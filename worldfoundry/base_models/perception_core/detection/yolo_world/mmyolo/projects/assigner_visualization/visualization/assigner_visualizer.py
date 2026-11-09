@@ -22,7 +22,7 @@ class YOLOAssignerVisualizer(DetLocalVisualizer):
     """
 
     def __init__(self, name: str = "visualizer", *args, **kwargs):
-        super().__init__(name=name, *args, **kwargs)
+        super().__init__(name=name, *args, **kwargs)  # noqa: B026 - Keeps the upstream argument order.
         # need priors_size from config
         self.priors_size = None
 

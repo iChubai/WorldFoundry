@@ -398,7 +398,7 @@ class MambaFeature(nn.Module):
         img_size=64,
         patch_size=1,
         in_chans=3,
-        embed_dims=[16, 32, 64, 128, 256],
+        embed_dims=[16, 32, 64, 128, 256],  # noqa: B006 - Keeps the upstream default object and signature.
         depths=(2, 2, 2, 2, 2),
         conv_stages=2,
         norm_layer=nn.LayerNorm,

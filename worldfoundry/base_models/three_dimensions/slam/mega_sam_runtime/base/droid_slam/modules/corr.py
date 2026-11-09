@@ -110,8 +110,8 @@ class AltCorrBlock:
             fmap2_i = self.pyramid[i][:, jj]
 
             coords_i = (coords / 2**i).reshape(B * N, S, H, W, 2).contiguous()
-            fmap1_i = fmap1_i.reshape((B * N,) + fmap1_i.shape[2:])
-            fmap2_i = fmap2_i.reshape((B * N,) + fmap2_i.shape[2:])
+            fmap1_i = fmap1_i.reshape((B * N,) + fmap1_i.shape[2:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            fmap2_i = fmap2_i.reshape((B * N,) + fmap2_i.shape[2:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             corr = CorrLayer.apply(fmap1_i.float(), fmap2_i.float(), coords_i, self.radius)
             corr = corr.view(B, N, S, -1, H, W).permute(0, 1, 3, 4, 5, 2)

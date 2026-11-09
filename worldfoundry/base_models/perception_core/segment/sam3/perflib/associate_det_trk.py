@@ -107,7 +107,7 @@ def associate_det_trk(
             assert track_masks.size(0) == igeit.size(1)  # Needed for loop optimizaiton below
             new_det_indices = []
             for d in range(det_masks.size(0)):
-                if not igeit_any_dim_1_list[d]:
+                if not igeit_any_dim_1_list[d]:  # noqa: SIM102 - Statement form kept for readability.
                     if det_scores is not None and det_scores[d] >= new_det_thresh:
                         new_det_indices.append(d)
 

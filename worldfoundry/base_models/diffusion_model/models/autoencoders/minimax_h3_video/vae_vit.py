@@ -173,7 +173,7 @@ class ViT3DDecoder(ViTBase):
         bias: bool = True,
         eps: float = 1e-5,
         num_register_tokens: int = 4,
-        mask_config: dict = {},
+        mask_config: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         super().__init__()

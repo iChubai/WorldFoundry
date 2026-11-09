@@ -115,7 +115,7 @@ def read(file):
     elif file.endswith(".pfm"):
         return readPFM(file)[0]
     else:
-        raise Exception("don't know how to read %s" % file)
+        raise Exception("don't know how to read %s" % file)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 def write(file, data):
@@ -128,11 +128,11 @@ def write(file, data):
     elif file.endswith(".pfm"):
         return writePFM(file, data)
     else:
-        raise Exception("don't know how to write %s" % file)
+        raise Exception("don't know how to write %s" % file)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 def readPFM(file):
-    file = open(file, "rb")
+    file = open(file, "rb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     color = None
     width = None
@@ -170,7 +170,7 @@ def readPFM(file):
 
 
 def writePFM(file, image, scale=1):
-    file = open(file, "wb")
+    file = open(file, "wb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     color = None
 
@@ -203,7 +203,7 @@ def readFlow(name):
     if name.endswith((".pfm", ".PFM")):
         return readPFM(name)[0][:, :, 0:2]
 
-    f = open(name, "rb")
+    f = open(name, "rb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     header = f.read(4)
     if header.decode("utf-8") != "PIEH":
@@ -234,7 +234,7 @@ def writeImage(name, data):
 
 
 def writeFlow(name, flow):
-    f = open(name, "wb")
+    f = open(name, "wb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     f.write(b"PIEH")
     np.array([flow.shape[1], flow.shape[0]], dtype=np.int32).tofile(f)
     flow = flow.astype(np.float32)
@@ -242,10 +242,10 @@ def writeFlow(name, flow):
 
 
 def readFloat(name):
-    f = open(name, "rb")
+    f = open(name, "rb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     if (f.readline().decode("utf-8")) != "float\n":
-        raise Exception("float file %s did not contain <float> keyword" % name)
+        raise Exception("float file %s did not contain <float> keyword" % name)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     dim = int(f.readline())
 
@@ -267,22 +267,22 @@ def readFloat(name):
 
 
 def writeFloat(name, data):
-    f = open(name, "wb")
+    f = open(name, "wb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     dim = len(data.shape)
     if dim > 3:
-        raise Exception("bad float file dimension: %d" % dim)
+        raise Exception("bad float file dimension: %d" % dim)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     f.write(("float\n").encode("ascii"))
-    f.write(("%d\n" % dim).encode("ascii"))
+    f.write(("%d\n" % dim).encode("ascii"))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     if dim == 1:
-        f.write(("%d\n" % data.shape[0]).encode("ascii"))
+        f.write(("%d\n" % data.shape[0]).encode("ascii"))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     else:
-        f.write(("%d\n" % data.shape[1]).encode("ascii"))
-        f.write(("%d\n" % data.shape[0]).encode("ascii"))
+        f.write(("%d\n" % data.shape[1]).encode("ascii"))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+        f.write(("%d\n" % data.shape[0]).encode("ascii"))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         for i in range(2, dim):
-            f.write(("%d\n" % data.shape[i]).encode("ascii"))
+            f.write(("%d\n" % data.shape[i]).encode("ascii"))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     data = data.astype(np.float32)
     if dim == 2:

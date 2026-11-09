@@ -94,7 +94,7 @@ class AggregatorBase(nn.Module, ABC):
         patch_embed="dinov2_vitl14_reg",
         pretrained_path=None,
         # Attention pattern
-        aa_order=["frame", "global"],
+        aa_order=["frame", "global"],  # noqa: B006 - Keeps the upstream default object and signature.
         aa_block_size=1,
         # RoPE
         rope_freq=100,

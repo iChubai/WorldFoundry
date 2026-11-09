@@ -81,7 +81,7 @@ def main():
     for video_filename in tqdm(video_files, desc="Processing videos"):
         video_name = os.path.splitext(video_filename)[0]
 
-        if video_name in prompts.keys():
+        if video_name in prompts.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             text_prompt = prompts[video_name].get("prompt", "")
         else:
             print(f"No prompt found for video: {video_name}. Skipping.")

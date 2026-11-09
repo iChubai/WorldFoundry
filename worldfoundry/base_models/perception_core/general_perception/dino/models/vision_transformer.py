@@ -150,7 +150,7 @@ class PatchEmbed(nn.Module):
 class VisionTransformer(nn.Module):
     def __init__(
         self,
-        img_size=[224],
+        img_size=[224],  # noqa: B006 - Keeps the upstream default object and signature.
         patch_size=16,
         in_chans=3,
         num_classes=0,

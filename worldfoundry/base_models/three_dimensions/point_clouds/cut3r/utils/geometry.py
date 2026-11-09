@@ -37,7 +37,7 @@ def xy_grid(
     tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin, strict=False)]
     grid = meshgrid(tw, th, indexing="xy")
     if homogeneous:
-        grid = grid + (ones((H, W)),)
+        grid = grid + (ones((H, W)),)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if unsqueeze is not None:
         grid = (grid[0].unsqueeze(unsqueeze), grid[1].unsqueeze(unsqueeze))
     if cat_dim is not None:

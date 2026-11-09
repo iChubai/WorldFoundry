@@ -9,7 +9,7 @@ from typing import Union
 import numpy as np
 import torch
 
-ArrayLike = Union[np.ndarray, torch.Tensor]
+ArrayLike = Union[np.ndarray, torch.Tensor]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 def _is_numpy(x: ArrayLike) -> bool:
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     import pycolmap
 
     max_diff = 0
-    for i in range(1000):
+    for i in range(1000):  # noqa: B007 - Loop target name kept as upstream.
         # Define distortion parameters (assuming 1 parameter for simplicity)
         B = random.randint(1, 500)
         track_num = random.randint(100, 1000)

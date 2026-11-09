@@ -860,7 +860,7 @@ class EvokeRotaryPosEmbed(nn.Module):
         return freqs.cos(), freqs.sin()
 
     @torch.no_grad()
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def _get_spatial_meshgrid(self, height, width, device_str):
         device = torch.device(device_str)
         gy = torch.arange(height, device=device, dtype=torch.float32)
@@ -1256,7 +1256,7 @@ class EvokeTransformer3DModel(
         is_use_gan_hooks: bool = False,
         is_use_gan_final: bool = False,
         gan_cond_map_dim: int = 768,
-        gan_hooks: list[int] = [5, 15, 25, 35],
+        gan_hooks: list[int] = [5, 15, 25, 35],  # noqa: B006 - Keeps the upstream default object and signature.
         # Metadata flag; does not change module topology. Signals caller to supply sink_latents.
         use_raw_sink_frames: bool = False,
         # Camera control: add lingbot-style AdaLN projections to transformer top-level and selected blocks.
@@ -1549,7 +1549,7 @@ class EvokeTransformer3DModel(
         if isinstance(latents, list):
             hidden_states = None
             rope_freqs = None
-            for idx, cur_hidden_states in enumerate(latents):
+            for idx, cur_hidden_states in enumerate(latents):  # noqa: B007 - The loop variable is read outside the loop.
                 cur_hidden_states = self.gradient_checkpointing_method(
                     self.patch_embedding, cur_hidden_states.to(self.device, dtype=self.dtype)
                 )
@@ -2498,7 +2498,7 @@ class EvokeTransformer3DModel(
         cls,
         pretrained_model_path,
         subfolder=None,
-        transformer_additional_kwargs={},
+        transformer_additional_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         low_cpu_mem_usage=False,
         torch_dtype=torch.float32,
         device_map="cpu",
@@ -2540,7 +2540,7 @@ class EvokeTransformer3DModel(
         model_file = os.path.join(pretrained_model_path, WEIGHTS_NAME)
         model_file_safetensors = model_file.replace(".bin", ".safetensors")
 
-        if "dict_mapping" in transformer_additional_kwargs.keys():
+        if "dict_mapping" in transformer_additional_kwargs.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             for key in transformer_additional_kwargs["dict_mapping"]:
                 transformer_additional_kwargs[transformer_additional_kwargs["dict_mapping"][key]] = config[key]
 
@@ -2655,7 +2655,7 @@ class EvokeTransformer3DModel(
 
         tmp_state_dict = {}
         for key in state_dict:
-            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():
+            if key in model.state_dict().keys() and model.state_dict()[key].size() == state_dict[key].size():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 tmp_state_dict[key] = state_dict[key]
             else:
                 print(key, "Size don't match, skip")

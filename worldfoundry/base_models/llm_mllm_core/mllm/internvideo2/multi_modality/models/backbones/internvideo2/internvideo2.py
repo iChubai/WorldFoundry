@@ -17,13 +17,13 @@ from .pos_embed import (
 
 logger = logging.getLogger(__name__)
 
-try:
+try:  # noqa: SIM105 - The handler carries an explanatory comment.
     from flash_attn.modules.mlp import FusedMLP
 except BaseException:
     # logger.warn(f'FusedMLP of flash_attn is not installed!!!')
     pass
 
-try:
+try:  # noqa: SIM105 - The handler carries an explanatory comment.
     from flash_attn.ops.rms_norm import DropoutAddRMSNorm
 except BaseException:
     # logger.warn(f'DropoutAddRMSNorm of flash_attn is not installed!!!')

@@ -50,11 +50,11 @@ def plot_images(
         return
     smooth_key = smooth_key or []
     os.makedirs(images_dir, exist_ok=True)
-    fname = [fname for fname in os.listdir(tb_dir) if os.path.isfile(os.path.join(tb_dir, fname))][0]
+    fname = [fname for fname in os.listdir(tb_dir) if os.path.isfile(os.path.join(tb_dir, fname))][0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
     tb_path = os.path.join(tb_dir, fname)
     data = read_tensorboard_file(tb_path)
 
-    for k in data.keys():
+    for k in data.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         _data = data[k]
         steps = [d["step"] for d in _data]
         values = [d["value"] for d in _data]

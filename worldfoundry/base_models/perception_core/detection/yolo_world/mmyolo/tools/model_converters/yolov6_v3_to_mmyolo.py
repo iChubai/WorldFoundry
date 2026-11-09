@@ -11,7 +11,7 @@ def convert(src, dst):
     try:
         ckpt = torch.load(src, map_location=torch.device("cpu"))
     except ModuleNotFoundError:
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: B904 - Keeps the implicit exception context.
             "This script must be placed under the meituan/YOLOv6 repo,"
             " because loading the official pretrained model need"
             " some python files to build model."

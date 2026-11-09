@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 import functools
 from dataclasses import dataclass
 from typing import Literal

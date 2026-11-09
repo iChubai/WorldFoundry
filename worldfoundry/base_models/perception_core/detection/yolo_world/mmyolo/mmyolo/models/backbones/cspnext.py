@@ -86,13 +86,13 @@ class CSPNeXt(BaseBackbone):
         arch_ovewrite: dict | None = None,
         channel_attention: bool = True,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN"},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN"},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         norm_eval: bool = False,
-        init_cfg: OptMultiConfig = {
+        init_cfg: OptMultiConfig = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "Kaiming",
             "layer": "Conv2d",
-            "a": math.sqrt(5),
+            "a": math.sqrt(5),  # noqa: B008 - Default evaluated once at definition, as upstream.
             "distribution": "uniform",
             "mode": "fan_in",
             "nonlinearity": "leaky_relu",

@@ -1,4 +1,4 @@
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import torch
 import torch.nn as nn

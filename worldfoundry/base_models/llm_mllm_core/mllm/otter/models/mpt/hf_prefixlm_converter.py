@@ -42,7 +42,7 @@ _SUPPORTED_GPT_MODELS = (
     GPTNeoForCausalLM,
     GPTNeoXForCausalLM,
 )
-CAUSAL_GPT_TYPES = Union[GPT2LMHeadModel, GPTJForCausalLM, GPTNeoForCausalLM, GPTNeoXForCausalLM]
+CAUSAL_GPT_TYPES = Union[GPT2LMHeadModel, GPTJForCausalLM, GPTNeoForCausalLM, GPTNeoXForCausalLM]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_TYPES:
@@ -59,7 +59,7 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
     if hasattr(model, "_prefix_lm_converted"):
         return model
     assert isinstance(model, _SUPPORTED_GPT_MODELS)
-    assert model.config.add_cross_attention == False, "Only supports GPT-style decoder-only models"
+    assert model.config.add_cross_attention == False, "Only supports GPT-style decoder-only models"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def _get_attn_modules(model: CAUSAL_GPT_TYPES) -> list[torch.nn.Module]:
         """Helper that gets a list of the model's attention modules.
@@ -187,7 +187,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
     if hasattr(model, "_prefix_lm_converted"):
         return model
     assert isinstance(model, BloomForCausalLM)
-    assert model.config.add_cross_attention == False, "Only supports BLOOM decoder-only models"
+    assert model.config.add_cross_attention == False, "Only supports BLOOM decoder-only models"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
     def _prepare_attn_mask(
         self: BloomModel,
@@ -335,7 +335,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
                     def custom_forward(*inputs):
                         return module(
                             *inputs,
-                            use_cache=use_cache,
+                            use_cache=use_cache,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                             output_attentions=output_attentions,
                         )
 
@@ -360,7 +360,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
                 )
             hidden_states = outputs[0]
             if use_cache is True:
-                presents = presents + (outputs[1],)
+                presents = presents + (outputs[1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             if output_attentions:
                 oa = (outputs[2 if use_cache else 1],)
                 all_self_attentions = all_self_attentions + oa
@@ -442,8 +442,8 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
                 shift_labels.view(batch_size * seq_length),
             )
         if not return_dict:
-            output = (lm_logits,) + transformer_outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (lm_logits,) + transformer_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return CausalLMOutputWithCrossAttentions(
             loss=loss,
             logits=lm_logits,
@@ -491,7 +491,7 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
     if hasattr(model, "_prefix_lm_converted"):
         return model
     assert isinstance(model, OPTForCausalLM)
-    assert model.config.add_cross_attention == False, "Only supports OPT decoder-only models"
+    assert model.config.add_cross_attention == False, "Only supports OPT decoder-only models"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
     model._original_forward = model.forward
     model._original_generate = model.generate
     model.model.decoder.bidirectional_mask = None
@@ -589,8 +589,8 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
     return model
 
 
-_SUPPORTED_HF_MODELS = _SUPPORTED_GPT_MODELS + (BloomForCausalLM, OPTForCausalLM)
-CAUSAL_LM_TYPES = Union[
+_SUPPORTED_HF_MODELS = _SUPPORTED_GPT_MODELS + (BloomForCausalLM, OPTForCausalLM)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+CAUSAL_LM_TYPES = Union[  # noqa: UP007 - Runtime type alias kept as typing.Union.
     GPT2LMHeadModel,
     GPTJForCausalLM,
     GPTNeoForCausalLM,

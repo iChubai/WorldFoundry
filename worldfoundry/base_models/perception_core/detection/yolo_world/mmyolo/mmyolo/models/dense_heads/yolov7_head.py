@@ -57,8 +57,8 @@ class YOLOv7p6HeadModule(YOLOv5HeadModule):
         main_out_channels: Sequence[int] = [256, 512, 768, 1024],
         aux_out_channels: Sequence[int] = [320, 640, 960, 1280],
         use_aux: bool = True,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         self.main_out_channels = main_out_channels

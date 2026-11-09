@@ -112,7 +112,7 @@ def get_model_tokenizer_glm4(
     kwargs["model_config"] = model_config
     model, tokenizer = get_model_tokenizer_chatglm(model_dir, model_info, model_kwargs, load_model, **kwargs)
     if len(tokenizer.encode("<|user|>", add_special_tokens=False)) > 1:
-        for k in tokenizer.special_tokens.keys():
+        for k in tokenizer.special_tokens.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             tokenizer.add_tokens(k)
     return model, tokenizer
 

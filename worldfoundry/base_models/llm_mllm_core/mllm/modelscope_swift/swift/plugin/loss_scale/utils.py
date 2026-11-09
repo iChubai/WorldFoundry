@@ -28,7 +28,7 @@ def calculate_loss_scale(
     """
     # query loss scale map
     if query_loss_scale_map is not None:
-        for key in query_loss_scale_map.keys():
+        for key in query_loss_scale_map.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if key in query:
                 if isinstance(query_loss_scale_map[key], (float, int)):
                     query_loss_scale_map[key] = [query_loss_scale_map[key]]

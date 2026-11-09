@@ -23,7 +23,7 @@ def build_model():
 def detect_face(detector, image, align=True, score_threshold=0.9):
     # FaceDetector.detect_faces does not support score_threshold parameter.
     # We can set it via environment variable.
-    score_threshold = os.environ.get("yunet_score_threshold", score_threshold)
+    score_threshold = os.environ.get("yunet_score_threshold", score_threshold)  # noqa: SIM112 - Environment variable name used by the upstream code.
     resp = []
     detected_face = None
     img_region = [0, 0, image.shape[1], image.shape[0]]

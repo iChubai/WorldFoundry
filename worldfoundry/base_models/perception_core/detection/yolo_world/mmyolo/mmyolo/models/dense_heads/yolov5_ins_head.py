@@ -42,8 +42,8 @@ class ProtoModule(BaseModule):
         in_channels: int = 32,
         middle_channels: int = 256,
         mask_channels: int = 32,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -85,8 +85,8 @@ class YOLOv5InsHeadModule(YOLOv5HeadModule):
         mask_channels: int = 32,
         proto_channels: int = 256,
         widen_factor: float = 1.0,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ):
         self.mask_channels = mask_channels
@@ -155,7 +155,7 @@ class YOLOv5InsHead(YOLOv5Head):
         self,
         *args,
         mask_overlap: bool = True,
-        loss_mask: ConfigType = {"type": "mmdet.CrossEntropyLoss", "use_sigmoid": True, "reduction": "none"},
+        loss_mask: ConfigType = {"type": "mmdet.CrossEntropyLoss", "use_sigmoid": True, "reduction": "none"},  # noqa: B006 - Keeps the upstream default object and signature.
         loss_mask_weight=0.05,
         **kwargs,
     ):
@@ -185,7 +185,7 @@ class YOLOv5InsHead(YOLOv5Head):
         else:
             outs = self(x)
             # Fast version
-            loss_inputs = outs + (
+            loss_inputs = outs + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 batch_data_samples["bboxes_labels"],
                 batch_data_samples["masks"],
                 batch_data_samples["img_metas"],

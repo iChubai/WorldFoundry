@@ -100,14 +100,14 @@ def get_clean_fn(type: str):
     elif type == "whitespace":
         return _clean_whitespace
     else:
-        assert False, f"Invalid clean function ({type})."
+        assert False, f"Invalid clean function ({type})."  # noqa: B011 - Keeps the assertion semantics under -O.
 
 
 def canonicalize_text(
     text,
     *,
     keep_punctuation_exact_string=None,
-    trans_punctuation: dict = str.maketrans("", "", string.punctuation),
+    trans_punctuation: dict = str.maketrans("", "", string.punctuation),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     """Returns canonicalized `text` (lowercase and punctuation removed).
 
@@ -142,7 +142,7 @@ class SimpleTokenizer:
     ):
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
-        merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")
+        merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         merges = merges[1 : 49152 - 256 - 2 + 1]
         merges = [tuple(merge.split()) for merge in merges]
         vocab = list(bytes_to_unicode().values())
@@ -173,7 +173,7 @@ class SimpleTokenizer:
     def bpe(self, token):
         if token in self.cache:
             return self.cache[token]
-        word = tuple(token[:-1]) + (token[-1] + "</w>",)
+        word = tuple(token[:-1]) + (token[-1] + "</w>",)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         pairs = get_pairs(word)
 
         if not pairs:
@@ -254,7 +254,7 @@ class SimpleTokenizer:
                 encode_fn=self.encode,
             )
 
-        all_tokens = [[self.sot_token_id] + self.encode(text) + [self.eot_token_id] for text in texts]
+        all_tokens = [[self.sot_token_id] + self.encode(text) + [self.eot_token_id] for text in texts]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
         for i, tokens in enumerate(all_tokens):
@@ -330,7 +330,7 @@ def simple_mask_tokenize(
             num_keep = context_length - 2
             start_index = random.randint(0, num_tokens - num_keep)  # high is incl
             tokens = tokens[start_index : start_index + num_keep]
-        tokens = [sot_token_id] + tokens + [eot_token_id]
+        tokens = [sot_token_id] + tokens + [eot_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         result[i, : len(tokens)] = torch.tensor(tokens)
 
     return result
@@ -383,7 +383,7 @@ def syntax_mask_tokenize(
         new_texts.append(new_text)
     texts = new_texts
 
-    all_tokens = [[sot_token_id] + encode_fn(text) + [eot_token_id] for text in texts]
+    all_tokens = [[sot_token_id] + encode_fn(text) + [eot_token_id] for text in texts]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
     for i, tokens in enumerate(all_tokens):
@@ -408,7 +408,7 @@ def get_reduction_mask_fn(type: str):
     elif type == "syntax":
         return syntax_mask_tokenize  # randomly drop prioritized by syntax
     else:
-        assert False, f"Unknown type {type}."
+        assert False, f"Unknown type {type}."  # noqa: B011 - Keeps the assertion semantics under -O.
 
 
 class HFTokenizer:
@@ -520,7 +520,7 @@ class HFTokenizer:
         encoded = []
         for tokens in encoded_outputs["input_ids"]:
             tokens = tokens[: context_length - 3]  # Leave room for special tokens
-            tokens = [self.tokenizer.bos_token_id] + tokens + [self.tokenizer.eos_token_id]
+            tokens = [self.tokenizer.bos_token_id] + tokens + [self.tokenizer.eos_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             encoded.append(tokens)
 
         # Create result tensor and handle padding + class token
@@ -552,7 +552,7 @@ class HFTokenizer:
             tokens = tokens + [pad_token_id] * (max_length - 1 - len(tokens))
 
         # Add class token at the end
-        tokens = tokens + [cls_token_id]
+        tokens = tokens + [cls_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return tokens
 
 

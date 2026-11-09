@@ -195,10 +195,10 @@ class VariableSizeImageTransform:
         """
         tgt_ar = img_width / img_height
         asp_dict = self._find_supported_aspect_ratios()
-        cl_d, cl_p = 1e23, None
+        cl_d, cl_p = 1e23, None  # noqa: F841 - Upstream assignment kept.
         if tgt_ar >= 1:
             cl_p = min(
-                [k for k in asp_dict.keys() if k <= tgt_ar],
+                [k for k in asp_dict.keys() if k <= tgt_ar],  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 key=lambda x: abs(x - tgt_ar),
             )
             v = asp_dict[cl_p]
@@ -207,7 +207,7 @@ class VariableSizeImageTransform:
             tgt_idx = max(widths, key=lambda x: x[1])[0]
         else:
             cl_p = min(
-                [k for k in asp_dict.keys() if k > tgt_ar],
+                [k for k in asp_dict.keys() if k > tgt_ar],  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 key=lambda x: abs(1 / x - 1 / tgt_ar),
             )
             v = asp_dict[cl_p]

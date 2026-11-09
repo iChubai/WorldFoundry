@@ -8,14 +8,14 @@ import numpy as np
 import torch
 from torch import Tensor
 
-DeviceType = Union[str, torch.device]
+DeviceType = Union[str, torch.device]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 T = TypeVar("T")
-IndexType = Union[
+IndexType = Union[  # noqa: UP007 - Runtime type alias kept as typing.Union.
     slice, int, list, torch.LongTensor, torch.cuda.LongTensor, torch.BoolTensor, torch.cuda.BoolTensor, np.ndarray
 ]
 
 
-class Keypoints(metaclass=ABCMeta):
+class Keypoints(metaclass=ABCMeta):  # noqa: B024 - Keeps the ABCMeta base shared by its subclasses.
     """The Keypoints class is for keypoints representation.
 
     Args:

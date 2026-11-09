@@ -200,7 +200,7 @@ class ImageFolderDataset(Dataset):
             raise OSError("No image files found in the specified path")
 
         name = os.path.splitext(os.path.basename(self._path))[0]
-        raw_shape = [len(self._image_fnames)] + list(self._load_raw_image(0).shape)
+        raw_shape = [len(self._image_fnames)] + list(self._load_raw_image(0).shape)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if resolution is not None and (raw_shape[2] != resolution or raw_shape[3] != resolution):
             raise OSError(
                 f"Image files do not match the specified resolution. Resolution is {resolution}, shape is {raw_shape}"
@@ -312,7 +312,7 @@ class VideoFramesFolderDataset(Dataset):
             self._all_objects = {
                 o
                 for d in listdir_full_paths(self._path)
-                for o in (([d] + listdir_full_paths(d)) if os.path.isdir(d) else [d])
+                for o in (([d] + listdir_full_paths(d)) if os.path.isdir(d) else [d])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             }
             self._all_objects = {
                 os.path.relpath(o, start=os.path.dirname(self._path)) for o in {self._path}.union(self._all_objects)
@@ -362,7 +362,7 @@ class VideoFramesFolderDataset(Dataset):
         if len(self._video_idx2frames) == 0:
             raise OSError("No videos found in the specified archive")
 
-        raw_shape = [len(self._video_idx2frames)] + list(self._load_raw_frames(0, [0])[0][0].shape)
+        raw_shape = [len(self._video_idx2frames)] + list(self._load_raw_frames(0, [0])[0][0].shape)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         super().__init__(name=name, raw_shape=raw_shape, **super_kwargs)
 

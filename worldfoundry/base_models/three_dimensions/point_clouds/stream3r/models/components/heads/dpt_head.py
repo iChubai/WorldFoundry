@@ -45,8 +45,8 @@ class DPTHead(nn.Module):
         activation: str = "inv_log",
         conf_activation: str = "expp1",
         features: int = 256,
-        out_channels: list[int] = [256, 512, 1024, 1024],
-        intermediate_layer_idx: list[int] = [4, 11, 17, 23],
+        out_channels: list[int] = [256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
+        intermediate_layer_idx: list[int] = [4, 11, 17, 23],  # noqa: B006 - Keeps the upstream default object and signature.
         pos_embed: bool = True,
         feature_only: bool = False,
         down_ratio: int = 1,
@@ -231,7 +231,7 @@ class DPTHead(nn.Module):
             x = self.resize_layers[dpt_idx](x)
 
             out.append(x)
-            dpt_idx += 1
+            dpt_idx += 1  # noqa: SIM113 - Keeps the explicit loop counter.
 
         # Fuse features from multiple layers.
         out = self.scratch_forward(out)
@@ -418,7 +418,7 @@ class FeatureFusionBlock(nn.Module):
         self.groups = groups
         self.expand = expand
         out_features = features
-        if self.expand == True:
+        if self.expand == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out_features = features // 2
 
         self.out_conv = nn.Conv2d(

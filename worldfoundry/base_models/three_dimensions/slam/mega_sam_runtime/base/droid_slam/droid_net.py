@@ -178,7 +178,7 @@ class GraphAggMotion(nn.Module):  # OLD VERSION
 
         if self.add_residual:
             raise NotImplementedError
-            mot_prob = torch.nn.functional.relu(self.logits_2(net_5) + init_w_)
+            mot_prob = torch.nn.functional.relu(self.logits_2(net_5) + init_w_)  # noqa: F821 - Unreachable after the preceding NotImplementedError.
         else:
             net_5_avg = self.relu5(self.norm_5(self.conv5(net.squeeze(0))))[None, ...]
             net_5 = (net_2 + torch.index_select(net_5_avg, dim=1, index=ix.long())).squeeze(0)

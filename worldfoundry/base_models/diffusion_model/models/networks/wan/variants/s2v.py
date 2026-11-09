@@ -67,7 +67,7 @@ def rope_precompute(x, grid_sizes, freqs, start=None):
             seq_len = int(seq_f * seq_h * seq_w)
             if seq_len > 0:
                 if t_f > 0:
-                    factor_f, factor_h, factor_w = (t_f / seq_f).item(), (t_h / seq_h).item(), (t_w / seq_w).item()
+                    factor_f, factor_h, factor_w = (t_f / seq_f).item(), (t_h / seq_h).item(), (t_w / seq_w).item()  # noqa: F841 - Upstream assignment kept.
                     # Generate a list of seq_f integers starting from f_o and ending at math.ceil(factor_f * seq_f.item() + f_o.item())
                     if f_o >= 0:
                         f_sam = np.linspace(f_o.item(), (t_f + f_o).item() - 1, seq_f).astype(int).tolist()
@@ -187,7 +187,7 @@ class MotionEncoder_tc(nn.Module):
 class FramePackMotioner(nn.Module):
     """FramePack-style motion tokenizer consumed by the S2V DiT."""
 
-    def __init__(self, inner_dim=1024, num_heads=16, zip_frame_buckets=[1, 2, 16], drop_mode="drop", *args, **kwargs):
+    def __init__(self, inner_dim=1024, num_heads=16, zip_frame_buckets=[1, 2, 16], drop_mode="drop", *args, **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__(*args, **kwargs)
         self.proj = nn.Conv3d(16, inner_dim, kernel_size=(1, 2, 2), stride=(1, 2, 2))
         self.proj_2x = nn.Conv3d(16, inner_dim, kernel_size=(2, 4, 4), stride=(2, 4, 4))
@@ -323,7 +323,7 @@ class AudioInjector_WAN(nn.Module):
         all_modules_names,
         dim=2048,
         num_heads=32,
-        inject_layer=[0, 27],
+        inject_layer=[0, 27],  # noqa: B006 - Keeps the upstream default object and signature.
         enable_adain=False,
         adain_dim=2048,
     ):
@@ -437,7 +437,7 @@ class WanS2VModel(torch.nn.Module):
         audio_dim: int,
         num_audio_token: int,
         enable_adain: bool = True,
-        audio_inject_layers: list = [0, 4, 8, 12, 16, 20, 24, 27, 30, 33, 36, 39],
+        audio_inject_layers: list = [0, 4, 8, 12, 16, 20, 24, 27, 30, 33, 36, 39],  # noqa: B006 - Keeps the upstream default object and signature.
         zero_timestep: bool = True,
         add_last_motion: bool = True,
         framepack_drop_mode: str = "padd",
@@ -541,7 +541,7 @@ class WanS2VModel(torch.nn.Module):
         original_seq_len,
         use_unified_sequence_parallel=False,
     ):
-        if block_idx in self.audio_injector.injected_block_id.keys():
+        if block_idx in self.audio_injector.injected_block_id.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             audio_attn_id = self.audio_injector.injected_block_id[block_idx]
             num_frames = audio_emb.shape[1]
             if use_unified_sequence_parallel:
@@ -571,7 +571,7 @@ class WanS2VModel(torch.nn.Module):
                 ]
         return hidden_states
 
-    def cal_audio_emb(self, audio_input, motion_frames=[73, 19]):
+    def cal_audio_emb(self, audio_input, motion_frames=[73, 19]):  # noqa: B006 - Keeps the upstream default object and signature.
         audio_input = torch.cat([audio_input[..., 0:1].repeat(1, 1, 1, motion_frames[0]), audio_input], dim=-1)
         audio_emb_global, audio_emb = self.casual_audio_encoder(audio_input)
         audio_emb_global = audio_emb_global[:, motion_frames[1] :].clone()
@@ -669,7 +669,11 @@ class WanS2VModel(torch.nn.Module):
                     x = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(
                             lambda x: self.after_transformer_block(
-                                block_id, x, audio_emb_global, merged_audio_emb, seq_len_x
+                                block_id,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                                x,
+                                audio_emb_global,
+                                merged_audio_emb,
+                                seq_len_x,
                             )
                         ),
                         x,
@@ -688,7 +692,11 @@ class WanS2VModel(torch.nn.Module):
                 x = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(
                         lambda x: self.after_transformer_block(
-                            block_id, x, audio_emb_global, merged_audio_emb, seq_len_x
+                            block_id,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                            x,
+                            audio_emb_global,
+                            merged_audio_emb,
+                            seq_len_x,
                         )
                     ),
                     x,

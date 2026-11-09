@@ -450,7 +450,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
 
         # Step 6: Remux extracted tensors into the singleton multiplex space
         for storage_key in ["cond_frame_outputs", "non_cond_frame_outputs"]:
-            for f_idx, frame_out in singleton_consolidated_outputs[storage_key].items():
+            for f_idx, frame_out in singleton_consolidated_outputs[storage_key].items():  # noqa: B007 - The loop variable is read outside the loop.
                 # mask memory features
                 if frame_out.get("maskmem_features") is not None:
                     # Keep mask memory features in data space (num_objects, C, H, W)
@@ -525,7 +525,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         )
         need_state_reinit = multiplex_state is None or assignments is None or total_valid_entries == 0
 
-        if not need_state_reinit and getattr(multiplex_state, "object_ids", None):
+        if not need_state_reinit and getattr(multiplex_state, "object_ids", None):  # noqa: SIM102 - Statement form kept for readability.
             if obj_id in multiplex_state.object_ids:
                 old_idx = multiplex_state.object_ids.index(obj_id)
                 multiplex_state.remove_objects(object_indices=[old_idx], strict=False)
@@ -633,7 +633,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                                 # Singleton features are in data space
                                 singleton_features_data = singleton_features_muxed
 
-                            feature_shape = (num_objs,) + singleton_features_data.shape[1:]
+                            feature_shape = (num_objs,) + singleton_features_data.shape[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                             maskmem_features_data = torch.zeros(
                                 feature_shape,
                                 dtype=singleton_features_data.dtype,
@@ -660,7 +660,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                                     # Singleton pos_enc is in data space
                                     level_data = level_enc
 
-                                level_shape = (num_objs,) + level_data.shape[1:]
+                                level_shape = (num_objs,) + level_data.shape[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                                 level_tensor = torch.zeros(
                                     level_shape,
                                     dtype=level_data.dtype,
@@ -771,7 +771,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                                 existing_features_data = None
 
                             if existing_features_data is None:
-                                feature_shape = (num_objs_total,) + singleton_features_data.shape[1:]
+                                feature_shape = (num_objs_total,) + singleton_features_data.shape[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                                 existing_features_data = torch.zeros(
                                     feature_shape,
                                     dtype=singleton_features_data.dtype,
@@ -780,7 +780,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                             elif existing_features_data.shape[0] < num_objs_total:
                                 pad_size = num_objs_total - existing_features_data.shape[0]
                                 pad = torch.zeros(
-                                    (pad_size,) + existing_features_data.shape[1:],
+                                    (pad_size,) + existing_features_data.shape[1:],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                                     dtype=existing_features_data.dtype,
                                     device=existing_features_data.device,
                                 )
@@ -837,7 +837,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                                     existing_level_data = None
 
                                 if existing_level_data is None:
-                                    level_shape = (num_objs_total,) + singleton_level_data.shape[1:]
+                                    level_shape = (num_objs_total,) + singleton_level_data.shape[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                                     existing_level_data = torch.zeros(
                                         level_shape,
                                         dtype=singleton_level_data.dtype,
@@ -846,7 +846,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                                 elif existing_level_data.shape[0] < num_objs_total:
                                     pad_size = num_objs_total - existing_level_data.shape[0]
                                     pad = torch.zeros(
-                                        (pad_size,) + existing_level_data.shape[1:],
+                                        (pad_size,) + existing_level_data.shape[1:],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                                         dtype=existing_level_data.dtype,
                                         device=existing_level_data.device,
                                     )
@@ -1070,7 +1070,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         is_init_cond_frame = frame_idx not in inference_state["frames_already_tracked"]
 
         if is_init_cond_frame:
-            reverse = False
+            reverse = False  # noqa: F841 - Kept as upstream; an underscore name already exists.
         else:
             _reverse = inference_state["frames_already_tracked"][frame_idx]["reverse"]
 
@@ -1433,7 +1433,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
 
         # Allow creating a new bucket only when existing buckets cannot fit the new objects
         allow_new_buckets_local = False
-        if not is_new_state and not reconditioning and multiplex_state is not None:
+        if not is_new_state and not reconditioning and multiplex_state is not None:  # noqa: SIM102 - Statement form kept for readability.
             if multiplex_state.available_slots < num_objects:
                 allow_new_buckets_local = True
 
@@ -1598,10 +1598,10 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
         max_obj_idx = batch_size - 1  # Default to batch_size - 1
 
         # Check both temp and regular output dicts to find max index
-        for obj_idx in inference_state["temp_output_dict_per_obj"].keys():
+        for obj_idx in inference_state["temp_output_dict_per_obj"].keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if obj_idx > max_obj_idx:
                 max_obj_idx = obj_idx
-        for obj_idx in inference_state["output_dict_per_obj"].keys():
+        for obj_idx in inference_state["output_dict_per_obj"].keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if obj_idx > max_obj_idx:
                 max_obj_idx = obj_idx
 
@@ -1978,7 +1978,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
             max_frame_num_to_track = num_frames
         if reverse:
             end_frame_idx = max(start_frame_idx - max_frame_num_to_track, 0)
-            if start_frame_idx > 0:
+            if start_frame_idx > 0:  # noqa: SIM108 - Branches carry per-case comments.
                 processing_order = range(start_frame_idx, end_frame_idx - 1, -1)
             else:
                 # TODO: Jie - this is the edge case that we start from frame 0 and track in reverse order;
@@ -2653,7 +2653,7 @@ class VideoTrackingMultiplexInference(VideoTrackingDynamicMultiplex):
                 new_local_obj_id_to_idx = {}
                 old_to_new = {old_idx: new_i for new_i, old_idx in enumerate(keep_indices)}
                 for obj_id, old_idx in local_obj_id_to_idx.items():
-                    if obj_id not in obj_ids:  # Keep objects not being removed
+                    if obj_id not in obj_ids:  # noqa: SIM102 - Branches carry per-case comments.  # Keep objects not being removed
                         # Find the new index for this object if it was kept
                         if old_idx in old_to_new:
                             new_idx = old_to_new[old_idx]

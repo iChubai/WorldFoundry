@@ -195,7 +195,7 @@ class EncoderFCN3D(nn.Module):
         self.use_fused_norm = os.environ.get("MINIMAX_H3_USE_FUSED_NORM", "false").lower() == "true"
 
         block_mid = [ch * ch_mult[i] for i in range(self.num_levels)]
-        block_in = [block_mid[0]] + block_mid[:-1]
+        block_in = [block_mid[0]] + block_mid[:-1]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         block_out = block_mid
 
         conv_kwargs = {

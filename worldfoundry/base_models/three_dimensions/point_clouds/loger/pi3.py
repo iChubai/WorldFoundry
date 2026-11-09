@@ -430,7 +430,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
             )
 
             if (i % 2 == 1 and not layer_skip0) or (i % 2 == 0 and layer_skip0):
-                hidden_before_block = hidden_for_block
+                hidden_before_block = hidden_for_block  # noqa: F841 - Kept as upstream; an underscore name already exists.
             else:
                 _hidden_before_block = hidden_for_block  # dummy
 
@@ -1249,13 +1249,14 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
                 frames = cam_tensor.shape[1]
                 rot_local = cam_tensor[..., :3, :3]
                 trans_local = cam_tensor[..., :3, 3]
-                rot_global = torch.matmul(current_rot.unsqueeze(1).expand(-1, frames, -1, -1), rot_local)
+                rot_global = torch.matmul(current_rot.unsqueeze(1).expand(-1, frames, -1, -1), rot_local)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 rotated_trans = torch.matmul(
-                    current_rot.unsqueeze(1).expand(-1, frames, -1, -1), trans_local.unsqueeze(-1)
+                    current_rot.unsqueeze(1).expand(-1, frames, -1, -1),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    trans_local.unsqueeze(-1),
                 ).squeeze(-1)
                 if allow_scale:
-                    rotated_trans = rotated_trans * current_scale.view(batch_size, 1, 1)
-                trans_global = rotated_trans + current_trans.unsqueeze(1)
+                    rotated_trans = rotated_trans * current_scale.view(batch_size, 1, 1)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                trans_global = rotated_trans + current_trans.unsqueeze(1)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 cam_out = cam_tensor.clone()
                 cam_out[..., :3, :3] = rot_global
                 cam_out[..., :3, 3] = trans_global

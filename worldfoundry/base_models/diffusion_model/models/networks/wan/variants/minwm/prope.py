@@ -59,10 +59,10 @@ can condition attention.  Used by MinWM causal / action graphs.
 
 """Module for base_models -> diffusion_model -> video -> wan -> wan_2p1 -> modules -> prope.py functionality."""
 
-from collections.abc import Callable
-from functools import partial
+from collections.abc import Callable  # noqa: E402 - Follows a module-level setup call, as upstream.
+from functools import partial  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-import torch
+import torch  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 
 def prope_qkv(
@@ -250,7 +250,7 @@ def _invert_SE3(transforms: torch.Tensor) -> torch.Tensor:
 def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
     """Lift 3x3 matrices to homogeneous 4x4 matrices."""
     assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros(Ks.shape[:-2] + (4, 4), device=Ks.device)
+    out = torch.zeros(Ks.shape[:-2] + (4, 4), device=Ks.device)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     out[..., :3, :3] = Ks
     out[..., 3, 3] = 1.0
     out = out.to(dtype=Ks.dtype)
@@ -306,7 +306,7 @@ def add_prope_parameters(model, zero_init: bool = True):
             WanT2VCrossAttention as ActionWanT2VCrossAttention,
         )
 
-        cross_attn_types = cross_attn_types + (
+        cross_attn_types = cross_attn_types + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ActionWanT2VCrossAttention,
             ActionWanI2VCrossAttention,
             ActionWanGanCrossAttention,
@@ -322,7 +322,7 @@ def add_prope_parameters(model, zero_init: bool = True):
     attn_types = tuple(filter(None, [WanSelfAttention, ActionWanSelfAttention, CausalWanSelfAttention]))
 
     for _name, module in model.named_modules():
-        if isinstance(module, attn_types) and not isinstance(module, cross_attn_types):
+        if isinstance(module, attn_types) and not isinstance(module, cross_attn_types):  # noqa: SIM102 - Branches carry per-case comments.
             if not hasattr(module, "prope_o"):
                 # Get dim from existing projection layer
                 dim = module.o.out_features

@@ -178,7 +178,7 @@ class MultiplexMaskDecoder(nn.Module):
             iou_pred = iou_pred[:, :, 0:1]
 
         if multimask_output and self.use_multimask_token_for_obj_ptr:
-            if self.multimask_outputs_only:
+            if self.multimask_outputs_only:  # noqa: SIM108 - Branches carry per-case comments.
                 sam_tokens_out = mask_tokens_out
             else:
                 sam_tokens_out = mask_tokens_out[:, :, 1:]  # [B, M, num_multimask_outputs, C] shape

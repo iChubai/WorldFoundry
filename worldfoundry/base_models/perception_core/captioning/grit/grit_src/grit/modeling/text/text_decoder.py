@@ -56,7 +56,7 @@ class WordAndPositionalEmbedding(nn.Module):
 
         return embeddings
 
-    @functools.lru_cache(maxsize=128)
+    @functools.lru_cache(maxsize=128)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def _create_position_indices(self, tokens: torch.Tensor):
         # Create position indices of the same size as token indices.
         batch_size, max_caption_length = tokens.size()

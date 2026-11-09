@@ -259,7 +259,7 @@ def spatial_temporal_view_decomposition(
     return sampled_video, frame_inds
 
 
-import random
+import random  # noqa: E402 - Follows the decord bridge setup.
 
 
 class UnifiedFrameSampler:

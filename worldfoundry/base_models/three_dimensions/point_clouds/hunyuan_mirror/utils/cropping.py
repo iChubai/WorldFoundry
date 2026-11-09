@@ -281,7 +281,7 @@ def crop_image_depthmap(image, depthmap, camera_intrinsics, crop_bbox):
     Return a crop of the input view.
     """
     image = ImageList(image)
-    l, t, r, b = crop_bbox
+    l, t, r, b = crop_bbox  # noqa: E741 - Ambiguous upstream name kept as written.
 
     image = image.crop((l, t, r, b))
     if depthmap is not None:
@@ -299,7 +299,7 @@ def crop_image_normalmap(image, normalmap, camera_intrinsics, valid_mask, crop_b
     Return a crop of the input view.
     """
     image = ImageList(image)
-    l, t, r, b = crop_bbox
+    l, t, r, b = crop_bbox  # noqa: E741 - Ambiguous upstream name kept as written.
 
     image = image.crop((l, t, r, b))
     normalmap = normalmap[t:b, l:r]

@@ -68,7 +68,7 @@ class GraphBuffer:
         ba_config: DictConfig,
         sparse_tracks: SparseTracks,
         camera_type: CameraType,
-        device: torch.device = torch.device("cuda"),
+        device: torch.device = torch.device("cuda"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         if cross_view_idx is None:
             cross_view_idx = [(i + 1) % n_views for i in range(n_views)]

@@ -148,8 +148,8 @@ def interpolate_pos_relative_bias_beit(state_dict_old, state_dict_new, patch_sha
 
                 r_ids = [-_ for _ in reversed(dis)]
 
-                x = r_ids + [0] + dis
-                y = r_ids + [0] + dis
+                x = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+                y = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
                 t = dst_size // 2.0
                 dx = np.arange(-t, t + 0.1, 1.0)

@@ -12,8 +12,8 @@ __all__ = list(itertools.chain(*module_members.values()))
 
 
 if TYPE_CHECKING:
-    from .maps import *
-    from .mesh import *
-    from .rasterization import *
-    from .transforms import *
-    from .utils import *
+    from .maps import *  # noqa: F403 - Upstream star import kept as written.
+    from .mesh import *  # noqa: F403 - Upstream star import kept as written.
+    from .rasterization import *  # noqa: F403 - Upstream star import kept as written.
+    from .transforms import *  # noqa: F403 - Upstream star import kept as written.
+    from .utils import *  # noqa: F403 - Upstream star import kept as written.

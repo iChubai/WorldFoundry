@@ -23,8 +23,8 @@ class DenseHead(nn.Module):
         dim_in: int = 2048,
         patch_size: int = 16,
         features: int = 256,
-        out_channels: list[int] = [256, 512, 1024, 1024],
-        intermediate_layer_idx: list[int] = [4, 11, 17, 23],
+        out_channels: list[int] = [256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
+        intermediate_layer_idx: list[int] = [4, 11, 17, 23],  # noqa: B006 - Keeps the upstream default object and signature.
     ) -> None:
         super().__init__()
 

@@ -32,7 +32,7 @@ class CrocoConfig(PretrainedConfig):
         dec_depth=8,  # decoder depth
         dec_num_heads=16,  # decoder number of heads in the transformer block
         mlp_ratio=4,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         norm_im2_in_dec=True,  # whether to apply normalization of the 'memory' = (second image) in the decoder
         pos_embed="cosine",  # positional embedding (either cosine or RoPE100)
     ):

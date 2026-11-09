@@ -258,14 +258,14 @@ class DepthHead(nn.Module):
             out_features.append(out)
 
         # aggregate output and project to depth
-        for i, (layer, features) in enumerate(zip(self.depth_mlp[::-1], out_features[::-1], strict=False)):
+        for i, (layer, features) in enumerate(zip(self.depth_mlp[::-1], out_features[::-1], strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
             out_depth_features = layer(features).permute(0, 3, 1, 2)
             out_depth_features = F.interpolate(out_depth_features, size=self.original_shapes, mode="bilinear")
             depths.append(out_depth_features)
         logdepth = self.to_depth(torch.cat(depths, dim=1))
 
         # aggregate output and project to confidences
-        for i, (layer, features) in enumerate(zip(self.confidence_mlp[::-1], out_features[::-1], strict=False)):
+        for i, (layer, features) in enumerate(zip(self.confidence_mlp[::-1], out_features[::-1], strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
             out_conf_features = layer(features).permute(0, 3, 1, 2)
             out_conf_features = F.interpolate(out_conf_features, size=self.original_shapes, mode="bilinear")
             confidences.append(out_conf_features)

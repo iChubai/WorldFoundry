@@ -46,9 +46,9 @@ class ONNXNMSop(torch.autograd.Function):
         ctx,
         boxes: Tensor,
         scores: Tensor,
-        max_output_boxes_per_class: Tensor = torch.tensor([100]),
-        iou_threshold: Tensor = torch.tensor([0.5]),
-        score_threshold: Tensor = torch.tensor([0.05]),
+        max_output_boxes_per_class: Tensor = torch.tensor([100]),  # noqa: B008 - Default evaluated once at definition, as upstream.
+        iou_threshold: Tensor = torch.tensor([0.5]),  # noqa: B008 - Default evaluated once at definition, as upstream.
+        score_threshold: Tensor = torch.tensor([0.05]),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ) -> Tensor:
         device = boxes.device
         batch = scores.shape[0]
@@ -66,9 +66,9 @@ class ONNXNMSop(torch.autograd.Function):
         g,
         boxes: Tensor,
         scores: Tensor,
-        max_output_boxes_per_class: Tensor = torch.tensor([100]),
-        iou_threshold: Tensor = torch.tensor([0.5]),
-        score_threshold: Tensor = torch.tensor([0.05]),
+        max_output_boxes_per_class: Tensor = torch.tensor([100]),  # noqa: B008 - Default evaluated once at definition, as upstream.
+        iou_threshold: Tensor = torch.tensor([0.5]),  # noqa: B008 - Default evaluated once at definition, as upstream.
+        score_threshold: Tensor = torch.tensor([0.05]),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         return g.op(
             "NonMaxSuppression", boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold, outputs=1

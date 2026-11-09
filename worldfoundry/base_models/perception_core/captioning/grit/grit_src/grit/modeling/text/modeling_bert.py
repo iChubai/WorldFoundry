@@ -71,7 +71,7 @@ class BertSelfAttention(nn.Module):
         super().__init__()
         if config.hidden_size % config.num_attention_heads != 0:
             raise ValueError(
-                "The hidden size (%d) is not a multiple of the number of attention "
+                "The hidden size (%d) is not a multiple of the number of attention "  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 "heads (%d)" % (config.hidden_size, config.num_attention_heads)
             )
         self.output_attentions = config.output_attentions
@@ -93,7 +93,7 @@ class BertSelfAttention(nn.Module):
             # exporter is not smart enough to detect dynamic size for some paths
             x = x.view(x.shape[0], -1, self.num_attention_heads, self.attention_head_size)
         else:
-            new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+            new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -125,7 +125,7 @@ class BertSelfAttention(nn.Module):
         context_layer = torch.matmul(attention_probs, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         context_layer = context_layer.view(*new_context_layer_shape)
 
         outputs = (context_layer, attention_probs) if self.output_attentions else (context_layer,)
@@ -171,7 +171,7 @@ class BertAttention(nn.Module):
         else:
             self_outputs = self.self(input_tensor, attention_mask, head_mask, history_state)
         attention_output = self.output(self_outputs[0], input_tensor)
-        outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
+        outputs = (attention_output,) + self_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # add attentions if we output them
         return outputs
 
 
@@ -256,7 +256,7 @@ class BertLayer(nn.Module):
             else:
                 intermediate_output = self.intermediate(self.LayerNorm(attention_output))
             layer_output = self.output(intermediate_output, attention_output)
-        outputs = (layer_output,) + attention_outputs[1:]  # add attentions if we output them
+        outputs = (layer_output,) + attention_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # add attentions if we output them
         return outputs
 
 
@@ -277,7 +277,7 @@ class BertEncoder(nn.Module):
         all_attentions = ()
         for i, layer_module in enumerate(self.layer):
             if self.output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             history_state = None if encoder_history_states is None else encoder_history_states[i]
             layer_outputs = layer_module(
@@ -289,14 +289,14 @@ class BertEncoder(nn.Module):
             hidden_states = layer_outputs[0]
 
             if self.output_attentions:
-                all_attentions = all_attentions + (layer_outputs[1],)
+                all_attentions = all_attentions + (layer_outputs[1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if self.pre_norm:
             hidden_states = self.LayerNorm(hidden_states)
         outputs = (hidden_states,)
         if self.output_hidden_states:
-            outputs = outputs + (all_hidden_states,)
+            outputs = outputs + (all_hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if self.output_attentions:
-            outputs = outputs + (all_attentions,)
+            outputs = outputs + (all_attentions,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs
 
 

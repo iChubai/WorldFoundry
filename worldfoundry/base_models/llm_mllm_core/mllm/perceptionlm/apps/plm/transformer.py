@@ -137,8 +137,8 @@ class LMTransformer(BaseTransformer):
         image_pos_index: torch.Tensor | None = None,
         loss_mask: torch.Tensor | None = None,
         aspect_ratios: torch.Tensor | None = None,
-        num_chunks: list[int] = [1],
-        media_type: list[str] = ["multi_image"],
+        num_chunks: list[int] = [1],  # noqa: B006 - Keeps the upstream default object and signature.
+        media_type: list[str] = ["multi_image"],  # noqa: B006 - Keeps the upstream default object and signature.
         attn_impl: str = "sdpa",
     ):
         _, seqlen = token_values.shape

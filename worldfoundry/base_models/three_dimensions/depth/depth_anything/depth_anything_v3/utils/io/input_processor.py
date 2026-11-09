@@ -318,8 +318,8 @@ class InputProcessor:
         if longest == target_size:
             return img
         scale = target_size / float(longest)
-        new_w = max(1, int(round(w * scale)))
-        new_h = max(1, int(round(h * scale)))
+        new_w = max(1, int(round(w * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        new_h = max(1, int(round(h * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         interpolation = cv2.INTER_CUBIC if scale > 1.0 else cv2.INTER_AREA
         arr = cv2.resize(np.asarray(img), (new_w, new_h), interpolation=interpolation)
         return Image.fromarray(arr)
@@ -330,8 +330,8 @@ class InputProcessor:
         if shortest == target_size:
             return img
         scale = target_size / float(shortest)
-        new_w = max(1, int(round(w * scale)))
-        new_h = max(1, int(round(h * scale)))
+        new_w = max(1, int(round(w * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        new_h = max(1, int(round(h * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         interpolation = cv2.INTER_CUBIC if scale > 1.0 else cv2.INTER_AREA
         arr = cv2.resize(np.asarray(img), (new_w, new_h), interpolation=interpolation)
         return Image.fromarray(arr)

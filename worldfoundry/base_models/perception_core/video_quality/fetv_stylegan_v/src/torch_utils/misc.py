@@ -282,8 +282,8 @@ def print_module_summary(module, inputs, max_nesting=3, skip_redundant=True):
                 str(param_size) if param_size else "-",
                 str(buffer_size) if buffer_size else "-",
                 input_shape_str if len(input_shape_str) > 0 else "-",
-                (output_shapes + ["-"])[0],
-                (output_dtypes + ["-"])[0],
+                (output_shapes + ["-"])[0],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+                (output_dtypes + ["-"])[0],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ]
         ]
         for idx in range(1, len(e.outputs)):

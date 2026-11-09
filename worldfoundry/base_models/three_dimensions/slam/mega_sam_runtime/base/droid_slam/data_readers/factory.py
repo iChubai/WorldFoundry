@@ -30,19 +30,19 @@ def create_datastream(dataset_path, **kwargs):
     from torch.utils.data import DataLoader
 
     if osp.isfile(osp.join(dataset_path, "calibration.txt")):
-        db = ETH3DStream(dataset_path, **kwargs)
+        db = ETH3DStream(dataset_path, **kwargs)  # noqa: F821 - Name is undefined in the upstream source.
 
     elif osp.isdir(osp.join(dataset_path, "image_left")):
         db = TartanAirStream(dataset_path, **kwargs)
 
     elif osp.isfile(osp.join(dataset_path, "rgb.txt")):
-        db = TUMStream(dataset_path, **kwargs)
+        db = TUMStream(dataset_path, **kwargs)  # noqa: F821 - Name is undefined in the upstream source.
 
     elif osp.isdir(osp.join(dataset_path, "mav0")):
-        db = EurocStream(dataset_path, **kwargs)
+        db = EurocStream(dataset_path, **kwargs)  # noqa: F821 - Name is undefined in the upstream source.
 
     elif osp.isfile(osp.join(dataset_path, "calib.txt")):
-        db = KITTIStream(dataset_path, **kwargs)
+        db = KITTIStream(dataset_path, **kwargs)  # noqa: F821 - Name is undefined in the upstream source.
 
     else:
         # db = TartanAirStream(dataset_path, **kwargs)

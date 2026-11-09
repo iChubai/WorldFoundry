@@ -148,7 +148,7 @@ def _get_google_drive_file_id(url: str) -> str | None:
 
 
 def _urlretrieve(url: str, filename: str, chunk_size: int = 1024) -> None:
-    with open(filename, "wb") as fh:
+    with open(filename, "wb") as fh:  # noqa: SIM117 - Keeps the nested context managers.
         with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "vissl"})) as response:
             with tqdm(total=response.length) as pbar:
                 for chunk in iter(lambda: response.read(chunk_size), ""):
@@ -372,7 +372,7 @@ def abspath(resource_path: str):
         return resource_path
 
 
-def makedir(dir_path):
+def makedir(dir_path):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """
     Create the directory if it does not exist.
     """
@@ -386,7 +386,7 @@ def makedir(dir_path):
     return is_success
 
 
-def is_url(input_url):
+def is_url(input_url):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """
     Check if an input string is a url. look for http(s):// and ignoring the case
     """

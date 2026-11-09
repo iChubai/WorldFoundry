@@ -68,8 +68,8 @@ class ConvNeXt(nn.Module):
         self,
         in_chans=3,
         num_classes=1000,
-        depths=[3, 3, 9, 3],
-        dims=[96, 192, 384, 768],
+        depths=[3, 3, 9, 3],  # noqa: B006 - Keeps the upstream default object and signature.
+        dims=[96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
         drop_path_rate=0.0,
         layer_scale_init_value=1e-6,
         head_init_scale=1.0,
@@ -192,7 +192,7 @@ def convnext_tiny(pretrained=True, in_22k=False, **kwargs):
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
         print(
-            "Successfully loaded pretrained %d params, and %d paras are unmatched."
+            "Successfully loaded pretrained %d params, and %d paras are unmatched."  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             % (len(pretrained_dict.keys()), len(unmatched_pretrained_dict.keys()))
         )
         print("Unmatched pretrained paras are :", unmatched_pretrained_dict.keys())
@@ -216,7 +216,7 @@ def convnext_small(pretrained=True, in_22k=False, **kwargs):
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
         print(
-            "Successfully loaded pretrained %d params, and %d paras are unmatched."
+            "Successfully loaded pretrained %d params, and %d paras are unmatched."  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             % (len(pretrained_dict.keys()), len(unmatched_pretrained_dict.keys()))
         )
         print("Unmatched pretrained paras are :", unmatched_pretrained_dict.keys())
@@ -240,7 +240,7 @@ def convnext_base(pretrained=True, in_22k=False, **kwargs):
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
         print(
-            "Successfully loaded pretrained %d params, and %d paras are unmatched."
+            "Successfully loaded pretrained %d params, and %d paras are unmatched."  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             % (len(pretrained_dict.keys()), len(unmatched_pretrained_dict.keys()))
         )
         print("Unmatched pretrained paras are :", unmatched_pretrained_dict.keys())
@@ -264,7 +264,7 @@ def convnext_large(pretrained=True, in_22k=False, **kwargs):
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
         print(
-            "Successfully loaded pretrained %d params, and %d paras are unmatched."
+            "Successfully loaded pretrained %d params, and %d paras are unmatched."  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             % (len(pretrained_dict.keys()), len(unmatched_pretrained_dict.keys()))
         )
         print("Unmatched pretrained paras are :", unmatched_pretrained_dict.keys())
@@ -289,7 +289,7 @@ def convnext_xlarge(pretrained=True, in_22k=False, **kwargs):
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
         print(
-            "Successfully loaded pretrained %d params, and %d paras are unmatched."
+            "Successfully loaded pretrained %d params, and %d paras are unmatched."  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             % (len(pretrained_dict.keys()), len(unmatched_pretrained_dict.keys()))
         )
         print("Unmatched pretrained paras are :", unmatched_pretrained_dict.keys())

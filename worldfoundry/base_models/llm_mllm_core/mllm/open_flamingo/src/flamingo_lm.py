@@ -163,7 +163,7 @@ class FlamingoLMMixin(nn.Module):
 
     def is_conditioned(self) -> bool:
         """Check whether all decoder layers are already conditioned."""
-        return all(l.is_conditioned() for l in self._get_decoder_layers())
+        return all(l.is_conditioned() for l in self._get_decoder_layers())  # noqa: E741 - Ambiguous upstream name kept as written.
 
     def clone_parameters(self):
         for layer in self._get_decoder_layers():

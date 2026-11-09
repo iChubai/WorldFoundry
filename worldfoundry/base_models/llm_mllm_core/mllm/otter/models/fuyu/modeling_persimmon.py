@@ -315,7 +315,7 @@ class PersimmonAttention(nn.Module):
         output_attentions: bool = False,
         use_cache: bool = False,
     ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
-        assert past_key_value == None
+        assert past_key_value == None  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
 
         bsz, q_len, _ = hidden_states.size()
 
@@ -691,7 +691,7 @@ class PersimmonModel(PersimmonPreTrainedModel):
                 def create_custom_forward(module):
                     def custom_forward(*inputs):
                         # None for past_key_value
-                        return module(*inputs, past_key_value, output_attentions)
+                        return module(*inputs, past_key_value, output_attentions)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                     return custom_forward
 
@@ -852,8 +852,8 @@ class PersimmonForCausalLM(PersimmonPreTrainedModel):
             loss = loss_fct(shift_logits, shift_labels)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return CausalLMOutputWithPast(
             loss=loss,
@@ -871,7 +871,7 @@ class PersimmonForCausalLM(PersimmonPreTrainedModel):
             past_length = past_key_values[0][0].shape[2]
 
             # Some generation methods already pass only the last input ID
-            if input_ids.shape[1] > past_length:
+            if input_ids.shape[1] > past_length:  # noqa: SIM108 - Branches carry per-case comments.
                 remove_prefix_length = past_length
             else:
                 # Default to old behavior: keep only final ID
@@ -1021,8 +1021,8 @@ class PersimmonForSequenceClassification(PersimmonPreTrainedModel):
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
-            output = (pooled_logits,) + transformer_outputs[1:]
-            return ((loss,) + output) if loss is not None else output
+            output = (pooled_logits,) + transformer_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return SequenceClassifierOutputWithPast(
             loss=loss,

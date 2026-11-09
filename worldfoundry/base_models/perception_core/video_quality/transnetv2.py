@@ -127,7 +127,7 @@ class TransNetV2(nn.Module):
 
         # Enable deterministic algorithms where possible
         # Note: This may impact performance but ensures consistency
-        try:
+        try:  # noqa: SIM105 - The handler carries an explanatory comment.
             torch.use_deterministic_algorithms(True, warn_only=True)
         except BaseException:
             # Fallback for older PyTorch versions
@@ -353,7 +353,7 @@ class TransNetV2(nn.Module):
         try:
             import ffmpeg
         except ModuleNotFoundError:
-            raise ModuleNotFoundError(
+            raise ModuleNotFoundError(  # noqa: B904 - Keeps the implicit exception context.
                 "For `predict_video` function `ffmpeg` needs to be installed in order to extract "
                 "individual frames from video file. Install `ffmpeg` command line tool and then "
                 "install python wrapper by `pip install ffmpeg-python`."

@@ -33,7 +33,7 @@ class SigLIPEncoder(torch.nn.Module):
         self,
         checkpoint_dir: str,
         model_name: str = "google/siglip-so400m-patch14-384",
-        device="cuda" if torch.cuda.is_available() else "cpu",
+        device="cuda" if torch.cuda.is_available() else "cpu",  # noqa: B008 - Default evaluated once at definition, as upstream.
         dtype=torch.float32,
     ) -> None:
         super().__init__()

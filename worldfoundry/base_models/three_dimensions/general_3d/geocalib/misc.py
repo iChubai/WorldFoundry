@@ -308,10 +308,10 @@ def J_up_projection(uv: torch.Tensor, abc: torch.Tensor, wrt: str = "uv") -> tor
     """
     if wrt == "uv":
         c = abc[..., 2][..., None, None, None]
-        return -c * torch.eye(2, device=uv.device, dtype=uv.dtype).expand(uv.shape[:-1] + (2, 2))
+        return -c * torch.eye(2, device=uv.device, dtype=uv.dtype).expand(uv.shape[:-1] + (2, 2))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     elif wrt == "abc":
-        J = uv.new_zeros(uv.shape[:-1] + (2, 3))
+        J = uv.new_zeros(uv.shape[:-1] + (2, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         J[..., 0, 0] = 1
         J[..., 1, 1] = 1
         J[..., 0, 2] = -uv[..., 0]

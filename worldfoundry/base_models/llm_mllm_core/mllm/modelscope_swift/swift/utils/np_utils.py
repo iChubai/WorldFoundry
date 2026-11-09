@@ -26,7 +26,7 @@ def get_seed(random_state: np.random.RandomState | None = None) -> int:
     return seed
 
 
-def stat_array(array: Union[np.ndarray, list[int], "torch.Tensor"]) -> tuple[dict[str, float], str]:
+def stat_array(array: Union[np.ndarray, list[int], "torch.Tensor"]) -> tuple[dict[str, float], str]:  # noqa: F821 - Quoted annotation avoids importing torch for NumPy utilities.
     if isinstance(array, list):
         array = np.array(array)
     mean = array.mean().item()

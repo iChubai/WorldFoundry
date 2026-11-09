@@ -254,15 +254,15 @@ class YOLOWorldSegHead(YOLOv5InsHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0.5, "strides": [8, 16, 32]},
-        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
-        loss_cls: ConfigType = {
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0.5, "strides": [8, 16, 32]},  # noqa: B006 - Keeps the upstream default object and signature.
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_cls: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.CrossEntropyLoss",
             "use_sigmoid": True,
             "reduction": "none",
             "loss_weight": 0.5,
         },
-        loss_bbox: ConfigType = {
+        loss_bbox: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "IoULoss",
             "iou_mode": "ciou",
             "bbox_format": "xyxy",
@@ -270,9 +270,9 @@ class YOLOWorldSegHead(YOLOv5InsHead):
             "loss_weight": 7.5,
             "return_iou": False,
         },
-        loss_dfl={"type": "mmdet.DistributionFocalLoss", "reduction": "mean", "loss_weight": 1.5 / 4},
+        loss_dfl={"type": "mmdet.DistributionFocalLoss", "reduction": "mean", "loss_weight": 1.5 / 4},  # noqa: B006 - Keeps the upstream default object and signature.
         mask_overlap: bool = True,
-        loss_mask: ConfigType = {"type": "mmdet.CrossEntropyLoss", "use_sigmoid": True, "reduction": "none"},
+        loss_mask: ConfigType = {"type": "mmdet.CrossEntropyLoss", "use_sigmoid": True, "reduction": "none"},  # noqa: B006 - Keeps the upstream default object and signature.
         loss_mask_weight=0.05,
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
@@ -321,7 +321,7 @@ class YOLOWorldSegHead(YOLOv5InsHead):
 
         outs = self(img_feats, txt_feats)
         # Fast version
-        loss_inputs = outs + (
+        loss_inputs = outs + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             batch_data_samples["bboxes_labels"],
             batch_data_samples["masks"],
             batch_data_samples["img_metas"],
@@ -345,7 +345,7 @@ class YOLOWorldSegHead(YOLOv5InsHead):
 
         outs = self(img_feats, txt_feats)
 
-        loss_inputs = outs + (
+        loss_inputs = outs + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             batch_gt_instances,
             batch_img_metas,
             batch_gt_instances_ignore,

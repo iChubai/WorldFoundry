@@ -20,7 +20,7 @@ def forward_levit(pretrained, x):
     return layer_1, layer_2, layer_3
 
 
-def _make_levit_backbone(model, hooks=[3, 11, 21], patch_grid=[14, 14]):
+def _make_levit_backbone(model, hooks=[3, 11, 21], patch_grid=[14, 14]):  # noqa: B006 - Keeps the upstream default object and signature.
     pretrained = nn.Module()
 
     pretrained.model = model
@@ -96,5 +96,5 @@ def stem_b4_transpose(in_chs, out_chs, activation):
 def _make_pretrained_levit_384(pretrained, hooks=None):
     model = timm.create_model("levit_384", pretrained=pretrained)
 
-    hooks = [3, 11, 21] if hooks == None else hooks
+    hooks = [3, 11, 21] if hooks == None else hooks  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
     return _make_levit_backbone(model, hooks=hooks)

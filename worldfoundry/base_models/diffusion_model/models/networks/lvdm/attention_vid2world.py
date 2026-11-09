@@ -578,7 +578,7 @@ class TemporalTransformer(nn.Module):
         else:
             x = rearrange(x, "(b hw) t c -> b hw t c", b=b).contiguous()
             context = rearrange(context, "(b t) l con -> b t l con", t=t).contiguous()
-            for i, block in enumerate(self.transformer_blocks):
+            for i, block in enumerate(self.transformer_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 # calculate each batch one by one (since number in shape could not greater then 65,535 for some package)
                 for j in range(b):
                     context_j = repeat(context[j], "t l con -> (t r) l con", r=(h * w) // t, t=t).contiguous()

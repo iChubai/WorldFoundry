@@ -52,8 +52,8 @@ class PPYOLOEHeadModule(BaseModule):
         num_base_priors: int = 1,
         featmap_strides: Sequence[int] = (8, 16, 32),
         reg_max: int = 16,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -169,9 +169,9 @@ class PPYOLOEHead(YOLOv6Head):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0.5, "strides": [8, 16, 32]},
-        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
-        loss_cls: ConfigType = {
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0.5, "strides": [8, 16, 32]},  # noqa: B006 - Keeps the upstream default object and signature.
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_cls: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.VarifocalLoss",
             "use_sigmoid": True,
             "alpha": 0.75,
@@ -180,7 +180,7 @@ class PPYOLOEHead(YOLOv6Head):
             "reduction": "sum",
             "loss_weight": 1.0,
         },
-        loss_bbox: ConfigType = {
+        loss_bbox: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "IoULoss",
             "iou_mode": "giou",
             "bbox_format": "xyxy",
@@ -188,7 +188,7 @@ class PPYOLOEHead(YOLOv6Head):
             "loss_weight": 2.5,
             "return_iou": False,
         },
-        loss_dfl: ConfigType = {"type": "mmdet.DistributionFocalLoss", "reduction": "mean", "loss_weight": 0.5 / 4},
+        loss_dfl: ConfigType = {"type": "mmdet.DistributionFocalLoss", "reduction": "mean", "loss_weight": 0.5 / 4},  # noqa: B006 - Keeps the upstream default object and signature.
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,

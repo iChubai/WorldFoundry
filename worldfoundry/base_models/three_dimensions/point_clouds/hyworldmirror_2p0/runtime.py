@@ -182,7 +182,7 @@ def _collect_fp32_critical_modules(model):
 
     critical = set()
     for _, module in model.named_modules():
-        if isinstance(module, MlpFP32) and hasattr(module, "fc2"):
+        if isinstance(module, MlpFP32) and hasattr(module, "fc2"):  # noqa: SIM102 - Statement form kept for readability.
             if any(p.dtype == torch.float32 for p in module.fc2.parameters()):
                 critical.add(module.fc2)
         if hasattr(module, "scratch") and hasattr(module.scratch, "output_conv2"):

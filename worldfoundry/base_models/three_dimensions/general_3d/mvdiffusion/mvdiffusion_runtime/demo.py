@@ -113,7 +113,7 @@ def resize_and_center_crop(img, size):
 args = parse_args()
 if args.image_path is None:
     config_file = package_data_path("models", "runtime", "configs", "mvdiffusion", "pano_generation.yaml")
-    config = yaml.load(open(config_file, "rb"), Loader=yaml.SafeLoader)
+    config = yaml.load(open(config_file, "rb"), Loader=yaml.SafeLoader)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     if args.steps is not None:
         config["model"]["diff_timestep"] = max(int(args.steps), 1)
     model = PanoGenerator(config)
@@ -124,7 +124,7 @@ if args.image_path is None:
     img = None
 else:
     config_file = package_data_path("models", "runtime", "configs", "mvdiffusion", "pano_generation_outpaint.yaml")
-    config = yaml.load(open(config_file, "rb"), Loader=yaml.SafeLoader)
+    config = yaml.load(open(config_file, "rb"), Loader=yaml.SafeLoader)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     if args.steps is not None:
         config["model"]["diff_timestep"] = max(int(args.steps), 1)
     model = PanoOutpaintGenerator(config)
@@ -177,7 +177,7 @@ if img is not None:
 if args.text_path is not None:
     prompt = []
     with open(args.text_path) as f:
-        for i, line in enumerate(f):
+        for i, line in enumerate(f):  # noqa: B007 - The loop variable is read outside the loop.
             prompt.append(line.strip())
     if len(prompt) < 8:
         raise ValueError("text file should contain 8 lines for each camera view")

@@ -75,8 +75,8 @@ class VisualGeometryTransformer(nn.Module):
         enable_cond=False,
         sampling_strategy="uniform",
         fixed_patch_embed=False,
-        condition_strategy=["token", "pow3r", "token"],
-        intermediate_idxs: list[int] = [4, 11, 17, 23],
+        condition_strategy=["token", "pow3r", "token"],  # noqa: B006 - Keeps the upstream default object and signature.
+        intermediate_idxs: list[int] = [4, 11, 17, 23],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         # Store config parameters
@@ -304,7 +304,7 @@ class VisualGeometryTransformer(nn.Module):
         self,
         images: torch.Tensor,
         priors: list | None = None,
-        cond_flags: list[int] = [0, 0, 0],
+        cond_flags: list[int] = [0, 0, 0],  # noqa: B006 - Keeps the upstream default object and signature.
         ctx_frames: int | None = None,
         enable_bf16=False,
         sp_size: int = 1,

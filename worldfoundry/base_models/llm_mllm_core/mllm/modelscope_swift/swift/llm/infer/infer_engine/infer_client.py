@@ -144,7 +144,7 @@ class InferClient(InferEngine):
         if request_config.stream:
 
             async def _gen_stream() -> AsyncIterator[ChatCompletionStreamResponse]:
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession() as session:  # noqa: SIM117 - Keeps the nested context managers.
                     async with session.post(url, json=request_data, **self._get_request_kwargs()) as resp:
                         async for data in resp.content:
                             data = self._parse_stream_data(data)
@@ -158,7 +158,7 @@ class InferClient(InferEngine):
 
             return _gen_stream()
         else:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession() as session:  # noqa: SIM117 - Keeps the nested context managers.
                 async with session.post(url, json=request_data, **self._get_request_kwargs()) as resp:
                     resp_obj = await resp.json()
                     if resp_obj["object"] == "error":

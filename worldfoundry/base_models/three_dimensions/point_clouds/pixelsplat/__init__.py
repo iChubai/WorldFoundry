@@ -16,7 +16,7 @@ def ensure_pixelsplat_source_alias() -> object:
 ensure_pixelsplat_source_alias()
 
 
-from .worldfoundry_runtime import (
+from .worldfoundry_runtime import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     DEFAULT_PIXELSPLAT_ASSET_ROOT,
     DEFAULT_PIXELSPLAT_CKPT,
     DEFAULT_PIXELSPLAT_DEMO_INDEX,

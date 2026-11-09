@@ -1,5 +1,6 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import math
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import torch
 import torch.nn.functional as F

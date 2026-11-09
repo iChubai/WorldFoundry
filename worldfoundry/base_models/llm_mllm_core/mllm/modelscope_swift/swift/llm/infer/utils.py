@@ -126,7 +126,7 @@ def prepare_adapter(args, model, adapters=None):
             from unsloth import FastLanguageModel as UnslothModel
         UnslothModel.for_inference(model)
         return model
-    tuner = extra_tuners[args.train_type] if args.train_type in extra_tuners else Swift
+    tuner = extra_tuners[args.train_type] if args.train_type in extra_tuners else Swift  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
     # compat deploy
     adapters = adapters or args.adapters
     for adapter in adapters:

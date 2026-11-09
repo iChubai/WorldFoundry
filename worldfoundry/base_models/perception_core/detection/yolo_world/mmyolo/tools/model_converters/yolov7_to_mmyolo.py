@@ -940,7 +940,7 @@ def convert(src, dst):
         yolov7_model = torch.load(src)["model"].float()
         blobs = yolov7_model.state_dict()
     except ModuleNotFoundError:
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: B904 - Keeps the implicit exception context.
             "This script must be placed under the WongKinYiu/yolov7 repo,"
             " because loading the official pretrained model need"
             " `model.py` to build model."

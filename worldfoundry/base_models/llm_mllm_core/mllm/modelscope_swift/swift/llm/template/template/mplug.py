@@ -87,7 +87,7 @@ class mPlugOwl3Template(Template):
         if media_type == "image":
             return [[-100], "\n"]
         elif media_type == "video":
-            return self.replace_video2image(load_video, inputs, lambda i: [[-100]]) + ["\n"]
+            return self.replace_video2image(load_video, inputs, lambda i: [[-100]]) + ["\n"]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def _encode(self, inputs: StdTemplateInputs) -> dict[str, Any]:
         encoded = super()._encode(inputs)

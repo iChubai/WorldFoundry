@@ -60,8 +60,8 @@ class RTMDetSepBNHeadModule(BaseModule):
         share_conv: bool = True,
         pred_kernel_size: int = 1,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN"},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN"},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -88,7 +88,7 @@ class RTMDetSepBNHeadModule(BaseModule):
 
         self.rtm_cls = nn.ModuleList()
         self.rtm_reg = nn.ModuleList()
-        for n in range(len(self.featmap_strides)):
+        for n in range(len(self.featmap_strides)):  # noqa: B007 - The loop variable is read outside the loop.
             cls_convs = nn.ModuleList()
             reg_convs = nn.ModuleList()
             for i in range(self.stacked_convs):
@@ -215,10 +215,10 @@ class RTMDetHead(YOLOv5Head):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},
-        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
-        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},
-        loss_bbox: ConfigType = {"type": "mmdet.GIoULoss", "loss_weight": 2.0},
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},  # noqa: B006 - Keeps the upstream default object and signature.
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_bbox: ConfigType = {"type": "mmdet.GIoULoss", "loss_weight": 2.0},  # noqa: B006 - Keeps the upstream default object and signature.
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,

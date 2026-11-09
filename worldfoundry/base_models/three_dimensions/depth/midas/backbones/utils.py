@@ -128,16 +128,16 @@ def get_readout_oper(vit_features, features, use_readout, start_index=1):
     elif use_readout == "project":
         readout_oper = [ProjectReadout(vit_features, start_index) for out_feat in features]
     else:
-        assert False, "wrong operation for readout token, use_readout can be 'ignore', 'add', or 'project'"
+        assert False, "wrong operation for readout token, use_readout can be 'ignore', 'add', or 'project'"  # noqa: B011 - Keeps the assertion semantics under -O.
 
     return readout_oper
 
 
 def make_backbone_default(
     model,
-    features=[96, 192, 384, 768],
-    size=[384, 384],
-    hooks=[2, 5, 8, 11],
+    features=[96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
+    size=[384, 384],  # noqa: B006 - Keeps the upstream default object and signature.
+    hooks=[2, 5, 8, 11],  # noqa: B006 - Keeps the upstream default object and signature.
     vit_features=768,
     use_readout="ignore",
     start_index=1,

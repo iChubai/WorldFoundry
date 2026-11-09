@@ -119,7 +119,7 @@ class CUT3RRepresentation:
                 downloaded_path = snapshot_download(pretrained_model_path, cache_dir=cache_dir)
                 # Look for .pth file in the downloaded directory
                 pth_files = list(Path(downloaded_path).glob("*.pth"))
-                if pth_files:
+                if pth_files:  # noqa: SIM108 - Branches carry per-case comments.
                     model_path = str(pth_files[0])
                 else:
                     # If no .pth file, check if the directory itself contains model files
@@ -143,7 +143,7 @@ class CUT3RRepresentation:
 
             model = ARCroco3DStereo.from_pretrained(model_path)
         except Exception as e:
-            raise RuntimeError(f"Failed to load CUT3R model from {model_path}: {e}")
+            raise RuntimeError(f"Failed to load CUT3R model from {model_path}: {e}")  # noqa: B904 - Keeps the implicit exception context.
 
         instance = cls(model=model, device=device)
         # Use auto-detected size or default
@@ -186,7 +186,7 @@ class CUT3RRepresentation:
             print(f"Model downloaded to: {output_path}")
             return output_path
         except Exception as e:
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: B904 - Keeps the implicit exception context.
                 f"Failed to download model from Google Drive (file_id: {file_id}): {e}\n"
                 f"Please check your internet connection and try again."
             )

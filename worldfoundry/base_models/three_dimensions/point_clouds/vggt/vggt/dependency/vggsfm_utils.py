@@ -6,10 +6,10 @@
 
 import logging
 import warnings
-from typing import Dict as Dict
-from typing import List as List
+from typing import Dict as Dict  # noqa: UP035 - Re-exported to modules that star-import this namespace.
+from typing import List as List  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Optional as Optional
-from typing import Tuple as Tuple
+from typing import Tuple as Tuple  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Union as Union
 
 import numpy as np  # noqa: F401 - Re-exported under this name.

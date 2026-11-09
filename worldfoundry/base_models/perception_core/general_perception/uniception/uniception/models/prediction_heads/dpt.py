@@ -42,9 +42,9 @@ class DPTFeature(nn.Module):
         self,
         patch_size: int | tuple[int, int] = 16,
         main_tasks: Iterable[str] = ("rgb",),
-        hooks: list[int] = [2, 5, 8, 11],
+        hooks: list[int] = [2, 5, 8, 11],  # noqa: B006 - Keeps the upstream default object and signature.
         input_feature_dims: int | list[int] | None = 768,
-        layer_dims: list[int] = [96, 192, 384, 768],
+        layer_dims: list[int] = [96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
         feature_dim: int = 256,
         use_bn: bool = False,
         output_width_ratio=1,
@@ -208,7 +208,7 @@ class DPTFeature(nn.Module):
             # layers = [self.act_postprocess[idx](l) for idx, l in enumerate(layers)]
             # # Project layers to chosen feature dim
             # layers = [self.scratch.layer_rn[idx](l) for idx, l in enumerate(layers)]
-            layers = [self.input_process[idx](l) for idx, l in enumerate(layers)]
+            layers = [self.input_process[idx](l) for idx, l in enumerate(layers)]  # noqa: E741 - Ambiguous upstream name kept as written.
 
             # Fuse layers using refinement stages
             path_4 = self.scratch.refinenet4(layers[3])[:, :, : layers[2].shape[2], : layers[2].shape[3]]
@@ -219,7 +219,7 @@ class DPTFeature(nn.Module):
             # Hook decoder onto 4 layers from specified ViT layers
             layers = [layered_feats[hook] for hook in self.hooks]
 
-            layers = [checkpoint(self.input_process[idx], l, use_reentrant=False) for idx, l in enumerate(layers)]
+            layers = [checkpoint(self.input_process[idx], l, use_reentrant=False) for idx, l in enumerate(layers)]  # noqa: E741 - Ambiguous upstream name kept as written.
 
             path_4 = checkpoint(self.scratch.refinenet4, layers[3], use_reentrant=False)[
                 :, :, : layers[2].shape[2], : layers[2].shape[3]
@@ -396,9 +396,9 @@ class DPTFeatureDoubleUpsampling(nn.Module):
         self,
         patch_size: int | tuple[int, int] = 16,
         main_tasks: Iterable[str] = ("rgb",),
-        hooks: list[int] = [0, 1],
+        hooks: list[int] = [0, 1],  # noqa: B006 - Keeps the upstream default object and signature.
         input_feature_dims: int | list[int] | None = 768,
-        layer_dims: list[int] = [384, 768],
+        layer_dims: list[int] = [384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
         feature_dim: int = 256,
         use_bn: bool = False,
         output_width_ratio=1,
@@ -445,7 +445,7 @@ class DPTFeatureDoubleUpsampling(nn.Module):
 
         out_shape3 = out_shape
         out_shape4 = out_shape
-        if expand == True:
+        if expand == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out_shape3 = out_shape * 4
             out_shape4 = out_shape * 8
 
@@ -556,7 +556,7 @@ class DPTFeatureDoubleUpsampling(nn.Module):
             # layers = [self.act_postprocess[idx](l) for idx, l in enumerate(layers)]
             # # Project layers to chosen feature dim
             # layers = [self.scratch.layer_rn[idx](l) for idx, l in enumerate(layers)]
-            layers = [self.input_process[idx](l) for idx, l in enumerate(layers)]
+            layers = [self.input_process[idx](l) for idx, l in enumerate(layers)]  # noqa: E741 - Ambiguous upstream name kept as written.
 
             # Fuse layers using refinement stages
             path_4 = self.scratch.refinenet4(layers[1])[:, :, : layers[0].shape[2], : layers[0].shape[3]]
@@ -565,7 +565,7 @@ class DPTFeatureDoubleUpsampling(nn.Module):
             # Hook decoder onto 4 layers from specified ViT layers
             layers = [layered_feats[hook] for hook in self.hooks]
 
-            layers = [checkpoint(self.input_process[idx], l, use_reentrant=False) for idx, l in enumerate(layers)]
+            layers = [checkpoint(self.input_process[idx], l, use_reentrant=False) for idx, l in enumerate(layers)]  # noqa: E741 - Ambiguous upstream name kept as written.
 
             path_4 = checkpoint(self.scratch.refinenet4, layers[1], use_reentrant=False)[
                 :, :, : layers[0].shape[2], : layers[0].shape[3]

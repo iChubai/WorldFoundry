@@ -42,7 +42,7 @@ from transformers.utils import (
     ModelOutput,
     add_start_docstrings,
     add_start_docstrings_to_model_forward,
-    logging,
+    logging,  # noqa: F811 - Later import provides the binding, as upstream.
     replace_return_docstrings,
 )
 
@@ -313,7 +313,7 @@ class MplugOwlVisionAttention(nn.Module):
 
             context_layer = torch.matmul(attention_probs, value_states).permute(0, 2, 1, 3)
 
-        new_context_layer_shape = context_layer.size()[:-2] + (self.hidden_size,)
+        new_context_layer_shape = context_layer.size()[:-2] + (self.hidden_size,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         context_layer = context_layer.reshape(new_context_layer_shape)
 
         output = self.dense(context_layer)
@@ -613,7 +613,7 @@ class MplugOwlVisionEncoder(nn.Module):
         hidden_states = inputs_embeds
         for _idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
-                encoder_states = encoder_states + (hidden_states,)
+                encoder_states = encoder_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             if self.gradient_checkpointing and self.training:
 
                 def create_custom_forward(module):
@@ -637,10 +637,10 @@ class MplugOwlVisionEncoder(nn.Module):
             hidden_states = layer_outputs[0]
 
             if output_attentions:
-                all_attentions = all_attentions + (layer_outputs[1],)
+                all_attentions = all_attentions + (layer_outputs[1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if output_hidden_states:
-            encoder_states = encoder_states + (hidden_states,)
+            encoder_states = encoder_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(v for v in [hidden_states, encoder_states, all_attentions] if v is not None)
@@ -700,7 +700,7 @@ class MplugOwlVisionModel(MplugOwlPreTrainedModel):
         pooled_output = self.post_layernorm(pooled_output)
 
         if not return_dict:
-            return (last_hidden_state, pooled_output) + encoder_outputs[1:]
+            return (last_hidden_state, pooled_output) + encoder_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return BaseModelOutputWithPooling(
             last_hidden_state=last_hidden_state,
@@ -743,7 +743,7 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
         self.config = config
         if config.hidden_size % config.num_attention_heads != 0:
             raise ValueError(
-                "The hidden size (%d) is not a multiple of the number of attention heads (%d)"
+                "The hidden size (%d) is not a multiple of the number of attention heads (%d)"  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 % (config.hidden_size, config.num_attention_heads)
             )
 
@@ -771,7 +771,7 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
         return self.attention_map
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -825,12 +825,12 @@ class MplugOwlVisualAbstractorMultiHeadAttention(nn.Module):
         context_layer = torch.matmul(attention_probs_dropped, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         context_layer = context_layer.view(*new_context_layer_shape)
 
         outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
 
-        outputs = outputs + (past_key_value,)
+        outputs = outputs + (past_key_value,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs
 
 
@@ -901,7 +901,7 @@ class MplugOwlVisualAbstractorAttention(nn.Module):
         )
         attention_output = self.output(self_outputs[0], hidden_states)
         # add attentions if we output them
-        outputs = (attention_output,) + self_outputs[1:]
+        outputs = (attention_output,) + self_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs
 
 
@@ -967,7 +967,7 @@ class MplugOwlVisualAbstractorEncoder(nn.Module):
         for i in range(self.config.num_hidden_layers):
             layer_module = self.layers[i]
             if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             layer_head_mask = head_mask[i] if head_mask is not None else None
             past_key_value = past_key_values[i] if past_key_values is not None else None
@@ -976,7 +976,7 @@ class MplugOwlVisualAbstractorEncoder(nn.Module):
 
                 def create_custom_forward(module):
                     def custom_forward(*inputs):
-                        return module(*inputs, past_key_value, output_attentions)
+                        return module(*inputs, past_key_value, output_attentions)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                     return custom_forward
 
@@ -1809,7 +1809,7 @@ def bloom_forward(
 ) -> tuple[torch.Tensor, ...] | BaseModelOutputWithPastAndCrossAttentions:
     if deprecated_arguments.pop("position_ids", False) is not False:
         # `position_ids` could have been `torch.Tensor` or `None` so defaulting pop to `False` allows to detect if users were passing explicitly `None`
-        warnings.warn(
+        warnings.warn(  # noqa: F821 - Name is undefined in the upstream source.
             "`position_ids` have no functionality in BLOOM and will be removed in v5.0.0. You can safely ignore"
             " passing `position_ids`.",
             FutureWarning,
@@ -1879,7 +1879,7 @@ def bloom_forward(
 
     for i, (block, layer_past) in enumerate(zip(self.h, past_key_values, strict=False)):
         if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
+            all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if self.gradient_checkpointing and self.training:
 
@@ -1911,16 +1911,16 @@ def bloom_forward(
 
         hidden_states = outputs[0]
         if use_cache is True:
-            presents = presents + (outputs[1],)
+            presents = presents + (outputs[1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if output_attentions:
-            all_self_attentions = all_self_attentions + (outputs[2 if use_cache else 1],)
+            all_self_attentions = all_self_attentions + (outputs[2 if use_cache else 1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Add last hidden state
     hidden_states = self.ln_f(hidden_states)
 
     if output_hidden_states:
-        all_hidden_states = all_hidden_states + (hidden_states,)
+        all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     if not return_dict:
         return tuple(v for v in [hidden_states, presents, all_hidden_states, all_self_attentions] if v is not None)

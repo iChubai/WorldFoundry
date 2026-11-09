@@ -18,7 +18,7 @@ def rotation_matrix_to_quaternion(R):
     """Convert rotation matrix to quaternion"""
     trace = R[..., 0, 0] + R[..., 1, 1] + R[..., 2, 2]
 
-    q = torch.zeros(R.shape[:-2] + (4,), device=R.device, dtype=R.dtype)
+    q = torch.zeros(R.shape[:-2] + (4,), device=R.device, dtype=R.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Case where trace > 0
     mask1 = trace > 0
@@ -63,7 +63,7 @@ def quaternion_to_rotation_matrix(q):
     norm = torch.sqrt(w * w + x * x + y * y + z * z)
     w, x, y, z = w / norm, x / norm, y / norm, z / norm
 
-    R = torch.zeros(q.shape[:-1] + (3, 3), device=q.device, dtype=q.dtype)
+    R = torch.zeros(q.shape[:-1] + (3, 3), device=q.device, dtype=q.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     R[..., 0, 0] = 1 - 2 * (y * y + z * z)
     R[..., 0, 1] = 2 * (x * y - w * z)
@@ -249,7 +249,7 @@ def render_interpolated_video(
             t += 0.04
             effects_splats["sh"] = RGB2SH(effects_splats["colors"]).reshape(-1, 1, 3)
             try:
-                gs_renderer.rasterizer.runner.splats
+                gs_renderer.rasterizer.runner.splats  # noqa: B018 - Probes the renderer for its splat attributes.
                 effects_splats["sh0"] = effects_splats["sh"][:, :1, :]
                 effects_splats["shN"] = effects_splats["sh"][:, 1:, :]
                 effects_splats["scales"] = effects_splats["scales"].log()
@@ -324,7 +324,7 @@ def render_interpolated_video(
             effects_splats["sh0"] = effects_splats["sh"][:, :1, :]
             effects_splats["shN"] = effects_splats["sh"][:, 1:, :]
             try:
-                gs_renderer.rasterizer.runner.splats
+                gs_renderer.rasterizer.runner.splats  # noqa: B018 - Probes the renderer for its splat attributes.
                 effects_splats["sh0"] = effects_splats["sh"][:, :1, :]
                 effects_splats["shN"] = effects_splats["sh"][:, 1:, :]
                 effects_splats["scales"] = effects_splats["scales"].log()

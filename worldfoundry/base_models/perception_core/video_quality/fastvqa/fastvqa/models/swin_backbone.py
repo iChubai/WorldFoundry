@@ -395,7 +395,7 @@ class SwinTransformerBlock3D(nn.Module):
             Dp,
             Hp,
             Wp,
-            fragments=(1,) + window_size[1:],
+            fragments=(1,) + window_size[1:],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             window_size=window_size,
             shift_size=shift_size,
             device=x.device,
@@ -407,7 +407,7 @@ class SwinTransformerBlock3D(nn.Module):
             resized_window_size=window_size if resized_window_size is not None else None,
         )  # self.finfo_windows)  # B*nW, Wd*Wh*Ww, C
         # merge windows
-        attn_windows = attn_windows.view(-1, *(window_size + (C,)))
+        attn_windows = attn_windows.view(-1, *(window_size + (C,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         shifted_x = window_reverse(attn_windows, window_size, B, Dp, Hp, Wp)  # B D' H' W' C
         # reverse cyclic shift
         if any(i > 0 for i in shift_size):
@@ -685,8 +685,8 @@ class SwinTransformer3D(nn.Module):
         patch_size=(2, 4, 4),
         in_chans=3,
         embed_dim=96,
-        depths=[2, 2, 6, 2],
-        num_heads=[3, 6, 12, 24],
+        depths=[2, 2, 6, 2],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_heads=[3, 6, 12, 24],  # noqa: B006 - Keeps the upstream default object and signature.
         window_size=(8, 7, 7),
         mlp_ratio=4.0,
         qkv_bias=True,
@@ -698,8 +698,8 @@ class SwinTransformer3D(nn.Module):
         patch_norm=True,
         frozen_stages=-1,
         use_checkpoint=True,
-        jump_attention=[False, False, False, False],
-        frag_biases=[True, True, True, False],
+        jump_attention=[False, False, False, False],  # noqa: B006 - Keeps the upstream default object and signature.
+        frag_biases=[True, True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         base_x_size=(32, 224, 224),
     ):
         super().__init__()
@@ -788,12 +788,12 @@ class SwinTransformer3D(nn.Module):
         state_dict = checkpoint["model"]
 
         # delete relative_position_index since we always re-init it
-        relative_position_index_keys = [k for k in state_dict.keys() if "relative_position_index" in k]
+        relative_position_index_keys = [k for k in state_dict.keys() if "relative_position_index" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         for k in relative_position_index_keys:
             del state_dict[k]
 
         # delete attn_mask since we always re-init it
-        attn_mask_keys = [k for k in state_dict.keys() if "attn_mask" in k]
+        attn_mask_keys = [k for k in state_dict.keys() if "attn_mask" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         for k in attn_mask_keys:
             del state_dict[k]
 
@@ -803,7 +803,7 @@ class SwinTransformer3D(nn.Module):
         )
 
         # bicubic interpolate relative_position_bias_table if not match
-        relative_position_bias_table_keys = [k for k in state_dict.keys() if "relative_position_bias_table" in k]
+        relative_position_bias_table_keys = [k for k in state_dict.keys() if "relative_position_bias_table" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         for k in relative_position_bias_table_keys:
             relative_position_bias_table_pretrained = state_dict[k]
             relative_position_bias_table_current = self.state_dict()[k]
@@ -855,7 +855,7 @@ class SwinTransformer3D(nn.Module):
                         clean_dict[forked_key] = value
 
         # bicubic interpolate relative_position_bias_table if not match
-        relative_position_bias_table_keys = [k for k in clean_dict.keys() if "relative_position_bias_table" in k]
+        relative_position_bias_table_keys = [k for k in clean_dict.keys() if "relative_position_bias_table" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         for k in relative_position_bias_table_keys:
             print(k)
             relative_position_bias_table_pretrained = clean_dict[k]
@@ -865,7 +865,7 @@ class SwinTransformer3D(nn.Module):
             if isinstance(self.window_size, list):
                 i_layer = int(k.split(".")[1])
                 L2 = (2 * self.window_size[i_layer][1] - 1) * (2 * self.window_size[i_layer][2] - 1)
-                wd = self.window_size[i_layer][0]
+                wd = self.window_size[i_layer][0]  # noqa: F841 - Kept as upstream; an underscore name already exists.
             else:
                 L2 = (2 * self.window_size[1] - 1) * (2 * self.window_size[2] - 1)
                 _wd = self.window_size[0]

@@ -48,7 +48,7 @@ class Attention(nn.Module):
         self.pos_emb = RelPosEmb(max_pos_size, dim_head)
 
     def forward(self, fmap):
-        heads, b, c, h, w = self.heads, *fmap.shape
+        heads, b, c, h, w = self.heads, *fmap.shape  # noqa: F841 - Upstream assignment kept.
 
         q, k = self.to_qk(fmap).chunk(2, dim=1)
 
@@ -96,7 +96,7 @@ class Aggregate(nn.Module):
             self.project = None
 
     def forward(self, attn, fmap):
-        heads, b, c, h, w = self.heads, *fmap.shape
+        heads, b, c, h, w = self.heads, *fmap.shape  # noqa: F841 - Upstream assignment kept.
 
         v = self.to_v(fmap)
         v = rearrange(v, "b (h d) x y -> b h (x y) d", h=heads)

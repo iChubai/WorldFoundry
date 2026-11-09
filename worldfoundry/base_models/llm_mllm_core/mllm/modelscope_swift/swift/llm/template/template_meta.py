@@ -60,7 +60,7 @@ class TemplateMeta:
 
     @staticmethod
     def _has_system(prefix_or_prompt: Prompt) -> bool:
-        return any(["{{SYSTEM}}" in p for p in prefix_or_prompt])
+        return any(["{{SYSTEM}}" in p for p in prefix_or_prompt])  # noqa: C419 - Evaluates every element before testing, as upstream.
 
     @staticmethod
     def _replace_system(prefix: Prompt) -> Prompt:

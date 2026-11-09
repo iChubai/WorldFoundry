@@ -25,7 +25,7 @@ class Aggregator(nn.Module):
         num_heads: int = 16,
         mlp_ratio: float = 4.0,
         num_register_tokens: int = 16,
-        register_attention_block_indices: list[int] = [2, 6, 9, 14, 20],
+        register_attention_block_indices: list[int] = [2, 6, 9, 14, 20],  # noqa: B006 - Keeps the upstream default object and signature.
         cached_layer_indices: tuple[int, ...] = (4, 11, 17, 23),
     ) -> None:
         super().__init__()

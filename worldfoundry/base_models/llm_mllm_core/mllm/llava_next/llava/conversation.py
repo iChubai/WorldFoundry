@@ -173,7 +173,7 @@ class Conversation:
         elif self.sep_style == SeparatorStyle.PLAIN:
             seps = [self.sep, self.sep2]
             ret = self.system
-            for i, (role, message) in enumerate(messages):
+            for i, (role, message) in enumerate(messages):  # noqa: B007 - The loop variable is read outside the loop.
                 if message:
                     if type(message) is tuple:
                         message, _, _ = message

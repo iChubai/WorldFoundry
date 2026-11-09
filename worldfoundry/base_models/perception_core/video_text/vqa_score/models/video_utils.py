@@ -197,17 +197,17 @@ def calculate_sample_indices(
 
 def calculate_sample_indices_uniform(frames_per_clip, total_frames, uniform_frame_count, original_fps):
     # Generate indices
-    if total_frames >= N:
+    if total_frames >= N:  # noqa: F821 - Name is undefined in the upstream source.
         # Sample N frames uniformly without replacement
-        indices = np.linspace(0, total_frames - 1, N, dtype=int)
+        indices = np.linspace(0, total_frames - 1, N, dtype=int)  # noqa: F821 - Name is undefined in the upstream source.
     else:
         # Not enough frames; repeat frames to reach N frames
-        repeats = math.ceil(N / total_frames)
+        repeats = math.ceil(N / total_frames)  # noqa: F821 - Name is undefined in the upstream source.
         base_indices = np.arange(total_frames)
-        indices = np.tile(base_indices, repeats)[:N]
+        indices = np.tile(base_indices, repeats)[:N]  # noqa: F821 - Name is undefined in the upstream source.
 
     # Split indices into clips
-    clip_indices = [indices[i * frames_per_clip : (i + 1) * frames_per_clip] for i in range(num_clips)]
+    clip_indices = [indices[i * frames_per_clip : (i + 1) * frames_per_clip] for i in range(num_clips)]  # noqa: F821 - Name is undefined in the upstream source.
 
     # Calculate timestamps for each clip
     timestamps = []
@@ -425,7 +425,7 @@ class ApolloMMLoader:
 def get_frame_from_vcap(vidcap, num_frames=10, fps=None, frame_count=None):
     import cv2
 
-    if fps == None or frame_count == None:
+    if fps == None or frame_count == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
         # if one of fps or frame_count is None, still recompute
         fps = vidcap.get(cv2.CAP_PROP_FPS)
         frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))

@@ -694,7 +694,7 @@ class WanTransformer3DModel(
 
         seq_lens = torch.tensor([u.size(1) for u in x], dtype=torch.long, device=device)
         if self.sp_world_size > 1:
-            seq_len = int(math.ceil(seq_len / self.sp_world_size)) * self.sp_world_size
+            seq_len = int(math.ceil(seq_len / self.sp_world_size)) * self.sp_world_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         assert seq_lens.max() <= seq_len
         x = torch.cat([torch.cat([u, u.new_zeros(1, seq_len - u.size(1), u.size(2))], dim=1) for u in x])
 

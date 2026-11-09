@@ -14,7 +14,7 @@ def build_model():
     home = functions.get_deepface_home()
 
     # model structure
-    if os.path.isfile(home + "/.deepface/weights/deploy.prototxt") != True:
+    if os.path.isfile(home + "/.deepface/weights/deploy.prototxt") != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print("deploy.prototxt will be downloaded...")
 
         url = "https://github.com/opencv/opencv/raw/3.4.0/samples/dnn/face_detector/deploy.prototxt"
@@ -24,7 +24,7 @@ def build_model():
         gdown.download(url, output, quiet=False)
 
     # pre-trained weights
-    if os.path.isfile(home + "/.deepface/weights/res10_300x300_ssd_iter_140000.caffemodel") != True:
+    if os.path.isfile(home + "/.deepface/weights/res10_300x300_ssd_iter_140000.caffemodel") != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print("res10_300x300_ssd_iter_140000.caffemodel will be downloaded...")
 
         url = "https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/res10_300x300_ssd_iter_140000.caffemodel"

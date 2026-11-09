@@ -22,7 +22,7 @@ for _path in (
     if _path_str not in sys.path:
         sys.path.insert(0, _path_str)
 
-from vggt.models.vggt import VGGT
+from vggt.models.vggt import VGGT  # noqa: E402 - Follows the sys.path setup.
 
 # Main model file
 # Consists of

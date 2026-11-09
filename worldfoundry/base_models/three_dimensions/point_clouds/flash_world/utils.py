@@ -188,7 +188,7 @@ def quaternion_to_matrix(quaternions):
         ),
         -1,
     )
-    return o.reshape(quaternions.shape[:-1] + (3, 3))
+    return o.reshape(quaternions.shape[:-1] + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 # from https://pytorch3d.readthedocs.io/en/latest/_modules/pytorch3d/transforms/rotation_conversions.html#matrix_to_quaternion
@@ -235,7 +235,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
 
     batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)
+    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     q_abs = _sqrt_positive_part(
         torch.stack(
@@ -276,7 +276,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     # if not for numerical problems, quat_candidates[i] should be same (up to a sign),
     # forall i; we pick the best-conditioned one (with the largest denominator)
     indices = q_abs.argmax(dim=-1, keepdim=True)
-    expand_dims = list(batch_dim) + [1, 4]
+    expand_dims = list(batch_dim) + [1, 4]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     gather_indices = indices.unsqueeze(-1).expand(expand_dims)
     out = torch.gather(quat_candidates, -2, gather_indices).squeeze(-2)
     return standardize_quaternion(out)
@@ -354,7 +354,7 @@ def create_rays(cameras, h, w, uv_offset=None):
 
 
 def matrix_to_square(mat):
-    l = len(mat.shape)
+    l = len(mat.shape)  # noqa: E741 - Ambiguous upstream name kept as written.
     if l == 3:
         return torch.cat([mat, torch.tensor([0, 0, 0, 1]).repeat(mat.shape[0], 1, 1).to(mat.device)], dim=1)
     elif l == 4:
@@ -428,7 +428,7 @@ def export_gaussians(gaussians, opacity_threshold=0.00, T_norm=None, ply_path=No
         spz.save_spz(cloud, spz.PackOptions(), spz_path)
 
     if ply_path is not None:
-        l = ["x", "y", "z"]
+        l = ["x", "y", "z"]  # noqa: E741 - Ambiguous upstream name kept as written.
         # All channels except the 3 DC
         for i in range(f_dc.shape[1]):
             l.append(f"f_dc_{i}")
@@ -488,7 +488,7 @@ def quaternion_slerp(q0, q1, fraction, spin: int = 0, shortestpath: bool = True)
     return q
 
 
-def sample_from_two_pose(pose_a, pose_b, fraction, noise_strengths=[0, 0]):
+def sample_from_two_pose(pose_a, pose_b, fraction, noise_strengths=[0, 0]):  # noqa: B006 - Keeps the upstream default object and signature.
     """
     Args:
         pose_a: first pose
@@ -514,7 +514,7 @@ def sample_from_two_pose(pose_a, pose_b, fraction, noise_strengths=[0, 0]):
     return new_pose
 
 
-def sample_from_dense_cameras(dense_cameras, t, noise_strengths=[0, 0, 0, 0]):
+def sample_from_dense_cameras(dense_cameras, t, noise_strengths=[0, 0, 0, 0]):  # noqa: B006 - Keeps the upstream default object and signature.
     N, C = dense_cameras.shape
     _M = t.shape
 

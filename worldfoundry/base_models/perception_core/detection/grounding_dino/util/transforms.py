@@ -26,7 +26,7 @@ def _resolve_size(
         min_original = float(min(width, height))
         max_original = float(max(width, height))
         if max_original / min_original * target > max_size:
-            target = int(round(max_size * min_original / max_original))
+            target = int(round(max_size * min_original / max_original))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     if (width <= height and width == target) or (height <= width and height == target):
         return height, width

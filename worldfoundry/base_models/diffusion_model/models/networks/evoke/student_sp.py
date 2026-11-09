@@ -637,7 +637,7 @@ def a2a_head_to_seq(x: torch.Tensor, ctx: UlyssesCtx) -> torch.Tensor:
 def _all_gather_tokens(x_local: torch.Tensor, group, gu: int) -> torch.Tensor:
     """[B, L, *rest] --all_gather--> [B, gu*L, *rest], concatenated in rank order (= the global token order)."""
     xt = x_local.transpose(0, 1).contiguous()  # [L, B, *rest]
-    out = torch.empty((gu * xt.shape[0],) + tuple(xt.shape[1:]), dtype=xt.dtype, device=xt.device)
+    out = torch.empty((gu * xt.shape[0],) + tuple(xt.shape[1:]), dtype=xt.dtype, device=xt.device)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     dist.all_gather_into_tensor(out, xt, group=group)
     bump_seq(op="allgather", shape=x_local.shape)
     return out.transpose(0, 1).contiguous()
@@ -650,7 +650,7 @@ def _pad_tokens(x: torch.Tensor, n: int) -> torch.Tensor:
     if cur == n:
         return x
     assert cur < n, f"[STU-SP] _pad_tokens: current length {cur} > target {n}"
-    return torch.cat([x, x.new_zeros((x.shape[0], n - cur) + tuple(x.shape[2:]))], dim=1)
+    return torch.cat([x, x.new_zeros((x.shape[0], n - cur) + tuple(x.shape[2:]))], dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def _split_local(full: torch.Tensor, plan: ShardPlan) -> torch.Tensor:
@@ -663,7 +663,7 @@ def _split_local(full: torch.Tensor, plan: ShardPlan) -> torch.Tensor:
 
 def _merge_global(gathered: torch.Tensor, plan: ShardPlan) -> torch.Tensor:
     """[B, G_u*L, *] (the rank-concatenated permuted order [h_0|n_0|h_1|n_1|...]) -> [B, S_real, *] in true order."""
-    g, lh, ln, L = plan.ctx.size, plan.lh, plan.ln, plan.L
+    g, lh, ln, L = plan.ctx.size, plan.lh, plan.ln, plan.L  # noqa: F841 - Upstream assignment kept.
     hs = [gathered[:, u * L : u * L + lh] for u in range(g)]
     ns = [gathered[:, u * L + lh : (u + 1) * L] for u in range(g)]
     return torch.cat([torch.cat(hs, dim=1)[:, : plan.hist_global], torch.cat(ns, dim=1)[:, : plan.noise_global]], dim=1)
@@ -748,7 +748,7 @@ def drop_pad_tokens(x: torch.Tensor, plan: ShardPlan) -> torch.Tensor:
 def restore_pad_tokens(x: torch.Tensor, plan: ShardPlan) -> torch.Tensor:
     """after attention, put zeros back at the pad positions (so the head->seq all-to-all stays equal length)."""
     idx = plan.valid_index(x.device)
-    out = x.new_zeros((x.shape[0], plan.L * plan.ctx.size) + tuple(x.shape[2:]))
+    out = x.new_zeros((x.shape[0], plan.L * plan.ctx.size) + tuple(x.shape[2:]))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     return out.index_copy(1, idx, x)
 
 

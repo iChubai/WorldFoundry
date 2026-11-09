@@ -139,7 +139,7 @@ def tokenize_conversation(
         conversation.append(message)
 
     if no_system_prompt:
-        conversation = [{"role": "system", "content": ""}] + conversation
+        conversation = [{"role": "system", "content": ""}] + conversation  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     text = tokenizer.apply_chat_template(
         conversation,
@@ -193,14 +193,22 @@ def build_llm_and_tokenizer(
         fp8_model_name_or_path = kwargs.pop("fp8_llm_cfg", None)
 
         llm = AutoModelForCausalLM.from_pretrained(
-            fp8_model_name_or_path, config=llm_cfg, torch_dtype=eval(config.model_dtype), *args, **kwargs
+            fp8_model_name_or_path,
+            config=llm_cfg,
+            torch_dtype=eval(config.model_dtype),
+            *args,  # noqa: B026 - Keeps the upstream argument order.
+            **kwargs,
         )
     else:
         if is_deepspeed_zero3_enabled():
             # NOTE: found by wei, need to pop out device_map when using zero3
             kwargs.pop("device_map")
         llm = AutoModelForCausalLM.from_pretrained(
-            model_name_or_path, config=llm_cfg, torch_dtype=eval(config.model_dtype), *args, **kwargs
+            model_name_or_path,
+            config=llm_cfg,
+            torch_dtype=eval(config.model_dtype),
+            *args,  # noqa: B026 - Keeps the upstream argument order.
+            **kwargs,
         )
     # Locate the tokenizer.
     llm_path = model_name_or_path

@@ -409,7 +409,7 @@ def attention_with_sink(
     T, num_heads, head_dim = q.shape
     scale = softmax_scale if softmax_scale is not None else head_dim**-0.5
     sink = sinks.to(_FP32)
-    if sink.ndim == 2:  # [sink_token_num, num_heads] -> reduce sink axis in logsumexp
+    if sink.ndim == 2:  # noqa: SIM108 - Branches carry per-case comments.  # [sink_token_num, num_heads] -> reduce sink axis in logsumexp
         sink_logits = torch.logsumexp(sink, dim=0)  # [num_heads]
     else:
         sink_logits = sink  # [num_heads]

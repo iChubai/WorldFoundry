@@ -8,19 +8,19 @@ import logging
 import math
 
 _logger = logging.getLogger(__name__)
-from dataclasses import dataclass
-from functools import partial
-from typing import Any
+from dataclasses import dataclass  # noqa: E402 - Follows the logging setup.
+from functools import partial  # noqa: E402 - Follows the logging setup.
+from typing import Any  # noqa: E402 - Follows the logging setup.
 
-import numpy as np
-import torch
-import torch.nn.functional as F
-from torch import nn
+import numpy as np  # noqa: E402 - Follows the logging setup.
+import torch  # noqa: E402 - Follows the logging setup.
+import torch.nn.functional as F  # noqa: E402 - Follows the logging setup.
+from torch import nn  # noqa: E402 - Follows the logging setup.
 
-from .hf_model import HFTextEncoder
-from .modified_resnet import ModifiedResNet
-from .timm_model import TimmModel
-from .transformer import (
+from .hf_model import HFTextEncoder  # noqa: E402 - Follows the logging setup.
+from .modified_resnet import ModifiedResNet  # noqa: E402 - Follows the logging setup.
+from .timm_model import TimmModel  # noqa: E402 - Follows the logging setup.
+from .transformer import (  # noqa: E402 - Follows the logging setup.
     Attention,
     LayerNorm,
     LayerNormFp32,
@@ -30,7 +30,7 @@ from .transformer import (
     lock_text_tower,
     text_global_pool,
 )
-from .utils import to_2tuple
+from .utils import to_2tuple  # noqa: E402 - Follows the logging setup.
 
 
 @dataclass
@@ -673,7 +673,7 @@ class CustomTextCLIP(nn.Module):
 def convert_weights_to_lp(model: nn.Module, dtype=torch.float16):
     """Convert applicable model parameters to low-precision (bf16 or fp16)"""
 
-    def _convert_weights(l):
+    def _convert_weights(l):  # noqa: E741 - Ambiguous upstream name kept as written.
         if isinstance(l, (nn.Conv1d, nn.Conv2d, nn.Linear)):
             l.weight.data = l.weight.data.to(dtype)
             if l.bias is not None:

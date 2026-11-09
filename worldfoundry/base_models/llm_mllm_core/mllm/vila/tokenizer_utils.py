@@ -111,7 +111,7 @@ def tokenize_conversation(
         conversation.append(message)
 
     if no_system_prompt:
-        conversation = [{"role": "system", "content": ""}] + conversation
+        conversation = [{"role": "system", "content": ""}] + conversation  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     text = tokenizer.apply_chat_template(
         conversation,

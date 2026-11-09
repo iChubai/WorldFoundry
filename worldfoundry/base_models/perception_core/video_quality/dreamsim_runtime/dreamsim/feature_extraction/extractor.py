@@ -165,7 +165,7 @@ class ViTExtractor(nn.Module):
             return model
 
         stride = nn_utils._pair(stride)
-        assert all([(patch_size // s_) * s_ == patch_size for s_ in stride]), (
+        assert all([(patch_size // s_) * s_ == patch_size for s_ in stride]), (  # noqa: C419 - Evaluates every element before testing, as upstream.
             f"stride {stride} should divide patch_size {patch_size}"
         )
 

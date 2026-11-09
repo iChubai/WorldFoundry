@@ -162,12 +162,12 @@ class YOLOv7Backbone(BaseBackbone):
         out_indices: tuple[int] = (2, 3, 4),
         frozen_stages: int = -1,
         plugins: dict | list[dict] | None = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         norm_eval: bool = False,
         init_cfg: OptMultiConfig = None,
     ):
-        assert arch in self.arch_settings.keys()
+        assert arch in self.arch_settings.keys()  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         self.arch = arch
         super().__init__(
             self.arch_settings[arch],

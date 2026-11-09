@@ -225,8 +225,8 @@ class CoTrackerOnlinePredictor(torch.nn.Module):
                 queries = queries.clone()
                 queries[:, :, 1:] *= queries.new_tensor(
                     [
-                        (self.interp_shape[1] - 1) / (W - 1),
-                        (self.interp_shape[0] - 1) / (H - 1),
+                        (self.interp_shape[1] - 1) / (W - 1),  # noqa: F821 - Name is undefined in the upstream source.
+                        (self.interp_shape[0] - 1) / (H - 1),  # noqa: F821 - Name is undefined in the upstream source.
                     ]
                 )
             elif grid_size > 0:

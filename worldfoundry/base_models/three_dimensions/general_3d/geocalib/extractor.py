@@ -127,7 +127,7 @@ class GeoCalib(nn.Module):
             "camera": camera,
             "gravity": gravity,
             "covariance": out["covariance"],
-            **{k: out[k] for k in out.keys() if "field" in k},
-            **{k: out[k] for k in out.keys() if "confidence" in k},
-            **{k: out[k] for k in out.keys() if "uncertainty" in k},
+            **{k: out[k] for k in out.keys() if "field" in k},  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+            **{k: out[k] for k in out.keys() if "confidence" in k},  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+            **{k: out[k] for k in out.keys() if "uncertainty" in k},  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         }

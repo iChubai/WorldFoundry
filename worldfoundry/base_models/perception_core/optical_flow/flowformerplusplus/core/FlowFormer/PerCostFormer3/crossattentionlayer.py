@@ -39,7 +39,7 @@ class CrossAttentionLayer(nn.Module):
 
         self.proj = nn.Linear(v_dim, query_token_dim)
         self.proj_drop = nn.Dropout(proj_drop)
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()  # noqa: F821 - Name is undefined in the upstream source.
 
         self.ffn = nn.Sequential(
             nn.Linear(query_token_dim, query_token_dim),
@@ -106,7 +106,7 @@ class CrossAttentionLayer_two_level(nn.Module):
 
         self.proj = nn.Linear(v_dim, query_token_dim)
         self.proj_drop = nn.Dropout(proj_drop)
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()  # noqa: F821 - Name is undefined in the upstream source.
 
         self.ffn = nn.Sequential(
             nn.Linear(query_token_dim, query_token_dim),
@@ -195,7 +195,7 @@ class CrossAttentionLayer_convk3s2(nn.Module):
 
         self.proj = nn.Linear(v_dim, query_token_dim)
         self.proj_drop = nn.Dropout(proj_drop)
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()  # noqa: F821 - Name is undefined in the upstream source.
 
         self.ffn = nn.Sequential(
             nn.Linear(query_token_dim, query_token_dim),
@@ -338,7 +338,7 @@ class CrossAttentionLayer_two_level_rep(nn.Module):
 
         self.proj = nn.Linear(v_dim, query_token_dim)
         self.proj_drop = nn.Dropout(proj_drop)
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()  # noqa: F821 - Name is undefined in the upstream source.
 
         self.ffn = nn.Sequential(
             nn.Linear(query_token_dim, query_token_dim),
@@ -440,7 +440,7 @@ class CrossAttentionLayer_34(nn.Module):
 
         self.proj = nn.Linear(v_dim, query_token_dim)
         self.proj_drop = nn.Dropout(proj_drop)
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()  # noqa: F821 - Name is undefined in the upstream source.
 
         self.ffn = nn.Sequential(
             nn.Linear(query_token_dim, query_token_dim),

@@ -43,7 +43,7 @@ class EasyDict(dict):
         try:
             return self[name]
         except KeyError:
-            raise AttributeError(name)
+            raise AttributeError(name)  # noqa: B904 - Keeps the implicit exception context.
 
     def __setattr__(self, name: str, value: Any) -> None:
         self[name] = value
@@ -62,7 +62,7 @@ class Logger:
         self.file = None
 
         if file_name is not None:
-            self.file = open(file_name, file_mode)
+            self.file = open(file_name, file_mode)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
         self.should_flush = should_flush
         self.stdout = sys.stdout
@@ -443,7 +443,7 @@ def open_url(
     url_data = None
     with requests.Session() as session:
         if verbose:
-            print("Downloading %s ..." % url, end="", flush=True)
+            print("Downloading %s ..." % url, end="", flush=True)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         for attempts_left in reversed(range(num_attempts)):
             try:
                 with session.get(url) as res:

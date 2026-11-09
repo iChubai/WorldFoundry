@@ -92,7 +92,7 @@ def validate_input_views_for_inference(
                 )
 
         # Check depth constraint: If depth is provided, intrinsics or ray_directions must also be provided
-        if "depth_z" in provided_keys:
+        if "depth_z" in provided_keys:  # noqa: SIM102 - Statement form kept for readability.
             if "intrinsics" not in provided_keys and "ray_directions" not in provided_keys:
                 raise ValueError(
                     f"View {view_idx} depth constraint violation: If 'depth_z' is provided, "

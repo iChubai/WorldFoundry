@@ -222,8 +222,8 @@ class Template(ProcessorMixin):
                 elif self.norm_bbox == "none":
                     image = inputs.images[image_id]
                     norm_width, norm_height = image.width, image.height
-                bbox[2 * i] = int(round(x / width * norm_width))
-                bbox[2 * i + 1] = int(round(y / height * norm_height))
+                bbox[2 * i] = int(round(x / width * norm_width))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+                bbox[2 * i + 1] = int(round(y / height * norm_height))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     def _preprocess_function_call(self, inputs: StdTemplateInputs) -> None:
         agent_template = self.agent_template
@@ -266,7 +266,7 @@ class Template(ProcessorMixin):
         if self.max_pixels is not None or inputs.objects:
             load_images = True
         if images:
-            for i, image in enumerate(images):
+            for i, image in enumerate(images):  # noqa: B007 - The loop variable is read outside the loop.
                 images[i] = self._load_image(images[i], load_images)
         if inputs.objects:
             self._get_height_width(inputs)
@@ -479,9 +479,9 @@ class Template(ProcessorMixin):
             keys.update(r[0].keys())
         for key in keys:
             if key in {"input_ids", "labels", "loss_scale"}:
-                packed[key] = sum((x[0][key] for x in row), start=[])
+                packed[key] = sum((x[0][key] for x in row), start=[])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
         if "position_ids" not in packed:
-            packed["position_ids"] = sum((list(range(x[1])) for x in row), start=[])
+            packed["position_ids"] = sum((list(range(x[1])) for x in row), start=[])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
 
         packed.update(self._data_collator_mm_data([r[0] for r in row]))
         return packed
@@ -526,7 +526,7 @@ class Template(ProcessorMixin):
                 problem_type = "single_label_classification"
                 assert config.num_labels >= labels + 1
         if logits is not None:
-            if logits.shape[-1] == 1:
+            if logits.shape[-1] == 1:  # noqa: SIM108 - Branches carry per-case comments.
                 problem_type = "regression"
             else:
                 problem_type = "single_label_classification"  # compatible with older versions
@@ -872,7 +872,7 @@ class Template(ProcessorMixin):
         else:
             ignore_loss_scale = all(loss_scale in {0, 1} for loss_scale in loss_scale_list)
         for i, (context, loss_weight) in enumerate(zip(context_list, loss_scale_list, strict=False)):
-            if isinstance(context, str):
+            if isinstance(context, str):  # noqa: SIM108 - Branches carry per-case comments.
                 # tokenizer_kwargs is the returned tokenizer_kwargs,
                 # while curr_tokenizer_kwargs is the tokenizer_kwargs for the current context.
                 token_list = self._tokenize(context)
@@ -1144,7 +1144,7 @@ class Template(ProcessorMixin):
         encoded["loss_scale"] = loss_scale
         if self.use_megatron:
             self._handle_megatron_cp(encoded)
-            encoded["labels"] = encoded["labels"][1:] + [-100]
+            encoded["labels"] = encoded["labels"][1:] + [-100]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             encoded["position_ids"] = list(range(len(encoded["labels"])))
         elif encoded.get("labels") is not None:
             encoded["labels"][0] = -100
@@ -1358,7 +1358,7 @@ class Template(ProcessorMixin):
         labels = []
         new_batch = []
         for b in batch:
-            keys = [key for key in b.keys() if "negative" in key]
+            keys = [key for key in b.keys() if "negative" in key]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             max_neg = max([int(re.findall(r"negative(-?\d+)", key)[0]) for key in keys]) if keys else None
             indexes = ["anchor_", "positive_"]
             if max_neg is not None:

@@ -495,7 +495,7 @@ def interp(x, dest):
 
 
 class BasicMultiUpdateBlock(nn.Module):
-    def __init__(self, args, hidden_dims=[], out_dims=2, tuning_mode=None):
+    def __init__(self, args, hidden_dims=[], out_dims=2, tuning_mode=None):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__()
         self.args = args
         self.n_gru_layers = args.model.decode_head.n_gru_layers  # 3
@@ -905,7 +905,7 @@ class EncoderFeature(nn.Module):
     def __init__(
         self,
         vit_channel,
-        num_ch_dec=[256, 512, 1024, 1024],
+        num_ch_dec=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         use_cls_token=True,
         num_register_tokens=0,
         tuning_mode=None,
@@ -960,7 +960,7 @@ class DecoderFeature(nn.Module):
     def __init__(
         self,
         vit_channel,
-        num_ch_dec=[128, 256, 512, 1024, 1024],
+        num_ch_dec=[128, 256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         use_cls_token=True,
         tuning_mode=None,
     ):

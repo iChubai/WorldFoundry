@@ -158,7 +158,7 @@ class DepthProEncoder(nn.Module):
         patch_stride = int(patch_size * (1 - overlap_ratio))
 
         image_size = x.shape[-1]
-        steps = int(math.ceil((image_size - patch_size) / patch_stride)) + 1
+        steps = int(math.ceil((image_size - patch_size) / patch_stride)) + 1  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         x_patch_list = []
         for j in range(steps):

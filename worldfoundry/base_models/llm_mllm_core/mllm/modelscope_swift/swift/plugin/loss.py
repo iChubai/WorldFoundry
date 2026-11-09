@@ -75,7 +75,7 @@ def loss_scale_func(outputs, labels, loss_scale=None, num_items_in_batch=None) -
         shift_scale = loss_scale[..., 1:].to(masks.device)
         shift_scale = shift_scale[masks]
         loss = shift_scale * loss
-    if num_items_in_batch is None:
+    if num_items_in_batch is None:  # noqa: SIM108 - Branches carry per-case comments.
         loss = loss.mean()
     else:
         # compat transformers>=4.46
@@ -349,7 +349,7 @@ def infonce_loss(outputs, labels, loss_scale=None, num_items_in_batch=None) -> t
             # cat all neg+1 tensors
             sentences = torch.cat(all_tensors, dim=0)
             length = 0
-            for idx, tensor in enumerate(split_tensors):
+            for idx, tensor in enumerate(split_tensors):  # noqa: B007 - The loop variable is read outside the loop.
                 # [D] * [B*(neg+1), D], neg numbers are different
                 similarity_matrix = torch.matmul(tensor[0], sentences.T) / temperature
                 labels = torch.tensor(length).to(tensor.device)

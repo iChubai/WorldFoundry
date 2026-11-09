@@ -91,7 +91,7 @@ def point_rendering(
     image,
     raster_settings,
     device,
-    background_color=[0, 0, 0],
+    background_color=[0, 0, 0],  # noqa: B006 - Keeps the upstream default object and signature.
     sobel_threshold=0.35,
     contract=8.0,
     sam_mask=None,
@@ -142,9 +142,9 @@ def point_rendering(
         boundary_mask = boundary_mask.reshape(-1)
         if sam_mask is not None:
             sam_mask = sam_mask.reshape(-1)
-            boundary_mask[sam_mask == True] = True
+            boundary_mask[sam_mask == True] = True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
-        points_3d = points_3d[boundary_mask == False]
+        points_3d = points_3d[boundary_mask == False]  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
         if points_3d.shape[0] <= 8:
             render_rgbs = torch.zeros((nframe, 3, h, w), device=device, dtype=torch.float32)
@@ -153,7 +153,7 @@ def point_rendering(
             render_masks[0:1] = 0
             return render_rgbs, render_masks
 
-        colors = colors[boundary_mask == False]
+        colors = colors[boundary_mask == False]  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
         if PointsRenderer is None:
             render_rgbs, render_masks, _ = render_point_cloud_frames_torch(

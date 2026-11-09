@@ -73,7 +73,7 @@ def calc_metric(metric, num_runs: int = 1, **kwargs):  # See metric_utils.Metric
             for i, results in enumerate(all_runs_results)
             for key, value in results.items()
         }
-        for key, value in all_runs_results[0].items():
+        for key, value in all_runs_results[0].items():  # noqa: B007 - The loop variable is read outside the loop.
             all_runs_values = [r[key] for r in all_runs_results]
             results[f"{key}_mean"] = np.mean(all_runs_values)
             results[f"{key}_std"] = np.std(all_runs_values)

@@ -64,10 +64,10 @@ class PPYOLOECSPResNet(BaseBackbone):
         frozen_stages: int = -1,
         plugins: dict | list[dict] | None = None,
         arch_ovewrite: dict | None = None,
-        block_cfg: ConfigType = {"type": "PPYOLOEBasicBlock", "shortcut": True, "use_alpha": True},
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
-        attention_cfg: ConfigType = {"type": "EffectiveSELayer", "act_cfg": {"type": "HSigmoid"}},
+        block_cfg: ConfigType = {"type": "PPYOLOEBasicBlock", "shortcut": True, "use_alpha": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        attention_cfg: ConfigType = {"type": "EffectiveSELayer", "act_cfg": {"type": "HSigmoid"}},  # noqa: B006 - Keeps the upstream default object and signature.
         norm_eval: bool = False,
         init_cfg: OptMultiConfig = None,
         use_large_stem: bool = False,

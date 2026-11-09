@@ -153,7 +153,7 @@ def get_model_tokenizer_gemma3_vision(
     try:
         from transformers import Gemma3ForConditionalGeneration
     except ImportError:
-        raise ImportError(
+        raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
             "Gemma3ForConditionalGeneration is unavailable. Install a Transformers build from the "
             "configured package index that provides Gemma3ForConditionalGeneration."
         )

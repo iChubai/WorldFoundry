@@ -203,7 +203,7 @@ def _transform_within_tags(text: str, scale_factor: float, tokenizer) -> list[in
         raise ValueError(f"Invalid number of ints: {len(num_ints)}")
     # Tokenize the text, skipping the
     tokens = [tokenizer.vocab[str(num)] for num in num_ints_translated]
-    return [token_space_open_string] + tokens + [token_space_close_string]
+    return [token_space_open_string] + tokens + [token_space_close_string]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def _tokenize_prompts_with_image_and_batch(
@@ -238,7 +238,7 @@ def _tokenize_prompts_with_image_and_batch(
     prompts_tokens = transformed_prompt_tokens
 
     bos_token = tokenizer.vocab["<s>"] if add_BOS else tokenizer.vocab["|ENDOFTEXT|"]
-    prompts_tokens = [[[bos_token] + x for x in prompt_seq] for prompt_seq in prompts_tokens]
+    prompts_tokens = [[[bos_token] + x for x in prompt_seq] for prompt_seq in prompts_tokens]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if add_beginning_of_answer_token:
         boa = tokenizer.vocab[BEGINNING_OF_ANSWER_STRING]
         # Only add bbox open token to the last subsequence since that is what will be completed

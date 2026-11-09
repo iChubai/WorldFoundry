@@ -51,7 +51,9 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.short_convolu
 from worldfoundry.core.nn.blocks.layers import VisionAttention as Attention_
 
 RMSNorm = get_rmsnorm_class()
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention import (  # noqa: E402 - Follows module-level setup, as upstream.
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
 
 _HAS_FLEX_ATTENTION = bool(int(os.environ.get("SANA_USE_FLEX_ATTENTION", "0")))
 
@@ -248,7 +250,7 @@ def torch_chunk_sana_gdn(
     # 1. PARALLEL PRE-PROCESSING
     # =========================================================================
 
-    I = torch.eye(D, device=q.device, dtype=q.dtype).view(1, 1, 1, D, D)
+    I = torch.eye(D, device=q.device, dtype=q.dtype).view(1, 1, 1, D, D)  # noqa: E741 - Ambiguous upstream name kept as written.
 
     # KV State Matrices: W = g * (I - c * K @ K^T)
     k_rot_beta = k_rot * beta

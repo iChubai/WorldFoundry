@@ -45,7 +45,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         fixed_patch_embed=False,
         sampling_strategy="uniform",
         dpt_gradient_checkpoint=False,
-        condition_strategy=["token", "pow3r", "token"],
+        condition_strategy=["token", "pow3r", "token"],  # noqa: B006 - Keeps the upstream default object and signature.
         rope_base=100.0,
         normalized_rope=True,
         rope_normalize_coords="separate",
@@ -259,7 +259,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
     def forward(
         self,
         views: dict[str, torch.Tensor],
-        cond_flags: list[int] = [0, 0, 0],
+        cond_flags: list[int] = [0, 0, 0],  # noqa: B006 - Keeps the upstream default object and signature.
         is_inference=True,
         sp_size=1,
         sp_group=None,
@@ -781,7 +781,7 @@ class WorldMirror(nn.Module, PyTorchModelHubMixin):
         if "is_target" not in views:
             context_nums = views["img"].shape[1]
         else:
-            context_nums = (views["is_target"][0] == False).sum().item()
+            context_nums = (views["is_target"][0] == False).sum().item()  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         context_imgs = views["img"][:, :context_nums]
 
         use_cond = sum(cond_flags) > 0

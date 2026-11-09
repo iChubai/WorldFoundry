@@ -43,9 +43,9 @@ class YOLOv6RepPAFPN(BaseYOLONeck):
         widen_factor: float = 1.0,
         num_csp_blocks: int = 12,
         freeze_all: bool = False,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
-        block_cfg: ConfigType = {"type": "RepVGGBlock"},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         self.num_csp_blocks = num_csp_blocks
@@ -208,10 +208,10 @@ class YOLOv6CSPRepPAFPN(YOLOv6RepPAFPN):
         hidden_ratio: float = 0.5,
         num_csp_blocks: int = 12,
         freeze_all: bool = False,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
-        block_act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
-        block_cfg: ConfigType = {"type": "RepVGGBlock"},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        block_act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         self.hidden_ratio = hidden_ratio
@@ -312,9 +312,9 @@ class YOLOv6RepBiPAFPN(YOLOv6RepPAFPN):
         widen_factor: float = 1.0,
         num_csp_blocks: int = 12,
         freeze_all: bool = False,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
-        block_cfg: ConfigType = {"type": "RepVGGBlock"},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         self.extra_in_channel = in_channels[0]
@@ -446,10 +446,10 @@ class YOLOv6CSPRepBiPAFPN(YOLOv6RepBiPAFPN):
         hidden_ratio: float = 0.5,
         num_csp_blocks: int = 12,
         freeze_all: bool = False,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
-        block_act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
-        block_cfg: ConfigType = {"type": "RepVGGBlock"},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        block_act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         self.hidden_ratio = hidden_ratio

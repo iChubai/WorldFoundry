@@ -33,7 +33,7 @@ class MappingNetwork(torch.nn.Module):
         activation="lrelu",  # Activation function: 'relu', 'lrelu', etc.
         lr_multiplier=0.01,  # Learning rate multiplier for the mapping layers.
         w_avg_beta=0.995,  # Decay for tracking the moving average of W during training, None = do not track.
-        cfg={},  # Additional config
+        cfg={},  # noqa: B006 - Keeps the upstream default object and signature.  # Additional config
     ):
         super().__init__()
 
@@ -156,7 +156,7 @@ class Conv2dLayer(torch.nn.Module):
         activation="linear",  # Activation function: 'relu', 'lrelu', etc.
         up=1,  # Integer upsampling factor.
         down=1,  # Integer downsampling factor.
-        resample_filter=[1, 3, 3, 1],  # Low-pass filter to apply when resampling activations.
+        resample_filter=[1, 3, 3, 1],  # noqa: B006 - Keeps the upstream default object and signature.  # Low-pass filter to apply when resampling activations.
         conv_clamp=None,  # Clamp the output to +-X, None = disable clamping.
         channels_last=False,  # Expect the input to have memory_format=channels_last?
         trainable=True,  # Update the weights of this layer during training?

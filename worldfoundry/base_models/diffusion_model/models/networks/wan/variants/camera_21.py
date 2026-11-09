@@ -88,7 +88,7 @@ def rope_apply(x, grid_sizes, freqs):
 
 @torch.amp.autocast("cuda", enabled=False)
 def rope_apply_given_freqs(x, freqs):
-    n, c = x.size(2), x.size(3) // 2
+    n, c = x.size(2), x.size(3) // 2  # noqa: F841 - Upstream assignment kept.
     seq_len = freqs.size(0)
     # loop over samples
     output = []

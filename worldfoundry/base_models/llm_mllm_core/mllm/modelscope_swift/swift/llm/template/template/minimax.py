@@ -52,7 +52,7 @@ class MinimaxVLTemplate(Template):
             return all_image_tokens
 
         if self.processor.process_image_mode == "anyres":
-            for pixel_value, image_size in zip(pixel_values, image_sizes, strict=False):
+            for pixel_value, image_size in zip(pixel_values, image_sizes, strict=False):  # noqa: B007 - The loop variable is read outside the loop.
                 height, width = image_size
                 num_image_tokens = self.processor.get_num_token(
                     height, width, self.processor.grid_pinpoints, self.processor.patch_size

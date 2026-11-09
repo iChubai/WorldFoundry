@@ -114,7 +114,7 @@ def add_mim_extension():
     # parse installment mode
     if "develop" in sys.argv:
         # installed by `pip install -e .`
-        if platform.system() == "Windows":
+        if platform.system() == "Windows":  # noqa: SIM108 - Branches carry per-case comments.
             # set `copy` mode here since symlink fails on Windows.
             mode = "copy"
         else:

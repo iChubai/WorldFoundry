@@ -17,7 +17,7 @@ class GSFeatHead(_BaseDPTHead):
         dim_in: int,
         patch_size: int = 14,
         features: int = 256,
-        out_channels: list[int] = [256, 512, 1024, 1024],
+        out_channels: list[int] = [256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         pos_embed: bool = True,
         down_ratio: int = 1,
         gradient_checkpoint: bool = False,

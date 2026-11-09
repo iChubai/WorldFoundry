@@ -63,11 +63,11 @@ class DenseRepresentationEncoder(UniCeptionViTEncoderBase):
         apply_pe: bool = True,
         input_size_for_pe: int | tuple[int, int] = 518,
         patch_size: int = 14,
-        intermediate_dims: list[int] = [588, 768, 1024],
+        intermediate_dims: list[int] = [588, 768, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         data_norm_type: str = "dense_rep_encoder",
         act_layer: type[nn.Module] = nn.GELU,
-        norm_layer: Callable | None = partial(nn.LayerNorm, eps=1e-6),
-        post_pe_norm_layer: Callable | None = partial(nn.LayerNorm, eps=1e-6),
+        norm_layer: Callable | None = partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
+        post_pe_norm_layer: Callable | None = partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         interpolate_antialias: bool = False,
         interpolate_offset: float = 0.1,
         pretrained_checkpoint_path: str | None = None,
@@ -99,7 +99,7 @@ class DenseRepresentationEncoder(UniCeptionViTEncoderBase):
             name=name,
             data_norm_type=data_norm_type,
             patch_size=patch_size,
-            *args,
+            *args,  # noqa: B026 - Keeps the upstream argument order.
             **kwargs,
         )
 

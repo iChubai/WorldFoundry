@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .refine import *
+from .refine import *  # noqa: F403 - Upstream star import kept as written.
 from .warplayer import warp
 
 
@@ -30,7 +30,7 @@ class Head(nn.Module):
         motion_feature = self.upsample(motion_feature)
         if self.scale != 4:
             x = F.interpolate(x, scale_factor=4.0 / self.scale, mode="bilinear", align_corners=False)
-        if flow != None:
+        if flow != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             if self.scale != 4:
                 flow = (
                     F.interpolate(flow, scale_factor=4.0 / self.scale, mode="bilinear", align_corners=False)
@@ -103,7 +103,7 @@ class MultiScaleFlow(nn.Module):
         self.local_block = nn.ModuleList(
             [IFBlock(17, c=kargs["local_hidden_dims"], scale=2 - i) for i in range(self.local_num)]
         )
-        self.unet = Unet(kargs["c"] * 2, kargs["M"])
+        self.unet = Unet(kargs["c"] * 2, kargs["M"])  # noqa: F405 - Name comes from the upstream star import.
 
     def warp_features(self, xs, flow):
         y0 = []
@@ -128,7 +128,7 @@ class MultiScaleFlow(nn.Module):
             af = self.feature_bone(img0, img1)
         timestep = (img0[:, :1].clone() * 0 + 1) * timestep
         for i in range(self.flow_num_stage):
-            if flow != None:
+            if flow != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
                 warped_img0 = warp(img0, flow[:, :2])
                 warped_img1 = warp(img1, flow[:, 2:4])
                 flow_, mask_ = self.block[i](
@@ -182,14 +182,14 @@ class MultiScaleFlow(nn.Module):
         af = self.feature_bone(img0, img1)
         timestep = (x[:, :1].clone() * 0 + 1) * (timestep.float() if type(timestep) is not float else timestep)
         for i in range(self.flow_num_stage):
-            if flow != None:
+            if flow != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
                 flow_d, mask_d = self.block[i](
                     torch.cat([af[-1 - i][:B], af[-1 - i][B:]], 1),
-                    torch.cat((img0, img1, warped_img0, warped_img1, mask, timestep), 1),
+                    torch.cat((img0, img1, warped_img0, warped_img1, mask, timestep), 1),  # noqa: F405 - Name comes from the upstream star import.
                     flow,
                 )
                 flow = flow + flow_d
-                mask = mask + mask_d
+                mask = mask + mask_d  # noqa: F405 - Name comes from the upstream star import.
             else:
                 flow, mask = self.block[i](
                     torch.cat([af[-1 - i][:B], af[-1 - i][B:]], 1), torch.cat((img0, img1, timestep), 1), None

@@ -508,7 +508,7 @@ class HYVideoDiffusionTransformer(nn.Module):
     def __init__(
         self,
         args: Any,
-        patch_size: list = [1, 2, 2],
+        patch_size: list = [1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         in_channels: int = 4,  # Should be VAE.config.latent_channels.
         out_channels: int | None = None,
         hidden_size: int = 3072,
@@ -517,7 +517,7 @@ class HYVideoDiffusionTransformer(nn.Module):
         mlp_act_type: str = "gelu_tanh",
         mm_double_blocks_depth: int = 20,
         mm_single_blocks_depth: int = 40,
-        rope_dim_list: list[int] = [16, 56, 56],
+        rope_dim_list: list[int] = [16, 56, 56],  # noqa: B006 - Keeps the upstream default object and signature.
         qkv_bias: bool = True,
         qk_norm: bool = True,
         qk_norm_type: str = "rms",

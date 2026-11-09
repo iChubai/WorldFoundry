@@ -19,7 +19,7 @@ def create_folder(path, verbose=False, exist_ok=True, safe=True):
         os.makedirs(path)
     except BaseException:
         if not safe:
-            raise OSError
+            raise OSError  # noqa: B904 - Keeps the implicit exception context.
         return False
     if verbose:
         print(f"Created folder: {path}")

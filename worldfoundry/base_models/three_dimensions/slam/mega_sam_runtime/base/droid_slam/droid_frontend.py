@@ -120,7 +120,7 @@ class DroidFrontend:
 
     def __call__(self, final_=False):
         """main update"""
-        if not self.is_initialized and final_ == True:
+        if not self.is_initialized and final_ == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             self.__initialize()
 
         # do initialization

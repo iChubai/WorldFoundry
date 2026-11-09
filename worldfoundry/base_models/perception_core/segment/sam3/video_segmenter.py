@@ -263,8 +263,8 @@ class Sam3VideoSegmenter:
             return [], (0, 0), (0, 0), (0, 0)
         orig_h, orig_w = frames[0].shape[:2]
         scale = target_size / float(max(orig_h, orig_w))
-        new_w = max(1, int(round(orig_w * scale)))
-        new_h = max(1, int(round(orig_h * scale)))
+        new_w = max(1, int(round(orig_w * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        new_h = max(1, int(round(orig_h * scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         pad_x = max(0, (target_size - new_w) // 2)
         pad_y = max(0, (target_size - new_h) // 2)
         interp = cv2.INTER_AREA if scale < 1.0 else cv2.INTER_LINEAR

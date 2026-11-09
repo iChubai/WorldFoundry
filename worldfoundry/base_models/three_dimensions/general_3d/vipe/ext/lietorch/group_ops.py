@@ -25,7 +25,7 @@ class GroupOp(torch.autograd.Function):
         inputs = ctx.saved_tensors
         grad = grad.contiguous()
         grad_inputs = cls.backward_op(ctx.group_id, grad, *inputs)
-        return (None,) + tuple(grad_inputs)
+        return (None,) + tuple(grad_inputs)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 class Exp(GroupOp):

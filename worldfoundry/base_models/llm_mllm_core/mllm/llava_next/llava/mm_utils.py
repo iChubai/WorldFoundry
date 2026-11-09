@@ -112,7 +112,7 @@ def process_highres_image(image, processor, grid_pinpoints):
     image_original_resize = image.resize((processor.size["shortest_edge"], processor.size["shortest_edge"]))
     image_padded = image_padded.resize((select_size, select_size))
     image_patches = extract_patches(image_padded, patch_size=processor.size["shortest_edge"], overlap_ratio=0)
-    image_patches = [image_original_resize] + image_patches
+    image_patches = [image_original_resize] + image_patches  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     image_patches = [
         processor.preprocess(image_patch, return_tensors="pt")["pixel_values"][0] for image_patch in image_patches
     ]
@@ -288,7 +288,7 @@ def process_anyres_image(image, processor, grid_pinpoints):
     # image_padded_square = expand2square(image, tuple(int(x*255) for x in processor.image_mean))
     # image_original_resize = image_padded_square.resize((processor.size['shortest_edge'], processor.size['shortest_edge']))
 
-    image_patches = [image_original_resize] + patches
+    image_patches = [image_original_resize] + patches  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     image_patches = [
         processor.preprocess(image_patch, return_tensors="pt")["pixel_values"][0] for image_patch in image_patches
     ]

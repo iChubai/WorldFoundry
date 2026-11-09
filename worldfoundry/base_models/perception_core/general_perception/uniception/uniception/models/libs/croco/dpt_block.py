@@ -25,7 +25,7 @@ def make_scratch(in_shape, out_shape, groups=1, expand=False):
     out_shape2 = out_shape
     out_shape3 = out_shape
     out_shape4 = out_shape
-    if expand == True:
+    if expand == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         out_shape1 = out_shape
         out_shape2 = out_shape * 2
         out_shape3 = out_shape * 4
@@ -145,7 +145,7 @@ class ResidualConvUnit_custom(nn.Module):
             groups=self.groups,
         )
 
-        if self.bn == True:
+        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             self.bn1 = nn.BatchNorm2d(features)
             self.bn2 = nn.BatchNorm2d(features)
 
@@ -163,12 +163,12 @@ class ResidualConvUnit_custom(nn.Module):
 
         out = self.activation(x)
         out = self.conv1(out)
-        if self.bn == True:
+        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out = self.bn1(out)
 
         out = self.activation(out)
         out = self.conv2(out)
-        if self.bn == True:
+        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out = self.bn2(out)
 
         if self.groups > 1:
@@ -204,7 +204,7 @@ class FeatureFusionBlock_custom(nn.Module):
 
         self.expand = expand
         out_features = features
-        if self.expand == True:
+        if self.expand == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out_features = features // 2
 
         self.out_conv = nn.Conv2d(
@@ -343,8 +343,8 @@ class DPTOutputAdapter(nn.Module):
         stride_level: int = 1,
         patch_size: int | tuple[int, int] = 16,
         main_tasks: Iterable[str] = ("rgb",),
-        hooks: list[int] = [2, 5, 8, 11],
-        layer_dims: list[int] = [96, 192, 384, 768],
+        hooks: list[int] = [2, 5, 8, 11],  # noqa: B006 - Keeps the upstream default object and signature.
+        layer_dims: list[int] = [96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
         feature_dim: int = 256,
         last_dim: int = 32,
         use_bn: bool = False,
@@ -507,14 +507,14 @@ class DPTOutputAdapter(nn.Module):
         layers = [encoder_tokens[hook] for hook in self.hooks]
 
         # Extract only task-relevant tokens and ignore global tokens.
-        layers = [self.adapt_tokens(l) for l in layers]
+        layers = [self.adapt_tokens(l) for l in layers]  # noqa: E741 - Ambiguous upstream name kept as written.
 
         # Reshape tokens to spatial representation
-        layers = [rearrange(l, "b (nh nw) c -> b c nh nw", nh=N_H, nw=N_W) for l in layers]
+        layers = [rearrange(l, "b (nh nw) c -> b c nh nw", nh=N_H, nw=N_W) for l in layers]  # noqa: E741 - Ambiguous upstream name kept as written.
 
-        layers = [self.act_postprocess[idx](l) for idx, l in enumerate(layers)]
+        layers = [self.act_postprocess[idx](l) for idx, l in enumerate(layers)]  # noqa: E741 - Ambiguous upstream name kept as written.
         # Project layers to chosen feature dim
-        layers = [self.scratch.layer_rn[idx](l) for idx, l in enumerate(layers)]
+        layers = [self.scratch.layer_rn[idx](l) for idx, l in enumerate(layers)]  # noqa: E741 - Ambiguous upstream name kept as written.
 
         # Fuse layers using refinement stages
         path_4 = self.scratch.refinenet4(layers[3])

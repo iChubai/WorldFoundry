@@ -75,7 +75,7 @@ class DeepseekVLTemplate(Template):
                     new_labels += labels[lo:hi]
                 image_tokens = [processor.image_id] * processor.num_image_tokens
                 if is_janus:
-                    image_tokens = [processor.image_start_id] + image_tokens + [processor.image_end_id]
+                    image_tokens = [processor.image_start_id] + image_tokens + [processor.image_end_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 new_input_ids += image_tokens
                 new_labels += [-100] * len(image_tokens)
                 lo = hi + 1
@@ -173,7 +173,7 @@ class DeepseekVLTemplate(Template):
                 outputs = model.language_model.model(
                     inputs_embeds=inputs_embeds,
                     use_cache=True,
-                    past_key_values=outputs.past_key_values if i != 0 else None,
+                    past_key_values=outputs.past_key_values if i != 0 else None,  # noqa: F821 - Reuses outputs from the previous iteration after the first step.
                 )
                 hidden_states = outputs.last_hidden_state
 

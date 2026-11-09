@@ -180,7 +180,7 @@ def _build_vision_tower(
         )
     else:
         vision_heads = vision_cfg.width // vision_cfg.head_width
-        norm_layer = LayerNormFp32 if cast_dtype in (torch.float16, torch.bfloat16) else LayerNorm
+        norm_layer = LayerNormFp32 if cast_dtype in (torch.float16, torch.bfloat16) else LayerNorm  # noqa: F821 - Name is undefined in the upstream source.
         visual = VisionTransformer(
             image_size=vision_cfg.image_size,
             patch_size=vision_cfg.patch_size,
@@ -345,7 +345,7 @@ class CustomCLIP(nn.Module):
 def convert_weights_to_lp(model: nn.Module, dtype=torch.float16):
     """Convert applicable model parameters to low-precision (bf16 or fp16)"""
 
-    def _convert_weights(l):
+    def _convert_weights(l):  # noqa: E741 - Ambiguous upstream name kept as written.
         if isinstance(l, (nn.Conv1d, nn.Conv2d, nn.Linear)):
             l.weight.data = l.weight.data.to(dtype)
             if l.bias is not None:
@@ -455,7 +455,7 @@ def build_model_from_openai_state_dict(
     return model.eval()
 
 
-def trace_model(model, batch_size=256, device=torch.device("cpu")):
+def trace_model(model, batch_size=256, device=torch.device("cpu")):  # noqa: B008 - Default evaluated once at definition, as upstream.
     model.eval()
     image_size = model.visual.image_size
     example_images = torch.ones((batch_size, 3, image_size, image_size), device=device)

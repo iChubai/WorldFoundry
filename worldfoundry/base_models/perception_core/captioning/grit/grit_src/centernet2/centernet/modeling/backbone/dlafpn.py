@@ -361,10 +361,10 @@ class DLAUP(Backbone):
         in_channels = [input_shapes[f].channels for f in in_features]
         in_levels = [int(math.log2(input_shapes[f].stride)) for f in in_features]
         self.in_features = in_features
-        out_features = [f"dlaup{l}" for l in in_levels]
+        out_features = [f"dlaup{l}" for l in in_levels]  # noqa: E741 - Ambiguous upstream name kept as written.
         self._out_features = out_features
-        self._out_feature_channels = {f"dlaup{l}": in_channels[i] for i, l in enumerate(in_levels)}
-        self._out_feature_strides = {f"dlaup{l}": 2**l for l in in_levels}
+        self._out_feature_channels = {f"dlaup{l}": in_channels[i] for i, l in enumerate(in_levels)}  # noqa: E741 - Ambiguous upstream name kept as written.
+        self._out_feature_strides = {f"dlaup{l}": 2**l for l in in_levels}  # noqa: E741 - Ambiguous upstream name kept as written.
 
         print("self._out_features", self._out_features)
         print("self._out_feature_channels", self._out_feature_channels)

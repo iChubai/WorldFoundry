@@ -96,7 +96,7 @@ def get_clean_fn(type: str):
     elif type == "whitespace":
         return _clean_whitespace
     else:
-        assert False, f"Invalid clean function ({type})."
+        assert False, f"Invalid clean function ({type})."  # noqa: B011 - Keeps the assertion semantics under -O.
 
 
 def canonicalize_text(text, *, keep_punctuation_exact_string=None):
@@ -133,7 +133,7 @@ class SimpleTokenizer:
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
         with g_pathmgr.open(bpe_path, "rb") as fh:
             bpe_bytes = io.BytesIO(fh.read())
-            merges = gzip.open(bpe_bytes).read().decode("utf-8").split("\n")
+            merges = gzip.open(bpe_bytes).read().decode("utf-8").split("\n")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         # merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")
         merges = merges[1 : 49152 - 256 - 2 + 1]
         merges = [tuple(merge.split()) for merge in merges]
@@ -164,7 +164,7 @@ class SimpleTokenizer:
     def bpe(self, token):
         if token in self.cache:
             return self.cache[token]
-        word = tuple(token[:-1]) + (token[-1] + "</w>",)
+        word = tuple(token[:-1]) + (token[-1] + "</w>",)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         pairs = get_pairs(word)
         if not pairs:
             return token + "</w>"
@@ -228,7 +228,7 @@ class SimpleTokenizer:
             texts = [texts]
         context_length = context_length or self.context_length
         assert context_length, "Please set a valid context length"
-        all_tokens = [[self.sot_token_id] + self.encode(text) + [self.eot_token_id] for text in texts]
+        all_tokens = [[self.sot_token_id] + self.encode(text) + [self.eot_token_id] for text in texts]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
         for i, tokens in enumerate(all_tokens):
             if len(tokens) > context_length:

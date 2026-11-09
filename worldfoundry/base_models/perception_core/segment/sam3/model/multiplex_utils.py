@@ -342,9 +342,12 @@ class MultiplexState:
         num_valid_entries = x.shape[0]
         assert num_valid_entries == self.total_valid_entries, f"{num_valid_entries=} != {self.total_valid_entries=}"
         output_shape = (
-            self.num_buckets,
-            self.multiplex_count,
-        ) + x.shape[1:]
+            (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+                self.num_buckets,
+                self.multiplex_count,
+            )
+            + x.shape[1:]
+        )
 
         x_flat = x.reshape(num_valid_entries, -1)
 
@@ -364,7 +367,7 @@ class MultiplexState:
         num_buckets, multiplex_count = x.shape[:2]
         assert num_buckets == self.num_buckets, f"{num_buckets=} != {self.num_buckets=}"
         assert multiplex_count == self.multiplex_count, f"{multiplex_count=} != {self.multiplex_count=}"
-        output_shape = (self.total_valid_entries,) + x.shape[2:]
+        output_shape = (self.total_valid_entries,) + x.shape[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         x_flat = x.reshape(num_buckets * multiplex_count, -1)
 
@@ -460,7 +463,7 @@ class MultiplexController(nn.Module):
                 assignments.append(ids[i * true_bucket_capacity : (i + 1) * true_bucket_capacity].tolist())
         else:
             # Only shuffle the the IDs within the first #batch_size slots, leave all paddings at the end
-            if random:
+            if random:  # noqa: SIM108 - Branches carry per-case comments.
                 # randomly assign ids to buckets
                 ids = torch.randperm(num_valid_entries, dtype=torch.int64)
             else:

@@ -142,7 +142,7 @@ def s2v_rope_apply(x, grid_sizes, freqs):
     caller already packed a per-sample table that matches the local shard.
     """
 
-    s, n, c = x.size(1), x.size(2), x.size(3) // 2
+    s, n, c = x.size(1), x.size(2), x.size(3) // 2  # noqa: F841 - Upstream assignment kept.
     # loop over samples
     output = []
     for i, _ in enumerate(x):
@@ -239,7 +239,7 @@ def _all_to_all_4d(tensor, scatter_dim, gather_dim, sp_group_obj):
     dist.all_to_all_single(output, tensor, group=pg)
 
     # Step 3: view and permute to rearrange.
-    new_shape = (sp_size, -1) + output.shape[1:]
+    new_shape = (sp_size, -1) + output.shape[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     output = output.view(new_shape)
 
     if scatter_dim == 2 and gather_dim == 1:

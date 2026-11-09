@@ -163,7 +163,7 @@ def load_ucpe_camera_adapter_weights(transformer: WorldCrafterTransformer3DModel
         elif key.startswith("blocks.") and ".cam_self_attn." in key:
             mapped_state[key] = value
 
-    expected_cam_keys = {key for key in transformer.state_dict().keys() if ".cam_self_attn." in key}
+    expected_cam_keys = {key for key in transformer.state_dict().keys() if ".cam_self_attn." in key}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
     mapped_cam_keys = set(mapped_state.keys())
     missing_cam_keys = sorted(expected_cam_keys - mapped_cam_keys)
     unexpected_cam_keys = sorted(mapped_cam_keys - expected_cam_keys)

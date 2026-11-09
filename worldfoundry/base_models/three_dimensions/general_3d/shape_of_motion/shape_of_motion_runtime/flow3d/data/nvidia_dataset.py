@@ -541,7 +541,7 @@ class NvidiaDataset(BaseDataset):
         return bkgd_points, bkgd_point_normals, bkgd_point_colors
 
     def get_video_dataset(self) -> Dataset:
-        return iPhoneDatasetVideoView(self)
+        return iPhoneDatasetVideoView(self)  # noqa: F821 - Name is undefined in the upstream source.
 
     def __getitem__(self, index: int):
         if self.training:

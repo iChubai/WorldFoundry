@@ -23,7 +23,7 @@ from ..tools.color import Color
 def load_model_and_processor(model_name_or_path, data_config):
     print(Color.red(f"Load model and processor from: {model_name_or_path}"), flush=True)
     if isinstance(data_config, str):
-        data_config = yaml.safe_load(open(data_config))
+        data_config = yaml.safe_load(open(data_config))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     processor = init_processor(model_name_or_path, data_config)
     model_config = LlavaConfig.from_pretrained(
         model_name_or_path,

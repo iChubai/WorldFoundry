@@ -8,11 +8,11 @@ import torch
 import torch.utils.data as data
 
 from .augmentation import RGBDAugmentor
-from .rgbd_utils import *
+from .rgbd_utils import *  # noqa: F403 - Upstream star import kept as written.
 
 
 class RGBDDataset(data.Dataset):
-    def __init__(self, name, datapath, n_frames=4, crop_size=[384, 512], fmin=8.0, fmax=75.0, do_aug=True):
+    def __init__(self, name, datapath, n_frames=4, crop_size=[384, 512], fmin=8.0, fmax=75.0, do_aug=True):  # noqa: B006 - Keeps the upstream default object and signature.
         """Base class for RGBD dataset"""
         self.aug = None
         self.root = datapath
@@ -33,7 +33,7 @@ class RGBDDataset(data.Dataset):
         cache_path = osp.join(cur_path, "cache", f"{self.name}.pickle")
 
         if osp.isfile(cache_path):
-            scene_info = pickle.load(open(cache_path, "rb"))[0]
+            scene_info = pickle.load(open(cache_path, "rb"))[0]  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         else:
             scene_info = self._build_dataset()
             with open(cache_path, "wb") as cachefile:
@@ -73,7 +73,7 @@ class RGBDDataset(data.Dataset):
         intrinsics = np.array(intrinsics) / f
 
         disps = np.stack(list(map(read_disp, depths)), 0)
-        d = f * compute_distance_matrix_flow(poses, disps, intrinsics)
+        d = f * compute_distance_matrix_flow(poses, disps, intrinsics)  # noqa: F405 - Name comes from the upstream star import.
 
         # uncomment for nice visualization
         # import matplotlib.pyplot as plt

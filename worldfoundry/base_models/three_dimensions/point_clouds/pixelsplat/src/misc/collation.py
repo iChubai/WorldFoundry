@@ -3,7 +3,7 @@ from typing import Union
 
 from torch import Tensor
 
-Tree = Union[dict[str, "Tree"], Tensor]
+Tree = Union[dict[str, "Tree"], Tensor]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 def collate(trees: list[Tree], merge_fn: Callable[[list[Tensor]], Tensor]) -> Tree:

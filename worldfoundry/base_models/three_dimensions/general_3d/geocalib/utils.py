@@ -229,7 +229,7 @@ def skew_symmetric(v: torch.Tensor) -> torch.Tensor:
     return torch.stack(
         [z, -v[..., 2], v[..., 1], v[..., 2], z, -v[..., 0], -v[..., 1], v[..., 0], z],
         dim=-1,
-    ).reshape(v.shape[:-1] + (3, 3))
+    ).reshape(v.shape[:-1] + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def rad2rotmat(roll: torch.Tensor, pitch: torch.Tensor, yaw: torch.Tensor | None = None) -> torch.Tensor:
@@ -246,21 +246,21 @@ def rad2rotmat(roll: torch.Tensor, pitch: torch.Tensor, yaw: torch.Tensor | None
     if yaw is None:
         yaw = roll.new_zeros(roll.shape)
 
-    Rx = pitch.new_zeros(pitch.shape + (3, 3))
+    Rx = pitch.new_zeros(pitch.shape + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     Rx[..., 0, 0] = 1
     Rx[..., 1, 1] = torch.cos(pitch)
     Rx[..., 1, 2] = torch.sin(pitch)
     Rx[..., 2, 1] = -torch.sin(pitch)
     Rx[..., 2, 2] = torch.cos(pitch)
 
-    Ry = yaw.new_zeros(yaw.shape + (3, 3))
+    Ry = yaw.new_zeros(yaw.shape + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     Ry[..., 0, 0] = torch.cos(yaw)
     Ry[..., 0, 2] = -torch.sin(yaw)
     Ry[..., 1, 1] = 1
     Ry[..., 2, 0] = torch.sin(yaw)
     Ry[..., 2, 2] = torch.cos(yaw)
 
-    Rz = roll.new_zeros(roll.shape + (3, 3))
+    Rz = roll.new_zeros(roll.shape + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     Rz[..., 0, 0] = torch.cos(roll)
     Rz[..., 0, 1] = torch.sin(roll)
     Rz[..., 1, 0] = -torch.sin(roll)

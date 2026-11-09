@@ -44,10 +44,15 @@ for _path in (
     if _path_str not in sys.path:
         sys.path.insert(0, _path_str)
 
-import torch
-from huggingface_hub import hf_hub_download
-from inference_utils import create_target_camera_path, load_and_preprocess_images_compat, render_chunked, save_video
-from models.encoder_decoder import EncDec_VitB8
+import torch  # noqa: E402 - Follows the sys.path setup.
+from huggingface_hub import hf_hub_download  # noqa: E402 - Follows the sys.path setup.
+from inference_utils import (  # noqa: E402 - Follows the sys.path setup.
+    create_target_camera_path,
+    load_and_preprocess_images_compat,
+    render_chunked,
+    save_video,
+)
+from models.encoder_decoder import EncDec_VitB8  # noqa: E402 - Follows the sys.path setup.
 
 
 def _resolve_checkpoint(model_repo):

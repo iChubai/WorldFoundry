@@ -5,9 +5,9 @@ from PIL import Image
 cv2.setNumThreads(0)
 cv2.ocl.setUseOpenCL(False)
 
-from torchvision.transforms import ColorJitter
+from torchvision.transforms import ColorJitter  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from . import flow_transforms
+from . import flow_transforms  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 
 class FlowAugmentor:
@@ -49,7 +49,7 @@ class FlowAugmentor:
 
         return img1, img2
 
-    def eraser_transform(self, img1, img2, bounds=[50, 100]):
+    def eraser_transform(self, img1, img2, bounds=[50, 100]):  # noqa: B006 - Keeps the upstream default object and signature.
         """Occlusion augmentation"""
 
         ht, wd = img1.shape[:2]
@@ -190,8 +190,8 @@ class SparseFlowAugmentor:
         coords0 = coords[valid >= 1]
         flow0 = flow[valid >= 1]
 
-        ht1 = int(round(ht * fy))
-        wd1 = int(round(wd * fx))
+        ht1 = int(round(ht * fy))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        wd1 = int(round(wd * fx))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         coords1 = coords0 * [fx, fy]
         flow1 = flow0 * [fx, fy]

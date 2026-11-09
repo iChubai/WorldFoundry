@@ -172,22 +172,22 @@ class CLIPT5Model(VQAScoreModel):
         """Load the model, tokenizer, image transform"""
         model_args = ModelArguments()
         model_max_length = (
-            CLIP_T5_MODELS[self.model_name]["tokenizer"]["model_max_length"]
+            CLIP_T5_MODELS[self.model_name]["tokenizer"]["model_max_length"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "model_max_length" in CLIP_T5_MODELS[self.model_name]["tokenizer"]
             else None
         )
         padding_side = (
-            CLIP_T5_MODELS[self.model_name]["tokenizer"]["padding_side"]
+            CLIP_T5_MODELS[self.model_name]["tokenizer"]["padding_side"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "padding_side" in CLIP_T5_MODELS[self.model_name]["tokenizer"]
             else None
         )
         mmprojector_repo = (
-            CLIP_T5_MODELS[self.model_name]["model"]["mmprojector_repo"]
+            CLIP_T5_MODELS[self.model_name]["model"]["mmprojector_repo"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "mmprojector_repo" in CLIP_T5_MODELS[self.model_name]["model"]
             else None
         )
         mmprojector_name = (
-            CLIP_T5_MODELS[self.model_name]["model"]["mmprojector_name"]
+            CLIP_T5_MODELS[self.model_name]["model"]["mmprojector_name"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "mmprojector_name" in CLIP_T5_MODELS[self.model_name]["model"]
             else None
         )
@@ -195,7 +195,7 @@ class CLIPT5Model(VQAScoreModel):
         # default is 'pad'
         # stage-1 models use 'square'
         self.image_aspect_ratio = (
-            CLIP_T5_MODELS[self.model_name]["model"]["image_aspect_ratio"]
+            CLIP_T5_MODELS[self.model_name]["model"]["image_aspect_ratio"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "image_aspect_ratio" in CLIP_T5_MODELS[self.model_name]["model"]
             else "pad"
         )

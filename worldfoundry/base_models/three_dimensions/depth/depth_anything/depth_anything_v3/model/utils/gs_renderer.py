@@ -140,7 +140,7 @@ def render_3dgs(
 
         image = rearrange(render_colors[..., :3], "v h w c -> v c h w").unbind(dim=0)
         radii = info["radii"].unbind(dim=0)
-        try:
+        try:  # noqa: SIM105 - The handler carries an explanatory comment.
             info["means2d"].retain_grad()  # [1, N, 2]
         except Exception:
             pass

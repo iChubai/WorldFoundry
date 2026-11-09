@@ -200,7 +200,7 @@ class MantisPreprocessor(MessagesPreprocessor):
 
     def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         images = [os.path.join(self.local_dir, p["path"]) for p in row["images"]]
-        if not all([os.path.exists(d) for d in images]):
+        if not all([os.path.exists(d) for d in images]):  # noqa: C419 - Evaluates every element before testing, as upstream.
             images = []
 
         if not images:

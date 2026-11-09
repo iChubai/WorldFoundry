@@ -161,7 +161,7 @@ class ORTWrapper(torch.nn.Module):
                 self.is_dynamic = True
             inputs_info.append(Binding(tensor.name, tensor.type, tuple(tensor.shape)))
 
-        for i, tensor in enumerate(self.session.get_outputs()):
+        for i, tensor in enumerate(self.session.get_outputs()):  # noqa: B007 - The loop variable is read outside the loop.
             outputs_info.append(Binding(tensor.name, tensor.type, tuple(tensor.shape)))
         self.inputs_info = inputs_info
         self.outputs_info = outputs_info

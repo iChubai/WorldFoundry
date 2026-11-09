@@ -11,7 +11,7 @@ from worldfoundry.base_models.three_dimensions.slam.droid_slam.droid_net import 
 
 
 class DepthVideo:
-    def __init__(self, image_size=[480, 640], buffer=1024, stereo=False, device="cuda:0"):
+    def __init__(self, image_size=[480, 640], buffer=1024, stereo=False, device="cuda:0"):  # noqa: B006 - Keeps the upstream default object and signature.
         # current keyframe count
         self.counter = Value("i", 0)
         self.ready = Value("i", 0)

@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 import torch
 import torch.nn as nn
 from einops import einsum, rearrange, repeat

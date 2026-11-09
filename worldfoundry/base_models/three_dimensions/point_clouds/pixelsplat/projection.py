@@ -106,7 +106,7 @@ def get_world_rays(
 
 def sample_image_grid(
     shape: tuple[int, ...],
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     """Get normalized (range 0 to 1) coordinates and integer indices for an image."""
 

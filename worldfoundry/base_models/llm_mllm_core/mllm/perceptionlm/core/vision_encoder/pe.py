@@ -180,9 +180,9 @@ class ResidualAttentionBlock(nn.Module):
         q_x: torch.Tensor,
         attn_mask: torch.Tensor | None = None,
     ):
-        if attn_mask is not None:
+        if attn_mask is not None:  # noqa: SIM102 - Branches carry per-case comments.
             # Leave boolean masks as is
-            if not attn_mask.dtype == torch.bool:
+            if not attn_mask.dtype == torch.bool:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 attn_mask = attn_mask.to(q_x.dtype)
 
         if isinstance(self.attn, SelfAttention):
@@ -274,7 +274,7 @@ class VisionTransformer(nn.Module):
         heads: int,
         mlp_ratio: float,
         act_layer: Callable = nn.GELU,
-        norm_layer: Callable = partial(nn.LayerNorm, eps=1e-5),
+        norm_layer: Callable = partial(nn.LayerNorm, eps=1e-5),  # noqa: B008 - Default evaluated once at definition, as upstream.
         use_ln_pre: bool = True,
         use_ln_post: bool = True,
         ls_init_value: float | None = None,
@@ -507,7 +507,7 @@ class TextTransformer(nn.Module):
         pool_type: str = "argmax",
         proj_bias: bool = False,
         act_layer: Callable = nn.GELU,
-        norm_layer: Callable = partial(nn.LayerNorm, eps=1e-5),
+        norm_layer: Callable = partial(nn.LayerNorm, eps=1e-5),  # noqa: B008 - Default evaluated once at definition, as upstream.
         output_tokens: bool = False,
         use_ln_post: bool = True,
     ):

@@ -42,8 +42,8 @@ class YOLOXPAFPN(BaseYOLONeck):
         num_csp_blocks: int = 3,
         use_depthwise: bool = False,
         freeze_all: bool = False,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         self.num_csp_blocks = round(num_csp_blocks * deepen_factor)

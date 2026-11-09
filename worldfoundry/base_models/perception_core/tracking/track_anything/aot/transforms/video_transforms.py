@@ -41,7 +41,7 @@ class Resize:
         else:
             new_h, new_w = self.output_size
 
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem:
                 continue
             tmp = sample[elem]
@@ -81,7 +81,7 @@ class Resize:
         top_pad, bottom_pad = sep_pad(new_h - h)
         left_pad, right_pad = sep_pad(new_w - w)
 
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem:
                 continue
             tmp = sample[elem]
@@ -156,7 +156,7 @@ class BalancedRandomCrop:
             left = np.random.randint(0, w - new_w + 1)
             after_crop = []
             contains = []
-            for elem in [ref_label, prev_label] + curr_label:
+            for elem in [ref_label, prev_label] + curr_label:  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 tmp = elem[top : top + new_h, left : left + new_w]
                 contains.append(np.unique(tmp))
                 after_crop.append(tmp)
@@ -177,13 +177,13 @@ class BalancedRandomCrop:
                 if after_crop_pixels > self.min_obj_pixel_num:
                     new_all_obj.append(obj_id)
 
-            is_contain_obj = not len(new_all_obj) == 0
+            is_contain_obj = not len(new_all_obj) == 0  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
 
             if len(new_all_obj) > self.max_obj_num:
                 random.shuffle(new_all_obj)
                 new_all_obj = new_all_obj[: self.max_obj_num]
 
-            all_obj = [0] + new_all_obj
+            all_obj = [0] + new_all_obj  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         post_process = []
         for elem in after_crop:
@@ -204,7 +204,7 @@ class BalancedRandomCrop:
         for idx in range(curr_len):
             sample["curr_label"].append(post_process[idx + 2])
 
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem or "label" in elem:
                 continue
             if elem == "curr_img":
@@ -248,7 +248,7 @@ class RandomScale:
             else:
                 sc *= float(self.short_edge) / h
 
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem:
                 continue
             tmp = sample[elem]
@@ -283,7 +283,7 @@ class RandomScaleV2:
         min_scale=0.36,
         max_scale=1.0,
         short_edge=None,
-        ratio=[3.0 / 4.0, 4.0 / 3.0],
+        ratio=[3.0 / 4.0, 4.0 / 3.0],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         self.min_scale = min_scale
         self.max_scale = max_scale
@@ -308,7 +308,7 @@ class RandomScaleV2:
                 sc_x *= float(self.short_edge) / h
                 sc_y *= float(self.short_edge) / h
 
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem:
                 continue
             tmp = sample[elem]
@@ -339,8 +339,8 @@ class RandomScaleV2:
             target_area = area * np.random.uniform(self.min_scale**2, self.max_scale**2)
             aspect_ratio = np.exp(np.random.uniform(log_ratio[0], log_ratio[1]))
 
-            w = int(round(np.sqrt(target_area * aspect_ratio)))
-            h = int(round(np.sqrt(target_area / aspect_ratio)))
+            w = int(round(np.sqrt(target_area * aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+            h = int(round(np.sqrt(target_area / aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
             if 0 < w <= width and 0 < h <= height:
                 return h, w
@@ -349,10 +349,10 @@ class RandomScaleV2:
         in_ratio = float(width) / float(height)
         if in_ratio < min(self.ratio):
             w = width
-            h = int(round(w / min(self.ratio)))
+            h = int(round(w / min(self.ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         elif in_ratio > max(self.ratio):
             h = height
-            w = int(round(h * max(self.ratio)))
+            w = int(round(h * max(self.ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         else:  # whole image
             w = width
             h = height
@@ -397,7 +397,7 @@ class RestrictSize:
         if new_h == h and new_w == w:
             return sample
 
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem:
                 continue
             tmp = sample[elem]
@@ -419,7 +419,7 @@ class RandomHorizontalFlip:
 
     def __call__(self, sample):
         if random.random() < self.p:
-            for elem in sample.keys():
+            for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if "meta" in elem:
                     continue
                 if elem == "curr_img" or elem == "curr_label":
@@ -444,7 +444,7 @@ class RandomVerticalFlip:
 
     def __call__(self, sample):
         if random.random() < self.p:
-            for elem in sample.keys():
+            for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if "meta" in elem:
                     continue
                 if elem == "curr_img" or elem == "curr_label":
@@ -462,11 +462,11 @@ class RandomVerticalFlip:
 
 
 class RandomGaussianBlur:
-    def __init__(self, prob=0.3, sigma=[0.1, 2.0]):
+    def __init__(self, prob=0.3, sigma=[0.1, 2.0]):  # noqa: B006 - Keeps the upstream default object and signature.
         self.aug = TF.RandomApply([IT.GaussianBlur(sigma)], p=prob)
 
     def __call__(self, sample):
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem or "label" in elem:
                 continue
 
@@ -505,7 +505,7 @@ class SubtractMeanImage:
         self.change_channels = change_channels
 
     def __call__(self, sample):
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "image" in elem:
                 if self.change_channels:
                     sample[elem] = sample[elem][:, :, [2, 1, 0]]
@@ -520,7 +520,7 @@ class ToTensor:
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        for elem in sample.keys():
+        for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if "meta" in elem:
                 continue
             tmp = sample[elem]
@@ -561,7 +561,7 @@ class MultiRestrictSize:
         max_short_edge=None,
         max_long_edge=800,
         flip=False,
-        multi_scale=[1.3],
+        multi_scale=[1.3],  # noqa: B006 - Keeps the upstream default object and signature.
         align_corners=True,
         max_stride=16,
     ):
@@ -612,7 +612,7 @@ class MultiRestrictSize:
                 samples.append(sample)
             else:
                 new_sample = {}
-                for elem in sample.keys():
+                for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     if "meta" in elem:
                         new_sample[elem] = sample[elem]
                         continue
@@ -629,7 +629,7 @@ class MultiRestrictSize:
             if self.flip:
                 now_sample = samples[-1]
                 new_sample = {}
-                for elem in now_sample.keys():
+                for elem in now_sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     if "meta" in elem:
                         new_sample[elem] = now_sample[elem].copy()
                         new_sample[elem]["flip"] = True
@@ -646,7 +646,7 @@ class MultiToTensor:
     def __call__(self, samples):
         for idx in range(len(samples)):
             sample = samples[idx]
-            for elem in sample.keys():
+            for elem in sample.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if "meta" in elem:
                     continue
                 tmp = sample[elem]

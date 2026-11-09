@@ -32,7 +32,7 @@ class ImageProjModel(nn.Module):
 
     def forward(self, image_embeds):
         # embeds = image_embeds
-        embeds = image_embeds.type(list(self.proj.parameters())[0].dtype)
+        embeds = image_embeds.type(list(self.proj.parameters())[0].dtype)  # noqa: RUF015 - Keeps eager list construction and IndexError.
         clip_extra_context_tokens = self.proj(embeds).reshape(
             -1, self.clip_extra_context_tokens, self.cross_attention_dim
         )
@@ -88,7 +88,7 @@ class PerceiverAttention(nn.Module):
         x = self.norm1(x)
         latents = self.norm2(latents)
 
-        b, l, _ = latents.shape
+        b, l, _ = latents.shape  # noqa: E741 - Ambiguous upstream name kept as written.
 
         q = self.to_q(latents)
         kv_input = torch.cat((x, latents), dim=-2)

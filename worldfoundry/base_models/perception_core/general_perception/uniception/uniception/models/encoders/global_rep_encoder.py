@@ -19,9 +19,9 @@ class GlobalRepresentationEncoder(nn.Module):
         name: str,
         in_chans: int = 3,
         enc_embed_dim: int = 1024,
-        intermediate_dims: list[int] = [128, 256, 512],
+        intermediate_dims: list[int] = [128, 256, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         act_layer: type[nn.Module] = nn.GELU,
-        norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),
+        norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         pretrained_checkpoint_path: str | None = None,
         *args,
         **kwargs,

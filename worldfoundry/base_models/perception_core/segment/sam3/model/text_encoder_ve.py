@@ -54,9 +54,9 @@ class ResidualAttentionBlock(nn.Module):
     ) -> torch.Tensor:
         k_x = k_x if k_x is not None else q_x
         v_x = v_x if v_x is not None else q_x
-        if attn_mask is not None:
+        if attn_mask is not None:  # noqa: SIM102 - Branches carry per-case comments.
             # Leave boolean masks as is
-            if not attn_mask.dtype == torch.bool:
+            if not attn_mask.dtype == torch.bool:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 attn_mask = attn_mask.to(q_x.dtype)
 
         return self.attn(q_x, k_x, v_x, need_weights=False, attn_mask=attn_mask)[0]

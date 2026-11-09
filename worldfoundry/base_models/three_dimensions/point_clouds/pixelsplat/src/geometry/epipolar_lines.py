@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 import itertools
 from collections.abc import Iterable
 from typing import Literal, TypedDict

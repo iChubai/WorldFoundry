@@ -50,7 +50,7 @@ class StepVideoModel(nn.Module):
         norm_elementwise_affine: bool = False,
         norm_eps: float = 1e-6,
         use_additional_conditions: bool | None = False,
-        caption_channels: int | None | list | tuple = [6144, 1024],
+        caption_channels: int | None | list | tuple = [6144, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         attention_type: str | None = "torch",
     ):
         super().__init__()

@@ -114,9 +114,9 @@ class DDIMSampler:
         if conditioning is not None:
             if isinstance(conditioning, dict):
                 try:
-                    cbs = conditioning[list(conditioning.keys())[0]].shape[0]
+                    cbs = conditioning[list(conditioning.keys())[0]].shape[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                 except BaseException:
-                    cbs = conditioning[list(conditioning.keys())[0]][0].shape[0]
+                    cbs = conditioning[list(conditioning.keys())[0]][0].shape[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
 
                 if cbs != batch_size:
                     print(f"Warning: Got {cbs} conditionings but batch-size is {batch_size}")
@@ -214,7 +214,7 @@ class DDIMSampler:
             ## use mask to blend noised original latent (img_orig) & new sampled latent (img)
             if mask is not None:
                 assert x0 is not None
-                if clean_cond:
+                if clean_cond:  # noqa: SIM108 - Branches carry per-case comments.
                     img_orig = x0
                 else:
                     img_orig = self.model.q_sample(x0, ts)  # TODO: deterministic forward pass? <ddim inversion>

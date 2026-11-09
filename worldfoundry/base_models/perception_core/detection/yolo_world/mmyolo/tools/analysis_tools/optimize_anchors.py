@@ -257,7 +257,7 @@ class YOLOV5KMeansAnchorOptimizer(BaseAnchorOptimizer):
             ratio threshold hyperparameter.
     """
 
-    def __init__(self, iters, prior_match_thr=4.0, mutation_args=[0.9, 0.1], augment_args=[0.9, 1.1], **kwargs):
+    def __init__(self, iters, prior_match_thr=4.0, mutation_args=[0.9, 0.1], augment_args=[0.9, 1.1], **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__(**kwargs)
         self.iters = iters
         self.prior_match_thr = prior_match_thr
@@ -381,7 +381,7 @@ class YOLOV5KMeansAnchorOptimizer(BaseAnchorOptimizer):
         # According to the uniform distribution,the scaling scale between
         # augment_min and augment_max is randomly generated
         scale = np.random.uniform(self.augment_min, self.augment_max, size=(box_size.shape[0], 1))
-        box_size = torch.tensor(np.array([l[:,] * s for s, l in zip(scale, box_size.cpu().numpy(), strict=False)])).to(
+        box_size = torch.tensor(np.array([l[:,] * s for s, l in zip(scale, box_size.cpu().numpy(), strict=False)])).to(  # noqa: E741 - Ambiguous upstream name kept as written.
             box_size.device, dtype=torch.float32
         )
         # step2: calculate ratio

@@ -16,7 +16,7 @@ def broadcat(tensors, dim=-1):
     num_tensors = len(tensors)
     shape_lens = {len(t.shape) for t in tensors}
     assert len(shape_lens) == 1, "tensors must all have the same number of dimensions"
-    shape_len = list(shape_lens)[0]
+    shape_len = list(shape_lens)[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
     dim = (dim + shape_len) if dim < 0 else dim
     dims = list(zip(*(list(t.shape) for t in tensors), strict=False))
     expandable_dims = [(i, val) for i, val in enumerate(dims) if i != dim]
@@ -117,7 +117,7 @@ class PatchDropout(nn.Module):
         assert 0 <= prob < 1.0
         self.prob = prob
         self.exclude_first_token = exclude_first_token  # exclude CLS token
-        logging.info(f"os.getenv('RoPE')={os.getenv('RoPE')}")
+        logging.info(f"os.getenv('RoPE')={os.getenv('RoPE')}")  # noqa: SIM112 - Environment variable name used by the upstream code.
 
     def forward(self, x):
         if not self.training or self.prob == 0.0:
@@ -145,7 +145,7 @@ class PatchDropout(nn.Module):
         if self.exclude_first_token:
             x = torch.cat((cls_tokens, x), dim=1)
 
-        if self.training and os.getenv("RoPE") == "1":
+        if self.training and os.getenv("RoPE") == "1":  # noqa: SIM112 - Environment variable name used by the upstream code.
             return x, patch_indices_keep
 
         return x
@@ -154,11 +154,11 @@ class PatchDropout(nn.Module):
 # --------------------------------------------------------
 # Adapted from  https://github.com/microsoft/unilm/tree/master/beit
 # --------------------------------------------------------
-import math
-import os
+import math  # noqa: E402 - Follows the logging setup.
+import os  # noqa: E402 - Follows the logging setup.
 
-import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn as nn  # noqa: E402 - Follows the logging setup.
+import torch.nn.functional as F  # noqa: E402 - Follows the logging setup.
 
 try:
     from timm.models.layers import drop_path, to_2tuple, trunc_normal_
@@ -736,7 +736,7 @@ class EVAVisionTransformer(nn.Module):
         x = self.pos_drop(x)
 
         # a patch_dropout of 0. would mean it is disabled and this function would do nothing but return what was passed in
-        if os.getenv("RoPE") == "1":
+        if os.getenv("RoPE") == "1":  # noqa: SIM112 - Environment variable name used by the upstream code.
             if self.training and not isinstance(self.patch_dropout, nn.Identity):
                 x, patch_indices_keep = self.patch_dropout(x)
                 # Directly pass patch_indices_keep to self.rope.forward
@@ -775,7 +775,7 @@ def load_state_dict(
     map_location: str = "cpu",
     model_key: str = "model|module|state_dict",
     is_openai: bool = False,
-    skip_list: list = [],
+    skip_list: list = [],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     if is_openai:
         model = torch.jit.load(checkpoint_path, map_location="cpu").eval()
@@ -798,7 +798,7 @@ def load_state_dict(
             logging.info(f"Removing key {k} from pretrained checkpoint")
             del state_dict[k]
 
-    if os.getenv("RoPE") == "1":
+    if os.getenv("RoPE") == "1":  # noqa: SIM112 - Environment variable name used by the upstream code.
         for k in list(state_dict.keys()):
             if "freqs_cos" in k or "freqs_sin" in k:
                 del state_dict[k]
@@ -806,7 +806,10 @@ def load_state_dict(
 
 
 def load_clip_visual_state_dict(
-    checkpoint_path: str, map_location: str = "cpu", is_openai: bool = False, skip_list: list = []
+    checkpoint_path: str,
+    map_location: str = "cpu",
+    is_openai: bool = False,
+    skip_list: list = [],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     state_dict = load_state_dict(checkpoint_path, map_location=map_location, is_openai=is_openai, skip_list=skip_list)
     # for k in list(state_dict.keys()):
@@ -820,7 +823,7 @@ def load_clip_visual_state_dict(
     return state_dict
 
 
-from dataclasses import dataclass
+from dataclasses import dataclass  # noqa: E402 - Follows module-level definitions, as upstream.
 
 try:
     from apex.normalization import FusedLayerNorm

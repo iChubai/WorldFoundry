@@ -97,9 +97,9 @@ class PackedAttention(Qwen2Attention):
             packed_attn_output = torch.cat(upacked_attn_output, dim=1)
         else:
             pad_size = sum(sample_lens) - packed_query_states.shape[0]
-            packed_query_states = pad_sequence(packed_query_states.permute(1, 0, 2), pad_size)
-            packed_key_states = pad_sequence(packed_key_states.permute(1, 0, 2), pad_size)
-            packed_value_states = pad_sequence(packed_value_states.permute(1, 0, 2), pad_size)
+            packed_query_states = pad_sequence(packed_query_states.permute(1, 0, 2), pad_size)  # noqa: F821 - Name is undefined in the upstream source.
+            packed_key_states = pad_sequence(packed_key_states.permute(1, 0, 2), pad_size)  # noqa: F821 - Name is undefined in the upstream source.
+            packed_value_states = pad_sequence(packed_value_states.permute(1, 0, 2), pad_size)  # noqa: F821 - Name is undefined in the upstream source.
             packed_attn_output = flex_attention(
                 packed_query_states.unsqueeze(0),
                 packed_key_states.unsqueeze(0),

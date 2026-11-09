@@ -110,7 +110,7 @@ def demo_data(path, args, model, image1, image2):
 
 
 @torch.no_grad()
-def demo_custom(model, args, device=torch.device("cuda")):
+def demo_custom(model, args, device=torch.device("cuda")):  # noqa: B008 - Default evaluated once at definition, as upstream.
     image1 = cv2.imread("./custom/image1.jpg")
     image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2RGB)
     image2 = cv2.imread("./custom/image2.jpg")

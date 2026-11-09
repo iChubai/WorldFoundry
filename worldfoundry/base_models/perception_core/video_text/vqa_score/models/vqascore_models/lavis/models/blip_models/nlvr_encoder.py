@@ -88,7 +88,7 @@ class BertSelfAttention(nn.Module):
         self.config = config
         if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
             raise ValueError(
-                "The hidden size (%d) is not a multiple of the number of attention "
+                "The hidden size (%d) is not a multiple of the number of attention "  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 "heads (%d)" % (config.hidden_size, config.num_attention_heads)
             )
 
@@ -124,7 +124,7 @@ class BertSelfAttention(nn.Module):
         return self.attention_map
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (
+        new_x_shape = x.size()[:-1] + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             self.num_attention_heads,
             self.attention_head_size,
         )
@@ -207,12 +207,12 @@ class BertSelfAttention(nn.Module):
         context_layer = torch.matmul(attention_probs_dropped, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         context_layer = context_layer.view(*new_context_layer_shape)
 
         outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
 
-        outputs = outputs + (past_key_value,)
+        outputs = outputs + (past_key_value,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs
 
 
@@ -316,7 +316,7 @@ class BertAttention(nn.Module):
             )
             attention_output = self.output([self_outputs0[0], self_outputs1[0]], hidden_states)
 
-            outputs = (attention_output,) + self_outputs0[1:]  # add attentions if we output them
+            outputs = (attention_output,) + self_outputs0[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # add attentions if we output them
         else:
             self_outputs = self.self(
                 hidden_states,
@@ -328,7 +328,7 @@ class BertAttention(nn.Module):
                 output_attentions,
             )
             attention_output = self.output(self_outputs[0], hidden_states)
-            outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
+            outputs = (attention_output,) + self_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # add attentions if we output them
         return outputs
 
 
@@ -421,9 +421,9 @@ class BertLayer(nn.Module):
             self.seq_len_dim,
             attention_output,
         )
-        outputs = (layer_output,) + outputs
+        outputs = (layer_output,) + outputs  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
-        outputs = outputs + (present_key_value,)
+        outputs = outputs + (present_key_value,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return outputs
 
@@ -463,7 +463,7 @@ class BertEncoder(nn.Module):
         for i in range(self.config.num_hidden_layers):
             layer_module = self.layer[i]
             if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             layer_head_mask = head_mask[i] if head_mask is not None else None
             past_key_value = past_key_values[i] if past_key_values is not None else None
@@ -477,7 +477,7 @@ class BertEncoder(nn.Module):
 
                 def create_custom_forward(module):
                     def custom_forward(*inputs):
-                        return module(*inputs, past_key_value, output_attentions)
+                        return module(*inputs, past_key_value, output_attentions)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                     return custom_forward
 
@@ -506,10 +506,10 @@ class BertEncoder(nn.Module):
             if use_cache:
                 next_decoder_cache += (layer_outputs[-1],)
             if output_attentions:
-                all_self_attentions = all_self_attentions + (layer_outputs[1],)
+                all_self_attentions = all_self_attentions + (layer_outputs[1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
+            all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(
@@ -852,7 +852,7 @@ class BertModel(BertPreTrainedModel):
         pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 
         if not return_dict:
-            return (sequence_output, pooled_output) + encoder_outputs[1:]
+            return (sequence_output, pooled_output) + encoder_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return BaseModelOutputWithPoolingAndCrossAttentions(
             last_hidden_state=sequence_output,

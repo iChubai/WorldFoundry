@@ -150,8 +150,8 @@ def _additional_include_flags() -> list[str]:
 
 
 def get_cpp_flags() -> list[str]:
-    return ["-O3", "-DWITH_CUDA"] + _additional_include_flags()
+    return ["-O3", "-DWITH_CUDA"] + _additional_include_flags()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def get_cuda_flags() -> list[str]:
-    return ["-O3", "-DWITH_CUDA", "--use_fast_math"] + _additional_include_flags()
+    return ["-O3", "-DWITH_CUDA", "--use_fast_math"] + _additional_include_flags()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.

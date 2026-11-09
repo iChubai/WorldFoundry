@@ -75,9 +75,9 @@ def forward_flex(self, x):
 
 def _make_vit_b16_backbone(
     model,
-    features=[96, 192, 384, 768],
-    size=[384, 384],
-    hooks=[2, 5, 8, 11],
+    features=[96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
+    size=[384, 384],  # noqa: B006 - Keeps the upstream default object and signature.
+    hooks=[2, 5, 8, 11],  # noqa: B006 - Keeps the upstream default object and signature.
     vit_features=768,
     use_readout="ignore",
     start_index=1,
@@ -98,7 +98,7 @@ def _make_vit_b16_backbone(
 def _make_pretrained_vitl16_384(pretrained, use_readout="ignore", hooks=None):
     model = timm.create_model("vit_large_patch16_384", pretrained=pretrained)
 
-    hooks = [5, 11, 17, 23] if hooks == None else hooks
+    hooks = [5, 11, 17, 23] if hooks == None else hooks  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
     return _make_vit_b16_backbone(
         model,
         features=[256, 512, 1024, 1024],
@@ -111,17 +111,17 @@ def _make_pretrained_vitl16_384(pretrained, use_readout="ignore", hooks=None):
 def _make_pretrained_vitb16_384(pretrained, use_readout="ignore", hooks=None):
     model = timm.create_model("vit_base_patch16_384", pretrained=pretrained)
 
-    hooks = [2, 5, 8, 11] if hooks == None else hooks
+    hooks = [2, 5, 8, 11] if hooks == None else hooks  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
     return _make_vit_b16_backbone(model, features=[96, 192, 384, 768], hooks=hooks, use_readout=use_readout)
 
 
 def _make_vit_b_rn50_backbone(
     model,
-    features=[256, 512, 768, 768],
-    size=[384, 384],
-    hooks=[0, 1, 8, 11],
+    features=[256, 512, 768, 768],  # noqa: B006 - Keeps the upstream default object and signature.
+    size=[384, 384],  # noqa: B006 - Keeps the upstream default object and signature.
+    hooks=[0, 1, 8, 11],  # noqa: B006 - Keeps the upstream default object and signature.
     vit_features=768,
-    patch_size=[16, 16],
+    patch_size=[16, 16],  # noqa: B006 - Keeps the upstream default object and signature.
     number_stages=2,
     use_vit_only=False,
     use_readout="ignore",
@@ -182,7 +182,7 @@ def _make_vit_b_rn50_backbone(
         if final_layer is not None:
             layers.append(final_layer)
 
-        value = nn.Sequential(*layers)
+        value = nn.Sequential(*layers)  # noqa: F841 - The local is visible through locals().
         exec(f"pretrained.act_postprocess{s + 1}=value")
 
     pretrained.model.start_index = start_index
@@ -202,7 +202,7 @@ def _make_vit_b_rn50_backbone(
 def _make_pretrained_vitb_rn50_384(pretrained, use_readout="ignore", hooks=None, use_vit_only=False):
     model = timm.create_model("vit_base_resnet50_384", pretrained=pretrained)
 
-    hooks = [0, 1, 8, 11] if hooks == None else hooks
+    hooks = [0, 1, 8, 11] if hooks == None else hooks  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
     return _make_vit_b_rn50_backbone(
         model,
         features=[256, 512, 768, 768],

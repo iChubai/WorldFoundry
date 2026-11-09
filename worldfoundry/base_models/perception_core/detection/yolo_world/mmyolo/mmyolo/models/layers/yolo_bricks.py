@@ -63,8 +63,8 @@ class SPPFBottleneck(BaseModule):
         use_conv_first: bool = True,
         mid_channels_scale: float = 0.5,
         conv_cfg: ConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg)
@@ -146,8 +146,8 @@ class RepVGGBlock(nn.Module):
         dilation: int | tuple[int] = 1,
         groups: int | None = 1,
         padding_mode: str | None = "zeros",
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         use_se: bool = False,
         use_alpha: bool = False,
         use_bn_first=True,
@@ -363,9 +363,9 @@ class BepC3StageBlock(nn.Module):
         num_blocks: int = 1,
         hidden_ratio: float = 0.5,
         concat_all_layer: bool = True,
-        block_cfg: ConfigType = {"type": "RepVGGBlock"},
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},  # noqa: B006 - Keeps the upstream default object and signature.
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         hidden_channels = int(out_channels * hidden_ratio)
@@ -443,7 +443,7 @@ class BottleRep(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        block_cfg: ConfigType = {"type": "RepVGGBlock"},
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},  # noqa: B006 - Keeps the upstream default object and signature.
         adaptive_weight: bool = False,
     ):
         super().__init__()
@@ -498,7 +498,7 @@ class ConvWrapper(nn.Module):
         groups: int = 1,
         bias: bool = True,
         norm_cfg: ConfigType = None,
-        act_cfg: ConfigType = {"type": "SiLU"},
+        act_cfg: ConfigType = {"type": "SiLU"},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.block = ConvModule(
@@ -532,7 +532,7 @@ class EffectiveSELayer(nn.Module):
             Defaults to dict(type='HSigmoid').
     """
 
-    def __init__(self, channels: int, act_cfg: ConfigType = {"type": "HSigmoid"}):
+    def __init__(self, channels: int, act_cfg: ConfigType = {"type": "HSigmoid"}):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__()
         assert isinstance(act_cfg, dict)
         self.fc = ConvModule(channels, channels, 1, act_cfg=None)
@@ -570,8 +570,8 @@ class PPYOLOESELayer(nn.Module):
     def __init__(
         self,
         feat_channels: int,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.fc = nn.Conv2d(feat_channels, feat_channels, 1)
@@ -627,8 +627,8 @@ class ELANBlock(BaseModule):
         num_blocks: int = 2,
         num_convs_in_block: int = 1,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -742,8 +742,8 @@ class MaxPoolAndStrideConvBlock(BaseModule):
         maxpool_kernel_sizes: int = 2,
         use_in_channels_of_middle: bool = False,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -807,8 +807,8 @@ class TinyDownSampleBlock(BaseModule):
         middle_ratio: float = 1.0,
         kernel_sizes: int | Sequence[int] = 3,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "LeakyReLU", "negative_slope": 0.1},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "LeakyReLU", "negative_slope": 0.1},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg)
@@ -886,8 +886,8 @@ class SPPFCSPBlock(BaseModule):
         kernel_sizes: int | Sequence[int] = 5,
         is_tiny_version: bool = False,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -945,7 +945,7 @@ class SPPFCSPBlock(BaseModule):
         if isinstance(self.kernel_sizes, int):
             y1 = self.poolings(x1)
             y2 = self.poolings(y1)
-            concat_list = [x1] + [y1, y2, self.poolings(y2)]
+            concat_list = [x1] + [y1, y2, self.poolings(y2)]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             if self.is_tiny_version:
                 x1 = self.fuse_layers(torch.cat(concat_list[::-1], 1))
             else:
@@ -1025,8 +1025,8 @@ class PPYOLOEBasicBlock(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         shortcut: bool = True,
         use_alpha: bool = False,
     ):
@@ -1086,11 +1086,11 @@ class CSPResLayer(nn.Module):
         in_channels: int,
         out_channels: int,
         num_block: int,
-        block_cfg: ConfigType = {"type": "PPYOLOEBasicBlock", "shortcut": True, "use_alpha": True},
+        block_cfg: ConfigType = {"type": "PPYOLOEBasicBlock", "shortcut": True, "use_alpha": True},  # noqa: B006 - Keeps the upstream default object and signature.
         stride: int = 1,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
-        attention_cfg: OptMultiConfig = {"type": "EffectiveSELayer", "act_cfg": {"type": "HSigmoid"}},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        attention_cfg: OptMultiConfig = {"type": "EffectiveSELayer", "act_cfg": {"type": "HSigmoid"}},  # noqa: B006 - Keeps the upstream default object and signature.
         use_spp: bool = False,
     ):
         super().__init__()
@@ -1195,7 +1195,7 @@ class RepStageBlock(nn.Module):
         out_channels: int,
         num_blocks: int = 1,
         bottle_block: nn.Module = RepVGGBlock,
-        block_cfg: ConfigType = {"type": "RepVGGBlock"},
+        block_cfg: ConfigType = {"type": "RepVGGBlock"},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         block_cfg = block_cfg.copy()
@@ -1280,8 +1280,8 @@ class DarknetBottleneck(MMDET_DarknetBottleneck):
         add_identity: bool = True,
         use_depthwise: bool = False,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ) -> None:
         super().__init__(in_channels, out_channels, init_cfg=init_cfg)
@@ -1341,8 +1341,8 @@ class CSPLayerWithTwoConv(BaseModule):
         num_blocks: int = 1,
         add_identity: bool = True,  # shortcut
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ) -> None:
         super().__init__(init_cfg=init_cfg)
@@ -1402,8 +1402,8 @@ class BiFusion(nn.Module):
         in_channels0: int,
         in_channels1: int,
         out_channels: int,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.conv1 = ConvModule(
@@ -1495,8 +1495,8 @@ class CSPSPPFBottleneck(BaseModule):
         use_conv_first: bool = True,
         mid_channels_scale: float = 0.5,
         conv_cfg: ConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg)

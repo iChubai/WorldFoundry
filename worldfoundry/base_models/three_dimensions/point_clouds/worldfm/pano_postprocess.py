@@ -46,7 +46,7 @@ def fit_within(w: int, h: int, max_w: int, max_h: int) -> tuple[int, int]:
     sw = max_w / max(1, w)
     sh = max_h / max(1, h)
     s = min(1.0, sw, sh)
-    return max(1, int(round(w * s))), max(1, int(round(h * s)))
+    return max(1, int(round(w * s))), max(1, int(round(h * s)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
 
 def resize_panorama(img_bgr_u8: np.ndarray, max_w: int, max_h: int) -> np.ndarray:

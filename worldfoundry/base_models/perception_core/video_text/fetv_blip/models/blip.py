@@ -10,20 +10,20 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-import os
-from urllib.parse import urlparse
+import os  # noqa: E402 - Follows the warnings configuration.
+from urllib.parse import urlparse  # noqa: E402 - Follows the warnings configuration.
 
-import torch
-from timm.models.hub import download_cached_file
-from torch import nn
-from transformers import BertTokenizer
+import torch  # noqa: E402 - Follows the warnings configuration.
+from timm.models.hub import download_cached_file  # noqa: E402 - Follows the warnings configuration.
+from torch import nn  # noqa: E402 - Follows the warnings configuration.
+from transformers import BertTokenizer  # noqa: E402 - Follows the warnings configuration.
 
-from worldfoundry.base_models.perception_core.captioning.tag2text.vit import (
+from worldfoundry.base_models.perception_core.captioning.tag2text.vit import (  # noqa: E402 - Follows the warnings configuration.
     VisionTransformer,
     interpolate_pos_embed,
 )
 
-from .med import BertConfig, BertLMHeadModel, BertModel
+from .med import BertConfig, BertLMHeadModel, BertModel  # noqa: E402 - Follows the warnings configuration.
 
 
 class BLIP_Base(nn.Module):
@@ -256,14 +256,14 @@ def load_checkpoint(model, url_or_filename):
     state_dict["visual_encoder.pos_embed"] = interpolate_pos_embed(
         state_dict["visual_encoder.pos_embed"], model.visual_encoder
     )
-    if "visual_encoder_m.pos_embed" in model.state_dict().keys():
+    if "visual_encoder_m.pos_embed" in model.state_dict().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         state_dict["visual_encoder_m.pos_embed"] = interpolate_pos_embed(
             state_dict["visual_encoder_m.pos_embed"], model.visual_encoder_m
         )
-    for key in model.state_dict().keys():
-        if key in state_dict.keys() and state_dict[key].shape != model.state_dict()[key].shape:
+    for key in model.state_dict().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+        if key in state_dict.keys() and state_dict[key].shape != model.state_dict()[key].shape:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             del state_dict[key]
 
     msg = model.load_state_dict(state_dict, strict=False)
-    print("load checkpoint from %s" % url_or_filename)
+    print("load checkpoint from %s" % url_or_filename)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     return model, msg

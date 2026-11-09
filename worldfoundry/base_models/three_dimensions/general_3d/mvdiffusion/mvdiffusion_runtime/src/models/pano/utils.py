@@ -13,7 +13,7 @@ def get_correspondences(R, K, img_h, img_w):
         for j in range(m):
             R_right = R[:, j : j + 1]
             K_right = K[:, j : j + 1]
-            l = R_right.shape[1]
+            l = R_right.shape[1]  # noqa: E741 - Ambiguous upstream name kept as written.
 
             R_left = R[:, i : i + 1].repeat(1, l, 1, 1)
             K_left = K[:, i : i + 1].repeat(1, l, 1, 1)

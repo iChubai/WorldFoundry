@@ -113,7 +113,7 @@ class Internvl2Template(InternvlTemplate):
         elif media_type == "video":
             video_segments = get_env_args("video_segments", int, self.video_segments)
             load_video = partial(load_video_internvl, num_segments=video_segments)
-            return self.replace_video2image(load_video, inputs, lambda i: [f"Frame{i + 1}: "] + image_context)
+            return self.replace_video2image(load_video, inputs, lambda i: [f"Frame{i + 1}: "] + image_context)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def replace_ref(self, ref: str, index: int, inputs: StdTemplateInputs) -> list[Context]:
         return [f"<ref>{ref}</ref>"]

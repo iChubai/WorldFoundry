@@ -118,7 +118,7 @@ class CheckpointFunction(torch.autograd.Function):
         del ctx.input_tensors
         del ctx.input_params
         del output_tensors
-        return (None, None) + input_grads
+        return (None, None) + input_grads  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 class BasicTransformerBlock(nn.Module):

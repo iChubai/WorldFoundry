@@ -270,7 +270,7 @@ class GLUMBConvTemp(GLUMBConv):
 class ChunkGLUMBConvTemp(GLUMBConvTemp):
     """Chunk-causal temporal GLUMBConv for long video FFN passes."""
 
-    def forward(self, x: torch.Tensor, HW=None, chunk_index: list[int] = [0]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, HW=None, chunk_index: list[int] = [0]) -> torch.Tensor:  # noqa: B006 - Keeps the upstream default object and signature.
         B, N, C = x.shape
 
         assert len(HW) == 3, "HW must be a tuple of (T, H, W)"

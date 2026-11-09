@@ -11,7 +11,7 @@ class VisionParser:
         n_frames=8,
         max_n_frames=256,
         is_training=True,
-        video_sampling_strategy={},
+        video_sampling_strategy={},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         self.n_frames = n_frames
         self.max_n_frames = max_n_frames

@@ -172,7 +172,7 @@ class TurboVAEDCausalConv3d(nn.Module):
     ):
         super().__init__()
 
-        assert is_causal == False
+        assert is_causal == False  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.is_causal = is_causal

@@ -215,7 +215,7 @@ def prepare_sequence_tensors(x, seq_len, sp_world_size):
     """Pad a batch of token sequences to the inference sequence length."""
     seq_lens = torch.tensor([tokens.size(1) for tokens in x], dtype=torch.long)
     if sp_world_size > 1:
-        seq_len = int(math.ceil(seq_len / sp_world_size)) * sp_world_size
+        seq_len = int(math.ceil(seq_len / sp_world_size)) * sp_world_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     assert seq_lens.max() <= seq_len
     padded = [
         torch.cat(
@@ -370,9 +370,12 @@ class WanI2VCrossAttention(WanT2VCrossAttention):
 
     def project_context_kv(self, context: torch.Tensor) -> tuple[torch.Tensor, ...]:
         b, n, d = context.size(0), self.num_heads, self.head_dim
-        return super().project_context_kv(context[:, 257:]) + (
-            self.norm_k_img(self.k_img(context[:, :257])).view(b, -1, n, d),
-            self.v_img(context[:, :257]).view(b, -1, n, d),
+        return (
+            super().project_context_kv(context[:, 257:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            + (
+                self.norm_k_img(self.k_img(context[:, :257])).view(b, -1, n, d),
+                self.v_img(context[:, :257]).view(b, -1, n, d),
+            )
         )
 
     def forward(self, x, context, context_lens, dtype=torch.bfloat16, t=0, condition_store=None):
@@ -932,7 +935,7 @@ class WanTransformer3DModel(WanTransformerMethodsMixin, nn.Module, NativeConfigM
         # Padding for multi-gpu inference
         seq_lens = torch.tensor([u.size(1) for u in x], dtype=torch.long)
         if self.sp_world_size > 1:
-            seq_len = int(math.ceil(seq_len / self.sp_world_size)) * self.sp_world_size
+            seq_len = int(math.ceil(seq_len / self.sp_world_size)) * self.sp_world_size  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         assert seq_lens.max() <= seq_len
         x = torch.cat([torch.cat([u, u.new_zeros(1, seq_len - u.size(1), u.size(2))], dim=1) for u in x])
 

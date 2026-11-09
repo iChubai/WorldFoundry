@@ -1,4 +1,5 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
+# ruff: noqa: F405 - Names come from the upstream star import.
 """Optional Wan 2.2 LLM prompt expander.
 
 Rewrites prompts using :mod:`.system_prompts` before UMT5
@@ -36,7 +37,7 @@ except ModuleNotFoundError:
     flash_attn_varlen_func = None  # in compatible with CPU machines
     FLASH_VER = None
 
-from .system_prompts import *
+from .system_prompts import *  # noqa: F403 - Upstream star import kept as written.
 
 DEFAULT_SYS_PROMPTS = {
     "t2v-A14B": {
@@ -106,7 +107,7 @@ class PromptExpander:
         if seed < 0:
             seed = random.randint(0, sys.maxsize)
         if image is not None and self.is_vl:
-            return self.extend_with_img(prompt, system_prompt, image=image, seed=seed, *args, **kwargs)
+            return self.extend_with_img(prompt, system_prompt, image=image, seed=seed, *args, **kwargs)  # noqa: B026 - Keeps the upstream argument order.
         elif not self.is_vl:
             return self.extend(prompt, system_prompt, seed, *args, **kwargs)
         else:

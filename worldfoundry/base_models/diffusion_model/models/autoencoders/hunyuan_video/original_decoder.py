@@ -304,7 +304,7 @@ class DecoderCausal3D(nn.Module):
         out_channels=3,
         eps=1e-6,
         dropout=0.0,
-        block_out_channels=[128, 256, 512, 512],
+        block_out_channels=[128, 256, 512, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         layers_per_block=2,
         num_groups=32,
         time_compression_ratio=4,
@@ -408,7 +408,7 @@ class HunyuanVideoVAEDecoder(nn.Module):
         out_channels=3,
         eps=1e-6,
         dropout=0.0,
-        block_out_channels=[128, 256, 512, 512],
+        block_out_channels=[128, 256, 512, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         layers_per_block=2,
         num_groups=32,
         time_compression_ratio=4,

@@ -70,12 +70,12 @@ def _crop_to_supported_aspect_ratio(image, min_aspect_ratio=0.5, max_aspect_rati
     aspect_ratio = height / max(width, 1)
 
     if aspect_ratio < min_aspect_ratio:
-        crop_width = min(width, max(1, int(round(height / min_aspect_ratio))))
+        crop_width = min(width, max(1, int(round(height / min_aspect_ratio))))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         left = max((width - crop_width) // 2, 0)
         return image.crop((left, 0, left + crop_width, height))
 
     if aspect_ratio > max_aspect_ratio:
-        crop_height = min(height, max(1, int(round(width * max_aspect_ratio))))
+        crop_height = min(height, max(1, int(round(width * max_aspect_ratio))))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         top = max((height - crop_height) // 2, 0)
         return image.crop((0, top, width, top + crop_height))
 

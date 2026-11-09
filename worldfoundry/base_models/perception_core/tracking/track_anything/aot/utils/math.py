@@ -20,7 +20,7 @@ def generate_permute_matrix(dim, num, keep_first=True, gpu_id=0):
 
 def truncated_normal_(tensor, mean=0, std=0.02):
     size = tensor.shape
-    tmp = tensor.new_empty(size + (4,)).normal_()
+    tmp = tensor.new_empty(size + (4,)).normal_()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     valid = (tmp < 2) & (tmp > -2)
     ind = valid.max(-1, keepdim=True)[1]
     tensor.data.copy_(tmp.gather(-1, ind).squeeze(-1))

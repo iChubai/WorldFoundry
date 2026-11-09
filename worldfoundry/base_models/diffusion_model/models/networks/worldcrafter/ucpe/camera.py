@@ -113,7 +113,7 @@ def _ucm_unproject_grid(
     cy: float | torch.Tensor,
     xi: float | torch.Tensor,
     dtype: torch.dtype = torch.float32,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     y_down: bool = True,
 ) -> torch.Tensor:
     scalar_input = all(not torch.is_tensor(value) for value in (fx, fy, cx, cy, xi))
@@ -298,7 +298,7 @@ def compute_up_lat_map(
     xi: torch.Tensor,
     height: int,
     width: int,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     delta: float = 0.1,
 ):
     """

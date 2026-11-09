@@ -461,7 +461,7 @@ class Sam3VideoInference(Sam3VideoBase):
             out_probs = torch.tensor([out["obj_id_to_score"][obj_id] for obj_id in curr_obj_ids])
             out_tracker_probs = torch.tensor(
                 [
-                    (out["obj_id_to_tracker_score"][obj_id] if obj_id in out["obj_id_to_tracker_score"] else 0.0)
+                    (out["obj_id_to_tracker_score"][obj_id] if obj_id in out["obj_id_to_tracker_score"] else 0.0)  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
                     for obj_id in curr_obj_ids
                 ]
             )
@@ -1147,7 +1147,7 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
     def _has_object_been_refined(self, inference_state, obj_id):
         action_history = inference_state["action_history"]
         for action in action_history:
-            if action["type"] in ["add", "refine"] and action.get("obj_ids"):
+            if action["type"] in ["add", "refine"] and action.get("obj_ids"):  # noqa: SIM102 - Statement form kept for readability.
                 if obj_id in action["obj_ids"]:
                     return True
         return False
@@ -1567,7 +1567,7 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
         mask_only_cond_frame_indices = []
         window = self.refinement_detector_cond_frame_removal_window
         for frame_idx in tracker_state["mask_inputs_per_obj"][obj_idx]:
-            if frame_idx not in tracker_state["point_inputs_per_obj"][obj_idx]:
+            if frame_idx not in tracker_state["point_inputs_per_obj"][obj_idx]:  # noqa: SIM102 - Branches carry per-case comments.
                 # clear conditioning frames within a window of the refined frame
                 if abs(frame_idx - refined_frame_idx) <= window:
                     mask_only_cond_frame_indices.append(frame_idx)

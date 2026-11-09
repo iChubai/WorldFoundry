@@ -209,8 +209,8 @@ def linear_relu_fwd(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     # return ref_c
 
     # Allocates output.
-    c = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=a.dtype)
-    relu_mask = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=bool)
+    c = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=a.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+    relu_mask = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=bool)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # 1D launch kernel where each block gets its own program.
     def grid(META):

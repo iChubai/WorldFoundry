@@ -198,7 +198,7 @@ class Blip2T5(Blip2Base):
         inputs_t5 = self.t5_proj(query_output.last_hidden_state)
         atts_t5 = torch.ones(inputs_t5.size()[:-1], dtype=torch.long).to(image.device)
 
-        prompt = samples["prompt"] if "prompt" in samples.keys() else self.prompt
+        prompt = samples["prompt"] if "prompt" in samples.keys() else self.prompt  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
 
         if isinstance(prompt, str):
             prompt = [prompt] * image.size(0)

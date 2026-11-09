@@ -120,7 +120,7 @@ class DPT(BaseModel):
         Args:
             x: The x.
         """
-        if self.channels_last == True:
+        if self.channels_last == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             x.contiguous(memory_format=torch.channels_last)
 
         layers = self.forward_transformer(self.pretrained, x)
@@ -153,9 +153,9 @@ class DPT(BaseModel):
 
 class DPTDepthModel(DPT):
     def __init__(self, path=None, non_negative=True, **kwargs):
-        features = kwargs["features"] if "features" in kwargs else 256
-        head_features_1 = kwargs["head_features_1"] if "head_features_1" in kwargs else features
-        head_features_2 = kwargs["head_features_2"] if "head_features_2" in kwargs else 32
+        features = kwargs["features"] if "features" in kwargs else 256  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        head_features_1 = kwargs["head_features_1"] if "head_features_1" in kwargs else features  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        head_features_2 = kwargs["head_features_2"] if "head_features_2" in kwargs else 32  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         kwargs.pop("head_features_1", None)
         kwargs.pop("head_features_2", None)
 

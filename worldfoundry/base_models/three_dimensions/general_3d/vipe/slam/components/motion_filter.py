@@ -36,7 +36,7 @@ class MotionFilter:
         droid_net: DroidNet,
         sparse_tracks: SparseTracks,
         thresh: float,
-        device: torch.device = torch.device("cuda"),
+        device: torch.device = torch.device("cuda"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     ):
         self.net = droid_net
         self.thresh = thresh

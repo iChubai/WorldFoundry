@@ -26,7 +26,7 @@ class RobustKernel(ABC):
     def is_gnc(self) -> bool:
         return False
 
-    def set_mu(self, mu: float) -> None:
+    def set_mu(self, mu: float) -> None:  # noqa: B027 - Optional hook with a no-op default.
         pass
 
     def update_mu(self, mu: float) -> float:

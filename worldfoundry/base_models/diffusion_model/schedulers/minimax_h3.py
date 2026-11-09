@@ -176,7 +176,7 @@ def minimax_h3_frame_count_from_video_latent_t(out_t: int) -> int:
 def minimax_h3_audio_latent_t(duration_seconds: float) -> int:
     """Audio latent temporal length at the 40 Hz latent boundary."""
 
-    return int(round(float(duration_seconds) * 40.0))
+    return int(round(float(duration_seconds) * 40.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
 
 # --------------------------------------------------------------------------- #

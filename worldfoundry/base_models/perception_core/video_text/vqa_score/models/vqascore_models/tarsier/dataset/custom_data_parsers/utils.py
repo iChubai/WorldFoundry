@@ -49,7 +49,7 @@ def _sample_frame_indices_v2(
         total_frames: int, 
         n_frames: int, 
         is_training=False, 
-        video_sampling_strategy = {},
+        video_sampling_strategy = {},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
     total_frames_idxs = list(range(total_frames))
     if total_frames <= n_frames: 
@@ -63,7 +63,7 @@ def _sample_frame_indices_v2(
     return sample_ids
 
 # 均匀抽帧，必采样首尾帧。
-def _sample_frame_indices_v1(total_frames: int, n_frames: int, is_training=False, video_sampling_strategy = {}):
+def _sample_frame_indices_v1(total_frames: int, n_frames: int, is_training=False, video_sampling_strategy = {}):  # noqa: B006 - Keeps the upstream default object and signature.
     if n_frames == 1:
         return [0]  # sample first frame in default
     if total_frames <= n_frames:
@@ -134,7 +134,7 @@ def download_file(path):
         # with timer(f'Download {path}'):
         return _download_file(path)
     except func_timeout.exceptions.FunctionTimedOut as e:
-        raise ValueError(e)
+        raise ValueError(e)  # noqa: B904 - Keeps the implicit exception context.
     
 def load_video_from_url(video_url):
     """
@@ -143,7 +143,7 @@ def load_video_from_url(video_url):
     """
     import imageio
     # Create a temporary file to store the video
-    temp_video_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+    temp_video_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     temp_video_path = temp_video_file.name
     # Read the video and write it to the temporary file
     reader = imageio.get_reader(video_url, "ffmpeg")
@@ -246,7 +246,7 @@ class GIFReader:
         for frame in ImageSequence.Iterator(self.gif):
             if i in frame_indices:
                 frames.append(frame.convert('RGB'))
-            i += 1
+            i += 1  # noqa: SIM113 - Keeps the explicit loop counter.
         return frames
 
     def preprocess(self):
@@ -280,7 +280,7 @@ def sample_video(
     sampling_fps:float | None=None,
     mask_boxes=None,
     is_training:bool=False,
-    video_sampling_strategy={'video_sampler_version': 'v1'},
+    video_sampling_strategy={'video_sampler_version': 'v1'},  # noqa: B006 - Keeps the upstream default object and signature.
     return_frame_ids: bool=False,
     ) -> list[Image.Image]:
 
@@ -349,7 +349,7 @@ def sample_video(
 
 
 def load_image_from_base64String(img_path):
-    img = base64.b64decode(open(img_path, "rb").read())
+    img = base64.b64decode(open(img_path, "rb").read())  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     buf = io.BytesIO(img)
     img = Image.open(buf)
     return img
@@ -424,12 +424,12 @@ def polygon_area(vertices, convert_format = True):
     return abs(area) / 2
 
 def get_text_len(text_line):
-    l = 0
+    l = 0  # noqa: E741 - Ambiguous upstream name kept as written.
     for c in text_line:
         if '\u4e00' <= c <= '\u9fff':
-            l += 1
+            l += 1  # noqa: E741 - Ambiguous upstream name kept as written.
         else:
-            l += 0.5
+            l += 0.5  # noqa: E741 - Ambiguous upstream name kept as written.
     return l
 
 def filter_ocr_polygon(response, area_threshold=0.0005):

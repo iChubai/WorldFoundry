@@ -25,7 +25,7 @@ class BaseModel(nn.Module):
 
     @property
     def device(self):
-        return list(self.parameters())[0].device
+        return list(self.parameters())[0].device  # noqa: RUF015 - Keeps eager list construction and IndexError.
 
     def load_checkpoint(self, url_or_filename):
         """
@@ -42,12 +42,12 @@ class BaseModel(nn.Module):
         else:
             raise RuntimeError("checkpoint url or path is invalid")
 
-        state_dict = checkpoint["model"] if "model" in checkpoint.keys() else checkpoint
+        state_dict = checkpoint["model"] if "model" in checkpoint.keys() else checkpoint  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
 
         msg = self.load_state_dict(state_dict, strict=False)
 
         logging.info(f"Missing keys {msg.missing_keys}")
-        logging.info("load checkpoint from %s" % url_or_filename)
+        logging.info("load checkpoint from %s" % url_or_filename)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
         return msg
 
@@ -123,7 +123,7 @@ class BaseEncoder(nn.Module):
 
     @property
     def device(self):
-        return list(self.parameters())[0].device
+        return list(self.parameters())[0].device  # noqa: RUF015 - Keeps eager list construction and IndexError.
 
 
 class SharedQueueMixin:

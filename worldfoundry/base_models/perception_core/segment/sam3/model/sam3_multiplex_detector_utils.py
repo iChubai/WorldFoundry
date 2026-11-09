@@ -106,7 +106,7 @@ def _nms_masks_core_batched(
 
     if perflib.is_enabled:
         # Compute batched pairwise IoU/IoM
-        if nms_use_iom:
+        if nms_use_iom:  # noqa: SIM108 - Branches carry per-case comments.
             overlaps = _batched_mask_iom(masks_binary)  # (B, num_det, num_det)
         else:
             overlaps = _batched_mask_iou(masks_binary)  # (B, num_det, num_det)
@@ -114,7 +114,7 @@ def _nms_masks_core_batched(
         return keep
 
     # Non-perflib path: compute batched IoU/IoM
-    if nms_use_iom:
+    if nms_use_iom:  # noqa: SIM108 - Branches carry per-case comments.
         overlaps = _batched_mask_iom(masks_binary)  # (B, num_det, num_det)
     else:
         overlaps = _batched_mask_iou(masks_binary)  # (B, num_det, num_det)
@@ -249,7 +249,7 @@ def _nms_masks_core_single(
 
     if perflib.is_enabled:
         masks_binary = pred_masks > 0  # (num_det, H_mask, W_mask)
-        if nms_use_iom:
+        if nms_use_iom:  # noqa: SIM108 - Branches carry per-case comments.
             ious = perf_mask_iom(masks_binary, masks_binary)  # (num_det, num_det)
         else:
             ious = perf_mask_iou(masks_binary, masks_binary)  # (num_det, num_det)
@@ -261,7 +261,7 @@ def _nms_masks_core_single(
     if probs.numel() == 0:
         return is_valid  # no valid detection, return empty keep mask
 
-    if nms_use_iom:
+    if nms_use_iom:  # noqa: SIM108 - Branches carry per-case comments.
         overlaps = mask_iom(masks_binary, masks_binary)  # (num_valid, num_valid)
     else:
         overlaps = mask_iou(masks_binary, masks_binary)  # (num_valid, num_valid)

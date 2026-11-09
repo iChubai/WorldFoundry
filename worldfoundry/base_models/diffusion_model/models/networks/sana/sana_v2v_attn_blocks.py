@@ -72,7 +72,7 @@ def _bidirectional_triton_gdn_is_supported(version: str | None = None) -> bool:
     for item in str(version).split(".")[:2]:
         digits = "".join(character for character in item if character.isdigit())
         numeric.append(int(digits or 0))
-    return tuple((numeric + [0, 0])[:2]) >= (3, 2)
+    return tuple((numeric + [0, 0])[:2]) >= (3, 2)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def flip_and_shift(x: torch.Tensor, dim: int = 2, shift_val: float = 0.0) -> torch.Tensor:

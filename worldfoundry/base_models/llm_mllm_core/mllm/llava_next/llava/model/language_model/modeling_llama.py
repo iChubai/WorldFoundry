@@ -518,7 +518,7 @@ class LlamaRingFlashAttention2(LlamaAttention):
             softmax_scale (`float`, *optional*):
                 The scaling of QK^T before applying softmax. Default to 1 / sqrt(head_dim)
         """
-        if not self._flash_attn_uses_top_left_mask:
+        if not self._flash_attn_uses_top_left_mask:  # noqa: SIM108 - Branches carry per-case comments.
             causal = self.is_causal
         else:
             # TODO: Remove the `query_length != 1` check once Flash Attention for RoCm is bumped to 2.1. For details, please see the comment in LlamaFlashAttention2 __init__.
@@ -715,7 +715,7 @@ class LlamaFlashAttention2(LlamaAttention):
             softmax_scale (`float`, *optional*):
                 The scaling of QK^T before applying softmax. Default to 1 / sqrt(head_dim)
         """
-        if not self._flash_attn_uses_top_left_mask:
+        if not self._flash_attn_uses_top_left_mask:  # noqa: SIM108 - Branches carry per-case comments.
             causal = self.is_causal
         else:
             # TODO: Remove the `query_length != 1` check once Flash Attention for RoCm is bumped to 2.1. For details, please see the comment in LlamaFlashAttention2 __init__.
@@ -1180,7 +1180,7 @@ class LlamaModel(LlamaPreTrainedModel):
             inputs_embeds = self.embed_tokens(input_ids)
 
         past_seen_tokens = 0
-        if use_cache:  # kept for BC (cache positions)
+        if use_cache:  # noqa: SIM102 - Branches carry per-case comments.  # kept for BC (cache positions)
             if not isinstance(past_key_values, StaticCache):
                 past_key_values = DynamicCache.from_legacy_cache(past_key_values)
                 past_seen_tokens = past_key_values.get_seq_length()
@@ -1303,7 +1303,7 @@ class LlamaModel(LlamaPreTrainedModel):
                 # Attend to all tokens in fully masked rows in the causal_mask, for example the relevant first rows when
                 # using left padding. This is required by F.scaled_dot_product_attention memory-efficient attention path.
                 # Details: https://github.com/pytorch/pytorch/issues/110213
-                causal_mask = AttentionMaskConverter._unmask_unattended(causal_mask, min_dtype)
+                causal_mask = AttentionMaskConverter._unmask_unattended(causal_mask, min_dtype)  # noqa: F821 - Name is undefined in the upstream source.
 
         return causal_mask
 
@@ -1422,8 +1422,8 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
             loss = loss_fct(shift_logits, shift_labels)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return CausalLMOutputWithPast(
             loss=loss,
@@ -1625,8 +1625,8 @@ class LlamaForSequenceClassification(LlamaPreTrainedModel):
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
-            output = (pooled_logits,) + transformer_outputs[1:]
-            return ((loss,) + output) if loss is not None else output
+            output = (pooled_logits,) + transformer_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return SequenceClassifierOutputWithPast(
             loss=loss,
@@ -1724,8 +1724,8 @@ class LlamaForQuestionAnswering(LlamaPreTrainedModel):
             total_loss = (start_loss + end_loss) / 2
 
         if not return_dict:
-            output = (start_logits, end_logits) + outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
+            output = (start_logits, end_logits) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((total_loss,) + output) if total_loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return QuestionAnsweringModelOutput(
             loss=total_loss,

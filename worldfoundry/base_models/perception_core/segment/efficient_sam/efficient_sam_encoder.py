@@ -184,7 +184,7 @@ class ImageEncoderViT(nn.Module):
 
         self.img_size = img_size
         self.image_embedding_size = img_size // (patch_size if patch_size > 0 else 1)
-        self.transformer_output_dim = ([patch_embed_dim] + neck_dims)[-1]
+        self.transformer_output_dim = ([patch_embed_dim] + neck_dims)[-1]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.pretrain_use_cls_token = True
         pretrain_img_size = 224
         self.patch_embed = PatchEmbed(img_size, patch_size, in_chans, patch_embed_dim)

@@ -432,7 +432,7 @@ if __name__ == "__main__":
     # model = vit_large_patch16_384(all_frames=num_frames, tubelet_size=1)
     # print(model)
 
-    flops = FlopCountAnalysis(model, torch.rand(1, 3, num_frames, 384, 384))
+    flops = FlopCountAnalysis(model, torch.rand(1, 3, num_frames, 384, 384))  # noqa: F821 - Name is undefined in the upstream source.
     s = time.time()
     print(flop_count_table(flops, max_depth=1))
     print(time.time() - s)

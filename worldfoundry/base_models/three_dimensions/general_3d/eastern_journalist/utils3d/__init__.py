@@ -11,7 +11,7 @@ from .helpers import lazy_import
 from .helpers import lazy_import_from as lazy_import_from
 
 with contextlib.suppress(ImportError):
-    from .interface import *
+    from .interface import *  # noqa: F403 - Upstream star import kept as written.
 
 __all__ = ["np", "numpy", "pt", "torch"]
 

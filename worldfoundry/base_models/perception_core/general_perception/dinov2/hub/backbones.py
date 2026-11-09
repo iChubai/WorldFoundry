@@ -35,7 +35,7 @@ def _make_dinov2_model(
         try:
             weights = Weights[weights]
         except KeyError:
-            raise AssertionError(f"Unsupported weights: {weights}")
+            raise AssertionError(f"Unsupported weights: {weights}")  # noqa: B904 - Keeps the implicit exception context.
 
     model_base_name = _make_dinov2_model_name(arch_name, patch_size)
     vit_kwargs = {

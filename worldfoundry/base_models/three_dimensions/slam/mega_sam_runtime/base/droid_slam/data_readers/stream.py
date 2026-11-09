@@ -7,11 +7,11 @@ import torch
 import torch.nn.functional as F
 import torch.utils.data as data
 
-from .rgbd_utils import *
+from .rgbd_utils import *  # noqa: F403 - Upstream star import kept as written.
 
 
 class RGBDStream(data.Dataset):
-    def __init__(self, datapath, frame_rate=-1, image_size=[384, 512], crop_size=[0, 0]):
+    def __init__(self, datapath, frame_rate=-1, image_size=[384, 512], crop_size=[0, 0]):  # noqa: B006 - Keeps the upstream default object and signature.
         self.datapath = datapath
         self.frame_rate = frame_rate
         self.image_size = image_size
@@ -68,7 +68,7 @@ class RGBDStream(data.Dataset):
 
 
 class ImageStream(data.Dataset):
-    def __init__(self, datapath, intrinsics, rate=1, image_size=[384, 512]):
+    def __init__(self, datapath, intrinsics, rate=1, image_size=[384, 512]):  # noqa: B006 - Keeps the upstream default object and signature.
         rgb_list = osp.join(datapath, "rgb.txt")
         if os.path.isfile(rgb_list):
             rgb_list = np.loadtxt(rgb_list, delimiter=" ", dtype=np.unicode_)
@@ -127,7 +127,7 @@ class StereoStream(data.Dataset):
         datapath,
         intrinsics,
         rate=1,
-        image_size=[384, 512],
+        image_size=[384, 512],  # noqa: B006 - Keeps the upstream default object and signature.
         map_left=None,
         map_right=None,
         left_root="image_left",

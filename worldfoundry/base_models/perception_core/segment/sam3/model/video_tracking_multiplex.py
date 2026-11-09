@@ -8,8 +8,8 @@ This file extends the base video tracking with prompt functionality to add:
     - Recording image features in memory to support the decoupled transformer for memory reading
 """
 
-import logging
-from copy import deepcopy
+import logging  # noqa: E402 - Follows a module-level setup call, as upstream.
+from copy import deepcopy  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 try:
     from collections.abc import Iterable
@@ -24,34 +24,50 @@ except ImportError:
         TypedDict,
     )
 
-import numpy as np
-import torch
-import torch.distributed
-import torch.nn as nn
-import torch.nn.functional as F
+import numpy as np  # noqa: E402 - Follows the optional import block.
+import torch  # noqa: E402 - Follows the optional import block.
+import torch.distributed  # noqa: E402 - Follows the optional import block.
+import torch.nn as nn  # noqa: E402 - Follows the optional import block.
+import torch.nn.functional as F  # noqa: E402 - Follows the optional import block.
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint, NestedTensor
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (  # noqa: E402 - Follows the optional import block.
+    BatchedDatapoint,
+    NestedTensor,
+)
 
 # isort: split
-from timm.models.layers import trunc_normal_
+from timm.models.layers import trunc_normal_  # noqa: E402 - Follows the optional import block.
 
-from worldfoundry.base_models.perception_core.segment.sam3.model.memory import SimpleMaskEncoder
-from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_mask_decoder import MultiplexMaskDecoder
-from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import (
+from worldfoundry.base_models.perception_core.segment.sam3.model.memory import (  # noqa: E402 - Follows the optional import block.
+    SimpleMaskEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_mask_decoder import (  # noqa: E402 - Follows the optional import block.
+    MultiplexMaskDecoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import (  # noqa: E402 - Follows the optional import block.
     MultiplexController,
     MultiplexState,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (  # noqa: E402 - Follows the optional import block.
     get_1d_sine_pe,
     get_next_point,
     sample_box_points,
     select_closest_cond_frames,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.sam.mask_decoder import MaskDecoder
-from worldfoundry.base_models.perception_core.segment.sam3.sam.prompt_encoder import PromptEncoder
-from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import TwoWayTransformer
-from worldfoundry.core.nn.blocks.layers import PositionEmbeddingRandom, SamHeadMLP
+from worldfoundry.base_models.perception_core.segment.sam3.sam.mask_decoder import (  # noqa: E402 - Follows the optional import block.
+    MaskDecoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.sam.prompt_encoder import (  # noqa: E402 - Follows the optional import block.
+    PromptEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import (  # noqa: E402 - Follows the optional import block.
+    TwoWayTransformer,
+)
+from worldfoundry.core.nn.blocks.layers import (  # noqa: E402 - Follows the optional import block.
+    PositionEmbeddingRandom,
+    SamHeadMLP,
+)
 
 # a large negative value as a placeholder score for missing objects
 NO_OBJ_SCORE = -1024.0
@@ -368,7 +384,7 @@ class VideoTrackingMultiplex(nn.Module):
         self.iou_prediction_use_sigmoid = iou_prediction_use_sigmoid
         self.object_score_logit_threshold = object_score_logit_threshold
         self.stability_score_attentuation = stability_score_attentuation
-        if iter_use_prev_mask_pred:
+        if iter_use_prev_mask_pred:  # noqa: SIM102 - Branches carry per-case comments.
             # In this case, we are feeding the previously predicted SAM mask logits
             # as mask prompt into the SAM mask decoder, which has a different format
             # and magnitude from GT mask input in VOS. Therefore in this case, the GT
@@ -993,7 +1009,7 @@ class VideoTrackingMultiplex(nn.Module):
                     backbone_out["sam2_backbone_out"]["backbone_fpn"][1].tensors
                 )
         # Clone to help torch.compile
-        for out_type in backbone_out.keys():
+        for out_type in backbone_out.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             for i in range(len(backbone_out[out_type]["backbone_fpn"])):
                 backbone_out[out_type]["backbone_fpn"][i].tensors = self._maybe_clone(
                     backbone_out[out_type]["backbone_fpn"][i].tensors
@@ -1050,7 +1066,7 @@ class VideoTrackingMultiplex(nn.Module):
             init_cond_frames = [start_frame_idx]  # starting frame
         else:
             # starting frame + randomly selected remaining frames (without replacement)
-            init_cond_frames = [start_frame_idx] + self.rng.choice(
+            init_cond_frames = [start_frame_idx] + self.rng.choice(  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 range(start_frame_idx + 1, num_frames),
                 num_init_cond_frames - 1,
                 replace=False,
@@ -1256,7 +1272,7 @@ class VideoTrackingMultiplex(nn.Module):
                 else:
                     if t_rel == 1:
                         # for t_rel == 1, we take the last frame (regardless of r)
-                        if not track_in_reverse:
+                        if not track_in_reverse:  # noqa: SIM108 - Branches carry per-case comments.
                             # the frame immediately before this frame (i.e. frame_idx - 1)
                             prev_frame_idx = frame_idx - t_rel
                         else:
@@ -1573,7 +1589,7 @@ class VideoTrackingMultiplex(nn.Module):
                 obj_current = object_score_logits.shape[0]
                 if obj_current != obj_expected:
                     if obj_current < obj_expected:
-                        pad_shape = (obj_expected - obj_current,) + tuple(object_score_logits.shape[1:])
+                        pad_shape = (obj_expected - obj_current,) + tuple(object_score_logits.shape[1:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                         obj_pad = object_score_logits.new_zeros(pad_shape)
                         object_score_logits = torch.cat([object_score_logits, obj_pad], dim=0)
                     else:
@@ -1655,7 +1671,7 @@ class VideoTrackingMultiplex(nn.Module):
             # Get the image features for the current frames
             img_ids = input.find_inputs[stage_id].img_ids
             # the image ids are for the entire batch
-            assert all([img_id == img_ids[0] for img_id in img_ids])  # should be all the same
+            assert all([img_id == img_ids[0] for img_id in img_ids])  # noqa: C419 - Evaluates every element before testing, as upstream.  # should be all the same
             # force this to have a batch size of 1
             img_ids = torch.tensor([img_ids[0]], device=img_ids.device, dtype=img_ids.dtype)
 
@@ -1953,7 +1969,7 @@ class VideoTrackingMultiplex(nn.Module):
                     src = interaction_out[k]
                     dst = propagation_out[k]
                     # Align dtype for floating tensors before indexed assignment
-                    if torch.is_tensor(src) and torch.is_tensor(dst):
+                    if torch.is_tensor(src) and torch.is_tensor(dst):  # noqa: SIM102 - Statement form kept for readability.
                         if torch.is_floating_point(src) and src.dtype != dst.dtype:
                             src = src.to(dtype=dst.dtype)
                     propagation_out[k][objects_to_interact] = src
@@ -3139,7 +3155,7 @@ class VideoTrackingDynamicMultiplex(VideoTrackingMultiplex):
             # Get the image features for the current frame
             img_ids = input.find_inputs[stage_id].img_ids
             # The image ids are for the entire batch
-            assert all([img_id == img_ids[0] for img_id in img_ids])  # should be all the same
+            assert all([img_id == img_ids[0] for img_id in img_ids])  # noqa: C419 - Evaluates every element before testing, as upstream.  # should be all the same
             # force this to have a batch size of 1
             img_ids = torch.tensor([img_ids[0]], device=img_ids.device, dtype=img_ids.dtype)
 

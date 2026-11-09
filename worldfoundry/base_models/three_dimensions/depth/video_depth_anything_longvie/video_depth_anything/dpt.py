@@ -46,7 +46,12 @@ class ConvBlock(nn.Module):
 
 class DPTHead(nn.Module):
     def __init__(
-        self, in_channels, features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False
+        self,
+        in_channels,
+        features=256,
+        use_bn=False,
+        out_channels=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
+        use_clstoken=False,
     ):
         super().__init__()
 

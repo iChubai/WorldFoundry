@@ -262,7 +262,7 @@ class WanCrossModalityAttention(nn.Module):
             grid_sizes(Tensor): Shape [B, 3], the second dimension contains (F, H, W)
             freqs(Tensor): Rope freqs, shape [1024, C / num_heads / 2]
         """
-        b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim
+        b, s, n, d = *x.shape[:2], self.num_heads, self.head_dim  # noqa: F841 - Upstream assignment kept.
 
         # query, key, value function
         def qkv_fn(x):

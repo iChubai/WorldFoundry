@@ -8,8 +8,8 @@ from collections import OrderedDict
 
 _logger = logging.getLogger(__name__)
 
-import torch
-import torch.nn as nn
+import torch  # noqa: E402 - Follows the logging setup.
+import torch.nn as nn  # noqa: E402 - Follows the logging setup.
 
 try:
     import timm
@@ -18,7 +18,7 @@ try:
 except ImportError:
     timm = None
 
-from .utils import freeze_batch_norm_2d
+from .utils import freeze_batch_norm_2d  # noqa: E402 - Follows the optional import block.
 
 
 class TimmModel(nn.Module):
@@ -122,7 +122,7 @@ class TimmModel(nn.Module):
                 # FIXME import here until API stable and in an official release
                 from timm.models.helpers import group_modules, group_parameters
             except ImportError:
-                raise RuntimeError("Please install a recent `timm` release from the configured package index.")
+                raise RuntimeError("Please install a recent `timm` release from the configured package index.")  # noqa: B904 - Keeps the implicit exception context.
             matcher = self.trunk.group_matcher()
             gparams = group_parameters(self.trunk, matcher)
             max_layer_id = max(gparams.keys())

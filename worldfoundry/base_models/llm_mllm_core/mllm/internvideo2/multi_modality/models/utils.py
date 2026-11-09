@@ -131,8 +131,8 @@ def interpolate_pos_relative_bias_beit(state_dict_old, state_dict_new, patch_sha
 
                 r_ids = [-_ for _ in reversed(dis)]
 
-                x = r_ids + [0] + dis
-                y = r_ids + [0] + dis
+                x = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+                y = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
                 t = dst_size // 2.0
                 dx = np.arange(-t, t + 0.1, 1.0)
@@ -231,7 +231,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
                 f"Encoder module {encoder_pointer} does not match decoder module {decoder_pointer}"
             )
 
-            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules.keys()}
+            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules.keys()}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             encoder_layer_pos = 0
             for name, _module in decoder_modules.items():
                 if name.isdigit():

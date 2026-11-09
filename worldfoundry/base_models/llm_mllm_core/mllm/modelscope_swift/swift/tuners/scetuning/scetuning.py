@@ -120,7 +120,7 @@ class SCETuning(SwiftAdapter):
                     target_module_ins_list.append(_get_module(t_module))
         if len(target_module_ins_list) == 0:
             logger.error("Cannot match target modules")
-        if len(hint_module_ins_list) > 0 and not len(hint_module_ins_list) == len(target_module_ins_list):
+        if len(hint_module_ins_list) > 0 and not len(hint_module_ins_list) == len(target_module_ins_list):  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             logger.info("Target modules' length should be equal with hint modules.")
             assert len(hint_module_ins_list) == len(target_module_ins_list)
         if isinstance(config.dims, int):

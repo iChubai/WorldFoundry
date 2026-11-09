@@ -25,7 +25,7 @@ def rotation_matrix_to_quaternion(R):
     """
     trace = R[..., 0, 0] + R[..., 1, 1] + R[..., 2, 2]
 
-    q = torch.zeros(R.shape[:-2] + (4,), device=R.device, dtype=R.dtype)
+    q = torch.zeros(R.shape[:-2] + (4,), device=R.device, dtype=R.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     mask1 = trace > 0
     s = torch.sqrt(trace[mask1] + 1.0) * 2
@@ -65,7 +65,7 @@ def quaternion_to_rotation_matrix(q):
     norm = torch.sqrt(w * w + x * x + y * y + z * z)
     w, x, y, z = w / norm, x / norm, y / norm, z / norm
 
-    R = torch.zeros(q.shape[:-1] + (3, 3), device=q.device, dtype=q.dtype)
+    R = torch.zeros(q.shape[:-1] + (3, 3), device=q.device, dtype=q.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     R[..., 0, 0] = 1 - 2 * (y * y + z * z)
     R[..., 0, 1] = 2 * (x * y - w * z)
@@ -175,7 +175,7 @@ def render_interpolated_video(
 
             if use_time_based:
                 gap = float(gaps[i]) if gaps is not None else 0.0
-                num_interp = max(0, int(round(gap * gap_scale)))
+                num_interp = max(0, int(round(gap * gap_scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             else:
                 num_interp = base_interp_per_pair
 

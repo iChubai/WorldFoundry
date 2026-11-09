@@ -142,7 +142,7 @@ def load_and_preprocess_images(image_file_paths, preprocessing_mode="crop", outp
     batched_images = torch.stack(processed_image_list)  # Concatenate along batch dimension
 
     # Single image batch dimension handling
-    if len(image_file_paths) == 1:
+    if len(image_file_paths) == 1:  # noqa: SIM102 - Branches carry per-case comments.
         # Ensure proper 4D tensor structure (batch, channels, height, width)
         if batched_images.dim() == 3:
             batched_images = batched_images.unsqueeze(0)

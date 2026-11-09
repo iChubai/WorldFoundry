@@ -88,7 +88,7 @@ def load_state_dict(
     map_location: str = "cpu",
     model_key: str = "model|module|state_dict",
     is_openai: bool = False,
-    skip_list: list = [],
+    skip_list: list = [],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     if is_openai:
         model = torch.jit.load(checkpoint_path, map_location="cpu").eval()
@@ -111,7 +111,7 @@ def load_state_dict(
             logging.info(f"Removing key {k} from pretrained checkpoint")
             del state_dict[k]
 
-    if os.getenv("RoPE") == "1":
+    if os.getenv("RoPE") == "1":  # noqa: SIM112 - Environment variable name used by the upstream code.
         for k in list(state_dict.keys()):
             if "freqs_cos" in k or "freqs_sin" in k:
                 del state_dict[k]
@@ -141,7 +141,10 @@ def load_checkpoint(model, checkpoint_path, model_key="model|module|state_dict",
 
 
 def load_clip_visual_state_dict(
-    checkpoint_path: str, map_location: str = "cpu", is_openai: bool = False, skip_list: list = []
+    checkpoint_path: str,
+    map_location: str = "cpu",
+    is_openai: bool = False,
+    skip_list: list = [],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     state_dict = load_state_dict(checkpoint_path, map_location=map_location, is_openai=is_openai, skip_list=skip_list)
 
@@ -157,7 +160,10 @@ def load_clip_visual_state_dict(
 
 
 def load_clip_text_state_dict(
-    checkpoint_path: str, map_location: str = "cpu", is_openai: bool = False, skip_list: list = []
+    checkpoint_path: str,
+    map_location: str = "cpu",
+    is_openai: bool = False,
+    skip_list: list = [],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     state_dict = load_state_dict(checkpoint_path, map_location=map_location, is_openai=is_openai, skip_list=skip_list)
 
@@ -223,7 +229,7 @@ def load_zero_partitions(
     # so we need to apply the function recursively.
     def load(module, prefix=""):
         local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
-        args = (state_dict, prefix, local_metadata, True, [], [], error_msgs)
+        args = (state_dict, prefix, local_metadata, True, [], [], error_msgs)  # noqa: F821 - Closure runs before the enclosing state_dict is deleted.
         if is_deepspeed_zero3_enabled:
             # because zero3 puts placeholders in model params, this context
             # manager gathers (unpartitions) the params of the current layer, then loads from
@@ -298,7 +304,7 @@ def load_pretrained_checkpoint(
     visual_model=None,
     text_model=None,
     model_key="model|module|state_dict",
-    skip_list=[],
+    skip_list=[],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     visual_tag = get_pretrained_tag(visual_model)
     text_tag = get_pretrained_tag(text_model)
@@ -361,7 +367,7 @@ def create_model(
     pretrained_visual_model: str | None = None,
     pretrained_text_model: str | None = None,
     cache_dir: str | None = None,
-    skip_list: list = [],
+    skip_list: list = [],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     model_name = model_name.replace("/", "-")  # for callers using old naming with / in ViT names
     if isinstance(device, str):
@@ -386,9 +392,9 @@ def create_model(
 
         if "rope" in model_cfg.get("vision_cfg", {}):
             if model_cfg["vision_cfg"]["rope"]:
-                os.environ["RoPE"] = "1"
+                os.environ["RoPE"] = "1"  # noqa: SIM112 - Environment variable name used by the upstream code.
         else:
-            os.environ["RoPE"] = "0"
+            os.environ["RoPE"] = "0"  # noqa: SIM112 - Environment variable name used by the upstream code.
 
         if force_quick_gelu:
             # override for use of QuickGELU on non-OpenAI transformer models
@@ -520,7 +526,7 @@ def create_model_and_transforms(
     image_mean: tuple[float, ...] | None = None,
     image_std: tuple[float, ...] | None = None,
     cache_dir: str | None = None,
-    skip_list: list = [],
+    skip_list: list = [],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     model = create_model(
         model_name,

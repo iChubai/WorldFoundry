@@ -8,8 +8,13 @@ from torch.nn import functional as F
 
 _logger = logging.getLogger(__name__)
 
-from .model import CLIPTextCfg, CLIPVisionCfg, _build_text_tower, _build_vision_tower
-from .transformer import (
+from .model import (  # noqa: E402 - Follows the logging setup.
+    CLIPTextCfg,
+    CLIPVisionCfg,
+    _build_text_tower,
+    _build_vision_tower,
+)
+from .transformer import (  # noqa: E402 - Follows the logging setup.
     LayerNorm,
     LayerNormFp32,
     MultimodalTransformer,
@@ -168,7 +173,7 @@ class CoCa(nn.Module):
             normalize = False
             output_logits = False
         if output_logits:
-            assert False, "FIXME, needs implementing"
+            assert False, "FIXME, needs implementing"  # noqa: B011 - Keeps the assertion semantics under -O.
 
         if image is not None:
             image_output = self.visual.forward_intermediates(

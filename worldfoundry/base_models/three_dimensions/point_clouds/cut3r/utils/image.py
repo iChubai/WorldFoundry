@@ -66,7 +66,7 @@ def _resize_pil_image(img, long_edge_size):
         interp = PIL.Image.LANCZOS
     elif long_edge_size >= S:
         interp = PIL.Image.BICUBIC
-    new_size = tuple(int(round(x * long_edge_size / S)) for x in img.size)
+    new_size = tuple(int(round(x * long_edge_size / S)) for x in img.size)  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     return img.resize(new_size, interp)
 
 

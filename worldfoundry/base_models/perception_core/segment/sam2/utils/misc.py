@@ -174,7 +174,7 @@ def load_video_frames(
     img_mean=(0.485, 0.456, 0.406),
     img_std=(0.229, 0.224, 0.225),
     async_loading_frames=False,
-    compute_device=torch.device("cuda"),
+    compute_device=torch.device("cuda"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     """
     Load the video frames from video_path. The frames are resized to image_size as in
@@ -213,7 +213,7 @@ def load_video_frames_from_jpg_images(
     img_mean=(0.485, 0.456, 0.406),
     img_std=(0.229, 0.224, 0.225),
     async_loading_frames=False,
-    compute_device=torch.device("cuda"),
+    compute_device=torch.device("cuda"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     """
     Load the video frames from a directory of JPEG files ("<frame_index>.jpg" format).
@@ -275,7 +275,7 @@ def load_video_frames_from_video_file(
     offload_video_to_cpu,
     img_mean=(0.485, 0.456, 0.406),
     img_std=(0.229, 0.224, 0.225),
-    compute_device=torch.device("cuda"),
+    compute_device=torch.device("cuda"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     """Load the video frames from a video file."""
     import decord

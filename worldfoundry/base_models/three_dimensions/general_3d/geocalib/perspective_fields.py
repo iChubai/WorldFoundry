@@ -68,7 +68,7 @@ def get_up_field(camera: BaseCamera, gravity: Gravity, normalize: bool = True) -
 
     if hasattr(camera, "dist"):
         d_uv = camera.distort(uv, return_scale=True)[0]  # (..., N, 1)
-        d_uv = torch.diag_embed(d_uv.expand(d_uv.shape[:-1] + (2,)))  # (..., N, 2, 2)
+        d_uv = torch.diag_embed(d_uv.expand(d_uv.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # (..., N, 2, 2)
         offset = camera.up_projection_offset(uv)  # (..., N, 2)
         offset = torch.einsum("...i,...j->...ij", offset, uv)  # (..., N, 2, 2)
 
@@ -119,7 +119,7 @@ def J_up_field(
     # distortion values
     if hasattr(camera, "dist"):
         d_uv = camera.distort(uv, return_scale=True)[0]  # (..., N, 1)
-        d_uv = torch.diag_embed(d_uv.expand(d_uv.shape[:-1] + (2,)))  # (..., N, 2, 2)
+        d_uv = torch.diag_embed(d_uv.expand(d_uv.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # (..., N, 2, 2)
         offset = camera.up_projection_offset(uv)  # (..., N, 2)
         offset_uv = torch.einsum("...i,...j->...ij", offset, uv)  # (..., N, 2, 2)
 
@@ -170,7 +170,7 @@ def J_up_field(
 
     if hasattr(camera, "dist"):
         J_duv = camera.J_distort(uv, wrt="scale2dist")
-        J_duv = torch.diag_embed(J_duv.expand(J_duv.shape[:-1] + (2,)))  # (..., N, 2, 2)
+        J_duv = torch.diag_embed(J_duv.expand(J_duv.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # (..., N, 2, 2)
         J_offset = torch.einsum("...i,...j->...ij", camera.J_up_projection_offset(uv, wrt="dist"), uv)
         J_proj2k1 = torch.einsum("...Nij,...Nj->...Ni", J_duv + J_offset, projected_up2d)
         J_k1 = torch.einsum("...Nij,...Nj->...Ni", J_norm2proj, J_proj2k1)[..., None]

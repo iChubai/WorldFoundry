@@ -432,7 +432,7 @@ class VllmEngine(InferEngine):
         request_id = random_uuid()
         result_generator = self._add_request(inputs, generation_config, request_id, adapter_request=adapter_request)
         result = None
-        async for result in result_generator:
+        async for result in result_generator:  # noqa: B007 - The loop variable is read outside the loop.
             pass
         return self._create_chat_completion_response(result, template, generation_config, request_id)
 

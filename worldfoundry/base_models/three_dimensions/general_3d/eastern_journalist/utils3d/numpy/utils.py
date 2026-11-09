@@ -1,5 +1,6 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 from numbers import Integral, Number
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import numpy as np
 from numpy import ndarray

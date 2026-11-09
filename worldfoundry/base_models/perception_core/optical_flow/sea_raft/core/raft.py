@@ -136,7 +136,7 @@ class RAFT(
             flow_predictions[i] = padder.unpad(flow_predictions[i])
             info_predictions[i] = padder.unpad(info_predictions[i])
 
-        if test_mode == False:
+        if test_mode == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             # exlude invalid pixels and extremely large diplacements
             nf_predictions = []
             for i in range(len(info_predictions)):

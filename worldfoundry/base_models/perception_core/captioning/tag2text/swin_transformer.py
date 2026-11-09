@@ -539,8 +539,8 @@ class SwinTransformer(nn.Module):
         in_chans=3,
         num_classes=1000,
         embed_dim=96,
-        depths=[2, 2, 6, 2],
-        num_heads=[3, 6, 12, 24],
+        depths=[2, 2, 6, 2],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_heads=[3, 6, 12, 24],  # noqa: B006 - Keeps the upstream default object and signature.
         window_size=7,
         mlp_ratio=4.0,
         qkv_bias=True,
@@ -673,7 +673,7 @@ def interpolate_relative_pos_embed(rel_pos_bias, dst_num_pos, param_name=""):
     src_size = int((src_num_pos - num_extra_tokens) ** 0.5)
     dst_size = int((dst_num_pos - num_extra_tokens) ** 0.5)
     if src_size != dst_size:
-        print("Position interpolate %s from %dx%d to %dx%d" % (param_name, src_size, src_size, dst_size, dst_size))
+        print("Position interpolate %s from %dx%d to %dx%d" % (param_name, src_size, src_size, dst_size, dst_size))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
         # extra_tokens = rel_pos_bias[-num_extra_tokens:, :]
         # rel_pos_bias = rel_pos_bias[:-num_extra_tokens, :]
@@ -701,8 +701,8 @@ def interpolate_relative_pos_embed(rel_pos_bias, dst_num_pos, param_name=""):
 
         r_ids = [-_ for _ in reversed(dis)]
 
-        x = r_ids + [0] + dis
-        y = r_ids + [0] + dis
+        x = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+        y = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         t = dst_size // 2.0
         dx = np.arange(-t, t + 0.1, 1.0)

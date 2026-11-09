@@ -97,7 +97,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
         info_sharing_config: dict,
         pred_head_config: dict,
         geometric_input_config: dict,
-        fusion_norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),
+        fusion_norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         pretrained_checkpoint_path: str | None = None,
         load_specific_pretrained_submodules: bool = False,
         specific_pretrained_submodules: list | None = None,
@@ -1806,7 +1806,7 @@ class MapAnything(nn.Module, PyTorchModelHubMixin):
             "data_norm_type",
         }
         for view in validated_views:
-            for name in view.keys():
+            for name in view.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if name in ignore_keys:
                     continue
                 val = view[name]

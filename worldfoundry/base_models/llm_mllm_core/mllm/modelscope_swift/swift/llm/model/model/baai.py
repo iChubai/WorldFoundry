@@ -31,9 +31,9 @@ def get_model_tokenizer_emu3_gen(
     processor = Emu3Processor(image_processor, image_tokenizer, tokenizer)
     model_info.max_model_len = model_info.max_model_len + 40960
     if model:
-        model.config.image_area = int(os.environ.get("image_area", model.config.image_area))
+        model.config.image_area = int(os.environ.get("image_area", model.config.image_area))  # noqa: SIM112 - Environment variable name used by the upstream code.
         model.config.max_position_embeddings = int(
-            os.environ.get("max_position_embeddings", model.config.max_position_embeddings)
+            os.environ.get("max_position_embeddings", model.config.max_position_embeddings)  # noqa: SIM112 - Environment variable name used by the upstream code.
         )
         processor.image_area = model.config.image_area
         model.generation_config.do_sample = True

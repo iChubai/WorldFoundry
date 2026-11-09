@@ -344,7 +344,7 @@ class CausalWanSelfAttention(nn.Module):
 
             else:
                 # DF path removed — only Teacher Forcing is supported.
-                assert False, "Diffusion Forcing is currently not supported. Only Teacher Forcing is supported."
+                assert False, "Diffusion Forcing is currently not supported. Only Teacher Forcing is supported."  # noqa: B011 - Keeps the assertion semantics under -O.
         else:
             frame_seqlen = math.prod(grid_sizes[0][1:]).item()
             current_start_frame = current_start // frame_seqlen
@@ -926,7 +926,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             import cv2
 
             mask = cv2.resize(mask[0, 0].cpu().float().numpy(), (1024, 1024))
-            imageio.imwrite("mask_%d.jpg" % (0), np.uint8(255.0 * mask))
+            imageio.imwrite("mask_%d.jpg" % (0), np.uint8(255.0 * mask))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
         return block_mask
 

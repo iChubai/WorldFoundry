@@ -359,7 +359,7 @@ def _enforce_frame_constraints(candidate_indices, sparse_samples, min_frames, ma
 
     if len(candidate_indices) > max_frames:
         indices_to_keep = np.linspace(0, len(candidate_indices) - 1, max_frames)
-        candidate_indices = [candidate_indices[int(round(i))] for i in indices_to_keep]
+        candidate_indices = [candidate_indices[int(round(i))] for i in indices_to_keep]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     return candidate_indices
 

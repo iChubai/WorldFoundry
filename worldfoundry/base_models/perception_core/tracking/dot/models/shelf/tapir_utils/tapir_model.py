@@ -449,8 +449,8 @@ class TAPIR(nn.Module):
                 num_frames = feature_grids.lowres[0].shape[1]
                 infer_query_points = utils.convert_grid_coordinates(
                     infer_query_points,
-                    (num_frames,) + video_size,
-                    (num_frames,) + self.initial_resolution,
+                    (num_frames,) + video_size,  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+                    (num_frames,) + self.initial_resolution,  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     coordinate_format="tyx",
                 )
             else:

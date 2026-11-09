@@ -115,7 +115,9 @@ class LLaMAPro(SwiftAdapter):
             model_key_mapping = LLaMAPro.get_model_key_mapping(model_type, config)
             new_module_list = [model_key_mapping.module_list + f".{i}" for i in new_module_idx]
             return {
-                key: value for key, value in state_dict.items() if any([m_part in key for m_part in new_module_list])
+                key: value
+                for key, value in state_dict.items()
+                if any([m_part in key for m_part in new_module_list])  # noqa: C419 - Evaluates every element before testing, as upstream.
             }
 
         def mark_trainable_callback(model):
@@ -123,7 +125,7 @@ class LLaMAPro(SwiftAdapter):
             new_module_list = [model_key_mapping.module_list + f".{i}" for i in new_module_idx]
             for name, parameter in model.named_parameters():
                 parameter: nn.Parameter
-                if any([m_part in name for m_part in new_module_list]):
+                if any([m_part in name for m_part in new_module_list]):  # noqa: C419 - Evaluates every element before testing, as upstream.
                     parameter.requires_grad = True
 
         config.model_type = origin_model_type

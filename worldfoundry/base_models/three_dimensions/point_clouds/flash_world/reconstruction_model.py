@@ -22,9 +22,12 @@ def inverse_softplus(x, beta=1):
         return math.log(math.exp(beta * x) - 1) / beta
 
 
-import copy
+import copy  # noqa: E402 - Follows module-level definitions, as upstream.
 
-from .autoencoder_kl_wan import WanCausalConv3d, WanRMS_norm
+from .autoencoder_kl_wan import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    WanCausalConv3d,
+    WanRMS_norm,
+)
 
 
 class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
@@ -57,7 +60,7 @@ class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
 
         # remove one block
         # self.decoder.up_blocks = self.decoder.up_blocks[:-1]
-        dims = [self.decoder.dim * u for u in [self.decoder.dim_mult[-1]] + self.decoder.dim_mult[::-1]]
+        dims = [self.decoder.dim * u for u in [self.decoder.dim_mult[-1]] + self.decoder.dim_mult[::-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         # self.decoder.up_blocks[-1].upsampler.mode = None
         # self.decoder.up_blocks[-1].upsampler.resample = nn.Identity()
         # self.decoder.up_blocks[-1].avg_shortcut = None
@@ -153,7 +156,7 @@ class WANDecoderPixelAligned3DGSReconstructionModel(nn.Module):
         )
 
 
-from torch.autograd import Function
+from torch.autograd import Function  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class _trunc_exp(Function):

@@ -10,7 +10,7 @@ def broadcat(tensors, dim=-1):
     num_tensors = len(tensors)
     shape_lens = {len(t.shape) for t in tensors}
     assert len(shape_lens) == 1, "tensors must all have the same number of dimensions"
-    shape_len = list(shape_lens)[0]
+    shape_len = list(shape_lens)[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
     dim = (dim + shape_len) if dim < 0 else dim
     dims = list(zip(*(list(t.shape) for t in tensors), strict=False))
     expandable_dims = [(i, val) for i, val in enumerate(dims) if i != dim]

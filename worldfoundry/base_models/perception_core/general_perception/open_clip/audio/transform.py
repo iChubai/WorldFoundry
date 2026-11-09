@@ -130,7 +130,7 @@ class AudioPreprocess:
                         overflow = global_mel.shape[0] - chunk_frames
                         idx = random.randint(0, overflow)
                         global_mel = global_mel[idx : idx + chunk_frames]
-                    mel_fusion = torch.stack([global_mel] + local_mels, dim=0)
+                    mel_fusion = torch.stack([global_mel] + local_mels, dim=0)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     longer = True
                 result["mel_fusion"] = mel_fusion
                 waveform = waveform[: self.clip_samples]

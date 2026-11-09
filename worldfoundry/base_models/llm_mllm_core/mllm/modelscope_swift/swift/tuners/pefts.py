@@ -113,8 +113,8 @@ def _create_and_replace_hook(self, peft_config, adapter_name, target, *args, **k
 
     if (
         isinstance(target_modules, str)
-        and not any([name in target.__class__.__name__.lower() for name in all_supported_names])
-        and not any([isinstance(target, type_) for type_ in all_supported_types])
+        and not any([name in target.__class__.__name__.lower() for name in all_supported_names])  # noqa: C419 - Evaluates every element before testing, as upstream.
+        and not any([isinstance(target, type_) for type_ in all_supported_types])  # noqa: C419 - Evaluates every element before testing, as upstream.
     ):
         return
 
@@ -238,7 +238,7 @@ def adalora_mask_to_budget(self, model, budget):
     vector_ipt = {}
     triplet_ipt = {}
     # Get the importance score for A, E, B
-    for n, p in model.named_parameters():
+    for n, p in model.named_parameters():  # noqa: B007 - The loop variable is read outside the loop.
         if f"lora_A.{self.adapter_name}" in n:
             entry_ipt = self._element_score(n)
             comb_ipt = torch.mean(entry_ipt, dim=1, keepdim=True)

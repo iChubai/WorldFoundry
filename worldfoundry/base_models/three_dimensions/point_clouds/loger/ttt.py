@@ -246,7 +246,7 @@ class FastWeightGluMLPMultihead(nn.Module):
         if num_dims == 3:
             x = x.unsqueeze(1)
 
-        b, t, l, d = x.shape
+        b, t, l, d = x.shape  # noqa: E741 - Ambiguous upstream name kept as written.
 
         if self.ttt_pre_norm:
             x = self.pre_norm(x)

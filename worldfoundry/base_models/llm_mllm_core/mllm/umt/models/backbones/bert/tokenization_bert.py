@@ -254,7 +254,7 @@ class BertTokenizer(PreTrainedTokenizer):
             :obj:`List[int]`: List of `input IDs <../glossary.html#input-ids>`__ with the appropriate special tokens.
         """
         if token_ids_1 is None:
-            return [self.cls_token_id] + token_ids_0
+            return [self.cls_token_id] + token_ids_0  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         cls = [self.cls_token_id]
         sep = [self.sep_token_id]
         return cls + token_ids_0 + sep + token_ids_1 + sep
@@ -452,7 +452,7 @@ class BasicTokenizer:
         # as is Japanese Hiragana and Katakana. Those alphabets are used to write
         # space-separated words, so they are not treated specially and handled
         # like the all of the other languages.
-        if (
+        if (  # noqa: SIM103 - Branches carry per-case comments.
             (cp >= 0x4E00 and cp <= 0x9FFF)
             or (cp >= 0x3400 and cp <= 0x4DBF)  #
             or (cp >= 0x20000 and cp <= 0x2A6DF)  #

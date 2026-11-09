@@ -27,7 +27,7 @@ def get_func(func_name):
         module = importlib.import_module(module_name)
         return getattr(module, parts[-1])
     except Exception:
-        raise RuntimeError(f"Failed to find function: {func_name}")
+        raise RuntimeError(f"Failed to find function: {func_name}")  # noqa: B904 - Keeps the implicit exception context.
 
 
 class DensePredModel(nn.Module):

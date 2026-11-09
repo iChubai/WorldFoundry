@@ -29,7 +29,7 @@ def normalized_quat_to_rotmat(quat: Tensor) -> Tensor:
         ],
         dim=-1,
     )
-    return mat.reshape(quat.shape[:-1] + (3, 3))
+    return mat.reshape(quat.shape[:-1] + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 # ref: https://github.com/hbb1/2d-gaussian-splatting/blob/61c7b417393d5e0c58b742ad5e2e5f9e9f240cc6/utils/point_utils.py#L26

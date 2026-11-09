@@ -69,7 +69,7 @@ class Renderer(nn.Module):
     def initialize_weights(self):
         for idx, block in enumerate(self.renderer_core.renderer_blocks):
             weight_init_std = 0.02 / (2 * (idx + 1)) ** 0.5
-            block.apply(lambda module: init_weights_normal(module, weight_init_std))
+            block.apply(lambda module: init_weights_normal(module, weight_init_std))  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
         wc = self.tgt_embedder.proj.weight.data
         nn.init.normal_(wc.view([wc.shape[0], -1]), mean=0.0, std=0.02)

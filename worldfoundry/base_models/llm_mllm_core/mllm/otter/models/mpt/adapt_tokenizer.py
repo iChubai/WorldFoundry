@@ -2,7 +2,7 @@ from typing import Union
 
 from transformers import AutoTokenizer, PreTrainedTokenizer, PreTrainedTokenizerFast
 
-Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]
+Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 NUM_SENTINEL_TOKENS: int = 100
 
 

@@ -17,6 +17,6 @@ def parse_args(entry):
     json_path = entry.cfg
     args = json_to_args(json_path)
     args_dict = args.__dict__
-    for index, (key, value) in enumerate(vars(entry).items()):
+    for index, (key, value) in enumerate(vars(entry).items()):  # noqa: B007 - Loop target name kept as upstream.
         args_dict[key] = value
     return args

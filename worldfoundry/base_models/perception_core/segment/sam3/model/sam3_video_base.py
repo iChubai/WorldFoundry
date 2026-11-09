@@ -893,7 +893,7 @@ class Sam3VideoBase(nn.Module):
         # This is done on all GPUs
         batch_size = tracker_low_res_masks_global.size(0)
         if batch_size > 0:
-            if not hasattr(self, "_warm_up_complete") or self._warm_up_complete:
+            if not hasattr(self, "_warm_up_complete") or self._warm_up_complete:  # noqa: SIM102 - Branches carry per-case comments.
                 if self.suppress_overlapping_based_on_recent_occlusion_threshold > 0.0:
                     # NOTE: tracker_low_res_masks_global is updated in-place then returned
                     tracker_low_res_masks_global = self._suppress_overlapping_based_on_recent_occlusion(

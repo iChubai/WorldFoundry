@@ -51,14 +51,14 @@ class CSPNeXtPAFPN(BaseYOLONeck):
         freeze_all: bool = False,
         use_depthwise: bool = False,
         expand_ratio: float = 0.5,
-        upsample_cfg: ConfigType = {"scale_factor": 2, "mode": "nearest"},
+        upsample_cfg: ConfigType = {"scale_factor": 2, "mode": "nearest"},  # noqa: B006 - Keeps the upstream default object and signature.
         conv_cfg: bool | None = None,
-        norm_cfg: ConfigType = {"type": "BN"},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
-        init_cfg: OptMultiConfig = {
+        norm_cfg: ConfigType = {"type": "BN"},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        init_cfg: OptMultiConfig = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "Kaiming",
             "layer": "Conv2d",
-            "a": math.sqrt(5),
+            "a": math.sqrt(5),  # noqa: B008 - Default evaluated once at definition, as upstream.
             "distribution": "uniform",
             "mode": "fan_in",
             "nonlinearity": "leaky_relu",

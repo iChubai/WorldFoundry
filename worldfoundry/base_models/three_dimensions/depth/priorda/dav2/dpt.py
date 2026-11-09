@@ -48,7 +48,7 @@ class DPTHead(nn.Module):
         in_channels,
         features=256,
         use_bn=False,
-        out_channels=[256, 512, 1024, 1024],
+        out_channels=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         use_clstoken=False,
         encoder_cond_dim=-1,
     ):
@@ -176,7 +176,7 @@ class DepthAnythingV2(nn.Module):
         self,
         encoder="vitl",
         features=256,
-        out_channels=[256, 512, 1024, 1024],
+        out_channels=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         use_bn=False,
         use_clstoken=False,
         encoder_cond_dim=-1,

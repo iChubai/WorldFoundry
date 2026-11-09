@@ -10,7 +10,7 @@ from typing import Any, Union, get_args, get_origin
 
 import torch
 
-MyTensor = Union[torch.Tensor, list[Any]]
+MyTensor = Union[torch.Tensor, list[Any]]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 class NestedTensor:
@@ -51,7 +51,7 @@ class NestedTensor:
 
 # Register NestedTensor as a pytree node so tree_map_only can traverse into it
 # (matches onevision/utils/misc.py registration)
-from torch.utils import _pytree as pytree
+from torch.utils import _pytree as pytree  # noqa: E402 - Follows module-level definitions, as upstream.
 
 pytree.register_pytree_node(
     NestedTensor,
@@ -224,7 +224,7 @@ def convert_my_tensors(obj):
 
         field_type = field.type
         if is_optional_field(field.type):
-            field_type = Union[get_args(field.type)[:-1]]  # Get the Optional field type
+            field_type = Union[get_args(field.type)[:-1]]  # noqa: UP007 - Runtime type alias kept as typing.Union.  # Get the Optional field type
 
         if field_type != MyTensor or getattr(obj, field.name) is None:
             continue

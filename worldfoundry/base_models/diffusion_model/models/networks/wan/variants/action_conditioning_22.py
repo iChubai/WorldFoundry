@@ -75,15 +75,15 @@ class ActionModule(nn.Module):
         vae_time_compression_ratio: int = 4,
         windows_size: int = 3,
         heads_num: int = 16,
-        patch_size: list = [1, 2, 2],
+        patch_size: list = [1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         qk_norm: bool = True,
         qkv_bias: bool = False,
-        rope_dim_list: list = [8, 28, 28],
+        rope_dim_list: list = [8, 28, 28],  # noqa: B006 - Keeps the upstream default object and signature.
         rope_theta=256,
-        mouse_qk_dim_list=[8, 28, 28],
+        mouse_qk_dim_list=[8, 28, 28],  # noqa: B006 - Keeps the upstream default object and signature.
         enable_mouse=True,
         enable_keyboard=True,
-        blocks=[],
+        blocks=[],  # noqa: B006 - Keeps the upstream default object and signature.
         local_attn_size=6,
     ):
         super().__init__()

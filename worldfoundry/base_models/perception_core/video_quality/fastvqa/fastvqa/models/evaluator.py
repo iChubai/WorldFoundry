@@ -14,8 +14,8 @@ from .xclip_backbone import build_x_clip_model
 class BaseEvaluator(nn.Module):
     def __init__(
         self,
-        backbone={},
-        vqa_head={},
+        backbone={},  # noqa: B006 - Keeps the upstream default object and signature.
+        vqa_head={},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.backbone = VideoBackbone(**backbone)
@@ -49,9 +49,9 @@ class DiViDeAddEvaluator(nn.Module):
         backbone_preserve_keys="fragments,resize",
         multi=False,
         layer=-1,
-        backbone={"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}},
+        backbone={"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}},  # noqa: B006 - Keeps the upstream default object and signature.
         divide_head=False,
-        vqa_head={"in_channels": 768},
+        vqa_head={"in_channels": 768},  # noqa: B006 - Keeps the upstream default object and signature.
         var=False,
     ):
         self.backbone_preserve_keys = backbone_preserve_keys.split(",")
@@ -155,8 +155,8 @@ class DiViDeAddEvaluator(nn.Module):
 class BaseImageEvaluator(nn.Module):
     def __init__(
         self,
-        backbone={},
-        iqa_head={},
+        backbone={},  # noqa: B006 - Keeps the upstream default object and signature.
+        iqa_head={},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.backbone = ImageBackbone(**backbone)
@@ -197,9 +197,9 @@ if __name__ == "__main__":
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    dataset = FusionDataset(fusion_opt)
+    dataset = FusionDataset(fusion_opt)  # noqa: F821 - Name is undefined in the upstream source.
 
-    model = DiViDeEvaluator({"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}}).to(device)
+    model = DiViDeEvaluator({"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}}).to(device)  # noqa: F821 - Name is undefined in the upstream source.
     data = dataset[0]
     video = {}
     for key in fusion_opt["sample_types"]:

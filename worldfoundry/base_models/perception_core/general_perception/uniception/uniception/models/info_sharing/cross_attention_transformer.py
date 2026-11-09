@@ -42,7 +42,7 @@ class MultiViewCrossAttentionTransformer(UniCeptionInfoSharingBase):
         init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: type[nn.Module] = nn.GELU,
-        norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),
+        norm_layer: type[nn.Module] | Callable[..., nn.Module] = partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         mlp_layer: type[nn.Module] = Mlp,
         custom_positional_encoding: Callable | None = None,
         norm_cross_tokens: bool = True,
@@ -87,7 +87,7 @@ class MultiViewCrossAttentionTransformer(UniCeptionInfoSharingBase):
             gradient_checkpointing (bool, optional): Whether to use gradient checkpointing for memory efficiency. (default: False)
         """
         # Initialize the base class
-        super().__init__(name=name, size=size, *args, **kwargs)
+        super().__init__(name=name, size=size, *args, **kwargs)  # noqa: B026 - Keeps the upstream argument order.
 
         # Initialize the specific attributes of the transformer
         self.input_embed_dim = input_embed_dim
@@ -298,7 +298,7 @@ class MultiViewCrossAttentionTransformerIFR(MultiViewCrossAttentionTransformer, 
         init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
-        norm_layer: nn.Module = partial(nn.LayerNorm, eps=1e-6),
+        norm_layer: nn.Module = partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         mlp_layer: nn.Module = Mlp,
         custom_positional_encoding: Callable | None = None,
         norm_cross_tokens: bool = True,
@@ -380,7 +380,7 @@ class MultiViewCrossAttentionTransformerIFR(MultiViewCrossAttentionTransformer, 
             entropy_scaling_growth_factor=entropy_scaling_growth_factor,
             pretrained_checkpoint_path=pretrained_checkpoint_path,
             gradient_checkpointing=gradient_checkpointing,
-            *args,
+            *args,  # noqa: B026 - Keeps the upstream argument order.
             **kwargs,
         )
         IntermediateFeatureReturner.__init__(

@@ -18,9 +18,9 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
 try:
     from transformers import BaseImageProcessor
 
-    Processor = Union[PreTrainedTokenizerBase, BaseImageProcessor, FeatureExtractionMixin, HfProcessorMixin]
+    Processor = Union[PreTrainedTokenizerBase, BaseImageProcessor, FeatureExtractionMixin, HfProcessorMixin]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 except ImportError:
-    Processor = Union[PreTrainedTokenizerBase, FeatureExtractionMixin, HfProcessorMixin]
+    Processor = Union[PreTrainedTokenizerBase, FeatureExtractionMixin, HfProcessorMixin]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 if "TOKENIZERS_PARALLELISM" not in os.environ:
     os.environ["TOKENIZERS_PARALLELISM"] = "false"

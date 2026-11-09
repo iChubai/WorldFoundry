@@ -141,7 +141,7 @@ class Model:
 
     def predict_with_caption(
         self, image: np.ndarray, caption: str, box_threshold: float = 0.35, text_threshold: float = 0.25
-    ) -> tuple[sv.Detections, list[str]]:
+    ) -> tuple[sv.Detections, list[str]]:  # noqa: F821 - Postponed annotation; supervision is imported inside the methods.
         """
         import cv2
 
@@ -175,7 +175,7 @@ class Model:
 
     def predict_with_classes(
         self, image: np.ndarray, classes: list[str], box_threshold: float, text_threshold: float
-    ) -> sv.Detections:
+    ) -> sv.Detections:  # noqa: F821 - Postponed annotation; supervision is imported inside the methods.
         """
         import cv2
 
@@ -225,7 +225,7 @@ class Model:
         return image_transformed
 
     @staticmethod
-    def post_process_result(source_h: int, source_w: int, boxes: torch.Tensor, logits: torch.Tensor) -> sv.Detections:
+    def post_process_result(source_h: int, source_w: int, boxes: torch.Tensor, logits: torch.Tensor) -> sv.Detections:  # noqa: F821 - Postponed annotation; supervision is imported inside the methods.
         import supervision as sv
 
         boxes = boxes * torch.Tensor([source_w, source_h, source_w, source_h])

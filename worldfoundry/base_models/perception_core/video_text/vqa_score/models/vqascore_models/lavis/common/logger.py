@@ -168,7 +168,7 @@ class MetricLogger:
                             data=str(data_time),
                         )
                     )
-            i += 1
+            i += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))

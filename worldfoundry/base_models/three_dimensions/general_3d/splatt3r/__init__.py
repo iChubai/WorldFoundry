@@ -7,7 +7,7 @@ def runtime_root() -> Path:
     return Path(__file__).resolve().parent / "splatt3r_runtime"
 
 
-from .worldfoundry_runtime import (
+from .worldfoundry_runtime import (  # noqa: E402 - Follows module-level definitions, as upstream.
     DEFAULT_SPLATT3R_FILENAME,
     DEFAULT_SPLATT3R_LOCAL_CKPT,
     DEFAULT_SPLATT3R_REPO,

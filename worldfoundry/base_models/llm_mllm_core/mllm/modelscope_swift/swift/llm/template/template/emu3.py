@@ -54,7 +54,7 @@ class Emu3GenTemplate(Template):
         else:
             prompt = inputs.to_history()["query"]
             encoded = self._process_prompt_test(prompt)
-            encoded = {key: encoded[key][0] for key in encoded.keys()}  # [1, L] -> [L]
+            encoded = {key: encoded[key][0] for key in encoded.keys()}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.  # [1, L] -> [L]
 
         return encoded
 
@@ -156,8 +156,8 @@ class Emu3GenTemplate(Template):
         w, h = image.size
         current_area = h * w
         target_ratio = (self.processor.image_area / current_area) ** 0.5
-        th = int(round(h * target_ratio))
-        tw = int(round(w * target_ratio))
+        th = int(round(h * target_ratio))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        tw = int(round(w * target_ratio))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         image = image.resize((tw, th))
         return image
 

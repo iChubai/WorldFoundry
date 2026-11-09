@@ -68,8 +68,8 @@ class YOLOXHeadModule(BaseModule):
         dcn_on_last_conv: bool = False,
         conv_bias: bool | str = "auto",
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         super().__init__(init_cfg=init_cfg)
@@ -212,28 +212,28 @@ class YOLOXHead(YOLOv5Head):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},
-        bbox_coder: ConfigType = {"type": "YOLOXBBoxCoder"},
-        loss_cls: ConfigType = {
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},  # noqa: B006 - Keeps the upstream default object and signature.
+        bbox_coder: ConfigType = {"type": "YOLOXBBoxCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_cls: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.CrossEntropyLoss",
             "use_sigmoid": True,
             "reduction": "sum",
             "loss_weight": 1.0,
         },
-        loss_bbox: ConfigType = {
+        loss_bbox: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.IoULoss",
             "mode": "square",
             "eps": 1e-16,
             "reduction": "sum",
             "loss_weight": 5.0,
         },
-        loss_obj: ConfigType = {
+        loss_obj: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.CrossEntropyLoss",
             "use_sigmoid": True,
             "reduction": "sum",
             "loss_weight": 1.0,
         },
-        loss_bbox_aux: ConfigType = {"type": "mmdet.L1Loss", "reduction": "sum", "loss_weight": 1.0},
+        loss_bbox_aux: ConfigType = {"type": "mmdet.L1Loss", "reduction": "sum", "loss_weight": 1.0},  # noqa: B006 - Keeps the upstream default object and signature.
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,

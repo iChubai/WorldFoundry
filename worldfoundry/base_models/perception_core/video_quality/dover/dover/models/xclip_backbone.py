@@ -310,7 +310,7 @@ class CrossFramelAttentionBlock(nn.Module):
         return self.attn(x, x, x, need_weights=False, attn_mask=self.attn_mask)[0]
 
     def forward(self, x):
-        l, bt, d = x.size()
+        l, bt, d = x.size()  # noqa: E741 - Ambiguous upstream name kept as written.
         b = bt // self.T
         x = x.view(l, b, self.T, d)
 
@@ -337,7 +337,7 @@ class CrossFramelAttentionBlock(nn.Module):
         return x
 
 
-class Transformer(nn.Module):
+class Transformer(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(
         self,
         width: int,
@@ -512,7 +512,7 @@ class PromptGeneratorLayer(nn.Module):
         )
 
     def forward(self, x, visual):
-        q = k = v = self.norm1(x)
+        q = k = v = self.norm1(x)  # noqa: F841 - Upstream assignment kept.
         x = x + self.cross_attn(q, visual, visual)
         x = x + self.dropout(self.mlp(self.norm3(x)))
         return x
@@ -547,7 +547,7 @@ class VideoSpecificPrompt(nn.Module):
             text = layer(text, visual)
 
 
-class ResidualAttentionBlock(nn.Module):
+class ResidualAttentionBlock(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(self, d_model: int, n_head: int, attn_mask: torch.Tensor = None):
         super().__init__()
 
@@ -786,7 +786,7 @@ def build_x_clip_model(
     if vit:
         vision_width = state_dict["visual.conv1.weight"].shape[0]
         vision_layers = len(
-            [k for k in state_dict.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")]
+            [k for k in state_dict.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         )
         vision_patch_size = state_dict["visual.conv1.weight"].shape[-1]
         grid_size = round((state_dict["visual.positional_embedding"].shape[0] - 1) ** 0.5)

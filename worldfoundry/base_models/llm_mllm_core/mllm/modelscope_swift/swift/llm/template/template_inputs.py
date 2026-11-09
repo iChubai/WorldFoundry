@@ -60,7 +60,7 @@ class InferRequest:
 
     messages: Messages
 
-    images: list[str | Image.Image] = field(default_factory=list)
+    images: list[str | Image.Image] = field(default_factory=list)  # noqa: F821 - Postponed PIL annotation retained from the template schema.
     audios: list[str] = field(default_factory=list)
     videos: list[str] = field(default_factory=list)
 
@@ -133,7 +133,7 @@ class StdTemplateInputs:
     rejected_response: str | None = None
     label: int | None = None
 
-    images: list[str | Image.Image] = field(default_factory=list)
+    images: list[str | Image.Image] = field(default_factory=list)  # noqa: F821 - Postponed PIL annotation retained from the template schema.
     audios: list[str] = field(default_factory=list)
     videos: list[str] = field(default_factory=list)
     objects: dict[str, list[Any]] = field(default_factory=dict)

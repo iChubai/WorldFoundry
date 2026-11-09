@@ -3,7 +3,7 @@ import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import bilinear_sampler
 
-try:
+try:  # noqa: SIM105 - The handler carries an explanatory comment.
     import alt_cuda_corr
 except BaseException:
     # alt_cuda_corr is not compiled

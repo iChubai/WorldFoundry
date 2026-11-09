@@ -43,7 +43,7 @@ class PreprocessCfg:
 
     @property
     def input_size(self):
-        return (self.num_channels,) + to_2tuple(self.size)
+        return (self.num_channels,) + to_2tuple(self.size)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 _PREPROCESS_KEYS = set(asdict(PreprocessCfg()).keys())
@@ -259,8 +259,8 @@ def center_crop_or_pad(img: torch.Tensor, output_size: list[int], fill=0) -> tor
         if crop_width == image_width and crop_height == image_height:
             return img
 
-    crop_top = int(round((image_height - crop_height) / 2.0))
-    crop_left = int(round((image_width - crop_width) / 2.0))
+    crop_top = int(round((image_height - crop_height) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    crop_left = int(round((image_width - crop_width) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     return F.crop(img, crop_top, crop_left, crop_height, crop_width)
 
 
@@ -419,7 +419,7 @@ def image_transform(
 
             if isinstance(image_size, (tuple, list)):
                 assert len(image_size) >= 2
-                input_size = (3,) + image_size[-2:]
+                input_size = (3,) + image_size[-2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             else:
                 input_size = (3, image_size, image_size)
 

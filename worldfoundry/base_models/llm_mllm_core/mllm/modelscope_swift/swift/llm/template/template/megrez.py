@@ -73,7 +73,7 @@ class MegrezOmniTemplate(Template):
             padding = text.split("<s>")
 
             def _get_new_tokens(i):
-                return self._tokenize(padding[i])
+                return self._tokenize(padding[i])  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
             input_ids, labels = self._extend_tokens(input_ids, labels, idx_list, _get_new_tokens)
         encoded["input_ids"] = input_ids

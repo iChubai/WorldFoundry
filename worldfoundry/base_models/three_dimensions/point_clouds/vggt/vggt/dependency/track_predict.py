@@ -3,11 +3,12 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
+# ruff: noqa: F405 - Names come from the upstream star import.
 
 import numpy as np
 import torch
 
-from .vggsfm_utils import *
+from .vggsfm_utils import *  # noqa: F403 - Upstream star import kept as written.
 
 
 def predict_tracks(

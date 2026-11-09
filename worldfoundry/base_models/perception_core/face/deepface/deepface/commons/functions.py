@@ -228,7 +228,7 @@ def extract_faces(
             extracted_face = [img_pixels, region_obj, confidence]
             extracted_faces.append(extracted_face)
 
-    if len(extracted_faces) == 0 and enforce_detection == True:
+    if len(extracted_faces) == 0 and enforce_detection == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         raise ValueError(f"Detected face shape is {img.shape}. Consider to set enforce_detection arg to False.")
 
     return extracted_faces
@@ -313,7 +313,7 @@ def find_target_size(model_name):
 
     target_size = target_sizes.get(model_name)
 
-    if target_size == None:
+    if target_size == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
         raise ValueError(f"unimplemented model name - {model_name}")
 
     return target_size

@@ -6,7 +6,7 @@ import torch
 from transformers import PreTrainedTokenizerBase, StoppingCriteria
 
 Prompt = list[str | list[int] | list[str]]
-Word = Union[str, list[int]]
+Word = Union[str, list[int]]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 Context = Word
 
 
@@ -147,7 +147,7 @@ def split_str_parts_by(text: str, delimiters: list[str], regex_mode: bool = Fals
     if regex_mode:
         parts = [part for part in parts if part]
         for part in parts:
-            for delimiter, delimiter_origin in zip(delimiters, delimiters_origin, strict=False):
+            for delimiter, delimiter_origin in zip(delimiters, delimiters_origin, strict=False):  # noqa: B007 - The loop variable is read outside the loop.
                 if re.match(delimiter, part, re.DOTALL):
                     break
             else:

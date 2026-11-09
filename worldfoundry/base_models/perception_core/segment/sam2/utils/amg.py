@@ -142,7 +142,7 @@ def generate_crop_boxes(
     layer_idxs.append(0)
 
     def crop_len(orig_len, n_crops, overlap):
-        return int(math.ceil((overlap * (n_crops - 1) + orig_len) / n_crops))
+        return int(math.ceil((overlap * (n_crops - 1) + orig_len) / n_crops))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     for i_layer in range(n_layers):
         n_crops_per_side = 2 ** (i_layer + 1)
@@ -206,7 +206,7 @@ def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str) -> tup
     small_regions = [i + 1 for i, s in enumerate(sizes) if s < area_thresh]
     if len(small_regions) == 0:
         return mask, False
-    fill_labels = [0] + small_regions
+    fill_labels = [0] + small_regions  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if not correct_holes:
         fill_labels = [i for i in range(n_labels) if i not in fill_labels]
         # If every region is below threshold, keep largest

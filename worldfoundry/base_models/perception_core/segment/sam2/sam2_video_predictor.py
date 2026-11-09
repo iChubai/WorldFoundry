@@ -553,7 +553,7 @@ class SAM2VideoPredictor(SAM2Base):
             max_frame_num_to_track = num_frames
         if reverse:
             end_frame_idx = max(start_frame_idx - max_frame_num_to_track, 0)
-            if start_frame_idx > 0:
+            if start_frame_idx > 0:  # noqa: SIM108 - Branches carry per-case comments.
                 processing_order = range(start_frame_idx, end_frame_idx - 1, -1)
             else:
                 processing_order = []  # skip reverse tracking if starting from frame 0
@@ -698,7 +698,7 @@ class SAM2VideoPredictor(SAM2Base):
             expanded_backbone_out["vision_pos_enc"][i] = pos
 
         features = self._prepare_backbone_features(expanded_backbone_out)
-        features = (expanded_image,) + features
+        features = (expanded_image,) + features  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return features
 
     def _run_single_frame_inference(

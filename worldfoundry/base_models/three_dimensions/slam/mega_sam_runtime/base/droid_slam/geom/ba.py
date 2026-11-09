@@ -101,8 +101,8 @@ def compute_preconditioner(poses, intrinsics, disps_sens, ii, jj, t0, t1, iterat
     kx, kk = torch.unique(ii, return_inverse=True)
     M = kx.shape[0]
 
-    _ii_ = ii - t0  # line 1378 in cuda code
-    _jj_ = jj - t0
+    _ii_ = ii - t0  # noqa: F841 - Upstream assignment kept.  # line 1378 in cuda code
+    _jj_ = jj - t0  # noqa: F841 - Upstream assignment kept.
 
     C_0 = safe_scatter_add_vec(Ck, kk, M)
     # w = safe_scatter_add_vec(wk, kk, M)
@@ -186,7 +186,7 @@ def precond_BA(
     #     align_scale = align_scale#.detach()
 
     # damping_scale = torch.exp(-mean_Hessian * 4. / 10.)
-    damping_scale = 0.0  # torch.exp(-mean_Hessian * 4.)
+    damping_scale = 0.0  # noqa: F841 - Upstream assignment kept.  # torch.exp(-mean_Hessian * 4.)
     # print("mean_Hessian ", N, P, mean_Hessian, damping_scale)
     # precondition = False
 
@@ -654,8 +654,8 @@ def getJacobian(
         # ii = ii // rig - fixedp
         # jj = jj // rig - fixedp
 
-        _ii_ = ii - t0  # line 1378 in cuda code
-        _jj_ = jj - t0
+        _ii_ = ii - t0  # noqa: F841 - Upstream assignment kept.  # line 1378 in cuda code
+        _jj_ = jj - t0  # noqa: F841 - Upstream assignment kept.
 
         # Check correct!
         # H_fc = safe_scatter_add_vec(Hfi, ii_, P) + \

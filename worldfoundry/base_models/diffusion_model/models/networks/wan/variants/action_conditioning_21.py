@@ -99,16 +99,16 @@ class ActionModule(nn.Module):
         vae_time_compression_ratio: int = 4,
         windows_size: int = 3,
         heads_num: int = 16,
-        patch_size: list = [1, 2, 2],
+        patch_size: list = [1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         qk_norm: bool = True,
         qkv_bias: bool = False,
-        rope_dim_list: list = [8, 28, 28],
+        rope_dim_list: list = [8, 28, 28],  # noqa: B006 - Keeps the upstream default object and signature.
         rope_theta=256,
-        mouse_qk_dim_list=[8, 28, 28],
+        mouse_qk_dim_list=[8, 28, 28],  # noqa: B006 - Keeps the upstream default object and signature.
         enable_mouse=True,
         enable_keyboard=True,
         local_attn_size=6,
-        blocks=[],
+        blocks=[],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.local_attn_size = local_attn_size
@@ -253,7 +253,7 @@ class ActionModule(nn.Module):
         mouse_condition: B, N_frames, C1
         keyboard_condition: B, N_frames, C2
         """
-        assert use_rope_keyboard == True
+        assert use_rope_keyboard == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
 
         B, N_frames, C = keyboard_condition.shape
         assert tt * th * tw == x.shape[1]
@@ -263,7 +263,7 @@ class ActionModule(nn.Module):
         # Defined freqs_cis early so it's available for both mouse and keyboard
         freqs_cis = (self.freqs_cos, self.freqs_sin)
 
-        assert (N_feats == tt and ((is_causal and kv_cache_mouse == None) or not is_causal)) or (
+        assert (N_feats == tt and ((is_causal and kv_cache_mouse == None) or not is_causal)) or (  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             (N_frames - 1) // self.vae_time_compression_ratio + 1 == start_frame + num_frame_per_block and is_causal
         )
 

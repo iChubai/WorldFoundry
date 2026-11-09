@@ -1,6 +1,7 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import itertools
 from numbers import Number
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import numpy as np
 from numpy import ndarray
@@ -854,7 +855,7 @@ def quaternion_to_matrix(quaternion: ndarray) -> ndarray:
     )
     w, x, y, z = quaternion[..., 0], quaternion[..., 1], quaternion[..., 2], quaternion[..., 3]
     zeros = np.zeros_like(w)
-    I = np.eye(3, dtype=quaternion.dtype)
+    I = np.eye(3, dtype=quaternion.dtype)  # noqa: E741 - Ambiguous upstream name kept as written.
     xyz = quaternion[..., 1:]
     A = xyz[..., :, None] * xyz[..., None, :] - I * (xyz**2).sum(axis=-1)[..., None, None]
     B = np.stack([zeros, -z, y, z, zeros, -x, -y, x, zeros], axis=-1).reshape(*quaternion.shape[:-1], 3, 3)
@@ -978,7 +979,7 @@ def euler_axis_angle_rotation(axis: str, angle: ndarray) -> ndarray:
     else:
         raise ValueError("letter must be either X, Y or Z.")
 
-    return np.stack(R_flat, -1).reshape(angle.shape + (3, 3))
+    return np.stack(R_flat, -1).reshape(angle.shape + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def euler_angles_to_matrix(euler_angles: ndarray, convention: str = "XYZ") -> ndarray:
@@ -1028,7 +1029,7 @@ def skew_symmetric(v: ndarray):
 
 def rotation_matrix_from_vectors(v1: ndarray, v2: ndarray):
     "Rotation matrix that rotates v1 to v2"
-    I = np.eye(3, dtype=v1.dtype)
+    I = np.eye(3, dtype=v1.dtype)  # noqa: E741 - Ambiguous upstream name kept as written.
     v1 = v1 / np.linalg.norm(v1, axis=-1)
     v2 = v2 / np.linalg.norm(v2, axis=-1)
     v = np.cross(v1, v2, axis=-1)
@@ -1403,7 +1404,7 @@ def transform_points(x: ndarray, *Ts: ndarray) -> ndarray:
     input_dim = x.shape[-1]
     pad_dim = max(max(max(T.shape[-2:]) for T in Ts), x.shape[-1])
     x = np.concatenate([x, np.ones((*x.shape[:-1], pad_dim - x.shape[-1]), dtype=x.dtype)], axis=-1)
-    I = np.eye(pad_dim, dtype=x.dtype)
+    I = np.eye(pad_dim, dtype=x.dtype)  # noqa: E741 - Ambiguous upstream name kept as written.
     Ts = [
         np.concatenate(
             [

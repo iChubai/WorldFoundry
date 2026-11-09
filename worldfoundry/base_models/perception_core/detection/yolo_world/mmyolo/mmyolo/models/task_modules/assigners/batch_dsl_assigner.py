@@ -106,7 +106,7 @@ class BatchDynamicSoftLabelAssigner(nn.Module):
         soft_center_radius: float = 3.0,
         topk: int = 13,
         iou_weight: float = 3.0,
-        iou_calculator: ConfigType = {"type": "mmdet.BboxOverlaps2D"},
+        iou_calculator: ConfigType = {"type": "mmdet.BboxOverlaps2D"},  # noqa: B006 - Keeps the upstream default object and signature.
         batch_iou: bool = True,
     ) -> None:
         super().__init__()

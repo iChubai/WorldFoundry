@@ -35,13 +35,13 @@ def convert(src: str, dst: str, imagenet_pretrain: bool = False):
                 # -> backbone.stem.0.conv.weight
                 org_ind = k.split(".")[1][-1]
                 new_ind = str(int(org_ind) - 1)
-                name = k.replace("stem.conv%s." % org_ind, "stem.%s." % new_ind)
+                name = k.replace("stem.conv%s." % org_ind, "stem.%s." % new_ind)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             else:
                 # backbone.stages.1.conv2.bn._variance
                 # -> backbone.stage2.0.conv2.bn.running_var
                 org_stage_ind = k.split(".")[1]
                 new_stage_ind = str(int(org_stage_ind) + 1)
-                name = k.replace("stages.%s." % org_stage_ind, "stage%s.0." % new_stage_ind)
+                name = k.replace("stages.%s." % org_stage_ind, "stage%s.0." % new_stage_ind)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 name = convert_repvgg(name)
                 if ".attn." in k:
                     name = name.replace(".attn.fc.", ".attn.fc.conv.")
@@ -58,13 +58,13 @@ def convert(src: str, dst: str, imagenet_pretrain: bool = False):
                     # -> backbone.stem.0.conv.weight
                     org_ind = k.split(".")[2][-1]
                     new_ind = str(int(org_ind) - 1)
-                    name = k.replace(".stem.conv%s." % org_ind, ".stem.%s." % new_ind)
+                    name = k.replace(".stem.conv%s." % org_ind, ".stem.%s." % new_ind)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 else:
                     # backbone.stages.1.conv2.bn._variance
                     # -> backbone.stage2.0.conv2.bn.running_var
                     org_stage_ind = k.split(".")[2]
                     new_stage_ind = str(int(org_stage_ind) + 1)
-                    name = k.replace(".stages.%s." % org_stage_ind, ".stage%s.0." % new_stage_ind)
+                    name = k.replace(".stages.%s." % org_stage_ind, ".stage%s.0." % new_stage_ind)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                     name = convert_repvgg(name)
                     if ".attn." in k:
                         name = name.replace(".attn.fc.", ".attn.fc.conv.")

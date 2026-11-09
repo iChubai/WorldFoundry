@@ -47,7 +47,7 @@ def _make_encoder(
     hooks=None,
     use_vit_only=False,
     use_readout="ignore",
-    in_features=[96, 256, 512, 1024],
+    in_features=[96, 256, 512, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     if backbone == "beitl16_512":
         pretrained = _make_pretrained_beitl16_512(use_pretrained, hooks=hooks, use_readout=use_readout)
@@ -112,7 +112,7 @@ def _make_encoder(
         scratch = _make_scratch([32, 48, 136, 384], features, groups=groups, expand=expand)  # efficientnet_lite3
     else:
         print(f"Backbone '{backbone}' not implemented")
-        assert False
+        assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
     return pretrained, scratch
 
@@ -297,7 +297,7 @@ class ResidualConvUnit_custom(nn.Module):
 
         self.conv2 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups)
 
-        if self.bn == True:
+        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             self.bn1 = nn.BatchNorm2d(features)
             self.bn2 = nn.BatchNorm2d(features)
 
@@ -316,12 +316,12 @@ class ResidualConvUnit_custom(nn.Module):
 
         out = self.activation(x)
         out = self.conv1(out)
-        if self.bn == True:
+        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out = self.bn1(out)
 
         out = self.activation(out)
         out = self.conv2(out)
-        if self.bn == True:
+        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out = self.bn2(out)
 
         if self.groups > 1:
@@ -349,7 +349,7 @@ class FeatureFusionBlock_custom(nn.Module):
 
         self.expand = expand
         out_features = features
-        if self.expand == True:
+        if self.expand == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out_features = features // 2
 
         self.out_conv = nn.Conv2d(features, out_features, kernel_size=1, stride=1, padding=0, bias=True, groups=1)

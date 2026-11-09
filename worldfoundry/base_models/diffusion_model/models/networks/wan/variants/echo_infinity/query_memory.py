@@ -216,8 +216,8 @@ class QueryMemoryEncoder(nn.Module):
                 self.query_states[g] = new_state
                 gate_means.append(gm)
             self.query_state = self.query_states[0]
-            gate_str = ", ".join((f"g{i}={('res' if gm is None else f'{gm:.3f}')}" for i, gm in enumerate(gate_means)))
-            norm_str = ", ".join(f"g{i}={self.query_states[i].norm().item():.1f}" for i in range(self.num_query_groups))
+            gate_str = ", ".join((f"g{i}={('res' if gm is None else f'{gm:.3f}')}" for i, gm in enumerate(gate_means)))  # noqa: F841 - Kept as upstream; an underscore name already exists.
+            norm_str = ", ".join(f"g{i}={self.query_states[i].norm().item():.1f}" for i in range(self.num_query_groups))  # noqa: F841 - Kept as upstream; an underscore name already exists.
         else:
             new_state, gate_mean = _update_single_group(query_state, self.connector_proj, self.gate_linear)
             if self.use_vib:

@@ -1,8 +1,9 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import os
 from io import TextIOWrapper
 from itertools import chain, repeat
 from pathlib import Path
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import numpy as np
 from numpy import ndarray
@@ -30,7 +31,7 @@ class WavefrontOBJDict(TypedDict):
     "Vertex texture coordinate indices of faces. NOTE: 0-based indexing"
     fn: Union[ndarray, Tuple[ndarray, ndarray]]
     "Vertex normal indices of faces. NOTE: 0-based indexing"
-    l: Union[ndarray, Tuple[ndarray, ndarray]]
+    l: Union[ndarray, Tuple[ndarray, ndarray]]  # noqa: E741 - Ambiguous upstream name kept as written.
     "Vertex indices of lines. NOTE: 0-based indexing"
     lt: Union[ndarray, Tuple[ndarray, ndarray]]
     "Vertex texture coordinate indices of lines. NOTE: 0-based indexing"
@@ -103,7 +104,7 @@ def read_obj(
     mtllib = []
     v, vt, vn = [], [], []  # Vertex coordinates, Vertex texture coordinate, Vertex normal
     f, ft, fn = [], [], []  # Face indices, Face texture indices, Face normal indices
-    l, lt = [], []  # Line indices, Line texture indices
+    l, lt = [], []  # noqa: E741 - Ambiguous upstream name kept as written.  # Line indices, Line texture indices
     p, pt = [], []  # Point indices, Point texture indices
     o = {}
     o_names, o_offsets = [], []
@@ -115,7 +116,7 @@ def read_obj(
     def int_(x):
         return int(x) if x != "" else 0
 
-    def pad(l, n, x=0):
+    def pad(l, n, x=0):  # noqa: E741 - Ambiguous upstream name kept as written.
         return l + [x] * (n - len(l))
 
     # Read the lines
@@ -214,24 +215,24 @@ def read_obj(
     # Process line data
     if len(l) > 0:
         l_lengths = np.array(list(map(len, l)))
-        l = np.array(list(chain.from_iterable(l)), dtype=np.int32) - 1
+        l = np.array(list(chain.from_iterable(l)), dtype=np.int32) - 1  # noqa: E741 - Ambiguous upstream name kept as written.
         lt = np.array(list(chain.from_iterable(lt)), dtype=np.int32) - 1
 
         if (l == -1).all():
-            l = None
+            l = None  # noqa: E741 - Ambiguous upstream name kept as written.
         if (lt == -1).all():
             lt = None
 
         if (l_lengths == l_lengths[0]).all():
             l_len = l_lengths[0]
-            l = l.reshape(-1, l_len) if l is not None else None
+            l = l.reshape(-1, l_len) if l is not None else None  # noqa: E741 - Ambiguous upstream name kept as written.
             lt = lt.reshape(-1, l_len) if lt is not None else None
         else:
             l_offsets = np.concatenate([[0], np.cumsum(l_lengths)])
-            l = (l, l_offsets) if l is not None else None
+            l = (l, l_offsets) if l is not None else None  # noqa: E741 - Ambiguous upstream name kept as written.
             lt = (lt, l_offsets) if lt is not None else None
     else:
-        l = None
+        l = None  # noqa: E741 - Ambiguous upstream name kept as written.
         lt = None
 
     # Process point data
@@ -317,7 +318,7 @@ def read_obj(
 
 
 def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encoding: Union[str, None] = None):
-    fp = Path(file).open("w", encoding=encoding) if isinstance(file, (str, Path, os.PathLike)) else file
+    fp = Path(file).open("w", encoding=encoding) if isinstance(file, (str, Path, os.PathLike)) else file  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     with fp:
         # Write mtllib
@@ -372,10 +373,10 @@ def write_obj(file: Union[str, Path, os.PathLike], obj: WavefrontOBJDict, encodi
 
         # Write lines
         if "l" in obj or "lt" in obj:
-            l = obj.get("l", None)
+            l = obj.get("l", None)  # noqa: E741 - Ambiguous upstream name kept as written.
             if isinstance(l, tuple):
                 l_data, l_offsets = l
-                l = np.split(l_data, l_offsets[1:-1])
+                l = np.split(l_data, l_offsets[1:-1])  # noqa: E741 - Ambiguous upstream name kept as written.
             lt = obj.get("lt", None)
             if isinstance(lt, tuple):
                 lt_data, l_offsets = lt

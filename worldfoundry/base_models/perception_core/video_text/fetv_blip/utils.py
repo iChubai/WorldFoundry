@@ -22,13 +22,13 @@ def step_lr_schedule(optimizer, epoch, init_lr, min_lr, decay_rate):
         param_group["lr"] = lr
 
 
-import datetime
-import os
-import time
-from collections import defaultdict, deque
+import datetime  # noqa: E402 - Follows module-level definitions, as upstream.
+import os  # noqa: E402 - Follows module-level definitions, as upstream.
+import time  # noqa: E402 - Follows module-level definitions, as upstream.
+from collections import defaultdict, deque  # noqa: E402 - Follows module-level definitions, as upstream.
 
-import torch
-import torch.distributed as dist
+import torch  # noqa: E402 - Follows module-level definitions, as upstream.
+import torch.distributed as dist  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class SmoothedValue:
@@ -167,7 +167,7 @@ class MetricLogger:
                             i, len(iterable), eta=eta_string, meters=str(self), time=str(iter_time), data=str(data_time)
                         )
                     )
-            i += 1
+            i += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))

@@ -274,12 +274,12 @@ class CoTracker(nn.Module):
                 feat_init = smart_cat(feat_init, feat_init_, dim=2)
 
             if prev_wind_idx > 0:
-                new_coords = coords[-1][:, self.S // 2 :] / float(self.stride)
+                new_coords = coords[-1][:, self.S // 2 :] / float(self.stride)  # noqa: F821 - Reuses the previous tracking window after the initial window.
 
                 coords_init_[:, : self.S // 2, :prev_wind_idx] = new_coords
                 coords_init_[:, self.S // 2 :, :prev_wind_idx] = new_coords[:, -1].repeat(1, self.S // 2, 1, 1)
 
-                new_vis = vis[:, self.S // 2 :].unsqueeze(-1)
+                new_vis = vis[:, self.S // 2 :].unsqueeze(-1)  # noqa: F821 - Reuses the previous tracking window after the initial window.
                 vis_init_[:, : self.S // 2, :prev_wind_idx] = new_vis
                 vis_init_[:, self.S // 2 :, :prev_wind_idx] = new_vis[:, -1].repeat(1, self.S // 2, 1, 1)
 

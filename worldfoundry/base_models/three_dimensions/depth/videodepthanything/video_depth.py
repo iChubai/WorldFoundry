@@ -44,7 +44,7 @@ class VideoDepthAnything(nn.Module):
         self,
         encoder="vitl",
         features=256,
-        out_channels=[256, 512, 1024, 1024],
+        out_channels=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         use_bn=False,
         use_clstoken=False,
         num_frames=32,

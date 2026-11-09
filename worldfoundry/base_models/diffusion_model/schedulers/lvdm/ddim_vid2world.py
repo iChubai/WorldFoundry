@@ -133,9 +133,9 @@ class DDIMSampler:
         if conditioning is not None:
             if isinstance(conditioning, dict):
                 try:
-                    cbs = conditioning[list(conditioning.keys())[0]].shape[0]
+                    cbs = conditioning[list(conditioning.keys())[0]].shape[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                 except BaseException:
-                    cbs = conditioning[list(conditioning.keys())[0]][0].shape[0]
+                    cbs = conditioning[list(conditioning.keys())[0]][0].shape[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
 
                 if cbs != batch_size:
                     print(f"Warning: Got {cbs} conditionings but batch-size is {batch_size}")
@@ -249,7 +249,7 @@ class DDIMSampler:
         if ar:
             original_img = img.clone()  # use clone() instead of deepcopy for tensors
             original_cond = cond  # no need to copy, we only read from it
-            if unconditional_conditioning is not None:
+            if unconditional_conditioning is not None:  # noqa: SIM108 - Branches carry per-case comments.
                 original_ucond = unconditional_conditioning  # no need to copy
             else:
                 original_ucond = cond
@@ -290,7 +290,7 @@ class DDIMSampler:
                             img = original_img[:, :, :1, :, :]
                     if i == 0:
                         clean_img = img.clone()
-                    if t > 0:
+                    if t > 0:  # noqa: SIM102 - Branches carry per-case comments.
                         if ar_noise_schedule is not None:
                             if ar_noise_schedule == 1:
                                 """ Add deterministic uniform noise to the history frames """
@@ -309,12 +309,12 @@ class DDIMSampler:
                     ucond_t = {}
                     cond_t["c_crossattn"] = original_cond["c_crossattn"]
                     cond_t["c_concat"] = [original_cond["c_concat"][0][:, :, : t + 1, :, :]]
-                    if "c_action" in original_cond.keys():
+                    if "c_action" in original_cond.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                         cond_t["c_action"] = [original_cond["c_action"][0][:, : t + 1, :]]
                         ucond_t["c_action"] = [original_cond["c_action"][0][:, : t + 1, :]]
                     ucond_t["c_crossattn"] = original_ucond["c_crossattn"]
                     ucond_t["c_concat"] = [original_ucond["c_concat"][0][:, :, : t + 1, :, :]]
-                    if "c_action_mask" in original_cond.keys():
+                    if "c_action_mask" in original_cond.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                         cond_t["c_action_mask"] = [original_cond["c_action_mask"][0][:, : t + 1]]
                         ucond_t["c_action_mask"] = [
                             torch.cat(
@@ -391,12 +391,12 @@ class DDIMSampler:
                 ## use mask to blend noised original latent (img_orig) & new sampled latent (img), this is never used
                 if mask is not None:
                     assert x0 is not None
-                    if clean_cond:
+                    if clean_cond:  # noqa: SIM108 - Branches carry per-case comments.
                         img_orig = x0
                     else:
                         img_orig = self.model.q_sample(x0, ts)  # TODO: deterministic forward pass? <ddim inversion>
                     img = img_orig * mask + (1.0 - mask) * img  # keep original & modify use img
-                if unconditional_conditioning == None:
+                if unconditional_conditioning == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
                     unconditional_conditioning = copy.deepcopy(cond)
                     unconditional_conditioning["c_action_mask"] = [
                         torch.zeros_like(cond["c_action_mask"][0]).to(device)

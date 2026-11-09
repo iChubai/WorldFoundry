@@ -179,7 +179,7 @@ class IndexedDatasetBuilder:
         self.idx_path = os.path.join(self.cache_dir, IndexedDataset.IDX_FNAME)
         if os.path.exists(self.bin_path):
             os.remove(self.bin_path)
-        self.bin_file = open(self.bin_path, "ab")
+        self.bin_file = open(self.bin_path, "ab")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         self.length_list = []
         self.idx_list = [0]
         self.shard_offset = [0]
@@ -196,7 +196,7 @@ class IndexedDatasetBuilder:
                 item_buffer = pickle.dumps(item)
                 bin_buffer.append(item_buffer)
                 self.idx_list.append(self.idx_list[-1] + len(item_buffer))
-                self.length_list.append(max([len(item[k]) for k in item.keys() if k.endswith(("input_ids", "labels"))]))
+                self.length_list.append(max([len(item[k]) for k in item.keys() if k.endswith(("input_ids", "labels"))]))  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             self.bin_file.write(b"".join(bin_buffer))
             offset = self.idx_list[-1] - self.shard_offset[-1]
             if offset >= self.CHUNK_SIZE:
@@ -206,7 +206,7 @@ class IndexedDatasetBuilder:
                 self.n_shard += 1
                 if os.path.exists(self.bin_path):
                     os.remove(self.bin_path)
-                self.bin_file = open(self.bin_path, "ab")
+                self.bin_file = open(self.bin_path, "ab")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     def add_items(self, items: list[Any]) -> None:
         if self._thread is None:
@@ -232,7 +232,7 @@ class IndexedDatasetBuilder:
 class BinReader:
     def __init__(self, bin_path: str):
         self.bin_path = bin_path
-        self.file = open(bin_path, "rb")
+        self.file = open(bin_path, "rb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         self.mm = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_READ)
 
     def read_buffer(self, offset: int, size: int) -> bytes:
@@ -423,7 +423,7 @@ class IterablePackingDataset(BasePackingDataset, IterableDataset):
     @staticmethod
     def cyclic_iter(iterable):
         while True:
-            for x in iterable:
+            for x in iterable:  # noqa: UP028 - Keeps the loop; `yield from` would forward send() and throw().
                 yield x
 
     def __iter__(self):
@@ -444,7 +444,7 @@ class IterablePackingDataset(BasePackingDataset, IterableDataset):
 
 
 class EncodePreprocessor(RowPreprocessor):
-    def __init__(self, template: "Template"):
+    def __init__(self, template: "Template"):  # noqa: F821 - Quoted annotation avoids a runtime Template import.
         super().__init__()
         self.template = template
 
@@ -454,5 +454,5 @@ class EncodePreprocessor(RowPreprocessor):
 
 class GetLengthPreprocessor(RowPreprocessor):
     def preprocess(self, row):
-        length = max([len(row[k]) for k in row.keys() if k.endswith("input_ids")])
+        length = max([len(row[k]) for k in row.keys() if k.endswith("input_ids")])  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         return {"length": length}

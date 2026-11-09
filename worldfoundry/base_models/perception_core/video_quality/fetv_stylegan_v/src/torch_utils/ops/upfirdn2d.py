@@ -79,7 +79,7 @@ def _get_filter_size(f):
 # ----------------------------------------------------------------------------
 
 
-def setup_filter(f, device=torch.device("cpu"), normalize=True, flip_filter=False, gain=1, separable=None):
+def setup_filter(f, device=torch.device("cpu"), normalize=True, flip_filter=False, gain=1, separable=None):  # noqa: B008 - Default evaluated once at definition, as upstream.
     r"""Convenience function to setup 2D FIR filter for `upfirdn2d()`.
 
     Args:

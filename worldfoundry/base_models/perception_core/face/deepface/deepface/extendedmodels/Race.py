@@ -46,7 +46,7 @@ def loadModel(
 
     home = functions.get_deepface_home()
 
-    if os.path.isfile(home + "/.deepface/weights/race_model_single_batch.h5") != True:
+    if os.path.isfile(home + "/.deepface/weights/race_model_single_batch.h5") != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print("race_model_single_batch.h5 will be downloaded...")
 
         output = home + "/.deepface/weights/race_model_single_batch.h5"

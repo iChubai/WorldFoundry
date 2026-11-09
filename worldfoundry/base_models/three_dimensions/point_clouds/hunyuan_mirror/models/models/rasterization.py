@@ -292,7 +292,7 @@ class GaussianSplatRenderer(nn.Module):
         filtered = {}
         mask_keys = ["means", "quats", "scales", "opacities", "sh", "weights"]
 
-        for key in splats.keys():
+        for key in splats.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if key in mask_keys and key in splats:
                 x = splats[key]
                 if x.ndim == 2:  # [B, N]
@@ -402,7 +402,7 @@ class GaussianSplatRenderer(nn.Module):
         images,
         gs_params,
         context_nums,
-        context_predictions={},
+        context_predictions={},  # noqa: B006 - Keeps the upstream default object and signature.
         position_from="gsdepth+gtcamera",
     ):
         """

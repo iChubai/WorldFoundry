@@ -173,7 +173,7 @@ class QwenVLBaseModel(QwenModel):
 
         return outputs
 
-    def forward(self, tokens, data_batch={}, start_pos: int = 0) -> torch.Tensor:
+    def forward(self, tokens, data_batch={}, start_pos: int = 0) -> torch.Tensor:  # noqa: B006 - Keeps the upstream default object and signature.
         """Extract hidden states for one token batch."""
         assert "pixel_values" not in data_batch, "pixel_values should not be in data_batch, use images instead"
         pixel_values = data_batch.get("images", None)

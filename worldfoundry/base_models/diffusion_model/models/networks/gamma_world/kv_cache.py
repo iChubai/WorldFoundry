@@ -109,8 +109,8 @@ class AttentionOpWithKVCache(nn.Module):
             history_v = self.v_cache[self.start_idx : kv_cache_cfg.current_idx]
             assert not any(x is None for x in history_k)
             assert not any(x is None for x in history_v)
-            k_out = torch.cat(history_k + [k], dim=1)  # type: ignore
-            v_out = torch.cat(history_v + [v], dim=1)  # type: ignore
+            k_out = torch.cat(history_k + [k], dim=1)  # type: ignore  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            v_out = torch.cat(history_v + [v], dim=1)  # type: ignore  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         else:
             k_out = k
             v_out = v

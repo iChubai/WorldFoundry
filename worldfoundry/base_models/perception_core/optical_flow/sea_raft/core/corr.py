@@ -5,7 +5,7 @@ from worldfoundry.base_models.perception_core.optical_flow.sea_raft.core.utils.u
     bilinear_sampler,
 )
 
-try:
+try:  # noqa: SIM105 - The handler carries an explanatory comment.
     import alt_cuda_corr  # noqa: F401 - Import checks optional dependency availability.
 except BaseException:
     # alt_cuda_corr is not compiled
@@ -61,7 +61,7 @@ def bilinear_sampling_corr(corr, idx1, idx2):
     dx, dy = offset[:, 1], offset[:, 2]
     b = idx2[:, 0].long()
     x0, y0 = idx2[:, 1].floor(), idx2[:, 2].floor()
-    x1, y1 = x0 + 1, y0 + 1
+    x1, y1 = x0 + 1, y0 + 1  # noqa: F841 - Upstream assignment kept.
     f00 = (1 - dy) * (1 - dx) * coords_corr(corr, idx1, b, x0, y0)
     # f01 = (1 - dy) * dx * coords_corr(corr, idx1, b, x0, y1)
     # f10 = dy * (1 - dx) * coords_corr(corr, idx1, b, x1, y0)

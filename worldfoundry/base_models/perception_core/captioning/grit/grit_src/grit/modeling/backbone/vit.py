@@ -13,12 +13,12 @@ from detectron2.modeling.backbone.build import BACKBONE_REGISTRY
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(CUR_DIR, "../../../centernet2"))
-import torch.utils.checkpoint as checkpoint
-from centernet.modeling.backbone.fpn_p5 import LastLevelP6P7_P5
-from detectron2.modeling.backbone.backbone import Backbone
-from timm.models.layers import DropPath, Mlp, trunc_normal_
+import torch.utils.checkpoint as checkpoint  # noqa: E402 - Follows the sys.path setup.
+from centernet.modeling.backbone.fpn_p5 import LastLevelP6P7_P5  # noqa: E402 - Follows the sys.path setup.
+from detectron2.modeling.backbone.backbone import Backbone  # noqa: E402 - Follows the sys.path setup.
+from timm.models.layers import DropPath, Mlp, trunc_normal_  # noqa: E402 - Follows the sys.path setup.
 
-from .utils import (
+from .utils import (  # noqa: E402 - Follows the sys.path setup.
     PatchEmbed,
     add_decomposed_rel_pos,
     get_abs_pos,

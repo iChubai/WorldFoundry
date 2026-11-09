@@ -78,7 +78,7 @@ class SwiftConfig:
                 model_dir = snapshot_download(pretrained_model_name_or_path, ignore_patterns=BIN_EXTENSIONS)
                 config_file = os.path.join(model_dir, CONFIG_NAME)
             except Exception:
-                raise ValueError(f"Can't find config.json at '{pretrained_model_name_or_path}'")
+                raise ValueError(f"Can't find config.json at '{pretrained_model_name_or_path}'")  # noqa: B904 - Keeps the implicit exception context.
 
         loaded_attributes = cls.from_json_file(config_file)
 
@@ -332,7 +332,7 @@ class SwiftAdapter:
 
     @classmethod
     def get_model_key_mapping(cls, model_type, config) -> ModelKeys:
-        if model_type in MODEL_ARCH_MAPPING.keys():
+        if model_type in MODEL_ARCH_MAPPING.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             model_key_mapping = MODEL_ARCH_MAPPING[model_type]
         else:
             model_key_mapping = config.model_key_mapping

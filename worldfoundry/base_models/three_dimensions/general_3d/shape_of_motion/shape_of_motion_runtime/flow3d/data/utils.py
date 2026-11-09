@@ -186,7 +186,7 @@ def median_filter_2d(x, kernel_size=3, stride=1, padding=1, same: bool = True):
     # would likely be more efficient to implement from scratch at C/Cuda level
     x = F.pad(x, _get_padding(x, k, stride, padding, same), mode="reflect")
     x = x.unfold(2, k[0], stride[0]).unfold(3, k[1], stride[1])
-    x = x.contiguous().view(x.size()[:4] + (-1,)).median(dim=-1)[0]
+    x = x.contiguous().view(x.size()[:4] + (-1,)).median(dim=-1)[0]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     return x
 
 

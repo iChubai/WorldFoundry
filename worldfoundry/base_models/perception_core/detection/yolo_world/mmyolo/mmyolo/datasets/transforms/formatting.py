@@ -68,7 +68,7 @@ class PackDetInputs(MMDET_PackDetInputs):
         instance_data = InstanceData()
         ignore_instance_data = InstanceData()
 
-        for key in self.mapping_table.keys():
+        for key in self.mapping_table.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if key not in results:
                 continue
             if key == "gt_masks" or isinstance(results[key], BaseBoxes):

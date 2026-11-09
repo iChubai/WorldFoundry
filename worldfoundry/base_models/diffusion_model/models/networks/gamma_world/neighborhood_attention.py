@@ -80,9 +80,9 @@ class NeighborhoodAttention(nn.Module):
 
         self.layer_id = natten_parameters["layer_id"]
         self.window_size = natten_parameters["window_size"]
-        self.stride = 1 if "stride" not in natten_parameters else natten_parameters["stride"]
-        self.dilation = 1 if "dilation" not in natten_parameters else natten_parameters["dilation"]
-        self.is_causal = False if "is_causal" not in natten_parameters else natten_parameters["is_causal"]
+        self.stride = 1 if "stride" not in natten_parameters else natten_parameters["stride"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        self.dilation = 1 if "dilation" not in natten_parameters else natten_parameters["dilation"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        self.is_causal = False if "is_causal" not in natten_parameters else natten_parameters["is_causal"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
         if not isinstance(self.window_size, Sequence) or len(self.window_size) != 3:
             raise ValueError(f"Invalid window_size value. Expected an iterable of length 3, got {self.window_size}.")
@@ -107,7 +107,7 @@ class NeighborhoodAttention(nn.Module):
             f"window_size={self.window_size}, stride={self.stride}, dilation={self.dilation}."
         )
 
-        self.base_size = None if "base_size" not in natten_parameters else natten_parameters["base_size"]
+        self.base_size = None if "base_size" not in natten_parameters else natten_parameters["base_size"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         if self.base_size is not None and (not isinstance(self.base_size, Sequence) or len(self.base_size) != 3):
             raise ValueError(
                 f"Invalid base feature map size. Expected an iterable of length 3, or None, got {self.base_size}."
@@ -201,8 +201,8 @@ class NeighborhoodAttention(nn.Module):
             )
 
         natten_configuration = None
-        assert 80 in self.performance_configs.keys()
-        if is_cuda and compute_cap in self.performance_configs.keys():
+        assert 80 in self.performance_configs.keys()  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+        if is_cuda and compute_cap in self.performance_configs.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             natten_configuration = self.performance_configs[compute_cap]
         elif is_cuda and compute_cap >= 80:
             natten_configuration = self.performance_configs[80]

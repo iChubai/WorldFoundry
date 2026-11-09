@@ -99,7 +99,7 @@ class Side(SwiftAdapter):
 
                     def forward_seq(self, input, *args, **kwargs):
                         for idx, module in enumerate(self):
-                            if idx >= len(tgt_module.tgt_module_keys):
+                            if idx >= len(tgt_module.tgt_module_keys):  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                                 continue
                             input = module(input)
                         return input

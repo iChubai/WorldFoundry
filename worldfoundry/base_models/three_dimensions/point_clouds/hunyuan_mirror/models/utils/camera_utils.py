@@ -59,7 +59,7 @@ def vector_to_camera_matrices(cam_vec, image_hw=None, build_intr=True):
         h, w = image_hw
         fy = h * 0.5 / torch.tan(fov_v * 0.5)
         fx = w * 0.5 / torch.tan(fov_u * 0.5)
-        shape = cam_vec.shape[:-1] + (3, 3)
+        shape = cam_vec.shape[:-1] + (3, 3)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         intr = torch.zeros(shape, device=cam_vec.device, dtype=cam_vec.dtype)
         intr[..., 0, 0] = fx
         intr[..., 1, 1] = fy

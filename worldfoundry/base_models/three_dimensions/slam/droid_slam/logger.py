@@ -13,11 +13,11 @@ class Logger:
 
     def _print_training_status(self):
         if self.writer is None:
-            self.writer = SummaryWriter("runs/%s" % self.name)
+            self.writer = SummaryWriter("runs/%s" % self.name)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             print(list(self.running_loss))
 
         lr = self.scheduler.get_lr().pop()
-        metrics_data = [self.running_loss[k] / SUM_FREQ for k in self.running_loss.keys()]
+        metrics_data = [self.running_loss[k] / SUM_FREQ for k in self.running_loss.keys()]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         training_str = f"[{self.total_steps + 1:6d}, {lr:10.7f}] "
         metrics_str = ("{:10.4f}, " * len(metrics_data)).format(*metrics_data)
 

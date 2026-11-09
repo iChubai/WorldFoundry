@@ -217,7 +217,7 @@ class CausalWanAttentionBlock(nn.Module):
         sink_size=0,
         qk_norm=True,
         cross_attn_norm=False,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         block_idx=0,
         eps=1e-6,
     ):
@@ -411,7 +411,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         sink_size=0,
         qk_norm=True,
         cross_attn_norm=True,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         eps=1e-6,
     ):
         r"""
@@ -720,7 +720,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         """
 
         if mouse_cond is not None or keyboard_cond is not None:
-            assert self.use_action_module == True
+            assert self.use_action_module == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         # params
         device = self.patch_embedding.weight.device
         if self.freqs.device != device:
@@ -831,7 +831,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
         """
         # params
         if mouse_cond is not None or keyboard_cond is not None:
-            assert self.use_action_module == True
+            assert self.use_action_module == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         device = self.patch_embedding.weight.device
         if self.freqs.device != device:
             self.freqs = self.freqs.to(device)
@@ -846,7 +846,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
                 local_attn_size=self.local_attn_size,
             )
         if self.block_mask_keyboard is None:
-            if self.use_rope_keyboard == False:
+            if self.use_rope_keyboard == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
                 self.block_mask_keyboard = self._prepare_blockwise_causal_attn_mask_keyboard(
                     device,
                     num_frames=x.shape[2],
@@ -970,7 +970,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
 
         # init output layer
         nn.init.zeros_(self.head.head.weight)
-        if self.use_action_module == True:
+        if self.use_action_module == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             for m in self.blocks:
                 try:
                     nn.init.zeros_(m.action_model.proj_mouse.weight)

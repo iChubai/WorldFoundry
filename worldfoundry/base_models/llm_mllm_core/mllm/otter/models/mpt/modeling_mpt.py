@@ -24,11 +24,11 @@ from .custom_embedding import SharedEmbedding
 from .norm import NORM_CLASS_REGISTRY
 from .param_init_fns import MODEL_INIT_REGISTRY
 
-try:
+try:  # noqa: SIM105 - The handler carries an explanatory comment.
     from .flash_attn_triton import flash_attn_func  # noqa: F401 - Import checks optional dependency availability.
 except BaseException:
     pass
-Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]
+Tokenizer = Union[PreTrainedTokenizer, PreTrainedTokenizerFast]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 class MPTPreTrainedModel(PreTrainedModel):
@@ -51,7 +51,7 @@ class MPTModel(MPTPreTrainedModel):
                 config.init_device = "cpu"
             else:
                 config.init_device = "meta"
-        if config.norm_type.lower() not in NORM_CLASS_REGISTRY.keys():
+        if config.norm_type.lower() not in NORM_CLASS_REGISTRY.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             norm_options = " | ".join(NORM_CLASS_REGISTRY.keys())
             raise NotImplementedError(
                 f"Requested norm type ({config.norm_type}) is not implemented within this repo (Options: {norm_options})."
@@ -311,7 +311,7 @@ class MPTModel(MPTPreTrainedModel):
         for b_idx, block in enumerate(self.blocks):  # type: ignore
             if output_hidden_states:
                 assert all_hidden_states is not None  # pyright
-                all_hidden_states = all_hidden_states + (x,)
+                all_hidden_states = all_hidden_states + (x,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             past_key_value = past_key_values[b_idx] if past_key_values is not None else None
             x, attn_weights, past_key_value = block(
                 x,
@@ -325,14 +325,14 @@ class MPTModel(MPTPreTrainedModel):
 
             if output_attentions:
                 assert all_self_attns is not None  # pyright
-                all_self_attns = all_self_attns + (attn_weights,)
+                all_self_attns = all_self_attns + (attn_weights,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         x = self.norm_f(x)  # type: ignore
 
         # add hidden states from the last decoder layer
         if output_hidden_states:
             assert all_hidden_states is not None  # pyright
-            all_hidden_states = all_hidden_states + (x,)
+            all_hidden_states = all_hidden_states + (x,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return BaseModelOutputWithPast(
             last_hidden_state=x,
@@ -514,7 +514,7 @@ class MPTForCausalLM(MPTPreTrainedModel):
             input_ids = input_ids[:, -1].unsqueeze(-1)
         if self.transformer.prefix_lm:
             prefix_mask = torch.ones_like(attention_mask)
-            if kwargs.get("use_cache") == False:
+            if kwargs.get("use_cache") == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
                 raise NotImplementedError("MPT with prefix_lm=True does not support use_cache=False.")
         else:
             prefix_mask = None

@@ -13,7 +13,7 @@ def replace_all_norms_with_flash_norms(model):
     patched_count = {"LayerNorm": 0, "RMSNorm": 0}
 
     for _name, module in model.named_modules():
-        if isinstance(module, (LayerNorm, FP32LayerNorm)):
+        if isinstance(module, (LayerNorm, FP32LayerNorm)):  # noqa: SIM102 - Statement form kept for readability.
             if hasattr(module, "elementwise_affine") and module.elementwise_affine:
                 module.forward = (lambda self, x: flash_layernorm(self, x)).__get__(module, module.__class__)
                 patched_count["LayerNorm"] += 1

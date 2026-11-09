@@ -215,7 +215,7 @@ def linear_glu_fwd(x: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor) ->
     M, K, N = torch.prod(torch.tensor(x.shape[:-1])).item(), x.shape[-1], weight.shape[0] // 2
 
     # Allocates output.
-    y = torch.empty(x.shape[:-1] + (N,), device=x.device, dtype=x.dtype)
+    y = torch.empty(x.shape[:-1] + (N,), device=x.device, dtype=x.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # 1D launch kernel where each block gets its own program.
     def grid(META):

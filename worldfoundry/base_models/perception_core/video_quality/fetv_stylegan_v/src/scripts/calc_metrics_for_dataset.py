@@ -126,7 +126,7 @@ def calc_metrics_for_dataset(
     # Validate arguments.
     args = dnnlib.EasyDict(metrics=metrics, num_gpus=gpus, verbose=verbose)
     if not all(metric_main.is_valid_metric(metric) for metric in args.metrics):
-        ctx.fail("\n".join(["--metrics can only contain the following values:"] + metric_main.list_valid_metrics()))
+        ctx.fail("\n".join(["--metrics can only contain the following values:"] + metric_main.list_valid_metrics()))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if not args.num_gpus >= 1:
         ctx.fail("--gpus must be at least 1")
 

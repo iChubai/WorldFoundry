@@ -150,7 +150,7 @@ class GRiTROIHeadsAndTextDecoder(CascadeROIHeads):
             proposals[0].objectness_logits[0] = math.log((1.0 - 1e-10) / (1 - (1.0 - 1e-10)))
             proposals[0].gt_classes[0] = targets[0].gt_classes[0]
             proposals[0].gt_object_descriptions.data[0] = targets[0].gt_object_descriptions.data[0]
-            if "foreground" in proposals[0].get_fields().keys():
+            if "foreground" in proposals[0].get_fields().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 proposals[0].foreground[0] = 1
         return proposals
 

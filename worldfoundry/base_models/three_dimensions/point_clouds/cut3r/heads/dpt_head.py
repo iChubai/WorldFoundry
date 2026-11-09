@@ -212,8 +212,8 @@ class DPTPts3dPose(nn.Module):
             token_cross = token.clone()
             for blk in self.final_transform:
                 token_cross = blk(token_cross, pose_token, kwargs.get("pos"))
-            x = x[:-1] + [token]
-            x_cross = x[:-1] + [token_cross]
+            x = x[:-1] + [token]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            x_cross = x[:-1] + [token_cross]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         with torch.autocast(device_type="cuda", enabled=False):
             self_out = self.dpt_self(

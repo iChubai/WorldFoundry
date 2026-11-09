@@ -189,7 +189,7 @@ class TarsierProcessor(ProcessorMixin):
         pil_img = pil_img.resize((max(width, height), max(width, height)))
         return pil_img
 
-    def centralcrop(self, pil_img: Image.Image, rate=[4, 3]):
+    def centralcrop(self, pil_img: Image.Image, rate=[4, 3]):  # noqa: B006 - Keeps the upstream default object and signature.
         width, height = pil_img.size
         size = (width, height)
         min_len = min(size)

@@ -82,8 +82,8 @@ class OpticalFlow(nn.Module):
         flow, alpha = self.model(
             src_frame=data["src_frame"] if "src_feats" not in data else None,
             tgt_frame=data["tgt_frame"] if "tgt_feats" not in data else None,
-            src_feats=data["src_feats"] if "src_feats" in data else None,
-            tgt_feats=data["tgt_feats"] if "tgt_feats" in data else None,
+            src_feats=data["src_feats"] if "src_feats" in data else None,  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+            tgt_feats=data["tgt_feats"] if "tgt_feats" in data else None,  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             coarse_flow=coarse_flow,
             coarse_alpha=coarse_alpha,
             is_train=is_train,

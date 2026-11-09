@@ -11,7 +11,7 @@ from .stream import RGBDStream
 
 cur_path = osp.dirname(osp.abspath(__file__))
 test_split = osp.join(cur_path, "tartan_test.txt")
-test_split = open(test_split).read().split()
+test_split = open(test_split).read().split()  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
 
 class TartanAir(RGBDDataset):

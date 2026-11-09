@@ -33,7 +33,7 @@ def convert_backbone(model_key, model_weight, state_dict, converted_names):
     new_key = new_key[:14] + str(num) + new_key[15:]
     if ".m." in model_key:
         new_key = new_key.replace(".m.", ".blocks.")
-    elif not new_key[16] == "0" and "stage4.1" not in new_key:
+    elif not new_key[16] == "0" and "stage4.1" not in new_key:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
         new_key = new_key.replace("conv1", "main_conv")
         new_key = new_key.replace("conv2", "short_conv")
         new_key = new_key.replace("conv3", "final_conv")

@@ -110,7 +110,7 @@ def main():
             target_layers.append(eval(f"model.{target_layer}"))
         except Exception as e:
             print(model)
-            raise RuntimeError("layer does not exist", e)
+            raise RuntimeError("layer does not exist", e)  # noqa: B904 - Keeps the implicit exception context.
 
     activations_wrapper = ActivationsWrapper(model, target_layers)
 

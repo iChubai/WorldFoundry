@@ -15,7 +15,7 @@ def get_image_transform(
         crop = [T.Resize((image_size, image_size), interpolation=interpolation)]
 
     return T.Compose(
-        crop
+        crop  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         + [
             T.Lambda(lambda x: x.convert("RGB")),
             T.ToTensor(),

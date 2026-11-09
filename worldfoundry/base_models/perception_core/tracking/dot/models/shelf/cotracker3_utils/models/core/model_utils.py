@@ -23,7 +23,7 @@ def get_uniformly_sampled_pts(
     size: int,
     num_frames: int,
     extent: tuple[float, ...],
-    device: torch.device | None = torch.device("cpu"),
+    device: torch.device | None = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     time_points = torch.randint(low=0, high=num_frames, size=(size, 1), device=device)
     space_points = torch.rand(size, 2, device=device) * torch.tensor([extent[1], extent[0]], device=device)
@@ -36,9 +36,9 @@ def get_superpoint_sampled_pts(
     size: int,
     num_frames: int,
     extent: tuple[float, ...],
-    device: torch.device | None = torch.device("cpu"),
+    device: torch.device | None = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
-    extractor = SuperPoint(max_num_keypoints=48).eval().cuda()
+    extractor = SuperPoint(max_num_keypoints=48).eval().cuda()  # noqa: F821 - Name is undefined in the upstream source.
     points = []
     for _ in range(8):
         frame_num = random.randint(0, int(num_frames * 0.25))
@@ -53,7 +53,7 @@ def get_sift_sampled_pts(
     size: int,
     num_frames: int,
     extent: tuple[float, ...],
-    device: torch.device | None = torch.device("cpu"),
+    device: torch.device | None = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     num_sampled_frames: int = 8,
     sampling_length_percent: float = 0.25,
 ):
@@ -77,7 +77,7 @@ def get_points_on_a_grid(
     size: int,
     extent: tuple[float, ...],
     center: tuple[float, ...] | None = None,
-    device: torch.device | None = torch.device("cpu"),
+    device: torch.device | None = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     r"""Get a grid of points covering a rectangular region
 
@@ -330,7 +330,7 @@ def get_grid(
         if not normalize:
             x = x * W
             y = y * H
-    x_view, y_view, exp = [1 for _ in S] + [1, -1], [1 for _ in S] + [-1, 1], S + [H, W]
+    x_view, y_view, exp = [1 for _ in S] + [1, -1], [1 for _ in S] + [-1, 1], S + [H, W]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     x = x.view(*x_view).expand(*exp)
     y = y.view(*y_view).expand(*exp)
     grid = torch.stack([x, y], dim=-1)
@@ -339,7 +339,7 @@ def get_grid(
     return grid
 
 
-def bilinear_sampler(input, coords, align_corners=True, padding_mode="border"):
+def bilinear_sampler(input, coords, align_corners=True, padding_mode="border"):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     r"""Sample a tensor using bilinear interpolation
 
     `bilinear_sampler(input, coords)` samples a tensor :attr:`input` at

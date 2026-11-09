@@ -67,7 +67,7 @@ class mPLUGOwl3Model(VQAScoreModel):
         return processed_data
 
     def encode_video(self, video_path, max_frames_num):
-        def uniform_sample(l, n):
+        def uniform_sample(l, n):  # noqa: E741 - Ambiguous upstream name kept as written.
             gap = len(l) / n
             idxs = [int(i * gap + gap / 2) for i in range(n)]
             return [l[i] for i in idxs]

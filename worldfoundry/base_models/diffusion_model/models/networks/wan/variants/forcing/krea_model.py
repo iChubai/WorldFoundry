@@ -163,9 +163,9 @@ class WanSelfAttention(nn.Module):
         if SAGEATTN_AVAILABLE:
             # print("Using sageattention in crossattn")
             og_dtype = q.dtype
-            q = q.transpose(1, 2).to(dtype)
-            k = k.transpose(1, 2).to(dtype)
-            v = v.transpose(1, 2).to(dtype)
+            q = q.transpose(1, 2).to(dtype)  # noqa: F821 - Name is undefined in the upstream source.
+            k = k.transpose(1, 2).to(dtype)  # noqa: F821 - Name is undefined in the upstream source.
+            v = v.transpose(1, 2).to(dtype)  # noqa: F821 - Name is undefined in the upstream source.
             x = sageattn_func(
                 q=rope_apply(q, grid_sizes, freqs),
                 k=rope_apply(k, grid_sizes, freqs),
@@ -641,7 +641,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         self.freqs = torch.cat(
             [
                 # rope_params(1024, d - 4 * (d // 6)),
-                rope_params_riflex(
+                rope_params_riflex(  # noqa: F821 - Name is undefined in the upstream source.
                     1024,
                     d - 4 * (d // 6),
                 ),

@@ -73,7 +73,7 @@ def _vggt_aggregator_state(
     if safetensors_path.is_file():
         state: dict[str, torch.Tensor] = {}
         with safe_open(str(safetensors_path), framework="pt", device="cpu") as checkpoint:
-            for name in checkpoint.keys():
+            for name in checkpoint.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if name.startswith("aggregator."):
                     state[name] = checkpoint.get_tensor(name).to(dtype=torch_dtype)
         return state

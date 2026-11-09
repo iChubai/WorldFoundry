@@ -32,7 +32,7 @@ def generate_video(image_paths, out_dir, gen_video=True):
         fov, 0, 0, video_size[0], video_size[1]
     )  # Specify parameters(FOV, theta, phi, height, width)
 
-    h = img.shape[0]
+    h = img.shape[0]  # noqa: F841 - Kept as upstream; an underscore name already exists.
     margin = 0
     if margin > 0:
         img = img[margin:-margin]

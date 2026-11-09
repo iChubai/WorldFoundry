@@ -311,7 +311,7 @@ arg_dict = {
 
 
 class RandomAugment:
-    def __init__(self, N=2, M=10, isPIL=False, augs=[]):
+    def __init__(self, N=2, M=10, isPIL=False, augs=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         self.N = N
         self.M = M
         self.isPIL = isPIL
@@ -337,7 +337,7 @@ class RandomAugment:
 
 
 class VideoRandomAugment:
-    def __init__(self, N=2, M=10, p=0.0, tensor_in_tensor_out=True, augs=[]):
+    def __init__(self, N=2, M=10, p=0.0, tensor_in_tensor_out=True, augs=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         self.N = N
         self.M = M
         self.p = p

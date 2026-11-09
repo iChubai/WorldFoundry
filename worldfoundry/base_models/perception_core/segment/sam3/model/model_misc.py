@@ -743,7 +743,7 @@ class TransformerWrapper(nn.Module):
 
     def _reset_parameters(self):
         for n, p in self.named_parameters():
-            if p.dim() > 1:
+            if p.dim() > 1:  # noqa: SIM102 - Statement form kept for readability.
                 if "box_embed" not in n and "query_embed" not in n and "reference_points" not in n:
                     nn.init.xavier_uniform_(p)
 
@@ -764,7 +764,7 @@ class MLP(nn.Module):
         super().__init__()
         self.num_layers = num_layers
         h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim], strict=False))
+        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim], strict=False))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.drop = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
         # whether to add the output as a residual connection to the input
         if residual and input_dim != output_dim:
@@ -947,7 +947,7 @@ class SAM3Output(list):
             if index == -1:
                 return self.self.output[-1][-1]
             else:
-                flattened_output = sum(self.output, [])
+                flattened_output = sum(self.output, [])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
                 return flattened_output[index]
 
     class _IterationMode(AbstractContextManager):
@@ -997,5 +997,5 @@ class SAM3Output(list):
         ]:
             return len(self.output)
         elif self.iter_mode == SAM3Output.IterMode.FLATTENED:
-            flattened_output = sum(self.output, [])
+            flattened_output = sum(self.output, [])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
             return len(flattened_output)

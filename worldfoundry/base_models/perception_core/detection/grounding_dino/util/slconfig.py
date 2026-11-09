@@ -71,7 +71,7 @@ class SLConfig:
         try:
             ast.parse(content)
         except SyntaxError:
-            raise SyntaxError(f"There are syntax errors in config file {filename}")
+            raise SyntaxError(f"There are syntax errors in config file {filename}")  # noqa: B904 - Keeps the implicit exception context.
 
     @staticmethod
     def _file2dict(filename):
@@ -79,7 +79,7 @@ class SLConfig:
         check_file_exist(filename)
         if filename.lower().endswith(".py"):
             with tempfile.TemporaryDirectory() as temp_config_dir:
-                temp_config_file = tempfile.NamedTemporaryFile(dir=temp_config_dir, suffix=".py")
+                temp_config_file = tempfile.NamedTemporaryFile(dir=temp_config_dir, suffix=".py")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
                 temp_config_name = osp.basename(temp_config_file.name)
                 if os.name == "nt":
                     temp_config_file.close()
@@ -168,7 +168,7 @@ class SLConfig:
                 try:
                     _ = int(k)
                 except BaseException:
-                    raise TypeError(f"b is a list, index {k} should be an int when input but {type(k)}")
+                    raise TypeError(f"b is a list, index {k} should be an int when input but {type(k)}")  # noqa: B904 - Keeps the implicit exception context.
                 b[int(k)] = SLConfig._merge_a_into_b(v, b[int(k)])
             else:
                 b[k] = v

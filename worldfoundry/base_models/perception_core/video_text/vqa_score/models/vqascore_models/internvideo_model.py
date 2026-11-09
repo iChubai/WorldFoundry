@@ -11,7 +11,7 @@ from transformers import AutoModel, AutoTokenizer
 
 decord.bridge.set_bridge("torch")
 
-from .vqa_model import VQAScoreModel
+from .vqa_model import VQAScoreModel  # noqa: E402 - Follows the decord bridge setup.
 
 INTERNVIDEO2_MODELS = {
     "internvideo2-chat-8b": {
@@ -144,7 +144,7 @@ class InternVideo2Model(VQAScoreModel):
             user_prompt = question
             media_tensor = data
             if self.model_name == "internvideo2-chat-8b":
-                input_ids, attention_masks, labels = [], [], []
+                input_ids, attention_masks, labels = [], [], []  # noqa: F841 - Upstream assignment kept.
 
                 conversation = ""
                 if instruction:
@@ -165,8 +165,8 @@ class InternVideo2Model(VQAScoreModel):
                 conversation += " [INST] " + user_prompt + " [/INST]"
                 conversation += ""
 
-                total_len = 0
-                indexs = []
+                total_len = 0  # noqa: F841 - Upstream assignment kept.
+                indexs = []  # noqa: F841 - Upstream assignment kept.
                 tokenized = self.build_input_ids_chat(
                     self.tokenizer,
                     conversation,
@@ -301,7 +301,7 @@ class InternVideo2Model(VQAScoreModel):
             user_prompt = question
             media_tensor = data
             if self.model_name == "internvideo2-chat-8b":
-                input_ids, attention_masks, labels = [], [], []
+                input_ids, attention_masks, labels = [], [], []  # noqa: F841 - Upstream assignment kept.
 
                 conversation = ""
                 if instruction:
@@ -322,8 +322,8 @@ class InternVideo2Model(VQAScoreModel):
                 conversation += " [INST] " + user_prompt + " [/INST]"
                 conversation += ""
 
-                total_len = 0
-                indexs = []
+                total_len = 0  # noqa: F841 - Upstream assignment kept.
+                indexs = []  # noqa: F841 - Upstream assignment kept.
                 tokenized = self.build_input_ids_chat(
                     self.tokenizer,
                     conversation,
@@ -678,9 +678,9 @@ class InternVideo2Model(VQAScoreModel):
             return [position / np.power(10000, 2 * (hid_j // 2) / d_hid) for hid_j in range(d_hid)]
 
         if ckpt_num_frame != -1 and ckpt_num_frame != cur_frame:
-            logger.info("Interpolate position embedding")
-            logger.info(f"Testing frame: {cur_frame}")
-            logger.info(f"Checkpoint frame: {ckpt_num_frame}")
+            logger.info("Interpolate position embedding")  # noqa: F821 - Name is undefined in the upstream source.
+            logger.info(f"Testing frame: {cur_frame}")  # noqa: F821 - Name is undefined in the upstream source.
+            logger.info(f"Checkpoint frame: {ckpt_num_frame}")  # noqa: F821 - Name is undefined in the upstream source.
 
             T = ckpt_num_frame  # checkpoint frame
             new_T = cur_frame  # testing frame

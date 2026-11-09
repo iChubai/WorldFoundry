@@ -11,26 +11,29 @@ from worldfoundry.core.io.paths import package_data_path
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
-import os
+import os  # noqa: E402 - Follows the warnings configuration.
 
-import torch
-from torch import nn
-from transformers import BertTokenizer
+import torch  # noqa: E402 - Follows the warnings configuration.
+from torch import nn  # noqa: E402 - Follows the warnings configuration.
+from transformers import BertTokenizer  # noqa: E402 - Follows the warnings configuration.
 
-from .med import BertConfig, BertLMHeadModel, BertModel
-from .swin_transformer import SwinTransformer, interpolate_relative_pos_embed
-from .vit import VisionTransformer, interpolate_pos_embed
+from .med import BertConfig, BertLMHeadModel, BertModel  # noqa: E402 - Follows the warnings configuration.
+from .swin_transformer import (  # noqa: E402 - Follows the warnings configuration.
+    SwinTransformer,
+    interpolate_relative_pos_embed,
+)
+from .vit import VisionTransformer, interpolate_pos_embed  # noqa: E402 - Follows the warnings configuration.
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 _BERT_BASE_UNCASED = os.environ.get("VBENCH_BERT_BASE_UNCASED", "bert-base-uncased")
-import json
-import math
-from urllib.parse import urlparse
+import json  # noqa: E402 - Follows the environment setup.
+import math  # noqa: E402 - Follows the environment setup.
+from urllib.parse import urlparse  # noqa: E402 - Follows the environment setup.
 
-import numpy as np
-from timm.models.hub import download_cached_file
+import numpy as np  # noqa: E402 - Follows the environment setup.
+from timm.models.hub import download_cached_file  # noqa: E402 - Follows the environment setup.
 
-from .tag_class import tra_array
+from .tag_class import tra_array  # noqa: E402 - Follows the environment setup.
 
 
 def read_json(rpath):
@@ -44,7 +47,7 @@ delete_tag_index = [127, 3351, 3265, 3338, 3355, 3359]
 class Tag2Text_Caption(nn.Module):
     def __init__(
         self,
-        med_config=str(package_data_path("models", "runtime", "configs", "tag2text", "med_config.json")),
+        med_config=str(package_data_path("models", "runtime", "configs", "tag2text", "med_config.json")),  # noqa: B008 - Default evaluated once at definition, as upstream.
         image_size=384,
         vit="base",
         vit_grad_ckpt=False,
@@ -145,7 +148,7 @@ class Tag2Text_Caption(nn.Module):
         image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(image.device)
 
         # ==============generate tag==============#
-        if tag_input == None:
+        if tag_input == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             image_spatial_embeds = image_embeds[:, 1:, :]
             _image_cls_embeds = image_embeds[:, 0, :]
 
@@ -247,7 +250,7 @@ class Tag2Text_Caption(nn.Module):
         for output in outputs:
             caption = self.tokenizer.decode(output, skip_special_tokens=True)
             captions.append(caption[len(self.prompt) :])
-        if return_tag_predict == True:
+        if return_tag_predict == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             if sample:
                 return captions, tag_input
             else:
@@ -301,7 +304,7 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module, base_mod
                 f"Encoder module {encoder_pointer} does not match decoder module {decoder_pointer}"
             )
 
-            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules.keys()}
+            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules.keys()}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             encoder_layer_pos = 0
             for name, _module in decoder_modules.items():
                 if name.isdigit():
@@ -426,12 +429,12 @@ def load_checkpoint(model, url_or_filename):
     state_dict["visual_encoder.pos_embed"] = interpolate_pos_embed(
         state_dict["visual_encoder.pos_embed"], model.visual_encoder
     )
-    if "visual_encoder_m.pos_embed" in model.state_dict().keys():
+    if "visual_encoder_m.pos_embed" in model.state_dict().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         state_dict["visual_encoder_m.pos_embed"] = interpolate_pos_embed(
             state_dict["visual_encoder_m.pos_embed"], model.visual_encoder_m
         )
-    for key in model.state_dict().keys():
-        if key in state_dict.keys() and state_dict[key].shape != model.state_dict()[key].shape:
+    for key in model.state_dict().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+        if key in state_dict.keys() and state_dict[key].shape != model.state_dict()[key].shape:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             del state_dict[key]
 
     msg = model.load_state_dict(state_dict, strict=False)
@@ -472,7 +475,7 @@ def load_checkpoint_swinbase(model, url_or_filename, kwargs):
             del state_dict[k]
 
     msg = model.load_state_dict(state_dict, strict=False)
-    print("load checkpoint from %s" % url_or_filename)
+    print("load checkpoint from %s" % url_or_filename)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     return model, msg
 
 

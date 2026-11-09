@@ -16,10 +16,10 @@ def adjust_learning_rate(
     is_cosine_decay=False,
     min_lr=1e-5,
     encoder_lr_ratio=1.0,
-    freeze_params=[],
+    freeze_params=[],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     if restart > 1:
-        each_max_itr = int(math.ceil(float(max_itr) / restart))
+        each_max_itr = int(math.ceil(float(max_itr) / restart))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         itr = itr % each_max_itr
         warm_up_steps /= restart
         max_itr = each_max_itr
@@ -54,8 +54,8 @@ def get_trainable_params(
     base_lr,
     weight_decay,
     use_frozen_bn=False,
-    exclusive_wd_dict={},
-    no_wd_keys=[],
+    exclusive_wd_dict={},  # noqa: B006 - Keeps the upstream default object and signature.
+    no_wd_keys=[],  # noqa: B006 - Keeps the upstream default object and signature.
 ):
     params = []
     memo = set()
@@ -68,7 +68,7 @@ def get_trainable_params(
             continue
         memo.add(value)
         wd = weight_decay
-        for exclusive_key in exclusive_wd_dict.keys():
+        for exclusive_key in exclusive_wd_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if exclusive_key in key:
                 wd = exclusive_wd_dict[exclusive_key]
                 break

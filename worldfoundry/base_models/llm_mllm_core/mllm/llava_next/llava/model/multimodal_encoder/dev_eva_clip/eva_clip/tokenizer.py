@@ -73,7 +73,7 @@ class SimpleTokenizer:
     def __init__(self, bpe_path: str = default_bpe(), special_tokens=None):
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
-        merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")
+        merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         merges = merges[1 : 49152 - 256 - 2 + 1]
         merges = [tuple(merge.split()) for merge in merges]
         vocab = list(bytes_to_unicode().values())
@@ -83,7 +83,7 @@ class SimpleTokenizer:
         if not special_tokens:
             special_tokens = ["<start_of_text>", "<end_of_text>"]
         else:
-            special_tokens = ["<start_of_text>", "<end_of_text>"] + special_tokens
+            special_tokens = ["<start_of_text>", "<end_of_text>"] + special_tokens  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         vocab.extend(special_tokens)
         self.encoder = dict(zip(vocab, range(len(vocab)), strict=False))
         self.decoder = {v: k for k, v in self.encoder.items()}
@@ -100,7 +100,7 @@ class SimpleTokenizer:
     def bpe(self, token):
         if token in self.cache:
             return self.cache[token]
-        word = tuple(token[:-1]) + (token[-1] + "</w>",)
+        word = tuple(token[:-1]) + (token[-1] + "</w>",)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         pairs = get_pairs(word)
 
         if not pairs:
@@ -175,7 +175,7 @@ def tokenize(texts: str | list[str], context_length: int = 77) -> torch.LongTens
 
     sot_token = _tokenizer.encoder["<start_of_text>"]
     eot_token = _tokenizer.encoder["<end_of_text>"]
-    all_tokens = [[sot_token] + _tokenizer.encode(text) + [eot_token] for text in texts]
+    all_tokens = [[sot_token] + _tokenizer.encode(text) + [eot_token] for text in texts]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
     for i, tokens in enumerate(all_tokens):

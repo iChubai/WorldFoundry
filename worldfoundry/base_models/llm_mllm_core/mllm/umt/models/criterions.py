@@ -192,7 +192,7 @@ class VTC_VTM_Loss(nn.Module):
             mask.fill_diagonal_(1)
         return mask  # `1` mark valid/matched location
 
-    @lru_cache(maxsize=16)
+    @lru_cache(maxsize=16)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def get_gather_args(self):
         """obtain the args for all_gather
         Returns: dict.

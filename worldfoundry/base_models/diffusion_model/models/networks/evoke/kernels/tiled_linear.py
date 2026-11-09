@@ -145,7 +145,7 @@ class TiledLinear(torch.autograd.Function):
 
             grads_tuple = torch.autograd.grad(
                 outputs=output,
-                inputs=[x_shard] + trainable_params,
+                inputs=[x_shard] + trainable_params,  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 grad_outputs=incoming_grad_shard,
                 allow_unused=True,
                 retain_graph=False,

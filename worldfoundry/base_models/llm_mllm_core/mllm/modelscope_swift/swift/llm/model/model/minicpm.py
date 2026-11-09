@@ -39,7 +39,7 @@ def _patch_minicpmv_device_map(model) -> None:
     if not hasattr(model, "hf_device_map") or len(model.hf_device_map.values()) == 1:
         return
 
-    device = list(model.hf_device_map.values())[0]
+    device = list(model.hf_device_map.values())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
     if hasattr(model, "get_vision_embedding") and not hasattr(model, "_old_get_vision_embedding"):
         # minicpm-v-v2-chat; avoid double patching
         _old_get_vision_embedding = model.__class__.get_vision_embedding

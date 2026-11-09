@@ -48,7 +48,7 @@ class TarsierModel(VQAScoreModel):
         model_path = self.model_info["model"]["path"]
         config_path = self.model_info["model"]["config"]
 
-        data_config = yaml.safe_load(open(config_path))
+        data_config = yaml.safe_load(open(config_path))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         self.model, self.processor = load_model_and_processor(model_path, data_config=data_config)
         self.model.eval()
 

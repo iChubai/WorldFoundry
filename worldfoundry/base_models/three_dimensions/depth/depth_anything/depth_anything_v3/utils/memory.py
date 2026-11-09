@@ -54,7 +54,7 @@ def cleanup_cuda_memory() -> None:
             torch.cuda.synchronize()
             torch.cuda.empty_cache()
             # Collect cross-process cuda resources
-            try:
+            try:  # noqa: SIM105 - The handler carries an explanatory comment.
                 torch.cuda.ipc_collect()
             except Exception:
                 # Older PyTorch versions or non-cuda devices may not support

@@ -342,7 +342,7 @@ class BertSelfAttention(nn.Module):
         self.config = config
         if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
             raise ValueError(
-                "The hidden size (%d) is not a multiple of the number of attention "
+                "The hidden size (%d) is not a multiple of the number of attention "  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 "heads (%d)" % (config.hidden_size, config.num_attention_heads)
             )
 
@@ -378,7 +378,7 @@ class BertSelfAttention(nn.Module):
         return self.attention_map
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -458,13 +458,13 @@ class BertSelfAttention(nn.Module):
         context_layer = torch.matmul(attention_probs_dropped, value_layer)
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         context_layer = context_layer.view(*new_context_layer_shape)
 
         # added `attention_scores` to return tuple
         outputs = (context_layer, attention_probs, attention_scores) if output_attentions else (context_layer,)
 
-        outputs = outputs + (past_key_value,)
+        outputs = outputs + (past_key_value,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs
 
 
@@ -533,7 +533,7 @@ class BertAttention(nn.Module):
         )
         attention_output = self.output(self_outputs[0], hidden_states)
         # add attentions if we output them
-        outputs = (attention_output,) + self_outputs[1:]
+        outputs = (attention_output,) + self_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs  # (context_layer, attention_probs, attention_scores, past_key_value,)
 
 
@@ -637,9 +637,9 @@ class BertLayer(nn.Module):
             self.seq_len_dim,
             attention_output,
         )
-        outputs = (layer_output,) + outputs
+        outputs = (layer_output,) + outputs  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
-        outputs = outputs + (present_key_value,)
+        outputs = outputs + (present_key_value,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return outputs
 
@@ -693,7 +693,7 @@ class BertEncoder(nn.Module):
         for i in range(start_layer, output_layer):
             layer_module = self.layer[i]
             if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             layer_head_mask = head_mask[i] if head_mask is not None else None
             past_key_value = past_key_values[i] if past_key_values is not None else None
@@ -708,7 +708,7 @@ class BertEncoder(nn.Module):
 
                 def create_custom_forward(module):
                     def custom_forward(*inputs):
-                        return module(*inputs, past_key_value, output_attentions)
+                        return module(*inputs, past_key_value, output_attentions)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                     return custom_forward
 
@@ -739,13 +739,13 @@ class BertEncoder(nn.Module):
                 # note for unnormalized attention, there is a mask added
                 offset = int(normalize_attention)
                 # all_self_attentions = all_self_attentions + (layer_outputs[1], )
-                all_self_attentions = all_self_attentions + (layer_outputs[2 - offset],)
+                all_self_attentions = all_self_attentions + (layer_outputs[2 - offset],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 if hasattr(layer_module, "crossattention"):
                     # all_cross_attentions = all_cross_attentions + (layer_outputs[3], )
-                    all_cross_attentions = all_cross_attentions + (layer_outputs[4 - offset],)
+                    all_cross_attentions = all_cross_attentions + (layer_outputs[4 - offset],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
+            all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(
@@ -1199,7 +1199,7 @@ class BertModel(BertPreTrainedModel):
         pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 
         if not return_dict:
-            return (sequence_output, pooled_output) + encoder_outputs[1:]
+            return (sequence_output, pooled_output) + encoder_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return BaseModelOutputWithPoolingAndCrossAttentions(
             last_hidden_state=sequence_output,
@@ -1297,8 +1297,8 @@ class BertForPreTraining(BertPreTrainedModel):
             total_loss = masked_lm_loss + next_sentence_loss
 
         if not return_dict:
-            output = (prediction_scores, seq_relationship_score) + outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
+            output = (prediction_scores, seq_relationship_score) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((total_loss,) + output) if total_loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return BertForPreTrainingOutput(
             loss=total_loss,
@@ -1441,8 +1441,8 @@ class BertLMHeadModel(BertPreTrainedModel):
             lm_loss = (1 - alpha) * lm_loss + alpha * loss_distill
 
         if not return_dict:
-            output = (prediction_scores,) + outputs[2:]
-            return ((lm_loss,) + output) if lm_loss is not None else output
+            output = (prediction_scores,) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((lm_loss,) + output) if lm_loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return CausalLMOutputWithCrossAttentions(
             loss=lm_loss,
@@ -1576,8 +1576,8 @@ class BertForMaskedLM(BertPreTrainedModel):
             masked_lm_loss = (1 - alpha) * masked_lm_loss + alpha * loss_distill
 
         if not return_dict:
-            output = (prediction_scores,) + outputs[2:]
-            return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output
+            output = (prediction_scores,) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((masked_lm_loss,) + output) if masked_lm_loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         # changed from MaskedLMOutput to MaskedLMOutputWithDistill
         return MaskedLMOutputWithDistill(
@@ -1687,8 +1687,8 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
             next_sentence_loss = loss_fct(seq_relationship_scores.view(-1, 2), labels.view(-1))
 
         if not return_dict:
-            output = (seq_relationship_scores,) + outputs[2:]
-            return ((next_sentence_loss,) + output) if next_sentence_loss is not None else output
+            output = (seq_relationship_scores,) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((next_sentence_loss,) + output) if next_sentence_loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return NextSentencePredictorOutput(
             loss=next_sentence_loss,
@@ -1765,8 +1765,8 @@ class BertForSequenceClassification(BertPreTrainedModel):
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
-            output = (logits,) + outputs[2:]
-            return ((loss,) + output) if loss is not None else output
+            output = (logits,) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return SequenceClassifierOutput(
             loss=loss,
@@ -1849,8 +1849,8 @@ class BertForMultipleChoice(BertPreTrainedModel):
             loss = loss_fct(reshaped_logits, labels)
 
         if not return_dict:
-            output = (reshaped_logits,) + outputs[2:]
-            return ((loss,) + output) if loss is not None else output
+            output = (reshaped_logits,) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return MultipleChoiceModelOutput(
             loss=loss,
@@ -1934,8 +1934,8 @@ class BertForTokenClassification(BertPreTrainedModel):
                 loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
-            output = (logits,) + outputs[2:]
-            return ((loss,) + output) if loss is not None else output
+            output = (logits,) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return TokenClassifierOutput(
             loss=loss,
@@ -2027,8 +2027,8 @@ class BertForQuestionAnswering(BertPreTrainedModel):
             total_loss = (start_loss + end_loss) / 2
 
         if not return_dict:
-            output = (start_logits, end_logits) + outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
+            output = (start_logits, end_logits) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((total_loss,) + output) if total_loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return QuestionAnsweringModelOutput(
             loss=total_loss,

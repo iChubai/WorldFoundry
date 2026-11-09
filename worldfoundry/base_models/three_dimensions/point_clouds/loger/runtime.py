@@ -142,7 +142,7 @@ class LoGeRRepresentation:
 
         print(f"Loading checkpoint from {ckpt_file} ...")
         checkpoint = load_torch_checkpoint(ckpt_file, map_location="cpu", weights_only=False)
-        state_dict = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint
+        state_dict = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         state_dict = {(k[7:] if k.startswith("module.") else k): v for k, v in state_dict.items()}
         model.load_state_dict(state_dict, strict=True)
         print("Checkpoint loaded successfully.")

@@ -52,7 +52,7 @@ def func_attention(query, context, smooth=1, raw_feature_norm="softmax", eps=1e-
     query: (n_context, queryL, d)
     context: (n_context, sourceL, d)
     """
-    batch_size_q, queryL = query.size(0), query.size(1)
+    batch_size_q, queryL = query.size(0), query.size(1)  # noqa: F841 - Upstream assignment kept.
     batch_size, sourceL = context.size(0), context.size(1)
 
     # Get attention
@@ -143,7 +143,7 @@ class BiMultiHeadAttention(nn.Module):
         nn.init.xavier_uniform_(self.out_l_proj.weight)
         self.out_l_proj.bias.data.fill_(0)
 
-    def forward(self, v, l, attention_mask_v=None, attention_mask_l=None):
+    def forward(self, v, l, attention_mask_v=None, attention_mask_l=None):  # noqa: E741 - Ambiguous upstream name kept as written.
         """_summary_
 
         Args:
@@ -279,13 +279,13 @@ class BiAttentionBlock(nn.Module):
         self.gamma_v = nn.Parameter(init_values * torch.ones(v_dim), requires_grad=True)
         self.gamma_l = nn.Parameter(init_values * torch.ones(l_dim), requires_grad=True)
 
-    def forward(self, v, l, attention_mask_v=None, attention_mask_l=None):
+    def forward(self, v, l, attention_mask_v=None, attention_mask_l=None):  # noqa: E741 - Ambiguous upstream name kept as written.
         v = self.layer_norm_v(v)
-        l = self.layer_norm_l(l)
+        l = self.layer_norm_l(l)  # noqa: E741 - Ambiguous upstream name kept as written.
         delta_v, delta_l = self.attn(v, l, attention_mask_v=attention_mask_v, attention_mask_l=attention_mask_l)
         # v, l = v + delta_v, l + delta_l
         v = v + self.drop_path(self.gamma_v * delta_v)
-        l = l + self.drop_path(self.gamma_l * delta_l)
+        l = l + self.drop_path(self.gamma_l * delta_l)  # noqa: E741 - Ambiguous upstream name kept as written.
         return v, l
 
     # def forward(self, v:List[torch.Tensor], l, attention_mask_v=None, attention_mask_l=None)

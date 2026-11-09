@@ -5,8 +5,8 @@ import math
 import re
 import warnings
 from itertools import chain
-from typing import Dict as Dict
-from typing import List as List
+from typing import Dict as Dict  # noqa: UP035 - Re-exported to modules that star-import this namespace.
+from typing import List as List  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Optional as Optional
 
 import torch
@@ -553,7 +553,7 @@ class MergedLinear(nn.Linear, LoRALayer):
         r: int = 0,
         lora_alpha: int = 1,
         lora_dropout: float = 0.0,
-        enable_lora: list[bool] = [False],
+        enable_lora: list[bool] = [False],  # noqa: B006 - Keeps the upstream default object and signature.
         fan_in_fan_out: bool = False,
         merge_weights: bool = True,
         bias: bool = True,
@@ -617,7 +617,7 @@ class MergedLinear(nn.Linear, LoRALayer):
         return T(self.zero_pad(delta_w))
 
     def merge(self, **kwargs):
-        if self.merge_weights and not self.merged:
+        if self.merge_weights and not self.merged:  # noqa: SIM102 - Branches carry per-case comments.
             # Merge the weights and mark it
             if self.r > 0 and any(self.enable_lora):
                 self.weight.data += self.merge_AB() * self.scaling

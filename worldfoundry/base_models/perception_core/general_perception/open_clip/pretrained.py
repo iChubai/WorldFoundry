@@ -744,7 +744,7 @@ def list_pretrained(as_str: bool = False):
     """returns list of pretrained models
     Returns a tuple (model_name, pretrain_tag) by default or 'name:tag' if as_str == True
     """
-    return [":".join([k, t]) if as_str else (k, t) for k in _PRETRAINED for t in _PRETRAINED[k].keys()]
+    return [":".join([k, t]) if as_str else (k, t) for k in _PRETRAINED for t in _PRETRAINED[k].keys()]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
 
 
 def list_pretrained_models_by_tag(tag: str):
@@ -806,7 +806,7 @@ def download_pretrained_from_url(
 
     if os.path.isfile(download_target):
         if expected_sha256:
-            if hashlib.sha256(open(download_target, "rb").read()).hexdigest().startswith(expected_sha256):
+            if hashlib.sha256(open(download_target, "rb").read()).hexdigest().startswith(expected_sha256):  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
                 return download_target
             else:
                 warnings.warn(
@@ -816,7 +816,7 @@ def download_pretrained_from_url(
         else:
             return download_target
 
-    with urllib.request.urlopen(url) as source, open(download_target, "wb") as output:
+    with urllib.request.urlopen(url) as source, open(download_target, "wb") as output:  # noqa: SIM117 - Keeps the nested context managers.
         with tqdm(total=int(source.headers.get("Content-Length")), ncols=80, unit="iB", unit_scale=True) as loop:
             while True:
                 buffer = source.read(8192)
@@ -826,7 +826,7 @@ def download_pretrained_from_url(
                 output.write(buffer)
                 loop.update(len(buffer))
 
-    if expected_sha256 and not hashlib.sha256(open(download_target, "rb").read()).hexdigest().startswith(
+    if expected_sha256 and not hashlib.sha256(open(download_target, "rb").read()).hexdigest().startswith(  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         expected_sha256
     ):
         raise RuntimeError("Model has been downloaded but the SHA256 checksum does not not match")
@@ -890,7 +890,7 @@ def download_pretrained_from_hf(
         )
         return cached_file  # Return the path to the downloaded file if successful
     except Exception as e:
-        raise FileNotFoundError(f"Failed to download file ({filename}) for {model_id}. Last error: {e}")
+        raise FileNotFoundError(f"Failed to download file ({filename}) for {model_id}. Last error: {e}")  # noqa: B904 - Keeps the implicit exception context.
 
 
 def download_pretrained(

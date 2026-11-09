@@ -478,24 +478,24 @@ def patah_chatglm_model(model):
                 dim=-1,
             )
             query_layer = query_layer.view(
-                query_layer.size()[:-1] + (self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
+                query_layer.size()[:-1] + (self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             )
             key_layer = key_layer.view(
-                key_layer.size()[:-1] + (self.num_multi_query_groups_per_partition, self.hidden_size_per_attention_head)
+                key_layer.size()[:-1] + (self.num_multi_query_groups_per_partition, self.hidden_size_per_attention_head)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             )
             value_layer = value_layer.view(
-                value_layer.size()[:-1]
+                value_layer.size()[:-1]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 + (self.num_multi_query_groups_per_partition, self.hidden_size_per_attention_head)
             )
         else:
-            new_tensor_shape = mixed_x_layer.size()[:-1] + (
+            new_tensor_shape = mixed_x_layer.size()[:-1] + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 self.num_attention_heads_per_partition,
                 3 * self.hidden_size_per_attention_head,
             )
             mixed_x_layer = mixed_x_layer.view(*new_tensor_shape)
 
             # [sq, b, np, 3 * hn] --> 3 [sq, b, np, hn]
-            (query_layer, key_layer, value_layer) = split_tensor_along_last_dim(mixed_x_layer, 3)
+            (query_layer, key_layer, value_layer) = split_tensor_along_last_dim(mixed_x_layer, 3)  # noqa: F821 - Name is undefined in the upstream source.
 
         # apply relative positional encoding (rotary embedding)
         if rotary_pos_emb is not None:
@@ -515,14 +515,14 @@ def patah_chatglm_model(model):
                 -1, -1, -1, self.num_attention_heads_per_partition // self.num_multi_query_groups_per_partition, -1
             )
             key_layer = key_layer.contiguous().view(
-                key_layer.size()[:2] + (self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
+                key_layer.size()[:2] + (self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             )
             value_layer = value_layer.unsqueeze(-2)
             value_layer = value_layer.expand(
                 -1, -1, -1, self.num_attention_heads_per_partition // self.num_multi_query_groups_per_partition, -1
             )
             value_layer = value_layer.contiguous().view(
-                value_layer.size()[:2] + (self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)
+                value_layer.size()[:2] + (self.num_attention_heads_per_partition, self.hidden_size_per_attention_head)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             )
 
         # ==================================
@@ -543,7 +543,7 @@ def patah_chatglm_model(model):
         )
         context_layer = einops.rearrange(context_layer, "(b s) ... -> b s ...", b=bsz)
         context_layer = context_layer.permute(1, 0, 2, 3)
-        new_context_layer_shape = context_layer.size()[:-2] + (self.core_attention.hidden_size_per_partition,)
+        new_context_layer_shape = context_layer.size()[:-2] + (self.core_attention.hidden_size_per_partition,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         context_layer = context_layer.reshape(*new_context_layer_shape)
 
         # =================
@@ -747,9 +747,9 @@ def patch_qwen2_model(model):
         past_key_values_length = 0
 
         if use_cache:
-            use_legacy_cache = not isinstance(past_key_values, Cache)
+            use_legacy_cache = not isinstance(past_key_values, Cache)  # noqa: F821 - Name is undefined in the upstream source.
             if use_legacy_cache:
-                past_key_values = DynamicCache.from_legacy_cache(past_key_values)
+                past_key_values = DynamicCache.from_legacy_cache(past_key_values)  # noqa: F821 - Name is undefined in the upstream source.
             past_key_values_length = past_key_values.get_usable_length(seq_length)
 
         if position_ids is None:

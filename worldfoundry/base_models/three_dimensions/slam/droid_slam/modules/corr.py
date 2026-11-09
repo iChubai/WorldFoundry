@@ -83,7 +83,13 @@ class CorrLayer(torch.autograd.Function):
     def backward(ctx, grad_corr):
         fmap1, fmap2, coords = ctx.saved_tensors
         fmap1_grad, fmap2_grad, coords_grad, ii, jj = droid_backends.altcorr_backward(
-            fmap1, fmap2, coords, ii, jj, grad_corr, ctx.r
+            fmap1,
+            fmap2,
+            coords,
+            ii,  # noqa: F821 - Name is undefined in the upstream source.
+            jj,  # noqa: F821 - Name is undefined in the upstream source.
+            grad_corr,
+            ctx.r,
         )
         return fmap1_grad, fmap2_grad, coords_grad, None
 

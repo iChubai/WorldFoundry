@@ -289,7 +289,7 @@ class CLIPT5ForConditionalGeneration(T5ForConditionalGeneration):
             past_length = past_key_values[0][0].shape[2]
 
             # Some generation methods already pass only the last input ID
-            if input_ids.shape[1] > past_length:
+            if input_ids.shape[1] > past_length:  # noqa: SIM108 - Branches carry per-case comments.
                 remove_prefix_length = past_length
             else:
                 # Default to old behavior: keep only final ID

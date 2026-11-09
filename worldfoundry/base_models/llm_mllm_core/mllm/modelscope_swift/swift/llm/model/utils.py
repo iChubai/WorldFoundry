@@ -173,7 +173,7 @@ class HfConfigFactory:
     @staticmethod
     def compat_zero3(config: PretrainedConfig) -> None:
         value = HfConfigFactory.get_config_attr(config, "hidden_size")
-        try:
+        try:  # noqa: SIM105 - The handler carries an explanatory comment.
             # AttributeError: can't set attribute 'hidden_size'
             config.hidden_size = value
         except AttributeError:

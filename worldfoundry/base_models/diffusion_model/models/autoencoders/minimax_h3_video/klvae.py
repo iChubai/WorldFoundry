@@ -42,7 +42,7 @@ def _resolve_temporal_cat_dtype():
         "float32": torch.float32,
     }
     if raw not in mapping:
-        raise ValueError("MINIMAX_H3_VAE_DECODER_TEMPORAL_CAT_DTYPE must be one of fp16|bf16|fp32|keep, got %r" % raw)
+        raise ValueError("MINIMAX_H3_VAE_DECODER_TEMPORAL_CAT_DTYPE must be one of fp16|bf16|fp32|keep, got %r" % raw)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     return mapping[raw]
 
 
@@ -298,8 +298,8 @@ class AutoencoderKL(nn.Module):
         num_tiles = i_max * j_max
 
         x_tiles = []
-        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len, strict=False)):
-            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len, strict=False)):
+        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len, strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
+            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len, strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
                 tile = x[..., i_pos : i_pos + i_len, j_pos : j_pos + j_len]
                 x_tiles.append(tile)
 
@@ -337,12 +337,12 @@ class AutoencoderKL(nn.Module):
         num_tiles = i_max * j_max
 
         z_tiles = []
-        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len, strict=False)):
+        for i, (i_pos, i_len) in enumerate(zip(y_idx, y_len, strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
             i_pos, i_len = (
                 i_pos // self.vae_ratio,
                 i_len // self.vae_ratio,
             )
-            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len, strict=False)):
+            for j, (j_pos, j_len) in enumerate(zip(x_idx, x_len, strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
                 j_pos, j_len = (j_pos // self.vae_ratio, j_len // self.vae_ratio)
                 tile = z[..., i_pos : i_pos + i_len, j_pos : j_pos + j_len]
                 z_tiles.append(tile)
@@ -549,7 +549,7 @@ class AutoencoderKL(nn.Module):
                 clip_z = torch.cat([clip_z, z_tail], dim=2)
 
             clip_dec = self._adaptive_decode(clip_z)
-            decoded_count += 1
+            decoded_count += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             if temporal_cat_dtype is not None and clip_dec.dtype != temporal_cat_dtype:
                 clip_dec = clip_dec.to(temporal_cat_dtype)
             if clip_dec.device != z.device:
@@ -991,9 +991,9 @@ class AutoencoderKLLegacy(AutoencoderKL):
         zq_ch_decoder=None,
         num_res_blocks=2,
         num_res_blocks_decoder=None,
-        ch_mult=[1, 2, 2, 4, 4, 8],
-        space_down=[2, 2, 2, 2, 1, 1],
-        space_up=[1, 2, 2, 2, 2, 1],
+        ch_mult=[1, 2, 2, 4, 4, 8],  # noqa: B006 - Keeps the upstream default object and signature.
+        space_down=[2, 2, 2, 2, 1, 1],  # noqa: B006 - Keeps the upstream default object and signature.
+        space_up=[1, 2, 2, 2, 2, 1],  # noqa: B006 - Keeps the upstream default object and signature.
         time_down=None,
         time_up=None,
         padding_mode="zeros",

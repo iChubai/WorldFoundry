@@ -27,7 +27,7 @@ class MaxSigmoidAttnBlock(BaseModule):
         use_depthwise: bool = False,
         with_scale: bool = False,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
         use_einsum: bool = True,
     ) -> None:
@@ -119,7 +119,7 @@ class RepMatrixMaxSigmoidAttnBlock(BaseModule):
         use_depthwise: bool = False,
         with_scale: bool = False,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
         use_einsum: bool = True,
     ) -> None:
@@ -201,7 +201,7 @@ class RepConvMaxSigmoidAttnBlock(BaseModule):
         use_depthwise: bool = False,
         with_scale: bool = False,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
         use_einsum: bool = True,
     ) -> None:
@@ -286,8 +286,8 @@ class MaxSigmoidCSPLayerWithTwoConv(CSPLayerWithTwoConv):
         with_scale: bool = False,
         add_identity: bool = True,  # shortcut
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
         use_einsum: bool = True,
     ) -> None:
@@ -349,8 +349,8 @@ class RepMaxSigmoidCSPLayerWithTwoConv(CSPLayerWithTwoConv):
         with_scale: bool = False,
         add_identity: bool = True,  # shortcut
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
         use_einsum: bool = True,
     ) -> None:
@@ -412,8 +412,8 @@ class RepConvMaxSigmoidCSPLayerWithTwoConv(CSPLayerWithTwoConv):
         with_scale: bool = False,
         add_identity: bool = True,  # shortcut
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
         use_einsum: bool = True,
     ) -> None:
@@ -546,7 +546,7 @@ class VanillaSigmoidBlock(BaseModule):
         use_depthwise: bool = False,
         with_scale: bool = False,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ) -> None:
         super().__init__(init_cfg=init_cfg)
@@ -593,8 +593,8 @@ class EfficientCSPLayerWithTwoConv(CSPLayerWithTwoConv):
         with_scale: bool = False,
         add_identity: bool = True,  # shortcut
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ) -> None:
         super().__init__(

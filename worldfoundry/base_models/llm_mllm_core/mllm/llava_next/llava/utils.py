@@ -13,7 +13,7 @@ moderation_msg = "I am sorry. Your input may violate our content moderation guid
 
 handler = None
 
-import torch.distributed as dist
+import torch.distributed as dist  # noqa: E402 - Follows module-level setup, as upstream.
 
 try:
     import av
@@ -38,7 +38,7 @@ def process_video_with_decord(video_file, data_args):
     video = vr.get_batch(frame_idx).asnumpy()
     frame_time = ",".join([f"{i:.2f}s" for i in frame_time])
 
-    num_frames_to_sample = num_frames = len(frame_idx)
+    num_frames_to_sample = num_frames = len(frame_idx)  # noqa: F841 - Upstream assignment kept.
     # https://github.com/dmlc/decord/issues/208
     vr.seek(0)
     return video, video_time, frame_time, num_frames_to_sample

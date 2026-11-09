@@ -26,7 +26,7 @@ def load_network_and_optimizer(net, opt, pretrained_dir, gpu, scaler=None):
     model_dict.update(pretrained_dict_update)
     net.load_state_dict(model_dict)
     opt.load_state_dict(pretrained["optimizer"])
-    if scaler is not None and "scaler" in pretrained.keys():
+    if scaler is not None and "scaler" in pretrained.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         scaler.load_state_dict(pretrained["scaler"])
     del pretrained
     return net.cuda(gpu), opt, pretrained_dict_remove
@@ -67,7 +67,7 @@ def load_network_and_optimizer_v2(net, opt, pretrained_dir, gpu, scaler=None):
     opt.load_state_dict(opt_dict)
 
     # load scaler
-    if scaler is not None and "scaler" in pretrained.keys():
+    if scaler is not None and "scaler" in pretrained.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         scaler.load_state_dict(pretrained["scaler"])
     del pretrained
     return net.cuda(gpu), opt, pretrained_dict_remove
@@ -79,9 +79,9 @@ def load_network(net, pretrained_dir, gpu):
         map_location=torch.device("cuda:" + str(gpu)),
         weights_only=False,
     )
-    if "state_dict" in pretrained.keys():
+    if "state_dict" in pretrained.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         pretrained_dict = pretrained["state_dict"]
-    elif "model" in pretrained.keys():
+    elif "model" in pretrained.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         pretrained_dict = pretrained["model"]
     else:
         pretrained_dict = pretrained
@@ -110,14 +110,14 @@ def save_network(net, opt, step, save_path, max_keep=8, backup_dir="./saved_mode
     try:
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        save_file = "save_step_%s.pth" % (step)
+        save_file = "save_step_%s.pth" % (step)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         save_dir = os.path.join(save_path, save_file)
         torch.save(ckpt, save_dir)
     except Exception:
         save_path = backup_dir
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        save_file = "save_step_%s.pth" % (step)
+        save_file = "save_step_%s.pth" % (step)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         save_dir = os.path.join(save_path, save_file)
         torch.save(ckpt, save_dir)
 
@@ -129,7 +129,7 @@ def save_network(net, opt, step, save_path, max_keep=8, backup_dir="./saved_mode
             all_step.append(step)
         all_step = list(np.sort(all_step))[:-max_keep]
         for step in all_step:
-            ckpt_path = os.path.join(save_path, "save_step_%s.pth" % (step))
+            ckpt_path = os.path.join(save_path, "save_step_%s.pth" % (step))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             os.system(f"rm {ckpt_path}")
 
 

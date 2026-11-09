@@ -26,7 +26,7 @@ from mmengine.utils import ProgressBar
 try:
     from sahi.slicing import slice_image
 except ImportError:
-    raise ImportError('Please run "pip install -U sahi" to install sahi first for large image inference.')
+    raise ImportError('Please run "pip install -U sahi" to install sahi first for large image inference.')  # noqa: B904 - Keeps the implicit exception context.
 
 from mmyolo.registry import VISUALIZERS
 from mmyolo.utils import switch_to_deploy

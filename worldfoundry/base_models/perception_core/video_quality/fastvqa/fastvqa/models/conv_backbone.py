@@ -64,8 +64,8 @@ class ConvNeXt(nn.Module):
         self,
         in_chans=3,
         num_classes=1000,
-        depths=[3, 3, 9, 3],
-        dims=[96, 192, 384, 768],
+        depths=[3, 3, 9, 3],  # noqa: B006 - Keeps the upstream default object and signature.
+        dims=[96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
         drop_path_rate=0.0,
         layer_scale_init_value=1e-6,
         head_init_scale=1.0,
@@ -216,8 +216,8 @@ class ConvNeXt3D(nn.Module):
         in_chans=3,
         num_classes=1000,
         inflate_strategy="131",
-        depths=[3, 3, 9, 3],
-        dims=[96, 192, 384, 768],
+        depths=[3, 3, 9, 3],  # noqa: B006 - Keeps the upstream default object and signature.
+        dims=[96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
         drop_path_rate=0.0,
         layer_scale_init_value=1e-6,
         head_init_scale=1.0,
@@ -262,7 +262,7 @@ class ConvNeXt3D(nn.Module):
     def inflate_weights(self, s_state_dict):
         t_state_dict = self.state_dict()
 
-        for key in t_state_dict.keys():
+        for key in t_state_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if key not in s_state_dict:
                 print(key)
                 continue

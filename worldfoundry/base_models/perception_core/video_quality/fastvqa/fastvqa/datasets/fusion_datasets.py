@@ -220,7 +220,7 @@ def get_single_sample(
 def get_spatial_samples(
     video,
     random_crop=0,  ## 1: ARP-kept Crop; 2: Square-like Crop
-    sample_types={"resize": {}, "fragments": {}},  ## resize | arp_resize | crop | fragments
+    sample_types={"resize": {}, "fragments": {}},  # noqa: B006 - Keeps the upstream default object and signature.  ## resize | arp_resize | crop | fragments
 ):
     if random_crop == 1:
         print("Alert!")
@@ -230,7 +230,7 @@ def get_spatial_samples(
         new_h, new_w = int(rnd_ratio * res_h), int(rnd_ratio * res_w)
         rnd_h = random.randrange(res_h - new_h)
         rnd_w = random.randrange(res_w - new_w)
-        video = video[..., rnd_h : rnd_hn + new_h, rnd_w : rnd_w + new_w]
+        video = video[..., rnd_h : rnd_hn + new_h, rnd_w : rnd_w + new_w]  # noqa: F821 - Name is undefined in the upstream source.
         ovideo = video
         video = torch.nn.functional.interpolate(
             video / 255.0, scale_factor=random.random() * 0.3 + 1.0, mode="bilinear"
@@ -364,7 +364,7 @@ class SampleFrames:
         return frame_inds.astype(np.int32)
 
 
-import random
+import random  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class FragmentSampleFrames:

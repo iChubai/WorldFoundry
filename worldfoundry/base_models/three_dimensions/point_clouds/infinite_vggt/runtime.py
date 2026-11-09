@@ -169,7 +169,7 @@ class InfiniteVGGTRepresentation:
 
         frames = [{"img": images[i].unsqueeze(0)} for i in range(images.shape[0])]
 
-        with torch.no_grad():
+        with torch.no_grad():  # noqa: SIM117 - Branches carry per-case comments.
             # Use legacy autocast API for compatibility with older PyTorch (no device_type)
             with torch.cuda.amp.autocast(dtype=self.dtype, enabled=(self.device == "cuda")):
                 output = self.model.inference(

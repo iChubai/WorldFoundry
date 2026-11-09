@@ -56,7 +56,7 @@ class DINOv2Encoder(UniCeptionViTEncoderBase):
             data_norm_type=data_norm_type,
             patch_size=patch_size,
             gradient_checkpointing=gradient_checkpointing,
-            *args,
+            *args,  # noqa: B026 - Keeps the upstream argument order.
             **kwargs,
         )
 
@@ -273,7 +273,7 @@ class DINOv2IntermediateFeatureReturner(DINOv2Encoder, IntermediateFeatureReturn
             keep_first_n_layers=keep_first_n_layers,
             use_pytorch_sdpa=use_pytorch_sdpa,
             disable_torch_compile_for_pe=disable_torch_compile_for_pe,
-            *args,
+            *args,  # noqa: B026 - Keeps the upstream argument order.
             **kwargs,
         )
         IntermediateFeatureReturner.__init__(

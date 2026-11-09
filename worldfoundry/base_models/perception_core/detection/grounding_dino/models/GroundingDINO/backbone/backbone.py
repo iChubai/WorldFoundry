@@ -170,7 +170,7 @@ def build_backbone(args):
         raise ValueError("Please set lr_backbone > 0")
     return_interm_indices = args.return_interm_indices
     assert return_interm_indices in [[0, 1, 2, 3], [1, 2, 3], [3]]
-    args.backbone_freeze_keywords
+    args.backbone_freeze_keywords  # noqa: B018 - Fails early when the config lacks this attribute, as upstream.
     use_checkpoint = getattr(args, "use_checkpoint", False)
 
     if args.backbone in ["resnet50", "resnet101"]:

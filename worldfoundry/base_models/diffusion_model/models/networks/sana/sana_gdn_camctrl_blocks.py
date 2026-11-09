@@ -285,7 +285,7 @@ def torch_chunk_cam_single_path_delta_rule(
     # =========================================================================
     # Phase 1: PARALLEL PRE-PROCESSING  (fully parallel over T)
     # =========================================================================
-    I = torch.eye(D, device=q_rot.device, dtype=q_rot.dtype).view(1, 1, 1, D, D)
+    I = torch.eye(D, device=q_rot.device, dtype=q_rot.dtype).view(1, 1, 1, D, D)  # noqa: E741 - Ambiguous upstream name kept as written.
 
     k_rot_beta = k_rot * beta
     W_kv = decay * (I - torch.matmul(k_rot_beta, k_rot.transpose(-1, -2)))

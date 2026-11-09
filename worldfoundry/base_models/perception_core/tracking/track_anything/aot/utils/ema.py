@@ -5,7 +5,7 @@
 import torch
 
 
-def get_param_buffer_for_ema(model, update_buffer=False, required_buffers=["running_mean", "running_var"]):
+def get_param_buffer_for_ema(model, update_buffer=False, required_buffers=["running_mean", "running_var"]):  # noqa: B006 - Keeps the upstream default object and signature.
     params = model.parameters()
     all_param_buffer = [p for p in params if p.requires_grad]
     if update_buffer:

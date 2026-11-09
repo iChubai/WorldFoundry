@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Union
 
-PatchSize = Union[int, tuple[int, int]]
+PatchSize = Union[int, tuple[int, int]]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 def to_2tuple(value: PatchSize) -> tuple[int, int]:

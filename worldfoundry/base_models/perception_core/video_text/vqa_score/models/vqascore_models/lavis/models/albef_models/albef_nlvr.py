@@ -209,7 +209,7 @@ class AlbefNLVR(AlbefBase, MomentumDistilationMixin):
             modules_0 = model.layer[layer_num].crossattention.self._modules
             modules_1 = model.layer[layer_num + 1].crossattention.self._modules
 
-            for name in modules_0.keys():
+            for name in modules_0.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if "key" in name or "value" in name:
                     module_0 = modules_0[name]
                     module_1 = modules_1[name]
@@ -225,7 +225,7 @@ class AlbefNLVR(AlbefBase, MomentumDistilationMixin):
     def load_from_pretrained(self, url_or_filename, use_distill=True):
         _, msg = super().load_from_pretrained(url_or_filename)
 
-        if use_distill and any(["_m" in k for k in msg.missing_keys]):
+        if use_distill and any(["_m" in k for k in msg.missing_keys]):  # noqa: C419 - Evaluates every element before testing, as upstream.
             # this is required when initializing the model from TA pre-trained weights
             self.copy_params()
 

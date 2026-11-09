@@ -648,7 +648,7 @@ class Sam3MultiplexDetector(Sam3MultiplexImageBase):
                 valid_frame_start = propagate_in_video_start_frame_idx - max_frame_num_to_track + 1
                 valid_frame_end = propagate_in_video_start_frame_idx
             else:
-                valid_frame_start = propagate_in_video_start_frame_idx
+                valid_frame_start = propagate_in_video_start_frame_idx  # noqa: F841 - Upstream assignment kept.
                 valid_frame_end = propagate_in_video_start_frame_idx + max_frame_num_to_track
         else:
             valid_frame_end = num_frames

@@ -173,22 +173,22 @@ class LLaVAModel(VQAScoreModel):
         """Load the model, tokenizer, image transform"""
         model_args = ModelArguments()
         model_max_length = (
-            LLAVA_MODELS[self.model_name]["tokenizer"]["model_max_length"]
+            LLAVA_MODELS[self.model_name]["tokenizer"]["model_max_length"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "model_max_length" in LLAVA_MODELS[self.model_name]["tokenizer"]
             else None
         )
         padding_side = (
-            LLAVA_MODELS[self.model_name]["tokenizer"]["padding_side"]
+            LLAVA_MODELS[self.model_name]["tokenizer"]["padding_side"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "padding_side" in LLAVA_MODELS[self.model_name]["tokenizer"]
             else None
         )
         mmprojector_repo = (
-            LLAVA_MODELS[self.model_name]["model"]["mmprojector_repo"]
+            LLAVA_MODELS[self.model_name]["model"]["mmprojector_repo"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "mmprojector_repo" in LLAVA_MODELS[self.model_name]["model"]
             else None
         )
         mmprojector_name = (
-            LLAVA_MODELS[self.model_name]["model"]["mmprojector_name"]
+            LLAVA_MODELS[self.model_name]["model"]["mmprojector_name"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "mmprojector_name" in LLAVA_MODELS[self.model_name]["model"]
             else None
         )
@@ -196,7 +196,7 @@ class LLaVAModel(VQAScoreModel):
         # default is 'pad' (llava-1.5 says this reduces hallucination)
         # stage-1 models use 'square'
         self.image_aspect_ratio = (
-            LLAVA_MODELS[self.model_name]["model"]["image_aspect_ratio"]
+            LLAVA_MODELS[self.model_name]["model"]["image_aspect_ratio"]  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "image_aspect_ratio" in LLAVA_MODELS[self.model_name]["model"]
             else "pad"
         )

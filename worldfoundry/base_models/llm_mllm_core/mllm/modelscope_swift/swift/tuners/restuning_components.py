@@ -12,7 +12,7 @@ logger = get_logger()
 
 
 class ResTuner(nn.Module):
-    def __init__(self, dim=None, layer_num=-1, depth=-1, zero_init_last=False, stage="", tuner_cfg={}, **kwargs):
+    def __init__(self, dim=None, layer_num=-1, depth=-1, zero_init_last=False, stage="", tuner_cfg={}, **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__()
         self.dim = dim
         self.layer_num = layer_num
@@ -76,9 +76,9 @@ class ResAdapter(nn.Module):
         self.layer_num = layer_num
         self.depth = depth
 
-        self.adapter_length = tuner_cfg["adapter_length"] if "adapter_length" in tuner_cfg else 32
-        self.adapter_type = tuner_cfg["adapter_type"] if "adapter_type" in tuner_cfg else None
-        self.adapter_weight = tuner_cfg["adapter_weight"] if "adapter_weight" in tuner_cfg else None
+        self.adapter_length = tuner_cfg["adapter_length"] if "adapter_length" in tuner_cfg else 32  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        self.adapter_type = tuner_cfg["adapter_type"] if "adapter_type" in tuner_cfg else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        self.adapter_weight = tuner_cfg["adapter_weight"] if "adapter_weight" in tuner_cfg else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
         self.adapter_length = (
             self.adapter_length[self.layer_num] if isinstance(self.adapter_length, list) else self.adapter_length
@@ -157,12 +157,12 @@ class ResGroupAdapter(nn.Module):
         self.layer_num = layer_num
         self.depth = depth
 
-        self.adapter_type = tuner_cfg["adapter_type"] if "adapter_type" in tuner_cfg else None
-        self.adapter_weight = tuner_cfg["adapter_weight"] if "adapter_weight" in tuner_cfg else None
+        self.adapter_type = tuner_cfg["adapter_type"] if "adapter_type" in tuner_cfg else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        self.adapter_weight = tuner_cfg["adapter_weight"] if "adapter_weight" in tuner_cfg else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
-        self.adapter_dim = tuner_cfg["dim"] if "dim" in tuner_cfg else dim
-        self.adapter_head = tuner_cfg["head"] if "head" in tuner_cfg else 4
-        self.adapter_scale_factor = tuner_cfg["scale_factor"] if "scale_factor" in tuner_cfg else 2
+        self.adapter_dim = tuner_cfg["dim"] if "dim" in tuner_cfg else dim  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        self.adapter_head = tuner_cfg["head"] if "head" in tuner_cfg else 4  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+        self.adapter_scale_factor = tuner_cfg["scale_factor"] if "scale_factor" in tuner_cfg else 2  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
         assert self.adapter_dim % self.adapter_head == 0, "adapter dim should be divisible by adapter head"
         self.dim_mlp = self.adapter_dim // self.adapter_head

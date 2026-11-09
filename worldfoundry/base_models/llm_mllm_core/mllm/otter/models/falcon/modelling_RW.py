@@ -426,7 +426,7 @@ class DecoderLayer(nn.Module):
 
         output = dropout_add(mlp_output, residual, self.config.hidden_dropout, training=self.training)
 
-        outputs = (output,) + outputs if use_cache else (output,) + outputs[1:]
+        outputs = (output,) + outputs if use_cache else (output,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return outputs  # hidden_states, present, attentions
 
@@ -640,7 +640,7 @@ class RWModel(RWPreTrainedModel):
 
         for i, (block, layer_past) in enumerate(zip(self.h, past_key_values, strict=False)):
             if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             if self.gradient_checkpointing and self.training:
                 if use_cache:
@@ -654,7 +654,7 @@ class RWModel(RWPreTrainedModel):
                         # None for past_key_value
                         return module(
                             *inputs,
-                            use_cache=use_cache,
+                            use_cache=use_cache,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                             output_attentions=output_attentions,
                         )
 
@@ -680,16 +680,16 @@ class RWModel(RWPreTrainedModel):
 
             hidden_states = outputs[0]
             if use_cache is True:
-                presents = presents + (outputs[1],)
+                presents = presents + (outputs[1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             if output_attentions:
-                all_self_attentions = all_self_attentions + (outputs[2 if use_cache else 1],)
+                all_self_attentions = all_self_attentions + (outputs[2 if use_cache else 1],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         # Add last hidden state
         hidden_states = self.ln_f(hidden_states)
 
         if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
+            all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(
@@ -815,8 +815,8 @@ class RWForCausalLM(RWPreTrainedModel):
             )
 
         if not return_dict:
-            output = (lm_logits,) + transformer_outputs[1:]
-            return ((loss,) + output) if loss is not None else output
+            output = (lm_logits,) + transformer_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return CausalLMOutputWithCrossAttentions(
             loss=loss,
@@ -958,8 +958,8 @@ class RWForSequenceClassification(RWPreTrainedModel):
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
-            output = (pooled_logits,) + transformer_outputs[1:]
-            return ((loss,) + output) if loss is not None else output
+            output = (pooled_logits,) + transformer_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return SequenceClassifierOutputWithPast(
             loss=loss,
@@ -1052,8 +1052,8 @@ class RWForTokenClassification(RWPreTrainedModel):
             )
 
         if not return_dict:
-            output = (logits,) + transformer_outputs[2:]
-            return ((loss,) + output) if loss is not None else output
+            output = (logits,) + transformer_outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return TokenClassifierOutput(
             loss=loss,
@@ -1138,8 +1138,8 @@ class RWForQuestionAnswering(RWPreTrainedModel):
             total_loss = (start_loss + end_loss) / 2
 
         if not return_dict:
-            output = (start_logits, end_logits) + outputs[2:]
-            return ((total_loss,) + output) if total_loss is not None else output
+            output = (start_logits, end_logits) + outputs[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((total_loss,) + output) if total_loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return QuestionAnsweringModelOutput(
             loss=total_loss,

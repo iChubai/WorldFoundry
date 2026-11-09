@@ -282,7 +282,7 @@ def _load_weights(model: VisionTransformer, checkpoint_path: str, prefix: str = 
     model.cls_token.copy_(_n2p(w[f"{prefix}cls"], t=False))
     pos_embed_w = _n2p(w[f"{prefix}Transformer/posembed_input/pos_embedding"], t=False)
     if pos_embed_w.shape != model.pos_embed.shape:
-        pos_embed_w = resize_pos_embed(  # resize pos embedding when different size from pretrained weights
+        pos_embed_w = resize_pos_embed(  # noqa: F821 - Name is undefined in the upstream source.  # resize pos embedding when different size from pretrained weights
             pos_embed_w, model.pos_embed, getattr(model, "num_tokens", 1), model.patch_embed.grid_size
         )
     model.pos_embed.copy_(pos_embed_w)
@@ -335,7 +335,7 @@ def interpolate_pos_embed(pos_embed_checkpoint, visual_encoder):
         )
         pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
         new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
-        print("reshape position embedding from %d to %d" % (orig_size**2, new_size**2))
+        print("reshape position embedding from %d to %d" % (orig_size**2, new_size**2))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
         return new_pos_embed
     else:

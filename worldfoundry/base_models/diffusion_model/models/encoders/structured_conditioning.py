@@ -47,7 +47,7 @@ class DataType(str, Enum):
 
 
 @dataclass(frozen=True)
-class BaseCondition(ABC):
+class BaseCondition(ABC):  # noqa: B024 - Keeps the ABCMeta base shared by its subclasses.
     """Typed tensor bundle passed into native model-internal forwards."""
 
     _is_broadcasted: bool = False

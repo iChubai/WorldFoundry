@@ -228,7 +228,7 @@ class MSHub(HubOperation):
             assert isinstance(user_name, str)
             hub_model_id = f"{user_name}/{repo_id}"
             logger.info(f"'/' not in hub_model_id, pushing to personal repo {hub_model_id}")
-        try:
+        try:  # noqa: SIM105 - The handler carries an explanatory comment.
             api.create_model(repo_id, visibility)
         except HTTPError:
             # The remote repository has been created

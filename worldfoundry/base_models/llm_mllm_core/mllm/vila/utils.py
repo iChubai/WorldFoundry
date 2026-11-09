@@ -84,7 +84,7 @@ def get_model_config(config):
             try:
                 return_list.append(os.path.join(root_path, key[:-4]))
             except BaseException:
-                raise ValueError(f"Cannot find resume path in config for {key}!")
+                raise ValueError(f"Cannot find resume path in config for {key}!")  # noqa: B904 - Keeps the implicit exception context.
         elif isinstance(cfg, PretrainedConfig):
             return_list.append(os.path.join(root_path, key[:-4]))
         elif isinstance(cfg, str):

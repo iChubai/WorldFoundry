@@ -319,7 +319,7 @@ class PretrainVisionTransformerEncoder(nn.Module):
             x = x + self.pos_embed.type_as(x).to(x.device).clone().detach()
 
         B, _, C = x.shape
-        if mask is not None:
+        if mask is not None:  # noqa: SIM108 - Branches carry per-case comments.
             x_vis = x[~mask].reshape(B, -1, C)  # ~mask means visible
         else:
             x_vis = x
@@ -372,7 +372,7 @@ class PretrainVisionTransformer(nn.Module):
         drop_rate=0.0,
         attn_drop_rate=0.0,
         drop_path_rate=0.0,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         init_values=0.0,
         use_learnable_pos_emb=False,
         num_frames=8,

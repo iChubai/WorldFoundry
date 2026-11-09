@@ -256,24 +256,24 @@ class FactorGraph:
             plt.figure(figsize=(12, 7))
             plt.subplot(2, 3, 1)
             plt.imshow(np.linalg.norm(weight[0, 0, ...].cpu().numpy(), axis=-1), cmap="gray")
-            plt.title("%02d-to-%02d" % (self.video.tstamp[self.ii[0]], self.video.tstamp[self.jj[0]]))
+            plt.title("%02d-to-%02d" % (self.video.tstamp[self.ii[0]], self.video.tstamp[self.jj[0]]))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             plt.subplot(2, 3, 2)
             plt.imshow(np.linalg.norm(weight[0, 1, ...].cpu().numpy(), axis=-1), cmap="gray")
-            plt.title("%02d-to-%02d" % (self.video.tstamp[self.ii[1]], self.video.tstamp[self.jj[1]]))
+            plt.title("%02d-to-%02d" % (self.video.tstamp[self.ii[1]], self.video.tstamp[self.jj[1]]))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             plt.subplot(2, 3, 3)
             plt.imshow(np.linalg.norm(weight[0, 2, ...].cpu().numpy(), axis=-1), cmap="gray")
-            plt.title("%02d-to-%02d" % (self.video.tstamp[self.ii[2]], self.video.tstamp[self.jj[2]]))
+            plt.title("%02d-to-%02d" % (self.video.tstamp[self.ii[2]], self.video.tstamp[self.jj[2]]))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             plt.subplot(2, 3, 4)
             plt.imshow(self.video.images[self.ii[0]].cpu().numpy().transpose(1, 2, 0)[..., ::-1])
-            plt.title("frame %02d iteration %02d" % (self.video.tstamp[self.ii[0]], viz_itr))
+            plt.title("frame %02d iteration %02d" % (self.video.tstamp[self.ii[0]], viz_itr))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             plt.subplot(2, 3, 5)
             plt.imshow(self.video.images[self.jj[0]].cpu().numpy().transpose(1, 2, 0)[..., ::-1])
-            plt.title("frame %02d iteration %02d" % (self.video.tstamp[self.jj[0]], viz_itr))
+            plt.title("frame %02d iteration %02d" % (self.video.tstamp[self.jj[0]], viz_itr))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             plt.subplot(2, 3, 6)
             plt.imshow(self.video.images[self.jj[1]].cpu().numpy().transpose(1, 2, 0)[..., ::-1])
-            plt.title("frame %02d iteration %02d" % (self.video.tstamp[self.jj[1]], viz_itr))
+            plt.title("frame %02d iteration %02d" % (self.video.tstamp[self.jj[1]], viz_itr))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             plt.tight_layout()
-            plt.savefig("debug/weights_%02d.png" % viz_itr)
+            plt.savefig("debug/weights_%02d.png" % viz_itr)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             plt.close()
 
         if t0 is None:

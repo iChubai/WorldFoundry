@@ -21,7 +21,7 @@ def get_points_on_a_grid(
     size: int,
     extent: tuple[float, ...],
     center: tuple[float, ...] | None = None,
-    device: torch.device | None = torch.device("cpu"),
+    device: torch.device | None = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     r"""Get a grid of points covering a rectangular region
 

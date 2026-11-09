@@ -195,7 +195,7 @@ class GSEffects:
         s = self.smoothstep(0.0, 10.0, normalized_t - 3.2) * 10.0
         scales = output["scales"]
         local_pos = output["means"].clone()
-        l = self.length_xz(local_pos)
+        l = self.length_xz(local_pos)  # noqa: E741 - Ambiguous upstream name kept as written.
         smoothstep_val = None
 
         if effect_type == 2:  # Spread Effect

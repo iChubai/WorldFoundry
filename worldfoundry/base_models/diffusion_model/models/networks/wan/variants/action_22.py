@@ -193,7 +193,7 @@ class Int8Linear(nn.Module):
         return out.to(orig_dtype)
 
 
-def convert_model_to_int8(model, target_layers=["q"]):
+def convert_model_to_int8(model, target_layers=["q"]):  # noqa: B006 - Keeps the upstream default object and signature.
     rank = 0
     if torch.distributed.is_initialized():
         rank = torch.distributed.get_rank()
@@ -555,7 +555,7 @@ class WanAttentionBlock(nn.Module):
         qk_norm=True,
         cross_attn_norm=False,
         eps=1e-6,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         block_idx=0,
         use_memory=False,
     ):
@@ -850,7 +850,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         qk_norm=True,
         cross_attn_norm=True,
         eps=1e-6,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         use_memory=True,
         sigma_theta=0.0,
         use_text_crossattn=True,

@@ -114,7 +114,7 @@ def chunk_index_from_chunk_size(
     if strategy in ("first_frame", "first_frame_alone", "first_frame_only"):
         if T <= 1:
             return [0]
-        indices = [0] + list(range(1, T, chunk_size))
+        indices = [0] + list(range(1, T, chunk_size))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if len(indices) > 2 and (T - indices[-1]) < chunk_size:
             indices.pop()
         return indices
@@ -122,7 +122,7 @@ def chunk_index_from_chunk_size(
     if strategy in ("first_plus_one", "first_chunk_plus_one"):
         if chunk_size + 1 >= T:
             return [0]
-        indices = [0] + list(range(chunk_size + 1, T, chunk_size))
+        indices = [0] + list(range(chunk_size + 1, T, chunk_size))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         # Absorb small remainder into last chunk to avoid degenerate chunks
         # (e.g., T_latent=41 with chunk_size=3 → last chunk would be 1 frame,
         # which crashes causal_conv1d). Merge it into the previous chunk instead.
@@ -205,7 +205,7 @@ def compute_chunk_sizes(chunk_index: list[int], T: int) -> list[int]:
 
     # Add T as the final boundary if not present
     if chunk_index[-1] != T:
-        chunk_index = chunk_index + [T]
+        chunk_index = chunk_index + [T]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Compute sizes
     sizes = [chunk_index[i + 1] - chunk_index[i] for i in range(len(chunk_index) - 1)]
@@ -415,10 +415,10 @@ def normalize_chunk_index(
         if not normalized_chunk_index:
             normalized_chunk_index = [0]
         if normalized_chunk_index[-1] != T:
-            normalized_chunk_index = normalized_chunk_index + [T]
+            normalized_chunk_index = normalized_chunk_index + [T]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         # Check if uniform (requires chunk_size for comparison)
-        if chunk_size is None:
+        if chunk_size is None:  # noqa: SIM108 - Branches carry per-case comments.
             # Can't verify uniformity without chunk_size, assume non-uniform (safe)
             is_uniform = False
         else:
@@ -443,7 +443,7 @@ def normalize_chunk_index(
     if not chunk_index_gen:
         chunk_index_gen = [0]
     if chunk_index_gen[-1] != T:
-        chunk_index_gen = chunk_index_gen + [T]
+        chunk_index_gen = chunk_index_gen + [T]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Check if uniform
     is_uniform = is_uniform_chunking(chunk_index_gen, T, chunk_size)

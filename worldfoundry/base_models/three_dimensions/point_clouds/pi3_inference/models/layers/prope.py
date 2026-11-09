@@ -256,7 +256,7 @@ def _invert_SE3(transforms: torch.Tensor) -> torch.Tensor:
 def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
     """Lift 3x3 matrices to homogeneous 4x4 matrices."""
     assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros(Ks.shape[:-2] + (4, 4), device=Ks.device)
+    out = torch.zeros(Ks.shape[:-2] + (4, 4), device=Ks.device)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     out[..., :3, :3] = Ks
     out[..., 3, 3] = 1.0
     return out

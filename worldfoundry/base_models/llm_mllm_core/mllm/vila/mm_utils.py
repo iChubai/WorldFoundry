@@ -32,7 +32,7 @@ from .constants import DEFAULT_IMAGE_TOKEN
 def get_frame_from_vcap(vidcap, num_frames=10, max_fps=0.0, fps=None, frame_count=None, video_file_name=None):
     import cv2
 
-    if fps == None or frame_count == None:
+    if fps == None or frame_count == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
         # if one of fps or frame_count is None, still recompute
         fps = vidcap.get(cv2.CAP_PROP_FPS)
         frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -100,7 +100,7 @@ def get_frame_from_vcap_with_fps(vidcap, num_frames=10, max_fps=0.0, fps=None, f
 
     import cv2
 
-    if fps == None or frame_count == None:
+    if fps == None or frame_count == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
         # if one of fps or frame_count is None, still recompute
         fps = vidcap.get(cv2.CAP_PROP_FPS)
         frame_count = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -335,7 +335,7 @@ def dynamic_preprocess(image, min_num=1, max_num=12, image_size=384, use_thumbna
     return processed_images
 
 
-def dynamic_s2_preprocess(image, s2_scales=[384, 768, 1152], max_num=12, image_size=384):
+def dynamic_s2_preprocess(image, s2_scales=[384, 768, 1152], max_num=12, image_size=384):  # noqa: B006 - Keeps the upstream default object and signature.
     orig_width, orig_height = image.size
     aspect_ratio = orig_width / orig_height
     min_num = (s2_scales[-1] // s2_scales[0]) ** 2  # at least use number of tiles as the largest scale

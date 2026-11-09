@@ -579,7 +579,7 @@ def _setup_device_and_mode(model, device, eval_mode):
 
 def build_sam3_image_model(
     bpe_path=None,
-    device="cuda" if torch.cuda.is_available() else "cpu",
+    device="cuda" if torch.cuda.is_available() else "cpu",  # noqa: B008 - Default evaluated once at definition, as upstream.
     eval_mode=True,
     checkpoint_path=None,
     load_from_HF=True,
@@ -680,7 +680,7 @@ def build_sam3_video_model(
     geo_encoder_use_img_cross_attn: bool = True,
     strict_state_dict_loading: bool = True,
     apply_temporal_disambiguation: bool = True,
-    device="cuda" if torch.cuda.is_available() else "cpu",
+    device="cuda" if torch.cuda.is_available() else "cpu",  # noqa: B008 - Default evaluated once at definition, as upstream.
     compile=False,
 ) -> Sam3VideoInferenceWithInstanceInteractivity:
     """
@@ -928,7 +928,7 @@ def build_sam3_multiplex_video_model(
     use_fa3: bool = False,
     use_rope_real: bool = False,
     strict_state_dict_loading: bool = True,
-    device="cuda" if torch.cuda.is_available() else "cpu",
+    device="cuda" if torch.cuda.is_available() else "cpu",  # noqa: B008 - Default evaluated once at definition, as upstream.
     compile=False,
 ):
     """

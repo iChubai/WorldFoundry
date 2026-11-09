@@ -1,5 +1,6 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 from functools import partial
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import cv2
 import numpy as np

@@ -157,8 +157,8 @@ def _make_dinov3_convnext_model_url(
 
 def _make_dinov3_convnext(
     in_chans: int = 3,
-    depths: list[int] = [3, 3, 27, 3],
-    dims: list[int] = [128, 256, 512, 1024],
+    depths: list[int] = [3, 3, 27, 3],  # noqa: B006 - Keeps the upstream default object and signature.
+    dims: list[int] = [128, 256, 512, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
     compact_arch_name: str = "convnext_base",
     drop_path_rate: float = 0.0,
     layer_scale_init_value: float = 1e-6,

@@ -30,7 +30,7 @@ logger = get_logger()
 
 def _find_local_mac() -> str:
     mac = uuid.getnode()
-    mac_address = ":".join(("%012x" % mac)[i : i + 2] for i in range(0, 12, 2))
+    mac_address = ":".join(("%012x" % mac)[i : i + 2] for i in range(0, 12, 2))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     return mac_address
 
 
@@ -256,7 +256,7 @@ def find_all_linears(model, model_arch=None, extra_layers=None, sub_module=None)
         lm_head_name = "lm_head"
     # 'score', 'classifier': classification model
     # 'v_head': reward model
-    ignore_layers = [lm_head_name, "score", "v_head", "classifier"] + ["lora_A", "lora_B", "base_layer"]
+    ignore_layers = [lm_head_name, "score", "v_head", "classifier"] + ["lora_A", "lora_B", "base_layer"]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     ignore_linear_cls = [
         "glulinear"  # phi4-mm
     ]

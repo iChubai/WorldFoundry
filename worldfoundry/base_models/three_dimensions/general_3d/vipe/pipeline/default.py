@@ -135,7 +135,7 @@ class DefaultAnnotationPipeline(Pipeline):
 
         annotate_output = AnnotationPipelineOutput()
 
-        if all([self.should_filter(video_stream.name()) for video_stream in video_streams]):
+        if all([self.should_filter(video_stream.name()) for video_stream in video_streams]):  # noqa: C419 - Evaluates every element before testing, as upstream.
             logger.info(f"{video_data.name()} has been proccessed already, skip it!!")
             return annotate_output
 

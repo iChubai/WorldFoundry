@@ -388,7 +388,7 @@ def so3_to_se3(so3: SO3) -> SE3:
     Returns:
         single / batch of SE3 Lie group elements [] / [bs]
     """
-    t_component = torch.zeros(so3.shape + (3,), device=so3.device, dtype=so3.dtype)
+    t_component = torch.zeros(so3.shape + (3,), device=so3.device, dtype=so3.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     return SE3.InitFromVec(torch.cat((t_component, so3.vec()), dim=-1))
 
 

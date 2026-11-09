@@ -21,8 +21,8 @@ if importlib.util.find_spec("xformers") is not None:
     XFORMERS_IS_AVAILBLE = True
 else:
     XFORMERS_IS_AVAILBLE = False
-from worldfoundry.core.nn.diffusion.convolution import zero_module
-from worldfoundry.core.nn.diffusion.utils import (
+from worldfoundry.core.nn.diffusion.convolution import zero_module  # noqa: E402 - Follows the conditional setup block.
+from worldfoundry.core.nn.diffusion.utils import (  # noqa: E402 - Follows the conditional setup block.
     checkpoint,
     default,
     exists,

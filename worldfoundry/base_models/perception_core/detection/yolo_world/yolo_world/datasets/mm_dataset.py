@@ -16,7 +16,7 @@ class MultiModalDataset:
         dataset: BaseDataset | dict,
         class_text_path: str | None = None,
         test_mode: bool = True,
-        pipeline: list[dict | Callable] = [],
+        pipeline: list[dict | Callable] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         lazy_init: bool = False,
     ) -> None:
         self.dataset: BaseDataset
@@ -28,7 +28,7 @@ class MultiModalDataset:
             raise TypeError(f"dataset must be a dict or a BaseDataset, but got {dataset}")
 
         if class_text_path is not None:
-            self.class_texts = json.load(open(class_text_path))
+            self.class_texts = json.load(open(class_text_path))  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
             # ori_classes = self.dataset.metainfo['classes']
             # assert len(ori_classes) == len(self.class_texts), \
             #     ('The number of classes in the dataset and the class text'
@@ -99,7 +99,7 @@ class MultiModalMixedDataset(MultiModalDataset):
         class_text_path: str | None = None,
         dataset_type: str = "detection",
         test_mode: bool = True,
-        pipeline: list[dict | Callable] = [],
+        pipeline: list[dict | Callable] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         lazy_init: bool = False,
     ) -> None:
         self.dataset_type = dataset_type

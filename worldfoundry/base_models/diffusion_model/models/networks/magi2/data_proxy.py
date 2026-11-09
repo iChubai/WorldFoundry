@@ -319,7 +319,7 @@ class SingleData:
                 h_i = int(self.ref_image_feat_lens[k][0])
                 w_i = int(self.ref_image_feat_lens[k][1])
             else:
-                h_i = w_i = int(math.ceil(math.sqrt(token_len)))
+                h_i = w_i = int(math.ceil(math.sqrt(token_len)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             # Images sit past the generated clip on the time axis, one latent step
             # apart, with a gap of 1 so they never alias the last video frame.
             t_off = t_steps + 2 + k
@@ -726,9 +726,9 @@ class Magi2PreviewDataProxy:
         Returns ``(video_latent_length, audio_latent_length)``.
         """
         seconds = float(seconds)
-        video_frame_length = int(round(seconds * fps * 2))
+        video_frame_length = int(round(seconds * fps * 2))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         video_latent_length = (video_frame_length - 1) // vae_stride[0] + 1
-        audio_latent_length = int(round(seconds * audio_latent_fps))
+        audio_latent_length = int(round(seconds * audio_latent_fps))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         return video_latent_length, audio_latent_length
 
     @classmethod

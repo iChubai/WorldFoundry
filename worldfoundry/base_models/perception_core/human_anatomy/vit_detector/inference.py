@@ -118,7 +118,7 @@ class Detector:
                         color = (255, 0, 0)
                     elif label_idx == 1:
                         label = "hand"
-                        color = (0, 0, 255)
+                        color = (0, 0, 255)  # noqa: F841 - Upstream assignment kept.
                     else:
                         label = "unknown"
 

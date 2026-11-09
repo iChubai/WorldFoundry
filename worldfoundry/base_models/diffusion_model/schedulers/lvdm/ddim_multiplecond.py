@@ -114,7 +114,7 @@ class DDIMSampler:
         # check condition bs
         if conditioning is not None:
             if isinstance(conditioning, dict):
-                first_conditioning = conditioning[list(conditioning.keys())[0]]
+                first_conditioning = conditioning[list(conditioning.keys())[0]]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                 if torch.is_tensor(first_conditioning):
                     cbs = first_conditioning.shape[0]
                 else:
@@ -216,7 +216,7 @@ class DDIMSampler:
             ## use mask to blend noised original latent (img_orig) & new sampled latent (img)
             if mask is not None:
                 assert x0 is not None
-                if clean_cond:
+                if clean_cond:  # noqa: SIM108 - Branches carry per-case comments.
                     img_orig = x0
                 else:
                     img_orig = self.model.q_sample(x0, ts)  # TODO: deterministic forward pass? <ddim inversion>

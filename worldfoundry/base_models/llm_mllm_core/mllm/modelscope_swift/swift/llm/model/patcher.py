@@ -95,7 +95,7 @@ def patch_output_normalizer(module: torch.nn.Module, model_meta):
     assert found, "Cannot find the proper lm_head name"
 
     def forward(self, input_ids: torch.LongTensor = None, attention_mask=None, *args, **kwargs):
-        outputs = self.forward_origin(input_ids=input_ids, attention_mask=attention_mask, *args, **kwargs)
+        outputs = self.forward_origin(input_ids=input_ids, attention_mask=attention_mask, *args, **kwargs)  # noqa: B026 - Keeps the upstream argument order.
         hidden_states = outputs.logits
         left_padding = attention_mask[:, -1].sum() == attention_mask.shape[0]
         if left_padding:
@@ -230,8 +230,8 @@ def _patch_sequence_classification(model, model_meta):
                 loss_fct = BCEWithLogitsLoss()
                 loss = loss_fct(pooled_logits, labels)
         if not return_dict:
-            output = (pooled_logits,) + output[1:]
-            return ((loss,) + output) if loss is not None else output
+            output = (pooled_logits,) + output[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return SequenceClassifierOutputWithPast(
             loss=loss,
@@ -335,7 +335,10 @@ def patch_mp_ddp():
     if is_mp_ddp() or use_torchacc():
         _old_accelerator_init = trainer.Accelerator.__init__
         trainer.Accelerator.__init__ = lambda self, device_placement=False, *args, **kwargs: _old_accelerator_init(
-            self, device_placement=device_placement, *args, **kwargs
+            self,
+            device_placement=device_placement,
+            *args,  # noqa: B026 - Keeps the upstream argument order.
+            **kwargs,
         )
         trainer.Accelerator.verify_device_map = lambda *args, **kwargs: False
 

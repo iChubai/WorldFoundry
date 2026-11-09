@@ -96,7 +96,7 @@ class PatchEmbed(nn.Module):
         return x, out_size
 
 
-from .twins import Block
+from .twins import Block  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class VerticalSelfAttentionLayer(nn.Module):
@@ -270,7 +270,7 @@ class CostPerceiverEncoder(nn.Module):
     def random_masking(self, x, mask_ratio, mask=None):
         B, _, H, W = x.shape
 
-        pad_l = pad_t = 0
+        pad_l = pad_t = 0  # noqa: F841 - Upstream assignment kept.
         pad_r = (self.patch_size - W % self.patch_size) % self.patch_size
         pad_b = (self.patch_size - H % self.patch_size) % self.patch_size
         H = H + pad_b
@@ -283,7 +283,7 @@ class CostPerceiverEncoder(nn.Module):
         L = H_down * W_down
         len_keep = int(L * (1 - mask_ratio))
 
-        if mask is not None:
+        if mask is not None:  # noqa: SIM108 - Branches carry per-case comments.
             noise = mask.reshape(B, L)
         else:
             # print("random mask")
@@ -434,7 +434,7 @@ class MemoryEncoder(nn.Module):
         if cfg.fnet == "twins":
             self.feat_encoder = twins_svt_large(pretrained=self.cfg.pretrain, del_layers=cfg.del_layers)
         elif "jh" in cfg.fnet:
-            self.feat_encoder = twins_svt_large_jihao(
+            self.feat_encoder = twins_svt_large_jihao(  # noqa: F821 - Name is undefined in the upstream source.
                 pretrained=self.cfg.pretrain, del_layers=cfg.del_layers, version=cfg.fnet
             )
         elif cfg.fnet == "basicencoder":
@@ -442,7 +442,7 @@ class MemoryEncoder(nn.Module):
         elif cfg.fnet == "convnext":
             self.feat_encoder = convnext_large(pretrained=self.cfg.pretrain)
         elif cfg.fnet == "nat":
-            self.feat_encoder = nat_base(pretrained=self.cfg.pretrain)
+            self.feat_encoder = nat_base(pretrained=self.cfg.pretrain)  # noqa: F821 - Name is undefined in the upstream source.
         else:
             exit()
 

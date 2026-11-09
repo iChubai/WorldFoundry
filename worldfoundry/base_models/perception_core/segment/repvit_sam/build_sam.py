@@ -44,7 +44,7 @@ def build_sam_vit_b(checkpoint=None):
     )
 
 
-from timm.models import create_model
+from timm.models import create_model  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 def build_sam_repvit(checkpoint=None):

@@ -23,7 +23,7 @@ Image.MAX_IMAGE_PIXELS = None
 try:
     import shapely.geometry as shgeo
 except ImportError:
-    raise ImportError('Please run "pip install shapely" to install shapely first.')
+    raise ImportError('Please run "pip install shapely" to install shapely first.')  # noqa: B904 - Keeps the implicit exception context.
 
 PHASE_REQUIRE_SETS = {
     "trainval": ["train", "val"],
@@ -316,7 +316,7 @@ def ann_window_iof(anns, window, eps=1e-6):
     wh = np.clip(rb - lt, 0, np.inf)
     h_overlaps = wh[..., 0] * wh[..., 1]
 
-    l, t, r, b = (window[..., i] for i in range(4))
+    l, t, r, b = (window[..., i] for i in range(4))  # noqa: E741 - Ambiguous upstream name kept as written.
     polys_win = np.stack([l, t, r, t, r, b, l, b], axis=-1)
     sg_polys_ann = [shgeo.Polygon(p) for p in anns.reshape(rows, -1, 2)]
     sg_polys_win = [shgeo.Polygon(p) for p in polys_win.reshape(cols, -1, 2)]

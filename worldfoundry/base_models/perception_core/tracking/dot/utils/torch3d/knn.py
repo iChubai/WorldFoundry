@@ -92,11 +92,11 @@ class _knn_points(Function):
         p1, p2, lengths1, lengths2, idx = ctx.saved_tensors
         norm = ctx.norm
         # TODO(gkioxari) Change cast to floats once we add support for doubles.
-        if not (grad_dists.dtype == torch.float32):
+        if not (grad_dists.dtype == torch.float32):  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             grad_dists = grad_dists.float()
-        if not (p1.dtype == torch.float32):
+        if not (p1.dtype == torch.float32):  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             p1 = p1.float()
-        if not (p2.dtype == torch.float32):
+        if not (p2.dtype == torch.float32):  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             p2 = p2.float()
         grad_p1, grad_p2 = _C.knn_points_backward(p1, p2, lengths1, lengths2, idx, norm, grad_dists)
         return grad_p1, grad_p2, None, None, None, None, None, None

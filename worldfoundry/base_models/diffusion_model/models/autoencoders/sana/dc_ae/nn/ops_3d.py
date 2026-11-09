@@ -202,7 +202,7 @@ class ConvLayer3d(nn.Module):
             )  # (B, T // self.causal_chunk_length, C, self.causal_chunk_length, H, W)
 
             if feature_cache is not None:
-                first_left_pad = feature_cache[feature_key] if feature_key in feature_cache else None
+                first_left_pad = feature_cache[feature_key] if feature_key in feature_cache else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
                 feature_cache[feature_key] = x[:, -1:, :, -self.conv.padding[0] :].clone()
             else:
                 first_left_pad = None

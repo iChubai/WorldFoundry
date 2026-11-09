@@ -99,7 +99,7 @@ try:
             elif type(module) is LinearKMaskedBias:
                 new_cls = Fp8LinearKMaskedBias
             else:
-                assert False, str(type(module))
+                assert False, str(type(module))  # noqa: B011 - Keeps the assertion semantics under -O.
             new_module = new_cls(
                 in_features=module.in_features,
                 out_features=module.out_features,

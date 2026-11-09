@@ -206,19 +206,19 @@ def _tokenize_prompts_and_batch(prompts, tokens_to_generate, add_BOS, tokenizer,
     prompts_tokens_tensor = torch.LongTensor(prompts_tokens)
     prompts_length_tensor = torch.LongTensor(prompts_length)
     attention_mask = torch.zeros(prompts_tokens_tensor.shape[:2])
-    for i, l in enumerate(prompts_length_tensor):
+    for i, l in enumerate(prompts_length_tensor):  # noqa: E741 - Ambiguous upstream name kept as written.
         attention_mask[i, :l] = 1
     return prompts_tokens_tensor, prompts_length_tensor, attention_mask
 
 
-def _tokenize_prompt(prompt, tokenizer, add_BOS=False, media_info={"<image>": 65, "<|video|>": 65}, **kwargs):
+def _tokenize_prompt(prompt, tokenizer, add_BOS=False, media_info={"<image>": 65, "<|video|>": 65}, **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
     media_tokens = {k: -int(i + 1) for i, k in enumerate(media_info.keys())}
     media_lengths = media_info.copy()
 
     prompt_chunk = [tokenizer.bos_token_id] if add_BOS else []
 
     # Pure Text
-    if all([media_token not in prompt for media_token in media_tokens]):
+    if all([media_token not in prompt for media_token in media_tokens]):  # noqa: C419 - Evaluates every element before testing, as upstream.
         enc_chunk = prompt_chunk + tokenizer(prompt, add_special_tokens=False, **kwargs)["input_ids"]
 
     # Multi-Modal Text

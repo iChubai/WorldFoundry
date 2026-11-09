@@ -13,8 +13,8 @@ from .swin_backbone import swin_3d_small, swin_3d_tiny
 class BaseEvaluator(nn.Module):
     def __init__(
         self,
-        backbone={},
-        vqa_head={},
+        backbone={},  # noqa: B006 - Keeps the upstream default object and signature.
+        vqa_head={},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.backbone = VideoBackbone(**backbone)
@@ -48,9 +48,9 @@ class DOVER(nn.Module):
         backbone_preserve_keys="fragments,resize",
         multi=False,
         layer=-1,
-        backbone={"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}},
+        backbone={"resize": {"window_size": (4, 4, 4)}, "fragments": {"window_size": (4, 4, 4)}},  # noqa: B006 - Keeps the upstream default object and signature.
         divide_head=False,
-        vqa_head={"in_channels": 768},
+        vqa_head={"in_channels": 768},  # noqa: B006 - Keeps the upstream default object and signature.
         var=False,
     ):
         self.backbone_preserve_keys = backbone_preserve_keys.split(",")
@@ -112,7 +112,7 @@ class DOVER(nn.Module):
         pooled=False,
         **kwargs,
     ):
-        assert (return_pooled_feats & return_raw_feats) == False, "Please only choose one kind of features to return"
+        assert (return_pooled_feats & return_raw_feats) == False, "Please only choose one kind of features to return"  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         if inference:
             self.eval()
             with torch.no_grad():
@@ -185,15 +185,18 @@ class DOVER(nn.Module):
             self.train()
             scores = []
             feats = {}
-            for key in vclips:
+            for key in vclips:  # noqa: F821 - Name is undefined in the upstream source.
                 feat = getattr(self, key.split("_")[0] + "_backbone")(
-                    vclips[key], multi=self.multi, layer=self.layer, **kwargs
+                    vclips[key],  # noqa: F821 - Name is undefined in the upstream source.
+                    multi=self.multi,
+                    layer=self.layer,
+                    **kwargs,
                 )
                 if hasattr(self, key.split("_")[0] + "_head"):
                     scores += [getattr(self, key.split("_")[0] + "_head")(feat)]
                 else:
                     scores += [self.vqa_head(feat)]
-                if return_pooled_feats:
+                if return_pooled_feats:  # noqa: F821 - Name is undefined in the upstream source.
                     feats[key] = feat
             if reduce_scores:
                 scores = reduce(lambda x, y: x + y, scores) if len(scores) > 1 else scores[0]
@@ -202,7 +205,7 @@ class DOVER(nn.Module):
                     scores = torch.mean(scores, (1, 2, 3, 4))
                     print(scores.shape)
 
-            if return_pooled_feats:
+            if return_pooled_feats:  # noqa: F821 - Name is undefined in the upstream source.
                 return scores, feats
             return scores
 
@@ -229,8 +232,8 @@ class MinimumDOVER(nn.Module):
 class BaseImageEvaluator(nn.Module):
     def __init__(
         self,
-        backbone={},
-        iqa_head={},
+        backbone={},  # noqa: B006 - Keeps the upstream default object and signature.
+        iqa_head={},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
         self.backbone = ImageBackbone(**backbone)

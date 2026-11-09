@@ -17,7 +17,7 @@ class MLPBlock(nn.Module):
         h = [hidden_dim] * (num_layers - 1)
         self.layers = nn.ModuleList(
             nn.Sequential(nn.Linear(n, k), act())
-            for n, k in zip([input_dim] + h, [hidden_dim] * num_layers, strict=False)
+            for n, k in zip([input_dim] + h, [hidden_dim] * num_layers, strict=False)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         )
         self.fc = nn.Linear(hidden_dim, output_dim)
 

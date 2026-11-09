@@ -77,7 +77,7 @@ class LieGroup:
 
     @property
     def tangent_shape(self):
-        return self.data.shape[:-1] + (self.manifold_dim,)
+        return self.data.shape[:-1] + (self.manifold_dim,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     @classmethod
     def Identity(cls, *batch_shape, **kwargs):
@@ -119,7 +119,7 @@ class LieGroup:
         elif isinstance(batch_shape[0], list):
             batch_shape = tuple(batch_shape[0])
 
-        tangent_shape = batch_shape + (cls.manifold_dim,)
+        tangent_shape = batch_shape + (cls.manifold_dim,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         xi = torch.randn(tangent_shape, **kwargs)
         return cls.exp(sigma * xi)
 
@@ -129,7 +129,7 @@ class LieGroup:
         inputs, out_shape = broadcast_inputs(x, y)
 
         data = op.apply(cls.group_id, *inputs)
-        return data.view(out_shape + (-1,))
+        return data.view(out_shape + (-1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     @classmethod
     def exp(cls, x):
@@ -202,7 +202,7 @@ class LieGroup:
         return self.__class__(self.data.detach())
 
     def view(self, dims):
-        data_reshaped = self.data.view(dims + (self.embedded_dim,))
+        data_reshaped = self.data.view(dims + (self.embedded_dim,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return self.__class__(data_reshaped)
 
     def __mul__(self, other):

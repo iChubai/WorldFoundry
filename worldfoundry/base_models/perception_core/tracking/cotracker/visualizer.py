@@ -48,7 +48,7 @@ def draw_circle(rgb, coord, radius, color=(255, 0, 0), visible=True, color_alpha
     left_up_point = (coord[0] - radius, coord[1] - radius)
     right_down_point = (coord[0] + radius, coord[1] + radius)
     # Draw the circle
-    color = tuple(list(color) + [color_alpha if color_alpha is not None else 255])
+    color = tuple(list(color) + [color_alpha if color_alpha is not None else 255])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     draw.ellipse(
         [left_up_point, right_down_point],
@@ -274,7 +274,7 @@ class Visualizer:
                 visibile = True
                 if visibility is not None:
                     visibile = visibility[0, t, i]
-                if coord[0] != 0 and coord[1] != 0:
+                if coord[0] != 0 and coord[1] != 0:  # noqa: SIM102 - Statement form kept for readability.
                     if not compensate_for_camera_motion or (compensate_for_camera_motion and segm_mask[i] > 0):
                         img = draw_circle(
                             img,

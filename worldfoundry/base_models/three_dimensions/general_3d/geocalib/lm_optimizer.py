@@ -177,7 +177,7 @@ class LMOptimizer(nn.Module):
         Args:
             camera_model (str): Camera model to use.
         """
-        assert camera_model in camera_models.keys(), (
+        assert camera_model in camera_models.keys(), (  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             f"Unknown camera model: {camera_model} not in {camera_models.keys()}"
         )
         self.camera_model = camera_models[camera_model]
@@ -496,17 +496,17 @@ class LMOptimizer(nn.Module):
             Tuple[BaseCamera, Gravity]: Updated camera and gravity estimates.
         """
         delta_gravity = (
-            delta[..., self.gravity_delta_dims] if self.estimate_gravity else delta.new_zeros(delta.shape[:-1] + (2,))
+            delta[..., self.gravity_delta_dims] if self.estimate_gravity else delta.new_zeros(delta.shape[:-1] + (2,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         )
         new_gravity = gravity.update(delta_gravity, spherical=self.conf.use_spherical_manifold)
 
-        delta_f = delta[..., self.focal_delta_dims] if self.estimate_focal else delta.new_zeros(delta.shape[:-1] + (1,))
+        delta_f = delta[..., self.focal_delta_dims] if self.estimate_focal else delta.new_zeros(delta.shape[:-1] + (1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         new_camera = camera.update_focal(delta_f, as_log=self.conf.use_log_focal)
 
         delta_dist = (
             delta[..., self.k1_delta_dims]
             if self.camera_has_distortion and self.estimate_k1
-            else delta.new_zeros(delta.shape[:-1] + (1,))
+            else delta.new_zeros(delta.shape[:-1] + (1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         )
         if self.camera_has_distortion:
             new_camera = new_camera.update_dist(delta_dist)
@@ -530,7 +530,7 @@ class LMOptimizer(nn.Module):
             Tuple[BaseCamera, Gravity, Dict[str, torch.Tensor]]: Optimized camera, gravity
             estimates and optimization information.
         """
-        key = list(data.keys())[0]
+        key = list(data.keys())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
         B = data[key].shape[0]
 
         lamb = data[key].new_ones(B) * self.conf.lambda_

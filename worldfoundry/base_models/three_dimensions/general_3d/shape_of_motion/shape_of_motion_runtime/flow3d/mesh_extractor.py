@@ -46,8 +46,8 @@ def transform_poses_pca(
     transform = np.concatenate([rot, rot @ -t_mean[:, None]], -1)
 
     # Flip coordinate system if z component of y-axis is negative
-    if poses_recentered.mean(axis=0)[2, 1] < 0:
-        poses_recentered = np.diag(np.array([1, -1, -1])) @ poses_recentered
+    if poses_recentered.mean(axis=0)[2, 1] < 0:  # noqa: F821 - Name is undefined in the upstream source.
+        poses_recentered = np.diag(np.array([1, -1, -1])) @ poses_recentered  # noqa: F821 - Name is undefined in the upstream source.
         transform = np.diag(np.array([1, -1, -1, 1])) @ transform
 
     return poses_recentered, transform

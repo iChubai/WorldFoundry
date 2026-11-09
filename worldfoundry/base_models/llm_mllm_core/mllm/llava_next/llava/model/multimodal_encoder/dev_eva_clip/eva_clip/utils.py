@@ -86,7 +86,7 @@ def resize_evaclip_pos_embed(state_dict, model, interpolation: str = "bicubic", 
         new_size = int(num_patches**0.5)
         # class_token and dist_token are kept unchanged
         if orig_size != new_size:
-            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))
+            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
@@ -120,7 +120,7 @@ def resize_eva_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_
         new_size = int(num_patches**0.5)
         # class_token and dist_token are kept unchanged
         if orig_size != new_size:
-            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))
+            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
@@ -156,7 +156,7 @@ def resize_rel_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_
             src_size = int((src_num_pos - num_extra_tokens) ** 0.5)
             dst_size = int((dst_num_pos - num_extra_tokens) ** 0.5)
             if src_size != dst_size:
-                print("Position interpolate for %s from %dx%d to %dx%d" % (key, src_size, src_size, dst_size, dst_size))
+                print("Position interpolate for %s from %dx%d to %dx%d" % (key, src_size, src_size, dst_size, dst_size))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 extra_tokens = rel_pos_bias[-num_extra_tokens:, :]
                 rel_pos_bias = rel_pos_bias[:-num_extra_tokens, :]
 
@@ -183,15 +183,15 @@ def resize_rel_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_
 
                 r_ids = [-_ for _ in reversed(dis)]
 
-                x = r_ids + [0] + dis
-                y = r_ids + [0] + dis
+                x = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+                y = r_ids + [0] + dis  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
                 t = dst_size // 2.0
                 dx = np.arange(-t, t + 0.1, 1.0)
                 dy = np.arange(-t, t + 0.1, 1.0)
 
-                print("Original positions = %s" % str(x))
-                print("Target positions = %s" % str(dx))
+                print("Original positions = %s" % str(x))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+                print("Target positions = %s" % str(dx))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
                 all_rel_pos_bias = []
 
@@ -217,7 +217,7 @@ def resize_rel_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_
         new_size = int(num_patches**0.5)
         # class_token and dist_token are kept unchanged
         if orig_size != new_size:
-            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))
+            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
@@ -236,7 +236,7 @@ def resize_rel_pos_embed(state_dict, model, interpolation: str = "bicubic", seq_
             )
 
 
-def freeze_batch_norm_2d(module, module_match={}, name=""):
+def freeze_batch_norm_2d(module, module_match={}, name=""):  # noqa: B006 - Keeps the upstream default object and signature.
     """
     Converts all `BatchNorm2d` and `SyncBatchNorm` layers of provided module into `FrozenBatchNorm2d`. If `module` is
     itself an instance of either `BatchNorm2d` or `SyncBatchNorm`, it is converted into `FrozenBatchNorm2d` and

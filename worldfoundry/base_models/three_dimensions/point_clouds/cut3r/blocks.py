@@ -361,7 +361,7 @@ class ConditionModulationBlock(nn.Module):
         attn_drop=0.0,
         drop_path=0.0,
         act_layer=nn.GELU,
-        norm_layer=partial(ModLN, eps=1e-6),
+        norm_layer=partial(ModLN, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         rope=None,
     ):
         super().__init__()

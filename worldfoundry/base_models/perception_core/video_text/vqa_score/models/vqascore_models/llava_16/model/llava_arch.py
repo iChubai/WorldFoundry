@@ -358,7 +358,7 @@ class LlavaMetaForCausalLM(ABC):
                 continue
 
             image_token_indices = (
-                [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]
+                [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             )
             cur_input_ids_noim = []
             cur_labels = labels[batch_idx]

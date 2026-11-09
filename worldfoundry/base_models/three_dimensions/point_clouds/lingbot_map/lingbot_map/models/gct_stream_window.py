@@ -436,7 +436,7 @@ class GCTStream(GCTBase):
             return {"num_cached_blocks": 0, "cache_memory_mb": 0.0}
 
         kv_cache = self.aggregator.kv_cache
-        num_cached = sum(1 for k in kv_cache.keys() if k.startswith("k_") and not k.endswith("_special"))
+        num_cached = sum(1 for k in kv_cache.keys() if k.startswith("k_") and not k.endswith("_special"))  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
 
         # Estimate memory usage
         total_elements = 0

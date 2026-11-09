@@ -27,9 +27,9 @@ class YOLOWorldPAFPN(YOLOv8PAFPN):
         widen_factor: float = 1.0,
         num_csp_blocks: int = 3,
         freeze_all: bool = False,
-        block_cfg: ConfigType = {"type": "CSPLayerWithTwoConv"},
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        block_cfg: ConfigType = {"type": "CSPLayerWithTwoConv"},  # noqa: B006 - Keeps the upstream default object and signature.
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ) -> None:
         self.guide_channels = guide_channels
@@ -151,15 +151,15 @@ class YOLOWorldDualPAFPN(YOLOWorldPAFPN):
         widen_factor: float = 1.0,
         num_csp_blocks: int = 3,
         freeze_all: bool = False,
-        text_enhancder: ConfigType = {
+        text_enhancder: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "ImagePoolingAttentionModule",
             "embed_channels": 256,
             "num_heads": 8,
             "pool_size": 3,
         },
-        block_cfg: ConfigType = {"type": "CSPLayerWithTwoConv"},
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        block_cfg: ConfigType = {"type": "CSPLayerWithTwoConv"},  # noqa: B006 - Keeps the upstream default object and signature.
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ) -> None:
         super().__init__(

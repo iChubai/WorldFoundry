@@ -22,7 +22,7 @@ class AutoencoderKL(nn.Module):
         lossconfig,
         embed_dim,
         ckpt_path=None,
-        ignore_keys=[],
+        ignore_keys=[],  # noqa: B006 - Keeps the upstream default object and signature.
         image_key="image",
         colorize_nlabels=None,
         monitor=None,
@@ -85,7 +85,7 @@ class AutoencoderKL(nn.Module):
         self.decodes = []
         self.save_decode_samples = 2048
 
-    def init_from_ckpt(self, path, ignore_keys=[]):
+    def init_from_ckpt(self, path, ignore_keys=[]):  # noqa: B006 - Keeps the upstream default object and signature.
         sd = torch.load(path, map_location="cpu")
         if "epoch" in sd and "state_dict" in sd:
             self._cur_epoch = sd["epoch"]

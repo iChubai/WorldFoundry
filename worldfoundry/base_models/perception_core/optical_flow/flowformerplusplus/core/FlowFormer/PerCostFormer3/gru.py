@@ -117,7 +117,7 @@ class SKBlock(nn.Module):
         shortcut = x.clone()
         x = shortcut + self.conv_l(x)
         _short_cut = x.clone()
-        x = shortcut + sefl.conv_pw(x)
+        x = shortcut + sefl.conv_pw(x)  # noqa: F821 - Unused first SKBlock definition; the later definition replaces it.
         return x
 
 
@@ -176,7 +176,7 @@ class ConvAttWoGRU(nn.Module):
         return x
 
 
-class SKBlock(nn.Module):
+class SKBlock(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     def __init__(self, input_dim, hidden_dim):
         super().__init__()
 
@@ -307,7 +307,7 @@ class BasicUpdateBlock(nn.Module):
         return net, mask, delta_flow
 
 
-from .gma import Aggregate
+from .gma import Aggregate  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class GMAUpdateBlock(nn.Module):

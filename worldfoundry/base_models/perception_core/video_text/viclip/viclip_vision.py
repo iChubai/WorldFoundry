@@ -30,7 +30,7 @@ def load_temp_embed_with_mismatch(temp_embed_old, temp_embed_new, add_zero=True)
         if add_zero:
             temp_embed_new[:, :num_frms_old] = temp_embed_old  # untrained embeddings are zeros.
         else:
-            temp_embed_new = interpolate_temporal_pos_embed(temp_embed_old, num_frms_new)
+            temp_embed_new = interpolate_temporal_pos_embed(temp_embed_old, num_frms_new)  # noqa: F821 - Name is undefined in the upstream source.
     elif num_frms_new < num_frms_old:
         temp_embed_new = temp_embed_old[:, :num_frms_new]
     else:  # =
@@ -202,7 +202,7 @@ class VisionTransformer(nn.Module):
 
         x = self.ln_post(x)
 
-        if self.proj is not None:
+        if self.proj is not None:  # noqa: SIM108 - Branches carry per-case comments.
             x = self.dropout(x[0]) @ self.proj
         else:
             x = x.permute(1, 0, 2)  # NBD -> BND
@@ -225,8 +225,8 @@ def inflate_weight(weight_2d, time_dim, center=True):
 
 def load_state_dict(model, state_dict, input_resolution=224, patch_size=16, center=True):
     state_dict_3d = model.state_dict()
-    for k in state_dict.keys():
-        if k in state_dict_3d.keys() and state_dict[k].shape != state_dict_3d[k].shape:
+    for k in state_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+        if k in state_dict_3d.keys() and state_dict[k].shape != state_dict_3d[k].shape:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if len(state_dict_3d[k].shape) <= 2:
                 logger.info(f"Ignore: {k}")
                 continue

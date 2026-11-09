@@ -393,7 +393,7 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
     def __init__(
         self,
         args,
-        patch_size: list = [1, 2, 2],
+        patch_size: list = [1, 2, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         in_channels: int = 4,  # Should be VAE.config.latent_channels.
         out_channels: int | None = None,
         hidden_size: int = 3072,
@@ -402,7 +402,7 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
         num_heads: int = 24,
         depth_double_blocks: int = 19,
         depth_single_blocks: int = 38,
-        rope_dim_list: list[int] = [16, 56, 56],
+        rope_dim_list: list[int] = [16, 56, 56],  # noqa: B006 - Keeps the upstream default object and signature.
         qkv_bias: bool = True,
         qk_norm: bool = True,
         qk_norm_type: str = "rms",
@@ -573,7 +573,7 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
             torch.cuda.empty_cache()
 
         camera_condition = cam_latents
-        assert camera_condition is not None, print("plucker_embedding is not provided")
+        assert camera_condition is not None, print("plucker_embedding is not provided")  # noqa: RUF030 - Upstream assertion prints its context before failing.
         latent_len = img.shape[2]
 
         # Embed image and text.
@@ -619,7 +619,7 @@ class HYVideoDiffusionTransformer(ModelMixin, ConfigMixin):
         freqs_cis = (freqs_cos, freqs_sin) if freqs_cos is not None else None
         # --------------------- Pass through DiT blocks ------------------------
         if not is_cache:
-            for layer_num, block in enumerate(self.double_blocks):
+            for layer_num, block in enumerate(self.double_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 double_block_args = [
                     img,
                     txt,

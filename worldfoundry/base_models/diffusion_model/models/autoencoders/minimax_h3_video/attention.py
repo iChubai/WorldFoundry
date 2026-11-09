@@ -145,14 +145,14 @@ class Attention(nn.Module):
 
         return hidden_states
 
-    def perform_attention(self, query, key, value, pack_info={}):
+    def perform_attention(self, query, key, value, pack_info={}):  # noqa: B006 - Keeps the upstream default object and signature.
         return self._perform_attention(query, key, value, pack_info)
 
     def forward(
         self,
         hidden_states: torch.Tensor,
         rotary_pos_emb: torch.Tensor | None = None,
-        pack_info: dict = {},
+        pack_info: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
     ) -> torch.Tensor:
         batch_size, seq_len, _ = hidden_states.shape
 

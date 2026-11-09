@@ -147,7 +147,7 @@ class TikTokenTokenizer(Tokenizer):
             subs.append(s[i : i + TIKTOKEN_MAX_ENCODE_CHARS])
         return (
             [self.bos_id] * add_bos
-            + sum(self.tkt_model.encode_ordinary_batch(subs), start=[])
+            + sum(self.tkt_model.encode_ordinary_batch(subs), start=[])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
             + [self.eos_id] * add_eos
         )
 
@@ -164,7 +164,7 @@ class TikTokenTokenizer(Tokenizer):
         for token in token_bytes:
             offsets.append(max(0, text_len - (0x80 <= token[0] < 0xC0)))
             text_len += sum(1 for c in token if not 0x80 <= c < 0xC0)
-        substrs = [text[s:e] for s, e in zip(offsets, offsets[1:] + [None], strict=False)]
+        substrs = [text[s:e] for s, e in zip(offsets, offsets[1:] + [None], strict=False)]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return substrs, offsets
 
 

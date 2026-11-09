@@ -341,7 +341,7 @@ class MetricLogger:
                             data=str(data_time),
                         )
                     )
-            i += 1
+            i += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
@@ -467,7 +467,7 @@ def nested_tensor_from_tensor_list(tensor_list: list[Tensor]):
         # TODO make it support different-sized images
         max_size = _max_by_axis([list(img.shape) for img in tensor_list])
         # min_size = tuple(min(s) for s in zip(*[img.shape for img in tensor_list]))
-        batch_shape = [len(tensor_list)] + max_size
+        batch_shape = [len(tensor_list)] + max_size  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         b, c, h, w = batch_shape
         dtype = tensor_list[0].dtype
         device = tensor_list[0].device

@@ -233,7 +233,7 @@ class BottleneckBlock(CNNBlockBase):
 
         spx = torch.split(out, self.width, 1)
         for i in range(self.nums):
-            sp = spx[i] if i == 0 or self.in_channels != self.out_channels else sp + spx[i]
+            sp = spx[i] if i == 0 or self.in_channels != self.out_channels else sp + spx[i]  # noqa: F821 - Accumulator is bound in the first iteration.
             sp = self.convs[i](sp)
             sp = F.relu_(self.bns[i](sp))
             out = sp if i == 0 else torch.cat((out, sp), 1)
@@ -434,7 +434,7 @@ class DeformBottleneckBlock(ResNetBlockBase):
 
         spx = torch.split(out, self.width, 1)
         for i in range(self.nums):
-            sp = spx[i].contiguous() if i == 0 or self.in_channels != self.out_channels else sp + spx[i].contiguous()
+            sp = spx[i].contiguous() if i == 0 or self.in_channels != self.out_channels else sp + spx[i].contiguous()  # noqa: F821 - Accumulator is bound in the first iteration.
 
             # sp = self.convs[i](sp)
             if self.deform_modulated:

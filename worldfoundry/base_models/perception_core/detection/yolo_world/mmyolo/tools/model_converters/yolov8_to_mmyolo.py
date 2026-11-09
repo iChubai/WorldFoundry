@@ -36,7 +36,7 @@ def convert(src, dst):
         yolov8_model = torch.load(src)["model"]
         blobs = yolov8_model.state_dict()
     except ModuleNotFoundError:
-        raise RuntimeError(
+        raise RuntimeError(  # noqa: B904 - Keeps the implicit exception context.
             "This script must be placed under the ultralytics repo,"
             " because loading the official pretrained model need"
             " `model.py` to build model."

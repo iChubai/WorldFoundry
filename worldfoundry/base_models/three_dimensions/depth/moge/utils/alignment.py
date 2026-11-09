@@ -1,5 +1,6 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import math
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import torch
 import torch.types
@@ -7,7 +8,7 @@ import torch.types
 
 def scatter_min(size: int, dim: int, index: torch.LongTensor, src: torch.Tensor) -> torch.return_types.min:
     "Scatter the minimum value along the given dimension of `input` into `src` at the indices specified in `index`."
-    shape = src.shape[:dim] + (size,) + src.shape[dim + 1 :]
+    shape = src.shape[:dim] + (size,) + src.shape[dim + 1 :]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     minimum = torch.full(shape, float("inf"), dtype=src.dtype, device=src.device).scatter_reduce(
         dim=dim, index=index, src=src, reduce="amin", include_self=False
     )
@@ -214,7 +215,7 @@ def align_depth_affine(
     - `scale: torch.Tensor` of shape (...).
     - `shift: torch.Tensor` of shape (...).
     """
-    dtype, device = depth_src.dtype, depth_src.device
+    dtype, device = depth_src.dtype, depth_src.device  # noqa: F841 - Upstream assignment kept.
 
     # Flatten batch dimensions for simplicity
     batch_shape, n = depth_src.shape[:-1], depth_src.shape[-1]
@@ -274,7 +275,7 @@ def align_depth_affine_irls(
     """
     Align `depth_src` to `depth_tgt` with given constant weights using IRLS.
     """
-    dtype, device = depth_src.dtype, depth_src.device
+    dtype, device = depth_src.dtype, depth_src.device  # noqa: F841 - Upstream assignment kept.
 
     w = weight
     x = torch.stack([depth_src, torch.ones_like(depth_src)], dim=-1)
@@ -303,7 +304,7 @@ def align_points_scale(
     - `a: torch.Tensor` of shape (...). Only positive solutions are garunteed. You should filter out negative scales before using it.
     - `b: torch.Tensor` of shape (...)
     """
-    dtype, device = points_src.dtype, points_src.device
+    dtype, device = points_src.dtype, points_src.device  # noqa: F841 - Upstream assignment kept.
 
     scale, _, _ = align(
         points_src.flatten(-2), points_tgt.flatten(-2), weight[..., None].expand_as(points_src).flatten(-2), trunc
@@ -420,7 +421,7 @@ def align_points_scale_xyz_shift(
     - `scale: torch.Tensor` of shape (...).
     - `shift: torch.Tensor` of shape (..., 3)
     """
-    dtype, device = points_src.dtype, points_src.device
+    dtype, device = points_src.dtype, points_src.device  # noqa: F841 - Upstream assignment kept.
 
     # Flatten batch dimensions for simplicity
     batch_shape, n = points_src.shape[:-2], points_src.shape[-2]
@@ -500,7 +501,7 @@ def align_points_z_shift(
     - `scale: torch.Tensor` of shape (...).
     - `shift: torch.Tensor` of shape (..., 3)
     """
-    dtype, device = points_src.dtype, points_src.device
+    dtype, device = points_src.dtype, points_src.device  # noqa: F841 - Upstream assignment kept.
 
     shift, _, _ = align(torch.ones_like(points_src[..., 2]), points_tgt[..., 2] - points_src[..., 2], weight, trunc)
     shift = torch.stack([torch.zeros_like(shift), torch.zeros_like(shift), shift], dim=-1)
@@ -528,7 +529,7 @@ def align_points_xyz_shift(
     - `scale: torch.Tensor` of shape (...).
     - `shift: torch.Tensor` of shape (..., 3)
     """
-    dtype, device = points_src.dtype, points_src.device
+    dtype, device = points_src.dtype, points_src.device  # noqa: F841 - Upstream assignment kept.
 
     shift, _, _ = align(
         torch.ones_like(points_src).swapaxes(-2, -1),

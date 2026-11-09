@@ -27,7 +27,7 @@ class TarsierDataProcessor:
         do_image_padding=False,
         do_image_crop=False,
         do_image_resize=True,
-        video_sampling_strategy={},
+        video_sampling_strategy={},  # noqa: B006 - Keeps the upstream default object and signature.
         prompt="",
         train_task="sft",
         **kwargs,

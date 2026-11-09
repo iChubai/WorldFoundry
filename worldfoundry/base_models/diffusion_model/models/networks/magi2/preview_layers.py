@@ -314,7 +314,7 @@ class ElementWiseFourierEmbed(nn.Module):
         in_pixels: bool = True,
         linear_bands: bool = False,
         learnable: bool = False,
-        device: torch.device = torch.device("cpu"),
+        device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
         dtype: torch.dtype = _FP32,
     ) -> None:
         super().__init__()
@@ -365,7 +365,7 @@ def get_coords(
     shape: Coords,
     ref_feat_shape: Coords,
     offset_thw: Coords = (0, 0, 0),
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     dtype: torch.dtype = _FP32,
     time_positions: torch.Tensor | None = None,
 ) -> torch.Tensor:

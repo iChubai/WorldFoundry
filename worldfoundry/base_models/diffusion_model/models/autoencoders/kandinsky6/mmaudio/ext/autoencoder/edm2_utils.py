@@ -75,7 +75,7 @@ class Normalize(torch.nn.Module):
 # or keep it as is.
 
 
-def resample(x, f=[1, 1], mode="keep"):
+def resample(x, f=[1, 1], mode="keep"):  # noqa: B006 - Keeps the upstream default object and signature.
     if mode == "keep":
         return x
     f = np.float32(f)

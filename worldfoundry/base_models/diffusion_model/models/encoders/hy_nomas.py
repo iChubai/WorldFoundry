@@ -155,7 +155,7 @@ class HyNomasConditioner:
         return {
             "encoder_hidden_states": encoded.hidden_states[-3][:, crop:].to(device=device, dtype=dtype),
             "encoder_attention_mask": tokens["attention_mask"][:, crop:].to(device=device),
-            "action_text_offsets": [boundaries + [min(self.length, int(tokens["attention_mask"].sum()))]]
+            "action_text_offsets": [boundaries + [min(self.length, int(tokens["attention_mask"].sum()))]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             if boundaries
             else None,
             "cache_action_start": boundaries[0] if boundaries else None,

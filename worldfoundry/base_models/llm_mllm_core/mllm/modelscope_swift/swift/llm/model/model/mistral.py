@@ -173,7 +173,7 @@ def get_model_tokenizer_mistral_2503(
     try:
         from transformers import Mistral3ForConditionalGeneration
     except ImportError:
-        raise ImportError(
+        raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
             "Mistral3ForConditionalGeneration is unavailable. Install a Transformers build from the "
             "configured package index that provides Mistral3ForConditionalGeneration."
         )

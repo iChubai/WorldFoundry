@@ -406,7 +406,7 @@ def _t5(
     encoder_only=False,
     decoder_only=False,
     return_tokenizer=False,
-    tokenizer_kwargs={},
+    tokenizer_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
     dtype=torch.float32,
     device="cpu",
     **kwargs,

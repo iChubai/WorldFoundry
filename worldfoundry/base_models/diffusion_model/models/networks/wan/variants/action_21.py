@@ -298,7 +298,7 @@ class WanAttentionBlock(nn.Module):
         window_size=(-1, -1),
         qk_norm=True,
         cross_attn_norm=False,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         eps=1e-6,
     ):
         super().__init__()
@@ -473,7 +473,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         qk_norm=True,
         cross_attn_norm=True,
         inject_sample_info=False,
-        action_config={},
+        action_config={},  # noqa: B006 - Keeps the upstream default object and signature.
         eps=1e-6,
     ):
         r"""
@@ -517,7 +517,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         assert model_type in ["i2v"]
         self.model_type = model_type
         self.use_action_module = len(action_config) > 0
-        assert self.use_action_module == True
+        assert self.use_action_module == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         self.patch_size = patch_size
         self.text_len = text_len
         self.in_dim = in_dim
@@ -632,7 +632,7 @@ class WanModel(nn.Module, NativeConfigMixin):
         """
         # params
         if mouse_cond is not None or keyboard_cond is not None:
-            assert self.use_action_module == True
+            assert self.use_action_module == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         device = self.patch_embedding.weight.device
         if self.freqs.device != device:
             self.freqs = self.freqs.to(device)
@@ -757,7 +757,7 @@ class WanModel(nn.Module, NativeConfigMixin):
 
         # init output layer
         nn.init.zeros_(self.head.head.weight)
-        if self.use_action_module == True:
+        if self.use_action_module == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             for m in self.blocks:
                 nn.init.zeros_(m.action_model.proj_mouse.weight)
                 if m.action_model.proj_mouse.bias is not None:

@@ -394,14 +394,14 @@ def _rope_precompute_coeffs(
 def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
     """Lift 3x3 matrices to homogeneous 4x4 matrices."""
     assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros(Ks.shape[:-2] + (4, 4), device=Ks.device, dtype=Ks.dtype)
+    out = torch.zeros(Ks.shape[:-2] + (4, 4), device=Ks.device, dtype=Ks.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     out[..., :3, :3] = Ks
     out[..., 3, 3] = 1.0
     return out
 
 
 # Shared PRoPE algebra; WorldCrafter retains only its variable-grid projection rules.
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3.pi3.models.layers.prope import (
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3.pi3.models.layers.prope import (  # noqa: E402 - Follows module-level definitions, as upstream.
     _apply_block_diagonal,
     _invert_K,
     _invert_SE3,

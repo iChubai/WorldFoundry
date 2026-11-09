@@ -1,4 +1,5 @@
 # Auto-generated implementation redirecting to numpy/torch implementations
+# ruff: noqa: B018 - TYPE_CHECKING blocks name each dispatcher's numpy and torch implementations for editors.
 import sys
 from typing import TYPE_CHECKING
 
@@ -162,7 +163,7 @@ def _contains_tensor(obj):
 
 @suppress_traceback
 def _call_based_on_args(fname, args, kwargs):
-    if "torch" in sys.modules:
+    if "torch" in sys.modules:  # noqa: SIM102 - Statement form kept for readability.
         if any(_contains_tensor(arg) for arg in args) or any(_contains_tensor(v) for v in kwargs.values()):
             fn = getattr(utils3d.torch, fname, None)
             if fn is None:

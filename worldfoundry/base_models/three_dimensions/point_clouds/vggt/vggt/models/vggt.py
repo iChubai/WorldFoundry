@@ -92,7 +92,7 @@ class VGGT(nn.Module, PyTorchModelHubMixin):
         if query_points is not None and len(query_points.shape) == 2:
             query_points = query_points.unsqueeze(0)
 
-        if cameras_possibly_zero is None and query_points is not None:
+        if cameras_possibly_zero is None and query_points is not None:  # noqa: SIM102 - Statement form kept for readability.
             if query_points.dim() == 4 and query_points.shape[-1] == self.aggregator.camera_token.shape[-1]:
                 cameras_possibly_zero = query_points
                 query_points = None

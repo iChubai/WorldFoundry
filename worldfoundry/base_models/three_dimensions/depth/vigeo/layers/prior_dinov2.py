@@ -291,7 +291,7 @@ class PriorDinoVisionTransformer(nn.Module):
                 x = self.process_attention(x, blk, attn_type="local", shape_info=(B, S))
                 local_x = x
 
-        processed_list = [torch.cat([self.norm(l), self.norm(c)], dim=-1) for l, c in zip(local_x, x, strict=False)]
+        processed_list = [torch.cat([self.norm(l), self.norm(c)], dim=-1) for l, c in zip(local_x, x, strict=False)]  # noqa: E741 - Ambiguous upstream name kept as written.
 
         h_img, w_img = x_img.shape[-2:]
         ph, pw = h_img // self.patch_size, w_img // self.patch_size

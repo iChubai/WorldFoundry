@@ -3,19 +3,19 @@ import torch
 TORCH_MAJOR = int(torch.__version__.split(".")[0])
 TORCH_MINOR = int(torch.__version__.split(".")[1])
 
-from torch.types import _TensorOrTensors
+from torch.types import _TensorOrTensors  # noqa: E402 - Follows module-level setup, as upstream.
 
 if TORCH_MAJOR == 1 and TORCH_MINOR < 8:
     from torch._six import container_abcs, istuple
 else:
     import collections.abc as container_abcs
 
-import warnings
-from collections.abc import Callable, Iterable
-from itertools import product
+import warnings  # noqa: E402 - Follows the conditional setup block.
+from collections.abc import Callable, Iterable  # noqa: E402 - Follows the conditional setup block.
+from itertools import product  # noqa: E402 - Follows the conditional setup block.
 
-import torch.testing
-from torch.overrides import is_tensor_like
+import torch.testing  # noqa: E402 - Follows the conditional setup block.
+from torch.overrides import is_tensor_like  # noqa: E402 - Follows the conditional setup block.
 
 
 def zero_gradients(x):
@@ -51,7 +51,7 @@ def iter_tensors(x: torch.Tensor | Iterable[torch.Tensor], only_requiring_grad: 
             yield x  # type: ignore
     elif isinstance(x, container_abcs.Iterable) and not isinstance(x, str):
         for elem in x:
-            for result in iter_tensors(elem, only_requiring_grad):
+            for result in iter_tensors(elem, only_requiring_grad):  # noqa: UP028 - Keeps the loop; `yield from` would forward send() and throw().
                 yield result
 
 
@@ -204,7 +204,7 @@ def get_analytical_jacobian(input, output, nondet_tol=0.0, grad_out=1.0):
                     if d_x is None:
                         jacobian_x[:, i].zero_()
                     else:
-                        d_x_dense = d_x.to_dense() if not d_x.layout == torch.strided else d_x
+                        d_x_dense = d_x.to_dense() if not d_x.layout == torch.strided else d_x  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                         assert jacobian_x[:, i].numel() == d_x_dense.numel()
                         jacobian_x[:, i] = d_x_dense.contiguous().view(-1)
 
@@ -323,7 +323,7 @@ def gradcheck(
             content = inp._values() if inp.is_sparse else inp
             # TODO: To cover more problematic cases, replace stride = 0 check with
             # "any overlap in memory" once we have a proper function to check it.
-            if content.layout is not torch._mkldnn:  # type: ignore
+            if content.layout is not torch._mkldnn:  # type: ignore  # noqa: SIM102 - Branches carry per-case comments.
                 if not all(st > 0 or sz <= 1 for st, sz in zip(content.stride(), content.size(), strict=False)):
                     raise RuntimeError(
                         "The {}th input has a dimension with stride 0. gradcheck only "
@@ -343,10 +343,10 @@ def gradcheck(
     output = _differentiable_outputs(func_out)
 
     if not output:
-        for i, o in enumerate(func_out):
+        for i, o in enumerate(func_out):  # noqa: B007 - The loop variable is read outside the loop.
 
             def fn(input):
-                return _as_tuple(func(*input))[i]
+                return _as_tuple(func(*input))[i]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
             numerical = get_numerical_jacobian(fn, tupled_inputs, eps=eps)
             for n in numerical:
@@ -359,7 +359,7 @@ def gradcheck(
             continue
 
         def fn(input):
-            return _as_tuple(func(*input))[i]
+            return _as_tuple(func(*input))[i]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
         analytical, reentrant, correct_grad_sizes, correct_grad_types = get_analytical_jacobian(
             tupled_inputs, o, nondet_tol=nondet_tol
@@ -395,8 +395,8 @@ def gradcheck(
         def checkIfNumericalAnalyticAreClose(a, n, j, error_str=""):
             if not torch.allclose(a, n, rtol, atol):
                 return fail_test(
-                    error_str + "Jacobian mismatch for output %d with respect to input %d,\n"
-                    "numerical:%s\nanalytical:%s\n" % (i, j, n, a)
+                    error_str + "Jacobian mismatch for output %d with respect to input %d,\n"  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+                    "numerical:%s\nanalytical:%s\n" % (i, j, n, a)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 )
 
         inp_tensors = iter_tensors(tupled_inputs, True)
@@ -439,7 +439,7 @@ def gradcheck(
 
     # check if the backward multiplies by grad_output
     output = _differentiable_outputs(func(*tupled_inputs))
-    if any([o.requires_grad for o in output]):
+    if any([o.requires_grad for o in output]):  # noqa: C419 - Evaluates every element before testing, as upstream.
         diff_input_list: list[torch.Tensor] = list(iter_tensors(tupled_inputs, True))
         if not diff_input_list:
             raise RuntimeError("no Tensors requiring grad found in input")

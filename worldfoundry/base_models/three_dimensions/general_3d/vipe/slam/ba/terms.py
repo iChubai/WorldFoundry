@@ -90,7 +90,7 @@ class SolverTerm(ABC):
     @abstractmethod
     def group_names(self) -> set[str]: ...
 
-    def update(self, solver):
+    def update(self, solver):  # noqa: B027 - Optional hook with a no-op default.
         pass
         # Default implementation do nothing.
 

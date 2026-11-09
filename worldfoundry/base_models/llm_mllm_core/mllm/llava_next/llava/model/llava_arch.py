@@ -274,7 +274,7 @@ class LlavaMetaForCausalLM(ABC):
         past_key_values,
         labels,
         images,
-        modalities=["image"],
+        modalities=["image"],  # noqa: B006 - Keeps the upstream default object and signature.
         image_sizes=None,
     ):
         vision_tower = self.get_vision_tower()
@@ -341,7 +341,7 @@ class LlavaMetaForCausalLM(ABC):
                             # Grid-wise
                             image_feature = self.add_token_per_grid(image_feature)
                             if getattr(self.config, "add_faster_video", False):
-                                faster_video_feature = self.add_token_per_grid(all_faster_video_features[image_idx])
+                                faster_video_feature = self.add_token_per_grid(all_faster_video_features[image_idx])  # noqa: F821 - Name is undefined in the upstream source.
                                 # Add a token for each frame
                                 concat_slow_fater_token = []
                                 # import pdb; pdb.set_trace()
@@ -532,7 +532,7 @@ class LlavaMetaForCausalLM(ABC):
                 continue
 
             image_token_indices = (
-                [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]
+                [-1] + torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0].tolist() + [cur_input_ids.shape[0]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             )
             cur_input_ids_noim = []
             cur_labels = labels[batch_idx]

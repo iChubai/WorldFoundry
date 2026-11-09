@@ -60,7 +60,7 @@ class ConvBlock_double(nn.Module):
 
 
 class DecoderFeature(nn.Module):
-    def __init__(self, feat_channels, num_ch_dec=[64, 64, 128, 256]):
+    def __init__(self, feat_channels, num_ch_dec=[64, 64, 128, 256]):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__()
         self.num_ch_dec = num_ch_dec
         self.feat_channels = feat_channels
@@ -132,7 +132,7 @@ class UNet(nn.Module):
         for i in range(down_sample_times):
             setattr(
                 self,
-                "conv_%d" % i,
+                "conv_%d" % i,  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 nn.Sequential(
                     basic_block(channels[i], channels[i + 1], stride=2),
                     basic_block(channels[i + 1], channels[i + 1]),
@@ -141,7 +141,7 @@ class UNet(nn.Module):
         for i in range(down_sample_times - 1, -1, -1):
             setattr(
                 self,
-                "deconv_%d" % i,
+                "deconv_%d" % i,  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 nn.Sequential(
                     nn.ConvTranspose2d(
                         channels[i + 1],
@@ -164,10 +164,10 @@ class UNet(nn.Module):
         x = conv0
         features[0] = conv0
         for i in range(self.down_sample_times):
-            x = getattr(self, "conv_%d" % i)(x)
+            x = getattr(self, "conv_%d" % i)(x)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             features[i + 1] = x
         for i in range(self.down_sample_times - 1, -1, -1):
-            x = features[i] + getattr(self, "deconv_%d" % i)(x)
+            x = features[i] + getattr(self, "deconv_%d" % i)(x)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         x = self.prob(x)
         return x
 

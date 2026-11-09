@@ -26,7 +26,7 @@ class DPTHeadTemporal(DPTHead):
         in_channels,
         features=256,
         use_bn=False,
-        out_channels=[256, 512, 1024, 1024],
+        out_channels=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         use_clstoken=False,
         num_frames=32,
         pe="ape",

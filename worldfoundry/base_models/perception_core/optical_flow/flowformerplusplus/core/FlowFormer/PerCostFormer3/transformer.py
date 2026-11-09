@@ -23,7 +23,7 @@ class FlowFormer(nn.Module):
         if cfg.cnet == "twins":
             self.context_encoder = twins_svt_large(pretrained=self.cfg.pretrain, del_layers=cfg.del_layers)
         elif "jh" in cfg.cnet:
-            self.context_encoder = twins_svt_large_jihao(
+            self.context_encoder = twins_svt_large_jihao(  # noqa: F821 - Name is undefined in the upstream source.
                 pretrained=self.cfg.pretrain, del_layers=cfg.del_layers, version=cfg.cnet
             )
         elif cfg.cnet == "basicencoder":
@@ -31,7 +31,7 @@ class FlowFormer(nn.Module):
         elif cfg.cnet == "convnext":
             self.context_encoder = convnext_large(pretrained=self.cfg.pretrain)
         elif cfg.cnet == "nat":
-            self.context_encoder = nat_base(pretrained=self.cfg.pretrain)
+            self.context_encoder = nat_base(pretrained=self.cfg.pretrain)  # noqa: F821 - Name is undefined in the upstream source.
 
         if cfg.pretrain_mode:
             print("[In pretrain mode, freeze context encoder]")

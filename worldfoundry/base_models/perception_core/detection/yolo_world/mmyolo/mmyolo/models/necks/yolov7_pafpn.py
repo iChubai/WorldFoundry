@@ -48,7 +48,7 @@ class YOLOv7PAFPN(BaseYOLONeck):
         self,
         in_channels: list[int],
         out_channels: list[int],
-        block_cfg: dict = {
+        block_cfg: dict = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "ELANBlock",
             "middle_ratio": 0.5,
             "block_ratio": 0.25,
@@ -64,8 +64,8 @@ class YOLOv7PAFPN(BaseYOLONeck):
         use_repconv_outs: bool = True,
         upsample_feats_cat_first: bool = False,
         freeze_all: bool = False,
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.03, "eps": 0.001},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         self.is_tiny_version = is_tiny_version

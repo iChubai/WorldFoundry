@@ -467,10 +467,10 @@ class TinyViT(nn.Module):
         img_size=224,
         in_chans=3,
         num_classes=1000,
-        embed_dims=[96, 192, 384, 768],
-        depths=[2, 2, 6, 2],
-        num_heads=[3, 6, 12, 24],
-        window_sizes=[7, 7, 14, 7],
+        embed_dims=[96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
+        depths=[2, 2, 6, 2],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_heads=[3, 6, 12, 24],  # noqa: B006 - Keeps the upstream default object and signature.
+        window_sizes=[7, 7, 14, 7],  # noqa: B006 - Keeps the upstream default object and signature.
         mlp_ratio=4.0,
         drop_rate=0.0,
         drop_path_rate=0.1,
@@ -573,10 +573,10 @@ class TinyViT(nn.Module):
         i = 0
         for layer in self.layers:
             for block in layer.blocks:
-                block.apply(lambda x: _set_lr_scale(x, lr_scales[i]))
+                block.apply(lambda x: _set_lr_scale(x, lr_scales[i]))  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 i += 1
             if layer.downsample is not None:
-                layer.downsample.apply(lambda x: _set_lr_scale(x, lr_scales[i - 1]))
+                layer.downsample.apply(lambda x: _set_lr_scale(x, lr_scales[i - 1]))  # noqa: B023 - Keeps the upstream late binding of the loop variable.
         assert i == depth
         for m in [self.norm_head, self.head]:
             m.apply(lambda x: _set_lr_scale(x, lr_scales[-1]))
@@ -626,7 +626,9 @@ class TinyViT(nn.Module):
         return x
 
 
-from timm.models import register_model
+from timm.models import (  # noqa: E402, F811 - Follows module-level definitions, as upstream.; Later import provides the binding, as upstream.
+    register_model,
+)
 
 
 @register_model

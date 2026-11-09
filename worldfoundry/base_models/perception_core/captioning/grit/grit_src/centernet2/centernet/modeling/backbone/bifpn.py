@@ -391,7 +391,7 @@ class BiFPN(Backbone):
         levels = [int(math.log2(s)) for s in in_strides]
         self._out_feature_strides = {f"p{int(math.log2(s))}": s for s in in_strides}
         if len(in_features) < num_levels:
-            for l in range(num_levels - len(in_features)):
+            for l in range(num_levels - len(in_features)):  # noqa: E741 - Ambiguous upstream name kept as written.
                 s = l + levels[-1]
                 self._out_feature_strides[f"p{s + 1}"] = 2 ** (s + 1)
         self._out_features = sorted(self._out_feature_strides.keys())

@@ -129,7 +129,7 @@ class SpatialAug:
         meshgrid = torch.meshgrid([torch.Tensor(range(th)), torch.Tensor(range(tw))])[::-1]
         cornergrid = torch.meshgrid([torch.Tensor([0, th - 1]), torch.Tensor([0, tw - 1])])[::-1]
 
-        for i in range(50):
+        for i in range(50):  # noqa: B007 - The loop variable is read outside the loop.
             # im0
             self.to_identity()
             # TODO add mirror
@@ -280,59 +280,59 @@ class PCAAug:
 
     def __init__(
         self,
-        lmult_pow=[0.4, 0, -0.2],
-        lmult_mult=[
+        lmult_pow=[0.4, 0, -0.2],  # noqa: B006 - Keeps the upstream default object and signature.
+        lmult_mult=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.4,
             0,
             0,
         ],
-        lmult_add=[
+        lmult_add=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.03,
             0,
             0,
         ],
-        sat_pow=[
+        sat_pow=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.4,
             0,
             0,
         ],
-        sat_mult=[0.5, 0, -0.3],
-        sat_add=[
+        sat_mult=[0.5, 0, -0.3],  # noqa: B006 - Keeps the upstream default object and signature.
+        sat_add=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.03,
             0,
             0,
         ],
-        col_pow=[
+        col_pow=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.4,
             0,
             0,
         ],
-        col_mult=[
+        col_mult=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.2,
             0,
             0,
         ],
-        col_add=[
+        col_add=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.02,
             0,
             0,
         ],
-        ladd_pow=[
+        ladd_pow=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.4,
             0,
             0,
         ],
-        ladd_mult=[
+        ladd_mult=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.4,
             0,
             0,
         ],
-        ladd_add=[
+        ladd_add=[  # noqa: B006 - Keeps the upstream default object and signature.
             0.04,
             0,
             0,
         ],
-        col_rotate=[
+        col_rotate=[  # noqa: B006 - Keeps the upstream default object and signature.
             1.0,
             0,
             0,
@@ -452,7 +452,7 @@ class PCAAug:
         # eig[:,:,2] = (eig[:,:,2] / s * s1) * smask + eig[:,:,2] * (1-smask)
 
         if max_l > 1e-2:
-            l = np.sqrt(eig[:, :, 0] * eig[:, :, 0] + eig[:, :, 1] * eig[:, :, 1] + eig[:, :, 2] * eig[:, :, 2])
+            l = np.sqrt(eig[:, :, 0] * eig[:, :, 0] + eig[:, :, 1] * eig[:, :, 1] + eig[:, :, 2] * eig[:, :, 2])  # noqa: E741 - Ambiguous upstream name kept as written.
             l1 = np.power(l1, self.lmult_pow)
             l1 = np.clip(l1 + self.lmult_add, 0, np.inf)
             l1 = l1 * self.lmult_mult

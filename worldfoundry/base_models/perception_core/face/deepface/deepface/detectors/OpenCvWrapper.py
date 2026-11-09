@@ -16,7 +16,7 @@ def build_cascade(model_name="haarcascade"):
     opencv_path = get_opencv_path()
     if model_name == "haarcascade":
         face_detector_path = opencv_path + "haarcascade_frontalface_default.xml"
-        if os.path.isfile(face_detector_path) != True:
+        if os.path.isfile(face_detector_path) != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             raise ValueError(
                 "Confirm that opencv is installed on your environment! Expected path ",
                 face_detector_path,
@@ -26,7 +26,7 @@ def build_cascade(model_name="haarcascade"):
 
     elif model_name == "haarcascade_eye":
         eye_detector_path = opencv_path + "haarcascade_eye.xml"
-        if os.path.isfile(eye_detector_path) != True:
+        if os.path.isfile(eye_detector_path) != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             raise ValueError(
                 "Confirm that opencv is installed on your environment! Expected path ",
                 eye_detector_path,
@@ -47,7 +47,7 @@ def detect_face(detector, img, align=True):
     img_region = [0, 0, img.shape[1], img.shape[0]]
 
     faces = []
-    try:
+    try:  # noqa: SIM105 - The handler carries an explanatory comment.
         # faces = detector["face_detector"].detectMultiScale(img, 1.3, 5)
 
         # note that, by design, opencv's haarcascade scores are >0 but not capped at 1

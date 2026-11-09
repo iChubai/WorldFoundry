@@ -184,7 +184,7 @@ def visualize_tracks_on_images(
         cur_tracks_np = cur_tracks.numpy()
         for i in valid_indices:
             x, y = cur_tracks_np[i]
-            pt = (int(round(x)), int(round(y)))
+            pt = (int(round(x)), int(round(y)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
             # track_colors_rgb[i] is (R,G,B). For OpenCV circle, we need BGR
             R, G, B = track_colors_rgb[i]

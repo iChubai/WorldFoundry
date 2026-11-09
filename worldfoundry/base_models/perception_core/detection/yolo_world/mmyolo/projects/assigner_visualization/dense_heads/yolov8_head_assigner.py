@@ -103,7 +103,7 @@ class YOLOv8HeadAssigner(YOLOv8Head):
 
         level_inds = torch.zeros_like(labels)
         img_inds = torch.zeros_like(labels)
-        level_nums = [0] + self.num_level_priors
+        level_nums = [0] + self.num_level_priors  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         for i in range(len(level_nums) - 1):
             level_nums[i + 1] = level_nums[i] + level_nums[i + 1]
             level_inds[level_nums[i] : level_nums[i + 1]] = i

@@ -107,5 +107,5 @@ class DFConv2d(nn.Module):
                 x.shape[-2:], self.padding, self.dilation, self.kernel_size, self.stride, strict=False
             )
         ]
-        output_shape = [x.shape[0], self.conv.weight.shape[0]] + output_shape
+        output_shape = [x.shape[0], self.conv.weight.shape[0]] + output_shape  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return _NewEmptyTensorOp.apply(x, output_shape)

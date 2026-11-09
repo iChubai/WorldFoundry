@@ -421,7 +421,7 @@ class CameraCausalHead(nn.Module):
         return pred_pose_enc_list
 
 
-def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     """
     Modulate the input tensor using scaling and shifting parameters.
     """

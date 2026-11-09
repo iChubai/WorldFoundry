@@ -37,7 +37,7 @@ def sample_video_frames(video_path, num_frames=32):
 
 def get_image_path_from_json(json_data, video_name, input_image_folder):
     video_prefix = video_name.split(".")[0]
-    if video_prefix in json_data.keys():
+    if video_prefix in json_data.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         img_paths = json_data[video_prefix].get("img_paths", [])
         for img_path in img_paths:
             if "/man/" in img_path or "/woman/" in img_path or "/crop_woman/" in img_path or "/crop_man/" in img_path:

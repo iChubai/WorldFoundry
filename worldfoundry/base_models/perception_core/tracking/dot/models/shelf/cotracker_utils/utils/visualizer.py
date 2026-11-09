@@ -25,7 +25,7 @@ def read_video_from_path(path):
         frames = []
         while cap.isOpened():
             ret, frame = cap.read()
-            if ret == True:
+            if ret == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
                 frames.append(np.array(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
             else:
                 break
@@ -222,7 +222,7 @@ class Visualizer:
                 visibile = True
                 if visibility is not None:
                     visibile = visibility[0, t, i]
-                if coord[0] != 0 and coord[1] != 0:
+                if coord[0] != 0 and coord[1] != 0:  # noqa: SIM102 - Statement form kept for readability.
                     if not compensate_for_camera_motion or (compensate_for_camera_motion and segm_mask[i] > 0):
                         cv2.circle(
                             res_video[t],

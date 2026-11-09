@@ -160,7 +160,7 @@ class Blip2T5Instruct(Blip2Base):
         atts_t5 = torch.ones(inputs_t5.size()[:-1], dtype=torch.long).to(image.device)
 
         fs_embeds, fs_atts = None, None
-        if self.few_shot_prob > 0 and "few_shot_samples" in samples.keys():
+        if self.few_shot_prob > 0 and "few_shot_samples" in samples.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             fs_embeds, fs_atts = self.prepare_few_shot_embeds(samples["few_shot_samples"])
 
         with self.maybe_autocast(dtype=torch.bfloat16):
@@ -293,7 +293,7 @@ class Blip2T5Instruct(Blip2Base):
         num_captions=1,
         temperature=1,
     ):
-        prompt = samples["prompt"] if "prompt" in samples.keys() else self.prompt
+        prompt = samples["prompt"] if "prompt" in samples.keys() else self.prompt  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
 
         image = samples["image"]
 
@@ -305,7 +305,7 @@ class Blip2T5Instruct(Blip2Base):
             assert len(prompt) == bs, "The number of prompts must be equal to the batch size."
 
         # For TextCaps
-        if "ocr_tokens" in samples.keys() and "{}" in prompt[0]:
+        if "ocr_tokens" in samples.keys() and "{}" in prompt[0]:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             prompt = [p.format(", ".join(samples["ocr_tokens"][i][:30])) for i, p in enumerate(prompt)]
 
         query_tokens = self.query_tokens.expand(bs, -1, -1)
@@ -448,7 +448,7 @@ class Blip2T5Instruct(Blip2Base):
             samples, num_beams=num_beams, max_length=max_len, min_length=min_len, length_penalty=length_penalty
         )
 
-        if self._apply_lemmatizer or ("apply_lemmatizer" in samples.keys() and samples["apply_lemmatizer"]):
+        if self._apply_lemmatizer or ("apply_lemmatizer" in samples.keys() and samples["apply_lemmatizer"]):  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             output_text = self._lemmatize(output_text)
 
         return output_text
@@ -469,16 +469,16 @@ class Blip2T5Instruct(Blip2Base):
                     "prompt": samples["prompt"],
                 }
 
-                if "text_input" in samples.keys():
+                if "text_input" in samples.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     this_sample["text_input"] = [samples["text_input"][i]]
 
-                if "context" in samples.keys():
+                if "context" in samples.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     this_sample["context"] = [samples["context"][i]]
 
-                if "history" in samples.keys():
+                if "history" in samples.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     this_sample["history"] = [samples["history"][i]]
 
-                if "caption" in samples.keys():
+                if "caption" in samples.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     this_sample["caption"] = [samples["caption"][i]]
 
                 this_result = self._predict_class(this_sample, candidates[i], n_segments)
@@ -522,21 +522,21 @@ class Blip2T5Instruct(Blip2Base):
         else:
             assert len(prompt) == bs, "The number of prompts must be equal to the batch size."
 
-        if "text_input" in samples.keys():
+        if "text_input" in samples.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if type(samples["text_input"][0]) is list:
                 prompt = [prompt[i].format(*samples["text_input"][i]) for i in range(len(prompt))]
             else:
                 prompt = [prompt[i].format(samples["text_input"][i]) for i in range(len(prompt))]
 
         # scienceqa
-        if "context" in samples.keys() and samples["context"] != "":
+        if "context" in samples.keys() and samples["context"] != "":  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             prompt = [f"context: {samples['context'][i]}. {prompt[i]}" for i in range(len(prompt))]
 
         # visual dialog
-        if "history" in samples.keys() and samples["history"][0] != "":
+        if "history" in samples.keys() and samples["history"][0] != "":  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             prompt = [f"dialog history: {samples['history'][i]}\n{prompt[i]}" for i in range(len(prompt))]
 
-        if "caption" in samples.keys() and samples["caption"][0] != "":
+        if "caption" in samples.keys() and samples["caption"][0] != "":  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             prompt = [f'This image has the caption "{samples["caption"][i]}". {prompt[i]}' for i in range(len(prompt))]
 
         query_tokens = self.query_tokens.expand(bs, -1, -1)

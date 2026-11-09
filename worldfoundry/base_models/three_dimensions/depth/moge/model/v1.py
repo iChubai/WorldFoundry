@@ -1,8 +1,9 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import importlib
 import warnings
 from numbers import Number
 from pathlib import Path
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import torch
 import torch.nn as nn
@@ -87,7 +88,7 @@ class Head(nn.Module):
         dim_in: int,
         dim_out: List[int],
         dim_proj: int = 512,
-        dim_upsample: List[int] = [256, 128, 128],
+        dim_upsample: List[int] = [256, 128, 128],  # noqa: B006 - Keeps the upstream default object and signature.
         dim_times_res_block_hidden: int = 1,
         num_res_blocks: int = 1,
         res_block_norm: Literal["group_norm", "layer_norm"] = "group_norm",
@@ -121,7 +122,7 @@ class Head(nn.Module):
                         for _ in range(num_res_blocks)
                     ),
                 )
-                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample, strict=False)
+                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample, strict=False)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ]
         )
 
@@ -231,12 +232,12 @@ class MoGeModel(nn.Module):
         encoder: str = "dinov2_vitb14",
         intermediate_layers: Union[int, List[int]] = 4,
         dim_proj: int = 512,
-        dim_upsample: List[int] = [256, 128, 128],
+        dim_upsample: List[int] = [256, 128, 128],  # noqa: B006 - Keeps the upstream default object and signature.
         dim_times_res_block_hidden: int = 1,
         num_res_blocks: int = 1,
         remap_output: Literal[False, True, "linear", "sinh", "exp", "sinh_exp"] = "linear",
         res_block_norm: Literal["group_norm", "layer_norm"] = "group_norm",
-        num_tokens_range: Tuple[Number, Number] = [1200, 2500],
+        num_tokens_range: Tuple[Number, Number] = [1200, 2500],  # noqa: B006 - Keeps the upstream default object and signature.
         last_res_blocks: int = 0,
         last_conv_channels: int = 32,
         last_conv_size: int = 1,

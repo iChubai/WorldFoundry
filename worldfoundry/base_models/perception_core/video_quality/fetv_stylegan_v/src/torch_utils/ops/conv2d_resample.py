@@ -39,7 +39,7 @@ def _conv2d_wrapper(x, w, stride=1, padding=0, groups=1, transpose=False, flip_w
 
     # Workaround performance pitfall in cuDNN 8.0.5, triggered when using
     # 1x1 kernel + memory_format=channels_last + less than 64 channels.
-    if kw == 1 and kh == 1 and stride == 1 and padding in [0, [0, 0], (0, 0)] and not transpose:
+    if kw == 1 and kh == 1 and stride == 1 and padding in [0, [0, 0], (0, 0)] and not transpose:  # noqa: SIM102 - Statement form kept for readability.
         if x.stride()[1] == 1 and min(out_channels, in_channels_per_group) < 64:
             if out_channels <= 4 and groups == 1:
                 in_shape = x.shape

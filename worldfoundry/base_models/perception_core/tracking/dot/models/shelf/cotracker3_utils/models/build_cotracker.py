@@ -23,7 +23,7 @@ def build_cotracker(
         raise ValueError(f"Unknown model name {model_name}")
 
 
-def build_cotracker(checkpoint=None, offline=True, window_len=16, v2=False):
+def build_cotracker(checkpoint=None, offline=True, window_len=16, v2=False):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     if offline:
         cotracker = CoTrackerThreeOffline(stride=4, corr_radius=3, window_len=window_len)
     else:

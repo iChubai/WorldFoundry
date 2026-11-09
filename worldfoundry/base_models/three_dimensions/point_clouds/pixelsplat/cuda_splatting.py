@@ -12,15 +12,15 @@ add_runtime_extension_overlay(
     environment_variable="WORLDFOUNDRY_DIFF_GAUSSIAN_RASTERIZATION_EXTENSION_DIR",
 )
 
-import contextlib
+import contextlib  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from diff_gaussian_rasterization import (
+from diff_gaussian_rasterization import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     GaussianRasterizationSettings,
     GaussianRasterizer,
 )
-from einops import einsum, rearrange, repeat
+from einops import einsum, rearrange, repeat  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from .projection import get_fov, homogenize_points
+from .projection import get_fov, homogenize_points  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 
 def get_projection_matrix(
@@ -247,7 +247,7 @@ def render_depth_cuda(
     if mode == "disparity":
         fake_color = 1 / fake_color
     elif mode == "relative_disparity":
-        fake_color = depth_to_relative_disparity(fake_color, near[:, None], far[:, None])
+        fake_color = depth_to_relative_disparity(fake_color, near[:, None], far[:, None])  # noqa: F821 - This port omits the relative-disparity helper.
     elif mode == "log":
         fake_color = fake_color.minimum(near[:, None]).maximum(far[:, None]).log()
 

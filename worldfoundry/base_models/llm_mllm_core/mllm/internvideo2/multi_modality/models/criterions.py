@@ -213,7 +213,7 @@ class VTC_VTM_Loss(nn.Module):
             mask.fill_diagonal_(1)
         return mask  # `1` mark valid/matched location
 
-    @lru_cache(maxsize=16)
+    @lru_cache(maxsize=16)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def get_gather_args(self):
         """obtain the args for all_gather
         Returns: dict.
@@ -443,7 +443,7 @@ class UTA_Loss(nn.Module):
 class new_UTA_Loss(nn.Module):
     """mask align clip loss."""
 
-    def __init__(self, distill_final_features=True, clip_loss_ratio=[1.0, 1.0]):
+    def __init__(self, distill_final_features=True, clip_loss_ratio=[1.0, 1.0]):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__()
         self.distill_final_features = distill_final_features
         self.clip_loss_ratio = clip_loss_ratio

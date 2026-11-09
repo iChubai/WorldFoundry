@@ -45,16 +45,16 @@ class PPYOLOECSPPAFPN(BaseYOLONeck):
 
     def __init__(
         self,
-        in_channels: list[int] = [256, 512, 1024],
-        out_channels: list[int] = [256, 512, 1024],
+        in_channels: list[int] = [256, 512, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
+        out_channels: list[int] = [256, 512, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         deepen_factor: float = 1.0,
         widen_factor: float = 1.0,
         freeze_all: bool = False,
         num_csplayer: int = 1,
         num_blocks_per_layer: int = 3,
-        block_cfg: ConfigType = {"type": "PPYOLOEBasicBlock", "shortcut": False, "use_alpha": False},
-        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        block_cfg: ConfigType = {"type": "PPYOLOEBasicBlock", "shortcut": False, "use_alpha": False},  # noqa: B006 - Keeps the upstream default object and signature.
+        norm_cfg: ConfigType = {"type": "BN", "momentum": 0.1, "eps": 1e-5},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         drop_block_cfg: ConfigType = None,
         init_cfg: OptMultiConfig = None,
         use_spp: bool = False,

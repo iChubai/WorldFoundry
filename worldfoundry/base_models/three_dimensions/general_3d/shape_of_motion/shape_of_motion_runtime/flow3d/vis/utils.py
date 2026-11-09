@@ -124,8 +124,8 @@ def draw_tracks_2d(
             color = colorsys.hsv_to_rgb(hsv[0], hsv[1] * color_alpha, hsv[2])
             pt1 = tracks_2d_np[j, i]
             pt2 = tracks_2d_np[j, i + 1]
-            p1 = (int(round(pt1[0])), int(round(pt1[1])))
-            p2 = (int(round(pt2[0])), int(round(pt2[1])))
+            p1 = (int(round(pt1[0])), int(round(pt1[1])))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+            p2 = (int(round(pt2[0])), int(round(pt2[1])))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             img_curr = cv2.line(
                 img_curr,
                 p1,
@@ -139,7 +139,7 @@ def draw_tracks_2d(
     for j in range(num_tracks):
         color = tuple(np.array(cmap(j / max(1, float(num_tracks - 1)))[:3]) * 255)
         pt = tracks_2d_np[j, -1]
-        pt = (int(round(pt[0])), int(round(pt[1])))
+        pt = (int(round(pt[0])), int(round(pt[1])))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         canvas = cv2.circle(
             canvas,
             pt,
@@ -237,7 +237,7 @@ def draw_tracks_2d_th(
     cmap_name: str = "gist_rainbow",
 ):
     cmap = colormaps.get_cmap(cmap_name)
-    CTX = dr.RasterizeCudaContext()
+    CTX = dr.RasterizeCudaContext()  # noqa: F821 - Name is undefined in the upstream source.
 
     W, H = img.shape[1], img.shape[0]
     if W % 8 != 0 or H % 8 != 0:
@@ -308,17 +308,17 @@ def draw_tracks_2d_th(
 
     rast, _ = cast(
         tuple,
-        dr.rasterize(CTX, verts_clip[None], faces_int32, (img.shape[0], img.shape[1])),
+        dr.rasterize(CTX, verts_clip[None], faces_int32, (img.shape[0], img.shape[1])),  # noqa: F821 - Name is undefined in the upstream source.
     )
     rgba = cast(
         torch.Tensor,
-        dr.interpolate(
+        dr.interpolate(  # noqa: F821 - Name is undefined in the upstream source.
             torch.cat([vert_colors, vert_alphas], dim=-1).contiguous(),
             rast,
             faces_int32,
         ),
     )[0]
-    rgba = cast(torch.Tensor, dr.antialias(rgba, rast, verts_clip, faces_int32))[0].clamp(0, 1)
+    rgba = cast(torch.Tensor, dr.antialias(rgba, rast, verts_clip, faces_int32))[0].clamp(0, 1)  # noqa: F821 - Name is undefined in the upstream source.
     # Compose.
     color = rgba[..., :-1] * rgba[..., -1:] + (1.0 - rgba[..., -1:]) * img
 

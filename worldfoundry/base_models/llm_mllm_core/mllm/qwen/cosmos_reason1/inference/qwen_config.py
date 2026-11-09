@@ -47,16 +47,16 @@ class QwenVisionConfig:
     finetuning_task: str | None = None
     forced_bos_token_id: int | None = None
     forced_eos_token_id: int | None = None
-    fullatt_block_indexes: list[int] | None = [7, 15, 23, 31]
+    fullatt_block_indexes: list[int] | None = [7, 15, 23, 31]  # noqa: RUF008 - Upstream mutable default kept as written.
     hidden_act: str = "silu"
     hidden_size: int = 1280
-    id2label: dict[int, str] = {0: "LABEL_0", 1: "LABEL_1"}
+    id2label: dict[int, str] = {0: "LABEL_0", 1: "LABEL_1"}  # noqa: RUF008 - Upstream mutable default kept as written.
     in_channels: int = 3
     in_chans: int = 3
     intermediate_size: int = 3420
     is_decoder: bool = False
     is_encoder_decoder: bool = False
-    label2id: dict[str, int] = {"LABEL_0": 0, "LABEL_1": 1}
+    label2id: dict[str, int] = {"LABEL_0": 0, "LABEL_1": 1}  # noqa: RUF008 - Upstream mutable default kept as written.
     length_penalty: float = 1.0
     max_length: int = 20
     min_length: int = 0
@@ -109,7 +109,7 @@ class QwenModelConfig(FSDP2ModelConfig):
     name_or_path: str = "Qwen/Qwen2.5-VL-3B-Instruct"
 
     add_cross_attention: bool = False
-    architectures: list[str] = ["Qwen2_5_VLModel"]
+    architectures: list[str] = ["Qwen2_5_VLModel"]  # noqa: RUF008 - Upstream mutable default kept as written.
     attention_dropout: float = 0.0
     bad_words_ids: list[list[int]] | None = None
     begin_suppress_tokens: list[int] | None = None
@@ -128,13 +128,13 @@ class QwenModelConfig(FSDP2ModelConfig):
     forced_eos_token_id: int | None = None
     hidden_act: str = "silu"
     hidden_size: int = 2048
-    id2label: dict[int, str] = {0: "LABEL_0", 1: "LABEL_1"}
+    id2label: dict[int, str] = {0: "LABEL_0", 1: "LABEL_1"}  # noqa: RUF008 - Upstream mutable default kept as written.
     image_token_id: int = 151655
     initializer_range: float = 0.02
     intermediate_size: int | None = 11008
     is_decoder: bool = False
     is_encoder_decoder: bool = False
-    label2id: dict[str, int] = {"LABEL_0": 0, "LABEL_1": 1}
+    label2id: dict[str, int] = {"LABEL_0": 0, "LABEL_1": 1}  # noqa: RUF008 - Upstream mutable default kept as written.
     length_penalty: float = 1.0
     max_length: int = 20
     max_position_embeddings: int = 128000
@@ -160,7 +160,7 @@ class QwenModelConfig(FSDP2ModelConfig):
     return_dict: bool = True
     return_dict_in_generate: bool = False
     rms_norm_eps: float = 1e-6
-    rope_scaling: dict[str, str | list[int]] = {
+    rope_scaling: dict[str, str | list[int]] = {  # noqa: RUF008 - Upstream mutable default kept as written.
         "mrope_section": [16, 24, 24],
         "rope_type": "default",
         "type": "default",
@@ -189,7 +189,7 @@ class QwenModelConfig(FSDP2ModelConfig):
     vision_end_token_id: int = 151653
     vision_token_id: int = 151654
     vocab_size: int = 151936
-    vision_config: QwenVisionConfig = L(QwenVisionConfig)()
+    vision_config: QwenVisionConfig = L(QwenVisionConfig)()  # noqa: RUF009 - Default evaluated once at definition, as upstream.
 
     def __getitem__(self, item):
         return getattr(self, item)

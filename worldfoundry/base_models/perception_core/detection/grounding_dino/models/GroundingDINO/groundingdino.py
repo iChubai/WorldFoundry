@@ -141,7 +141,7 @@ class GroundingDINO(nn.Module):
 
         self.backbone = backbone
         self.aux_loss = aux_loss
-        self.box_pred_damping = box_pred_damping = None
+        self.box_pred_damping = box_pred_damping = None  # noqa: F841 - Upstream assignment kept.
 
         self.iter_update = iter_update
         assert iter_update, "Why not iter_update?"
@@ -278,14 +278,14 @@ class GroundingDINO(nn.Module):
 
         srcs = []
         masks = []
-        for l, feat in enumerate(self.features):
+        for l, feat in enumerate(self.features):  # noqa: E741 - Ambiguous upstream name kept as written.
             src, mask = feat.decompose()
             srcs.append(self.input_proj[l](src))
             masks.append(mask)
             assert mask is not None
         if self.num_feature_levels > len(srcs):
             _len_srcs = len(srcs)
-            for l in range(_len_srcs, self.num_feature_levels):
+            for l in range(_len_srcs, self.num_feature_levels):  # noqa: E741 - Ambiguous upstream name kept as written.
                 src = self.input_proj[l](self.features[-1].tensors) if l == _len_srcs else self.input_proj[l](srcs[-1])
                 m = samples.mask
                 mask = F.interpolate(m[None].float(), size=src.shape[-2:]).to(torch.bool)[0]
@@ -294,7 +294,7 @@ class GroundingDINO(nn.Module):
                 masks.append(mask)
                 self.poss.append(pos_l)
 
-        input_query_bbox = input_query_label = attn_mask = dn_meta = None
+        input_query_bbox = input_query_label = attn_mask = dn_meta = None  # noqa: F841 - Upstream assignment kept.
         hs, reference, hs_enc, ref_enc, init_box_proposal = self.transformer(
             srcs, masks, input_query_bbox, self.poss, input_query_label, attn_mask, text_dict
         )

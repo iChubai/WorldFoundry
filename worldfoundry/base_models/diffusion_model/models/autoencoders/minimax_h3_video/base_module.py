@@ -244,7 +244,7 @@ class TransformerBlock(nn.Module):
         self,
         hidden_states: torch.FloatTensor,
         rotary_pos_emb: torch.FloatTensor | None = None,
-        pack_info: dict = {},
+        pack_info: dict = {},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         norm_hidden_states = self.norm1(_vit_norm_input(self.norm1, hidden_states)).to(hidden_states.dtype)
         attn_output = self.attn(norm_hidden_states, rotary_pos_emb, pack_info)

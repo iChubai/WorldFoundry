@@ -129,7 +129,7 @@ def parse_memrope_cfg(raw):
 
     def _get(d, key, default):
         try:
-            val = d[key] if key in d else default
+            val = d[key] if key in d else default  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         except TypeError:
             val = getattr(d, key, default)
         return default if val is None else val
@@ -369,7 +369,7 @@ class CausalWanSelfAttention(nn.Module):
         Args mirror the AR branch; returns x of shape [B, S, n_heads, head_dim].
         """
         b, s, n, d = q.shape
-        f_full, h_full, w = (int(grid_sizes[0][0].item()), int(grid_sizes[0][1].item()), int(grid_sizes[0][2].item()))
+        f_full, h_full, w = (int(grid_sizes[0][0].item()), int(grid_sizes[0][1].item()), int(grid_sizes[0][2].item()))  # noqa: F841 - Upstream assignment kept.
         fs_full = h_full * w  # tokens per full (gen+cond) frame, e.g. 3120
         fs = fs_full // 2  # tokens per half-frame, e.g. 1560
         sh = h_full // 2  # single-half height patch count

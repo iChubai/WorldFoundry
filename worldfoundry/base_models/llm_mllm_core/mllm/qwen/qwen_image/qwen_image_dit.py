@@ -471,7 +471,7 @@ class QwenImageDiT(torch.nn.Module):
         img_shapes,
     ):
         # prompt_emb
-        all_prompt_emb = entity_prompt_emb + [prompt_emb]
+        all_prompt_emb = entity_prompt_emb + [prompt_emb]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         all_prompt_emb = [self.txt_in(self.txt_norm(local_prompt_emb)) for local_prompt_emb in all_prompt_emb]
         all_prompt_emb = torch.cat(all_prompt_emb, dim=1)
 
@@ -482,7 +482,7 @@ class QwenImageDiT(torch.nn.Module):
         entity_rotary_emb = [
             self.pos_embed(img_shapes, entity_seq_len, device=latents.device)[1] for entity_seq_len in entity_seq_lens
         ]
-        txt_rotary_emb = torch.cat(entity_rotary_emb + [image_rotary_emb[1]], dim=0)
+        txt_rotary_emb = torch.cat(entity_rotary_emb + [image_rotary_emb[1]], dim=0)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         image_rotary_emb = (image_rotary_emb[0], txt_rotary_emb)
 
         # attention_mask
@@ -491,7 +491,7 @@ class QwenImageDiT(torch.nn.Module):
         entity_masks = entity_masks.repeat(1, 1, repeat_dim, 1, 1)
         entity_masks = [entity_masks[:, i, None].squeeze(1) for i in range(max_masks)]
         global_mask = torch.ones_like(entity_masks[0]).to(device=latents.device, dtype=latents.dtype)
-        entity_masks = entity_masks + [global_mask]
+        entity_masks = entity_masks + [global_mask]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         N = len(entity_masks)
         batch_size = entity_masks[0].shape[0]

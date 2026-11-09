@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 import json
 from dataclasses import dataclass
 from functools import cached_property

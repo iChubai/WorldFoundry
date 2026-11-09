@@ -60,7 +60,7 @@ def show_bbox_num(cfg, out_dir, fig_set, class_name, class_num):
 
     # Draw titles, labels and so on
     for x, y in enumerate(class_num):
-        plt.text(x, y, "%s" % y, ha="center", fontsize=fig_set["fontsize"] + 3)
+        plt.text(x, y, "%s" % y, ha="center", fontsize=fig_set["fontsize"] + 3)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     plt.xticks(rotation=fig_set["xticks_angle"])
     plt.xlabel("Category Name")
     plt.ylabel("Num of instances")
@@ -100,21 +100,21 @@ def show_bbox_wh(out_dir, fig_set, class_bbox_w, class_bbox_h, class_name):
         plt.text(
             positions_w[i],
             median(class_bbox_w[i]),
-            f"{'%.2f' % median(class_bbox_w[i])}",
+            f"{'%.2f' % median(class_bbox_w[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
         plt.text(
             positions_w[i],
             max(class_bbox_w[i]),
-            f"{'%.2f' % max(class_bbox_w[i])}",
+            f"{'%.2f' % max(class_bbox_w[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
         plt.text(
             positions_w[i],
             min(class_bbox_w[i]),
-            f"{'%.2f' % min(class_bbox_w[i])}",
+            f"{'%.2f' % min(class_bbox_w[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
@@ -124,21 +124,21 @@ def show_bbox_wh(out_dir, fig_set, class_bbox_w, class_bbox_h, class_name):
         plt.text(
             positions_h[i],
             median(class_bbox_h[i]),
-            f"{'%.2f' % median(class_bbox_h[i])}",
+            f"{'%.2f' % median(class_bbox_h[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
         plt.text(
             positions_h[i],
             max(class_bbox_h[i]),
-            f"{'%.2f' % max(class_bbox_h[i])}",
+            f"{'%.2f' % max(class_bbox_h[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
         plt.text(
             positions_h[i],
             min(class_bbox_h[i]),
-            f"{'%.2f' % min(class_bbox_h[i])}",
+            f"{'%.2f' % min(class_bbox_h[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
@@ -184,21 +184,21 @@ def show_bbox_wh_ratio(out_dir, fig_set, class_name, class_bbox_ratio):
         plt.text(
             positions[i],
             median(class_bbox_ratio[i]),
-            f"{'%.2f' % median(class_bbox_ratio[i])}",
+            f"{'%.2f' % median(class_bbox_ratio[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
         plt.text(
             positions[i],
             max(class_bbox_ratio[i]),
-            f"{'%.2f' % max(class_bbox_ratio[i])}",
+            f"{'%.2f' % max(class_bbox_ratio[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
         plt.text(
             positions[i],
             min(class_bbox_ratio[i]),
-            f"{'%.2f' % min(class_bbox_ratio[i])}",
+            f"{'%.2f' % min(class_bbox_ratio[i])}",  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             ha="center",
             fontsize=fig_set["fontsize"],
         )
@@ -231,7 +231,7 @@ def show_bbox_area(out_dir, fig_set, area_rule, class_name, bbox_area_num):
     for i in range(len(area_rule) - 1):
         area_num = [bbox_area_num[idx][i] for idx in range(len(class_name))]
         plt.bar(positions + width * i, area_num, width, label=labels[i], color=colors[i])
-        for idx, (x, y) in enumerate(zip(positions.tolist(), area_num, strict=False)):
+        for idx, (x, y) in enumerate(zip(positions.tolist(), area_num, strict=False)):  # noqa: B007 - The loop variable is read outside the loop.
             plt.text(x + width * i, y, y, ha="center", fontsize=fig_set["fontsize"] - 1)
 
     # Draw titles, labels and so on
@@ -271,7 +271,7 @@ def show_class_list(classes, class_num):
         col_num = int(len(classes) / 25) + 1
         class_nums = class_num.tolist()
         class_name_list = list(classes)
-        for i in range((col_num * 25) - len(classes)):
+        for i in range((col_num * 25) - len(classes)):  # noqa: B007 - The loop variable is read outside the loop.
             class_name_list.append("")
             class_nums.append("")
         for i in range(0, len(class_name_list), 25):
@@ -368,7 +368,7 @@ def main():
     if args.area_rule is None:
         area_rule = [0, 32, 96, 1e5]
     elif args.area_rule and len(args.area_rule) <= 3:
-        area_rules = [0] + args.area_rule + [1e5]
+        area_rules = [0] + args.area_rule + [1e5]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         area_rule = sorted(area_rules)
     else:
         raise RuntimeError(f'Expected the "{args.area_rule}" to be e.g. 30 60 120, and no more than three numbers.')
@@ -399,7 +399,7 @@ def main():
     # Get the width, height and area of bbox corresponding to each category
     print("\nRead bbox information in each class:")
     progress_bar_classes = ProgressBar(len(classes))
-    for idx, (classes, classes_idx) in enumerate(zip(classes, classes_idx, strict=False)):
+    for idx, (classes, classes_idx) in enumerate(zip(classes, classes_idx, strict=False)):  # noqa: B020, B007 - Upstream loop rebinding kept.; The loop variable is read outside the loop.
         bbox = np.array(class_bbox[idx])
         bbox_area_nums = np.zeros((len(area_rule) - 1,), dtype=np.int64)
         if len(bbox) > 0:

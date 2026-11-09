@@ -26,7 +26,7 @@ def get_pil_image(raw_image_data) -> Image.Image:
         raise ValueError("Unsupported image data format")
 
 
-import math
+import math  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class OtterHD(BaseModel):

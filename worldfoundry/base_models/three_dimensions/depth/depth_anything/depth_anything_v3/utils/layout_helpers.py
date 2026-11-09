@@ -30,7 +30,7 @@ from torch import Tensor
 
 Alignment = Literal["start", "center", "end"]
 Axis = Literal["horizontal", "vertical"]
-Color = Union[
+Color = Union[  # noqa: UP007 - Runtime type alias kept as typing.Union.
     int,
     float,
     Iterable[int],

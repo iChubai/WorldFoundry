@@ -259,7 +259,7 @@ class DinoVisionTransformer(nn.Module):
                 pos_nodiff = torch.cat([pos_special, pos_nodiff], dim=2)
         return pos, pos_nodiff
 
-    def _get_intermediate_layers_not_chunked(self, x, n=1, export_feat_layers=[], **kwargs):
+    def _get_intermediate_layers_not_chunked(self, x, n=1, export_feat_layers=[], **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
         B, S, _, H, W = x.shape
         x = self.prepare_tokens_with_masks(x)
         output, total_block_len, aux_output = [], len(self.blocks), []
@@ -320,7 +320,7 @@ class DinoVisionTransformer(nn.Module):
         self,
         x: torch.Tensor,
         n: int | Sequence = 1,  # Layers or n last layers to take
-        export_feat_layers: list[int] = [],
+        export_feat_layers: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
         outputs, aux_outputs = self._get_intermediate_layers_not_chunked(

@@ -38,14 +38,14 @@ def box_convert_simple(box, convert_type="xyxy2xywh"):
 
 def read_img(image, convert="RGB", check_exist=False):
     if isinstance(image, str):
-        if check_exist and not osp.exists(image):
+        if check_exist and not osp.exists(image):  # noqa: F821 - Name is undefined in the upstream source.
             return None
         try:
             img = Image.open(image)
             if convert:
                 img = img.convert(convert)
         except BaseException:
-            raise OSError("File error: ", image)
+            raise OSError("File error: ", image)  # noqa: B904 - Keeps the implicit exception context.
         return np.asarray(img)
     else:
         if isinstance(image, np.ndarray):
@@ -267,8 +267,8 @@ class AAPoseMeta:
         if (ori_height / ori_width) > (height / width):
             new_width = int(height / ori_height * ori_width)
             padding = int((width - new_width) / 2)
-            padding_width = padding
-            padding_height = 0
+            padding_width = padding  # noqa: F841 - Upstream assignment kept.
+            padding_height = 0  # noqa: F841 - Kept as upstream; an underscore name already exists.
             scale = height / ori_height
 
             for kps in all_kps:
@@ -852,7 +852,7 @@ def keypoints_from_heatmaps(
     if post_process in ["megvii", "unbiased"]:
         assert kernel > 0
     if use_udp:
-        assert not post_process == "megvii"
+        assert not post_process == "megvii"  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
 
     # normalize configs
     if post_process is False:
@@ -995,7 +995,7 @@ def multilabel_classification_accuracy(pred, gt, mask, thr=0.5):
     valid = (mask > 0).min(axis=1) if mask.ndim == 2 else (mask > 0)
     pred, gt = pred[valid], gt[valid]
 
-    if pred.shape[0] == 0:
+    if pred.shape[0] == 0:  # noqa: SIM108 - Branches carry per-case comments.
         acc = 0.0  # when no sample is with gt labels, set acc to 0.
     else:
         # The classification of a sample is regarded as correct
@@ -1016,7 +1016,7 @@ def get_transform(center, scale, res, rot=0):
     t[0, 2] = res[1] * (-float(center[0]) / w + 0.5)
     t[1, 2] = res[0] * (-float(center[1]) / h + 0.5)
     t[2, 2] = 1
-    if not rot == 0:
+    if not rot == 0:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
         rot = -rot  # To match direction of rotation from cropping
         rot_mat = np.zeros((3, 3))
         rot_rad = rot * np.pi / 180

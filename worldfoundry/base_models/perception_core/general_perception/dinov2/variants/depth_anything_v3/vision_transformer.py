@@ -266,7 +266,7 @@ class DinoVisionTransformer(nn.Module):
                 pos_nodiff = torch.cat([pos_special, pos_nodiff], dim=2)
         return pos, pos_nodiff
 
-    def _get_intermediate_layers_not_chunked(self, x, n=1, export_feat_layers=[], **kwargs):
+    def _get_intermediate_layers_not_chunked(self, x, n=1, export_feat_layers=[], **kwargs):  # noqa: B006 - Keeps the upstream default object and signature.
         B, S, _, H, W = x.shape
         x = self.prepare_tokens_with_masks(x)
         output, total_block_len, aux_output = [], len(self.blocks), []
@@ -292,7 +292,7 @@ class DinoVisionTransformer(nn.Module):
                 b_idx = select_reference_view(x, strategy=strategy)
                 # Reorder views to place reference view first
                 x = reorder_by_reference(x, b_idx)
-                local_x = reorder_by_reference(local_x, b_idx)
+                local_x = reorder_by_reference(local_x, b_idx)  # noqa: F821 - Earlier local-attention blocks bind local_x for the supported alt_start values.
 
             if self.alt_start != -1 and i == self.alt_start:
                 if kwargs.get("cam_token") is not None:
@@ -345,7 +345,7 @@ class DinoVisionTransformer(nn.Module):
         self,
         x: torch.Tensor,
         n: int | Sequence = 1,  # Layers or n last layers to take
-        export_feat_layers: list[int] = [],
+        export_feat_layers: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
         outputs, aux_outputs = self._get_intermediate_layers_not_chunked(

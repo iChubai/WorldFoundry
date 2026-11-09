@@ -391,7 +391,7 @@ class AlbefVQA(AlbefBase, MomentumDistilationMixin):
         else:
             raise RuntimeError("checkpoint url or path is invalid")
 
-        state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint
+        state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
         # reshape positional embedding to accomodate for image resolution change
         pos_embed_reshaped = interpolate_pos_embed(state_dict["visual_encoder.pos_embed"], self.visual_encoder)
@@ -425,12 +425,12 @@ class AlbefVQA(AlbefBase, MomentumDistilationMixin):
 
                 del state_dict[key]
 
-        for key in self.state_dict().keys():
-            if key in state_dict.keys() and state_dict[key].shape != self.state_dict()[key].shape:
+        for key in self.state_dict().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+            if key in state_dict.keys() and state_dict[key].shape != self.state_dict()[key].shape:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 del state_dict[key]
 
         msg = self.load_state_dict(state_dict, strict=False)
-        logging.info("load checkpoint from %s" % url_or_filename)
+        logging.info("load checkpoint from %s" % url_or_filename)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         logging.info(f"missing keys: {msg.missing_keys}")
 
         return msg

@@ -74,7 +74,7 @@ def scaled_multihead_dot_product_attention(
                 stacklevel=1,
             )
         attn_weight = attn_weight.masked_fill(~key_padding_mask.view((b, 1, 1, s_k)), min_val)
-    if is_causal and (not q.size(2) == 1):
+    if is_causal and (not q.size(2) == 1):  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
         s = max(s_q, s_k)
         causal_mask = attn_weight.new_ones(s, s, dtype=torch.float16)
         causal_mask = causal_mask.tril()
@@ -92,7 +92,7 @@ def scaled_multihead_dot_product_attention(
     return (out, None, past_key_value)
 
 
-def check_valid_inputs(*tensors, valid_dtypes=[torch.float16, torch.bfloat16]):
+def check_valid_inputs(*tensors, valid_dtypes=[torch.float16, torch.bfloat16]):  # noqa: B006 - Keeps the upstream default object and signature.
     for tensor in tensors:
         if tensor.dtype not in valid_dtypes:
             raise TypeError(f"tensor.dtype={tensor.dtype!r} must be in valid_dtypes={valid_dtypes!r}.")
@@ -118,7 +118,7 @@ def flash_attn_fn(
     try:
         from flash_attn import bert_padding, flash_attn_interface
     except BaseException:
-        raise RuntimeError("Please install flash-attn==1.0.3.post0")
+        raise RuntimeError("Please install flash-attn==1.0.3.post0")  # noqa: B904 - Keeps the implicit exception context.
     check_valid_inputs(query, key, value)
     if past_key_value is not None:
         if len(past_key_value) != 0:
@@ -189,7 +189,7 @@ def triton_flash_attn_fn(
             except BaseException:
                 _installed = False
         if not _installed:
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: B904 - Keeps the implicit exception context.
                 "Requirements for `attn_impl: triton` are not installed. Use a runtime image with the "
                 "compatible Triton/flash-attn packages preinstalled, or set "
                 "model.attn_config.attn_impl=torch."

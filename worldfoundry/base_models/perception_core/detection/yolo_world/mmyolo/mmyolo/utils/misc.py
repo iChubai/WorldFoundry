@@ -100,7 +100,7 @@ def show_data_classes(data_classes):
     elif len(data_classes) % 25 != 0 and len(data_classes) > 25:
         col_num = int(len(data_classes) / 25) + 1
         data_name_list = list(data_classes)
-        for i in range((col_num * 25) - len(data_classes)):
+        for i in range((col_num * 25) - len(data_classes)):  # noqa: B007 - The loop variable is read outside the loop.
             data_name_list.append("")
         for i in range(0, len(data_name_list), 25):
             data_classes_info.add_column("Class name", data_name_list[i : i + 25])
@@ -118,7 +118,7 @@ def is_metainfo_lower(cfg):
             dataloader_cfg = dataloader_cfg["dataset"]
         if "metainfo" in dataloader_cfg:
             all_keys = dataloader_cfg["metainfo"].keys()
-            all_is_lower = all([str(k).islower() for k in all_keys])
+            all_is_lower = all([str(k).islower() for k in all_keys])  # noqa: C419 - Evaluates every element before testing, as upstream.
             assert all_is_lower, (
                 f"The keys in dataset metainfo must be all lowercase, but got {all_keys}. "
                 f"Please refer to https://github.com/open-mmlab/mmyolo/blob/e62c8c4593/configs/yolov5/yolov5_s-v61_syncbn_fast_1xb4-300e_balloon.py#L8"

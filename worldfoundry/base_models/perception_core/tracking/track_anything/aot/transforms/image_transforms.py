@@ -89,7 +89,7 @@ class RandomVerticalFlip:
 class GaussianBlur:
     """Gaussian blur augmentation from SimCLR: https://arxiv.org/abs/2002.05709"""
 
-    def __init__(self, sigma=[0.1, 2.0]):
+    def __init__(self, sigma=[0.1, 2.0]):  # noqa: B006 - Keeps the upstream default object and signature.
         self.sigma = sigma
 
     def __call__(self, x):
@@ -395,8 +395,8 @@ class RandomResizedCrop:
             log_ratio = (math.log(ratio[0]), math.log(ratio[1]))
             aspect_ratio = math.exp(random.uniform(*log_ratio))
 
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
+            w = int(round(math.sqrt(target_area * aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+            h = int(round(math.sqrt(target_area / aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
             if 0 < w <= width and 0 < h <= height:
                 i = random.randint(0, height - h)
@@ -407,10 +407,10 @@ class RandomResizedCrop:
         in_ratio = float(width) / float(height)
         if in_ratio < min(ratio):
             w = width
-            h = int(round(w / min(ratio)))
+            h = int(round(w / min(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         elif in_ratio > max(ratio):
             h = height
-            w = int(round(h * max(ratio)))
+            w = int(round(h * max(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         else:  # whole image
             w = width
             h = height

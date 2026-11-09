@@ -25,7 +25,7 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt.networks.b
 
 
 class Model(nn.Module):
-    def __init__(self, corr_radius=3, corr_lvls=4, num_flows=5, channels=[84, 96, 112, 128], skip_channels=84):
+    def __init__(self, corr_radius=3, corr_lvls=4, num_flows=5, channels=[84, 96, 112, 128], skip_channels=84):  # noqa: B006 - Keeps the upstream default object and signature.
         super().__init__()
         self.radius = corr_radius
         self.corr_levels = corr_lvls

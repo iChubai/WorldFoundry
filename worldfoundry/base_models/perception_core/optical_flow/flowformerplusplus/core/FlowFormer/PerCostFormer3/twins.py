@@ -963,7 +963,7 @@ class PosConv(nn.Module):
         return x
 
     def no_weight_decay(self):
-        return ["proj.%d.weight" % i for i in range(4)]
+        return ["proj.%d.weight" % i for i in range(4)]  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 class PatchEmbed(nn.Module):
@@ -1011,7 +1011,7 @@ class Twins(nn.Module):
         drop_rate=0.0,
         attn_drop_rate=0.0,
         drop_path_rate=0.0,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         depths=(3, 4, 6, 3),
         sr_ratios=(8, 4, 2, 1),
         wss=None,

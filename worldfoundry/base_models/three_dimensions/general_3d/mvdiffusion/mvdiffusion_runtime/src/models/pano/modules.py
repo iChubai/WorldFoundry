@@ -45,7 +45,7 @@ class CPAttn(nn.Module):
             R_right = R[:, indexs]
             K_right = K[:, indexs]
 
-            l = R_right.shape[1]
+            l = R_right.shape[1]  # noqa: E741 - Ambiguous upstream name kept as written.
 
             R_left = R[:, i : i + 1].repeat(1, l, 1, 1)
             K_left = K[:, i : i + 1].repeat(1, l, 1, 1)

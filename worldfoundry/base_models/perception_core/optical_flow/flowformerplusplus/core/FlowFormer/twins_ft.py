@@ -73,7 +73,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos, cossin=False):
     emb_sin = np.sin(out)  # (M, D/2)
     emb_cos = np.cos(out)  # (M, D/2)
 
-    if cossin:
+    if cossin:  # noqa: SIM108 - Branches carry per-case comments.
         emb = np.concatenate([emb_cos, emb_sin], axis=1)  # (M, D)
     else:
         emb = np.concatenate([emb_sin, emb_cos], axis=1)  # (M, D)
@@ -98,7 +98,7 @@ def interpolate_pos_embed(model, checkpoint_model, remove_index=True):
         new_size = int(num_patches**0.5)
         # class_token and dist_token are kept unchanged
         if orig_size != new_size:
-            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size), flush=True)
+            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size), flush=True)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
@@ -122,7 +122,7 @@ def interpolate_pos_embed(model, checkpoint_model, remove_index=True):
         new_size = int(num_patches**0.5)
         # class_token and dist_token are kept unchanged
         if orig_size != new_size:
-            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size), flush=True)
+            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size), flush=True)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
@@ -135,7 +135,7 @@ def interpolate_pos_embed(model, checkpoint_model, remove_index=True):
             checkpoint_model["decoder_pos_embed"] = new_pos_embed
 
     # interpolate position bias table if needed
-    relative_position_bias_table_keys = [k for k in checkpoint_model.keys() if "relative_position_bias_table" in k]
+    relative_position_bias_table_keys = [k for k in checkpoint_model.keys() if "relative_position_bias_table" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
     for table_key in relative_position_bias_table_keys:
         table_pretrained = checkpoint_model[table_key]
         if table_key not in model.state_dict():
@@ -157,7 +157,7 @@ def interpolate_pos_embed(model, checkpoint_model, remove_index=True):
                 checkpoint_model[table_key] = table_pretrained_resized.view(nH2, L2).permute(1, 0)
 
     bias_index_keys = []
-    for k in checkpoint_model.keys():
+    for k in checkpoint_model.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         if "relative_position_index" in k and remove_index:
             print(f"del {k} from pretrain ckpt")
             # do not load relative position index for workaround of changing input size
@@ -166,7 +166,7 @@ def interpolate_pos_embed(model, checkpoint_model, remove_index=True):
         del checkpoint_model[k]
 
     bias_index_keys = []
-    for k in checkpoint_model.keys():
+    for k in checkpoint_model.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         if "attn_mask" in k:
             print(f"del {k} from pretrain ckpt")
             bias_index_keys.append(k)
@@ -374,7 +374,7 @@ class PosConv(nn.Module):
         return x
 
     def no_weight_decay(self):
-        return ["proj.%d.weight" % i for i in range(4)]
+        return ["proj.%d.weight" % i for i in range(4)]  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 class PatchEmbed(nn.Module):
@@ -427,7 +427,7 @@ class Twins(nn.Module):
         drop_rate=0.0,
         attn_drop_rate=0.0,
         drop_path_rate=0.0,
-        norm_layer=partial(nn.LayerNorm, eps=1e-6),
+        norm_layer=partial(nn.LayerNorm, eps=1e-6),  # noqa: B008 - Default evaluated once at definition, as upstream.
         block_cls=Block,
         norm_pix_loss=True,
     ):

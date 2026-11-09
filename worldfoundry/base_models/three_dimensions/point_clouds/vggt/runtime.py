@@ -120,7 +120,7 @@ class VGGTRepresentation:
             else:
                 model = VGGT.from_pretrained(pretrained_model_path)
         except Exception as e:
-            raise RuntimeError(f"Failed to load VGGT model: {e}")
+            raise RuntimeError(f"Failed to load VGGT model: {e}")  # noqa: B904 - Keeps the implicit exception context.
 
         instance = cls(model=model, device=device)
         instance.preprocess_mode = kwargs.get("preprocess_mode", "crop")

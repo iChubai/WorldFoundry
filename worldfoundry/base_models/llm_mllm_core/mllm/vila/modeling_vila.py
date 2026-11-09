@@ -1,3 +1,4 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import copy
 import logging
 import os
@@ -20,7 +21,7 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 from .base_projector import MultimodalProjector, MultimodalProjectorConfig
 from .builder import build_llm_and_tokenizer
 from .configuration_vila import VILAConfig
-from .constants import *
+from .constants import *  # noqa: F403 - Upstream star import kept as written.
 from .media import extract_media
 from .media_encoder import BasicImageEncoder, BasicVideoEncoder
 from .mm_utils import process_image, process_images
@@ -300,7 +301,7 @@ class VILAForCausalLM(VILAPretrainedModel):
                 for x, block_size in zip(image_features, new_block_sizes, strict=False)
             ]  # list of 1 * C * H * W tensors
             image_features = [rearrange(x, "1 c h w -> (h w) c") for x in image_features]  # list of N * C tensors
-            if all([feature.shape[0] == image_features[0].shape[0] for feature in image_features]):
+            if all([feature.shape[0] == image_features[0].shape[0] for feature in image_features]):  # noqa: C419 - Evaluates every element before testing, as upstream.
                 image_features = torch.stack(image_features, dim=0)
         else:
             image_features = self.get_vision_tower()(images)
@@ -333,7 +334,7 @@ class VILAForCausalLM(VILAPretrainedModel):
 
         # Extract text and media embeddings
         text_embeds = self.llm.model.embed_tokens(input_ids)
-        if media is not None:
+        if media is not None:  # noqa: SIM108 - Branches carry per-case comments.
             media_embeds = self.__embed_media_tokens(media, media_config)
         else:
             # no media was provided, so we just return an empty dict

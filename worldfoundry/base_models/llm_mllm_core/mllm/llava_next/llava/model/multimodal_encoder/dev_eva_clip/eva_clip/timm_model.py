@@ -97,7 +97,7 @@ class TimmModel(nn.Module):
                 # FIXME import here until API stable and in an official release
                 from timm.models.helpers import group_modules, group_parameters
             except ImportError:
-                raise RuntimeError("Please install a recent `timm` release from the configured package index.")
+                raise RuntimeError("Please install a recent `timm` release from the configured package index.")  # noqa: B904 - Keeps the implicit exception context.
             matcher = self.trunk.group_matcher()
             gparams = group_parameters(self.trunk, matcher)
             max_layer_id = max(gparams.keys())

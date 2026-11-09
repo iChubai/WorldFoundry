@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-__all__ = ["repvit_m1"]
+__all__ = ["repvit_m1"]  # noqa: F822 - Name is undefined in the upstream source.
 
 
 def _make_divisible(v, divisor, min_value=None):
@@ -23,10 +23,12 @@ def _make_divisible(v, divisor, min_value=None):
     return new_v
 
 
-import torch
-from timm.models.layers import SqueezeExcite
+import torch  # noqa: E402 - Follows module-level definitions, as upstream.
+from timm.models.layers import SqueezeExcite  # noqa: E402 - Follows module-level definitions, as upstream.
 
-from worldfoundry.core.nn.blocks.layers import LayerNorm2d
+from worldfoundry.core.nn.blocks.layers import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    LayerNorm2d,
+)
 
 
 class Conv2d_BN(torch.nn.Sequential):
@@ -189,7 +191,7 @@ class RepViTBlock(nn.Module):
         return self.channel_mixer(self.token_mixer(x))
 
 
-from timm.models.vision_transformer import trunc_normal_
+from timm.models.vision_transformer import trunc_normal_  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class BN_Linear(torch.nn.Sequential):
@@ -205,7 +207,7 @@ class BN_Linear(torch.nn.Sequential):
 
     @torch.no_grad()
     def fuse(self):
-        bn, l = self._modules.values()
+        bn, l = self._modules.values()  # noqa: E741 - Ambiguous upstream name kept as written.
         w = bn.weight / (bn.running_var + bn.eps) ** 0.5
         b = bn.bias - self.bn.running_mean * self.bn.weight / (bn.running_var + bn.eps) ** 0.5
         w = l.weight * w[None, :]
@@ -300,7 +302,7 @@ class RepViT(nn.Module):
         return x
 
 
-from timm.models import register_model
+from timm.models import register_model  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 @register_model

@@ -271,7 +271,7 @@ def convert_labelme_to_coco(image_dir: str, labels_dir: str, out_path: str, clas
     # save json result
     Path(out_path).parent.mkdir(exist_ok=True, parents=True)
     print(f"Saving json to {out_path}")
-    json.dump(coco_json_data, open(out_path, "w"), indent=2)
+    json.dump(coco_json_data, open(out_path, "w"), indent=2)  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     if class_id_txt is None:
         category_to_id_path = Path(out_path).with_name("class_with_id.txt")

@@ -1072,7 +1072,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
             )
 
         if self.use_moe:
-            dtype, device = packed_sequence_und.dtype, packed_sequence_und.device
+            dtype, device = packed_sequence_und.dtype, packed_sequence_und.device  # noqa: F841 - Upstream assignment kept.
             # packed_sequence_ = torch.zeros((packed_sequence_und.shape[0]+packed_sequence_gen.shape[0], packed_sequence_und.shape[1]), dtype=dtype, device=device)
             packed_sequence_und_ = torch.zeros_like(packed_sequence_und)
             packed_sequence_gen_ = torch.zeros_like(packed_sequence_gen)
@@ -1287,7 +1287,7 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel):
         expert_state_dict = {}
         for file_path in safetensor_files:
             with safe_open(file_path, framework="pt", device="cpu") as f:
-                for key in f.keys():
+                for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     expert_state_dict[key] = f.get_tensor(key)
 
         layer_mapping = get_layer_mapping_strategy(self.llm_layers, self.expert_layers)

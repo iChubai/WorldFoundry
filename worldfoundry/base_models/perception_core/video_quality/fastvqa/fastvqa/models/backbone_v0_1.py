@@ -295,7 +295,7 @@ class SwinTransformerBlock3D(nn.Module):
         # W-MSA/SW-MSA
         attn_windows = self.attn(x_windows, mask=attn_mask)  # B*nW, Wd*Wh*Ww, C
         # merge windows
-        attn_windows = attn_windows.view(-1, *(window_size + (C,)))
+        attn_windows = attn_windows.view(-1, *(window_size + (C,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         shifted_x = window_reverse(attn_windows, window_size, B, Dp, Hp, Wp)  # B D' H' W' C
         # reverse cyclic shift
         if any(i > 0 for i in shift_size):
@@ -565,8 +565,8 @@ class SwinTransformer3D(nn.Module):
         patch_size=(2, 4, 4),
         in_chans=3,
         embed_dim=96,
-        depths=[2, 2, 6, 2],
-        num_heads=[3, 6, 12, 24],
+        depths=[2, 2, 6, 2],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_heads=[3, 6, 12, 24],  # noqa: B006 - Keeps the upstream default object and signature.
         window_size=(8, 7, 7),
         mlp_ratio=4.0,
         qkv_bias=True,
@@ -578,7 +578,7 @@ class SwinTransformer3D(nn.Module):
         patch_norm=True,
         frozen_stages=-1,
         use_checkpoint=True,
-        jump_attention=[False, False, False, False],
+        jump_attention=[False, False, False, False],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         super().__init__()
 
@@ -662,12 +662,12 @@ class SwinTransformer3D(nn.Module):
         state_dict = checkpoint["model"]
 
         # delete relative_position_index since we always re-init it
-        relative_position_index_keys = [k for k in state_dict.keys() if "relative_position_index" in k]
+        relative_position_index_keys = [k for k in state_dict.keys() if "relative_position_index" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         for k in relative_position_index_keys:
             del state_dict[k]
 
         # delete attn_mask since we always re-init it
-        attn_mask_keys = [k for k in state_dict.keys() if "attn_mask" in k]
+        attn_mask_keys = [k for k in state_dict.keys() if "attn_mask" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         for k in attn_mask_keys:
             del state_dict[k]
 
@@ -677,7 +677,7 @@ class SwinTransformer3D(nn.Module):
         )
 
         # bicubic interpolate relative_position_bias_table if not match
-        relative_position_bias_table_keys = [k for k in state_dict.keys() if "relative_position_bias_table" in k]
+        relative_position_bias_table_keys = [k for k in state_dict.keys() if "relative_position_bias_table" in k]  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         for k in relative_position_bias_table_keys:
             relative_position_bias_table_pretrained = state_dict[k]
             relative_position_bias_table_current = self.state_dict()[k]
@@ -714,7 +714,7 @@ class SwinTransformer3D(nn.Module):
 
         model_state_dict = self.state_dict()
         state_dict = torch.load(load_path)
-        if "state_dict" in state_dict.keys():
+        if "state_dict" in state_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             state_dict = state_dict["state_dict"]
 
         clean_dict = OrderedDict()
@@ -751,7 +751,7 @@ class SwinTransformer3D(nn.Module):
             self.pretrained = pretrained
         if isinstance(self.pretrained, str):
             self.apply(_init_weights)
-            logger = get_root_logger()
+            logger = get_root_logger()  # noqa: F821 - Name is undefined in the upstream source.
             logger.info(f"load model from: {self.pretrained}")
 
             if self.pretrained2d:
@@ -783,7 +783,7 @@ class SwinTransformer3D(nn.Module):
         x = rearrange(x, "n d h w c -> n c d h w")
 
         if multi:
-            return feats[:-1] + [x]
+            return feats[:-1] + [x]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         else:
             return x
 

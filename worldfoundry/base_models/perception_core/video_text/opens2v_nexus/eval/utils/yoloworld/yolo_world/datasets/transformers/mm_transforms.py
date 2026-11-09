@@ -67,7 +67,7 @@ class RandomLoadText:
 
         if "instances" in results:
             retaged_instances = []
-            for idx, inst in enumerate(results["instances"]):
+            for idx, inst in enumerate(results["instances"]):  # noqa: B007 - The loop variable is read outside the loop.
                 label = inst["bbox_label"]
                 if label in label2ids:
                     inst["bbox_label"] = label2ids[label]

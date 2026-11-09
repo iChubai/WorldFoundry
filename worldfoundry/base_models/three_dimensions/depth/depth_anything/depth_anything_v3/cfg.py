@@ -77,7 +77,7 @@ def resolve_recursive(
 ) -> Any:
     config = resolver(config)
     if isinstance(config, DictConfig):
-        for k in config.keys():
+        for k in config.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             v = config.get(k)
             if isinstance(v, (DictConfig, ListConfig)):
                 config[k] = resolve_recursive(v, resolver)

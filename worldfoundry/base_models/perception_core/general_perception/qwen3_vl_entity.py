@@ -251,7 +251,7 @@ class Qwen3VLEntityExtractor:
                 cap.release()
                 if not ret or frame is None:
                     return [], "Failed to read video frame"
-                temp_image_path = tempfile.NamedTemporaryFile(suffix=".png", delete=False).name
+                temp_image_path = tempfile.NamedTemporaryFile(suffix=".png", delete=False).name  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
                 cv2.imwrite(temp_image_path, frame)
                 content_type = "image"
                 content_path = temp_image_path

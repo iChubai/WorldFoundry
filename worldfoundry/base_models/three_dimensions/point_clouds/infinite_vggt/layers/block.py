@@ -159,7 +159,7 @@ def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None
         residual = residual.flatten(1)
         x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
     else:
-        x_plus_residual = scaled_index_add(
+        x_plus_residual = scaled_index_add(  # noqa: F821 - Name is undefined in the upstream source.
             x, brange, residual.to(dtype=x.dtype), scaling=scaling_vector, alpha=residual_scale_factor
         )
     return x_plus_residual
@@ -179,12 +179,12 @@ def get_attn_bias_and_cat(x_list, branges=None):
         for b, x in zip(batch_sizes, x_list, strict=False):
             for _ in range(b):
                 seqlens.append(x.shape[1])
-        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
+        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)  # noqa: F821 - Name is undefined in the upstream source.
         attn_bias._batch_sizes = batch_sizes
         attn_bias_cache[all_shapes] = attn_bias
 
     if branges is not None:
-        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])
+        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])  # noqa: F821 - Name is undefined in the upstream source.
     else:
         tensors_bs1 = tuple(x.reshape([1, -1, *x.shape[2:]]) for x in x_list)
         cat_tensors = torch.cat(tensors_bs1, dim=1)
@@ -222,7 +222,7 @@ class NestedTensorBlock(Block):
         """
         x_list contains a list of tensors to nest together and run
         """
-        assert isinstance(self.attn, MemEffAttention)
+        assert isinstance(self.attn, MemEffAttention)  # noqa: F821 - Name is undefined in the upstream source.
 
         if self.training and self.sample_drop_ratio > 0.0:
 

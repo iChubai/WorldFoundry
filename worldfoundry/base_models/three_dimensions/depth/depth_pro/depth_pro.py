@@ -79,7 +79,7 @@ def create_backbone_model(preset: ViTPreset) -> tuple[nn.Module, ViTPreset]:
 
 def create_model_and_transforms(
     config: DepthProConfig = DEFAULT_MONODEPTH_CONFIG_DICT,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     precision: torch.dtype = torch.float32,
 ) -> tuple[DepthPro, Compose]:
     """Create a DepthPro model and load weights from `config.checkpoint_uri`.
@@ -112,7 +112,7 @@ def create_model_and_transforms(
         decoder_features=config.decoder_features,
     )
     decoder = MultiresConvDecoder(
-        dims_encoder=[config.decoder_features] + list(encoder.dims_encoder),
+        dims_encoder=[config.decoder_features] + list(encoder.dims_encoder),  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         dim_decoder=config.decoder_features,
     )
     model = DepthPro(

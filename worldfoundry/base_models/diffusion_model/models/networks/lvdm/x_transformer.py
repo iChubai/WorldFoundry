@@ -115,7 +115,7 @@ def pick_and_pop(keys, d):
 def group_dict_by_key(cond, d):
     """Split ``d`` into ``(matches, rest)`` using predicate ``cond(key)``."""
     return_val = [{}, {}]
-    for key in d.keys():
+    for key in d.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         match = bool(cond(key))
         ind = int(not match)
         return_val[ind][key] = d[key]
@@ -475,7 +475,7 @@ class AttentionLayers(nn.Module):
             default_block = ("a", "f")
 
         if macaron:
-            default_block = ("f",) + default_block
+            default_block = ("f",) + default_block  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if exists(custom_layers):
             layer_types = custom_layers
@@ -643,7 +643,7 @@ class TransformerWrapper(nn.Module):
 
     def forward(self, x, return_embeddings=False, mask=None, return_mems=False, return_attn=False, mems=None, **kwargs):
         """Embed tokens ``B L`` → ``B L C`` and run the encoder."""
-        b, n, device, num_mem = *x.shape, x.device, self.num_memory_tokens
+        b, n, device, num_mem = *x.shape, x.device, self.num_memory_tokens  # noqa: F841 - Upstream assignment kept.
         x = self.token_emb(x)
         x += self.pos_emb(x)
         x = self.emb_dropout(x)

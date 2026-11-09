@@ -257,7 +257,7 @@ class MeiCameraModel(BaseCameraModel):
         Jf = None
         if compute_jf:
             # (..., 4, 1 [focal] + 1 [distortion])
-            Jf = pts.new_zeros(pts.shape + (1 + 1,))
+            Jf = pts.new_zeros(pts.shape + (1 + 1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             # Note that fx and fy are assumed to be equivalent for the derivation.
             f_num = (
                 -(k1**3) * r2**2
@@ -327,7 +327,7 @@ class MeiCameraModel(BaseCameraModel):
         Jf = None
         if compute_jf:
             # (..., 2, 1 [focal] + 1 [distortion])
-            Jf = coords.new_zeros(coords.shape + (1 + 1,))
+            Jf = coords.new_zeros(coords.shape + (1 + 1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             Jf[..., 0, 0] = X * d
             Jf[..., 1, 0] = Y * d
             Jf[..., 0, 1] = -fx * r * X * d**2

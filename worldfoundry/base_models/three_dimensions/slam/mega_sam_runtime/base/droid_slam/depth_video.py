@@ -15,7 +15,7 @@ from torch.multiprocessing import Value
 
 
 class DepthVideo:
-    def __init__(self, image_size=[480, 640], buffer=1024, stereo=False, device="cuda:0"):
+    def __init__(self, image_size=[480, 640], buffer=1024, stereo=False, device="cuda:0"):  # noqa: B006 - Keeps the upstream default object and signature.
         # current keyframe count
         self.counter = Value("i", 0)
         self.ready = Value("i", 0)
@@ -286,7 +286,7 @@ class DepthVideo:
             if t1 is None:
                 t1 = max(ii.max().item(), jj.max().item()) + 1
 
-            if use_mono:
+            if use_mono:  # noqa: SIM108 - Branches carry per-case comments.
                 disps_sens = self.disps_sens
             else:  # not using mono depeth
                 disps_sens = self.disps_sens * 0.0

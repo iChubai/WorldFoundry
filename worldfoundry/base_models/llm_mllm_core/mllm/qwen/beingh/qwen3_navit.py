@@ -603,7 +603,7 @@ class Qwen3ForCausalLM(Qwen3PreTrainedModel):
         expert_state_dict = {}
         for file_path in safetensor_files:
             with safe_open(file_path, framework="pt", device="cpu") as f:
-                for key in f.keys():
+                for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     expert_state_dict[key] = f.get_tensor(key)
 
         layer_mapping = get_layer_mapping_strategy(self.llm_layers, self.expert_layers)

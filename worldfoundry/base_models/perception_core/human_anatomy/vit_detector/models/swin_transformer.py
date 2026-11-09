@@ -530,8 +530,8 @@ class SwinTransformer(nn.Module):
         in_chans=3,
         num_classes=1000,
         embed_dim=96,
-        depths=[2, 2, 6, 2],
-        num_heads=[3, 6, 12, 24],
+        depths=[2, 2, 6, 2],  # noqa: B006 - Keeps the upstream default object and signature.
+        num_heads=[3, 6, 12, 24],  # noqa: B006 - Keeps the upstream default object and signature.
         window_size=7,
         mlp_ratio=4.0,
         qkv_bias=True,

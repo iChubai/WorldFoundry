@@ -1,4 +1,5 @@
 # Auto-generated for lazy_import_all_from
+# ruff: noqa: F822 - Export list for lazy_import_all_from; the sibling module or package provides these names.
 __all__ = [
     "bounding_rect_from_mask",
     "build_mesh_from_depth_map",

@@ -166,13 +166,13 @@ class OobleckEncoder(nn.Module):
         in_channels: int = 2,
         channels: int = 128,
         latent_dim: int = 32,
-        c_mults: list[int] = [1, 2, 4, 8],
-        strides: list[int] = [2, 4, 8, 8],
+        c_mults: list[int] = [1, 2, 4, 8],  # noqa: B006 - Keeps the upstream default object and signature.
+        strides: list[int] = [2, 4, 8, 8],  # noqa: B006 - Keeps the upstream default object and signature.
         use_snake: bool = False,
         **_kwargs,
     ):
         super().__init__()
-        c_mults = [1] + list(c_mults)
+        c_mults = [1] + list(c_mults)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         layers: list[nn.Module] = [wn_conv1d(in_channels, c_mults[0] * channels, kernel_size=7, padding=3)]
         for i in range(len(c_mults) - 1):
             layers.append(
@@ -197,15 +197,15 @@ class OobleckDecoder(nn.Module):
         out_channels: int = 2,
         channels: int = 128,
         latent_dim: int = 32,
-        c_mults: list[int] = [1, 2, 4, 8],
-        strides: list[int] = [2, 4, 8, 8],
+        c_mults: list[int] = [1, 2, 4, 8],  # noqa: B006 - Keeps the upstream default object and signature.
+        strides: list[int] = [2, 4, 8, 8],  # noqa: B006 - Keeps the upstream default object and signature.
         use_snake: bool = False,
         use_nearest_upsample: bool = False,
         final_tanh: bool = True,
         **_kwargs,
     ):
         super().__init__()
-        c_mults = [1] + list(c_mults)
+        c_mults = [1] + list(c_mults)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         layers: list[nn.Module] = [wn_conv1d(latent_dim, c_mults[-1] * channels, kernel_size=7, padding=3)]
         for i in range(len(c_mults) - 1, 0, -1):
             layers.append(

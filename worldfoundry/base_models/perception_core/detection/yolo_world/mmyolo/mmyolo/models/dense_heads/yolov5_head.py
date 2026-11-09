@@ -153,7 +153,7 @@ class YOLOv5Head(BaseDenseHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = {
+        prior_generator: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.YOLOAnchorGenerator",
             "base_sizes": [
                 [(10, 13), (16, 30), (33, 23)],
@@ -162,14 +162,14 @@ class YOLOv5Head(BaseDenseHead):
             ],
             "strides": [8, 16, 32],
         },
-        bbox_coder: ConfigType = {"type": "YOLOv5BBoxCoder"},
-        loss_cls: ConfigType = {
+        bbox_coder: ConfigType = {"type": "YOLOv5BBoxCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_cls: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.CrossEntropyLoss",
             "use_sigmoid": True,
             "reduction": "mean",
             "loss_weight": 0.5,
         },
-        loss_bbox: ConfigType = {
+        loss_bbox: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "IoULoss",
             "iou_mode": "ciou",
             "bbox_format": "xywh",
@@ -178,7 +178,7 @@ class YOLOv5Head(BaseDenseHead):
             "loss_weight": 0.05,
             "return_iou": True,
         },
-        loss_obj: ConfigType = {
+        loss_obj: ConfigType = {  # noqa: B006 - Keeps the upstream default object and signature.
             "type": "mmdet.CrossEntropyLoss",
             "use_sigmoid": True,
             "reduction": "mean",
@@ -187,7 +187,7 @@ class YOLOv5Head(BaseDenseHead):
         prior_match_thr: float = 4.0,
         near_neighbor_thr: float = 0.5,
         ignore_iof_thr: float = -1.0,
-        obj_level_weights: list[float] = [4.0, 1.0, 0.4],
+        obj_level_weights: list[float] = [4.0, 1.0, 0.4],  # noqa: B006 - Keeps the upstream default object and signature.
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,
@@ -367,7 +367,7 @@ class YOLOv5Head(BaseDenseHead):
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
-            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
             score_thr = cfg.get("score_thr", -1)
             # yolox_style does not require the following operations
@@ -441,7 +441,7 @@ class YOLOv5Head(BaseDenseHead):
         else:
             outs = self(x)
             # Fast version
-            loss_inputs = outs + (batch_data_samples["bboxes_labels"], batch_data_samples["img_metas"])
+            loss_inputs = outs + (batch_data_samples["bboxes_labels"], batch_data_samples["img_metas"])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             losses = self.loss_by_feat(*loss_inputs)
 
         return losses

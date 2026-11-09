@@ -143,7 +143,7 @@ def s3_request(func):
             return func(url, *args, **kwargs)
         except ClientError as exc:
             if int(exc.response["Error"]["Code"]) == 404:
-                raise OSError(f"file {url} not found")
+                raise OSError(f"file {url} not found")  # noqa: B904 - Keeps the implicit exception context.
             else:
                 raise
 

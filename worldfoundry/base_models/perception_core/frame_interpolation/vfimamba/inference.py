@@ -1,8 +1,9 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import torch
 import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from .config import *
+from .config import *  # noqa: F403 - Upstream star import kept as written.
 from .paths import checkpoint_path
 
 
@@ -46,7 +47,7 @@ class Model:
         try:
             from huggingface_hub import hf_hub_download
         except ImportError:
-            raise ImportError(
+            raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
                 "Model is hosted on the Hugging Face Hub. "
                 "Please install huggingface_hub by running `pip install huggingface_hub` to load the weights correctly."
             )
@@ -95,7 +96,7 @@ class Model:
             preds = infer(input)
             return (preds[0] + preds[1].flip(1).flip(2)).unsqueeze(0) / 2.0
 
-        if TTA == False:
+        if TTA == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             return infer(imgs)
         else:
             return (infer(imgs) + infer(imgs.flip(2).flip(3)).flip(2).flip(3)) / 2
@@ -113,7 +114,7 @@ class Model:
             return (preds[0] + preds[1].flip(1).flip(2)).unsqueeze(0) / 2.0
 
         _, _, _, pred = self.net(imgs, timestep=timestep, scale=scale, local=local)
-        if TTA == False:
+        if TTA == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             return pred
         else:
             _, _, _, pred2 = self.net(imgs.flip(2).flip(3), timestep=timestep, scale=scale, local=local)

@@ -83,7 +83,7 @@ class VisionTower(nn.Module):
                     try:
                         import deepspeed
                     except ImportError:
-                        raise ImportError("DeepSpeed is not installed. Please install it with `pip install deepspeed`.")
+                        raise ImportError("DeepSpeed is not installed. Please install it with `pip install deepspeed`.")  # noqa: B904 - Keeps the implicit exception context.
                     with deepspeed.zero.GatheredParameters([old_embeddings.weight], modifier_rank=None):
                         old_num_tokens, old_embedding_dim = old_embeddings.weight.size()
                 else:

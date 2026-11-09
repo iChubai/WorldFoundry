@@ -242,7 +242,7 @@ class MplugOwlConfig(PretrainedConfig):
         self.vision_config = MplugOwlVisionConfig(**vision_config)
         self.visual_abstractor_config = MplugOwlVisualAbstractorConfig(**visual_abstractor_config)
         # self.visual_abstractor_config.layer_norm_eps = 1e-6
-        text_model_type = text_config["model_type"] if "model_type" in text_config else "llama"
+        text_model_type = text_config["model_type"] if "model_type" in text_config else "llama"  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         self.text_config = CONFIG_MAPPING[text_model_type](**text_config)
 
         self.tie_word_embeddings = self.text_config.tie_word_embeddings

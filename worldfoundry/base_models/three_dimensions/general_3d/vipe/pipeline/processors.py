@@ -75,7 +75,7 @@ class IntrinsicEstimationProcessor(StreamProcessor):
         frame_height, frame_width = frame.size()
         fx = fy = frame_height / (2 * np.tan(self.fov_y / 2))
         frame.intrinsics = torch.as_tensor(
-            [fx, fy, frame_width / 2, frame_height / 2] + self.distortion,
+            [fx, fy, frame_width / 2, frame_height / 2] + self.distortion,  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         ).float()
         frame.camera_type = self.camera_type
         return frame
@@ -452,7 +452,7 @@ class MultiviewDepthProcessor(StreamProcessor):
                 # Grab all neighboring keyframes to anchor the current sliding window.
                 # Note that we remove redundant keyframes that already exist in the current sliding window.
                 sw_keyframe_inds = list(
-                    set(sum([self._probe_keyframe_indices(i) for i in current_sliding_window_idx], []))
+                    set(sum([self._probe_keyframe_indices(i) for i in current_sliding_window_idx], []))  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
                 )
                 sw_keyframe_inds = [
                     t for t in sw_keyframe_inds if self.keyframes_inds[t] not in current_sliding_window_idx

@@ -34,7 +34,13 @@ def _make_fusion_block(features, use_bn, size=None):
 
 class DPTHead(nn.Module):
     def __init__(
-        self, nclass, in_channels, features=256, use_bn=False, out_channels=[256, 512, 1024, 1024], use_clstoken=False
+        self,
+        nclass,
+        in_channels,
+        features=256,
+        use_bn=False,
+        out_channels=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
+        use_clstoken=False,
     ):
         super().__init__()
 
@@ -153,7 +159,7 @@ class DPT_DINOv2(nn.Module):
         self,
         encoder="vitl",
         features=256,
-        out_channels=[256, 512, 1024, 1024],
+        out_channels=[256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         use_bn=False,
         use_clstoken=False,
         localhub=True,

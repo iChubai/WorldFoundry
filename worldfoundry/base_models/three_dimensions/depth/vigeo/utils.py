@@ -75,7 +75,7 @@ def quat_to_mat(quaternions: torch.Tensor) -> torch.Tensor:
         ),
         -1,
     )
-    return o.reshape(quaternions.shape[:-1] + (3, 3))
+    return o.reshape(quaternions.shape[:-1] + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def median(x: torch.Tensor, default_value: float = 1.0) -> torch.Tensor:

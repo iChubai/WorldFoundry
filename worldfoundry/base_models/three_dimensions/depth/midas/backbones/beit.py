@@ -51,7 +51,7 @@ def _get_rel_pos_bias(self, window_size):
     )
 
     key = str(window_size[1]) + "," + str(window_size[0])
-    if key not in self.relative_position_indices.keys():
+    if key not in self.relative_position_indices.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         self.relative_position_indices[key] = gen_relative_position_index(window_size)
 
     relative_position_bias = new_relative_position_bias_table[self.relative_position_indices[key].view(-1)].view(
@@ -134,9 +134,9 @@ def beit_forward_features(self, x):
 
 def _make_beit_backbone(
     model,
-    features=[96, 192, 384, 768],
-    size=[384, 384],
-    hooks=[0, 4, 8, 11],
+    features=[96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
+    size=[384, 384],  # noqa: B006 - Keeps the upstream default object and signature.
+    hooks=[0, 4, 8, 11],  # noqa: B006 - Keeps the upstream default object and signature.
     vit_features=768,
     use_readout="ignore",
     start_index=1,

@@ -64,7 +64,7 @@ class DepthAnythingAdapter:
 
         # Ensure RGB format (DepthAnything expects RGB)
         # Check if it's BGR by comparing first and last channel means
-        if image_np.shape[2] == 3:
+        if image_np.shape[2] == 3:  # noqa: SIM102 - Branches carry per-case comments.
             # Simple heuristic: if first channel mean > last channel mean, likely BGR
             if image_np[..., 0].mean() > image_np[..., 2].mean():
                 image_np = image_np[..., ::-1]  # BGR to RGB

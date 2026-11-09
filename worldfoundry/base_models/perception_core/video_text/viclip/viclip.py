@@ -17,7 +17,7 @@ class ViCLIP(nn.Module):
     def __init__(
         self,
         tokenizer=None,
-        pretrain=os.path.join(os.path.dirname(os.path.abspath(__file__)), "ViClip-InternVid-10M-FLT.pth"),
+        pretrain=os.path.join(os.path.dirname(os.path.abspath(__file__)), "ViClip-InternVid-10M-FLT.pth"),  # noqa: B008 - Default evaluated once at definition, as upstream.
         freeze_text=True,
     ):
         super().__init__()
@@ -188,7 +188,7 @@ class ViCLIP(nn.Module):
         encoder = self.text_encoder
         return encoder.bert if hasattr(encoder, "bert") else encoder
 
-    def get_text_features(self, input_text, tokenizer, text_feature_dict={}):
+    def get_text_features(self, input_text, tokenizer, text_feature_dict={}):  # noqa: B006 - Keeps the upstream default object and signature.
         if input_text in text_feature_dict:
             return text_feature_dict[input_text]
         text_template = f"{input_text}"

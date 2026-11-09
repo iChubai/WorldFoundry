@@ -114,7 +114,7 @@ class Conversation:
             return ret
         elif self.sep_style == SeparatorStyle.RWKV:
             ret = system_prompt
-            for i, (role, message) in enumerate(self.messages):
+            for i, (role, message) in enumerate(self.messages):  # noqa: B007 - The loop variable is read outside the loop.
                 if message:
                     ret += role + ": " + message.replace("\r\n", "\n").replace("\n\n", "\n")
                     ret += "\n\n"
@@ -124,7 +124,7 @@ class Conversation:
         elif self.sep_style == SeparatorStyle.LLAMA2:
             seps = [self.sep, self.sep2]
             ret = system_prompt if self.system_message else "[INST] "
-            for i, (role, message) in enumerate(self.messages):
+            for i, (role, message) in enumerate(self.messages):  # noqa: B007 - The loop variable is read outside the loop.
                 tag = self.roles[i % 2]
                 if message:
                     if i == 0:

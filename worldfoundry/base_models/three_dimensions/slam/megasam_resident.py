@@ -139,9 +139,9 @@ def load_unidepth_model(weights_root: Path, device: Any) -> Any:
 def resize_unidepth_rgb(rgb: np.ndarray) -> np.ndarray:
     if rgb.shape[1] > rgb.shape[0]:
         final_w = LONG_DIM
-        final_h = int(round(LONG_DIM * rgb.shape[0] / rgb.shape[1]))
+        final_h = int(round(LONG_DIM * rgb.shape[0] / rgb.shape[1]))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     else:
-        final_w = int(round(LONG_DIM * rgb.shape[1] / rgb.shape[0]))
+        final_w = int(round(LONG_DIM * rgb.shape[1] / rgb.shape[0]))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         final_h = LONG_DIM
     return cv2.resize(rgb, (final_w, final_h), cv2.INTER_AREA)
 

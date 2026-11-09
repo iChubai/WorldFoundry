@@ -1468,7 +1468,7 @@ def loadModel(
 
     home = functions.get_deepface_home()
 
-    if os.path.isfile(home + "/.deepface/weights/facenet_weights.h5") != True:
+    if os.path.isfile(home + "/.deepface/weights/facenet_weights.h5") != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print("facenet_weights.h5 will be downloaded...")
 
         output = home + "/.deepface/weights/facenet_weights.h5"

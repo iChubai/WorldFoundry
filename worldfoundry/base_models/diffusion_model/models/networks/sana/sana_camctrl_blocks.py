@@ -79,7 +79,7 @@ def create_grid(
     width: int,
     batch: int | None = None,
     dtype: torch.dtype = torch.float32,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ) -> torch.Tensor:
     """Create a pixel coordinate grid of shape ``(H, W, 3)`` or ``(B, H, W, 3)``."""
     if device.type == "cpu":
@@ -105,7 +105,7 @@ def ucm_unproject_grid(
     cy: float | torch.Tensor,
     xi: float | torch.Tensor,
     dtype: torch.dtype = torch.float32,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     y_down: bool = True,
 ) -> torch.Tensor:
     """Unproject pixel grid into a camera-frame direction vector using the UCM."""
@@ -324,7 +324,7 @@ def compute_up_lat_map(
     width: int,
     cx: torch.Tensor,
     cy: torch.Tensor,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     delta: float = 0.1,
 ):
     """Compute UCPE absolute embedding maps ``(up_map, lat_map)``.

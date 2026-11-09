@@ -52,17 +52,21 @@ from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops imp
 
 logger = get_logger(__name__)
 
-from collections.abc import Mapping, Sequence
-from dataclasses import fields, is_dataclass
+from collections.abc import Mapping, Sequence  # noqa: E402 - Follows the logging setup.
+from dataclasses import fields, is_dataclass  # noqa: E402 - Follows the logging setup.
 
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (  # noqa: E402 - Follows the logging setup.
     BatchedPointer,
     FindStage,
     NestedTensor,
     convert_my_tensors,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.geometry_encoders import Prompt
-from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import load_resource_as_video_frames
+from worldfoundry.base_models.perception_core.segment.sam3.model.geometry_encoders import (  # noqa: E402 - Follows the logging setup.
+    Prompt,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import (  # noqa: E402 - Follows the logging setup.
+    load_resource_as_video_frames,
+)
 
 
 def recursive_to(data, *args, **kwargs):
@@ -658,7 +662,7 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
             out_probs = torch.tensor([out["obj_id_to_score"][obj_id] for obj_id in curr_obj_ids])
             out_sam2_probs = torch.tensor(
                 [
-                    (out["obj_id_to_sam2_score"][obj_id] if obj_id in out["obj_id_to_sam2_score"] else 0.0)
+                    (out["obj_id_to_sam2_score"][obj_id] if obj_id in out["obj_id_to_sam2_score"] else 0.0)  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
                     for obj_id in curr_obj_ids
                 ]
             )
@@ -1261,8 +1265,8 @@ class Sam3MultiplexTracking(Sam3MultiplexBase):
             dynamic=False,  # Accuracy regression on True
         )
 
-        sam3.model.sam3_video_base._associate_det_trk_compilable = compile_wrapper(
-            sam3.model.sam3_video_base._associate_det_trk_compilable,
+        sam3.model.sam3_video_base._associate_det_trk_compilable = compile_wrapper(  # noqa: F821 - This port lacks the namespace for the optional compilation branch.
+            sam3.model.sam3_video_base._associate_det_trk_compilable,  # noqa: F821 - This port lacks the namespace for the optional compilation branch.
             mode="max-autotune-no-cudagraphs",
             fullgraph=True,
             dynamic=False,
@@ -2276,7 +2280,7 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
             return False
         action_history = inference_state["action_history"]
         for action in action_history:
-            if action["type"] in ["add", "refine"] and action.get("obj_ids"):
+            if action["type"] in ["add", "refine"] and action.get("obj_ids"):  # noqa: SIM102 - Statement form kept for readability.
                 if obj_id in action["obj_ids"]:
                     return True
         return False
@@ -2829,7 +2833,7 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         mask_only_cond_frame_indices = []
         window = self.refinement_detector_cond_frame_removal_window
         for frame_idx in sam2_state["mask_inputs_per_obj"][obj_idx]:
-            if frame_idx not in sam2_state["point_inputs_per_obj"][obj_idx]:
+            if frame_idx not in sam2_state["point_inputs_per_obj"][obj_idx]:  # noqa: SIM102 - Branches carry per-case comments.
                 # clear conditioning frames within a window of the refined frame
                 if abs(frame_idx - refined_frame_idx) <= window:
                     mask_only_cond_frame_indices.append(frame_idx)
@@ -3026,7 +3030,7 @@ class Sam3MultiplexTrackingWithInteractivity(Sam3MultiplexTracking):
         new_sam2_state["multiplex_state"] = new_multiplex_state
 
         for storage_key in ["cond_frame_outputs", "non_cond_frame_outputs"]:
-            for f_idx, frame_out in singleton_consolidated_outputs[storage_key].items():
+            for f_idx, frame_out in singleton_consolidated_outputs[storage_key].items():  # noqa: B007 - The loop variable is read outside the loop.
                 if frame_out.get("maskmem_features") is not None:
                     frame_out["maskmem_features"] = frame_out["maskmem_features"].clone()
                 if frame_out.get("maskmem_pos_enc") is not None:

@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 from jaxtyping import Float, Int64, Shaped
 from torch import Tensor, nn
 

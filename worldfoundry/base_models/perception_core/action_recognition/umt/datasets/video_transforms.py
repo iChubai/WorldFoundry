@@ -30,7 +30,7 @@ _RANDOM_INTERPOLATION = (Image.BILINEAR, Image.BICUBIC)
 
 
 def _pil_interp(method):
-    if method == "bicubic":
+    if method == "bicubic":  # noqa: SIM116 - Branch chain kept as upstream.
         return Image.BICUBIC
     elif method == "lanczos":
         return Image.LANCZOS
@@ -61,9 +61,9 @@ def random_short_side_scale_jitter(images, min_size, max_size, boxes=None, inver
             `num boxes` x 4.
     """
     if inverse_uniform_sampling:
-        size = int(round(1.0 / np.random.uniform(1.0 / max_size, 1.0 / min_size)))
+        size = int(round(1.0 / np.random.uniform(1.0 / max_size, 1.0 / min_size)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     else:
-        size = int(round(np.random.uniform(min_size, max_size)))
+        size = int(round(np.random.uniform(min_size, max_size)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     height = images.shape[2]
     width = images.shape[3]
@@ -72,11 +72,11 @@ def random_short_side_scale_jitter(images, min_size, max_size, boxes=None, inver
     new_width = size
     new_height = size
     if width < height:
-        new_height = int(math.floor((float(height) / width) * size))
+        new_height = int(math.floor((float(height) / width) * size))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         if boxes is not None:
             boxes = boxes * float(new_height) / height
     else:
-        new_width = int(math.floor((float(width) / height) * size))
+        new_width = int(math.floor((float(width) / height) * size))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         if boxes is not None:
             boxes = boxes * float(new_width) / width
 
@@ -213,8 +213,8 @@ def uniform_crop(images, size, spatial_idx, boxes=None, scale_size=None):
             align_corners=False,
         )
 
-    y_offset = int(math.ceil((height - size) / 2))
-    x_offset = int(math.ceil((width - size) / 2))
+    y_offset = int(math.ceil((height - size) / 2))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    x_offset = int(math.ceil((width - size) / 2))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     if height > width:
         if spatial_idx == 0:
@@ -473,8 +473,8 @@ def _get_param_spatial_crop(scale, ratio, height, width, num_repeat=10, log_scal
         else:
             aspect_ratio = random.uniform(*ratio)
 
-        w = int(round(math.sqrt(target_area * aspect_ratio)))
-        h = int(round(math.sqrt(target_area / aspect_ratio)))
+        w = int(round(math.sqrt(target_area * aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        h = int(round(math.sqrt(target_area / aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         if np.random.uniform() < 0.5 and switch_hw:
             w, h = h, w
@@ -488,10 +488,10 @@ def _get_param_spatial_crop(scale, ratio, height, width, num_repeat=10, log_scal
     in_ratio = float(width) / float(height)
     if in_ratio < min(ratio):
         w = width
-        h = int(round(w / min(ratio)))
+        h = int(round(w / min(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     elif in_ratio > max(ratio):
         h = height
-        w = int(round(h * max(ratio)))
+        w = int(round(h * max(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     else:  # whole image
         w = width
         h = height
@@ -693,8 +693,8 @@ class RandomResizedCropAndInterpolation:
             log_ratio = (math.log(ratio[0]), math.log(ratio[1]))
             aspect_ratio = math.exp(random.uniform(*log_ratio))
 
-            w = int(round(math.sqrt(target_area * aspect_ratio)))
-            h = int(round(math.sqrt(target_area / aspect_ratio)))
+            w = int(round(math.sqrt(target_area * aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+            h = int(round(math.sqrt(target_area / aspect_ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
             if w <= img.size[0] and h <= img.size[1]:
                 i = random.randint(0, img.size[1] - h)
@@ -705,10 +705,10 @@ class RandomResizedCropAndInterpolation:
         in_ratio = img.size[0] / img.size[1]
         if in_ratio < min(ratio):
             w = img.size[0]
-            h = int(round(w / min(ratio)))
+            h = int(round(w / min(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         elif in_ratio > max(ratio):
             h = img.size[1]
-            w = int(round(h * max(ratio)))
+            w = int(round(h * max(ratio)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         else:  # whole image
             w = img.size[0]
             h = img.size[1]
@@ -1088,8 +1088,8 @@ class CenterCrop:
             )
             raise ValueError(error_msg)
 
-        x1 = int(round((im_w - w) / 2.0))
-        y1 = int(round((im_h - h) / 2.0))
+        x1 = int(round((im_w - w) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+        y1 = int(round((im_h - h) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         cropped = FF.crop_clip(clip, y1, x1, h, w)
 
         return cropped

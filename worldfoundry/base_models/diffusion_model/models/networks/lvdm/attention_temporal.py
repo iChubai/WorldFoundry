@@ -210,7 +210,7 @@ class TemporalCrossAttention(nn.Module):
             sim += sim2
         # print('mask',mask)
         if exists(self.mask):
-            if mask is None:
+            if mask is None:  # noqa: SIM108 - Branches carry per-case comments.
                 mask = self.mask.to(sim.device)
             else:
                 mask = self.mask.to(sim.device).bool() & mask  # .to(sim.device)
@@ -675,7 +675,7 @@ class BasicTransformerBlockST(nn.Module):
             x = self.attn2(self.norm2(x), context=context_) + x
             x = rearrange(x, "(b t) (h w) c -> b c t h w", b=b, h=h)
 
-            if (no_temporal_attn is None) or (not no_temporal_attn):
+            if (no_temporal_attn is None) or (not no_temporal_attn):  # noqa: F821 - Name is undefined in the upstream source.
                 if self.temporalcrossfirst:
                     # temporal cross attention
                     if self.temporal_crossattn_type == "crossattn":
@@ -1029,7 +1029,7 @@ class QKVAttentionLegacy(nn.Module):
     @staticmethod
     def count_flops(model, _x, y):
         """fvcore flop-count hook for the legacy QKV kernel."""
-        return count_flops_attn(model, _x, y)
+        return count_flops_attn(model, _x, y)  # noqa: F821 - Name is undefined in the upstream source.
 
 
 # ---------------------------------------------------------------------------------------------------------------

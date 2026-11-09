@@ -87,7 +87,7 @@ def show_bbox_only(coco, anns, show_label_bbox=True, is_filling=True):
 
         label_bbox = {"facecolor": color} if show_label_bbox else None
 
-        ax.text(bbox_x, bbox_y, "%s" % (coco.loadCats(ann["category_id"])[0]["name"]), color="white", bbox=label_bbox)
+        ax.text(bbox_x, bbox_y, "%s" % (coco.loadCats(ann["category_id"])[0]["name"]), color="white", bbox=label_bbox)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     if is_filling:
         p = PatchCollection(polygons, facecolor=colors, linewidths=0, alpha=0.4)

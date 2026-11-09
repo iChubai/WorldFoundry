@@ -145,7 +145,7 @@ def get_model_tokenizer_internvl(
 ):
     model, tokenizer = get_model_tokenizer_with_flash_attn(model_dir, model_info, model_kwargs, load_model, **kwargs)
 
-    if model_info.quant_method == "bnb" and kwargs.get("is_training"):
+    if model_info.quant_method == "bnb" and kwargs.get("is_training"):  # noqa: SIM102 - Branches carry per-case comments.
         # patch: bnb backward shape mismatch bug
         if model is not None and model.language_model is not None:
             model.language_model.output.state.force_no_igemmlt = True

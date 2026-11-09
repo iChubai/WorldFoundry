@@ -1,8 +1,9 @@
 # decorator
+# ruff: noqa: F405 - Names come from the upstream star import.
 import inspect
 from functools import wraps
 from numbers import Number
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import numpy as np
 

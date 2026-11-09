@@ -574,7 +574,7 @@ def find(
         result_df["source_h"] = target_region["h"]
 
         distances = []
-        for index, instance in df.iterrows():
+        for index, instance in df.iterrows():  # noqa: B007 - The loop variable is read outside the loop.
             source_representation = instance[f"{model_name}_representation"]
 
             if distance_metric == "cosine":

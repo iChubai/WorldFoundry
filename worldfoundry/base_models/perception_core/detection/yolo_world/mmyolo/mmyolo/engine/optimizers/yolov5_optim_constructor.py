@@ -110,7 +110,7 @@ class YOLOv5OptimizerConstructor:
         optimizer_cfg["params"].append({"params": params_groups[2]})
 
         print_log(
-            "Optimizer groups: %g .bias, %g conv.weight, %g other"
+            "Optimizer groups: %g .bias, %g conv.weight, %g other"  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             % (len(params_groups[2]), len(params_groups[0]), len(params_groups[1])),
             "current",
         )

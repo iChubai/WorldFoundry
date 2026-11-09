@@ -107,7 +107,7 @@ class YOLOXPoseHead(YOLOXHead):
         else:
             outs = self(x)
             # Fast version
-            loss_inputs = outs + (
+            loss_inputs = outs + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 batch_data_samples["bboxes_labels"],
                 batch_data_samples["keypoints"],
                 batch_data_samples["keypoints_visible"],
@@ -255,7 +255,7 @@ class YOLOXPoseHead(YOLOXHead):
         intermediate output from a parent class without copying a
         arge block of code
         """
-        with OutputSaveFunctionWrapper(filter_scores_and_topk, super().predict_by_feat.__globals__) as outputs_1:
+        with OutputSaveFunctionWrapper(filter_scores_and_topk, super().predict_by_feat.__globals__) as outputs_1:  # noqa: SIM117 - Keeps the nested context managers.
             with OutputSaveFunctionWrapper(batched_nms, super()._bbox_post_process.__globals__) as outputs_2:
                 results_list = super().predict_by_feat(
                     cls_scores, bbox_preds, objectnesses, batch_img_metas, cfg, rescale, with_nms

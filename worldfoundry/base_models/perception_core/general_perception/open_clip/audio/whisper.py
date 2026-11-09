@@ -413,7 +413,7 @@ def create_whisper_model(audio_cfg, output_dim, **kwargs) -> WhisperEncoder:
             model_state_dict = model.state_dict()
             whisper_state_dict = whisper_model.encoder.state_dict()
             loaded = 0
-            for k in model_state_dict.keys():
+            for k in model_state_dict.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 if k in whisper_state_dict and model_state_dict[k].shape == whisper_state_dict[k].shape:
                     model_state_dict[k] = whisper_state_dict[k]
                     loaded += 1

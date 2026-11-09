@@ -38,7 +38,7 @@ class BaseCamera(TensorWrapper):
         # w, h, fx, fy, cx, cy, dist
         assert data.shape[-1] in {6, 7, 8}, data.shape
 
-        pad = data.new_zeros(data.shape[:-1] + (8 - data.shape[-1],))
+        pad = data.new_zeros(data.shape[:-1] + (8 - data.shape[-1],))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         data = torch.cat([data, pad], -1) if data.shape[-1] != 8 else data
         super().__init__(data)
 
@@ -116,7 +116,7 @@ class BaseCamera(TensorWrapper):
     @property
     def K(self) -> torch.Tensor:
         """Returns the self intrinsic matrix with shape (..., 3, 3)."""
-        shape = self.shape + (3, 3)
+        shape = self.shape + (3, 3)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         K = self._data.new_zeros(shape)
         K[..., 0, 0] = self.f[..., 0]
         K[..., 1, 1] = self.f[..., 1]
@@ -182,7 +182,7 @@ class BaseCamera(TensorWrapper):
         zero = torch.zeros_like(z)
         z = z.clamp(min=self.eps)
         J = torch.stack([1 / z, zero, -x / z**2, zero, 1 / z, -y / z**2], dim=-1)
-        J = J.reshape(p3d.shape[:-1] + (2, 3))
+        J = J.reshape(p3d.shape[:-1] + (2, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return J  # N x 2 x 3
 
     def undo_scale_crop(self, data: dict[str, torch.Tensor]):
@@ -199,7 +199,7 @@ class BaseCamera(TensorWrapper):
         """Jacobian of the distortion function."""
         if wrt == "scale2pts":  # (..., 2)
             J = [
-                vmap(jacfwd(lambda x: self[idx].distort(x, return_scale=True)[0]))(p2d[idx])[None]
+                vmap(jacfwd(lambda x: self[idx].distort(x, return_scale=True)[0]))(p2d[idx])[None]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 for idx in range(p2d.shape[0])
             ]
 
@@ -210,8 +210,8 @@ class BaseCamera(TensorWrapper):
             for idx in range(p2d.shape[0]):  # loop to batch pts dimension
 
                 def func(x):
-                    params = torch.cat([self._data[idx, :6], x[None]], -1)
-                    return self.__class__(params).distort(p2d[idx], return_scale=True)[0]
+                    params = torch.cat([self._data[idx, :6], x[None]], -1)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    return self.__class__(params).distort(p2d[idx], return_scale=True)[0]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                 J.append(vmap(jacfwd(func))(self[idx].dist))
 
@@ -228,7 +228,7 @@ class BaseCamera(TensorWrapper):
     def J_undistort(self, p2d: torch.Tensor, wrt: str = "pts") -> torch.Tensor:
         """Jacobian of the undistortion function."""
         if wrt == "pts":  # (..., 2, 2)
-            J = [vmap(jacfwd(lambda x: self[idx].undistort(x)[0]))(p2d[idx])[None] for idx in range(p2d.shape[0])]
+            J = [vmap(jacfwd(lambda x: self[idx].undistort(x)[0]))(p2d[idx])[None] for idx in range(p2d.shape[0])]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
             return torch.cat(J, dim=0).squeeze(-3)
 
@@ -237,8 +237,8 @@ class BaseCamera(TensorWrapper):
             for batch_idx in range(p2d.shape[0]):  # loop to batch pts dimension
 
                 def func(x):
-                    params = torch.cat([self._data[batch_idx, :6], x[None]], -1)
-                    return self.__class__(params).undistort(p2d[batch_idx])[0]
+                    params = torch.cat([self._data[batch_idx, :6], x[None]], -1)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    return self.__class__(params).undistort(p2d[batch_idx])[0]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                 J.append(vmap(jacfwd(func))(self[batch_idx].dist))
 
@@ -255,7 +255,7 @@ class BaseCamera(TensorWrapper):
         """Jacobian of the distortion offset for up-projection."""
         if wrt == "uv":  # (B, N, 2, 2)
             J = [
-                vmap(jacfwd(lambda x: self[idx].up_projection_offset(x)[0, 0]))(p2d[idx])[None]
+                vmap(jacfwd(lambda x: self[idx].up_projection_offset(x)[0, 0]))(p2d[idx])[None]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                 for idx in range(p2d.shape[0])
             ]
 
@@ -266,8 +266,8 @@ class BaseCamera(TensorWrapper):
             for batch_idx in range(p2d.shape[0]):  # loop to batch pts dimension
 
                 def func(x):
-                    params = torch.cat([self._data[batch_idx, :6], x[None]], -1)[None]
-                    return self.__class__(params).up_projection_offset(p2d[batch_idx][None])
+                    params = torch.cat([self._data[batch_idx, :6], x[None]], -1)[None]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    return self.__class__(params).up_projection_offset(p2d[batch_idx][None])  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                 J.append(vmap(jacfwd(func))(self[batch_idx].dist))
 
@@ -353,7 +353,7 @@ class BaseCamera(TensorWrapper):
         """Transform point in the image plane to 3D world coordinates."""
         p2d = self.normalize(p2d)
         p2d, valid = self.undistort(p2d)
-        ones = p2d.new_ones(p2d.shape[:-1] + (1,))
+        ones = p2d.new_ones(p2d.shape[:-1] + (1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         p3d = torch.cat([p2d, ones], -1)
         return p3d, valid
 
@@ -433,7 +433,7 @@ class BaseCamera(TensorWrapper):
         pano_img = pano_img if pano_img.dim() == 4 else pano_img.unsqueeze(0)  # B x 3 x H x W
 
         pano_imgs = []
-        for i, yaw in enumerate(yaws):
+        for i, yaw in enumerate(yaws):  # noqa: B007 - The loop variable is read outside the loop.
             if resize_factor is not None:
                 # resize the panorama such that the fov of the panorama has the same height as the
                 # image
@@ -502,14 +502,14 @@ class Pinhole(BaseCamera):
     def distort(self, p2d: torch.Tensor, return_scale: bool = False) -> tuple[torch.Tensor]:
         """Distort normalized 2D coordinates."""
         if return_scale:
-            return p2d.new_ones(p2d.shape[:-1] + (1,))
+            return p2d.new_ones(p2d.shape[:-1] + (1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return p2d, p2d.new_ones((p2d.shape[0], 1)).bool()
 
     def J_distort(self, p2d: torch.Tensor, wrt: str = "pts") -> torch.Tensor:
         """Jacobian of the distortion function."""
         if wrt == "pts":
-            return torch.eye(2, device=p2d.device, dtype=p2d.dtype).expand(p2d.shape[:-1] + (2, 2))
+            return torch.eye(2, device=p2d.device, dtype=p2d.dtype).expand(p2d.shape[:-1] + (2, 2))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         raise ValueError(f"Unknown wrt: {wrt}")
 
@@ -520,14 +520,14 @@ class Pinhole(BaseCamera):
     def J_undistort(self, p2d: torch.Tensor, wrt: str = "pts") -> torch.Tensor:
         """Jacobian of the undistortion function."""
         if wrt == "pts":
-            return torch.eye(2, device=p2d.device, dtype=p2d.dtype).expand(p2d.shape[:-1] + (2, 2))
+            return torch.eye(2, device=p2d.device, dtype=p2d.dtype).expand(p2d.shape[:-1] + (2, 2))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         raise ValueError(f"Unknown wrt: {wrt}")
 
     def J_up_projection_offset(self, p2d: torch.Tensor, wrt: str = "uv") -> torch.Tensor:
         """Jacobian of the up-projection offset."""
         if wrt == "uv":
-            return torch.zeros(p2d.shape[:-1] + (2, 2), device=p2d.device, dtype=p2d.dtype)
+            return torch.zeros(p2d.shape[:-1] + (2, 2), device=p2d.device, dtype=p2d.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         raise ValueError(f"Unknown wrt: {wrt}")
 
@@ -600,7 +600,7 @@ class SimpleRadial(BaseCamera):
             return -r2 * p2d
         elif wrt == "pts":
             radial = 1 + b1 * r2
-            radial_diag = torch.diag_embed(radial.expand(radial.shape[:-1] + (2,)))
+            radial_diag = torch.diag_embed(radial.expand(radial.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ppT = torch.einsum("...i,...j->...ij", p2d, p2d)  # (..., 2, 2)
             return (2 * b1[..., None] * ppT) + radial_diag
         else:
@@ -609,7 +609,7 @@ class SimpleRadial(BaseCamera):
     def J_up_projection_offset(self, p2d: torch.Tensor, wrt: str = "uv") -> torch.Tensor:
         """Jacobian of the up-projection offset."""
         if wrt == "uv":  # (..., 2, 2)
-            return torch.diag_embed((2 * self.k1[..., None, None]).expand(p2d.shape[:-1] + (2,)))
+            return torch.diag_embed((2 * self.k1[..., None, None]).expand(p2d.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         elif wrt == "dist":
             return 2 * p2d  # (..., 2)
         else:
@@ -701,7 +701,7 @@ class SimpleDivisional(BaseCamera):
             t0 = 1 + k1 * r2
             t0 = t0.masked_fill(t0 == 0, 1e6)
             ppT = torch.einsum("...i,...j->...ij", p2d, p2d)  # (..., 2, 2)
-            J = torch.diag_embed((1 / t0).expand(p2d.shape[:-1] + (2,)))
+            J = torch.diag_embed((1 / t0).expand(p2d.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             return J - 2 * k1[..., None] * ppT / t0[..., None] ** 2  # (..., N, 2, 2)
 
         else:
@@ -737,7 +737,7 @@ class SimpleDivisional(BaseCamera):
 
             denom = 2 * r2 * t1
             denom = denom.masked_fill(denom == 0, 1e6)
-            J = torch.diag_embed((4 / denom).expand(p2d.shape[:-1] + (2,)))
+            J = torch.diag_embed((4 / denom).expand(p2d.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             denom = 4 * t1 * r2**2
             denom = denom.masked_fill(denom == 0, 1e6)
@@ -757,7 +757,7 @@ class SimpleDivisional(BaseCamera):
 
             denom = k1 * r2**2
             denom = denom.masked_fill(denom == 0, 1e6)
-            J = J - torch.diag_embed(((1 - t1) / denom).expand(p2d.shape[:-1] + (2,)))
+            J = J - torch.diag_embed(((1 - t1) / denom).expand(p2d.shape[:-1] + (2,)))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             return J
         else:
@@ -908,7 +908,7 @@ class SimpleMei(BaseCamera):
                     ds_dv * v + s,
                 ],
                 dim=-1,
-            ).reshape(p2d.shape[:-1] + (2, 2))
+            ).reshape(p2d.shape[:-1] + (2, 2))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             return J
 
         else:
@@ -932,7 +932,7 @@ class SimpleMei(BaseCamera):
             uu = 1 / lower_s - (u**2) * upper_c / lower_b
             uv = -u * v * upper_c / lower_b
             vv = 1 / lower_s - (v**2) * upper_c / lower_b
-            J = torch.cat([uu, uv, uv, vv], dim=-1).reshape(p2d.shape[:-1] + (2, 2))
+            J = torch.cat([uu, uv, uv, vv], dim=-1).reshape(p2d.shape[:-1] + (2, 2))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             res = -k1[..., None] * J
             return res
         elif wrt == "dist":

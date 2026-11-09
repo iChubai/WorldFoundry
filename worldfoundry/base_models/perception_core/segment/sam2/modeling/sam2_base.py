@@ -531,7 +531,7 @@ class SAM2Base(torch.nn.Module):
                 t_rel = self.num_maskmem - t_pos  # how many frames before current frame
                 if t_rel == 1:
                     # for t_rel == 1, we take the last frame (regardless of r)
-                    if not track_in_reverse:
+                    if not track_in_reverse:  # noqa: SIM108 - Branches carry per-case comments.
                         # the frame immediately before this frame (i.e. frame_idx - 1)
                         prev_frame_idx = frame_idx - t_rel
                     else:

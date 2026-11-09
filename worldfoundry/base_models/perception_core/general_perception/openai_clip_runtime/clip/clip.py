@@ -109,7 +109,7 @@ def _load_checkpoint_state_dict(model_path: str):
     except RuntimeError:
         state_dict = torch.load(model_path, map_location="cpu", weights_only=True)
         if not isinstance(state_dict, dict):
-            raise TypeError(f"CLIP checkpoint must contain a state dict, got {type(state_dict)!r}")
+            raise TypeError(f"CLIP checkpoint must contain a state dict, got {type(state_dict)!r}")  # noqa: B904 - Keeps the implicit exception context.
         return state_dict
     return scripted_model.state_dict()
 
@@ -137,7 +137,7 @@ def clear_checkpoint_cache() -> None:
 
 def load(
     name: str,
-    device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu",
+    device: str | torch.device = "cuda" if torch.cuda.is_available() else "cpu",  # noqa: B008 - Default evaluated once at definition, as upstream.
     jit: bool = False,
     download_root: str | None = None,
 ):
@@ -277,7 +277,7 @@ def tokenize(
 
     sot_token = _tokenizer.encoder["<|startoftext|>"]
     eot_token = _tokenizer.encoder["<|endoftext|>"]
-    all_tokens = [[sot_token] + _tokenizer.encode(text) + [eot_token] for text in texts]
+    all_tokens = [[sot_token] + _tokenizer.encode(text) + [eot_token] for text in texts]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if version.parse(torch.__version__) < version.parse("1.8.0"):
         result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
     else:

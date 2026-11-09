@@ -96,7 +96,7 @@ def get_clean_fn(type: str):
     elif type == "whitespace":
         return _clean_whitespace
     else:
-        assert False, f"Invalid clean function ({type})."
+        assert False, f"Invalid clean function ({type})."  # noqa: B011 - Keeps the assertion semantics under -O.
 
 
 def canonicalize_text(text, *, keep_punctuation_exact_string=None):
@@ -134,7 +134,7 @@ class SimpleTokenizer:
     ):
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
-        merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")
+        merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
         merges = merges[1 : 49152 - 256 - 2 + 1]
         merges = [tuple(merge.split()) for merge in merges]
         vocab = list(bytes_to_unicode().values())
@@ -165,7 +165,7 @@ class SimpleTokenizer:
     def bpe(self, token):
         if token in self.cache:
             return self.cache[token]
-        word = tuple(token[:-1]) + (token[-1] + "</w>",)
+        word = tuple(token[:-1]) + (token[-1] + "</w>",)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         pairs = get_pairs(word)
 
         if not pairs:
@@ -246,7 +246,7 @@ class SimpleTokenizer:
                 encode_fn=self.encode,
             )
 
-        all_tokens = [[self.sot_token_id] + self.encode(text) + [self.eot_token_id] for text in texts]
+        all_tokens = [[self.sot_token_id] + self.encode(text) + [self.eot_token_id] for text in texts]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
 
         for i, tokens in enumerate(all_tokens):
@@ -303,7 +303,7 @@ def simple_mask_tokenize(
             num_keep = context_length - 2
             start_index = random.randint(0, num_tokens - num_keep)  # high is incl
             tokens = tokens[start_index : start_index + num_keep]
-        tokens = [sot_token_id] + tokens + [eot_token_id]
+        tokens = [sot_token_id] + tokens + [eot_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         result[i, : len(tokens)] = torch.tensor(tokens)
 
     return result

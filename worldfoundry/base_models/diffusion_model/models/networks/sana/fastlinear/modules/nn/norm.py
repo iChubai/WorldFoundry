@@ -78,7 +78,7 @@ def build_norm(name="bn2d", num_features=None, affine=True, **kwargs) -> nn.Modu
     elif name is None or name.lower() == "none":
         return None
     else:
-        raise ValueError("do not support: %s" % name)
+        raise ValueError("do not support: %s" % name)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 def get_norm_name(norm: nn.Module or None) -> str or None:
@@ -159,7 +159,7 @@ def reset_bn(
         return
 
     tmp_model.eval()
-    with torch.inference_mode():
+    with torch.inference_mode():  # noqa: SIM117 - Keeps the nested context managers.
         with tqdm(total=len(data_loader), desc="reset bn", disable=not progress_bar or not is_master()) as t:
             for images in data_loader:
                 images = images.to(get_device(tmp_model))

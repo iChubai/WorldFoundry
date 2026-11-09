@@ -21,7 +21,7 @@ from mmengine.utils import ProgressBar
 try:
     from pytorch_grad_cam import AblationCAM, EigenCAM
 except ImportError:
-    raise ImportError('Please run `pip install "grad-cam"` to install pytorch_grad_cam package.')
+    raise ImportError('Please run `pip install "grad-cam"` to install pytorch_grad_cam package.')  # noqa: B904 - Keeps the implicit exception context.
 
 from mmyolo.utils.boxam_utils import (
     BoxAMDetectorVisualizer,
@@ -137,7 +137,7 @@ def init_detector_and_visualizer(args, cfg):
             target_layers.append(eval(f"model_wrapper.detector.{target_layer}"))
         except Exception as e:
             print(model_wrapper.detector)
-            raise RuntimeError("layer does not exist", e)
+            raise RuntimeError("layer does not exist", e)  # noqa: B904 - Keeps the implicit exception context.
 
     ablationcam_extra_params = {
         "batch_size": args.batch_size,

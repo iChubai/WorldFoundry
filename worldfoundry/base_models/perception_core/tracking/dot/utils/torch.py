@@ -90,7 +90,7 @@ def get_grid(height, width, shape=None, dtype="torch", device="cpu", align_corne
         if not normalize:
             x = x * W
             y = y * H
-    x_view, y_view, exp = [1 for _ in S] + [1, -1], [1 for _ in S] + [-1, 1], S + [H, W]
+    x_view, y_view, exp = [1 for _ in S] + [1, -1], [1 for _ in S] + [-1, 1], S + [H, W]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     x = x.view(*x_view).expand(*exp)
     y = y.view(*y_view).expand(*exp)
     grid = torch.stack([x, y], dim=-1)

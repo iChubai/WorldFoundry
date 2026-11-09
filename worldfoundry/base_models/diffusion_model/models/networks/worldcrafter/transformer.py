@@ -35,7 +35,7 @@ class WorldCrafterTransformerBlock(HeliosTransformerBlock):
         history_seq_len = hidden_states.shape[1] - original_context_length if original_context_length is not None else 0
         current_norm_hidden_states = norm_hidden_states[:, history_seq_len:, :]
 
-        if hasattr(self, "cam_self_attn") and camera_control_ucpe_input is not None:
+        if hasattr(self, "cam_self_attn") and camera_control_ucpe_input is not None:  # noqa: SIM102 - Statement form kept for readability.
             if self.cam_self_attn.adaptation_method == "before":
                 cam_current = self.cam_self_attn(current_norm_hidden_states, camera_control_ucpe_input)
                 cam_full = torch.zeros_like(norm_hidden_states)
@@ -44,7 +44,7 @@ class WorldCrafterTransformerBlock(HeliosTransformerBlock):
 
         attn_output = self.attn1(norm_hidden_states, None, None, rotary_emb, original_context_length)
 
-        if hasattr(self, "cam_self_attn") and camera_control_ucpe_input is not None:
+        if hasattr(self, "cam_self_attn") and camera_control_ucpe_input is not None:  # noqa: SIM102 - Statement form kept for readability.
             if self.cam_self_attn.adaptation_method == "parallel":
                 cam_current = self.cam_self_attn(current_norm_hidden_states, camera_control_ucpe_input)
                 cam_full = torch.zeros_like(attn_output)
@@ -53,7 +53,7 @@ class WorldCrafterTransformerBlock(HeliosTransformerBlock):
 
         hidden_states = (hidden_states.float() + attn_output * gate_msa).type_as(hidden_states)
 
-        if hasattr(self, "cam_self_attn") and camera_control_ucpe_input is not None:
+        if hasattr(self, "cam_self_attn") and camera_control_ucpe_input is not None:  # noqa: SIM102 - Statement form kept for readability.
             if self.cam_self_attn.adaptation_method == "after":
                 cam_current = self.cam_self_attn(hidden_states[:, history_seq_len:, :], camera_control_ucpe_input)
                 hidden_states = hidden_states.clone()

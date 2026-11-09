@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 from math import prod
 
 import torch
@@ -114,7 +115,7 @@ def get_world_rays(
 
 def sample_image_grid(
     shape: tuple[int, ...],
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ) -> tuple[
     Float[Tensor, "*shape dim"],  # float coordinates (xy indexing)
     Int64[Tensor, "*shape dim"],  # integer indices (ij indexing)

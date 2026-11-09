@@ -746,7 +746,7 @@ class CausalWanModel(nn.Module, NativeConfigMixin):
             import cv2
 
             mask = cv2.resize(mask[0, 0].cpu().float().numpy(), (1024, 1024))
-            imageio.imwrite("mask_%d.jpg" % (0), np.uint8(255.0 * mask))
+            imageio.imwrite("mask_%d.jpg" % (0), np.uint8(255.0 * mask))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
         return block_mask
 

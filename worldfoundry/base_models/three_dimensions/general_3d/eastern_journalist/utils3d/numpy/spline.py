@@ -1,4 +1,4 @@
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import numpy as np
 
@@ -6,7 +6,10 @@ __all__ = ["linear_spline_interpolate"]
 
 
 def linear_spline_interpolate(
-    x: np.ndarray, t: np.ndarray, s: np.ndarray, extrapolation_mode: Literal["constant", "linear"] = "constant"
+    x: np.ndarray,
+    t: np.ndarray,
+    s: np.ndarray,
+    extrapolation_mode: Literal["constant", "linear"] = "constant",  # noqa: F405 - Name comes from the upstream star import.
 ) -> np.ndarray:
     """
     Linear spline interpolation.

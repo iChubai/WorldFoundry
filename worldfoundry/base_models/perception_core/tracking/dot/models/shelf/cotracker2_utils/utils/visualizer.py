@@ -255,7 +255,7 @@ class Visualizer:
                 visibile = True
                 if visibility is not None:
                     visibile = visibility[0, t, i]
-                if coord[0] != 0 and coord[1] != 0:
+                if coord[0] != 0 and coord[1] != 0:  # noqa: SIM102 - Statement form kept for readability.
                     if not compensate_for_camera_motion or (compensate_for_camera_motion and segm_mask[i] > 0):
                         img = draw_circle(
                             img,

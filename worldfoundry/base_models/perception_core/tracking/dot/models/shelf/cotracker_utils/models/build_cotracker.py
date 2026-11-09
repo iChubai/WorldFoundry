@@ -22,7 +22,7 @@ def build_cotracker(
     elif patch_size == 8 and wind_size == 16:
         return build_cotracker_stride_8_wind_16()
     else:
-        raise ValueError(f"Unknown model for patch size {patch_size} and window size {window_size}")
+        raise ValueError(f"Unknown model for patch size {patch_size} and window size {window_size}")  # noqa: F821 - Name is undefined in the upstream source.
 
 
 # model used to produce the results in the paper

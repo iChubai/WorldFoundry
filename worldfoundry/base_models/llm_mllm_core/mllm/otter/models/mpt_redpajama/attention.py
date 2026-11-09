@@ -94,7 +94,7 @@ def scaled_multihead_dot_product_attention(
     return out, None
 
 
-def check_valid_inputs(*tensors, valid_dtypes=[torch.float16, torch.bfloat16]):
+def check_valid_inputs(*tensors, valid_dtypes=[torch.float16, torch.bfloat16]):  # noqa: B006 - Keeps the upstream default object and signature.
     for tensor in tensors:
         if tensor.dtype not in valid_dtypes:
             raise TypeError(f"{tensor.dtype=} must be in {valid_dtypes=}.")
@@ -118,7 +118,7 @@ def flash_attn_fn(
     try:
         from flash_attn import bert_padding, flash_attn_interface
     except BaseException:
-        raise RuntimeError("Please install flash_attn==0.2.8")
+        raise RuntimeError("Please install flash_attn==0.2.8")  # noqa: B904 - Keeps the implicit exception context.
 
     check_valid_inputs(query, key, value)
 
@@ -178,7 +178,7 @@ def triton_flash_attn_fn(
     try:
         from flash_attn import flash_attn_triton  # type: ignore
     except BaseException:
-        raise RuntimeError("Please install flash_attn==0.2.8 and triton==2.0.0.dev20221202.")
+        raise RuntimeError("Please install flash_attn==0.2.8 and triton==2.0.0.dev20221202.")  # noqa: B904 - Keeps the implicit exception context.
 
     check_valid_inputs(query, key, value)
 

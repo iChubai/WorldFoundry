@@ -154,13 +154,13 @@ class RepresentationBackbone(nn.Module):
                 )
             frame_pos = pos.reshape(batch, views, total_tokens, 2).reshape(batch * views, total_tokens, 2)
             tokens = self.frame_blocks[frame_index](tokens, pos=frame_pos)
-            frame_index += 1
+            frame_index += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             last_frame = tokens.reshape(batch, views, total_tokens, channels)
 
             tokens = tokens.reshape(batch, views, total_tokens, channels).reshape(batch, views * total_tokens, channels)
             global_pos = pos.reshape(batch, views, total_tokens, 2).reshape(batch, views * total_tokens, 2)
             tokens = self.global_blocks[global_index](tokens, pos=global_pos)
-            global_index += 1
+            global_index += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             last_global = tokens.reshape(batch, views, total_tokens, channels)
 
         if last_frame is None or last_global is None:

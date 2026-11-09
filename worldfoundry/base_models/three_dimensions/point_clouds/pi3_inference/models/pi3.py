@@ -50,7 +50,7 @@ class Pi3(nn.Module, PyTorchModelHubMixin):
         # ----------------------
         #        Decoder
         # ----------------------
-        self.encoder.blocks[0].attn.qkv.in_features  # 1024
+        self.encoder.blocks[0].attn.qkv.in_features  # noqa: B018 - Attribute access resolves the lazy import, as upstream.  # 1024
         if decoder_size == "small":
             dec_embed_dim = 384
             dec_num_heads = 6

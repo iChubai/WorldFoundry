@@ -95,7 +95,7 @@ def loadModel(
     _home = functions.get_deepface_home()
     output = "../../checkpoints/vgg_face_weights.h5"
     print("VGG:", output)
-    if os.path.isfile(output) != True:
+    if os.path.isfile(output) != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print("vgg_face_weights.h5 will be downloaded...")
         gdown.download(url, output, quiet=False)
 

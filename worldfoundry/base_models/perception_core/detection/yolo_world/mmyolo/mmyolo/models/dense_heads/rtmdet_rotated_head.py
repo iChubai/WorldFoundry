@@ -81,8 +81,8 @@ class RTMDetRotatedSepBNHeadModule(RTMDetSepBNHeadModule):
         pred_kernel_size: int = 1,
         angle_out_dim: int = 1,
         conv_cfg: OptConfigType = None,
-        norm_cfg: ConfigType = {"type": "BN"},
-        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},
+        norm_cfg: ConfigType = {"type": "BN"},  # noqa: B006 - Keeps the upstream default object and signature.
+        act_cfg: ConfigType = {"type": "SiLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
         init_cfg: OptMultiConfig = None,
     ):
         self.angle_out_dim = angle_out_dim
@@ -261,13 +261,13 @@ class RTMDetRotatedHead(RTMDetHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "strides": [8, 16, 32], "offset": 0},
-        bbox_coder: ConfigType = {"type": "DistanceAnglePointCoder"},
-        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},
-        loss_bbox: ConfigType = {"type": "mmrotate.RotatedIoULoss", "mode": "linear", "loss_weight": 2.0},
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "strides": [8, 16, 32], "offset": 0},  # noqa: B006 - Keeps the upstream default object and signature.
+        bbox_coder: ConfigType = {"type": "DistanceAnglePointCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_bbox: ConfigType = {"type": "mmrotate.RotatedIoULoss", "mode": "linear", "loss_weight": 2.0},  # noqa: B006 - Keeps the upstream default object and signature.
         angle_version: str = "le90",
         use_hbbox_loss: bool = False,
-        angle_coder: ConfigType = {"type": "mmrotate.PseudoAngleCoder"},
+        angle_coder: ConfigType = {"type": "mmrotate.PseudoAngleCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
         loss_angle: OptConfigType = None,
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
@@ -421,7 +421,7 @@ class RTMDetRotatedHead(RTMDetHead):
             flatten_decoded_bboxes, flatten_cls_scores, flatten_objectness, batch_img_metas, strict=False
         ):
             scale_factor = img_meta["scale_factor"]
-            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
             score_thr = cfg.get("score_thr", -1)
             # yolox_style does not require the following operations

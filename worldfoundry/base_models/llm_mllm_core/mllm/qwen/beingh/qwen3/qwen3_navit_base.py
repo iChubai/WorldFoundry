@@ -24,7 +24,7 @@ class Qwen3DecoderLayer(nn.Module):
         if (
             config.sliding_window and config._attn_implementation != "flash_attention_2"
         ):  # diff with Llama is this warning
-            logger.warning_once(
+            logger.warning_once(  # noqa: F821 - Name is undefined in the upstream source.
                 f"Sliding Window Attention is enabled but not implemented for `{config._attn_implementation}`; "
                 "unexpected results may be encountered."
             )

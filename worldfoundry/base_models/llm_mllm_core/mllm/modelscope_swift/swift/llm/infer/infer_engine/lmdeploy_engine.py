@@ -264,7 +264,7 @@ class LmdeployEngine(InferEngine):
         if version.parse(lmdeploy.__version__) >= version.parse("0.6.5"):
             async with self.engine.model_inst(session_id) as inst:
                 async with self.engine.safe_run(inst, session_id, **inputs, **kwargs) as gen:
-                    async for output in gen:
+                    async for output in gen:  # noqa: B007 - The loop variable is read outside the loop.
                         pass
                 if self.engine.backend == "pytorch":
                     # manually end pytorch session
@@ -273,7 +273,7 @@ class LmdeployEngine(InferEngine):
         else:
             async with self.engine.safe_run(session_id):
                 generator = await self.engine.get_generator(False, session_id)
-                async for output in generator.async_stream_infer(session_id=session_id, **inputs, **kwargs):
+                async for output in generator.async_stream_infer(session_id=session_id, **inputs, **kwargs):  # noqa: B007 - The loop variable is read outside the loop.
                     pass
 
         response = template.decode(output.token_ids)
@@ -320,7 +320,7 @@ class LmdeployEngine(InferEngine):
                 results = await self.engine.vl_encoder.preprocess(messages)
                 if self.engine.backend == "turbomind":
                     results = await self.engine.vl_encoder.async_infer(results)
-                    inputs["images"] = [result["content"] for result in results if result["role"] == "forward"][0]
+                    inputs["images"] = [result["content"] for result in results if result["role"] == "forward"][0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
                     await template.prepare_lmdeploy_turbomind_inputs(inputs)
                 else:
                     inputs["images"] = results[1]["content"]

@@ -274,8 +274,8 @@ class Qwen2VLTemplate(Template):
                 merge_length = processor.image_processor.merge_size**2
 
                 def _get_new_tokens(i):
-                    token_len = media_grid_thw[i].prod() // merge_length
-                    return [media_token] * token_len
+                    token_len = media_grid_thw[i].prod() // merge_length  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                    return [media_token] * token_len  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                 input_ids, labels = self._extend_tokens(input_ids, labels, idx_list, _get_new_tokens)
                 encoded.update(media_inputs)
@@ -517,16 +517,16 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
                     video_second_per_grid = media_inputs["video_second_per_grid"]
 
                     def _get_new_tokens_use_audio_in_video(i):
-                        audio_token_indices = torch.arange(audio_lengths[i])
-                        grid_thw = media_grid_thw[i]
-                        height = grid_thw[1] // merge_size
-                        width = grid_thw[2] // merge_size
+                        audio_token_indices = torch.arange(audio_lengths[i])  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        grid_thw = media_grid_thw[i]  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        height = grid_thw[1] // merge_size  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        width = grid_thw[2] // merge_size  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         video_token_indices = torch.arange(grid_thw[0]).reshape(-1, 1, 1)
                         video_token_indices = torch.broadcast_to(
                             video_token_indices, (video_token_indices.shape[0], height, width)
                         ).reshape(-1)
                         video_token_indices = (
-                            video_token_indices * video_second_per_grid[i] * self.position_id_per_seconds
+                            video_token_indices * video_second_per_grid[i] * self.position_id_per_seconds  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         )
                         tokens_per_chunk = int(self.position_id_per_seconds * self.seconds_per_chunk)
                         video_chunk_indexes = processor.get_chunked_index(video_token_indices, tokens_per_chunk)
@@ -536,7 +536,7 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
                         for j in range(max(len(video_chunk_indexes), len(audio_chunk_indexes))):
                             if j < len(video_chunk_indexes):
                                 video_seq_length = video_chunk_indexes[j][1] - video_chunk_indexes[j][0]
-                                res += token_id * video_seq_length
+                                res += token_id * video_seq_length  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                             if j < len(audio_chunk_indexes):
                                 audio_seq_length = audio_chunk_indexes[j][1] - audio_chunk_indexes[j][0]
                                 res += audio_token_id * audio_seq_length
@@ -549,8 +549,8 @@ class Qwen2_5OmniTemplate(Qwen2_5VLTemplate):
                 else:
 
                     def _get_new_tokens(i):
-                        token_len = media_grid_thw[i].prod() // (merge_size**2)
-                        return token_id * token_len
+                        token_len = media_grid_thw[i].prod() // (merge_size**2)  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        return token_id * token_len  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                     input_ids, labels = self._extend_tokens(input_ids, labels, idx_list, _get_new_tokens)
 

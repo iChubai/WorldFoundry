@@ -82,7 +82,7 @@ def sampler_gaussian_zy(latent, mean, std, image_size, point_num=25, return_delt
         return sampled_latents, sampled_weights
 
 
-def sampler_gaussian(latent, mean, std, image_size, point_num=25, return_deltaXY=False):
+def sampler_gaussian(latent, mean, std, image_size, point_num=25, return_deltaXY=False):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     # latent [B, H*W, D]
     # mean [B, 2, H, W]
     # std [B, 1, H, W]

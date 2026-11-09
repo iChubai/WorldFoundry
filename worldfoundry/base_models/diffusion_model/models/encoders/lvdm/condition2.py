@@ -207,7 +207,12 @@ class FrozenCLIPEmbedder(AbstractEncoder):
 
 class ClipImageEmbedder(nn.Module):
     def __init__(
-        self, model, jit=False, device="cuda" if torch.cuda.is_available() else "cpu", antialias=True, ucg_rate=0.0
+        self,
+        model,
+        jit=False,
+        device="cuda" if torch.cuda.is_available() else "cpu",  # noqa: B008 - Default evaluated once at definition, as upstream.
+        antialias=True,
+        ucg_rate=0.0,
     ):
         super().__init__()
         from worldfoundry.base_models.perception_core.general_perception.openai_clip import (

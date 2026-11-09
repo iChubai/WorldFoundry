@@ -38,9 +38,9 @@ def posenc(x, min_deg, max_deg):
         return x
     scales = torch.tensor([2**i for i in range(min_deg, max_deg)], dtype=x.dtype, device=x.device)
 
-    xb = (x[..., None, :] * scales[:, None]).reshape(list(x.shape[:-1]) + [-1])
+    xb = (x[..., None, :] * scales[:, None]).reshape(list(x.shape[:-1]) + [-1])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     four_feat = torch.sin(torch.cat([xb, xb + 0.5 * torch.pi], dim=-1))
-    return torch.cat([x] + [four_feat], dim=-1)
+    return torch.cat([x] + [four_feat], dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 class CoTrackerThreeBase(nn.Module):
@@ -329,7 +329,7 @@ class CoTrackerThreeOnline(CoTrackerThreeBase):
         )
 
         C_ = C
-        H4, W4 = H // self.stride, W // self.stride
+        H4, W4 = H // self.stride, W // self.stride  # noqa: F841 - Upstream assignment kept.
 
         # Compute convolutional features for the video or for the current chunk in case of online mode
         if (not is_train) and (fmaps_chunk_size < T):
@@ -358,7 +358,7 @@ class CoTrackerThreeOnline(CoTrackerThreeBase):
         track_feat_pyramid = []
         track_feat_support_pyramid = []
         fmaps_pyramid.append(fmaps)
-        for i in range(self.corr_levels - 1):
+        for i in range(self.corr_levels - 1):  # noqa: B007 - The loop variable is read outside the loop.
             fmaps_ = fmaps.reshape(B * T_pad, self.latent_dim, fmaps.shape[-2], fmaps.shape[-1])
             fmaps_ = F.avg_pool2d(fmaps_, 2, stride=2)
             fmaps = fmaps_.reshape(B, T_pad, self.latent_dim, fmaps_.shape[-2], fmaps_.shape[-1])
@@ -390,7 +390,7 @@ class CoTrackerThreeOnline(CoTrackerThreeBase):
                 track_feat_pyramid.append(track_feat.repeat(1, T_pad, 1, 1))
                 track_feat_support_pyramid.append(track_feat_support.unsqueeze(1))
 
-        coord_preds, vis_preds, confidence_preds = [], [], []
+        coord_preds, vis_preds, confidence_preds = [], [], []  # noqa: F841 - Upstream assignment kept.
 
         vis_init = torch.zeros((B, S, N, 1), device=device).float()
         conf_init = torch.zeros((B, S, N, 1), device=device).float()

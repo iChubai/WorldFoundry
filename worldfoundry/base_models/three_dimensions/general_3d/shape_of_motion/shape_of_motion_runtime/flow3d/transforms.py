@@ -20,7 +20,7 @@ def rt_to_mat4(R: torch.Tensor, t: torch.Tensor, s: torch.Tensor | None = None) 
         bottom = (
             mat34.new_tensor([[0.0, 0.0, 0.0, 1.0]])
             .reshape((1,) * (mat34.dim() - 2) + (1, 4))
-            .expand(mat34.shape[:-2] + (1, 4))
+            .expand(mat34.shape[:-2] + (1, 4))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         )
     else:
         bottom = F.pad(1.0 / s[..., None, None], (3, 0), value=0.0)

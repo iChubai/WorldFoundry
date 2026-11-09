@@ -122,9 +122,9 @@ class AMPBlock1(torch.nn.Module):
         return x
 
     def remove_weight_norm(self):
-        for l in self.convs1:
+        for l in self.convs1:  # noqa: E741 - Ambiguous upstream name kept as written.
             remove_parametrizations(l, "weight")
-        for l in self.convs2:
+        for l in self.convs2:  # noqa: E741 - Ambiguous upstream name kept as written.
             remove_parametrizations(l, "weight")
 
 
@@ -200,7 +200,7 @@ class AMPBlock2(torch.nn.Module):
         return x
 
     def remove_weight_norm(self):
-        for l in self.convs:
+        for l in self.convs:  # noqa: E741 - Ambiguous upstream name kept as written.
             remove_parametrizations(l, "weight")
 
 
@@ -305,7 +305,7 @@ class BigVGAN(torch.nn.Module):
         x = self.activation_post(x)
         x = self.conv_post(x)
         # Final tanh activation
-        if self.use_tanh_at_final:
+        if self.use_tanh_at_final:  # noqa: SIM108 - Branches carry per-case comments.
             x = torch.tanh(x)
         else:
             x = torch.clamp(x, min=-1.0, max=1.0)  # Bound the output to [-1, 1]
@@ -314,10 +314,10 @@ class BigVGAN(torch.nn.Module):
 
     def remove_weight_norm(self):
         try:
-            for l in self.ups:
+            for l in self.ups:  # noqa: E741 - Ambiguous upstream name kept as written.
                 for l_i in l:
                     remove_parametrizations(l_i, "weight")
-            for l in self.resblocks:
+            for l in self.resblocks:  # noqa: E741 - Ambiguous upstream name kept as written.
                 l.remove_weight_norm()
             remove_parametrizations(self.conv_pre, "weight")
             remove_parametrizations(self.conv_post, "weight")

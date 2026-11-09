@@ -230,7 +230,7 @@ class ConfigValidator:
                 try:
                     self.arguments[k].val = self.arguments[k].type(v)
                 except ValueError:
-                    raise ValueError(f"{k} is not a valid {self.arguments[k].type}.")
+                    raise ValueError(f"{k} is not a valid {self.arguments[k].type}.")  # noqa: B904 - Keeps the implicit exception context.
 
             if self.arguments[k].choices is not None:
                 assert v in self.arguments[k].choices, f"""{k} must be one of {self.arguments[k].choices}."""

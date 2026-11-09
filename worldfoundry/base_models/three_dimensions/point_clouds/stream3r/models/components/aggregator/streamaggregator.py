@@ -36,7 +36,7 @@ class STreamAggregator(nn.Module):
         proj_bias=True,
         ffn_bias=True,
         patch_embed="dinov2_vitl14_reg",
-        aa_order=["frame", "global"],
+        aa_order=["frame", "global"],  # noqa: B006 - Keeps the upstream default object and signature.
         aa_block_size=1,
         qk_norm=True,
         rope_freq=100,

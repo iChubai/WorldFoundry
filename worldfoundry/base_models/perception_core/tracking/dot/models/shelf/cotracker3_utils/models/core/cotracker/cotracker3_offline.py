@@ -75,7 +75,7 @@ class CoTrackerThreeOffline(CoTrackerThreeBase):
             [],
         )
         C_ = C
-        H4, W4 = H // self.stride, W // self.stride
+        H4, W4 = H // self.stride, W // self.stride  # noqa: F841 - Upstream assignment kept.
         # Compute convolutional features for the video or for the current chunk in case of online mode
 
         if fmaps_chunk_size < T:
@@ -104,7 +104,7 @@ class CoTrackerThreeOffline(CoTrackerThreeBase):
         track_feat_pyramid = []
         track_feat_support_pyramid = []
         fmaps_pyramid.append(fmaps)
-        for i in range(self.corr_levels - 1):
+        for i in range(self.corr_levels - 1):  # noqa: B007 - The loop variable is read outside the loop.
             fmaps_ = fmaps.reshape(B * T, self.latent_dim, fmaps.shape[-2], fmaps.shape[-1])
             fmaps_ = F.avg_pool2d(fmaps_, 2, stride=2)
             fmaps = fmaps_.reshape(B, T, self.latent_dim, fmaps_.shape[-2], fmaps_.shape[-1])

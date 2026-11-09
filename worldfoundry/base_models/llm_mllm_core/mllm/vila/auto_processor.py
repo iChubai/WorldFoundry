@@ -141,10 +141,10 @@ def extract_value_from_conv(chat):
                 value.append(Image(fetch_image_url_or_fpath(content["image"])))
             elif "image_pil" in content:
                 # Qwen style
-                assert isinstance(content["image_pil"], PIL.Image.Image), f"Type of {media_key} must be PIL.Image.Image"
+                assert isinstance(content["image_pil"], PIL.Image.Image), f"Type of {media_key} must be PIL.Image.Image"  # noqa: F821 - Name is undefined in the upstream source.
                 value.append(content["image_pil"])
             else:
-                raise ValueError(f"Type = `image` , but no `path` or `image` in | {content=}, {conversation=}")
+                raise ValueError(f"Type = `image` , but no `path` or `image` in | {content=}, {conversation=}")  # noqa: F821 - Name is undefined in the upstream source.
         elif content["type"] == "text":
             value.append(content["text"])
         # NOTE(ligeng): video supports are needed here

@@ -43,7 +43,7 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
         num_train_timesteps: int = 1000,
         shift: float = 1.0,  # Following Stable diffusion 3,
         stages: int = 3,
-        stage_range: list = [0, 1 / 3, 2 / 3, 1],
+        stage_range: list = [0, 1 / 3, 2 / 3, 1],  # noqa: B006 - Keeps the upstream default object and signature.
         gamma: float = 1 / 3,
         # For UniPC
         thresholding: bool = False,
@@ -52,7 +52,7 @@ class EvokeScheduler(SchedulerMixin, ConfigMixin):
         predict_x0: bool = True,
         solver_type: str = "bh2",
         lower_order_final: bool = True,
-        disable_corrector: list[int] = [],
+        disable_corrector: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         solver_p: SchedulerMixin = None,
         use_flow_sigmas: bool = True,
         scheduler_type: str = "unipc",  # ["euler", "unipc", "dmd"]

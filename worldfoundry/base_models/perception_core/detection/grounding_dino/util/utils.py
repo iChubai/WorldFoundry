@@ -35,12 +35,12 @@ def clean_state_dict(state_dict):
     return new_state_dict
 
 
-def renorm(img: torch.FloatTensor, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) -> torch.FloatTensor:
+def renorm(img: torch.FloatTensor, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) -> torch.FloatTensor:  # noqa: B006 - Keeps the upstream default object and signature.
     # img: tensor(3,H,W) or tensor(B,3,H,W)
     # return: same as img
-    assert img.dim() == 3 or img.dim() == 4, "img.dim() should be 3 or 4 but %d" % img.dim()
+    assert img.dim() == 3 or img.dim() == 4, "img.dim() should be 3 or 4 but %d" % img.dim()  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     if img.dim() == 3:
-        assert img.size(0) == 3, 'img.size(0) shoule be 3 but "%d". (%s)' % (
+        assert img.size(0) == 3, 'img.size(0) shoule be 3 but "%d". (%s)' % (  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             img.size(0),
             str(img.size()),
         )
@@ -50,7 +50,7 @@ def renorm(img: torch.FloatTensor, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224
         img_res = img_perm * std + mean
         return img_res.permute(2, 0, 1)
     else:  # img.dim() == 4
-        assert img.size(1) == 3, 'img.size(1) shoule be 3 but "%d". (%s)' % (
+        assert img.size(1) == 3, 'img.size(1) shoule be 3 but "%d". (%s)' % (  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             img.size(1),
             str(img.size()),
         )

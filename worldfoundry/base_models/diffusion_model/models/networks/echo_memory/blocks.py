@@ -347,7 +347,7 @@ class EchoWanMemoryAdapter(nn.Module):
             if architecture.spatial_grid_shape is None:
                 raise ValueError("spatial recipe has no checkpoint grid shape")
             cells, tokens = architecture.spatial_grid_shape
-            grid_size = int(round(math.sqrt(cells)))
+            grid_size = int(round(math.sqrt(cells)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             self.spatial_memory_module = SpatialGridMemory(
                 dim,
                 grid_size=grid_size,

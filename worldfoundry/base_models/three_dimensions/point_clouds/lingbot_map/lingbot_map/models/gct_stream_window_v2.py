@@ -21,13 +21,16 @@ from tqdm.auto import tqdm
 # every N frames.
 _KV_DEBUG = os.environ.get("LINGBOT_DEBUG_KV", "")
 
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import mat_to_quat, quat_to_mat
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import (  # noqa: E402 - Follows the environment setup.
+    mat_to_quat,
+    quat_to_mat,
+)
 
-from ..aggregator.stream import AggregatorStream
-from ..heads.camera_head import CameraCausalHead
-from ..utils.geometry import closed_form_inverse_se3
-from ..utils.pose_enc import pose_encoding_to_extri_intri
-from .gct_base import GCTBase
+from ..aggregator.stream import AggregatorStream  # noqa: E402 - Follows the environment setup.
+from ..heads.camera_head import CameraCausalHead  # noqa: E402 - Follows the environment setup.
+from ..utils.geometry import closed_form_inverse_se3  # noqa: E402 - Follows the environment setup.
+from ..utils.pose_enc import pose_encoding_to_extri_intri  # noqa: E402 - Follows the environment setup.
+from .gct_base import GCTBase  # noqa: E402 - Follows the environment setup.
 
 logger = logging.getLogger(__name__)
 
@@ -499,7 +502,7 @@ class GCTStream(GCTBase):
             return {"num_cached_blocks": 0, "cache_memory_mb": 0.0}
 
         kv_cache = self.aggregator.kv_cache
-        num_cached = sum(1 for k in kv_cache.keys() if k.startswith("k_") and not k.endswith("_special"))
+        num_cached = sum(1 for k in kv_cache.keys() if k.startswith("k_") and not k.endswith("_special"))  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
 
         # Estimate memory usage
         total_elements = 0

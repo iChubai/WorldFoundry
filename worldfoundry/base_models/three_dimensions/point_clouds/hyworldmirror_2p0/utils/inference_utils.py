@@ -310,7 +310,7 @@ def load_prior_depth(prior_depth_path, img_paths, target_h, target_w, preprocess
 
     depth_files = {}
     for f in sorted(depth_dir.iterdir()):
-        if f.suffix.lower() in (".npy", ".exr", ".png"):
+        if f.suffix.lower() in (".npy", ".exr", ".png"):  # noqa: SIM102 - Statement form kept for readability.
             if f.stem not in depth_files or f.suffix.lower() == ".npy":
                 depth_files[f.stem] = str(f)
 
@@ -475,11 +475,11 @@ def compute_sky_mask(
             pil_img = Image.open(img_paths[i]).convert("RGB")
             sw, sh = pil_img.size
             if sw / sh > processed_aspect_ratio:
-                cw = int(round(sh * processed_aspect_ratio))
+                cw = int(round(sh * processed_aspect_ratio))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
                 ch = sh
             else:
                 cw = sw
-                ch = int(round(sw / processed_aspect_ratio))
+                ch = int(round(sw / processed_aspect_ratio))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             left, top = (sw - cw) // 2, (sh - ch) // 2
             pil_img = pil_img.crop((left, top, left + cw, top + ch))
             frame = segment_sky(cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR), session)
@@ -779,7 +779,7 @@ def save_results(
 
     ar = W / H
     max_w = max(Image.open(p).size[0] for p in img_paths)
-    new_w, new_h = max_w, int(round(max_w / ar))
+    new_w, new_h = max_w, int(round(max_w / ar))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     longest = max(new_w, new_h)
     if longest > max_resolution:
         sf = max_resolution / longest

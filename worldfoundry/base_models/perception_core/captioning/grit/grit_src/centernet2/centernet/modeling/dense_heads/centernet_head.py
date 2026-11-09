@@ -87,7 +87,7 @@ class CenterNetHead(nn.Module):
             self.share_tower,
             self.bbox_pred,
         ]:
-            for l in modules.modules():
+            for l in modules.modules():  # noqa: E741 - Ambiguous upstream name kept as written.
                 if isinstance(l, nn.Conv2d):
                     torch.nn.init.normal_(l.weight, std=0.01)
                     torch.nn.init.constant_(l.bias, 0)
@@ -118,7 +118,7 @@ class CenterNetHead(nn.Module):
     def from_config(cls, cfg, input_shape):
         ret = {
             # 'input_shape': input_shape,
-            "in_channels": [s.channels for s in input_shape][0],
+            "in_channels": [s.channels for s in input_shape][0],  # noqa: RUF015 - Keeps eager list construction and IndexError.
             "num_levels": len(input_shape),
             "num_classes": cfg.MODEL.CENTERNET.NUM_CLASSES,
             "with_agn_hm": cfg.MODEL.CENTERNET.WITH_AGN_HM,
@@ -136,7 +136,7 @@ class CenterNetHead(nn.Module):
         clss = []
         bbox_reg = []
         agn_hms = []
-        for l, feature in enumerate(x):
+        for l, feature in enumerate(x):  # noqa: E741 - Ambiguous upstream name kept as written.
             feature = self.share_tower(feature)
             cls_tower = self.cls_tower(feature)
             bbox_tower = self.bbox_tower(feature)

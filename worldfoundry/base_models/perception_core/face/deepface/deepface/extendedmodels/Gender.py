@@ -48,7 +48,7 @@ def loadModel(
 
     home = functions.get_deepface_home()
 
-    if os.path.isfile(home + "/.deepface/weights/gender_model_weights.h5") != True:
+    if os.path.isfile(home + "/.deepface/weights/gender_model_weights.h5") != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print("gender_model_weights.h5 will be downloaded...")
 
         output = home + "/.deepface/weights/gender_model_weights.h5"

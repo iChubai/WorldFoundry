@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 from math import isqrt
 from typing import Literal
 
@@ -12,18 +13,23 @@ add_runtime_extension_overlay(
     environment_variable="WORLDFOUNDRY_DIFF_GAUSSIAN_RASTERIZATION_EXTENSION_DIR",
 )
 
-import contextlib
+import contextlib  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from diff_gaussian_rasterization import (
+from diff_gaussian_rasterization import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     GaussianRasterizationSettings,
     GaussianRasterizer,
 )
-from einops import einsum, rearrange, repeat
-from jaxtyping import Float
-from torch import Tensor
+from einops import einsum, rearrange, repeat  # noqa: E402 - Follows a module-level setup call, as upstream.
+from jaxtyping import Float  # noqa: E402 - Follows a module-level setup call, as upstream.
+from torch import Tensor  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from ...geometry.projection import get_fov, homogenize_points
-from ..encoder.epipolar.conversions import depth_to_relative_disparity
+from ...geometry.projection import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    get_fov,
+    homogenize_points,
+)
+from ..encoder.epipolar.conversions import (  # noqa: E402 - Follows a module-level setup call, as upstream.
+    depth_to_relative_disparity,
+)
 
 
 def get_projection_matrix(

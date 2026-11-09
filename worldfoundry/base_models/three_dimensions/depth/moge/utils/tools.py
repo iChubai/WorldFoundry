@@ -1,3 +1,4 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import importlib
 import importlib.util
 import json
@@ -6,7 +7,7 @@ import os
 import time
 import warnings
 from functools import wraps
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 
 def catch_exception(fn):
@@ -45,7 +46,7 @@ def traverse_nested_dict_keys(d: Dict[str, Dict]) -> Generator[Tuple[str, ...], 
     for k, v in d.items():
         if isinstance(v, dict):
             for sub_key in traverse_nested_dict_keys(v):
-                yield (k,) + sub_key
+                yield (k,) + sub_key  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         else:
             yield (k,)
 
@@ -92,7 +93,7 @@ def flatten_nested_dict(d: Dict[str, Any], parent_key: Tuple[str, ...] = None) -
     if parent_key is None:
         parent_key = ()
     for k, v in d.items():
-        new_key = parent_key + (k,)
+        new_key = parent_key + (k,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if isinstance(v, MutableMapping):
             items.extend(flatten_nested_dict(v, new_key).items())
         else:
@@ -151,7 +152,7 @@ def recursive_replace(d: Union[List, Dict, str], mapping: Dict[str, str]):
 
 
 class timeit:
-    _history: ClassVar[Dict[str, List["timeit"]]] = {}
+    _history: ClassVar[Dict[str, List["timeit"]]] = {}  # noqa: RUF012 - Shared class-level value, as upstream.
 
     def __init__(self, name: str | None = None, verbose: bool = True, average: bool = False):
         self.name = name

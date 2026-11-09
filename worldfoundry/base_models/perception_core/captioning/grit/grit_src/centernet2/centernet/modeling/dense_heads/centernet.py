@@ -47,7 +47,7 @@ class CenterNet(nn.Module):
         sigmoid_clamp=1e-4,
         ignore_high_fp=-1.0,
         center_nms=False,
-        sizes_of_interest=[[0, 80], [64, 160], [128, 320], [256, 640], [512, 10000000]],
+        sizes_of_interest=[[0, 80], [64, 160], [128, 320], [256, 640], [512, 10000000]],  # noqa: B006 - Keeps the upstream default object and signature.
         more_pos=False,
         more_pos_thresh=0.2,
         more_pos_topk=9,
@@ -60,8 +60,8 @@ class CenterNet(nn.Module):
         no_reduce=False,
         debug=False,
         vis_thresh=0.5,
-        pixel_mean=[103.530, 116.280, 123.675],
-        pixel_std=[1.0, 1.0, 1.0],
+        pixel_mean=[103.530, 116.280, 123.675],  # noqa: B006 - Keeps the upstream default object and signature.
+        pixel_std=[1.0, 1.0, 1.0],  # noqa: B006 - Keeps the upstream default object and signature.
         device="cuda",
         centernet_head=None,
     ):
@@ -345,12 +345,12 @@ class CenterNet(nn.Module):
         L = len(grids)
         num_loc_list = [len(loc) for loc in grids]
         strides = torch.cat(
-            [shapes_per_level.new_ones(num_loc_list[l]) * self.strides[l] for l in range(L)]
+            [shapes_per_level.new_ones(num_loc_list[l]) * self.strides[l] for l in range(L)]  # noqa: E741 - Ambiguous upstream name kept as written.
         ).float()  # M
         reg_size_ranges = torch.cat(
             [
                 shapes_per_level.new_tensor(self.sizes_of_interest[l]).float().view(1, 2).expand(num_loc_list[l], 2)
-                for l in range(L)
+                for l in range(L)  # noqa: E741 - Ambiguous upstream name kept as written.
             ]
         )  # M x 2
         grids = torch.cat(grids, dim=0)  # M x 2
@@ -369,7 +369,7 @@ class CenterNet(nn.Module):
                 flattened_hms.append(grids.new_zeros((M, 1 if self.only_proposal else heatmap_channels)))
                 continue
 
-            l = grids[:, 0].view(M, 1) - boxes[:, 0].view(1, N)  # M x N
+            l = grids[:, 0].view(M, 1) - boxes[:, 0].view(1, N)  # noqa: E741 - Ambiguous upstream name kept as written.  # M x N
             t = grids[:, 1].view(M, 1) - boxes[:, 1].view(1, N)  # M x N
             r = boxes[:, 2].view(1, N) - grids[:, 0].view(M, 1)  # M x N
             b = boxes[:, 3].view(1, N) - grids[:, 1].view(M, 1)  # M x N
@@ -408,7 +408,7 @@ class CenterNet(nn.Module):
         # transpose im first training_targets to level first ones
         reg_targets = _transpose(reg_targets, num_loc_list)
         flattened_hms = _transpose(flattened_hms, num_loc_list)
-        for l in range(len(reg_targets)):
+        for l in range(len(reg_targets)):  # noqa: E741 - Ambiguous upstream name kept as written.
             reg_targets[l] = reg_targets[l] / float(self.strides[l])
         reg_targets = cat(list(reg_targets), dim=0)  # MB x 4
         flattened_hms = cat(list(flattened_hms), dim=0)  # MB x C
@@ -432,7 +432,7 @@ class CenterNet(nn.Module):
         loc_per_level = (shapes_per_level[:, 0] * shapes_per_level[:, 1]).long()  # L
         level_bases = []
         s = 0
-        for l in range(L):
+        for l in range(L):  # noqa: E741 - Ambiguous upstream name kept as written.
             level_bases.append(s)
             s = s + B * loc_per_level[l]
         level_bases = shapes_per_level.new_tensor(level_bases).long()  # L
@@ -594,7 +594,7 @@ class CenterNet(nn.Module):
 
     def predict_instances(self, grids, logits_pred, reg_pred, image_sizes, agn_hm_pred, is_proposal=False):
         sampled_boxes = []
-        for l in range(len(grids)):
+        for l in range(len(grids)):  # noqa: E741 - Ambiguous upstream name kept as written.
             sampled_boxes.append(
                 self.predict_single_level(
                     grids[l],
@@ -745,7 +745,7 @@ class CenterNet(nn.Module):
         loc_per_level = (shapes_per_level[:, 0] * shapes_per_level[:, 1]).long()  # L
         level_bases = []
         s = 0
-        for l in range(L):
+        for l in range(L):  # noqa: E741 - Ambiguous upstream name kept as written.
             level_bases.append(s)
             s = s + B * loc_per_level[l]
         level_bases = shapes_per_level.new_tensor(level_bases).long()  # L
@@ -765,7 +765,7 @@ class CenterNet(nn.Module):
             strides = strides_default.view(1, L, 1).expand(n, L, 2)  #
             centers_inds = (centers / strides).long()  # n x L x 2
             center_grids = centers_inds * strides + strides // 2  # n x L x 2
-            l = center_grids[:, :, 0] - bboxes[:, 0].view(n, 1).expand(n, L)
+            l = center_grids[:, :, 0] - bboxes[:, 0].view(n, 1).expand(n, L)  # noqa: E741 - Ambiguous upstream name kept as written.
             t = center_grids[:, :, 1] - bboxes[:, 1].view(n, 1).expand(n, L)
             r = bboxes[:, 2].view(n, 1).expand(n, L) - center_grids[:, :, 0]
             b = bboxes[:, 3].view(n, 1).expand(n, L) - center_grids[:, :, 1]  # n x L

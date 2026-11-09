@@ -85,7 +85,7 @@ class PatchDropout(nn.Module):
         assert 0 <= prob < 1.0
         self.prob = prob
         self.exclude_first_token = exclude_first_token  # exclude CLS token
-        logging.info(f"os.getenv('RoPE')={os.getenv('RoPE')}")
+        logging.info(f"os.getenv('RoPE')={os.getenv('RoPE')}")  # noqa: SIM112 - Environment variable name used by the upstream code.
 
     def forward(self, x):
         if not self.training or self.prob == 0.0:
@@ -113,7 +113,7 @@ class PatchDropout(nn.Module):
         if self.exclude_first_token:
             x = torch.cat((cls_tokens, x), dim=1)
 
-        if self.training and os.getenv("RoPE") == "1":
+        if self.training and os.getenv("RoPE") == "1":  # noqa: SIM112 - Environment variable name used by the upstream code.
             return x, patch_indices_keep
 
         return x
@@ -141,7 +141,7 @@ def _in_projection_packed(
                 b_q = b_kv = None
             else:
                 b_q, b_kv = b.split([E, E * 2])
-            return (F.linear(q, w_q, b_q),) + F.linear(k, w_kv, b_kv).chunk(2, dim=-1)
+            return (F.linear(q, w_q, b_q),) + F.linear(k, w_kv, b_kv).chunk(2, dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     else:
         w_q, w_k, w_v = w.chunk(3)
         if b is None:
@@ -159,7 +159,7 @@ class Attention(nn.Module):
         qkv_bias=True,
         scaled_cosine=False,
         scale_heads=False,
-        logit_scale_max=math.log(1.0 / 0.01),
+        logit_scale_max=math.log(1.0 / 0.01),  # noqa: B008 - Default evaluated once at definition, as upstream.
         attn_drop=0.0,
         proj_drop=0.0,
         xattn=False,
@@ -255,7 +255,7 @@ class CustomAttention(nn.Module):
         qkv_bias=True,
         scaled_cosine=True,
         scale_heads=False,
-        logit_scale_max=math.log(1.0 / 0.01),
+        logit_scale_max=math.log(1.0 / 0.01),  # noqa: B008 - Default evaluated once at definition, as upstream.
         attn_drop=0.0,
         proj_drop=0.0,
         xattn=False,
@@ -668,7 +668,7 @@ class VisionTransformer(nn.Module):
         x = x.permute(1, 0, 2)  # LND -> NLD
 
         if not return_all_features:
-            if self.global_average_pool:
+            if self.global_average_pool:  # noqa: SIM108 - Branches carry per-case comments.
                 x = x.mean(dim=1)  # x = x[:,1:,:].mean(dim=1)
             else:
                 x = x[:, 0]

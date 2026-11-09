@@ -1,4 +1,5 @@
-from typing import *
+# ruff: noqa: F405 - Names come from the upstream star import.
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import numpy as np
 import scipy.sparse as sp
@@ -372,7 +373,7 @@ def flatten_mesh_indices(faces1: ndarray, attr1: ndarray, *more_faces_attrs_pair
     """
 
 
-def flatten_mesh_indices(*args: ndarray) -> Tuple[ndarray, ...]:
+def flatten_mesh_indices(*args: ndarray) -> Tuple[ndarray, ...]:  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     assert len(args) % 2 == 0, "The number of arguments must be even."
     T, P = args[0].shape
     assert all(arg.shape[0] == T and arg.shape[1] == P for arg in args[::2]), "The faces must have the same shape."

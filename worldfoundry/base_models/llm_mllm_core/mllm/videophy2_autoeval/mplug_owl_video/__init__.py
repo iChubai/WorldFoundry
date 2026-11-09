@@ -79,7 +79,7 @@ else:
 
     sys.modules[__name__] = _LazyModule(__name__, globals()["__file__"], _import_structure, module_spec=__spec__)
 
-from .configuration_mplug_owl import *
-from .modeling_mplug_owl import *
-from .processing_mplug_owl import *
-from .tokenization_mplug_owl import *
+from .configuration_mplug_owl import *  # noqa: E402, F403 - Follows the module alias setup.; Upstream star import kept as written.
+from .modeling_mplug_owl import *  # noqa: E402, F403 - Follows the module alias setup.; Upstream star import kept as written.
+from .processing_mplug_owl import *  # noqa: E402, F403 - Follows the module alias setup.; Upstream star import kept as written.
+from .tokenization_mplug_owl import *  # noqa: E402, F403 - Follows the module alias setup.; Upstream star import kept as written.

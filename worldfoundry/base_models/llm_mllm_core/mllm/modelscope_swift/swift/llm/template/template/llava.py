@@ -322,7 +322,7 @@ class LLavaTemplate(Template):
         images = [b["images"] for b in batch if "images" in b]
         if images:
             res["images"] = images
-            res["image_sizes"] = sum([b["image_sizes"] for b in batch if "image_sizes" in b], start=[])
+            res["image_sizes"] = sum([b["image_sizes"] for b in batch if "image_sizes" in b], start=[])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
         return res
 
 

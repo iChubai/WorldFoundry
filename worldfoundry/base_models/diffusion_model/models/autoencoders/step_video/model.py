@@ -25,7 +25,7 @@ from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistributi
 
 def base_group_norm(x, norm_layer, act_silu=False, channel_last=False):
     if hasattr(base_group_norm, "spatial") and base_group_norm.spatial:
-        assert channel_last == True
+        assert channel_last == True  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         x_shape = x.shape
         x = x.flatten(0, 1)
         if channel_last:
@@ -371,7 +371,7 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3D(nn.Module):
         x = x.mean(dim=2)
         return x
 
-    def __init__(
+    def __init__(  # noqa: F811 - Later definition replaces the earlier one, as upstream.
         self,
         in_channels: int,
         out_channels: int,
@@ -384,7 +384,7 @@ class PixelUnshuffleChannelAveragingDownSampleLayer3D(nn.Module):
         assert in_channels * factor**3 % out_channels == 0
         self.group_size = in_channels * factor**3 // out_channels
 
-    def forward(self, x: torch.Tensor, is_init=True) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, is_init=True) -> torch.Tensor:  # noqa: F811 - Later definition replaces the earlier one, as upstream.
         pad = (0, 0, 0, 0, self.factor - 1, 0)  # (left, right, top, bottom, front, back)
         x = F.pad(x, pad)
         B, C, D, H, W = x.shape
@@ -409,8 +409,8 @@ class CausalConvChannelLast(CausalConv):
     def __init__(self, chan_in, chan_out, kernel_size, **kwargs):
         super().__init__(chan_in, chan_out, kernel_size, **kwargs)
 
-        self.time_causal_padding = (0, 0) + self.time_causal_padding
-        self.time_uncausal_padding = (0, 0) + self.time_uncausal_padding
+        self.time_causal_padding = (0, 0) + self.time_causal_padding  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+        self.time_uncausal_padding = (0, 0) + self.time_uncausal_padding  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     def forward(self, x, is_init=True, residual=None):
         if self.is_first_run:
@@ -552,7 +552,7 @@ class VideoEncoder(nn.Module):
         in_channels=3,
         z_channels=16,
         double_z=True,
-        down_sampling_layer=[1, 2],
+        down_sampling_layer=[1, 2],  # noqa: B006 - Keeps the upstream default object and signature.
         resamp_with_conv=True,
         version=1,
     ):
@@ -567,7 +567,7 @@ class VideoEncoder(nn.Module):
         self.conv_in = CausalConv(in_channels, ch, kernel_size=3)
         self.down_sampling_layer = down_sampling_layer
 
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
             block = nn.ModuleList()
@@ -746,7 +746,7 @@ class VideoDecoder(nn.Module):
         out_channels=3,
         ch_mult=(1, 2, 4, 4),
         num_res_blocks=2,
-        temporal_up_layers=[2, 3],
+        temporal_up_layers=[2, 3],  # noqa: B006 - Keeps the upstream default object and signature.
         temporal_downsample=4,
         resamp_with_conv=True,
         version=1,
@@ -896,7 +896,7 @@ class AutoencoderKL(nn.Module):
         z_channels=16,
         num_res_blocks=2,
         model_path=None,
-        weight_dict={},
+        weight_dict={},  # noqa: B006 - Keeps the upstream default object and signature.
         world_size=1,
         version=1,
     ):
@@ -934,7 +934,7 @@ class AutoencoderKL(nn.Module):
 
         p = {}
         with safe_open(model_path, framework="pt", device="cpu") as f:
-            for k in f.keys():
+            for k in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 tensor = f.get_tensor(k)
                 if k.startswith("decoder.conv_out."):
                     k = k.replace("decoder.conv_out.", "decoder.conv_out.conv.")
@@ -949,7 +949,7 @@ class AutoencoderKL(nn.Module):
         # Conv2d NCHW->NHWC
 
     def naive_encode(self, x, is_init_image=True):
-        b, l, c, h, w = x.size()
+        b, l, c, h, w = x.size()  # noqa: E741 - Ambiguous upstream name kept as written.
         x = rearrange(x, "b l c h w -> b c l h w").contiguous()
         z = self.encoder(x, l, True)  # 下采样[1, 4, 8, 16, 16]
         return z

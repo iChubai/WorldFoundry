@@ -68,7 +68,7 @@ class Aggregator(nn.Module):
         qkv_bias=True,
         proj_bias=True,
         ffn_bias=True,
-        aa_order=[
+        aa_order=[  # noqa: B006 - Keeps the upstream default object and signature.
             "frame",
             "cross",
             "global",

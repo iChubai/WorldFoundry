@@ -36,7 +36,7 @@ class DPTHead(nn.Module):
         output_dim: int = 4,
         activation: str = "inv_log+expp1",
         features: int = 256,
-        out_channels: list[int] = [256, 512, 1024, 1024],
+        out_channels: list[int] = [256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
         pos_embed: bool = True,
         down_ratio: int = 1,
         is_gsdpt: bool = False,
@@ -482,7 +482,7 @@ class FeatureFusionBlock(nn.Module):
         self.groups = groups
         self.expand = expand
         out_features = features
-        if self.expand == True:
+        if self.expand == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out_features = features // 2
 
         self.out_conv = nn.Conv2d(

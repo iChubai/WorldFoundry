@@ -43,8 +43,8 @@ class DPTHead_3D_Causal(nn.Module):
         activation: str = "inv_log",
         conf_activation: str = "expp1",
         features: int = 256,
-        out_channels: list[int] = [256, 512, 1024, 1024],
-        intermediate_layer_idx: list[int] = [23, 17, 11, 7],
+        out_channels: list[int] = [256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
+        intermediate_layer_idx: list[int] = [23, 17, 11, 7],  # noqa: B006 - Keeps the upstream default object and signature.
         pos_embed: bool = True,
         feature_only: bool = False,
         down_ratio: int = 1,
@@ -200,7 +200,7 @@ class DPTHead_3D_Causal(nn.Module):
                 x = self._apply_pos_embed(x, W, H)
             x = self.resize_layers[dpt_idx](x)
             out.append(x)
-            dpt_idx += 1
+            dpt_idx += 1  # noqa: SIM113 - Keeps the explicit loop counter.
         return out
 
     def __forward_impl_second_part(

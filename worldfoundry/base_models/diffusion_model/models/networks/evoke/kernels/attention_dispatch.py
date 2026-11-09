@@ -58,7 +58,7 @@ def create_navit_attention_masks(
     if restrict_self_attn:
         cu_seqlens_kv = [0]
         for _ in range(batch_size):
-            for length in original_context_length_list:
+            for length in original_context_length_list:  # noqa: B007 - The loop variable is read outside the loop.
                 cu_seqlens_kv.append(cu_seqlens_kv[-1] + history_context_length)
         cu_seqlens_kv = torch.tensor(cu_seqlens_kv, device=device, dtype=torch.int32)
         max_seqlen_kv = history_context_length
@@ -85,7 +85,7 @@ def create_navit_attention_masks(
 
     cu_seqlens_kv = [0]
     for _ in range(batch_size):
-        for length in original_context_length_list:
+        for length in original_context_length_list:  # noqa: B007 - The loop variable is read outside the loop.
             cu_seqlens_kv.append(cu_seqlens_kv[-1] + encoder_hidden_states_seq_len)
     cu_seqlens_kv = torch.tensor(cu_seqlens_kv, device=device, dtype=torch.int32)
     max_seqlen_kv = encoder_hidden_states_seq_len

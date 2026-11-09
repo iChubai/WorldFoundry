@@ -42,7 +42,7 @@ def _load_local_bert_model(model_dir):
         allowed_missing_keys = {"pooler.dense.weight", "pooler.dense.bias"}
         disallowed_missing_keys = set(missing_keys) - allowed_missing_keys
         if disallowed_missing_keys or unexpected_keys:
-            raise RuntimeError(
+            raise RuntimeError(  # noqa: B904 - Keeps the implicit exception context.
                 "legacy local BERT checkpoint did not match BertModel: "
                 f"missing={sorted(disallowed_missing_keys)}, "
                 f"unexpected={sorted(unexpected_keys)}"

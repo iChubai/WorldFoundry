@@ -1,5 +1,5 @@
 import re
-from os.path import *
+from os.path import *  # noqa: F403 - Upstream star import kept as written.
 
 import cv2
 import numpy as np
@@ -34,7 +34,7 @@ def readFlow(fn):
 
 
 def readPFM(file):
-    file = open(file, "rb")
+    file = open(file, "rb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
 
     color = None
     width = None
@@ -90,7 +90,7 @@ def writeFlow(filename, uv, v=None):
 
     assert u.shape == v.shape
     height, width = u.shape
-    f = open(filename, "wb")
+    f = open(filename, "wb")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     # write the header
     f.write(TAG_CHAR)
     np.array(width).astype(np.int32).tofile(f)
@@ -126,7 +126,7 @@ def writeFlowKITTI(filename, uv):
 
 
 def read_gen(file_name, pil=False):
-    ext = splitext(file_name)[-1]
+    ext = splitext(file_name)[-1]  # noqa: F405 - Name comes from the upstream star import.
     if ext == ".png" or ext == ".jpeg" or ext == ".ppm" or ext == ".jpg":
         return Image.open(file_name)
     elif ext == ".bin" or ext == ".raw":

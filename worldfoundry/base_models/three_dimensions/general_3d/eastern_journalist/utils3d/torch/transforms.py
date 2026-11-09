@@ -1,6 +1,7 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import itertools
 from numbers import Number
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import torch
 import torch.nn.functional as F
@@ -877,7 +878,7 @@ def euler_axis_angle_rotation(axis: str, angle: Tensor) -> Tensor:
     else:
         raise ValueError("letter must be either X, Y or Z.")
 
-    return torch.stack(R_flat, -1).reshape(angle.shape + (3, 3))
+    return torch.stack(R_flat, -1).reshape(angle.shape + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def euler_angles_to_matrix(euler_angles: Tensor, convention: str = "XYZ") -> Tensor:
@@ -928,7 +929,7 @@ def skew_symmetric(v: Tensor):
 
 def rotation_matrix_from_vectors(v1: Tensor, v2: Tensor):
     "Rotation matrix that rotates v1 to v2"
-    I = torch.eye(3).to(v1)
+    I = torch.eye(3).to(v1)  # noqa: E741 - Ambiguous upstream name kept as written.
     v1 = F.normalize(v1, dim=-1)
     v2 = F.normalize(v2, dim=-1)
     v = torch.cross(v1, v2, dim=-1)
@@ -1129,7 +1130,7 @@ def quaternion_to_matrix(quaternion: Tensor, eps: float = 1e-12) -> Tensor:
     quaternion = F.normalize(quaternion, dim=-1, eps=eps)
     w, x, y, z = quaternion.unbind(dim=-1)
     zeros = torch.zeros_like(w)
-    I = torch.eye(3, dtype=quaternion.dtype, device=quaternion.device)
+    I = torch.eye(3, dtype=quaternion.dtype, device=quaternion.device)  # noqa: E741 - Ambiguous upstream name kept as written.
     xyz = quaternion[..., 1:]
     A = xyz[..., :, None] * xyz[..., None, :] - I * (xyz**2).sum(dim=-1)[..., None, None]
     B = torch.stack([zeros, -z, y, z, zeros, -x, -y, x, zeros], dim=-1).unflatten(-1, (3, 3))
@@ -1447,7 +1448,7 @@ def transform_points(x: Tensor, *Ts: Tensor) -> Tensor:
     input_dim = x.shape[-1]
     pad_dim = max(max(max(T.shape[-2:]) for T in Ts), x.shape[-1])
     x = torch.cat([x, torch.ones((*x.shape[:-1], pad_dim - x.shape[-1]), dtype=x.dtype, device=x.device)], dim=-1)
-    I = torch.eye(pad_dim, dtype=x.dtype, device=x.device)
+    I = torch.eye(pad_dim, dtype=x.dtype, device=x.device)  # noqa: E741 - Ambiguous upstream name kept as written.
     Ts = [
         torch.cat(
             [

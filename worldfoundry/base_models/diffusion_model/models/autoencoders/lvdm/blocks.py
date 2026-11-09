@@ -219,14 +219,14 @@ class Model(nn.Module):
         self.conv_in = torch.nn.Conv2d(in_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for i_block in range(self.num_res_blocks):  # noqa: B007 - The loop variable is read outside the loop.
                 block.append(
                     ResnetBlock(
                         in_channels=block_in, out_channels=block_out, temb_channels=self.temb_ch, dropout=dropout
@@ -370,7 +370,7 @@ class Encoder(nn.Module):
         self.conv_in = torch.nn.Conv2d(in_channels, self.ch, kernel_size=3, stride=1, padding=1)
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         self.in_ch_mult = in_ch_mult
         self.down = nn.ModuleList()
         for i_level in range(self.num_resolutions):
@@ -480,7 +480,7 @@ class Decoder(nn.Module):
         self.tanh_out = tanh_out
 
         # compute in_ch_mult, block_in and curr_res at lowest res
-        _in_ch_mult = (1,) + tuple(ch_mult)
+        _in_ch_mult = (1,) + tuple(ch_mult)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
@@ -670,7 +670,8 @@ class LatentRescaler(nn.Module):
         for block in self.res_block1:
             x = block(x, None)
         x = torch.nn.functional.interpolate(
-            x, size=(int(round(x.shape[2] * self.factor)), int(round(x.shape[3] * self.factor)))
+            x,
+            size=(int(round(x.shape[2] * self.factor)), int(round(x.shape[3] * self.factor))),  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         )
         x = self.attn(x)
         for block in self.res_block2:

@@ -5,7 +5,7 @@ from worldfoundry.core.io.paths import package_data_path
 from .xbert import BertConfig, BertForMaskedLM, BertLMHeadModel, BertModel
 
 logger = logging.getLogger(__name__)
-import os
+import os  # noqa: E402 - Follows the logging setup.
 
 
 def build_bert(model_config, pretrain, checkpoint):

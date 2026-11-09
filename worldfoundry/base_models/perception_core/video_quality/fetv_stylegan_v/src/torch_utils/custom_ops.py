@@ -84,7 +84,7 @@ def get_plugin(module_name, sources, **build_kwargs):
         # actually cares about this.)
         source_dirs_set = {os.path.dirname(source) for source in sources}
         if len(source_dirs_set) == 1 and ("TORCH_EXTENSIONS_DIR" in os.environ):
-            all_source_files = sorted(x for x in Path(list(source_dirs_set)[0]).iterdir() if x.is_file())
+            all_source_files = sorted(x for x in Path(list(source_dirs_set)[0]).iterdir() if x.is_file())  # noqa: RUF015 - Keeps eager list construction and IndexError.
 
             # Compute a combined hash digest for all source files in the same
             # custom op directory (usually .cu, .cpp, .py and .h files).

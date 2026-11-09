@@ -32,7 +32,7 @@ class CholeskySolver(torch.autograd.Function):
 def block_solve(H, b, ep=0.1, lm=0.0001):
     """solve normal equations"""
     B, N, _, D, _ = H.shape
-    I = torch.eye(D).to(H.device)
+    I = torch.eye(D).to(H.device)  # noqa: E741 - Ambiguous upstream name kept as written.
     H = H + (ep + lm * H) * I
 
     H = H.permute(0, 1, 3, 2, 4)
@@ -55,7 +55,7 @@ def schur_solve(H, E, C, v, w, ep=0.01, lm=0.0001, sless=False):
     Q = (1.0 / C).view(B, M * HW, 1)
 
     # damping
-    I = torch.eye(P * D).to(H.device)
+    I = torch.eye(P * D).to(H.device)  # noqa: E741 - Ambiguous upstream name kept as written.
     H = H + (ep + lm * H) * I
 
     v = v.reshape(B, P * D, 1)
@@ -95,7 +95,7 @@ def schur_solve_f(H, E, C, v, w, H_fc, Hff, vf, Efd, ep=0.01, lm=0.0001, sless=F
     Q = (1.0 / C).view(B, M * HW, 1)
 
     # damping
-    I = torch.eye(P * D).to(H.device)
+    I = torch.eye(P * D).to(H.device)  # noqa: E741 - Ambiguous upstream name kept as written.
     H = H + (ep + lm * H) * I
     Hff = Hff + (ep + lm * Hff)
 

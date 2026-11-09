@@ -317,7 +317,7 @@ class MosaicGPT(PreTrainedModel):
         for b_idx, block in enumerate(self.transformer.blocks):  # type: ignore
             if output_hidden_states:
                 assert all_hidden_states is not None  # pyright
-                all_hidden_states = all_hidden_states + (x,)
+                all_hidden_states = all_hidden_states + (x,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             past_key_value = past_key_values[b_idx] if past_key_values is not None else None
             x, past_key_value = block(
                 x,
@@ -398,7 +398,7 @@ class MosaicGPT(PreTrainedModel):
             # Leverage a convenience of sequential generation!
             prefix_mask = torch.ones_like(attention_mask)
             # This requires that we're using the cache
-            if kwargs.get("use_cache") == False:
+            if kwargs.get("use_cache") == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
                 raise NotImplementedError("MosaicGPT with prefix_lm=True does not support use_cache=False.")
         else:
             prefix_mask = None

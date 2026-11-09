@@ -94,7 +94,7 @@ def calc_local_qk_range(
     num_audio_and_txt_tokens: int,
     num_frames: int,
     frame_receptive_field: int,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Reproduce upstream ``calc_local_qk_range`` (L1348) without CUDA pinning.
 
@@ -141,7 +141,7 @@ def calc_local_attn_handler(
     num_audio_and_txt_tokens: int,
     num_frames: int,
     frame_receptive_field: int,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ) -> LocalAttnHandler:
     """Build a :class:`LocalAttnHandler` (upstream ``calc_local_attn_ffa_handler``)."""
     q_ranges, k_ranges = calc_local_qk_range(

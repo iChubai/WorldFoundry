@@ -1,5 +1,5 @@
 import struct
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 from zipfile import (
     _FH_EXTRA_FIELD_LENGTH,
     _FH_FILENAME_LENGTH,
@@ -32,7 +32,7 @@ class _SharedWebFile(WebFile):
 class WebZipFile(ZipFile):
     "Lock-free version of ZipFile that reads from a WebFile, allowing for concurrent reads."
 
-    def __init__(self, url: str, session: Optional[Session] = None, headers: Optional[Dict[str, str]] = None):
+    def __init__(self, url: str, session: Optional[Session] = None, headers: Optional[Dict[str, str]] = None):  # noqa: F405 - Name comes from the upstream star import.
         """Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
         or append 'a'."""
         webf = WebFile(url, session=session, headers=headers)
@@ -117,7 +117,7 @@ class WebZipFile(ZipFile):
                 fname_str = fname.decode(self.metadata_encoding or "cp437")
 
             if fname_str != zinfo.orig_filename:
-                raise BadZipFile("File name in directory %r and header %r differ." % (zinfo.orig_filename, fname))
+                raise BadZipFile("File name in directory %r and header %r differ." % (zinfo.orig_filename, fname))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
             # check for encrypted flag & handle password
             is_encrypted = zinfo.flag_bits & _MASK_ENCRYPTED
@@ -125,9 +125,9 @@ class WebZipFile(ZipFile):
                 if not pwd:
                     pwd = self.pwd
                 if pwd and not isinstance(pwd, bytes):
-                    raise TypeError("pwd: expected bytes, got %s" % type(pwd).__name__)
+                    raise TypeError("pwd: expected bytes, got %s" % type(pwd).__name__)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 if not pwd:
-                    raise RuntimeError("File %r is encrypted, password required for extraction" % name)
+                    raise RuntimeError("File %r is encrypted, password required for extraction" % name)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             else:
                 pwd = None
 

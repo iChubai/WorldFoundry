@@ -84,8 +84,8 @@ class CameraPoses(nn.Module):
         """invert the camera pose"""
         Rs = self.params["Rs"]
         _ts = self.params["ts"]
-        Rs_inv = Rs.inverse() if use_inverse else R.transpose(-1, -2)
-        ts_inv = (-R_inv @ t)[..., 0]
+        Rs_inv = Rs.inverse() if use_inverse else R.transpose(-1, -2)  # noqa: F821 - Name is undefined in the upstream source.
+        ts_inv = (-R_inv @ t)[..., 0]  # noqa: F821 - Name is undefined in the upstream source.
         return self(Rs_inv, ts_inv)
 
     def compose(self, pose):

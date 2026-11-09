@@ -528,7 +528,7 @@ class AOTInferEngine(nn.Module):
             fg_logits.append(logit[:, 1 : 1 + self.max_aot_obj_num])
 
         bg_logit, _ = torch.min(torch.cat(bg_logits, dim=1), dim=1, keepdim=True)
-        merged_logit = torch.cat([bg_logit] + fg_logits, dim=1)
+        merged_logit = torch.cat([bg_logit] + fg_logits, dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return merged_logit
 
@@ -545,7 +545,7 @@ class AOTInferEngine(nn.Module):
             fg_probs.append(prob[:, 1 : 1 + self.max_aot_obj_num])
 
         bg_prob = torch.prod(torch.cat(bg_probs, dim=1), dim=1, keepdim=True)
-        merged_prob = torch.cat([bg_prob] + fg_probs, dim=1).clamp(1e-5, 1 - 1e-5)
+        merged_prob = torch.cat([bg_prob] + fg_probs, dim=1).clamp(1e-5, 1 - 1e-5)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         merged_logit = torch.logit(merged_prob)
 
         return merged_logit

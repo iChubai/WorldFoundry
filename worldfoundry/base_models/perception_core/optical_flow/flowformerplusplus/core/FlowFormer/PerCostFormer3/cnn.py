@@ -19,25 +19,25 @@ class ResidualBlock(nn.Module):
         if norm_fn == "group":
             self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
             self.norm2 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm3 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
 
         elif norm_fn == "batch":
             self.norm1 = nn.BatchNorm2d(planes)
             self.norm2 = nn.BatchNorm2d(planes)
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm3 = nn.BatchNorm2d(planes)
 
         elif norm_fn == "instance":
             self.norm1 = nn.InstanceNorm2d(planes)
             self.norm2 = nn.InstanceNorm2d(planes)
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm3 = nn.InstanceNorm2d(planes)
 
         elif norm_fn == "none":
             self.norm1 = nn.Sequential()
             self.norm2 = nn.Sequential()
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm3 = nn.Sequential()
 
         if stride == 1:
@@ -72,28 +72,28 @@ class BottleneckBlock(nn.Module):
             self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=planes // 4)
             self.norm2 = nn.GroupNorm(num_groups=num_groups, num_channels=planes // 4)
             self.norm3 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm4 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
 
         elif norm_fn == "batch":
             self.norm1 = nn.BatchNorm2d(planes // 4)
             self.norm2 = nn.BatchNorm2d(planes // 4)
             self.norm3 = nn.BatchNorm2d(planes)
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm4 = nn.BatchNorm2d(planes)
 
         elif norm_fn == "instance":
             self.norm1 = nn.InstanceNorm2d(planes // 4)
             self.norm2 = nn.InstanceNorm2d(planes // 4)
             self.norm3 = nn.InstanceNorm2d(planes)
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm4 = nn.InstanceNorm2d(planes)
 
         elif norm_fn == "none":
             self.norm1 = nn.Sequential()
             self.norm2 = nn.Sequential()
             self.norm3 = nn.Sequential()
-            if not stride == 1:
+            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
                 self.norm4 = nn.Sequential()
 
         if stride == 1:
@@ -479,7 +479,7 @@ class BasicRPEEncoder(nn.Module):
         return self.encoder(rpe_tokens)
 
 
-from .twins import Block, CrossBlock
+from .twins import Block, CrossBlock  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class TwinsSelfAttentionLayer(nn.Module):

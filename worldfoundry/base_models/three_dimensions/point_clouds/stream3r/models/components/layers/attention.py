@@ -106,9 +106,9 @@ class MemEffAttention(Attention):
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads)
 
-        q, k, v = unbind(qkv, 2)
+        q, k, v = unbind(qkv, 2)  # noqa: F821 - Name is undefined in the upstream source.
 
-        x = memory_efficient_attention(q, k, v, attn_bias=attn_bias)
+        x = memory_efficient_attention(q, k, v, attn_bias=attn_bias)  # noqa: F821 - Name is undefined in the upstream source.
         x = x.reshape([B, N, C])
 
         x = self.proj(x)

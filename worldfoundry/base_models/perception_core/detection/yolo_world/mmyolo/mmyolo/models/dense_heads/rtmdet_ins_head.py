@@ -46,8 +46,8 @@ class MaskFeatModule(BaseModule):
         stacked_convs: int = 4,
         num_levels: int = 3,
         num_prototypes: int = 8,
-        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},
-        norm_cfg: ConfigType = {"type": "BN"},
+        act_cfg: ConfigType = {"type": "ReLU", "inplace": True},  # noqa: B006 - Keeps the upstream default object and signature.
+        norm_cfg: ConfigType = {"type": "BN"},  # noqa: B006 - Keeps the upstream default object and signature.
     ) -> None:
         super().__init__(init_cfg=None)
         self.num_levels = num_levels
@@ -109,7 +109,7 @@ class RTMDetInsSepBNHeadModule(RTMDetSepBNHeadModule):
             self.cls_out_channels = num_classes
         else:
             self.cls_out_channels = num_classes + 1
-        super().__init__(num_classes=num_classes, *args, **kwargs)
+        super().__init__(num_classes=num_classes, *args, **kwargs)  # noqa: B026 - Keeps the upstream argument order.
 
     def _init_layers(self):
         """Initialize layers of the head."""
@@ -139,7 +139,7 @@ class RTMDetInsSepBNHeadModule(RTMDetSepBNHeadModule):
         self.num_gen_params = sum(weight_nums) + sum(bias_nums)
         pred_pad_size = self.pred_kernel_size // 2
 
-        for n in range(len(self.featmap_strides)):
+        for n in range(len(self.featmap_strides)):  # noqa: B007 - The loop variable is read outside the loop.
             cls_convs = nn.ModuleList()
             reg_convs = nn.ModuleList()
             kernel_convs = nn.ModuleList()
@@ -301,11 +301,11 @@ class RTMDetInsSepBNHead(RTMDetHead):
     def __init__(
         self,
         head_module: ConfigType,
-        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},
-        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},
-        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},
-        loss_bbox: ConfigType = {"type": "mmdet.GIoULoss", "loss_weight": 2.0},
-        loss_mask={"type": "mmdet.DiceLoss", "loss_weight": 2.0, "eps": 5e-6, "reduction": "mean"},
+        prior_generator: ConfigType = {"type": "mmdet.MlvlPointGenerator", "offset": 0, "strides": [8, 16, 32]},  # noqa: B006 - Keeps the upstream default object and signature.
+        bbox_coder: ConfigType = {"type": "DistancePointBBoxCoder"},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_cls: ConfigType = {"type": "mmdet.QualityFocalLoss", "use_sigmoid": True, "beta": 2.0, "loss_weight": 1.0},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_bbox: ConfigType = {"type": "mmdet.GIoULoss", "loss_weight": 2.0},  # noqa: B006 - Keeps the upstream default object and signature.
+        loss_mask={"type": "mmdet.DiceLoss", "loss_weight": 2.0, "eps": 5e-6, "reduction": "mean"},  # noqa: B006 - Keeps the upstream default object and signature.
         train_cfg: OptConfigType = None,
         test_cfg: OptConfigType = None,
         init_cfg: OptMultiConfig = None,
@@ -430,7 +430,7 @@ class RTMDetInsSepBNHead(RTMDetHead):
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
-            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
             score_thr = cfg.get("score_thr", -1)
             if scores.shape[0] == 0:

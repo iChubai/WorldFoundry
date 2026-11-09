@@ -1,5 +1,6 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import threading
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import nvdiffrast.torch as dr
 import torch

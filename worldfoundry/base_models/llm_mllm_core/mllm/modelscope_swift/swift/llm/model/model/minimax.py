@@ -69,7 +69,7 @@ def get_model_tokenizer_minimax_vl(
             "language_model.model.norm": get_device(device_ids[len(device_ids) - 1]),
             "language_model.lm_head": get_device(device_ids[len(device_ids) - 1]),
         }
-        for key, value in vision_map.items():
+        for key, value in vision_map.items():  # noqa: B007 - The loop variable is read outside the loop.
             device_map[key] = get_device(device_ids[0])
         device_map["vision_tower.vision_model.post_layernorm"] = get_device(device_ids[0])
         layers_per_device = config.text_config.num_hidden_layers // len(device_ids)

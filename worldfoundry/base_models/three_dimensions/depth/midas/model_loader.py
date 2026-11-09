@@ -195,7 +195,7 @@ def load_model(device, model_path, model_type="dpt_large_384", optimize=True, he
 
     else:
         print(f"model_type '{model_type}' not implemented, use: --model_type large")
-        assert False
+        assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
     if "openvino" not in model_type:
         print(f"Model loaded, number of parameters = {sum(p.numel() for p in model.parameters()) / 1e6:.0f}M")

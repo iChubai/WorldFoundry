@@ -560,10 +560,10 @@ class T5Attention(nn.Module):
         attn_output = self.o(attn_output)
 
         present_key_value_state = (key_states, value_states) if (self.is_decoder and use_cache) else None
-        outputs = (attn_output,) + (present_key_value_state,) + (position_bias,)
+        outputs = (attn_output,) + (present_key_value_state,) + (position_bias,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if output_attentions:
-            outputs = outputs + (attn_weights,)
+            outputs = outputs + (attn_weights,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return outputs
 
 
@@ -595,7 +595,7 @@ class T5LayerSelfAttention(nn.Module):
             output_attentions=output_attentions,
         )
         hidden_states = hidden_states + self.dropout(attention_output[0])
-        outputs = (hidden_states,) + attention_output[1:]  # add attentions if we output them
+        outputs = (hidden_states,) + attention_output[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # add attentions if we output them
         return outputs
 
 
@@ -631,7 +631,7 @@ class T5LayerCrossAttention(nn.Module):
             output_attentions=output_attentions,
         )
         layer_output = hidden_states + self.dropout(attention_output[0])
-        outputs = (layer_output,) + attention_output[1:]  # add attentions if we output them
+        outputs = (layer_output,) + attention_output[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.  # add attentions if we output them
         return outputs
 
 
@@ -736,7 +736,7 @@ class T5Block(nn.Module):
 
         outputs = (hidden_states,)
 
-        outputs = outputs + (present_key_value_state,) + attention_outputs if use_cache else outputs + attention_outputs
+        outputs = outputs + (present_key_value_state,) + attention_outputs if use_cache else outputs + attention_outputs  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return outputs  # hidden-states, present_key_value_states, (self-attention position bias), (self-attention weights), (cross-attention position bias), (cross-attention weights)
 
@@ -825,7 +825,7 @@ class T5PreTrainedModel(PreTrainedModel):
         # shift inputs to the right
         if is_torch_fx_proxy(input_ids):
             # Item assignment is not supported natively for proxies.
-            shifted_input_ids = torch.full(input_ids.shape[:-1] + (1,), decoder_start_token_id)
+            shifted_input_ids = torch.full(input_ids.shape[:-1] + (1,), decoder_start_token_id)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             shifted_input_ids = torch.cat([shifted_input_ids, input_ids[..., :-1]], dim=-1)
         else:
             shifted_input_ids = input_ids.new_zeros(input_ids.shape)
@@ -867,7 +867,7 @@ class T5Stack(T5PreTrainedModel):
         )
         assert_device_map(self.device_map, len(self.block))
         self.model_parallel = True
-        self.first_device = "cpu" if "cpu" in self.device_map.keys() else "cuda:" + str(min(self.device_map.keys()))
+        self.first_device = "cpu" if "cpu" in self.device_map.keys() else "cuda:" + str(min(self.device_map.keys()))  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         self.last_device = "cuda:" + str(max(self.device_map.keys()))
         # Load onto devices
         for k, v in self.device_map.items():
@@ -1018,7 +1018,7 @@ class T5Stack(T5PreTrainedModel):
                 if cross_attn_layer_head_mask is not None:
                     cross_attn_layer_head_mask = cross_attn_layer_head_mask.to(hidden_states.device)
             if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
+                all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             if self.gradient_checkpointing and self.training:
                 if use_cache:
@@ -1029,7 +1029,7 @@ class T5Stack(T5PreTrainedModel):
 
                 def create_custom_forward(module):
                     def custom_forward(*inputs):
-                        return tuple(module(*inputs, use_cache, output_attentions))
+                        return tuple(module(*inputs, use_cache, output_attentions))  # noqa: B023 - Keeps the upstream late binding of the loop variable.
 
                     return custom_forward
 
@@ -1063,7 +1063,7 @@ class T5Stack(T5PreTrainedModel):
             # layer_outputs is a tuple with:
             # hidden-states, key-value-states, (self-attention position bias), (self-attention weights), (cross-attention position bias), (cross-attention weights)
             if use_cache is False:
-                layer_outputs = layer_outputs[:1] + (None,) + layer_outputs[1:]
+                layer_outputs = layer_outputs[:1] + (None,) + layer_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             hidden_states, present_key_value_state = layer_outputs[:2]
 
@@ -1075,12 +1075,12 @@ class T5Stack(T5PreTrainedModel):
                 encoder_decoder_position_bias = layer_outputs[4 if output_attentions else 3]
             # append next layer key value states
             if use_cache:
-                present_key_value_states = present_key_value_states + (present_key_value_state,)
+                present_key_value_states = present_key_value_states + (present_key_value_state,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             if output_attentions:
-                all_attentions = all_attentions + (layer_outputs[3],)
+                all_attentions = all_attentions + (layer_outputs[3],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 if self.is_decoder:
-                    all_cross_attentions = all_cross_attentions + (layer_outputs[5],)
+                    all_cross_attentions = all_cross_attentions + (layer_outputs[5],)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
             # Model Parallel: If it's the last layer for that device, put things on the next device
             if self.model_parallel:
@@ -1093,7 +1093,7 @@ class T5Stack(T5PreTrainedModel):
 
         # Add last layer
         if output_hidden_states:
-            all_hidden_states = all_hidden_states + (hidden_states,)
+            all_hidden_states = all_hidden_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(
@@ -1404,7 +1404,7 @@ class T5Model(T5PreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         # FutureWarning: head_mask was separated into two input args - head_mask, decoder_head_mask
-        if head_mask is not None and decoder_head_mask is None:
+        if head_mask is not None and decoder_head_mask is None:  # noqa: SIM102 - Statement form kept for readability.
             if self.config.num_layers == self.config.num_decoder_layers:
                 warnings.warn(__HEAD_MASK_WARNING_MSG, FutureWarning, stacklevel=1)
                 decoder_head_mask = head_mask
@@ -1610,7 +1610,7 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         # FutureWarning: head_mask was separated into two input args - head_mask, decoder_head_mask
-        if head_mask is not None and decoder_head_mask is None:
+        if head_mask is not None and decoder_head_mask is None:  # noqa: SIM102 - Statement form kept for readability.
             if self.config.num_layers == self.config.num_decoder_layers:
                 warnings.warn(__HEAD_MASK_WARNING_MSG, FutureWarning, stacklevel=1)
                 decoder_head_mask = head_mask
@@ -1693,8 +1693,8 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
                 loss = loss.view(lm_logits.size(0), -1).sum(1)
 
         if not return_dict:
-            output = (lm_logits,) + decoder_outputs[1:] + encoder_outputs
-            return ((loss,) + output) if loss is not None else output
+            output = (lm_logits,) + decoder_outputs[1:] + encoder_outputs  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return ((loss,) + output) if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return Seq2SeqLMOutput(
             loss=loss,
@@ -1752,14 +1752,14 @@ class T5ForConditionalGeneration(T5PreTrainedModel):
             reordered_layer_past_states = ()
             for layer_past_state in layer_past_states:
                 # need to set correct `past` for each of the four key / value states
-                reordered_layer_past_states = reordered_layer_past_states + (
+                reordered_layer_past_states = reordered_layer_past_states + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                     layer_past_state.index_select(0, beam_idx.to(layer_past_state.device)),
                 )
 
             assert reordered_layer_past_states[0].shape == layer_past_states[0].shape
             assert len(reordered_layer_past_states) == len(layer_past_states)
 
-            reordered_decoder_past = reordered_decoder_past + (reordered_layer_past_states,)
+            reordered_decoder_past = reordered_decoder_past + (reordered_layer_past_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return reordered_decoder_past
 
 

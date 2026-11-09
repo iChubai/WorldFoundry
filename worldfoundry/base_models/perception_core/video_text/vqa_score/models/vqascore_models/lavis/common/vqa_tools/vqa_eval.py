@@ -191,7 +191,7 @@ class VQAEval:
         ]
 
     def evaluate(self, quesIds=None):
-        if quesIds == None:
+        if quesIds == None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             quesIds = list(self.params["question_id"])
         gts = {}
         res = {}
@@ -247,7 +247,7 @@ class VQAEval:
     def processPunctuation(self, inText):
         outText = inText
         for p in self.punct:
-            if (p + " " in inText or " " + p in inText) or (re.search(self.commaStrip, inText) != None):
+            if (p + " " in inText or " " + p in inText) or (re.search(self.commaStrip, inText) != None):  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
                 outText = outText.replace(p, "")
             else:
                 outText = outText.replace(p, " ")
@@ -310,7 +310,7 @@ class VQAEval:
         if progress >= 1:
             progress = 1
             status = "Done...\r\n"
-        block = int(round(barLength * progress))
+        block = int(round(barLength * progress))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         text = "\rFinshed Percent: [{}] {}% {}".format(
             "#" * block + "-" * (barLength - block), int(progress * 100), status
         )

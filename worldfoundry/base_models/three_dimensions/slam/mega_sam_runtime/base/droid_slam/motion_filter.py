@@ -91,7 +91,7 @@ class MotionFilter:
 
             # check motion magnitue / add new frame to video
             if delta.norm(dim=-1).mean().item() > self.thresh or last_frame:
-                print("ADDING KEYFRAMES %d" % tstamp)
+                print("ADDING KEYFRAMES %d" % tstamp)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
                 self.count = 0
                 net, inp = self.__context_encoder(inputs[:, [0]])
                 self.net, self.inp, self.fmap = net, inp, gmap

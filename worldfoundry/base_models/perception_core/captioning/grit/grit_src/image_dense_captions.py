@@ -13,15 +13,17 @@ WINDOW_NAME = "GRiT"
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 # sys.path.insert(0, f"{CUR_DIR}/../")
 # print(CUR_DIR)
-import sys
+import sys  # noqa: E402 - Follows module-level setup, as upstream.
 
-from worldfoundry.core.io.filesystem.disk import default_worldfoundry_cache_dir
+from worldfoundry.core.io.filesystem.disk import (  # noqa: E402 - Follows module-level setup, as upstream.
+    default_worldfoundry_cache_dir,
+)
 
 sys.path.append(os.path.join(CUR_DIR, "./centernet2/"))
-from centernet.config import add_centernet_config
+from centernet.config import add_centernet_config  # noqa: E402 - Follows the sys.path setup.
 
-from .grit.config import add_grit_config
-from .grit.predictor import VisualizationDemo
+from .grit.config import add_grit_config  # noqa: E402 - Follows the sys.path setup.
+from .grit.predictor import VisualizationDemo  # noqa: E402 - Follows the sys.path setup.
 
 
 class ObjDescription:

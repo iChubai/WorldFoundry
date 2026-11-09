@@ -141,7 +141,7 @@ class DinoVisionTransformer(nn.Module):
             nn.Parameter(torch.zeros(1, num_register_tokens, embed_dim)) if num_register_tokens else None
         )
 
-        if drop_path_uniform is True:
+        if drop_path_uniform is True:  # noqa: SIM108 - Branches carry per-case comments.
             dpr = [drop_path_rate] * depth
         else:
             dpr = np.linspace(0, drop_path_rate, depth).tolist()  # stochastic depth decay rule

@@ -275,7 +275,7 @@ def compute_up_lat_map(
     xi: torch.Tensor,
     height: int,
     width: int,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     delta: float = 0.1,
     pixel_center: bool = False,
 ):

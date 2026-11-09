@@ -67,7 +67,7 @@ def loadModel(
     file_name = "arcface_weights.h5"
     output = home + "/.deepface/weights/" + file_name
 
-    if os.path.isfile(output) != True:
+    if os.path.isfile(output) != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print(file_name, " will be downloaded to ", output)
         gdown.download(url, output, quiet=False)
 

@@ -3,22 +3,22 @@ import logging
 import os
 
 _logger = logging.getLogger(__name__)
-import re
-import warnings
-from copy import deepcopy
-from dataclasses import asdict
-from pathlib import Path
-from typing import Any
+import re  # noqa: E402 - Follows the logging setup.
+import warnings  # noqa: E402 - Follows the logging setup.
+from copy import deepcopy  # noqa: E402 - Follows the logging setup.
+from dataclasses import asdict  # noqa: E402 - Follows the logging setup.
+from pathlib import Path  # noqa: E402 - Follows the logging setup.
+from typing import Any  # noqa: E402 - Follows the logging setup.
 
-import torch
+import torch  # noqa: E402 - Follows the logging setup.
 
-from worldfoundry.core.io.paths import resolve_data_path
-from worldfoundry.core.model_loading import load_torch_checkpoint
+from worldfoundry.core.io.paths import resolve_data_path  # noqa: E402 - Follows the logging setup.
+from worldfoundry.core.model_loading import load_torch_checkpoint  # noqa: E402 - Follows the logging setup.
 
-from .clap_model import CLAP
-from .coca_model import CoCa
-from .convert import convert_state_dict
-from .model import (
+from .clap_model import CLAP  # noqa: E402 - Follows the logging setup.
+from .coca_model import CoCa  # noqa: E402 - Follows the logging setup.
+from .convert import convert_state_dict  # noqa: E402 - Follows the logging setup.
+from .model import (  # noqa: E402 - Follows the logging setup.
     CLIP,
     CustomTextCLIP,
     convert_to_custom_text_state_dict,
@@ -28,14 +28,17 @@ from .model import (
     resize_text_pos_embed,
     set_model_preprocess_cfg,
 )
-from .naflex_convert import apply_naflex_vision_config, convert_naflex_state_dict
-from .pretrained import (
+from .naflex_convert import (  # noqa: E402 - Follows the logging setup.
+    apply_naflex_vision_config,
+    convert_naflex_state_dict,
+)
+from .pretrained import (  # noqa: E402 - Follows the logging setup.
     download_pretrained,
     download_pretrained_from_hf,
     get_pretrained_cfg,
     list_pretrained_tags_by_model,
 )
-from .transform import (
+from .transform import (  # noqa: E402 - Follows the logging setup.
     AugmentationCfg,
     PreprocessCfg,
     image_transform_v2,
@@ -46,7 +49,12 @@ from .transform import (
 )
 
 # isort: split
-from .tokenizer import DEFAULT_CONTEXT_LENGTH, HFTokenizer, SigLipTokenizer, SimpleTokenizer
+from .tokenizer import (  # noqa: E402 - Follows the logging setup.
+    DEFAULT_CONTEXT_LENGTH,
+    HFTokenizer,
+    SigLipTokenizer,
+    SimpleTokenizer,
+)
 
 HF_HUB_PREFIX = "hf-hub:"
 _MODEL_CONFIG_PATHS = [resolve_data_path("models", "runtime", "configs", "open_clip", "model_configs")]
@@ -447,7 +455,7 @@ def create_model(
                     # QuickGELU compatibility check will happen in after force overrides
                 except Exception as e:
                     _logger.error(f"Failed to download weights for tag '{pretrained}': {e}")
-                    raise RuntimeError(f"Failed to download weights for tag '{pretrained}': {e}")
+                    raise RuntimeError(f"Failed to download weights for tag '{pretrained}': {e}")  # noqa: B904 - Keeps the implicit exception context.
             elif os.path.isfile(pretrained):
                 # Handle pretrained file path
                 _logger.info(f"`pretrained` specifies file path: {pretrained}")
@@ -793,7 +801,7 @@ def get_tokenizer(
 
     if hf_tokenizer_name:
         # If 'hf_tokenizer_name' key exists in text_cfg (even if empty string): Use HFTokenizer.
-        if schema == "local-dir":
+        if schema == "local-dir":  # noqa: SIM108 - Branches carry per-case comments.
             # If config came from local-dir, ALWAYS use the local dir path for HFTokenizer.
             # This assumes the tokenizer files are inside that directory.
             tokenizer_source = local_dir_path

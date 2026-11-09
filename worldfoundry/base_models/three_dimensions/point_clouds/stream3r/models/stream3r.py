@@ -19,9 +19,11 @@ def freeze_all_params(modules):
             module.requires_grad = False
 
 
-from .components.aggregator.streamaggregator import STreamAggregator
-from .components.heads.camera_head import CameraHead
-from .components.heads.dpt_head import DPTHead
+from .components.aggregator.streamaggregator import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    STreamAggregator,
+)
+from .components.heads.camera_head import CameraHead  # noqa: E402 - Follows module-level definitions, as upstream.
+from .components.heads.dpt_head import DPTHead  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class STream3R(nn.Module, PyTorchModelHubMixin):

@@ -27,14 +27,14 @@ class MetricOptions:
     def __init__(
         self,
         G=None,
-        G_kwargs={},
-        dataset_kwargs={},
+        G_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
+        dataset_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         num_gpus=1,
         rank=0,
         device=None,
         progress=None,
         cache=True,
-        gen_dataset_kwargs={},
+        gen_dataset_kwargs={},  # noqa: B006 - Keeps the upstream default object and signature.
         generator_as_dataset=False,
         seed=0,
         real_feat_path=None,
@@ -65,7 +65,7 @@ def get_feature_detector_name(url):
     return os.path.splitext(url.split("/")[-1])[0]
 
 
-def get_feature_detector(url, device=torch.device("cpu"), num_gpus=1, rank=0, verbose=False):
+def get_feature_detector(url, device=torch.device("cpu"), num_gpus=1, rank=0, verbose=False):  # noqa: B008 - Default evaluated once at definition, as upstream.
     assert 0 <= rank < num_gpus
     key = (url, device)
     if key not in _feature_detector_cache:

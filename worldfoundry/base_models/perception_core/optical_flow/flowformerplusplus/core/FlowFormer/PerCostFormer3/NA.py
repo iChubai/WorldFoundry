@@ -124,7 +124,7 @@ class selfattentionlayer_nat(nn.Module):
         return x
 
 
-from .twins import Block
+from .twins import Block  # noqa: E402 - Follows module-level definitions, as upstream.
 
 
 class NATwins(nn.Module):

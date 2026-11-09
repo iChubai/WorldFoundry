@@ -300,7 +300,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
                             vfrag,
                             get_spatial_fragments(
                                 video,
-                                fragments,
+                                fragments,  # noqa: F821 - Name is undefined in the upstream source.
                                 fx,
                                 fy,
                                 fsx,
@@ -317,7 +317,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
             vfrag, frame_inds, label, img_shape = self.cache[index]
         vfrag = ((vfrag.permute(1, 2, 3, 0) - self.mean) / self.std).permute(3, 0, 1, 2)
         data = {
-            "video": vfrag.reshape((-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(
+            "video": vfrag.reshape((-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 0, 1
             ),  # B, V, T, C, H, W
             "frame_inds": frame_inds,
@@ -326,7 +326,7 @@ class FastVQAPlusPlusDataset(torch.utils.data.Dataset):
         }
         if need_original_frames:
             data["original_video"] = video.reshape(
-                (-1, self.nfrags * self.num_clips, self.clip_len) + video.shape[2:]
+                (-1, self.nfrags * self.num_clips, self.clip_len) + video.shape[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ).transpose(0, 1)
         return data
 
@@ -440,7 +440,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
             vfrag, frame_inds, label, img_shape = self.cache[index]
         vfrag = ((vfrag.permute(1, 2, 3, 0) - self.mean) / self.std).permute(3, 0, 1, 2)
         data = {
-            "video": vfrag.reshape((-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(
+            "video": vfrag.reshape((-1, self.nfrags * self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 0, 1
             ),  # B, V, T, C, H, W
             "frame_inds": frame_inds,
@@ -449,7 +449,7 @@ class FragmentVideoDataset(torch.utils.data.Dataset):
         }
         if need_original_frames:
             data["original_video"] = video.reshape(
-                (-1, self.nfrags * self.num_clips, self.clip_len) + video.shape[2:]
+                (-1, self.nfrags * self.num_clips, self.clip_len) + video.shape[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ).transpose(0, 1)
         return data
 
@@ -516,12 +516,12 @@ class ResizedVideoDataset(torch.utils.data.Dataset):
             video = video.permute(3, 0, 1, 2)
             video = torch.nn.functional.interpolate(video, size=(self.size, self.size))
             if tocache:
-                return (vfrag, frame_inds, label, img_shape)
+                return (vfrag, frame_inds, label, img_shape)  # noqa: F821 - Name is undefined in the upstream source.
         else:
             vfrag, frame_inds, label, img_shape = self.cache[index]
         vfrag = ((vfrag.permute(1, 2, 3, 0) - self.mean) / self.std).permute(3, 0, 1, 2)
         data = {
-            "video": vfrag.reshape((-1, self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(
+            "video": vfrag.reshape((-1, self.num_clips, self.clip_len) + vfrag.shape[2:]).transpose(  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 0, 1
             ),  # B, V, T, C, H, W
             "frame_inds": frame_inds,
@@ -530,7 +530,7 @@ class ResizedVideoDataset(torch.utils.data.Dataset):
         }
         if need_original_frames:
             data["original_video"] = video.reshape(
-                (-1, self.nfrags * self.num_clips, self.clip_len) + video.shape[2:]
+                (-1, self.nfrags * self.num_clips, self.clip_len) + video.shape[2:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ).transpose(0, 1)
         return data
 

@@ -368,7 +368,7 @@ def _iter_checkpoint_weights(
         raise FileNotFoundError(f"No *.safetensors found under {model_path!r}")
     for shard_path in shard_paths:
         with safe_open(shard_path, framework="pt", device="cpu") as f:
-            for name in f.keys():
+            for name in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 # The H3 feature extractor stops after layer 49. Avoid reading
                 # unused checkpoint tensors (layers 50+, final norm, lm_head)
                 # from the multi-GB shards merely to discard them downstream.

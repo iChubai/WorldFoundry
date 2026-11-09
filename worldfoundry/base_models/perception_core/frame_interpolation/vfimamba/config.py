@@ -10,7 +10,7 @@ LOCAL = 2
 """==========Model config=========="""
 
 
-def init_model_config(F=32, W=7, depth=[2, 2, 2, 4, 4], M=False):
+def init_model_config(F=32, W=7, depth=[2, 2, 2, 4, 4], M=False):  # noqa: B006 - Keeps the upstream default object and signature.
     """This function should not be modified"""
     return {
         "embed_dims": [(2**i) * F for i in range(len(depth))],

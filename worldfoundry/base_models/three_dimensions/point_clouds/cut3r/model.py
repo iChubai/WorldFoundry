@@ -297,7 +297,7 @@ class ARCroco3DStereo(CroCoNet):
             try:
                 model = super().from_pretrained(pretrained_model_name_or_path, **kw)
             except TypeError:
-                raise Exception(f"tried to load {pretrained_model_name_or_path} from huggingface, but failed")
+                raise Exception(f"tried to load {pretrained_model_name_or_path} from huggingface, but failed")  # noqa: B904 - Keeps the implicit exception context.
             return model
 
     def _set_patch_embed(self, img_size=224, patch_size=16, enc_embed_dim=768):
@@ -624,7 +624,7 @@ class ARCroco3DStereo(CroCoNet):
         res = self._downstream_head(head_input, shape_i, pos=pos_i)
         img_mask = views[i]["img_mask"]
         update = views[i].get("update", None)
-        if update is not None:
+        if update is not None:  # noqa: SIM108 - Branches carry per-case comments.
             update_mask = img_mask & update  # if don't update, then whatever img_mask
         else:
             update_mask = img_mask
@@ -685,7 +685,7 @@ class ARCroco3DStereo(CroCoNet):
             ress.append(res)
             img_mask = views[i]["img_mask"]
             update = views[i].get("update", None)
-            if update is not None:
+            if update is not None:  # noqa: SIM108 - Branches carry per-case comments.
                 update_mask = img_mask & update  # if don't update, then whatever img_mask
             else:
                 update_mask = img_mask
@@ -852,7 +852,7 @@ class ARCroco3DStereo(CroCoNet):
             ress.append(res)
             img_mask = view["img_mask"]
             update = view.get("update", None)
-            if update is not None:
+            if update is not None:  # noqa: SIM108 - Branches carry per-case comments.
                 update_mask = img_mask & update  # if don't update, then whatever img_mask
             else:
                 update_mask = img_mask

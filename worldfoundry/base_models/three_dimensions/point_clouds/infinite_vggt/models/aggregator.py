@@ -69,7 +69,7 @@ class Aggregator(nn.Module):
         proj_bias=True,
         ffn_bias=True,
         patch_embed="dinov2_vitl14_reg",
-        aa_order=["frame", "global"],
+        aa_order=["frame", "global"],  # noqa: B006 - Keeps the upstream default object and signature.
         aa_block_size=1,
         qk_norm=True,
         rope_freq=100,
@@ -208,7 +208,7 @@ class Aggregator(nn.Module):
         """
         B, S, C_in, H, W = images.shape
 
-        if use_cache and past_key_values[0] is not None:
+        if use_cache and past_key_values[0] is not None:  # noqa: SIM108 - Branches carry per-case comments.
             # _, _, S_true, _, _ = past_key_values[0][0].shape
             S_true = past_frame_idx + 1
         else:

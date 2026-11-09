@@ -7,7 +7,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.mast3r import ensure_i
 from .utils import geometry, sh_utils
 
 ensure_import_paths()
-import mast3r.model as mast3r_model
+import mast3r.model as mast3r_model  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 
 class MAST3RGaussians(nn.Module):

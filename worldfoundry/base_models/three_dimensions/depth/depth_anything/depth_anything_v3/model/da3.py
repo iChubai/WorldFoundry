@@ -104,7 +104,7 @@ class DepthAnything3Net(nn.Module):
         x: torch.Tensor,
         extrinsics: torch.Tensor | None = None,
         intrinsics: torch.Tensor | None = None,
-        export_feat_layers: list[int] | None = [],
+        export_feat_layers: list[int] | None = [],  # noqa: B006 - Keeps the upstream default object and signature.
         infer_gs: bool = False,
         use_ray_pose: bool = False,
         ref_view_strategy: str = "saddle_balanced",
@@ -336,7 +336,7 @@ class NestedDepthAnything3Net(nn.Module):
         x: torch.Tensor,
         extrinsics: torch.Tensor | None = None,
         intrinsics: torch.Tensor | None = None,
-        export_feat_layers: list[int] | None = [],
+        export_feat_layers: list[int] | None = [],  # noqa: B006 - Keeps the upstream default object and signature.
         infer_gs: bool = False,
         use_ray_pose: bool = False,
         ref_view_strategy: str = "saddle_balanced",

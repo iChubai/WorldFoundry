@@ -323,7 +323,7 @@ class InternVideo2_Stage2(nn.Module):
 
         teacher_name = self.config.model.vision_encoder.clip_teacher
         self.clip_teacher = None
-        if teacher_name != None:
+        if teacher_name != None:  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
             raise ValueError("InternVideo2 metric inference does not use a clip teacher")
 
         # parameters for mask

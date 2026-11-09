@@ -69,7 +69,7 @@ class LlavaMixtralForCausalLM(MixtralForCausalLM, LlavaMetaForCausalLM):
         images: torch.FloatTensor | None = None,
         image_sizes: list[list[int]] | None = None,
         return_dict: bool | None = None,
-        modalities: list[str] | None = ["image"],
+        modalities: list[str] | None = ["image"],  # noqa: B006 - Keeps the upstream default object and signature.
         dpo_forward: bool | None = None,
         cache_position=None,
     ) -> tuple | CausalLMOutputWithPast:
@@ -117,7 +117,7 @@ class LlavaMixtralForCausalLM(MixtralForCausalLM, LlavaMetaForCausalLM):
         inputs: torch.Tensor | None = None,
         images: torch.Tensor | None = None,
         image_sizes: torch.Tensor | None = None,
-        modalities: list[str] | None = ["image"],
+        modalities: list[str] | None = ["image"],  # noqa: B006 - Keeps the upstream default object and signature.
         **kwargs,
     ) -> GenerateOutput | torch.LongTensor:
         position_ids = kwargs.pop("position_ids", None)

@@ -24,7 +24,7 @@ class DlibResNet:
         # ---------------------
 
         # download pre-trained model if it does not exist
-        if os.path.isfile(weight_file) != True:
+        if os.path.isfile(weight_file) != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             print("dlib_face_recognition_resnet_model_v1.dat is going to be downloaded")
 
             file_name = "dlib_face_recognition_resnet_model_v1.dat.bz2"

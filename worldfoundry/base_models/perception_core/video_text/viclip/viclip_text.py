@@ -113,7 +113,7 @@ class CLIP_TEXT(nn.Module):
     def no_weight_decay(self):
         return {"token_embedding", "positional_embedding"}
 
-    @functools.cache
+    @functools.cache  # noqa: B019 - Keeps the upstream per-instance method cache.
     def build_attention_mask(self):
         # lazily create causal attention mask, with full attention between the vision tokens
         # pytorch uses additive attention mask; fill with -inf
@@ -143,7 +143,7 @@ class CLIP_TEXT(nn.Module):
 
         sot_token = self._tokenizer.encoder["<|startoftext|>"]
         eot_token = self._tokenizer.encoder["<|endoftext|>"]
-        all_tokens = [[sot_token] + self._tokenizer.encode(text) + [eot_token] for text in texts]
+        all_tokens = [[sot_token] + self._tokenizer.encode(text) + [eot_token] for text in texts]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if packaging.version.parse(torch.__version__) < packaging.version.parse("1.8.0"):
             result = torch.zeros(len(all_tokens), context_length, dtype=torch.long)
         else:

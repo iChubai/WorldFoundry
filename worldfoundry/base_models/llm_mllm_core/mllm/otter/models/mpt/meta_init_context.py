@@ -91,7 +91,7 @@ def init_on_device(device: torch.device, include_buffers: bool = False):
         nn.Module.register_parameter = register_empty_parameter
         if include_buffers:
             nn.Module.register_buffer = register_empty_buffer
-        for torch_function_name in tensor_constructors_to_patch.keys():
+        for torch_function_name in tensor_constructors_to_patch.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             setattr(
                 torch,
                 torch_function_name,

@@ -7,35 +7,43 @@ from dataclasses import dataclass, field
 
 logging.basicConfig(level=logging.INFO)
 
-import torch
-from huggingface_hub import snapshot_download
-from omegaconf import OmegaConf
-from PIL import Image
-from torch import nn
-from torch.nn import functional as F
-from torch.nn.attention.flex_attention import create_block_mask
-from tqdm import tqdm
+import torch  # noqa: E402 - Follows the logging setup.
+from huggingface_hub import snapshot_download  # noqa: E402 - Follows the logging setup.
+from omegaconf import OmegaConf  # noqa: E402 - Follows the logging setup.
+from PIL import Image  # noqa: E402 - Follows the logging setup.
+from torch import nn  # noqa: E402 - Follows the logging setup.
+from torch.nn import functional as F  # noqa: E402 - Follows the logging setup.
+from torch.nn.attention.flex_attention import create_block_mask  # noqa: E402 - Follows the logging setup.
+from tqdm import tqdm  # noqa: E402 - Follows the logging setup.
 
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.tokenizer import (
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.tokenizer import (  # noqa: E402 - Follows the logging setup.
     PLMTokenizer,
     Tokenizer,
     build_tokenizer,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.transformer import (
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.apps.plm.transformer import (  # noqa: E402 - Follows the logging setup.
     LMTransformer,
     LMTransformerArgs,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.args import dataclass_from_dict
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.checkpoint import load_consolidated_checkpoint
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transformer import (
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.args import (  # noqa: E402 - Follows the logging setup.
+    dataclass_from_dict,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.checkpoint import (  # noqa: E402 - Follows the logging setup.
+    load_consolidated_checkpoint,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transformer import (  # noqa: E402 - Follows the logging setup.
     Attention,
     causal_mask,
     generate_doc_mask_mod,
     lengths_to_local_ids,
     lengths_to_start_ids,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.image_transform import get_image_transform
-from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.video_transform import get_video_transform
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.image_transform import (  # noqa: E402 - Follows the logging setup.
+    get_image_transform,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.perceptionlm.core.transforms.video_transform import (  # noqa: E402 - Follows the logging setup.
+    get_video_transform,
+)
 
 
 def sample_top_p(probs: torch.Tensor, p: float) -> torch.Tensor:
@@ -79,7 +87,7 @@ def pack_prompts(prompts: list[int]):
     lengths = []
     for _i, p in enumerate(prompts):
         p = torch.tensor(p, dtype=torch.long)
-        l = p.size(0)
+        l = p.size(0)  # noqa: E741 - Ambiguous upstream name kept as written.
         res.append(p)
         lengths.append(l)
     lengths = torch.tensor(lengths, dtype=torch.long)
@@ -439,7 +447,7 @@ class PackedCausalTransformerGenerator:
                     if not is_done[seq_id]:
                         generated_tokens[seq_id].append(tok)
                         current_end_str = self.tokenizer.decode(generated_tokens[seq_id][-self.max_until_size :])
-                        contains_end_string = any([e in current_end_str for e in self.until])
+                        contains_end_string = any([e in current_end_str for e in self.until])  # noqa: C419 - Evaluates every element before testing, as upstream.
                         is_done[seq_id] = (
                             contains_end_string or tok == self.tokenizer.eot_id or tok == self.tokenizer.eos_id
                         )

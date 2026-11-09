@@ -27,7 +27,7 @@ class MPTBlock(nn.Module):
         d_model: int,
         n_heads: int,
         expansion_ratio: int,
-        attn_config: dict = {
+        attn_config: dict = {  # noqa: B006 - Keeps the upstream default object and signature.
             "attn_type": "multihead_attention",
             "attn_pdrop": 0.0,
             "attn_impl": "triton",

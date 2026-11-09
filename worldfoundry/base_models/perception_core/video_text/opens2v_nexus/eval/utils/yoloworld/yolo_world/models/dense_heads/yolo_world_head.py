@@ -380,7 +380,7 @@ class YOLOWorldHead(YOLOv8Head):
 
         outs = self(img_feats, txt_feats)
         # Fast version
-        loss_inputs = outs + (
+        loss_inputs = outs + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             batch_data_samples["bboxes_labels"],
             batch_data_samples["img_metas"],
         )
@@ -403,7 +403,7 @@ class YOLOWorldHead(YOLOv8Head):
 
         outs = self(img_feats, txt_feats)
 
-        loss_inputs = outs + (
+        loss_inputs = outs + (  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             batch_gt_instances,
             batch_img_metas,
             batch_gt_instances_ignore,
@@ -682,7 +682,7 @@ class YOLOWorldHead(YOLOv8Head):
         ):
             ori_shape = img_meta["ori_shape"]
             scale_factor = img_meta["scale_factor"]
-            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None
+            pad_param = img_meta["pad_param"] if "pad_param" in img_meta else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
             score_thr = cfg.get("score_thr", -1)
             # yolox_style does not require the following operations

@@ -40,7 +40,7 @@ def shift_predictions(
     try:
         from sahi.slicing import shift_bboxes, shift_masks
     except ImportError:
-        raise ImportError('Please run "pip install -U sahi" to install sahi first for large image inference.')
+        raise ImportError('Please run "pip install -U sahi" to install sahi first for large image inference.')  # noqa: B904 - Keeps the implicit exception context.
 
     assert len(det_data_samples) == len(offsets), "The `results` should has the same length with `offsets`."
     shifted_predictions = []

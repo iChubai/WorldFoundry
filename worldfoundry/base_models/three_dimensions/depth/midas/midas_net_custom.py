@@ -22,7 +22,7 @@ class MidasNet_small(BaseModel):
         exportable=True,
         channels_last=False,
         align_corners=True,
-        blocks={"expand": True},
+        blocks={"expand": True},  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         """Init.
 
@@ -48,7 +48,7 @@ class MidasNet_small(BaseModel):
         features3 = features
         features4 = features
         self.expand = False
-        if "expand" in self.blocks and self.blocks["expand"] == True:
+        if "expand" in self.blocks and self.blocks["expand"] == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             self.expand = True
             features1 = features
             features2 = features * 2
@@ -96,7 +96,7 @@ class MidasNet_small(BaseModel):
         Returns:
             tensor: depth
         """
-        if self.channels_last == True:
+        if self.channels_last == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             print("self.channels_last = ", self.channels_last)
             x.contiguous(memory_format=torch.channels_last)
 

@@ -155,7 +155,7 @@ class LetterResize(MMDET_Resize):
     def __init__(
         self,
         scale: int | tuple[int, int],
-        pad_val: dict = {"img": 0, "mask": 0, "seg": 255},
+        pad_val: dict = {"img": 0, "mask": 0, "seg": 255},  # noqa: B006 - Keeps the upstream default object and signature.
         use_mini_pad: bool = False,
         stretch_only: bool = False,
         allow_scale_up: bool = True,
@@ -181,7 +181,7 @@ class LetterResize(MMDET_Resize):
             return
 
         # Use batch_shape if a batch_shape policy is configured
-        if "batch_shape" in results:
+        if "batch_shape" in results:  # noqa: SIM108 - Branches carry per-case comments.
             scale = tuple(results["batch_shape"])  # hw
         else:
             scale = self.scale[::-1]  # wh -> hw
@@ -198,7 +198,7 @@ class LetterResize(MMDET_Resize):
         ratio = [ratio, ratio]  # float -> (float, float) for (height, width)
 
         # compute the best size of the image
-        no_pad_shape = (int(round(image_shape[0] * ratio[0])), int(round(image_shape[1] * ratio[1])))
+        no_pad_shape = (int(round(image_shape[0] * ratio[0])), int(round(image_shape[1] * ratio[1])))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         # padding height & width
         padding_h, padding_w = [scale[0] - no_pad_shape[0], scale[1] - no_pad_shape[1]]
@@ -225,7 +225,7 @@ class LetterResize(MMDET_Resize):
         results["scale_factor"] = scale_factor
 
         # padding
-        top_padding, left_padding = int(round(padding_h // 2 - 0.1)), int(round(padding_w // 2 - 0.1))
+        top_padding, left_padding = int(round(padding_h // 2 - 0.1)), int(round(padding_w // 2 - 0.1))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         bottom_padding = padding_h - top_padding
         right_padding = padding_w - left_padding
 
@@ -267,7 +267,7 @@ class LetterResize(MMDET_Resize):
         # resize the gt_masks
         gt_mask_h = results["gt_masks"].height * results["scale_factor"][1]
         gt_mask_w = results["gt_masks"].width * results["scale_factor"][0]
-        gt_masks = results["gt_masks"].resize((int(round(gt_mask_h)), int(round(gt_mask_w))))
+        gt_masks = results["gt_masks"].resize((int(round(gt_mask_h)), int(round(gt_mask_w))))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         top_padding, _, left_padding, _ = results["pad_param"]
         if int(left_padding) != 0:
@@ -1057,10 +1057,10 @@ class PPYOLOERandomDistort(BaseTransform):
 
     def __init__(
         self,
-        hue_cfg: dict = {"min": -18, "max": 18, "prob": 0.5},
-        saturation_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},
-        contrast_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},
-        brightness_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},
+        hue_cfg: dict = {"min": -18, "max": 18, "prob": 0.5},  # noqa: B006 - Keeps the upstream default object and signature.
+        saturation_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},  # noqa: B006 - Keeps the upstream default object and signature.
+        contrast_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},  # noqa: B006 - Keeps the upstream default object and signature.
+        brightness_cfg: dict = {"min": 0.5, "max": 1.5, "prob": 0.5},  # noqa: B006 - Keeps the upstream default object and signature.
         num_distort_func: int = 4,
     ):
         self.hue_cfg = hue_cfg
@@ -1192,9 +1192,9 @@ class PPYOLOERandomCrop(BaseTransform):
 
     def __init__(
         self,
-        aspect_ratio: list[float] = [0.5, 2.0],
-        thresholds: list[float] = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9],
-        scaling: list[float] = [0.3, 1.0],
+        aspect_ratio: list[float] = [0.5, 2.0],  # noqa: B006 - Keeps the upstream default object and signature.
+        thresholds: list[float] = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9],  # noqa: B006 - Keeps the upstream default object and signature.
+        scaling: list[float] = [0.3, 1.0],  # noqa: B006 - Keeps the upstream default object and signature.
         num_attempts: int = 50,
         allow_no_crop: bool = True,
         cover_all_box: bool = False,
@@ -1463,7 +1463,7 @@ class YOLOv5CopyPaste(BaseTransform):
         if len(results.get("gt_masks", [])) == 0:
             return results
         gt_masks = results["gt_masks"]
-        assert isinstance(gt_masks, PolygonMasks), "only support type of PolygonMasks, but get type: %s" % type(
+        assert isinstance(gt_masks, PolygonMasks), "only support type of PolygonMasks, but get type: %s" % type(  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             gt_masks
         )
         gt_bboxes = results["gt_bboxes"]
@@ -1627,7 +1627,7 @@ class RegularizeRotatedBox(BaseTransform):
 
             self.box_type = RotatedBoxes
         except ImportError:
-            raise ImportError(
+            raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
                 'Please run "mim install -r requirements/mmrotate.txt" to install mmrotate first for rotated detection.'
             )
 

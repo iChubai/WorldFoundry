@@ -328,9 +328,9 @@ class ResTunerBypassBlock(nn.Module):
             vertical_cfg = tuner_cfg
             aux_cfg = "upsample" if use_upsample and layer_num != depth - 1 else None
         elif isinstance(tuner_cfg, dict):
-            lateral_cfg = tuner_cfg["lateral_cfg"] if "lateral_cfg" in tuner_cfg else None
-            vertical_cfg = tuner_cfg["vertical_cfg"] if "vertical_cfg" in tuner_cfg else None
-            aux_cfg = tuner_cfg["aux_cfg"] if "aux_cfg" in tuner_cfg else None
+            lateral_cfg = tuner_cfg["lateral_cfg"] if "lateral_cfg" in tuner_cfg else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+            vertical_cfg = tuner_cfg["vertical_cfg"] if "vertical_cfg" in tuner_cfg else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
+            aux_cfg = tuner_cfg["aux_cfg"] if "aux_cfg" in tuner_cfg else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
         self.lateral_tuner = ResTuner(dim, layer_num, depth, zero_init_last, "lateral", lateral_cfg, **kwargs)
         self.vertical_tuner = ResTuner(dim, layer_num, depth, zero_init_last, "vertical", vertical_cfg, **kwargs)

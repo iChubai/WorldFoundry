@@ -84,7 +84,7 @@ def affine_inverse_np(A: np.ndarray):
 
 def sample_image_grid(
     shape: tuple[int, ...],
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ) -> tuple[
     torch.Tensor,  # float coordinates (xy indexing), "*shape dim"
     torch.Tensor,  # integer indices (ij indexing), "*shape dim"

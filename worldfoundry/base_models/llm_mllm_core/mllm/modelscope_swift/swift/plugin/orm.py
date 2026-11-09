@@ -64,7 +64,7 @@ class ReactORM(ORM):
                         f1.append(0)
                 else:
                     for k, v in ref_input_json.items():
-                        if k in cand_input_json.keys():
+                        if k in cand_input_json.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                             if cand_input_json[k] == v:
                                 full_match += 1
                             else:

@@ -78,7 +78,7 @@ def analysis(
         resolution_x = img.shape[1]
         resolution_y = img.shape[0]
 
-        if freeze == False:
+        if freeze == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             try:
                 # just extract the regions to highlight in webcam
                 face_objs = DeepFace.extract_faces(
@@ -135,14 +135,14 @@ def analysis(
 
                 # -------------------------------------
 
-        if face_detected == True and face_included_frames == frame_threshold and freeze == False:
+        if face_detected == True and face_included_frames == frame_threshold and freeze == False:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             freeze = True
             # base_img = img.copy()
             base_img = raw_img.copy()
             detected_faces_final = detected_faces.copy()
             tic = time.time()
 
-        if freeze == True:
+        if freeze == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             toc = time.time()
             if (toc - tic) < time_threshold:
                 if freezed_frame == 0:
@@ -166,7 +166,7 @@ def analysis(
                         # -------------------------------
                         # facial attribute analysis
 
-                        if enable_face_analysis == True:
+                        if enable_face_analysis == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
                             demographies = DeepFace.analyze(
                                 img_path=custom_face,
                                 detector_backend=detector_backend,

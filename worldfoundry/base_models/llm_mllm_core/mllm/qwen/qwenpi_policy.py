@@ -98,8 +98,8 @@ def center_crop_image(image: np.ndarray | Image.Image) -> Image.Image:
     W, H = pil.size
 
     # Compute centered crop box (integer pixels)
-    crop_w = max(1, int(round(W * side_scale)))
-    crop_h = max(1, int(round(H * side_scale)))
+    crop_w = max(1, int(round(W * side_scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    crop_h = max(1, int(round(H * side_scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     left = (W - crop_w) // 2
     top = (H - crop_h) // 2
     right = left + crop_w
@@ -356,7 +356,7 @@ class QwenPiServer:
 
         print("Initializing model ... ")
 
-        if "qwen" in path_to_pi_model:
+        if "qwen" in path_to_pi_model:  # noqa: SIM108 - Branches carry per-case comments.
             policy = QwenPI0InferencePolicy(config)
         else:
             # Shuai: Not tested yet
@@ -368,7 +368,7 @@ class QwenPiServer:
 
         for file_path in tqdm(all_safetensors):
             with safe_open(file_path, framework="pt", device="cpu") as f:
-                for key in f.keys():
+                for key in f.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                     merged_weights[key] = f.get_tensor(key)
 
         policy.load_state_dict(merged_weights, strict=True)

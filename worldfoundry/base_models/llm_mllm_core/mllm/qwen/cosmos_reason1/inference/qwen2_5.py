@@ -1200,7 +1200,7 @@ class Qwen2_5_VLModel(nn.Module):
         for decoder_layer in self.layers:
             if output_hidden_states:
                 all_hidden_states += (hidden_states,)
-            layer_id += 1
+            layer_id += 1  # noqa: SIM113 - Keeps the explicit loop counter.
             layer_outputs = decoder_layer(
                 hidden_states,
                 attention_mask=causal_mask,  # None
@@ -1377,7 +1377,7 @@ class Qwen2_5_VLModel(nn.Module):
                 device=device,
             )
             diagonal_attend_mask = torch.arange(target_length, device=device) > cache_position.reshape(-1, 1)
-            if config.sliding_window is not None:
+            if config.sliding_window is not None:  # noqa: SIM102 - Branches carry per-case comments.
                 # if we have sliding window, we should not attend to tokens beyond sliding window length, so we mask them out also
                 # the check is needed to verify is current checkpoint was trained with sliding window or not
                 if not isinstance(past_key_values, SlidingWindowCache) or sequence_length > target_length:

@@ -209,7 +209,7 @@ def matmul(a: torch.Tensor, b: torch.Tensor, compute_dtype: torch.dtype, output_
     if a.dtype == b.dtype == compute_dtype == output_dtype:
         return a @ b
     # Allocates output.
-    c = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=output_dtype)
+    c = torch.empty(a.shape[:-1] + (N,), device=a.device, dtype=output_dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # 1D launch kernel where each block gets its own program.
     def grid(META):

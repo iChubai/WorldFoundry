@@ -224,7 +224,7 @@ def interpolate_pos_embed_internvideo2(checkpoint_model, model, orig_t_size=8):
 
 def interpolate_pos_embed_internvideo2_new(checkpoint_model, model, orig_t_size=8):
     pos_names = []
-    for k in checkpoint_model.keys():
+    for k in checkpoint_model.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         if ("pos_embed" in k or "clip_pos_embed" in k) and "img_pos_embed" not in k:
             pos_names.append(k)
 
@@ -232,7 +232,7 @@ def interpolate_pos_embed_internvideo2_new(checkpoint_model, model, orig_t_size=
 
     assert len(pos_names) > 0, checkpoint_model.keys()
 
-    if "pos_embed_spatial" in checkpoint_model.keys() or "pos_embed_temporal" in checkpoint_model.keys():
+    if "pos_embed_spatial" in checkpoint_model.keys() or "pos_embed_temporal" in checkpoint_model.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
         raise NotImplementedError
 
     # interpolate position embedding

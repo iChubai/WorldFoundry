@@ -478,7 +478,7 @@ class FlamingoLMMixin(nn.Module):
 
     def is_conditioned(self) -> bool:
         """Check whether all decoder layers are already conditioned."""
-        return all(l.is_conditioned() for l in self._get_decoder_layers())
+        return all(l.is_conditioned() for l in self._get_decoder_layers())  # noqa: E741 - Ambiguous upstream name kept as written.
 
     def clear_conditioned_layers(self) -> None:
         for layer in self._get_decoder_layers():
@@ -812,7 +812,7 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
         # Freeze all parameters in lang encoders except gated_cross_attn_layers
         if "train_lang_encoder" in self.config.__dict__ and self.config.train_lang_encoder is True:
             master_print("Unfreeze language decoder.")
-            for name, param in self.lang_encoder.named_parameters():
+            for name, param in self.lang_encoder.named_parameters():  # noqa: B007 - The loop variable is read outside the loop.
                 param.requires_grad = True
 
         if "lora_config" in self.config.__dict__:

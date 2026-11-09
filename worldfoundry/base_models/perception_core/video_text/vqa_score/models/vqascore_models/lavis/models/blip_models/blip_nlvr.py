@@ -184,6 +184,6 @@ class BlipNLVR(BlipBase, MomentumDistilationMixin):
                 state_dict[new_key1] = state_dict[key]
 
         msg = self.load_state_dict(state_dict, strict=False)
-        print("load checkpoint from %s" % url_or_filename)
+        print("load checkpoint from %s" % url_or_filename)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         print(f"missing keys {msg.missing_keys}")
         return msg

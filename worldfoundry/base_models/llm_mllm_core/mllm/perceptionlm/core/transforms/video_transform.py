@@ -108,7 +108,7 @@ class VideoTransform(ImageTransform):
             end_frame = start_frame + 1
 
         sample_fps = int(sampling_fps)
-        t_stride = int(round(float(fps) / sample_fps))
+        t_stride = int(round(float(fps) / sample_fps))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
         all_pos = list(range(start_frame, end_frame + 1, t_stride))
         if len(all_pos) > max_frames:
@@ -131,7 +131,7 @@ class VideoTransform(ImageTransform):
     def uniform_sample(self, m, n):
         assert n <= m
         stride = (m - 1) / (n - 1) if n > 1 else 0  # Calculate the stride
-        return [int(round(i * stride)) for i in range(n)]
+        return [int(round(i * stride)) for i in range(n)]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
     def draw_bounding_boxes(self, frames, all_bboxes):
         # Assuming frames is a torch.Tensor with shape (N, C, H, W)

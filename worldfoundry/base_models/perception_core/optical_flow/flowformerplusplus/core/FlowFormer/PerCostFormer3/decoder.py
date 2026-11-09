@@ -255,7 +255,7 @@ class MemoryDecoder(nn.Module):
         grid = torch.cat([xgrid, ygrid], dim=-1)
         img = F.grid_sample(feat_t_quater, grid, align_corners=True)
 
-        if mask:
+        if mask:  # noqa: F821 - Name is undefined in the upstream source.
             mask = (xgrid > -1) & (ygrid > -1) & (xgrid < 1) & (ygrid < 1)
             return img, mask.float()
 
@@ -288,7 +288,7 @@ class MemoryDecoder(nn.Module):
         context_quater,
         feat_s_quater,
         feat_t_quater,
-        data={},
+        data={},  # noqa: B006 - Keeps the upstream default object and signature.
         flow_init=None,
         cost_patches=None,
     ):
@@ -376,7 +376,7 @@ class MemoryDecoder(nn.Module):
         else:
             return flow_predictions[-1], coords1 - coords0
 
-    def pretrain_forward(self, cost_memory, context, data={}, flow_init=None, cost_patches=None, mask_for_patch1=None):
+    def pretrain_forward(self, cost_memory, context, data={}, flow_init=None, cost_patches=None, mask_for_patch1=None):  # noqa: B006 - Keeps the upstream default object and signature.
         cost_maps_outter = data["cost_maps_outter"].detach()
         cost_maps = data["cost_maps"].detach()
 

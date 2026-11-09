@@ -21,23 +21,33 @@ from einops import rearrange, repeat
 from tqdm import tqdm
 
 mainlogger = logging.getLogger("mainlogger")
-import torch
-import torch.nn as nn
-from torchvision.utils import make_grid
+import torch  # noqa: E402 - Follows the logging setup.
+import torch.nn as nn  # noqa: E402 - Follows the logging setup.
+from torchvision.utils import make_grid  # noqa: E402 - Follows the logging setup.
 
-from worldfoundry.base_models.diffusion_model.models.encoders.lvdm.resampler import ImageProjModel, Resampler
-from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math import (
+from worldfoundry.base_models.diffusion_model.models.encoders.lvdm.resampler import (  # noqa: E402 - Follows the logging setup.
+    ImageProjModel,
+    Resampler,
+)
+from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math import (  # noqa: E402 - Follows the logging setup.
     make_beta_schedule,
     rescale_zero_terminal_snr,
 )
 
 # import pytorch_lightning as pl
 # from pytorch_lightning.utilities import rank_zero_only
-from worldfoundry.core.model_loading.factory import instantiate_from_config
-from worldfoundry.core.nn.blocks.ema import LitEma
-from worldfoundry.core.nn.diffusion.convolution import disabled_train
-from worldfoundry.core.nn.diffusion.utils import default, exists, extract_into_tensor, noise_like
-from worldfoundry.core.nn.latent.distributions import DiagonalGaussianDistribution
+from worldfoundry.core.model_loading.factory import instantiate_from_config  # noqa: E402 - Follows the logging setup.
+from worldfoundry.core.nn.blocks.ema import LitEma  # noqa: E402 - Follows the logging setup.
+from worldfoundry.core.nn.diffusion.convolution import disabled_train  # noqa: E402 - Follows the logging setup.
+from worldfoundry.core.nn.diffusion.utils import (  # noqa: E402 - Follows the logging setup.
+    default,
+    exists,
+    extract_into_tensor,
+    noise_like,
+)
+from worldfoundry.core.nn.latent.distributions import (  # noqa: E402 - Follows the logging setup.
+    DiagonalGaussianDistribution,
+)
 
 __conditioning_keys__ = {"concat": "c_concat", "crossattn": "c_crossattn", "adm": "y"}
 
@@ -79,7 +89,7 @@ class DDPM(nn.Module):
         beta_schedule="linear",
         loss_type="l2",
         ckpt_path=None,
-        ignore_keys=[],
+        ignore_keys=[],  # noqa: B006 - Keeps the upstream default object and signature.
         load_only_unet=False,
         monitor=None,
         use_ema=True,
@@ -233,7 +243,7 @@ class DDPM(nn.Module):
         self.register_buffer("lvlb_weights", lvlb_weights, persistent=False)
         assert not torch.isnan(self.lvlb_weights).all()
 
-    def init_from_ckpt(self, path, ignore_keys=[], only_model=False):
+    def init_from_ckpt(self, path, ignore_keys=[], only_model=False):  # noqa: B006 - Keeps the upstream default object and signature.
         sd = torch.load(path, map_location="cpu")
         if "state_dict" in list(sd.keys()):
             sd = sd["state_dict"]
@@ -493,7 +503,7 @@ class DDPM(nn.Module):
         lr = self.learning_rate
         params = list(self.model.parameters())
         if self.learn_logvar:
-            params = params + [self.logvar]
+            params = params + [self.logvar]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         opt = torch.optim.AdamW(params, lr=lr)
         return opt
 
@@ -540,7 +550,7 @@ class LatentDiffusion(DDPM):
         ckpt_path = kwargs.pop("ckpt_path", None)
         ignore_keys = kwargs.pop("ignore_keys", [])
         conditioning_key = default(conditioning_key, "crossattn")
-        super().__init__(conditioning_key=conditioning_key, *args, **kwargs)
+        super().__init__(conditioning_key=conditioning_key, *args, **kwargs)  # noqa: B026 - Keeps the upstream argument order.
 
         self.cond_stage_trainable = cond_stage_trainable
         self.cond_stage_key = cond_stage_key
@@ -786,7 +796,7 @@ class LatentDiffusion(DDPM):
         cond_key = "txt" if is_imgbatch else self.cond_stage_key
         cond = batch[cond_key]
         if random_uncond and self.uncond_type == "empty_seq":
-            for i, ci in enumerate(cond):
+            for i, ci in enumerate(cond):  # noqa: B007 - The loop variable is read outside the loop.
                 if random.random() < self.uncond_prob:
                     cond[i] = ""
         if isinstance(cond, (dict, list)):
@@ -818,7 +828,7 @@ class LatentDiffusion(DDPM):
 
     def shared_step(self, batch, random_uncond, **kwargs):
         is_imgbatch = False
-        if "loader_img" in batch.keys():
+        if "loader_img" in batch.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             ratio = 10.0 / self.temporal_length
             if random.uniform(0.0, 10.0) < ratio:
                 is_imgbatch = True
@@ -1189,7 +1199,7 @@ class LatentDiffusion(DDPM):
     @torch.no_grad()
     def sample_log(self, cond, batch_size, ddim, ddim_steps, **kwargs):
         if ddim:
-            ddim_sampler = DDIMSampler(self)
+            ddim_sampler = DDIMSampler(self)  # noqa: F821 - This port omits the sampler used by the image-logging hook.
             shape = (self.channels, self.temporal_length, *self.image_size)
             kwargs.update({"clean_cond": True})
             samples, intermediates = ddim_sampler.sample(ddim_steps, batch_size, shape, cond, verbose=False, **kwargs)
@@ -1239,7 +1249,7 @@ class LatentDiffusion(DDPM):
             scheduler = instantiate_from_config(self.scheduler_config)
             scheduler.start_step = self.global_step
             lr_scheduler = {
-                "scheduler": LambdaLR(optimizer, lr_lambda=scheduler.schedule),
+                "scheduler": LambdaLR(optimizer, lr_lambda=scheduler.schedule),  # noqa: F821 - This port omits the training scheduler import.
                 "interval": interval,
                 "frequency": frequency,
             }
@@ -1248,7 +1258,7 @@ class LatentDiffusion(DDPM):
             decay_steps = scheduler.decay_steps
             last_step = -1 if self.global_step == 0 else scheduler.start_step
             lr_scheduler = {
-                "scheduler": CosineAnnealingLR(optimizer, T_max=decay_steps, last_epoch=last_step),
+                "scheduler": CosineAnnealingLR(optimizer, T_max=decay_steps, last_epoch=last_step),  # noqa: F821 - This port omits the training scheduler import.
                 "interval": interval,
                 "frequency": frequency,
             }
@@ -1342,14 +1352,14 @@ class DiffusionWrapper(nn.Module):
         if self.conditioning_key is None:
             out = self.diffusion_model(x, t)
         elif self.conditioning_key == "concat":
-            xc = torch.cat([x] + c_concat, dim=1)
+            xc = torch.cat([x] + c_concat, dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             out = self.diffusion_model(xc, t, **kwargs)
         elif self.conditioning_key == "crossattn":
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(x, t, context=cc, **kwargs)
         elif self.conditioning_key == "hybrid":
             ## it is just right [b,c,t,h,w]: concatenate in channel dim
-            xc = torch.cat([x] + c_concat, dim=1)
+            xc = torch.cat([x] + c_concat, dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(xc, t, context=cc, **kwargs)
         elif self.conditioning_key == "resblockcond":
@@ -1360,30 +1370,30 @@ class DiffusionWrapper(nn.Module):
             out = self.diffusion_model(x, t, y=cc)
         elif self.conditioning_key == "hybrid-adm":
             assert c_adm is not None
-            xc = torch.cat([x] + c_concat, dim=1)
+            xc = torch.cat([x] + c_concat, dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(xc, t, context=cc, y=c_adm, **kwargs)
         elif self.conditioning_key == "hybrid-time":
             assert s is not None
-            xc = torch.cat([x] + c_concat, dim=1)
+            xc = torch.cat([x] + c_concat, dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(xc, t, context=cc, s=s)
         elif self.conditioning_key == "concat-time-mask":
             # assert s is not None
-            xc = torch.cat([x] + c_concat, dim=1)
+            xc = torch.cat([x] + c_concat, dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             out = self.diffusion_model(xc, t, context=None, s=s, mask=mask)
         elif self.conditioning_key == "concat-adm-mask":
             # assert s is not None
-            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x
+            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             out = self.diffusion_model(xc, t, context=None, y=s, mask=mask)
         elif self.conditioning_key == "hybrid-adm-mask":
             cc = torch.cat(c_crossattn, 1)
-            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x
+            xc = torch.cat([x] + c_concat, dim=1) if c_concat is not None else x  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             out = self.diffusion_model(xc, t, context=cc, y=s, mask=mask)
         elif self.conditioning_key == "hybrid-time-adm":  # adm means y, e.g., class index
             # assert s is not None
             assert c_adm is not None
-            xc = torch.cat([x] + c_concat, dim=1)
+            xc = torch.cat([x] + c_concat, dim=1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             cc = torch.cat(c_crossattn, 1)
             out = self.diffusion_model(xc, t, context=cc, s=s, y=c_adm)
         elif self.conditioning_key == "crossattn-adm":

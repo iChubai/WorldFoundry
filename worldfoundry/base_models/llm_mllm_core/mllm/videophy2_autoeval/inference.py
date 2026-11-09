@@ -7,7 +7,7 @@ import torch
 from mplug_owl_video.modeling_mplug_owl import MplugOwlForConditionalGeneration
 from mplug_owl_video.processing_mplug_owl import MplugOwlImageProcessor, MplugOwlProcessor
 from peft import LoraConfig, get_peft_model
-from template import *
+from template import *  # noqa: F403 - Upstream star import kept as written.
 from tqdm import tqdm
 from transformers.models.llama.tokenization_llama import LlamaTokenizer
 
@@ -51,11 +51,11 @@ def inference(args, model, df, processor, tokenizer):
         for i, row in tqdm(df.iterrows()):
             videopaths = [row["videopath"]]
             if args.task == "sa":
-                prompts = [PROMPT_SA.format(caption=row["caption"])]
+                prompts = [PROMPT_SA.format(caption=row["caption"])]  # noqa: F405 - Name comes from the upstream star import.
             elif args.task == "pc":
-                prompts = [PROMPT_PHYSICS]
+                prompts = [PROMPT_PHYSICS]  # noqa: F405 - Name comes from the upstream star import.
             else:
-                prompts = [PROMPT_RULE.format(rule=row["rule"])]
+                prompts = [PROMPT_RULE.format(rule=row["rule"])]  # noqa: F405 - Name comes from the upstream star import.
             inputs = processor(text=prompts, videos=videopaths, num_frames=args.num_frames, return_tensors="pt")
             inputs = {k: v.bfloat16() if v.dtype == torch.float else v for k, v in inputs.items()}
             inputs = {k: v.to(model.device) for k, v in inputs.items()}

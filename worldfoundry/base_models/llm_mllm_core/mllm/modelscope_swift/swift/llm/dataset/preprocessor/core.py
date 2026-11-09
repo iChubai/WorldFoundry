@@ -19,7 +19,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.modelscope_swift.swift.utils im
     safe_ddp_context,
 )
 
-DATASET_TYPE = Union[HfDataset, HfIterableDataset]
+DATASET_TYPE = Union[HfDataset, HfIterableDataset]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 logger = get_logger()
 
@@ -163,7 +163,7 @@ class RowPreprocessor:
         new_objects = {}
         # Ensure the order
         for k in ["ref", "bbox", "bbox_type", "image_id"]:
-            if k in objects.keys():
+            if k in objects.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 new_objects[k] = objects[k]
         row["objects"] = new_objects
         bbox = new_objects["bbox"]
@@ -233,7 +233,7 @@ class RowPreprocessor:
     @staticmethod
     def safe_rename_columns(dataset, columns):
         dataset = RowPreprocessor.get_features_dataset(dataset)
-        columns_keys = {k.lower(): k for k in dataset.features.keys()}  # lower -> lower/upper
+        columns_keys = {k.lower(): k for k in dataset.features.keys()}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.  # lower -> lower/upper
         safe_columns = {columns_keys[k.lower()]: v for k, v in columns.items() if k.lower() in columns_keys}
 
         counter = Counter(safe_columns.values())
@@ -340,7 +340,7 @@ class RowPreprocessor:
             dataset_mapped = dataset.map(
                 self.batched_preprocess,
                 fn_kwargs={"strict": strict, "ignore_max_length_error": ignore_max_length_error},
-                remove_columns=[col for col in dataset.features.keys() if col not in keep_columns],
+                remove_columns=[col for col in dataset.features.keys() if col not in keep_columns],  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 **map_kwargs,
             )
         if isinstance(dataset_mapped, HfDataset) and len(dataset) != len(dataset_mapped):
@@ -358,7 +358,7 @@ class ResponsePreprocessor(RowPreprocessor):
         super().__init__(columns=columns, **kwargs)
         system_keys = ["system", "system_prompt"]
         query_keys = ["query", "prompt", "input", "instruction", "question", "problem"]
-        response_keys = ["response", "answer", "output", "targets", "target", "answer_key", "answers", "solution"] + [
+        response_keys = ["response", "answer", "output", "targets", "target", "answer_key", "answers", "solution"] + [  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             "text",
             "completion",
             "content",

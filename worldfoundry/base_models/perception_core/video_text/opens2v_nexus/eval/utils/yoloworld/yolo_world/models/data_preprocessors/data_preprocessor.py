@@ -6,7 +6,7 @@ from mmdet.models.data_preprocessors import DetDataPreprocessor
 from mmengine.structures import BaseDataElement
 from mmyolo.registry import MODELS
 
-CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str, None]
+CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str, None]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 @MODELS.register_module()

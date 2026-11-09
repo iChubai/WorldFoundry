@@ -442,7 +442,13 @@ class ChunkCausalAttention(LiteLAReLURope):
         super().__init__(in_dim, out_dim, heads, heads_ratio, dim, eps, use_bias, qk_norm, norm_eps)
 
     def forward(
-        self, x: torch.Tensor, mask=None, HW=None, rotary_emb=None, block_mask=None, chunk_index: list[int] = [0]
+        self,
+        x: torch.Tensor,
+        mask=None,
+        HW=None,
+        rotary_emb=None,
+        block_mask=None,
+        chunk_index: list[int] = [0],  # noqa: B006 - Keeps the upstream default object and signature.
     ) -> torch.Tensor:
         B, N, C = x.shape
 
@@ -1132,7 +1138,7 @@ class CaptionEmbedder(nn.Module):
         in_channels,
         hidden_size,
         uncond_prob,
-        act_layer=nn.GELU(approximate="tanh"),
+        act_layer=nn.GELU(approximate="tanh"),  # noqa: B008 - Default evaluated once at definition, as upstream.
         token_num=120,
     ):
         super().__init__()
@@ -1185,7 +1191,7 @@ class CaptionEmbedderDoubleBr(nn.Module):
     Embeds class labels into vector representations. Also handles label dropout for classifier-free guidance.
     """
 
-    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):
+    def __init__(self, in_channels, hidden_size, uncond_prob, act_layer=nn.GELU(approximate="tanh"), token_num=120):  # noqa: B008 - Default evaluated once at definition, as upstream.
         super().__init__()
         self.proj = Mlp(
             in_features=in_channels, hidden_features=hidden_size, out_features=hidden_size, act_layer=act_layer, drop=0

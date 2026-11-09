@@ -69,7 +69,7 @@ class Blip2Qformer(Blip2Base):
             vit_model, img_size, drop_path_rate, use_grad_checkpoint, vit_precision
         )
         if freeze_vit:
-            for name, param in self.visual_encoder.named_parameters():
+            for name, param in self.visual_encoder.named_parameters():  # noqa: B007 - The loop variable is read outside the loop.
                 param.requires_grad = False
             self.visual_encoder = self.visual_encoder.eval()
             self.visual_encoder.train = disabled_train

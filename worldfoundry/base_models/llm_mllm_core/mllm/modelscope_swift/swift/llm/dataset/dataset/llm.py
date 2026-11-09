@@ -61,7 +61,7 @@ register_dataset(
 class RuozhibaPreprocessor(RowPreprocessor):
     def preprocess(self, row: dict[str, Any]) -> dict[str, Any] | None:
         title = row["title"] if row.get("title") is not None else row["content"]
-        abs = row["abs"] if "abs" in row else None
+        abs = row["abs"] if "abs" in row else None  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
         if abs and abs != title:
             title = title + "，" + abs
 
@@ -786,7 +786,7 @@ class GuanacoPreprocessor(RowPreprocessor):
                     history[-1][-1] = part["content"]
         if input.startswith("User:"):
             input = input[len("User:") :].strip()
-        if any([not h[0] or not h[1] for h in history]):
+        if any([not h[0] or not h[1] for h in history]):  # noqa: C419 - Evaluates every element before testing, as upstream.
             return
 
         messages = []

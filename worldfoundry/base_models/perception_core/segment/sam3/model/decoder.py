@@ -1279,7 +1279,7 @@ class TransformerEncoderDecoupledCrossAttention(nn.Module):
                 [
                     memory_image,
                     torch.zeros(
-                        (memory_image.shape[0], num_obj_ptr_tokens) + memory_image.shape[2:],
+                        (memory_image.shape[0], num_obj_ptr_tokens) + memory_image.shape[2:],  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                         dtype=memory_image.dtype,
                         device=memory_image.device,
                     ),

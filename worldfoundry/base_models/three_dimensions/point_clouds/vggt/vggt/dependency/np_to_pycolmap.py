@@ -118,7 +118,7 @@ def batch_np_matrix_to_pycolmap(
         for point3D_id in range(1, num_points3D + 1):
             original_track_idx = valid_idx[point3D_id - 1]
 
-            if (reconstruction.points3D[point3D_id].xyz < max_points3D_val).all():
+            if (reconstruction.points3D[point3D_id].xyz < max_points3D_val).all():  # noqa: SIM102 - Branches carry per-case comments.
                 if masks[fidx][original_track_idx]:
                     # It seems we don't need +0.5 for BA
                     point2D_xy = tracks[fidx][original_track_idx]

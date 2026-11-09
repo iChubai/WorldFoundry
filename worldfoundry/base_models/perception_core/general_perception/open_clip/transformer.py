@@ -454,7 +454,7 @@ class CustomTransformer(nn.Module):
                     norm_layer=norm_layer,
                 )
             else:
-                assert False
+                assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
         self.resblocks = nn.ModuleList([_create_block(bt) for bt in block_types])
 
@@ -735,7 +735,7 @@ class VisionTransformer(nn.Module):
                         n_queries=1,
                     )
                 else:
-                    assert False
+                    assert False  # noqa: B011 - Keeps the assertion semantics under -O.
             else:
                 self.attn_pool_type = ""
                 self.pool_type = pool_type
@@ -1168,7 +1168,7 @@ class TextTransformer(nn.Module):
         # Class + padding additive mask
         if self.use_pad_mask or self.cls_emb is not None:
             add_mask = self._build_additive_mask(text, seq_len, x.dtype)
-            if attn_mask is not None:
+            if attn_mask is not None:  # noqa: SIM108 - Branches carry per-case comments.
                 # Slice the causal mask to match current sequence length
                 attn_mask = attn_mask[:seq_len, :seq_len].unsqueeze(0) + add_mask
             else:
@@ -1365,7 +1365,7 @@ class MultimodalTransformer(Transformer):
         indices: int | list[int] | None = None,
         stop_early: bool = False,
     ):
-        assert False, "Not currently implemented for MultimodalTransformer w/ xattn"
+        assert False, "Not currently implemented for MultimodalTransformer w/ xattn"  # noqa: B011 - Keeps the assertion semantics under -O.
 
     def forward(self, image_embs, text_embs):
         # TODO(kv-cache): Accept past_key_values (list of (K, V) per layer)
@@ -1420,7 +1420,7 @@ def lock_text_tower(
         unlocked_layers: Number of layers to leave unlocked (from the end)
     """
     # Determine where to look for text components
-    if hasattr(model, "text"):
+    if hasattr(model, "text"):  # noqa: SIM108 - Branches carry per-case comments.
         # CustomTextCLIP or already a TextTransformer with nested structure
         text_module = model.text
     else:

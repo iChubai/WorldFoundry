@@ -73,7 +73,7 @@ class LieGroup:
 
     @property
     def tangent_shape(self):
-        return self.data.shape[:-1] + (self.manifold_dim,)
+        return self.data.shape[:-1] + (self.manifold_dim,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     @classmethod
     def Identity(cls, *batch_shape, **kwargs):
@@ -115,7 +115,7 @@ class LieGroup:
         elif isinstance(batch_shape[0], list):
             batch_shape = tuple(batch_shape[0])
 
-        tangent_shape = batch_shape + (cls.manifold_dim,)
+        tangent_shape = batch_shape + (cls.manifold_dim,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         xi = torch.randn(tangent_shape, **kwargs)
         return cls.exp(sigma * xi)
 
@@ -125,7 +125,7 @@ class LieGroup:
         inputs, out_shape = broadcast_inputs(x, y)
 
         data = op.apply(cls.group_id, *inputs)
-        return data.view(out_shape + (-1,))
+        return data.view(out_shape + (-1,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     @classmethod
     def exp(cls, x):
@@ -134,7 +134,7 @@ class LieGroup:
 
     def quaternion(self):
         """extract quaternion"""
-        return self.apply_op(Quat, self.data)
+        return self.apply_op(Quat, self.data)  # noqa: F821 - Name is undefined in the upstream source.
 
     def log(self):
         """logarithm map"""
@@ -177,8 +177,8 @@ class LieGroup:
 
     def matrix(self):
         """convert element to 4x4 matrix"""
-        I = torch.eye(4, dtype=self.dtype, device=self.device)
-        I = I.view([1] * (len(self.data.shape) - 1) + [4, 4])
+        I = torch.eye(4, dtype=self.dtype, device=self.device)  # noqa: E741 - Ambiguous upstream name kept as written.
+        I = I.view([1] * (len(self.data.shape) - 1) + [4, 4])  # noqa: E741 - Ambiguous upstream name kept as written.
         return self.__class__(self.data[..., None, :]).act(I).transpose(-1, -2)
 
     def translation(self):
@@ -196,7 +196,7 @@ class LieGroup:
         return self.__class__(self.data.detach())
 
     def view(self, dims):
-        data_reshaped = self.data.view(dims + (self.embedded_dim,))
+        data_reshaped = self.data.view(dims + (self.embedded_dim,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         return self.__class__(data_reshaped)
 
     def __mul__(self, other):

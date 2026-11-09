@@ -1,7 +1,8 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import warnings
 from numbers import Number
 from pathlib import Path
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import torch
 import torch.amp
@@ -44,7 +45,7 @@ class MoGeModel_v2(nn.Module):
         normal_head: Dict[str, Any] = None,
         scale_head: Dict[str, Any] = None,
         remap_output: Literal["linear", "sinh", "exp", "sinh_exp"] = "linear",
-        num_tokens_range: List[int] = [1200, 3600],
+        num_tokens_range: List[int] = [1200, 3600],  # noqa: B006 - Keeps the upstream default object and signature.
         **deprecated_kwargs,
     ):
         super().__init__()

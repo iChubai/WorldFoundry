@@ -89,7 +89,7 @@ class BaseMultiModalMixImageTransform(BaseTransform, metaclass=ABCMeta):
         if "texts" not in results:
             return results
 
-        mix_texts = sum([results["texts"]] + [x["texts"] for x in results["mix_results"]], [])
+        mix_texts = sum([results["texts"]] + [x["texts"] for x in results["mix_results"]], [])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
         mix_texts = list({tuple(x) for x in mix_texts})
         text2id = {text: i for i, text in enumerate(mix_texts)}
 

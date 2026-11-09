@@ -92,7 +92,7 @@ class SwiftModel(nn.Module):
                     logger.warn(f"Adapter {adapter_name} has been patched, skip.")
 
         self.extra_state_keys = extra_state_keys or []
-        self.has_additional_modules = any([c.config.has_additional_modules for c in self.adapters.values()])
+        self.has_additional_modules = any([c.config.has_additional_modules for c in self.adapters.values()])  # noqa: C419 - Evaluates every element before testing, as upstream.
 
         def forward(self, *args, **kwargs):
             return self.base_model(*args, **kwargs)
@@ -427,7 +427,7 @@ class SwiftModel(nn.Module):
                 lines = f.readlines()
 
         quantization_config = None
-        if hasattr(self.base_model, "config") and hasattr(self.base_model.config, "quantization_config"):
+        if hasattr(self.base_model, "config") and hasattr(self.base_model.config, "quantization_config"):  # noqa: SIM102 - Statement form kept for readability.
             if hasattr(self.base_model.config.quantization_config, "to_dict"):
                 quantization_config = self.base_model.config.quantization_config.to_dict()
         training_config_text = ""
@@ -802,7 +802,7 @@ class Swift:
             return
         else:
             assert len(model.adapters) == 1
-            adapter = list(model.adapters.values())[0]
+            adapter = list(model.adapters.values())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if adapter.config.swift_type == SwiftTuners.LLAMAPRO:
                 from modelscope.hub.utils.utils import get_cache_dir
 
@@ -946,7 +946,7 @@ class Swift:
             if isinstance(adapter_name, str) or adapter_name is None
             else adapter_name[0]
             if isinstance(adapter_name, list)
-            else list(adapter_name.keys())[0]
+            else list(adapter_name.keys())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
         )
         _name = _name or ""
         if os.path.exists(os.path.join(model_id, _name, CONFIG_NAME)):

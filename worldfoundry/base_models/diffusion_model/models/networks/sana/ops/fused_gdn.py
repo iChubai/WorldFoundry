@@ -79,7 +79,7 @@ def _kcfg():
 # precision=2 → bf16  dots   + fp32 state    (DOT_PRECISION=0, STATE_FP32=1) [default]
 # precision=3 → bf16  dots   + bf16 state    (DOT_PRECISION=0, STATE_FP32=0)
 def _precision_params(precision: int) -> tuple:
-    if precision == 0:
+    if precision == 0:  # noqa: SIM116 - Branch chain kept as upstream.
         return 2, True
     elif precision == 1:
         return 1, True

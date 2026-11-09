@@ -36,7 +36,7 @@ try:
     from mmdeploy.apis.utils import build_task_processor
     from mmdeploy.utils import get_input_shape, load_config
 except ImportError:
-    raise ImportError(
+    raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
         "mmdeploy is not installed, please see "
         "https://mmdeploy.readthedocs.io/en/1.x/01-how-to-build/build_from_source.html"
     )

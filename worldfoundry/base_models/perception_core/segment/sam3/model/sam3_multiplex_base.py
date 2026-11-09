@@ -1051,7 +1051,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
         # This is done on all GPUs
         batch_size = tracker_low_res_masks_global.size(0)
         if batch_size > 0:
-            if not hasattr(self, "_warm_up_complete") or self._warm_up_complete:
+            if not hasattr(self, "_warm_up_complete") or self._warm_up_complete:  # noqa: SIM102 - Branches carry per-case comments.
                 if self.suppress_overlapping_based_on_recent_occlusion_threshold > 0.0:
                     # NOTE: tracker_low_res_masks_global is updated in-place then returned
                     with torch.profiler.record_function("_suppress_overlapping_based_on_recent_occlusion"):
@@ -1613,7 +1613,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
                 low_res_masks_local = torch.zeros(0, H_mask, W_mask, device=self.device)
                 obj_scores_local = torch.zeros(0, device=self.device)
 
-        if self.is_multiplex and self.tracker.is_multiplex_dynamic:
+        if self.is_multiplex and self.tracker.is_multiplex_dynamic:  # noqa: SIM102 - Branches carry per-case comments.
             # obj_ids_local might not be sorted, which is problematic because
             # the rest of the code assumes that they are.
             # Currently this only happens in the dynamic multiplex setting (since we backfill states)
@@ -1628,7 +1628,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
                 low_res_masks_local = low_res_masks_local[sort_indices]
                 obj_scores_local = obj_scores_local[sort_indices]
 
-        if self.is_multiplex and self.tracker.is_multiplex_dynamic:
+        if self.is_multiplex and self.tracker.is_multiplex_dynamic:  # noqa: SIM102 - Branches carry per-case comments.
             # obj_ids_local might not be sorted, which is problematic because
             # the rest of the code assumes that they are.
             # Currently this only happens in the dynamic multiplex setting (since we backfill states)
@@ -2017,7 +2017,7 @@ class Sam3MultiplexBase(Sam3VideoBase):
         first_frames_i = obj_first_frame.unsqueeze(1)  # (N_obj, 1)
         first_frames_j = obj_first_frame.unsqueeze(0)  # (1, N_obj)
 
-        if not reverse:
+        if not reverse:  # noqa: SIM108 - Branches carry per-case comments.
             is_earlier_matrix = first_frames_i < first_frames_j  # (N_obj, N_obj)
         else:
             is_earlier_matrix = first_frames_i > first_frames_j  # (N_obj, N_obj)

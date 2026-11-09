@@ -18,9 +18,9 @@ class LoadTextTokens:
             payload = payload[-(self.max_text_len - 2) :]
             need_predict = payload[-(self.max_text_len - 2) :]
 
-        input_ids = [begin_token] + payload + [self.tokenizer.sep_token_id]
+        input_ids = [begin_token] + payload + [self.tokenizer.sep_token_id]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
-        need_predict = [0] + need_predict + [1]
+        need_predict = [0] + need_predict + [1]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         data = {
             "text_tokens": torch.tensor(input_ids),
             "text_lengths": len(input_ids),

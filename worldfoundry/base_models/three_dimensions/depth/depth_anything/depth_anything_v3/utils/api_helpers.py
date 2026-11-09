@@ -5,7 +5,7 @@ def parse_scalar(s):
     if not isinstance(s, str):
         return s
     t = s.strip()
-    l = t.lower()
+    l = t.lower()  # noqa: E741 - Ambiguous upstream name kept as written.
     if l == "true":
         return True
     if l == "false":

@@ -23,7 +23,7 @@ def broadcast_inputs(x, y):
     else:
         x_expand = [m if n == 1 else 1 for (n, m) in zip(xs, ys, strict=False)]
         y_expand = [n if m == 1 else 1 for (n, m) in zip(xs, ys, strict=False)]
-        x1 = x.repeat(x_expand + [1]).reshape(-1, xd).contiguous()
-        y1 = y.repeat(y_expand + [1]).reshape(-1, yd).contiguous()
+        x1 = x.repeat(x_expand + [1]).reshape(-1, xd).contiguous()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+        y1 = y.repeat(y_expand + [1]).reshape(-1, yd).contiguous()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     return (x1, y1), tuple(out_shape)

@@ -1,10 +1,11 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import importlib
 import time
 import warnings
 from contextlib import contextmanager
 from functools import wraps
 from pathlib import Path
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 
 def suppress_traceback(fn):

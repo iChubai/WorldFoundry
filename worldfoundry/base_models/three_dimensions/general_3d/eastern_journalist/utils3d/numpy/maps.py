@@ -1,5 +1,6 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import math
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import numpy as np
 from numpy import ndarray
@@ -692,7 +693,7 @@ def masked_area_resize(
         return ret
 
 
-from worldfoundry.core.media.artifacts import (
+from worldfoundry.core.media.artifacts import (  # noqa: E402 - Follows module-level definitions, as upstream.
     colorize_depth_map,
     colorize_normal_map,
 )

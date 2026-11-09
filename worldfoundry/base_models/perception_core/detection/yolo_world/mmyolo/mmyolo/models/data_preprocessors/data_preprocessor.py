@@ -12,7 +12,7 @@ from torch import Tensor
 
 from mmyolo.registry import MODELS
 
-CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str, None]
+CastData = Union[tuple, dict, BaseDataElement, torch.Tensor, list, bytes, str, None]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 @MODELS.register_module()
@@ -199,7 +199,7 @@ class PPYOLOEBatchRandomResize(BatchSyncRandomResize):
         interval: int = 1,
         size_divisor: int = 32,
         random_interp=True,
-        interp_mode: list[str] | str = ["nearest", "bilinear", "bicubic", "area"],
+        interp_mode: list[str] | str = ["nearest", "bilinear", "bicubic", "area"],  # noqa: B006 - Keeps the upstream default object and signature.
         keep_ratio: bool = False,
     ) -> None:
         super().__init__(random_size_range, interval, size_divisor)

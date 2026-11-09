@@ -1,3 +1,4 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
 import json
 import os
 import zipfile
@@ -11,7 +12,7 @@ from torch import nn
 from torchvision import transforms
 
 from .config import dreamsim_args, dreamsim_weights
-from .constants import *
+from .constants import *  # noqa: F403 - Upstream star import kept as written.
 from .feature_extraction.extractor import ViTExtractor
 
 peft_version = version.parse(peft.__version__)

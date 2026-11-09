@@ -177,7 +177,7 @@ class Wrapped_StepChatTokenizer(StepChatTokenizer):
         out_tokens = []
         attn_mask = []
         if len(text) == 0:
-            part_tokens = [self.BOS] + [self.EOS]
+            part_tokens = [self.BOS] + [self.EOS]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             valid_size = len(part_tokens)
             if len(part_tokens) < max_length:
                 part_tokens += [self.PAD] * (max_length - valid_size)
@@ -187,7 +187,7 @@ class Wrapped_StepChatTokenizer(StepChatTokenizer):
             for part in text:
                 part_tokens = self.tokenize(part)
                 part_tokens = part_tokens[: (max_length - 2)]  # leave 2 space for bos and eos
-                part_tokens = [self.BOS] + part_tokens + [self.EOS]
+                part_tokens = [self.BOS] + part_tokens + [self.EOS]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 valid_size = len(part_tokens)
                 if len(part_tokens) < max_length:
                     part_tokens += [self.PAD] * (max_length - valid_size)
@@ -209,6 +209,6 @@ class Wrapped_StepChatTokenizer(StepChatTokenizer):
         # cu_seqlens
         cu_out_tokens = out_tokens.masked_select(attn_mask != 0).unsqueeze(0)
         seqlen = attn_mask.sum(dim=1).tolist()
-        cu_seqlens = torch.cumsum(torch.tensor([0] + seqlen), 0).to(device=out_tokens.device, dtype=torch.int32)
+        cu_seqlens = torch.cumsum(torch.tensor([0] + seqlen), 0).to(device=out_tokens.device, dtype=torch.int32)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         max_seq_len = max(seqlen)
         return Tokens(out_tokens, cu_out_tokens, attn_mask, cu_seqlens, max_seq_len)

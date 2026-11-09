@@ -132,7 +132,7 @@ class ValleyTemplate(Template):
     def _data_collator(self, batch: list[dict[str, Any]], *, padding_to: int | None = None) -> dict[str, Any]:
         res = super()._data_collator(batch, padding_to=padding_to)
         if "images" in batch[0]:
-            res["images"] = sum([b["images"] for b in batch if "images" in b], start=[])
+            res["images"] = sum([b["images"] for b in batch if "images" in b], start=[])  # noqa: RUF017 - Keeps the upstream sum() list concatenation.
             res["image_sizes"] = torch.concat([b["image_sizes"] for b in batch if "image_sizes" in b], dim=0)
             for media_type in ["image", "video"]:
                 grid_thw = [b[f"{media_type}_grid_thw"] for b in batch if b.get(f"{media_type}_grid_thw") is not None]

@@ -65,8 +65,8 @@ class EvaViTWrapper(nn.Module):
         if self.device.type != "meta":
             model = model.to("cuda")
         self.vision_tower = model.visual
-        resize_transform = [t for t in image_processor.transforms if isinstance(t, torchvision.transforms.Resize)][0]
-        normalize_transform = [
+        resize_transform = [t for t in image_processor.transforms if isinstance(t, torchvision.transforms.Resize)][0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
+        normalize_transform = [  # noqa: RUF015 - Keeps eager list construction and IndexError.
             t for t in image_processor.transforms if isinstance(t, torchvision.transforms.Normalize)
         ][0]
         self.resize_transform_size = resize_transform.size

@@ -201,7 +201,7 @@ class PtEngine(InferEngine):
             for j, logits in enumerate(batched_logits):
                 token = generate_ids[j].item()
                 logprobs = torch.log_softmax(logits[i], -1)
-                tokens = [token] + logprobs.argsort(descending=True, dim=-1)[:top_logprobs].tolist()
+                tokens = [token] + logprobs.argsort(descending=True, dim=-1)[:top_logprobs].tolist()  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                 logprobs_list.append({token: logprobs[token].item() for token in tokens})
             batched_logprobs.append(logprobs_list)
         return batched_logprobs

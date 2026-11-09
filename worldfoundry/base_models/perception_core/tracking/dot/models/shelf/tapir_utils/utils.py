@@ -180,7 +180,7 @@ def heatmaps_to_points(
 
 def is_same_res(r1, r2):
     """Test if two image resolutions are the same."""
-    return all([x == y for x, y in zip(r1, r2, strict=False)])
+    return all([x == y for x, y in zip(r1, r2, strict=False)])  # noqa: C419 - Evaluates every element before testing, as upstream.
 
 
 def convert_grid_coordinates(
@@ -264,7 +264,7 @@ def generate_default_resolutions(full_size, train_size, num_levels=None):
     Returns:
       A list of resolutions.
     """
-    if all([x == y for x, y in zip(train_size, full_size, strict=False)]):
+    if all([x == y for x, y in zip(train_size, full_size, strict=False)]):  # noqa: C419 - Evaluates every element before testing, as upstream.
         return [train_size]
 
     if num_levels is None:
@@ -282,8 +282,8 @@ def generate_default_resolutions(full_size, train_size, num_levels=None):
     sizes = []
     for i in range(num_levels):
         size = (
-            int(round((ll_h * (h / ll_h) ** (i / (num_levels - 1))) // 8)) * 8,
-            int(round((ll_w * (w / ll_w) ** (i / (num_levels - 1))) // 8)) * 8,
+            int(round((ll_h * (h / ll_h) ** (i / (num_levels - 1))) // 8)) * 8,  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+            int(round((ll_w * (w / ll_w) ** (i / (num_levels - 1))) // 8)) * 8,  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         )
         sizes.append(size)
     return sizes

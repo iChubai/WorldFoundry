@@ -44,7 +44,7 @@ class FlorenceTemplate(Template):
         images = inputs.images or []
         labels = encoded["labels"]
         if labels is not None:
-            labels = [0] + labels
+            labels = [0] + labels  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         if images:
             pixel_values = processor.image_processor(images, return_tensors="pt")["pixel_values"].to(
                 self.model_info.torch_dtype

@@ -7,7 +7,7 @@ from torch import nn as nn
 from torchvision.ops.misc import FrozenBatchNorm2d
 
 
-def freeze_batch_norm_2d(module, module_match={}, name=""):
+def freeze_batch_norm_2d(module, module_match={}, name=""):  # noqa: B006 - Keeps the upstream default object and signature.
     """
     Converts all `BatchNorm2d` and `SyncBatchNorm` layers of provided module into `FrozenBatchNorm2d`. If `module` is
     itself an instance of either `BatchNorm2d` or `SyncBatchNorm`, it is converted into `FrozenBatchNorm2d` and
@@ -68,7 +68,7 @@ def to_ntuple(n, x):
 
 # Replaces all linear layers with linear_replacement
 # TODO: add int8 support for other linear layers including attn and convnets
-def replace_linear(model, linear_replacement, include_modules=["c_fc", "c_proj"], copy_weights=True):
+def replace_linear(model, linear_replacement, include_modules=["c_fc", "c_proj"], copy_weights=True):  # noqa: B006 - Keeps the upstream default object and signature.
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
             replace_linear(module, linear_replacement, include_modules, copy_weights)

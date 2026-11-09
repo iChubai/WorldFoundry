@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import requests
 from tqdm import tqdm
@@ -7,7 +7,7 @@ from tqdm import tqdm
 __all__ = ["download_bytes", "download_file"]
 
 
-def download_file(url: str, filepath: Union[str, Path], headers: dict | None = None, resume: bool = True) -> None:
+def download_file(url: str, filepath: Union[str, Path], headers: dict | None = None, resume: bool = True) -> None:  # noqa: F405 - Name comes from the upstream star import.
     # Ensure headers is a dict if not provided
     headers = headers or {}
 

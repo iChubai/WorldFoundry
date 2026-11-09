@@ -113,7 +113,7 @@ def main():
         test_data_cfg.pipeline = cfg.tta_pipeline
 
     # build the runner from config
-    if "runner_type" not in cfg:
+    if "runner_type" not in cfg:  # noqa: SIM108 - Branches carry per-case comments.
         # build the default runner
         runner = Runner.from_cfg(cfg)
     else:

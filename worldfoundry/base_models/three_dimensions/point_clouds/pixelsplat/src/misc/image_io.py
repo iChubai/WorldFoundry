@@ -1,3 +1,4 @@
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 from pathlib import Path
 from typing import Union
 
@@ -9,7 +10,7 @@ from jaxtyping import Float, UInt8
 from PIL import Image
 from torch import Tensor
 
-FloatImage = Union[
+FloatImage = Union[  # noqa: UP007 - Runtime type alias kept as typing.Union.
     Float[Tensor, "height width"],
     Float[Tensor, "channel height width"],
     Float[Tensor, "batch channel height width"],

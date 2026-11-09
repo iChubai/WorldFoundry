@@ -110,7 +110,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         predict_x0: bool = True,
         solver_type: str = "bh2",
         lower_order_final: bool = True,
-        disable_corrector: list[int] = [],
+        disable_corrector: list[int] = [],  # noqa: B006 - Keeps the upstream default object and signature.
         solver_p: NativeSchedulerMixin = None,
         timestep_spacing: str = "linspace",
         steps_offset: int = 0,
@@ -489,14 +489,14 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
 
         if self.predict_x0:
             x_t_ = sigma_t / sigma_s0 * x - alpha_t * h_phi_1 * m0
-            if D1s is not None:
+            if D1s is not None:  # noqa: SIM108 - Branches carry per-case comments.
                 pred_res = torch.einsum("k,bkc...->bc...", rhos_p, D1s)  # pyright: ignore
             else:
                 pred_res = 0
             x_t = x_t_ - alpha_t * B_h * pred_res
         else:
             x_t_ = alpha_t / alpha_s0 * x - sigma_t * h_phi_1 * m0
-            if D1s is not None:
+            if D1s is not None:  # noqa: SIM108 - Branches carry per-case comments.
                 pred_res = torch.einsum("k,bkc...->bc...", rhos_p, D1s)  # pyright: ignore
             else:
                 pred_res = 0

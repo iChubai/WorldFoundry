@@ -11,7 +11,10 @@ from transformers.configuration_utils import PretrainedConfig
 from transformers.dynamic_module_utils import get_class_from_dynamic_module
 from transformers.generation import GenerationMixin
 from transformers.modeling_outputs import ModelOutput
-from transformers.models.auto import CONFIG_MAPPING, AutoModel
+from transformers.models.auto import (  # noqa: F811 - Later import provides the binding, as upstream.
+    CONFIG_MAPPING,
+    AutoModel,
+)
 from transformers.utils import logging
 
 # from models.modeling_qwen2 import Qwen2ForCausalLM
@@ -54,7 +57,7 @@ class LlavaConfig(PretrainedConfig):
 
         if isinstance(self.vision_config, dict):
             vision_config["model_type"] = (
-                vision_config["model_type"] if "model_type" in vision_config else "clip_vision_model"
+                vision_config["model_type"] if "model_type" in vision_config else "clip_vision_model"  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             )
             if "auto_map" in vision_config:
                 repo_id, class_ref = vision_config["auto_map"]["AutoConfig"].split("--")
@@ -73,7 +76,7 @@ class LlavaConfig(PretrainedConfig):
         self.text_config = text_config
 
         if isinstance(self.text_config, dict):
-            text_config["model_type"] = text_config["model_type"] if "model_type" in text_config else "llama"
+            text_config["model_type"] = text_config["model_type"] if "model_type" in text_config else "llama"  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
             if "auto_map" in text_config:
                 repo_id, class_ref = text_config["auto_map"]["AutoConfig"].split("--")
                 repo_id = current_path
@@ -439,8 +442,8 @@ class TarsierForConditionalGeneration(TarsierPreTrainedModel, GenerationMixin):
             logits = _pad_input(logits.squeeze(0), input_ids_indices, bsz, max_seq_len)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return LlavaCausalLMOutputWithPast(
             loss=loss,

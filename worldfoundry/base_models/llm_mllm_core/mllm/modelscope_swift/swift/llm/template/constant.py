@@ -185,7 +185,7 @@ class TemplateType(LLMTemplateType, MLLMTemplateType, RMTemplateType):
     @classmethod
     def get_template_name_list(cls) -> list[str]:
         res = []
-        for k in cls.__dict__.keys():
+        for k in cls.__dict__.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             if k.startswith("__"):
                 continue
             value = cls.__dict__[k]

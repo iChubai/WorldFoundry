@@ -9,7 +9,7 @@ def forward_swin(pretrained, x):
     return forward_default(pretrained, x)
 
 
-def _make_swin_backbone(model, hooks=[1, 1, 17, 1], patch_grid=[96, 96]):
+def _make_swin_backbone(model, hooks=[1, 1, 17, 1], patch_grid=[96, 96]):  # noqa: B006 - Keeps the upstream default object and signature.
     pretrained = nn.Module()
 
     pretrained.model = model

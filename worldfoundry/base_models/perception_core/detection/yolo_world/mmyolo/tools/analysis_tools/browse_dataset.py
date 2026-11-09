@@ -230,7 +230,7 @@ def main():
         else:
             image = make_grid(list(image_i), [result["name"] for result in intermediate_imgs])
 
-        if hasattr(datasample, "img_path"):
+        if hasattr(datasample, "img_path"):  # noqa: SIM108 - Branches carry per-case comments.
             filename = osp.basename(datasample.img_path)
         else:
             # some dataset have not image path

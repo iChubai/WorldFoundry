@@ -627,7 +627,7 @@ def rotation_matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
 
     batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)
+    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     q_abs = _sqrt_positive_part(
         torch.stack(
@@ -659,7 +659,7 @@ def rotation_matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
 
     # if not for numerical problems, quat_candidates[i] should be same (up to a sign),
     # forall i; we pick the best-conditioned one (with the largest denominator)
-    out = quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(batch_dim + (4,))
+    out = quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(batch_dim + (4,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Convert from rijk to ijkr
     out = out[..., [1, 2, 3, 0]]
@@ -908,7 +908,7 @@ def xy_grid(
     tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin, strict=False)]
     grid = meshgrid(tw, th, indexing="xy")
     if homogeneous:
-        grid = grid + (ones((H, W)),)
+        grid = grid + (ones((H, W)),)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if unsqueeze is not None:
         grid = (grid[0].unsqueeze(unsqueeze), grid[1].unsqueeze(unsqueeze))
     if cat_dim is not None:
@@ -1380,7 +1380,7 @@ def crop_to_aspect_ratio(image, depth, camera_params, target_ratio=1.5):
 
         # Adjust camera parameters
         new_cx = cx - left
-        adjusted_params = [fx, fy, new_cx, cy] + list(camera_params[4:])
+        adjusted_params = [fx, fy, new_cx, cy] + list(camera_params[4:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     else:
         # Image is taller than target ratio, crop height
@@ -1396,7 +1396,7 @@ def crop_to_aspect_ratio(image, depth, camera_params, target_ratio=1.5):
 
         # Adjust camera parameters
         new_cy = cy - top
-        adjusted_params = [fx, fy, cx, new_cy] + list(camera_params[4:])
+        adjusted_params = [fx, fy, cx, new_cy] + list(camera_params[4:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     return cropped_image, cropped_depth, adjusted_params
 

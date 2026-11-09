@@ -86,8 +86,8 @@ class ConvNeXt(nn.Module):
     def __init__(
         self,
         in_chans: int = 3,
-        depths: list[int] = [3, 3, 9, 3],
-        dims: list[int] = [96, 192, 384, 768],
+        depths: list[int] = [3, 3, 9, 3],  # noqa: B006 - Keeps the upstream default object and signature.
+        dims: list[int] = [96, 192, 384, 768],  # noqa: B006 - Keeps the upstream default object and signature.
         drop_path_rate: float = 0.0,
         layer_scale_init_value: float = 1e-6,
         patch_size: int | None = None,
@@ -277,7 +277,7 @@ def get_convnext_arch(arch_name):
     try:
         size_dict = convnext_sizes[query_sizename]
     except KeyError:
-        raise NotImplementedError("didn't recognize convnext size string")
+        raise NotImplementedError("didn't recognize convnext size string")  # noqa: B904 - Keeps the implicit exception context.
 
     return partial(
         ConvNeXt,

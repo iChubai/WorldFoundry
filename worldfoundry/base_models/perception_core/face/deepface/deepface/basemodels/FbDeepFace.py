@@ -56,7 +56,7 @@ def loadModel(
 
     home = functions.get_deepface_home()
 
-    if os.path.isfile(home + "/.deepface/weights/VGGFace2_DeepFace_weights_val-0.9034.h5") != True:
+    if os.path.isfile(home + "/.deepface/weights/VGGFace2_DeepFace_weights_val-0.9034.h5") != True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
         print("VGGFace2_DeepFace_weights_val-0.9034.h5 will be downloaded...")
 
         output = home + "/.deepface/weights/VGGFace2_DeepFace_weights_val-0.9034.h5.zip"

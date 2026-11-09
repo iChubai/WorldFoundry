@@ -9,7 +9,7 @@ from typing import Union
 import numpy as np
 import torch
 
-TypeSpec = Union[str, np.dtype, torch.dtype]
+TypeSpec = Union[str, np.dtype, torch.dtype]  # noqa: UP007 - Runtime type alias kept as typing.Union.
 
 
 _NUMPY_TO_TORCH_DTYPE: dict[np.dtype, torch.dtype] = {

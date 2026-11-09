@@ -20,8 +20,8 @@ def _has_spatial_correlation_ext() -> bool:
     global _SPATIAL_CORR_EXT_AVAILABLE
     if _SPATIAL_CORR_EXT_AVAILABLE is None:
         try:
-            _corr_ext.forward
-            _corr_ext.backward
+            _corr_ext.forward  # noqa: B018 - Probes the compiled extension for this entry point.
+            _corr_ext.backward  # noqa: B018 - Probes the compiled extension for this entry point.
             _SPATIAL_CORR_EXT_AVAILABLE = True
         except Exception:
             _SPATIAL_CORR_EXT_AVAILABLE = False

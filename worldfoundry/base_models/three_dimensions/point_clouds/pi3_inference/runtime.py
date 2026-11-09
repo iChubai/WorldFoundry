@@ -58,7 +58,7 @@ class Pi3Representation:
 
             ckpt_path = os.path.join(model_root, "model.safetensors")
             if not os.path.exists(ckpt_path):
-                raise FileNotFoundError(f"model.safetensors not found in {model_root}")
+                raise FileNotFoundError(f"model.safetensors not found in {model_root}")  # noqa: B904 - Keeps the implicit exception context.
 
             from safetensors.torch import load_file
 

@@ -1,8 +1,10 @@
+# ruff: noqa: F405 - Names come from the upstream star import.
+# ruff: noqa: F722 - jaxtyping dimension strings in annotations.
 """Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> rasterization.py functionality."""
 
 import threading
 from contextlib import contextmanager
-from typing import *
+from typing import *  # noqa: F403 - Upstream star import kept as written.
 
 import moderngl
 import numpy as np
@@ -283,13 +285,13 @@ class RastContext:
             Leave empty to create context with default settings. Or refer to moderngl.create_context() for other parameters.
         """
         if len(args) == 0 and len(kwargs) == 0:
-            try:
+            try:  # noqa: SIM105 - The handler carries an explanatory comment.
                 # Default
                 self.mgl_ctx = moderngl.create_context()
             except BaseException:
                 pass
             if not hasattr(self, "mgl_ctx"):
-                try:
+                try:  # noqa: SIM105 - The handler carries an explanatory comment.
                     # EGL
                     self.mgl_ctx = moderngl.create_context(
                         standalone=True,
@@ -298,13 +300,13 @@ class RastContext:
                 except BaseException:
                     pass
             if not hasattr(self, "mgl_ctx"):
-                try:
+                try:  # noqa: SIM105 - The handler carries an explanatory comment.
                     # Default standalone
                     self.mgl_ctx = moderngl.create_context(standalone=True)
                 except BaseException:
                     pass
             if not hasattr(self, "mgl_ctx"):
-                try:
+                try:  # noqa: SIM105 - The handler carries an explanatory comment.
                     # EGL with more specifications
                     self.mgl_ctx = moderngl.create_context(
                         standalone=True, backend="egl", libgl="libGL.so.1", libegl="libEGL.so.1"

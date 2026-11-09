@@ -28,7 +28,7 @@ def normalize(d):
     out = torch.zeros(d.size())
     if d.is_cuda:
         out = out.cuda()
-    B = list(d.size())[0]
+    B = list(d.size())[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
     for b in list(range(B)):
         out[b] = normalize_single(d[b])
     return out

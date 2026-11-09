@@ -11,6 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+# ruff: noqa: F405 - Names come from the upstream star import.
 
 
 import os
@@ -24,7 +25,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants impo
     DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_PATCH_TOKEN,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model import *
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model import *  # noqa: F403 - Upstream star import kept as written.
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.utils import rank0_print
 from worldfoundry.core.attention import resolve_transformers_attention_implementation
 
@@ -415,7 +416,7 @@ def load_pretrained_model(
                         **kwargs,
                     )
                 except BaseException:
-                    raise ValueError(f"Model {model_name} not supported")
+                    raise ValueError(f"Model {model_name} not supported")  # noqa: B904 - Keeps the implicit exception context.
 
     else:
         # Load language model

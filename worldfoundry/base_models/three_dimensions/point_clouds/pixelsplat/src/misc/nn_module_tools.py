@@ -3,7 +3,7 @@ from torch import nn
 
 def convert_to_buffer(module: nn.Module, persistent: bool = True):
     # Recurse over child modules.
-    for name, child in list(module.named_children()):
+    for name, child in list(module.named_children()):  # noqa: B007 - The loop variable is read outside the loop.
         convert_to_buffer(child, persistent)
 
     # Also re-save buffers to change persistence.

@@ -23,8 +23,8 @@ class EfficientSam(nn.Module):
         prompt_encoder: PromptEncoder,
         decoder_max_num_input_points: int,
         mask_decoder: MaskDecoder,
-        pixel_mean: list[float] = [0.485, 0.456, 0.406],
-        pixel_std: list[float] = [0.229, 0.224, 0.225],
+        pixel_mean: list[float] = [0.485, 0.456, 0.406],  # noqa: B006 - Keeps the upstream default object and signature.
+        pixel_std: list[float] = [0.229, 0.224, 0.225],  # noqa: B006 - Keeps the upstream default object and signature.
     ) -> None:
         """
         SAM predicts object masks from an image and input prompts.

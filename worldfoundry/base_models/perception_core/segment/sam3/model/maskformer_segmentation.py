@@ -128,7 +128,7 @@ class SegmentationHead(nn.Module):
         else:
             backbone_feats = [_unwrap(x).to(model_device) for x in backbone_feats]
             pixel_embed = self.pixel_decoder(backbone_feats)
-            if pixel_embed.shape[0] == 1:
+            if pixel_embed.shape[0] == 1:  # noqa: SIM108 - Branches carry per-case comments.
                 # For batch_size=1 training, we can avoid the indexing to save memory
                 pixel_embed = pixel_embed.squeeze(0)
             else:

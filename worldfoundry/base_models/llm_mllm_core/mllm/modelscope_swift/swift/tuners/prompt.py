@@ -90,7 +90,7 @@ class Prompt(SwiftAdapter):
                     input_embedding = getattr(self, f"prompt_{adapter_name}").forward(input_embedding)
                     if isinstance(config.embedding_pos, int):
                         args = type(args)(
-                            args[0 : config.embedding_pos] + (input_embedding,) + args[config.embedding_pos + 1 :]
+                            args[0 : config.embedding_pos] + (input_embedding,) + args[config.embedding_pos + 1 :]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                         )
                     else:
                         kwargs[config.embedding_pos] = input_embedding
@@ -107,8 +107,10 @@ class Prompt(SwiftAdapter):
                                 attention_mask
                             )
                         if isinstance(config.attention_mask_pos, int):
-                            args = type(args)(
-                                args[0 : config.attention_mask_pos]
+                            args = type(
+                                args
+                            )(
+                                args[0 : config.attention_mask_pos]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
                                 + (attention_mask,)
                                 + args[config.attention_mask_pos + 1 :]
                             )

@@ -44,12 +44,12 @@ class AlbefBase(BaseModel):
         else:
             raise RuntimeError("checkpoint url or path is invalid")
 
-        state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint
+        state_dict = checkpoint["model"] if "model" in checkpoint else checkpoint  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
         state_dict["visual_encoder.pos_embed"] = interpolate_pos_embed(
             state_dict["visual_encoder.pos_embed"], self.visual_encoder
         )
-        if "visual_encoder_m.pos_embed" in self.state_dict().keys() and "visual_encoder_m.pos_embed" in state_dict:
+        if "visual_encoder_m.pos_embed" in self.state_dict().keys() and "visual_encoder_m.pos_embed" in state_dict:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             state_dict["visual_encoder_m.pos_embed"] = interpolate_pos_embed(
                 state_dict["visual_encoder_m.pos_embed"], self.visual_encoder_m
             )
@@ -61,14 +61,14 @@ class AlbefBase(BaseModel):
                     state_dict[new_key] = state_dict[key]
                     del state_dict[key]
 
-        for key in self.state_dict().keys():
-            if key in state_dict.keys() and state_dict[key].shape != self.state_dict()[key].shape:
+        for key in self.state_dict().keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
+            if key in state_dict.keys() and state_dict[key].shape != self.state_dict()[key].shape:  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
                 del state_dict[key]
 
         msg = self.load_state_dict(state_dict, strict=False)
 
         logging.info(f"Missing keys {msg.missing_keys}")
-        logging.info("load checkpoint from %s" % url_or_filename)
+        logging.info("load checkpoint from %s" % url_or_filename)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
         return msg
 
 

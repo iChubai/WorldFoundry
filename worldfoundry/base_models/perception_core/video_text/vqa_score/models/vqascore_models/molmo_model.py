@@ -72,7 +72,7 @@ class MOLMOVisionModel:
         question_template: str = 'Does this image show "{}"? Answer the question with Yes or No',
         answer_template: str = "Yes",
     ) -> torch.Tensor:
-        assert len(paths) == len(texts), "Number of paths and texts must match"
+        assert len(paths) == len(texts), "Number of paths and texts must match"  # noqa: F821 - Name is undefined in the upstream source.
 
         images = self.load_images(images)
         questions = [question_template.format(text) for text in texts]

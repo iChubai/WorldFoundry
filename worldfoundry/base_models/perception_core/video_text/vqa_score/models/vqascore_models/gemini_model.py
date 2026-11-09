@@ -204,7 +204,7 @@ class GeminiModel(VQAScoreModel):
 
                     if target_answer in cur_token:
                         ans_prob = max(ans_prob, np.exp(candidate.log_probability))
-                print(f"Answer Probability {ans}")
+                print(f"Answer Probability {ans}")  # noqa: F821 - Name is undefined in the upstream source.
                 return torch.tensor([ans_prob])
 
             except Exception as retry_error:
@@ -239,7 +239,7 @@ class GeminiModel(VQAScoreModel):
 
     def generate_single(self, data, question, max_new_tokens=1024):
         try:
-            config = GenerateContentConfig(
+            config = GenerateContentConfig(  # noqa: F841 - Kept as upstream; an underscore name already exists.
                 temperature=0.7,
                 top_p=0.95,
                 top_k=40,

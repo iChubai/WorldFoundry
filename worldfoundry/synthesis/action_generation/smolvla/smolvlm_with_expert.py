@@ -369,7 +369,7 @@ class SmolVLMWithExpertModel(nn.Module):
         attention_mask: torch.Tensor | None = None,
         position_ids: torch.LongTensor | None = None,
         past_key_values: list[torch.FloatTensor] | None = None,
-        inputs_embeds: list[torch.FloatTensor] = None,
+        inputs_embeds: list[torch.FloatTensor] | None = None,
         use_cache: bool | None = None,
         fill_kv_cache: bool | None = None,
     ):

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 # WorldFoundry modification: vendored in-tree from the pinned official checkpoint runtime.
 # Copyright (C) 2026 Xiaomi Corporation.
 # Copyright 2025 The Qwen Team and The HuggingFace Inc. team. All rights reserved.
@@ -13,8 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import numpy as np
 import torch
 from transformers.feature_extraction_utils import BatchFeature
@@ -49,7 +49,7 @@ class Qwen3VLImagesKwargs(ImagesKwargs):
 class Qwen3VLProcessorKwargs(ProcessingKwargs, total=False):
     images_kwargs: Qwen3VLImagesKwargs
     videos_kwargs: Qwen3VLVideosProcessorKwargs
-    _defaults = {
+    _defaults = {  # noqa: RUF012 - TypedDict subclass; Transformers reads these defaults and ClassVar is invalid here.
         "text_kwargs": {
             "padding": False,
             "return_token_type_ids": False,
@@ -75,7 +75,7 @@ class MiBotProcessor(ProcessorMixin):
             in a chat into a tokenizable string.
     """
 
-    attributes = ["image_processor", "tokenizer", "video_processor"]
+    attributes: ClassVar[list] = ["image_processor", "tokenizer", "video_processor"]
     image_processor_class = "AutoImageProcessor"
     video_processor_class = "AutoVideoProcessor"
     tokenizer_class = ("Qwen2Tokenizer", "Qwen2TokenizerFast")

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 # WorldFoundry modification: vendored in-tree from the pinned official checkpoint runtime.
 # Copyright (C) 2026 Xiaomi Corporation.
 # Copyright 2025 The Qwen Team and The HuggingFace Inc. team. All rights reserved.
@@ -13,7 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_rope_utils import rope_config_validation
 
@@ -35,7 +36,7 @@ class Qwen3VLVisionConfig(PretrainedConfig):
         temporal_patch_size=2,
         out_hidden_size=3584,
         num_position_embeddings=2304,
-        deepstack_visual_indexes=[8, 16, 24],
+        deepstack_visual_indexes=[8, 16, 24],  # noqa: B006 - Keeps the upstream default object and signature.
         initializer_range=0.02,
         **kwargs,
     ):
@@ -257,8 +258,8 @@ class Qwen3VLConfig(PretrainedConfig):
     ```"""
 
     model_type = "qwen3_vl"
-    sub_configs = {"vision_config": Qwen3VLVisionConfig, "text_config": Qwen3VLTextConfig}
-    keys_to_ignore_at_inference = ["past_key_values"]
+    sub_configs: ClassVar[dict] = {"vision_config": Qwen3VLVisionConfig, "text_config": Qwen3VLTextConfig}
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(
         self,
@@ -350,11 +351,11 @@ class MiBoTConfig(PretrainedConfig):
     """
 
     model_type = "mibot"
-    sub_configs = {
+    sub_configs: ClassVar[dict] = {
         "vlm_config": Qwen3VLConfig,
         "dit_config": DiTConfig,
     }
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list] = ["past_key_values"]
 
     def __init__(
         self,

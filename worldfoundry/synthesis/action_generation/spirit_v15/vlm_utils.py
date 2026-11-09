@@ -61,29 +61,28 @@ def preprocess_qwen_visual(
                 role = conv["from"]
                 content = conv["value"]
             role = roles.get(role, role)
-            if role == "user":
-                if "<image>" in content:
-                    parts = content.split("<image>")
-                    new_parts = []
-                    for i in range(len(parts) - 1):
-                        new_parts.append(parts[i])
-                        if visual_replicate_index_image < len(grid_thw_image):
-                            replacement = (
-                                "<|vision_start|>"
-                                + "<|image_pad|>" * grid_thw_image[visual_replicate_index_image]
-                                + "<|vision_end|>"
-                            )
-                            new_parts.append(replacement)
-                            visual_replicate_index_image += 1
-                    new_parts.append(parts[-1])
-                    content = "".join(new_parts)
+            if role == "user" and "<image>" in content:
+                parts = content.split("<image>")
+                new_parts = []
+                for i in range(len(parts) - 1):
+                    new_parts.append(parts[i])
+                    if visual_replicate_index_image < len(grid_thw_image):
+                        replacement = (
+                            "<|vision_start|>"
+                            + "<|image_pad|>" * grid_thw_image[visual_replicate_index_image]
+                            + "<|vision_end|>"
+                        )
+                        new_parts.append(replacement)
+                        visual_replicate_index_image += 1
+                new_parts.append(parts[-1])
+                content = "".join(new_parts)
             conv = [{"role": role, "content": content}]
             encode_id = _chat_template_token_ids(tokenizer, conv)
             input_id += encode_id
         input_ids.append(input_id)
     input_ids = torch.tensor(input_ids, dtype=torch.long)
     input_ids = input_ids[:, : tokenizer.model_max_length]
-    return dict(input_ids=input_ids)
+    return {"input_ids": input_ids}
 
 
 def get_rope_index_3(

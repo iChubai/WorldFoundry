@@ -23,7 +23,7 @@ class RDTRunner(nn.Module):
         img_pos_embed_config=None,
         dtype=torch.bfloat16,
     ):
-        super(RDTRunner, self).__init__()
+        super().__init__()
         # Create diffusion model
         hidden_size = config["rdt"]["hidden_size"]
         self.model = RDT(
@@ -69,7 +69,7 @@ class RDTRunner(nn.Module):
         self.action_dim = action_dim
 
         print(
-            "Diffusion params: %e"
+            "Diffusion params: %e"  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             % sum(
                 [p.numel() for p in self.model.parameters()]
                 + [p.numel() for p in self.lang_adaptor.parameters()]

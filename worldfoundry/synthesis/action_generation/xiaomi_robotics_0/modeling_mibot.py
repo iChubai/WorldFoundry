@@ -14,10 +14,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
@@ -552,14 +552,14 @@ class Qwen3VLPreTrainedModel(PreTrainedModel):
     # this explicit prevents Transformers from installing training checkpoint
     # hooks while preserving the PreTrainedModel loading contract.
     supports_gradient_checkpointing = False
-    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn = True
     _supports_sdpa = True
 
     _can_compile_fullgraph = True
     _supports_attention_backend = True
-    _can_record_outputs = {
+    _can_record_outputs: ClassVar[dict] = {
         "hidden_states": Qwen3VLTextDecoderLayer,
         "attentions": Qwen3VLTextAttention,
     }
@@ -567,7 +567,7 @@ class Qwen3VLPreTrainedModel(PreTrainedModel):
 
 class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
     config: Qwen3VLVisionConfig
-    _no_split_modules = ["Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLVisionBlock"]
 
     def __init__(self, config, *inputs, **kwargs) -> None:
         super().__init__(config, *inputs, **kwargs)
@@ -647,7 +647,7 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
         idx_list = [[] for _ in range(4)]
         weight_list = [[] for _ in range(4)]
 
-        for t, h, w in zip(grid_ts, grid_hs, grid_ws, strict=False):
+        for _t, h, w in zip(grid_ts, grid_hs, grid_ws, strict=False):
             h_idxs = torch.linspace(0, self.num_grid_per_side - 1, h)
             w_idxs = torch.linspace(0, self.num_grid_per_side - 1, w)
 
@@ -757,7 +757,7 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
 
 class Qwen3VLTextModel(Qwen3VLPreTrainedModel):
     config: Qwen3VLTextConfig
-    _no_split_modules = ["Qwen3VLTextDecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLTextDecoderLayer"]
 
     def __init__(self, config: Qwen3VLTextConfig):
         super().__init__(config)
@@ -877,11 +877,11 @@ class Qwen3VLTextModel(Qwen3VLPreTrainedModel):
 
 class Qwen3VLModel(Qwen3VLPreTrainedModel):
     base_model_prefix = ""
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping: ClassVar[dict] = {}
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: Qwen3VLConfig
-    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
 
     def __init__(self, config):
         super().__init__(config)
@@ -1237,10 +1237,10 @@ class Qwen3VLBackboneOutput(ModelOutput):
 
 
 class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping: ClassVar[dict] = {}
     # A mapping works with both Transformers 4.57 (which iterates the keys)
     # and Transformers 5.x (which requires explicit target/source metadata).
-    _tied_weights_keys = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
+    _tied_weights_keys: ClassVar[dict] = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: Qwen3VLConfig
@@ -1378,7 +1378,7 @@ class TimestepEmbedder(nn.Module):
 
 class MLPProjector(nn.Module):
     def __init__(self, input_dim: int, output_dim: int, num_layers: int = 1, bias: bool = False):
-        super(MLPProjector, self).__init__()
+        super().__init__()
 
         if num_layers < 1:
             raise ValueError(f"num_layers must be at least 1, got {num_layers}")
@@ -1523,7 +1523,7 @@ class DiT(PreTrainedModel):
     config_class = DiTConfig
     _supports_flash_attn = True
     _supports_sdpa = True
-    _no_split_modules = ["DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["DecoderLayer"]
 
     def __init__(self, config: DiTConfig):
         super().__init__(config)
@@ -1556,7 +1556,7 @@ class MiBoTForActionGeneration(PreTrainedModel):
     supports_gradient_checkpointing = False
     _supports_flash_attn = True
     _supports_sdpa = True
-    _no_split_modules = ["DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["DecoderLayer"]
 
     def __init__(self, config: MiBoTConfig):
         super().__init__(config)

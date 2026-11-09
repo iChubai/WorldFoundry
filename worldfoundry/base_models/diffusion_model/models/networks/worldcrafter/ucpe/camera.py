@@ -122,11 +122,7 @@ def _ucm_unproject_grid(
         return torch.tensor([value], device=device, dtype=dtype)
 
     fx, fy, cx, cy, xi = map(tensor_1d, (fx, fy, cx, cy, xi))
-    xs = torch.linspace(0, width - 1, width, dtype=dtype, device=device)
-    ys = torch.linspace(0, height - 1, height, dtype=dtype, device=device)
-    ys, xs = torch.meshgrid([ys, xs], indexing="ij")
-    grid = torch.stack((xs, ys, torch.ones_like(xs)), dim=2)
-    grid = repeat(grid, "... -> b ...", b=fx.shape[0])
+    grid = _pixel_grid(height=height, width=width, batch=fx.shape[0], dtype=dtype, device=device)
 
     x = (grid[..., 0] - cx[:, None, None]) / fx[:, None, None]
     y = (grid[..., 1] - cy[:, None, None]) / fy[:, None, None]

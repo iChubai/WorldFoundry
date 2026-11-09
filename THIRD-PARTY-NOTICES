@@ -1266,6 +1266,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+Astronex-World inference runtime
+--------------------------------
+Source: https://github.com/Astronex-Robotics/Astronex-World/tree/27584bf1a89da01ef35a03b48d83bc818d2adf2b
+Copyright: 2026 Astronex Robotics.
+License: Apache License 2.0; the complete license text is retained in this bundle.
+Files: worldfoundry/synthesis/visual_generation/astronex_world/astronex_world_runtime/**
+The causal and bidirectional samplers, the Wan2.2-based model, camera, action and LoRA
+modules, the sequence-parallel utilities and the prompt/image datasets used by the
+sampler are kept for inference; the runtime's PROVENANCE.md lists the modifications.
+
 AlayaWorld v1.1 inference runtime
 ---------------------------------
 Source: https://github.com/AlayaLab/AlayaWorld/tree/ea03cfbb2e4c4e9102ed8ea8562e0b5370ca9b79

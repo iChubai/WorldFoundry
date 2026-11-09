@@ -111,7 +111,6 @@ ASTRONEX = _spec(
             mode,
             "Astronex-Lab/Astronex-World",
             mode=mode,
-            source_root=str(official_runtime_repo_path("Astronex-Robotics--Astronex-World")),
         )
         for mode in ("causal", "bidirectional")
     ],
@@ -138,7 +137,6 @@ ASTRONEX = _spec(
         _field("embodiment_id", "integer"),
         _field("vram_limit_gb", "number"),
         _field("consumer", "boolean", target="load_kwargs", description="Causal mode only."),
-        _asset("source_root"),
     ),
     aliases=("astronex",),
     task="interactive-world-model",

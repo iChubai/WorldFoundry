@@ -8,7 +8,7 @@ description: Zing、Astronex-World、SolarWM、AlayaWorld v1.1 和 Echo-WM 的�
 | 模型 ID | 推理实现 | 外部依赖 |
 | --- | --- | --- |
 | `zing`（别名 `zing-0.5`） | 复用原生 Wan2.2、UMT5、VAE38，增加键盘控制与因果缓存 | 无外部模型仓库 |
-| `astronex-world` | 官方 causal / bidirectional 采样入口 | Astronex-World 源码与环境 |
+| `astronex-world` | 官方 causal / bidirectional 采样入口，已 vendor 进 WorldFoundry | 无（需独立环境） |
 | `solarwm` | 官方 `solarwm infer`，读取索引中的图像、描述和相机轨迹 | SolarWM 源码及对应后端环境 |
 | `alayaworld` | 保留已有原生 LTX-2.3 + DA3 合并权重路线 | 无外部模型仓库 |
 | `alayaworld-v1.1` | 仓库内 vendor 的纯推理 ViGeo rollout 与 Alaya LTX-2.3 Transformer，复用共享加载器、VAE、历史、文本编码器和 ViGeo | 无 |
@@ -68,13 +68,12 @@ pipe.close()
 
 ## Astronex-World
 
-源码固定版本为 `27584bf1a89da01ef35a03b48d83bc818d2adf2b`，权重为 `Astronex-Lab/Astronex-World`。
+采样器 vendor 自源码版本 `27584bf1a89da01ef35a03b48d83bc818d2adf2b`，权重为 `Astronex-Lab/Astronex-World`。
 
 ```python
 from worldfoundry.pipelines.astronex_world import AstronexWorldPipeline
 
 pipe = AstronexWorldPipeline.from_pretrained(
-    source_root="/path/to/Astronex-World-source",
     checkpoint_dir="/path/to/Astronex-World-weights",
     python_executable="/path/to/astronex-env/bin/python",
     mode="causal",

@@ -8,7 +8,7 @@ These routes generate video using local weights. Catalog browsing and configurat
 | Model ID | Inference route | Required source |
 | --- | --- | --- |
 | `zing` (alias `zing-0.5`) | Native Wan2.2 layers, UMT5, VAE38; Zing keyboard and causal cache extensions | None |
-| `astronex-world` | Official causal or bidirectional sampler | Astronex-World checkout |
+| `astronex-world` | Official causal or bidirectional sampler, vendored in WorldFoundry | None |
 | `solarwm` | Official `solarwm infer`, indexed image/caption/camera cases | SolarWM checkout and matching backend environment |
 | `alayaworld` | Existing native LTX-2.3 + DA3 merged checkpoint route | None |
 | `alayaworld-v1.1` | Inference-only ViGeo rollout and Alaya LTX-2.3 transformer vendored in WorldFoundry, with shared loaders/VAE/history/text/ViGeo | None |
@@ -68,14 +68,13 @@ pipe.close()
 
 ## Astronex-World
 
-Use source revision `27584bf1a89da01ef35a03b48d83bc818d2adf2b` and the `Astronex-Lab/Astronex-World` checkpoint layout.
+The sampler is vendored from source revision `27584bf1a89da01ef35a03b48d83bc818d2adf2b`. Use the `Astronex-Lab/Astronex-World` checkpoint layout.
 
 ```python
 from worldfoundry.pipelines.astronex_world import AstronexWorldPipeline
 
 pipe = AstronexWorldPipeline.from_pretrained(
     checkpoint_dir="/path/to/Astronex-World-weights",
-    source_root="/path/to/Astronex-World-source",
     python_executable="/path/to/astronex-env/bin/python",
     mode="causal",  # or "bidirectional"
     device="cuda:0",

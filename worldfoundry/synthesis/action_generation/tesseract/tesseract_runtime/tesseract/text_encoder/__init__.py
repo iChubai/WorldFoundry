@@ -1,1 +1,0 @@
-from .text_encoder import compute_prompt_embeddings as compute_prompt_embeddings

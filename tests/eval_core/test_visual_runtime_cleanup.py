@@ -21,14 +21,8 @@ def test_warp_as_history_training_config_is_not_packaged() -> None:
     assert not (runtime_root / "helios/utils/train_config.py").exists()
 
 
-def test_wow_idm_runtime_is_inference_only() -> None:
-    idm_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/wow/wow_runtime/idm"
-
-    assert (idm_root / "infer.py").is_file()
-    assert (idm_root / "models/idm_models.py").is_file()
-    assert not (idm_root / "README.md").exists()
-    assert not (idm_root / "train.py").exists()
-    assert not (idm_root / "datasets").exists()
+def test_wow_idm_runtime_is_not_packaged() -> None:
+    assert not (REPO_ROOT / "worldfoundry/synthesis/visual_generation/wow/wow_runtime/idm").exists()
 
 
 def test_inspatio_world_runtime_does_not_package_training_datasets() -> None:

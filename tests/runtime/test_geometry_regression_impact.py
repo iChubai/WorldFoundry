@@ -461,7 +461,7 @@ def cases_selected_by(plan: dict, path: str) -> dict[str, list[dict]]:
     return selected
 
 
-@pytest.mark.parametrize("path", [REALTIME_CONTRACTS, STUDIO_REALTIME_WEBRTC, MEDIA_PROCESSING_RTX])
+@pytest.mark.parametrize("path", [REALTIME_CONTRACTS, MEDIA_PROCESSING_RTX])
 def test_realtime_layer_paths_select_cases_through_their_dependencies(realtime_layer_plan: dict, path: str) -> None:
     root = TOOLS.parents[1]
     assert (root / path).is_file()
@@ -472,6 +472,25 @@ def test_realtime_layer_paths_select_cases_through_their_dependencies(realtime_l
         for reason in reasons:
             assert reason["kind"] != "shared_component_or_case_matrix"
             assert set(reason["kind"].split("+")) <= {"declared_component", "static_import", "recorded_import"}
+
+
+def test_unimported_studio_realtime_serving_files_require_only_their_cpu_contracts(realtime_layer_plan: dict) -> None:
+    assert (TOOLS.parents[1] / STUDIO_REALTIME_WEBRTC).is_file()
+    assert not cases_selected_by(realtime_layer_plan, STUDIO_REALTIME_WEBRTC)
+    assert STUDIO_REALTIME_WEBRTC not in realtime_layer_plan["uncovered_paths"]
+    contracts = [
+        item["required_cpu_contracts"]
+        for item in realtime_layer_plan["cpu_only_changes"]
+        if item["path"] == STUDIO_REALTIME_WEBRTC
+    ]
+    assert contracts == [
+        [
+            "tests/studio_visualization/test_realtime_delivery.py",
+            "tests/studio_visualization/test_realtime_input.py",
+            "tests/studio_visualization/test_world_realtime.py",
+        ]
+    ]
+    assert set(contracts[0]) <= set(realtime_layer_plan["required_cpu_contracts"])
 
 
 def test_realtime_contracts_select_their_offline_importers_only(realtime_layer_plan: dict) -> None:

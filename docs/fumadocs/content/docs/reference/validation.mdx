@@ -574,6 +574,9 @@ declarations. The realtime layers `worldfoundry/core/execution/realtime/`,
 are not shared paths: a change there selects the cases whose import closure,
 declared components or recorded imports include the file. `core/media/processing`
 still reaches every case through the lazy facade table in `worldfoundry.core`.
+No replay case imports `studio/serving/realtime/`; its files are declared
+CPU-only components, so a change there requires the Studio realtime CPU
+contracts named in the dependency file.
 Unknown paths or an unresolved import graph select the full matrix
 and exit with `uncovered`, requiring the coverage gap to be resolved. A docs-only
 change can report `no_inference_changes`; it still requires the CPU gates.

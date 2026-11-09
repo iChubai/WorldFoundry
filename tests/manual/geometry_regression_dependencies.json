@@ -611,6 +611,7 @@
       "required_cpu_contracts": [
         "tests/studio_visualization/test_realtime_input.py",
         "tests/studio_visualization/test_realtime_input_consumers.py",
+        "tests/studio_visualization/test_realtime_input_golden.py",
         "tests/studio_visualization/test_world_realtime.py"
       ]
     },
@@ -663,8 +664,7 @@
       "reason": "Studio realtime serving layer that no replay case imports; its transport, input and delivery behavior is covered by the Studio realtime CPU contracts.",
       "required_cpu_contracts": [
         "tests/studio_visualization/test_realtime_delivery.py",
-        "tests/studio_visualization/test_realtime_input.py",
-        "tests/studio_visualization/test_world_realtime.py"
+        "tests/studio_visualization/test_realtime_presentation.py"
       ]
     }
   ],

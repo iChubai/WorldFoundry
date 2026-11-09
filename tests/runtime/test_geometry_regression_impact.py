@@ -486,8 +486,7 @@ def test_unimported_studio_realtime_serving_files_require_only_their_cpu_contrac
     assert contracts == [
         [
             "tests/studio_visualization/test_realtime_delivery.py",
-            "tests/studio_visualization/test_realtime_input.py",
-            "tests/studio_visualization/test_world_realtime.py",
+            "tests/studio_visualization/test_realtime_presentation.py",
         ]
     ]
     assert set(contracts[0]) <= set(realtime_layer_plan["required_cpu_contracts"])

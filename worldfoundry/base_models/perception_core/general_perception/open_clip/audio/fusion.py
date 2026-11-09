@@ -15,16 +15,9 @@ class DAF(nn.Module):
     """
 
     def __init__(self):
-        """Init."""
         super().__init__()
 
     def forward(self, x, residual):
-        """Forward.
-
-        Args:
-            x: The x.
-            residual: The residual.
-        """
         return x + residual
 
 
@@ -34,13 +27,6 @@ class iAFF(nn.Module):
     """
 
     def __init__(self, channels=64, r=4, type="2D"):
-        """Init.
-
-        Args:
-            channels: The channels.
-            r: The r.
-            type: The type.
-        """
         super().__init__()
         inter_channels = int(channels // r)
 
@@ -124,12 +110,6 @@ class iAFF(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, residual):
-        """Forward.
-
-        Args:
-            x: The x.
-            residual: The residual.
-        """
         flag = False
         xa = x + residual
         if xa.size(0) == 1:
@@ -157,13 +137,6 @@ class AFF(nn.Module):
     """
 
     def __init__(self, channels=64, r=4, type="2D"):
-        """Init.
-
-        Args:
-            channels: The channels.
-            r: The r.
-            type: The type.
-        """
         super().__init__()
         inter_channels = int(channels // r)
 
@@ -205,12 +178,6 @@ class AFF(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, residual):
-        """Forward.
-
-        Args:
-            x: The x.
-            residual: The residual.
-        """
         flag = False
         xa = x + residual
         if xa.size(0) == 1:

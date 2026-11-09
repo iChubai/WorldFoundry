@@ -1,6 +1,5 @@
 # ruff: noqa: F405 - Names come from the upstream star import.
 # ruff: noqa: F722 - jaxtyping dimension strings in annotations.
-"""Module for base_models -> three_dimensions -> general_3d -> eastern_journalist -> utils3d -> numpy -> rasterization.py functionality."""
 
 import threading
 from contextlib import contextmanager
@@ -24,14 +23,6 @@ __all__ = [
 
 
 def map_np_dtype(dtype) -> str:
-    """Map np dtype.
-
-    Args:
-        dtype: The dtype.
-
-    Returns:
-        The return value.
-    """
     if dtype == int:  # noqa: E721 - numpy dtypes compare equal to the matching Python type.
         return "i4"
     elif dtype == np.uint8:
@@ -45,11 +36,6 @@ def map_np_dtype(dtype) -> str:
 
 
 def one_value(dtype):
-    """One value.
-
-    Args:
-        dtype: The dtype.
-    """
     if dtype == "u1":
         return 255
     elif dtype == "u2":
@@ -327,22 +313,13 @@ class RastContext:
         self.programs = {}
 
     def __enter__(self):
-        """Enter."""
         self.mgl_ctx.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """Exit.
-
-        Args:
-            exc_type: The exc type.
-            exc_value: The exc value.
-            traceback: The traceback.
-        """
         self.mgl_ctx.__exit__(exc_type, exc_value, traceback)
 
     def __del__(self):
-        """Del."""
         try:
             self.mgl_ctx.release()
             for _prog_name, prog in self.programs.items():
@@ -368,18 +345,6 @@ def run_full_screen_program(
     out_depth: Optional[moderngl.Texture] = None,
     **uniforms,
 ) -> moderngl.Texture:
-    """Run full screen program.
-
-    Args:
-        ctx: The ctx.
-        prog: The prog.
-        in_tex: The in tex.
-        out_tex_or_rbo: The out tex or rbo.
-        out_depth: The out depth.
-
-    Returns:
-        The return value.
-    """
     vao = ctx.mgl_ctx.vertex_array(prog, [])
     if isinstance(in_tex, list):
         for i, tex in enumerate(in_tex):
@@ -401,13 +366,6 @@ def run_full_screen_program(
 
 
 def clear_texture(ctx: RastContext, tex: moderngl.Texture, value: Union[Tuple[float], Tuple[int], float, int]):
-    """Clear texture.
-
-    Args:
-        ctx: The ctx.
-        tex: The tex.
-        value: The value.
-    """
     if tex.depth:
         fbo = ctx.mgl_ctx.framebuffer(color_attachments=[], depth_attachment=tex)
         fbo.clear(depth=value)
@@ -436,13 +394,6 @@ def clear_texture(ctx: RastContext, tex: moderngl.Texture, value: Union[Tuple[fl
 def depth_texture_buffer_to_linear(
     ctx: RastContext, buffer_depth_tex: moderngl.Texture, linear_depth_tex: moderngl.Texture
 ):
-    """Depth texture buffer to linear.
-
-    Args:
-        ctx: The ctx.
-        buffer_depth_tex: The buffer depth tex.
-        linear_depth_tex: The linear depth tex.
-    """
     program_name = "depth_buffer_to_linear"
     if (prog := ctx.programs.get(program_name, None)) is None:
         prog = ctx.mgl_ctx.program(vertex_shader=FULL_SCREEN_VS, fragment_shader=DEPTH_BUFFER_TO_LINEAR_FS)
@@ -454,13 +405,6 @@ def depth_texture_buffer_to_linear(
 def depth_texture_linear_to_buffer(
     ctx: RastContext, linear_depth_tex: moderngl.Texture, buffer_depth_tex: moderngl.Texture
 ):
-    """Depth texture linear to buffer.
-
-    Args:
-        ctx: The ctx.
-        linear_depth_tex: The linear depth tex.
-        buffer_depth_tex: The buffer depth tex.
-    """
     program_name = "depth_linear_to_buffer"
     if (prog := ctx.programs.get(program_name, None)) is None:
         prog = ctx.mgl_ctx.program(vertex_shader=FULL_SCREEN_VS, fragment_shader=DEPTH_LINEAR_TO_BUFFER_FS)
@@ -489,8 +433,6 @@ def rasterize_triangles(
     ctx: Optional[RastContext] = None,
 ) -> Dict[str, ndarray]:
     """
-    Rasterize triangles.
-
     Parameters
     ----
     - `size` (Tuple[int, int]): (height, width) of the output image
@@ -1174,8 +1116,6 @@ def rasterize_lines(
     ctx: Optional[RastContext] = None,
 ) -> Tuple[ndarray, ...]:
     """
-    Rasterize lines.
-
     Parameters
     ----
     - `size` (Tuple[int, int]): (height, width) of the output image
@@ -1537,8 +1477,6 @@ def rasterize_point_cloud(
     ctx: Optional[RastContext] = None,
 ) -> Dict[str, ndarray]:
     """
-    Rasterize point cloud.
-
     Parameters
     ----
     - `size` (Tuple[int, int]): (height, width) of the output image

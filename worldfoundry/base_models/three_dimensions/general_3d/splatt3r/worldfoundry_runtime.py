@@ -1,9 +1,8 @@
-"""Module for base_models -> three_dimensions -> general_3d -> splatt3r -> worldfoundry_runtime.py functionality."""
-
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io import write_json
 from worldfoundry.core.io.paths import hfd_root_path
@@ -14,11 +13,6 @@ DEFAULT_SPLATT3R_FILENAME = "epoch=19-step=1200.ckpt"
 
 
 def _resolve_hfd_root() -> Path:
-    """Helper function to resolve hfd root.
-
-    Returns:
-        The return value.
-    """
     return hfd_root_path()
 
 
@@ -26,11 +20,6 @@ DEFAULT_SPLATT3R_LOCAL_CKPT = _resolve_hfd_root() / "brandonsmart--splatt3r_v1.0
 
 
 def _default_checkpoint_candidates() -> list[Path]:
-    """Helper function to default checkpoint candidates.
-
-    Returns:
-        The return value.
-    """
     hfd_root = _resolve_hfd_root()
     ckpt_root = hfd_root.parent
     return [
@@ -54,11 +43,6 @@ class Splatt3RRuntime:
         checkpoint_path: str | Path | None = None,
         image_size: int = 512,
     ) -> None:
-        """Init.
-
-        Returns:
-            The return value.
-        """
         self.model_id = model_id
         self.model_name = self.DISPLAY_NAME
         self.generation_type = "3d_reconstruction"
@@ -75,7 +59,7 @@ class Splatt3RRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "Splatt3RRuntime":
+    ) -> Splatt3RRuntime:
         """
         Build a lazy Splatt3R runtime.
 
@@ -100,19 +84,9 @@ class Splatt3RRuntime:
 
     @staticmethod
     def _runtime_root() -> Path:
-        """Helper function to runtime root.
-
-        Returns:
-            The return value.
-        """
         return package_root("worldfoundry.base_models.three_dimensions.general_3d.splatt3r.splatt3r_runtime")
 
     def _resolve_checkpoint(self) -> str:
-        """Helper function to resolve checkpoint.
-
-        Returns:
-            The return value.
-        """
         if self.checkpoint_path:
             return self.checkpoint_path
         for candidate in _default_checkpoint_candidates():
@@ -166,15 +140,6 @@ class Splatt3RRuntime:
 
     @staticmethod
     def _image_paths(images: Any, interactions: Sequence[str]) -> list[str]:
-        """Helper function to image paths.
-
-        Args:
-            images: The images.
-            interactions: The interactions.
-
-        Returns:
-            The return value.
-        """
         if images is None:
             paths = list(interactions)
         elif isinstance(images, (str, Path)):

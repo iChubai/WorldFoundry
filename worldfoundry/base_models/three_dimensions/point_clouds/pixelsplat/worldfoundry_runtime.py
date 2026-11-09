@@ -7,21 +7,17 @@ import os
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping, Sequence
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
-from worldfoundry.core.io.paths import package_module_root as package_root
 from worldfoundry.core.io.paths import hfd_root_path
+from worldfoundry.core.io.paths import package_module_root as package_root
 from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 
 def _resolve_hfd_root() -> Path:
-    """Helper function to resolve hfd root.
-
-    Returns:
-        The return value.
-    """
     return hfd_root_path()
 
 
@@ -34,11 +30,6 @@ DEFAULT_PIXELSPLAT_DEMO_INDEX = DEFAULT_PIXELSPLAT_ASSET_ROOT / "evaluation_inde
 
 
 def _default_checkpoint_candidates() -> list[Path]:
-    """Helper function to default checkpoint candidates.
-
-    Returns:
-        The return value.
-    """
     hfd_root = _resolve_hfd_root()
     ckpt_root = hfd_root.parent
     return [
@@ -64,11 +55,6 @@ class PixelSplatRuntime:
         experiment: str = "re10k",
         index_path: str | Path = DEFAULT_PIXELSPLAT_DEMO_INDEX,
     ) -> None:
-        """Init.
-
-        Returns:
-            The return value.
-        """
         self.model_id = model_id
         self.model_name = self.DISPLAY_NAME
         self.generation_type = "3d_reconstruction"
@@ -86,18 +72,7 @@ class PixelSplatRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "PixelSplatRuntime":
-        """From pretrained.
-
-        Args:
-            pretrained_model_path: The pretrained model path.
-            args: The args.
-            device: The device.
-            model_id: The model id.
-
-        Returns:
-            The return value.
-        """
+    ) -> PixelSplatRuntime:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
@@ -114,28 +89,13 @@ class PixelSplatRuntime:
 
     @staticmethod
     def _runtime_root() -> Path:
-        """Helper function to runtime root.
-
-        Returns:
-            The return value.
-        """
         return package_root("worldfoundry.base_models.three_dimensions.point_clouds.pixelsplat")
 
     @staticmethod
     def _base_source_root() -> Path:
-        """Helper function to base source root.
-
-        Returns:
-            The return value.
-        """
         return Path(__file__).resolve().parent
 
     def _resolve_checkpoint(self) -> Path:
-        """Helper function to resolve checkpoint.
-
-        Returns:
-            The return value.
-        """
         if self.checkpoint_path:
             return Path(self.checkpoint_path).expanduser().resolve()
         for candidate in _default_checkpoint_candidates():
@@ -192,9 +152,7 @@ class PixelSplatRuntime:
                 )
                 buffer = BytesIO()
                 image.save(buffer, format="PNG")
-            encoded_images.append(
-                torch.frombuffer(buffer.getbuffer(), dtype=torch.uint8).clone()
-            )
+            encoded_images.append(torch.frombuffer(buffer.getbuffer(), dtype=torch.uint8).clone())
             # RE10K stores normalized intrinsics followed by a 3x4 world-to-camera
             # matrix.  Sequential demo frames do not ship poses, so use a small,
             # explicit linear baseline and record that fact in result metadata.
@@ -232,25 +190,15 @@ class PixelSplatRuntime:
             ],
             test_root / chunk_name,
         )
-        (test_root / "index.json").write_text(
-            json.dumps({scene: chunk_name}, indent=2) + "\n", encoding="utf-8"
-        )
+        (test_root / "index.json").write_text(json.dumps({scene: chunk_name}, indent=2) + "\n", encoding="utf-8")
         evaluation_index = stage_root / "evaluation_index.json"
         evaluation_index.write_text(
-            json.dumps(
-                {scene: {"context": [0, 1], "target": [2]}}, indent=2
-            )
-            + "\n",
+            json.dumps({scene: {"context": [0, 1], "target": [2]}}, indent=2) + "\n",
             encoding="utf-8",
         )
         return stage_root, evaluation_index, [str(path) for path in selected]
 
     def _runtime_env(self) -> dict[str, str]:
-        """Helper function to runtime env.
-
-        Returns:
-            The return value.
-        """
         runtime_root = self._runtime_root()
         env = os.environ.copy()
         python_path = env.get("PYTHONPATH")
@@ -273,19 +221,6 @@ class PixelSplatRuntime:
         fps: int | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        """Predict.
-
-        Args:
-            prompt: The prompt.
-            images: The images.
-            video: The video.
-            interactions: The interactions.
-            output_path: The output path.
-            fps: The fps.
-
-        Returns:
-            The return value.
-        """
         del prompt, fps
         if video is not None:
             raise ValueError("pixelSplat consumes posed image sequences, not input video.")
@@ -317,8 +252,7 @@ class PixelSplatRuntime:
             staged_images = []
             if not index_path.is_file():
                 raise FileNotFoundError(
-                    "pixelSplat demo index is missing and no input images were provided: "
-                    f"{index_path}"
+                    f"pixelSplat demo index is missing and no input images were provided: {index_path}"
                 )
         overrides = [
             f"+experiment={kwargs.get('experiment') or self.experiment}",

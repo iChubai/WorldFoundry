@@ -8,8 +8,8 @@ DINOv2
 
 import collections.abc
 import math
+from collections.abc import Callable
 from itertools import repeat
-from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
@@ -52,7 +52,7 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob: float = 0.0, scale_by_keep: bool = True):
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
         self.scale_by_keep = scale_by_keep
 
@@ -60,7 +60,7 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
 
     def extra_repr(self):
-        return f"drop_prob={round(self.drop_prob,3):0.3f}"
+        return f"drop_prob={round(self.drop_prob, 3):0.3f}"
 
 
 class Mlp(nn.Module):
@@ -93,9 +93,9 @@ class SwiGLUFFN(nn.Module):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
-        act_layer: Callable[..., nn.Module] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: Callable[..., nn.Module] | None = None,
         drop: float = 0.0,
         bias: bool = True,
     ) -> None:
@@ -116,9 +116,9 @@ class SwiGLUFFNFused(SwiGLUFFN):
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
-        act_layer: Callable[..., nn.Module] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: Callable[..., nn.Module] | None = None,
         drop: float = 0.0,
         bias: bool = True,
     ) -> None:
@@ -141,14 +141,14 @@ class Attention(nn.Module):
     def __init__(
         self,
         dim: int,
-        latent_attn_dim: Optional[int] = None,
+        latent_attn_dim: int | None = None,
         num_heads: int = 8,
         qkv_bias: bool = False,
         qk_norm: bool = False,
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         norm_layer: nn.Module = nn.LayerNorm,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
         use_scalable_softmax: bool = False,
         use_entropy_scaling: bool = False,
         base_token_count_for_entropy_scaling: int = 444,
@@ -222,9 +222,9 @@ class Attention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, xpos)
             k = self.custom_positional_encoding(k, xpos)
 
@@ -271,7 +271,7 @@ class CrossAttention(nn.Module):
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         norm_layer: nn.Module = nn.LayerNorm,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
         use_scalable_softmax: bool = False,
         use_entropy_scaling: bool = False,
         base_token_count_for_entropy_scaling: int = 444,
@@ -348,12 +348,12 @@ class CrossAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                qpos is not None
-            ), "Positions of queries (qpos) are a required input when using custom positional encoding"
-            assert (
-                kpos is not None
-            ), "Positions of keys (kpos) are a required input when using custom positional encoding"
+            assert qpos is not None, (
+                "Positions of queries (qpos) are a required input when using custom positional encoding"
+            )
+            assert kpos is not None, (
+                "Positions of keys (kpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, qpos)
             k = self.custom_positional_encoding(k, kpos)
 
@@ -413,24 +413,22 @@ class LayerScale(nn.Module):
 
 
 class SelfAttentionBlock(nn.Module):
-    "Self-Attention Block"
-
     def __init__(
         self,
         dim: int,
         num_heads: int,
-        latent_attn_dim: Optional[int] = None,
+        latent_attn_dim: int | None = None,
         mlp_ratio: float = 4.0,
         qkv_bias: bool = False,
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
         mlp_layer: nn.Module = Mlp,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
         use_scalable_softmax: bool = False,
         use_entropy_scaling: bool = False,
         base_token_count_for_entropy_scaling: int = 444,
@@ -506,17 +504,15 @@ class SelfAttentionBlock(nn.Module):
             torch.Tensor: Output features of same shape as input
         """
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
         x = x + self.drop_path1(self.ls1(self.attn(self.norm1(x), xpos)))
         x = x + self.drop_path2(self.ls2(self.mlp(self.norm2(x))))
         return x
 
 
 class CrossAttentionBlock(nn.Module):
-    "Cross-Attention Block"
-
     def __init__(
         self,
         dim: int,
@@ -526,12 +522,12 @@ class CrossAttentionBlock(nn.Module):
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
         mlp_layer: nn.Module = Mlp,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
         norm_cross_tokens: bool = True,
         use_scalable_softmax: bool = False,
         use_entropy_scaling: bool = False,
@@ -634,12 +630,12 @@ class CrossAttentionBlock(nn.Module):
             torch.Tensor: Output features of same shape as input
         """
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
-            assert (
-                ypos is not None
-            ), "Positions of cross tokens (ypos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
+            assert ypos is not None, (
+                "Positions of cross tokens (ypos) are a required input when using custom positional encoding"
+            )
         x = x + self.drop_path1(self.ls1(self.attn(self.norm1(x), xpos)))
         y_ = self.norm_y(y)
         x = x + self.drop_path2(self.ls2(self.cross_attn(self.norm2(x), y_, y_, xpos, ypos)))
@@ -698,7 +694,7 @@ class DiffAttention(nn.Module):
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         norm_layer: nn.Module = nn.LayerNorm,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
     ):
         """
         Initialize the DiffAttention layer.
@@ -761,9 +757,9 @@ class DiffAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                xpos is not None
-            ), "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            assert xpos is not None, (
+                "Positions of tokens (xpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, xpos)
             k = self.custom_positional_encoding(k, xpos)
 
@@ -819,7 +815,7 @@ class DiffCrossAttention(nn.Module):
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         norm_layer: nn.Module = nn.LayerNorm,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
     ):
         """
         Initialize the Cross-Attention layer.
@@ -896,12 +892,12 @@ class DiffCrossAttention(nn.Module):
         q, k = self.q_norm(q), self.k_norm(k)
 
         if self.custom_positional_encoding is not None:
-            assert (
-                qpos is not None
-            ), "Positions of queries (qpos) are a required input when using custom positional encoding"
-            assert (
-                kpos is not None
-            ), "Positions of keys (kpos) are a required input when using custom positional encoding"
+            assert qpos is not None, (
+                "Positions of queries (qpos) are a required input when using custom positional encoding"
+            )
+            assert kpos is not None, (
+                "Positions of keys (kpos) are a required input when using custom positional encoding"
+            )
             q = self.custom_positional_encoding(q, qpos)
             k = self.custom_positional_encoding(k, kpos)
 
@@ -958,12 +954,12 @@ class DiffSelfAttentionBlock(SelfAttentionBlock):
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
         mlp_layer: nn.Module = Mlp,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
     ):
         super().__init__(
             dim=dim,
@@ -1007,12 +1003,12 @@ class DiffCrossAttentionBlock(CrossAttentionBlock):
         qk_norm: bool = False,
         proj_drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values: Optional[float] = None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: nn.Module = nn.GELU,
         norm_layer: nn.Module = nn.LayerNorm,
         mlp_layer: nn.Module = Mlp,
-        custom_positional_encoding: Callable = None,
+        custom_positional_encoding: Callable | None = None,
         norm_cross_tokens: bool = True,
     ):
         super().__init__(

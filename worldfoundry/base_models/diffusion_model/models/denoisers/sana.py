@@ -159,9 +159,7 @@ def sana_streaming_config(*, autoregressive: bool) -> dict[str, object]:
         additional_inchannels=128,
         attn_type=("V2VStateCachedBiGDNAttention" if autoregressive else "V2VBiGDNAttention"),
         softmax_ratio=0.25,
-        softmax_attn_type=(
-            "V2VAfterRoPEGatedSoftmaxAttention" if autoregressive else "V2VGatedSoftmaxAttention"
-        ),
+        softmax_attn_type=("V2VAfterRoPEGatedSoftmaxAttention" if autoregressive else "V2VGatedSoftmaxAttention"),
         ffn_type=("CachedGLUMBConvTemp" if autoregressive else "GLUMBConvTemp"),
         pos_embed_type=("casual_wan_rope" if autoregressive else "wan_rope"),
     )
@@ -331,8 +329,7 @@ class SanaDenoiser(FeatureCacheDenoiserMixin):
         if not isinstance(blocks, nn.ModuleList):
             raise TypeError("Sana streaming graph must expose a ModuleList named 'blocks'")
         return tuple(
-            getattr(getattr(block, "attn", None), "fixed_rope_cache_type", None) == "state"
-            for block in blocks
+            getattr(getattr(block, "attn", None), "fixed_rope_cache_type", None) == "state" for block in blocks
         )
 
     def __call__(self, model_input: DenoiserInput) -> DenoiserOutput:
@@ -383,9 +380,7 @@ class SanaDenoiser(FeatureCacheDenoiserMixin):
             if not isinstance(frame_info, Mapping):
                 raise TypeError("Sana condition_frame_info must map frame indices to timestep weights")
             frame_timestep = (
-                timestep
-                if timestep.ndim == 3
-                else timestep[:, None, None].expand(-1, 1, latents.shape[2]).clone()
+                timestep if timestep.ndim == 3 else timestep[:, None, None].expand(-1, 1, latents.shape[2]).clone()
             )
             for raw_index, raw_weight in frame_info.items():
                 index = int(raw_index)
@@ -592,9 +587,7 @@ def build_sana_video_denoiser(context: ComponentBuildContext) -> SanaDenoiser:
 def build_sana_streaming_denoiser(context: ComponentBuildContext) -> SanaDenoiser:
     from ..networks.sana.sana_multi_scale_video_v2v import SanaMSVideoV2V
 
-    config = sana_streaming_config(
-        autoregressive=bool(context.component_options.get("autoregressive", False))
-    )
+    config = sana_streaming_config(autoregressive=bool(context.component_options.get("autoregressive", False)))
     return _build(context, module_class=SanaMSVideoV2V, config=config)
 
 

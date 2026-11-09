@@ -84,7 +84,7 @@ def interpolate_pos_embed(model, checkpoint_model):
         new_size = int(num_patches**0.5)
         # class_token and dist_token are kept unchanged
         if orig_size != new_size:
-            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))
+            print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
             extra_tokens = pos_embed_checkpoint[:, :num_extra_tokens]
             # only the position tokens are interpolated
             pos_tokens = pos_embed_checkpoint[:, num_extra_tokens:]
@@ -104,7 +104,7 @@ try:
     from uniception.models.libs.croco.curope import cuRoPE2D
 
     RoPE2D = cuRoPE2D
-except:
+except BaseException:
 
     class RoPE2D(torch.nn.Module):
         def __init__(self, freq=100.0, F0=1.0):

@@ -5,10 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> modeling -> sam2_utils.py functionality."""
-
 import copy
-from typing import Tuple
 
 import numpy as np
 import torch
@@ -56,9 +53,7 @@ def select_closest_cond_frames(frame_idx, cond_frame_outputs, max_cond_frame_num
             key=lambda x: abs(x - frame_idx),
         )[:num_remain]
         selected_outputs.update((t, cond_frame_outputs[t]) for t in inds_remain)
-        unselected_outputs = {
-            t: v for t, v in cond_frame_outputs.items() if t not in selected_outputs
-        }
+        unselected_outputs = {t: v for t, v in cond_frame_outputs.items() if t not in selected_outputs}
 
     return selected_outputs, unselected_outputs
 
@@ -88,12 +83,6 @@ def get_activation_fn(activation):
 
 
 def get_clones(module, N):
-    """Get clones.
-
-    Args:
-        module: The module.
-        N: The n.
-    """
     return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
 
 
@@ -103,7 +92,7 @@ def sample_box_points(
     noise_bound: int = 20,  # SAM default
     top_left_label: int = 2,
     bottom_right_label: int = 3,
-) -> Tuple[np.array, np.array]:
+) -> tuple[np.array, np.array]:
     """
     Sample a noised version of the top left and bottom right corners of a given `bbox`
 
@@ -119,9 +108,7 @@ def sample_box_points(
     device = masks.device
     box_coords = mask_to_box(masks)
     B, _, H, W = masks.shape
-    box_labels = torch.tensor(
-        [top_left_label, bottom_right_label], dtype=torch.int, device=device
-    ).repeat(B)
+    box_labels = torch.tensor([top_left_label, bottom_right_label], dtype=torch.int, device=device).repeat(B)
     if noise > 0.0:
         if not isinstance(noise_bound, torch.Tensor):
             noise_bound = torch.tensor(noise_bound, device=device)
@@ -133,9 +120,7 @@ def sample_box_points(
         box_noise = box_noise * torch.stack((max_dx, max_dy, max_dx, max_dy), dim=-1)
 
         box_coords = box_coords + box_noise
-        img_bounds = (
-            torch.tensor([W, H, W, H], device=device) - 1
-        )  # uncentered pixel coords
+        img_bounds = torch.tensor([W, H, W, H], device=device) - 1  # uncentered pixel coords
         box_coords.clamp_(torch.zeros_like(img_bounds), img_bounds)  # In place clamping
 
     box_coords = box_coords.reshape(-1, 2, 2)  # always 2 points
@@ -259,13 +244,6 @@ def sample_one_point_from_error_center(gt_masks, pred_masks, padding=True):
 
 
 def get_next_point(gt_masks, pred_masks, method):
-    """Get next point.
-
-    Args:
-        gt_masks: The gt masks.
-        pred_masks: The pred masks.
-        method: The method.
-    """
     if method == "uniform":
         return sample_random_points_from_errors(gt_masks, pred_masks)
     elif method == "center":

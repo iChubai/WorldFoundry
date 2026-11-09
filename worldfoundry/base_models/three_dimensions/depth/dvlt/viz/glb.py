@@ -20,7 +20,6 @@ expect.
 
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import trimesh
@@ -30,7 +29,6 @@ from worldfoundry.base_models.three_dimensions.depth.dvlt.viz.camera_overlay imp
     patch_glb_material_unlit,
     scene_scale,
 )
-
 
 __all__ = [
     "opencv_to_opengl_transform",
@@ -49,12 +47,12 @@ def opencv_to_opengl_transform() -> np.ndarray:
 def pointcloud_to_glb(
     pts: np.ndarray,
     rgb: np.ndarray,
-    output_path: Optional[Path] = None,
+    output_path: Path | None = None,
     *,
-    name: Optional[str] = None,
-    cameras_c2w: Optional[np.ndarray] = None,
-    intrinsics: Optional[np.ndarray] = None,
-    image_hw: Optional[tuple[int, int]] = None,
+    name: str | None = None,
+    cameras_c2w: np.ndarray | None = None,
+    intrinsics: np.ndarray | None = None,
+    image_hw: tuple[int, int] | None = None,
     frustum_frac: float = 0.01,
     edge_frac: float = 0.04,
     line_frac: float = 0.0002,

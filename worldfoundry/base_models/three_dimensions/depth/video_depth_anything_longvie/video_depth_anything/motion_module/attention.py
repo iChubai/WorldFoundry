@@ -11,10 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> motion_module -> attention.py functionality."""
-
-from typing import Optional, Tuple
-
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -47,30 +43,16 @@ class CrossAttention(nn.Module):
     def __init__(
         self,
         query_dim: int,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         heads: int = 8,
         dim_head: int = 64,
         dropout: float = 0.0,
         bias=False,
         upcast_attention: bool = False,
         upcast_softmax: bool = False,
-        added_kv_proj_dim: Optional[int] = None,
-        norm_num_groups: Optional[int] = None,
+        added_kv_proj_dim: int | None = None,
+        norm_num_groups: int | None = None,
     ):
-        """Init.
-
-        Args:
-            query_dim: The query dim.
-            cross_attention_dim: The cross attention dim.
-            heads: The heads.
-            dim_head: The dim head.
-            dropout: The dropout.
-            bias: The bias.
-            upcast_attention: The upcast attention.
-            upcast_softmax: The upcast softmax.
-            added_kv_proj_dim: The added kv proj dim.
-            norm_num_groups: The norm num groups.
-        """
         super().__init__()
         inner_dim = dim_head * heads
         cross_attention_dim = cross_attention_dim if cross_attention_dim is not None else query_dim
@@ -107,11 +89,6 @@ class CrossAttention(nn.Module):
         self.to_out.append(nn.Dropout(dropout))
 
     def reshape_heads_to_batch_dim(self, tensor):
-        """Reshape heads to batch dim.
-
-        Args:
-            tensor: The tensor.
-        """
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size, seq_len, head_size, dim // head_size).contiguous()
@@ -119,22 +96,12 @@ class CrossAttention(nn.Module):
         return tensor
 
     def reshape_heads_to_4d(self, tensor):
-        """Reshape heads to 4d.
-
-        Args:
-            tensor: The tensor.
-        """
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size, seq_len, head_size, dim // head_size).contiguous()
         return tensor
 
     def reshape_batch_dim_to_heads(self, tensor):
-        """Reshape batch dim to heads.
-
-        Args:
-            tensor: The tensor.
-        """
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size // head_size, head_size, seq_len, dim).contiguous()
@@ -142,35 +109,18 @@ class CrossAttention(nn.Module):
         return tensor
 
     def reshape_4d_to_heads(self, tensor):
-        """Reshape 4d to heads.
-
-        Args:
-            tensor: The tensor.
-        """
         batch_size, seq_len, head_size, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size, seq_len, dim * head_size).contiguous()
         return tensor
 
     def set_attention_slice(self, slice_size):
-        """Set attention slice.
-
-        Args:
-            slice_size: The slice size.
-        """
         if slice_size is not None and slice_size > self.sliceable_head_dim:
             raise ValueError(f"slice_size {slice_size} has to be smaller or equal to {self.sliceable_head_dim}.")
 
         self._slice_size = slice_size
 
     def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-        """
         batch_size, sequence_length, _ = hidden_states.shape
 
         encoder_hidden_states = encoder_hidden_states
@@ -203,11 +153,10 @@ class CrossAttention(nn.Module):
             key = self.reshape_heads_to_batch_dim(key)
             value = self.reshape_heads_to_batch_dim(value)
 
-        if attention_mask is not None:
-            if attention_mask.shape[-1] != query.shape[1]:
-                target_length = query.shape[1]
-                attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
-                attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
+        if attention_mask is not None and attention_mask.shape[-1] != query.shape[1]:
+            target_length = query.shape[1]
+            attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
+            attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
 
         # attention, what we cannot get enough of
         if XFORMERS_AVAILABLE and self._use_memory_efficient_attention_xformers:
@@ -228,14 +177,6 @@ class CrossAttention(nn.Module):
         return hidden_states
 
     def _attention(self, query, key, value, attention_mask=None):
-        """Helper function to attention.
-
-        Args:
-            query: The query.
-            key: The key.
-            value: The value.
-            attention_mask: The attention mask.
-        """
         if self.upcast_attention:
             query = query.float()
             key = key.float()
@@ -267,16 +208,6 @@ class CrossAttention(nn.Module):
         return hidden_states
 
     def _sliced_attention(self, query, key, value, sequence_length, dim, attention_mask):
-        """Helper function to sliced attention.
-
-        Args:
-            query: The query.
-            key: The key.
-            value: The value.
-            sequence_length: The sequence length.
-            dim: The dim.
-            attention_mask: The attention mask.
-        """
         batch_size_attention = query.shape[0]
         hidden_states = torch.zeros(
             (batch_size_attention, sequence_length, dim // self.heads), device=query.device, dtype=query.dtype
@@ -320,14 +251,6 @@ class CrossAttention(nn.Module):
         return hidden_states
 
     def _memory_efficient_attention_xformers(self, query, key, value, attention_mask):
-        """Helper function to memory efficient attention xformers.
-
-        Args:
-            query: The query.
-            key: The key.
-            value: The value.
-            attention_mask: The attention mask.
-        """
         if self.upcast_efficient_attention:
             org_dtype = query.dtype
             query = query.float()
@@ -347,14 +270,6 @@ class CrossAttention(nn.Module):
         # raise NotImplementedError
 
     def _memory_efficient_attention_split(self, query, key, value, attention_mask):
-        """Helper function to memory efficient attention split.
-
-        Args:
-            query: The query.
-            key: The key.
-            value: The value.
-            attention_mask: The attention mask.
-        """
         batch_size = query.shape[0]
         max_batch_size = 65535
         num_batches = (batch_size + max_batch_size - 1) // max_batch_size
@@ -365,11 +280,10 @@ class CrossAttention(nn.Module):
             query_batch = query[start_idx:end_idx]
             key_batch = key[start_idx:end_idx]
             value_batch = value[start_idx:end_idx]
-            if attention_mask is not None:
-                attention_mask_batch = attention_mask[start_idx:end_idx]
-            else:
-                attention_mask_batch = None
-            result = xformers.ops.memory_efficient_attention(query_batch, key_batch, value_batch, attn_bias=attention_mask_batch)
+            attention_mask_batch = attention_mask[start_idx:end_idx] if attention_mask is not None else None
+            result = xformers.ops.memory_efficient_attention(
+                query_batch, key_batch, value_batch, attn_bias=attention_mask_batch
+            )
             results.append(result)
         full_result = torch.cat(results, dim=0)
         return full_result
@@ -390,20 +304,11 @@ class FeedForward(nn.Module):
     def __init__(
         self,
         dim: int,
-        dim_out: Optional[int] = None,
+        dim_out: int | None = None,
         mult: int = 4,
         dropout: float = 0.0,
         activation_fn: str = "geglu",
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            dim_out: The dim out.
-            mult: The mult.
-            dropout: The dropout.
-            activation_fn: The activation fn.
-        """
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = dim_out if dim_out is not None else dim
@@ -424,11 +329,6 @@ class FeedForward(nn.Module):
         self.net.append(nn.Linear(inner_dim, dim_out))
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         for module in self.net:
             hidden_states = module(hidden_states)
         return hidden_states
@@ -440,32 +340,16 @@ class GELU(nn.Module):
     """
 
     def __init__(self, dim_in: int, dim_out: int):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-        """
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out)
 
     def gelu(self, gate):
-        """Gelu.
-
-        Args:
-            gate: The gate.
-        """
         if gate.device.type != "mps":
             return F.gelu(gate)
         # mps: gelu is not implemented for float16
         return F.gelu(gate.to(dtype=torch.float32)).to(dtype=gate.dtype)
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         hidden_states = self.proj(hidden_states)
         hidden_states = self.gelu(hidden_states)
         return hidden_states
@@ -482,32 +366,16 @@ class GEGLU(nn.Module):
     """
 
     def __init__(self, dim_in: int, dim_out: int):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-        """
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out * 2)
 
     def gelu(self, gate):
-        """Gelu.
-
-        Args:
-            gate: The gate.
-        """
         if gate.device.type != "mps":
             return F.gelu(gate)
         # mps: gelu is not implemented for float16
         return F.gelu(gate.to(dtype=torch.float32)).to(dtype=gate.dtype)
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         hidden_states, gate = self.proj(hidden_states).chunk(2, dim=-1)
         return hidden_states * self.gelu(gate)
 
@@ -520,33 +388,15 @@ class ApproximateGELU(nn.Module):
     """
 
     def __init__(self, dim_in: int, dim_out: int):
-        """Init.
-
-        Args:
-            dim_in: The dim in.
-            dim_out: The dim out.
-        """
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = self.proj(x)
         return x * torch.sigmoid(1.702 * x)
 
 
 def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0):
-    """Precompute freqs cis.
-
-    Args:
-        dim: The dim.
-        end: The end.
-        theta: The theta.
-    """
     freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
     t = torch.arange(end, device=freqs.device, dtype=torch.float32)
     freqs = torch.outer(t, freqs)
@@ -555,12 +405,6 @@ def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0):
 
 
 def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
-    """Reshape for broadcast.
-
-    Args:
-        freqs_cis: The freqs cis.
-        x: The x.
-    """
     ndim = x.ndim
     assert 0 <= 1 < ndim
     assert freqs_cis.shape == (x.shape[1], x.shape[-1])
@@ -572,17 +416,7 @@ def apply_rotary_emb(
     xq: torch.Tensor,
     xk: torch.Tensor,
     freqs_cis: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Apply rotary emb.
-
-    Args:
-        xq: The xq.
-        xk: The xk.
-        freqs_cis: The freqs cis.
-
-    Returns:
-        The return value.
-    """
+) -> tuple[torch.Tensor, torch.Tensor]:
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2).contiguous())
     xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2).contiguous())
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)

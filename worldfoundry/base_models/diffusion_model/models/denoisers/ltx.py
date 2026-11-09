@@ -72,9 +72,7 @@ def convert_ltx_video_transformer_state_dict(
 
     prefix = "model.diffusion_model."
     return {
-        f"velocity_model.{key.removeprefix(prefix)}": state_dict[key]
-        for key in state_dict
-        if key.startswith(prefix)
+        f"velocity_model.{key.removeprefix(prefix)}": state_dict[key] for key in state_dict if key.startswith(prefix)
     }
 
 

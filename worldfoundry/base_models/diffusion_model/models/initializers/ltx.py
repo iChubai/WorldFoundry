@@ -122,12 +122,19 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
         if resize_mode == "center_crop":
             source_height, source_width = tensor.shape[-2:]
             resized_height, resized_width, top, left = center_crop_resize_geometry(
-                source_height, source_width, height, width,
+                source_height,
+                source_width,
+                height,
+                width,
             )
             tensor = functional.interpolate(
-                tensor, size=(resized_height, resized_width), mode="bicubic", align_corners=False, antialias=True,
+                tensor,
+                size=(resized_height, resized_width),
+                mode="bicubic",
+                align_corners=False,
+                antialias=True,
             ).clamp(0, 1)
-            tensor = tensor[:, :, top:top + height, left:left + width]
+            tensor = tensor[:, :, top : top + height, left : left + width]
         else:
             tensor = functional.interpolate(tensor, size=(height, width), mode="bilinear", align_corners=False)
         tensor = tensor.mul(2).sub(1)

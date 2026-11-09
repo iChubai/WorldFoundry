@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import itertools
 import math
 from contextlib import nullcontext
 from dataclasses import dataclass
@@ -84,7 +85,7 @@ def mrope_tables(
     positions = torch.meshgrid(*(torch.arange(n, device=device) for n in grid), indexing="ij")
     thetas = (arch.rope_theta_t, arch.rope_theta_hw, arch.rope_theta_hw)
     cos_parts, sin_parts = ([], [])
-    for position, dim, theta in zip(positions, arch.rope_sections, thetas):
+    for position, dim, theta in zip(positions, arch.rope_sections, thetas, strict=False):
         inv_freq = theta ** (-torch.arange(0, dim, 2, device=device, dtype=torch.float32) / dim)
         angles = position.flatten().float()[:, None] * inv_freq[None]
         angles = torch.cat((angles, angles), dim=-1)
@@ -241,7 +242,7 @@ class PixelUMMDecoderModel(nn.Module):
         hidden = arch.hidden_size
         self.embed = nn.Linear(TUBE_DIM, hidden)
         self.cond_proj = nn.Linear(LATENT_CHANNELS, LATENT_TOKEN_GRID**2 * hidden)
-        self.layers = nn.ModuleList((PixelUMMBlock(arch) for _ in range(arch.num_layers)))
+        self.layers = nn.ModuleList(PixelUMMBlock(arch) for _ in range(arch.num_layers))
         self.final_norm = RMSNorm(hidden, arch.rms_norm_eps)
         self.head = PixelUMMHead(hidden)
 
@@ -322,7 +323,7 @@ def _merge_overlapping(parts: list[torch.Tensor], starts: list[int], *, dim: int
         raise ValueError("parts and starts must be non-empty and have equal length")
     result = parts[0]
     result_end = starts[0] + parts[0].shape[dim]
-    for part, start in zip(parts[1:], starts[1:]):
+    for part, start in zip(parts[1:], starts[1:], strict=False):
         part_end = start + part.shape[dim]
         overlap = result_end - start
         if overlap < 0 or part_end <= result_end:
@@ -487,9 +488,9 @@ class PixelUMMDecoder(nn.Module):
             raise ValueError("decoder overlap must be smaller than the tile")
         if tail_hold_latents < 0:
             raise ValueError("tail_hold_latents must be nonnegative")
-        if not denoising_step_list or any((not 0 < value <= 1 for value in denoising_step_list)):
+        if not denoising_step_list or any(not 0 < value <= 1 for value in denoising_step_list):
             raise ValueError("denoising_step_list must contain values in (0, 1]")
-        if any((first <= second for first, second in zip(denoising_step_list, denoising_step_list[1:]))):
+        if any((first <= second for first, second in itertools.pairwise(denoising_step_list))):
             raise ValueError("denoising_step_list must be strictly decreasing")
         if not 1 <= num_steps <= len(denoising_step_list):
             raise ValueError("num_steps must be between 1 and the distilled schedule length")
@@ -665,7 +666,7 @@ class PixelUMMDecoder(nn.Module):
 
     def create_streaming_decode_session(
         self, *, to_cpu: bool = True, retain_history: bool = True, generator: torch.Generator | None = None
-    ) -> "PixelUMMStreamingDecodeSession":
+    ) -> PixelUMMStreamingDecodeSession:
         """
         Create independent state for append-only decoding, tail correction, and rollback.
 
@@ -730,7 +731,7 @@ class PixelUMMStreamingDecodeSession:
     def _segment_raw_visible_spans(self) -> Any:
         raw_start = 0
         visible_start = 0
-        for latent_frames, pixel_frames in zip(self.push_latent_frames, self.push_pixel_frames):
+        for latent_frames, pixel_frames in zip(self.push_latent_frames, self.push_pixel_frames, strict=False):
             raw_end = raw_start + latent_frames * self.temporal_ratio
             visible_end = visible_start + pixel_frames
             yield (raw_start, raw_start + pixel_frames, raw_end, visible_start, visible_end)

@@ -3,7 +3,6 @@ from __future__ import annotations
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, Optional
 
 import numpy as np
 import torch
@@ -31,12 +30,12 @@ class Lyra2Representation:
         runtime_root: str,
         device: str = "cuda",
         da3_model_name: str = DEFAULT_DA3_MODEL_NAME,
-        da3_model_path_custom: Optional[str] = None,
+        da3_model_path_custom: str | None = None,
         no_vipe: bool = False,
         force: bool = False,
-        render_fps: Optional[float] = None,
+        render_fps: float | None = None,
         render_chunk_size: int = 1,
-        vipe_overrides: Optional[list[str]] = None,
+        vipe_overrides: list[str] | None = None,
     ):
         self.repo_root = repo_root
         self.runtime_root = runtime_root
@@ -55,12 +54,12 @@ class Lyra2Representation:
         pretrained_model_path,
         device=None,
         da3_model_name: str = DEFAULT_DA3_MODEL_NAME,
-        da3_model_path_custom: Optional[str] = None,
+        da3_model_path_custom: str | None = None,
         no_vipe: bool = False,
         force: bool = False,
-        render_fps: Optional[float] = None,
+        render_fps: float | None = None,
         render_chunk_size: int = 1,
-        vipe_overrides: Optional[list[str]] = None,
+        vipe_overrides: list[str] | None = None,
         **kwargs,
     ):
         repo_root = resolve_repo_root(pretrained_model_path)
@@ -87,7 +86,7 @@ class Lyra2Representation:
             vipe_overrides=vipe_overrides,
         )
 
-    def _ensure_video_path(self, data: Dict) -> str:
+    def _ensure_video_path(self, data: dict) -> str:
         if data.get("video_path"):
             return str(Path(data["video_path"]).expanduser().resolve())
 
@@ -98,10 +97,7 @@ class Lyra2Representation:
         if video is None:
             raise ValueError("Lyra2Representation expects either 'video_path', 'video', or 'video_tensor'.")
 
-        if torch.is_tensor(video):
-            video = video_tensor_to_uint8_frames(video)
-        else:
-            video = np.asarray(video)
+        video = video_tensor_to_uint8_frames(video) if torch.is_tensor(video) else np.asarray(video)
         if video.ndim != 4:
             raise ValueError(f"Expected video with shape [T,H,W,C], got {tuple(video.shape)}")
 
@@ -117,7 +113,7 @@ class Lyra2Representation:
         save_video_frames(video, str(video_path), fps=fps)
         return str(video_path)
 
-    def get_representation(self, data: Dict[str, object]) -> Dict[str, object]:
+    def get_representation(self, data: dict[str, object]) -> dict[str, object]:
         video_path = self._ensure_video_path(data)
         output_dir = data.get("output_dir")
         if output_dir is None:

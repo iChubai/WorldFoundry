@@ -99,7 +99,7 @@ class HunyuanVideoI2VDenoiser:
         if values is None:
             from worldfoundry.core.attention import get_nd_rotary_pos_embed
 
-            sizes = tuple(size // patch for size, patch in zip(key, self.model.patch_size))
+            sizes = tuple(size // patch for size, patch in zip(key, self.model.patch_size, strict=False))
             values = get_nd_rotary_pos_embed(
                 self.model.rope_dim_list,
                 sizes,
@@ -149,8 +149,11 @@ class HunyuanVideo15Denoiser:
         vision = model_input.conditioning.get("vision_states")
         if vision is None:
             vision = torch.zeros(
-                hidden_states.shape[0], 729, 1152,
-                device=hidden_states.device, dtype=hidden_states.dtype,
+                hidden_states.shape[0],
+                729,
+                1152,
+                device=hidden_states.device,
+                dtype=hidden_states.dtype,
             )
         if not isinstance(vision, torch.Tensor):
             raise TypeError("HunyuanVideo 1.5 vision_states must be a tensor")

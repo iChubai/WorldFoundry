@@ -8,7 +8,6 @@ optional per-head gating.  Backends come from :class:`TransformerAttentionOps`.
 import torch
 
 from worldfoundry.core.attention.cache.context import ContextAttentionCache, prepend_history_mask
-
 from worldfoundry.core.nn import TransformerAttentionOps as AttentionOps
 
 from .rope import LTXRopeType, apply_rotary_emb
@@ -116,7 +115,14 @@ class Attention(torch.nn.Module):
             if camera_control is not None:
                 camera_q, camera_k = self.preattention_function(q, k, self, mask, None, None)
                 camera_out = self._camera_attention(
-                    camera_q, camera_k, v, x, camera_control, mask, perturbation_mask, cache,
+                    camera_q,
+                    camera_k,
+                    v,
+                    x,
+                    camera_control,
+                    mask,
+                    perturbation_mask,
+                    cache,
                 )
             q, k = self.preattention_function(q, k, self, mask, pe, k_pe)
             if cache is not None:

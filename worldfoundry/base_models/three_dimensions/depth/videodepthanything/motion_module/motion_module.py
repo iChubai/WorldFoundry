@@ -3,8 +3,6 @@
 #
 # This file may have been modified by ByteDance Ltd. and/or its affiliates on [date of modification]
 # Original file was released under [ Apache-2.0 license], with the full license text available at [https://github.com/guoyww/AnimateDiff?tab=Apache-2.0-1-ov-file#readme].
-"""Module for base_models -> three_dimensions -> depth -> videodepthanything -> motion_module -> motion_module.py functionality."""
-
 import math
 
 import torch
@@ -21,11 +19,6 @@ from .attention import (
 
 
 def zero_module(module):
-    """Zero module.
-
-    Args:
-        module: The module.
-    """
     # Zero out the parameters of a module and return it.
     for p in module.parameters():
         p.detach().zero_()
@@ -33,7 +26,6 @@ def zero_module(module):
 
 
 class TemporalModule(nn.Module):
-    """Temporal module implementation."""
     def __init__(
         self,
         in_channels,
@@ -45,18 +37,6 @@ class TemporalModule(nn.Module):
         zero_initialize=True,
         pos_embedding_type="ape",
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            num_attention_heads: The num attention heads.
-            num_transformer_block: The num transformer block.
-            num_attention_blocks: The num attention blocks.
-            norm_num_groups: The norm num groups.
-            temporal_max_len: The temporal max len.
-            zero_initialize: The zero initialize.
-            pos_embedding_type: The pos embedding type.
-        """
         super().__init__()
 
         self.temporal_transformer = TemporalTransformer3DModel(
@@ -71,22 +51,11 @@ class TemporalModule(nn.Module):
         )
 
         if zero_initialize:
-            self.temporal_transformer.proj_out = zero_module(
-                self.temporal_transformer.proj_out
-            )
+            self.temporal_transformer.proj_out = zero_module(self.temporal_transformer.proj_out)
 
     def forward(self, input_tensor, encoder_hidden_states, attention_mask=None):
-        """Forward.
-
-        Args:
-            input_tensor: The input tensor.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-        """
         hidden_states = input_tensor
-        hidden_states = self.temporal_transformer(
-            hidden_states, encoder_hidden_states, attention_mask
-        )
+        hidden_states = self.temporal_transformer(hidden_states, encoder_hidden_states, attention_mask)
 
         output = hidden_states
         return output
@@ -94,6 +63,7 @@ class TemporalModule(nn.Module):
 
 class TemporalTransformer3DModel(nn.Module):
     """Temporal transformer d model implementation."""
+
     def __init__(
         self,
         in_channels,
@@ -105,25 +75,11 @@ class TemporalTransformer3DModel(nn.Module):
         temporal_max_len=32,
         pos_embedding_type="ape",
     ):
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            num_layers: The num layers.
-            num_attention_blocks: The num attention blocks.
-            norm_num_groups: The norm num groups.
-            temporal_max_len: The temporal max len.
-            pos_embedding_type: The pos embedding type.
-        """
         super().__init__()
 
         inner_dim = num_attention_heads * attention_head_dim
 
-        self.norm = torch.nn.GroupNorm(
-            num_groups=norm_num_groups, num_channels=in_channels, eps=1e-6, affine=True
-        )
+        self.norm = torch.nn.GroupNorm(num_groups=norm_num_groups, num_channels=in_channels, eps=1e-6, affine=True)
         self.proj_in = nn.Linear(in_channels, inner_dim)
 
         self.transformer_blocks = nn.ModuleList(
@@ -142,16 +98,7 @@ class TemporalTransformer3DModel(nn.Module):
         self.proj_out = nn.Linear(inner_dim, in_channels)
 
     def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-        """
-        assert (
-            hidden_states.dim() == 5
-        ), f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
+        assert hidden_states.dim() == 5, f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
         video_length = hidden_states.shape[2]
         hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w")
 
@@ -160,11 +107,7 @@ class TemporalTransformer3DModel(nn.Module):
 
         hidden_states = self.norm(hidden_states)
         inner_dim = hidden_states.shape[1]
-        hidden_states = (
-            hidden_states.permute(0, 2, 3, 1)
-            .reshape(batch, height * width, inner_dim)
-            .contiguous()
-        )
+        hidden_states = hidden_states.permute(0, 2, 3, 1).reshape(batch, height * width, inner_dim).contiguous()
         hidden_states = self.proj_in(hidden_states)
 
         # Transformer Blocks
@@ -178,11 +121,7 @@ class TemporalTransformer3DModel(nn.Module):
 
         # output
         hidden_states = self.proj_out(hidden_states)
-        hidden_states = (
-            hidden_states.reshape(batch, height, width, inner_dim)
-            .permute(0, 3, 1, 2)
-            .contiguous()
-        )
+        hidden_states = hidden_states.reshape(batch, height, width, inner_dim).permute(0, 3, 1, 2).contiguous()
 
         output = hidden_states + residual
         output = rearrange(output, "(b f) c h w -> b c f h w", f=video_length)
@@ -191,7 +130,6 @@ class TemporalTransformer3DModel(nn.Module):
 
 
 class TemporalTransformerBlock(nn.Module):
-    """Temporal transformer block implementation."""
     def __init__(
         self,
         dim,
@@ -201,16 +139,6 @@ class TemporalTransformerBlock(nn.Module):
         temporal_max_len=32,
         pos_embedding_type="ape",
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            num_attention_blocks: The num attention blocks.
-            temporal_max_len: The temporal max len.
-            pos_embedding_type: The pos embedding type.
-        """
         super().__init__()
 
         self.attention_blocks = nn.ModuleList(
@@ -225,9 +153,7 @@ class TemporalTransformerBlock(nn.Module):
                 for i in range(num_attention_blocks)
             ]
         )
-        self.norms = nn.ModuleList(
-            [nn.LayerNorm(dim) for i in range(num_attention_blocks)]
-        )
+        self.norms = nn.ModuleList([nn.LayerNorm(dim) for i in range(num_attention_blocks)])
 
         self.ff = FeedForward(dim, dropout=0.0, activation_fn="geglu")
         self.ff_norm = nn.LayerNorm(dim)
@@ -239,15 +165,7 @@ class TemporalTransformerBlock(nn.Module):
         attention_mask=None,
         video_length=None,
     ):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-            video_length: The video length.
-        """
-        for attention_block, norm in zip(self.attention_blocks, self.norms):
+        for attention_block, norm in zip(self.attention_blocks, self.norms, strict=False):
             norm_hidden_states = norm(hidden_states)
             hidden_states = (
                 attention_block(
@@ -266,45 +184,23 @@ class TemporalTransformerBlock(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
-    """Positional encoding implementation."""
     def __init__(self, d_model, dropout=0.0, max_len=32):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            dropout: The dropout.
-            max_len: The max len.
-        """
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
         position = torch.arange(max_len).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model)
-        )
+        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
         pe = torch.zeros(1, max_len, d_model)
         pe[0, :, 0::2] = torch.sin(position * div_term)
         pe[0, :, 1::2] = torch.cos(position * div_term)
         self.register_buffer("pe", pe)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = x + self.pe[:, : x.size(1)].to(x.dtype)
         return self.dropout(x)
 
 
 class TemporalAttention(CrossAttention):
-    """Temporal attention implementation."""
     def __init__(self, temporal_max_len=32, pos_embedding_type="ape", *args, **kwargs):
-        """Init.
-
-        Args:
-            temporal_max_len: The temporal max len.
-            pos_embedding_type: The pos embedding type.
-        """
         super().__init__(*args, **kwargs)
 
         self.pos_embedding_type = pos_embedding_type
@@ -313,9 +209,7 @@ class TemporalAttention(CrossAttention):
         self.pos_encoder = None
         self.freqs_cis = None
         if self.pos_embedding_type == "ape":
-            self.pos_encoder = PositionalEncoding(
-                kwargs["query_dim"], dropout=0.0, max_len=temporal_max_len
-            )
+            self.pos_encoder = PositionalEncoding(kwargs["query_dim"], dropout=0.0, max_len=temporal_max_len)
 
         elif self.pos_embedding_type == "rope":
             self.freqs_cis = precompute_freqs_cis(kwargs["query_dim"], temporal_max_len)
@@ -330,18 +224,8 @@ class TemporalAttention(CrossAttention):
         attention_mask=None,
         video_length=None,
     ):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-            video_length: The video length.
-        """
         d = hidden_states.shape[1]
-        hidden_states = rearrange(
-            hidden_states, "(b f) d c -> (b d) f c", f=video_length
-        )
+        hidden_states = rearrange(hidden_states, "(b f) d c -> (b d) f c", f=video_length)
 
         if self.pos_encoder is not None:
             hidden_states = self.pos_encoder(hidden_states)
@@ -353,9 +237,7 @@ class TemporalAttention(CrossAttention):
         )
 
         if self.group_norm is not None:
-            hidden_states = self.group_norm(hidden_states.transpose(1, 2)).transpose(
-                1, 2
-            )
+            hidden_states = self.group_norm(hidden_states.transpose(1, 2)).transpose(1, 2)
 
         query = self.to_q(hidden_states)
         dim = query.shape[-1]
@@ -363,11 +245,7 @@ class TemporalAttention(CrossAttention):
         if self.added_kv_proj_dim is not None:
             raise NotImplementedError
 
-        encoder_hidden_states = (
-            encoder_hidden_states
-            if encoder_hidden_states is not None
-            else hidden_states
-        )
+        encoder_hidden_states = encoder_hidden_states if encoder_hidden_states is not None else hidden_states
         key = self.to_k(encoder_hidden_states)
         value = self.to_v(encoder_hidden_states)
 
@@ -376,11 +254,10 @@ class TemporalAttention(CrossAttention):
             freqs_cis = self.freqs_cis[:seq_len].to(query.device)
             query, key = apply_rotary_emb(query, key, freqs_cis)
 
-        if attention_mask is not None:
-            if attention_mask.shape[-1] != query.shape[1]:
-                target_length = query.shape[1]
-                attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
-                attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
+        if attention_mask is not None and attention_mask.shape[-1] != query.shape[1]:
+            target_length = query.shape[1]
+            attention_mask = F.pad(attention_mask, (0, target_length), value=0.0)
+            attention_mask = attention_mask.repeat_interleave(self.heads, dim=0)
 
         use_memory_efficient = self._use_memory_efficient_attention_xformers
         if use_memory_efficient and (dim // self.heads) % 8 != 0:
@@ -393,9 +270,7 @@ class TemporalAttention(CrossAttention):
             key = self.reshape_heads_to_4d(key)
             value = self.reshape_heads_to_4d(value)
 
-            hidden_states = self._memory_efficient_attention_xformers(
-                query, key, value, attention_mask
-            )
+            hidden_states = self._memory_efficient_attention_xformers(query, key, value, attention_mask)
             # Some versions of xformers return output in fp32, cast it back to the dtype of the input
             hidden_states = hidden_states.to(query.dtype)
         else:

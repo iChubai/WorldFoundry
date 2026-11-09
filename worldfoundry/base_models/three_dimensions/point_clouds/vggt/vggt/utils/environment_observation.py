@@ -17,14 +17,14 @@ with white. Video loading requires optional ``opencv-python``.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal, Sequence
+from typing import Literal
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-
 
 ViewMode = Literal["full", "left", "right"]
 ResizeMode = Literal["crop", "pad"]
@@ -42,7 +42,9 @@ def _normalize_view(view: str) -> ViewMode:
     return view  # type: ignore[return-value]
 
 
-def _resize_for_vggt(img: Image.Image, *, target_size: int, mode: ResizeMode, source_size: tuple[int, int] | None = None) -> torch.Tensor:
+def _resize_for_vggt(
+    img: Image.Image, *, target_size: int, mode: ResizeMode, source_size: tuple[int, int] | None = None
+) -> torch.Tensor:
     """Resize then crop/pad; *source_size* keeps stereo FOV math on the uncropped frame."""
 
     width, height = source_size or img.size
@@ -170,7 +172,9 @@ def load_and_preprocess_images(
     return torch.stack(_pad_to_common_shape(tensors))
 
 
-def _read_video_frames(path: str | Path, *, start_point: int, frame_stride: int, target_frames: int | None) -> list[np.ndarray]:
+def _read_video_frames(
+    path: str | Path, *, start_point: int, frame_stride: int, target_frames: int | None
+) -> list[np.ndarray]:
     """Sample RGB frames via OpenCV; missing cv2 or an empty file raises, never returns []."""
 
     try:

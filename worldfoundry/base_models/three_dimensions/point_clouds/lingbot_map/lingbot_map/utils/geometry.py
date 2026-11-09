@@ -4,14 +4,10 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> utils -> geometry.py functionality."""
-
-import os
-import torch
 import numpy as np
-from scipy.spatial.transform import Rotation as R
-
+import torch
 from scipy.spatial.transform import Rotation
+
 try:
     from lietorch import SE3, Sim3
 except ImportError:
@@ -184,6 +180,7 @@ def closed_form_inverse_se3(se3, R=None, T=None):
 
     return inverted_matrix
 
+
 def closed_form_inverse_se3_general(se3, R=None, T=None):
     """
     支持任意 batch 维度的 SE3 逆运算
@@ -216,7 +213,7 @@ def project_world_points_to_camera_points_batch(world_points, cam_extrinsics):
     Returns:
     """
     # TODO: merge this into project_world_points_to_cam
-    
+
     # device = world_points.device
     # with torch.autocast(device_type=device.type, enabled=False):
     ones = torch.ones_like(world_points[..., :1])  # shape: (B, S, H, W, 1)
@@ -233,7 +230,6 @@ def project_world_points_to_camera_points_batch(world_points, cam_extrinsics):
     camera_points = torch.matmul(extrinsics_exp, world_points_h_exp).squeeze(-1)
 
     return camera_points
-
 
 
 def project_world_points_to_cam(
@@ -257,21 +253,15 @@ def project_world_points_to_cam(
     device = world_points.device
     # with torch.autocast(device_type=device.type, dtype=torch.double):
     with torch.autocast(device_type=device.type, enabled=False):
-        N = world_points.shape[0]  # Number of points
+        _N = world_points.shape[0]  # Number of points
         B = cam_extrinsics.shape[0]  # Batch size, i.e., number of cameras
-        world_points_homogeneous = torch.cat(
-            [world_points, torch.ones_like(world_points[..., 0:1])], dim=1
-        )  # Nx4
+        world_points_homogeneous = torch.cat([world_points, torch.ones_like(world_points[..., 0:1])], dim=1)  # Nx4
         # Reshape for batch processing
-        world_points_homogeneous = world_points_homogeneous.unsqueeze(0).expand(
-            B, -1, -1
-        )  # BxNx4
+        world_points_homogeneous = world_points_homogeneous.unsqueeze(0).expand(B, -1, -1)  # BxNx4
 
         # Step 1: Apply extrinsic parameters
         # Transform 3D points to camera coordinate system for all cameras
-        cam_points = torch.bmm(
-            cam_extrinsics, world_points_homogeneous.transpose(-1, -2)
-        )
+        cam_points = torch.bmm(cam_extrinsics, world_points_homogeneous.transpose(-1, -2))
 
         if only_points_cam:
             return None, cam_points
@@ -280,7 +270,6 @@ def project_world_points_to_cam(
         image_points = img_from_cam(cam_intrinsics, cam_points, distortion_params, default=default)
 
         return image_points, cam_points
-
 
 
 def img_from_cam(cam_intrinsics, cam_points, distortion_params=None, default=0.0):
@@ -309,9 +298,7 @@ def img_from_cam(cam_intrinsics, cam_points, distortion_params=None, default=0.0
         distorted_xy = ndc_xy
 
     # Prepare cam_points for batch matrix multiplication
-    cam_coords_homo = torch.cat(
-        (distorted_xy, torch.ones_like(distorted_xy[:, :1, :])), dim=1
-    )  # Bx3xN
+    cam_coords_homo = torch.cat((distorted_xy, torch.ones_like(distorted_xy[:, :1, :])), dim=1)  # Bx3xN
     # Apply intrinsic parameters using batch matrix multiplication
     pixel_coords = torch.bmm(cam_intrinsics, cam_coords_homo)  # Bx3xN
 
@@ -322,8 +309,6 @@ def img_from_cam(cam_intrinsics, cam_points, distortion_params=None, default=0.0
     pixel_coords = torch.nan_to_num(pixel_coords, nan=default)
 
     return pixel_coords.transpose(1, 2)  # BxNx2
-
-
 
 
 def cam_from_img(pred_tracks, intrinsics, extra_params=None):
@@ -348,31 +333,23 @@ def cam_from_img(pred_tracks, intrinsics, extra_params=None):
     if extra_params is not None:
         # Apply iterative undistortion
         try:
-            tracks_normalized = iterative_undistortion(
-                extra_params, tracks_normalized
-            )
-        except:
-            tracks_normalized = single_undistortion(
-                extra_params, tracks_normalized
-            )
+            tracks_normalized = iterative_undistortion(extra_params, tracks_normalized)
+        except BaseException:
+            tracks_normalized = single_undistortion(extra_params, tracks_normalized)
 
     return tracks_normalized
+
 
 ## Droid SLAM Part
 
 MIN_DEPTH = 0.2
 
+
 def extract_intrinsics(intrinsics):
-    """Extract intrinsics.
+    return intrinsics[..., None, None, :].unbind(dim=-1)
 
-    Args:
-        intrinsics: The intrinsics.
-    """
-    return intrinsics[...,None,None,:].unbind(dim=-1)
 
-def projective_transform(
-    poses, depths, intrinsics, ii, jj, jacobian=False, return_depth=False
-):
+def projective_transform(poses, depths, intrinsics, ii, jj, jacobian=False, return_depth=False):
     """map points from ii->jj"""
 
     # inverse project (pinhole)
@@ -415,28 +392,31 @@ def induced_flow(poses, disps, intrinsics, ii, jj):
         torch.arange(wd, device=disps.device, dtype=torch.float),
         indexing="ij",
     )
-    
+
     coords0 = torch.stack([x, y], dim=-1)
     coords1, valid = projective_transform(poses, disps, intrinsics, ii, jj, False)
 
     return coords1[..., :2] - coords0, valid
 
+
 def all_pairs_distance_matrix(poses, beta=2.5):
-    """ compute distance matrix between all pairs of poses """
+    """compute distance matrix between all pairs of poses"""
     poses = np.array(poses, dtype=np.float32)
-    poses[:,:3] *= beta # scale to balence rot + trans
+    poses[:, :3] *= beta  # scale to balence rot + trans
     poses = SE3(torch.from_numpy(poses))
 
-    r = (poses[:,None].inv() * poses[None,:]).log()
+    r = (poses[:, None].inv() * poses[None, :]).log()
     return r.norm(dim=-1).cpu().numpy()
 
+
 def pose_matrix_to_quaternion(pose):
-    """ convert 4x4 pose matrix to (t, q) """
+    """convert 4x4 pose matrix to (t, q)"""
     q = Rotation.from_matrix(pose[..., :3, :3]).as_quat()
     return np.concatenate([pose[..., :3, 3], q], axis=-1)
 
+
 def compute_distance_matrix_flow(poses, disps, intrinsics):
-    """ compute flow magnitude between all pairs of frames """
+    """compute flow magnitude between all pairs of frames"""
     if not isinstance(poses, SE3):
         poses = torch.from_numpy(poses).float().cuda()[None]
         poses = SE3(poses).inv()
@@ -445,7 +425,7 @@ def compute_distance_matrix_flow(poses, disps, intrinsics):
         intrinsics = torch.from_numpy(intrinsics).float().cuda()[None]
 
     N = poses.shape[1]
-    
+
     ii, jj = torch.meshgrid(torch.arange(N), torch.arange(N))
     ii = ii.reshape(-1).cuda()
     jj = jj.reshape(-1).cuda()
@@ -455,12 +435,12 @@ def compute_distance_matrix_flow(poses, disps, intrinsics):
 
     s = 2048
     for i in range(0, ii.shape[0], s):
-        flow1, val1 = induced_flow(poses, disps, intrinsics, ii[i:i+s], jj[i:i+s])
-        flow2, val2 = induced_flow(poses, disps, intrinsics, jj[i:i+s], ii[i:i+s])
-        
+        flow1, val1 = induced_flow(poses, disps, intrinsics, ii[i : i + s], jj[i : i + s])
+        flow2, val2 = induced_flow(poses, disps, intrinsics, jj[i : i + s], ii[i : i + s])
+
         flow = torch.stack([flow1, flow2], dim=2)
         val = torch.stack([val1, val2], dim=2)
-        
+
         mag = flow.norm(dim=-1).clamp(max=MAX_FLOW)
         mag = mag.view(mag.shape[1], -1)
         val = val.view(val.shape[1], -1)
@@ -468,15 +448,15 @@ def compute_distance_matrix_flow(poses, disps, intrinsics):
         mag = (mag * val).mean(-1) / val.mean(-1)
         mag[val.mean(-1) < 0.7] = np.inf
 
-        i1 = ii[i:i+s].cpu().numpy()
-        j1 = jj[i:i+s].cpu().numpy()
+        i1 = ii[i : i + s].cpu().numpy()
+        j1 = jj[i : i + s].cpu().numpy()
         matrix[i1, j1] = mag.cpu().numpy()
 
     return matrix
 
 
 def compute_distance_matrix_flow2(poses, disps, intrinsics, beta=0.4):
-    """ compute flow magnitude between all pairs of frames """
+    """compute flow magnitude between all pairs of frames"""
     # if not isinstance(poses, SE3):
     #     poses = torch.from_numpy(poses).float().cuda()[None]
     #     poses = SE3(poses).inv()
@@ -485,7 +465,7 @@ def compute_distance_matrix_flow2(poses, disps, intrinsics, beta=0.4):
     #     intrinsics = torch.from_numpy(intrinsics).float().cuda()[None]
 
     N = poses.shape[1]
-    
+
     ii, jj = torch.meshgrid(torch.arange(N), torch.arange(N))
     ii = ii.reshape(-1)
     jj = jj.reshape(-1)
@@ -495,20 +475,20 @@ def compute_distance_matrix_flow2(poses, disps, intrinsics, beta=0.4):
 
     s = 2048
     for i in range(0, ii.shape[0], s):
-        flow1a, val1a = induced_flow(poses, disps, intrinsics, ii[i:i+s], jj[i:i+s], tonly=True)
-        flow1b, val1b = induced_flow(poses, disps, intrinsics, ii[i:i+s], jj[i:i+s])
-        flow2a, val2a = induced_flow(poses, disps, intrinsics, jj[i:i+s], ii[i:i+s], tonly=True)
-        flow2b, val2b = induced_flow(poses, disps, intrinsics, ii[i:i+s], jj[i:i+s])
+        flow1a, val1a = induced_flow(poses, disps, intrinsics, ii[i : i + s], jj[i : i + s], tonly=True)
+        flow1b, val1b = induced_flow(poses, disps, intrinsics, ii[i : i + s], jj[i : i + s])
+        flow2a, val2a = induced_flow(poses, disps, intrinsics, jj[i : i + s], ii[i : i + s], tonly=True)
+        flow2b, val2b = induced_flow(poses, disps, intrinsics, ii[i : i + s], jj[i : i + s])
 
         flow1 = flow1a + beta * flow1b
         val1 = val1a * val2b
 
         flow2 = flow2a + beta * flow2b
         val2 = val2a * val2b
-        
+
         flow = torch.stack([flow1, flow2], dim=2)
         val = torch.stack([val1, val2], dim=2)
-        
+
         mag = flow.norm(dim=-1).clamp(max=MAX_FLOW)
         mag = mag.view(mag.shape[1], -1)
         val = val.view(val.shape[1], -1)
@@ -516,19 +496,14 @@ def compute_distance_matrix_flow2(poses, disps, intrinsics, beta=0.4):
         mag = (mag * val).mean(-1) / val.mean(-1)
         mag[val.mean(-1) < 0.8] = np.inf
 
-        i1 = ii[i:i+s].cpu().numpy()
-        j1 = jj[i:i+s].cpu().numpy()
+        i1 = ii[i : i + s].cpu().numpy()
+        j1 = jj[i : i + s].cpu().numpy()
         matrix[i1, j1] = mag.cpu().numpy()
 
     return matrix
 
-def coords_grid(ht, wd, **kwargs):
-    """Coords grid.
 
-    Args:
-        ht: The ht.
-        wd: The wd.
-    """
+def coords_grid(ht, wd, **kwargs):
     y, x = torch.meshgrid(
         torch.arange(ht, dtype=torch.float, **kwargs),
         torch.arange(wd, dtype=torch.float, **kwargs),
@@ -572,10 +547,7 @@ def proj(Xs, intrinsics, jacobian=False, return_depth=False):
 
     x = fx * (X * d) + cx
     y = fy * (Y * d) + cy
-    if return_depth:
-        coords = torch.stack([x, y, D * d], dim=-1)
-    else:
-        coords = torch.stack([x, y], dim=-1)
+    coords = torch.stack([x, y, D * d], dim=-1) if return_depth else torch.stack([x, y], dim=-1)
 
     if jacobian:
         B, N, H, W = d.shape
@@ -679,6 +651,7 @@ def actp(Gij, X0, jacobian=False):
 
     return X1, None
 
+
 def _sqrt_positive_part(x: torch.Tensor) -> torch.Tensor:
     """
     Returns torch.sqrt(torch.max(0, x))
@@ -688,6 +661,7 @@ def _sqrt_positive_part(x: torch.Tensor) -> torch.Tensor:
     positive_mask = x > 0
     ret[positive_mask] = torch.sqrt(x[positive_mask])
     return ret
+
 
 def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     """
@@ -703,9 +677,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
 
     batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(
-        matrix.reshape(batch_dim + (9,)), dim=-1
-    )
+    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     q_abs = _sqrt_positive_part(
         torch.stack(
@@ -732,9 +704,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     flr = torch.tensor(0.1).to(dtype=q_abs.dtype, device=q_abs.device)
     quat_candidates = quat_by_rijk / (2.0 * q_abs[..., None].max(flr))
 
-    out = quat_candidates[
-        F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :
-    ].reshape(batch_dim + (4,))
+    out = quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(batch_dim + (4,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     return standardize_quaternion(out)
 
 
@@ -752,6 +722,7 @@ def standardize_quaternion(quaternions: torch.Tensor) -> torch.Tensor:
     """
     quaternions = F.normalize(quaternions, p=2, dim=-1)
     return torch.where(quaternions[..., 0:1] < 0, -quaternions, quaternions)
+
 
 def umeyama(X, Y):
     """

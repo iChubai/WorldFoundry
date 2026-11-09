@@ -1,7 +1,6 @@
-"""Module for base_models -> capabilities.py functionality."""
-
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import os
 import shlex
@@ -21,14 +20,6 @@ REPO_ROOT = Path(
 
 
 def _path_tokens(env: Mapping[str, str] | None = None) -> dict[str, str]:
-    """Helper function to path tokens.
-
-    Args:
-        env: The env.
-
-    Returns:
-        The return value.
-    """
     environ = os.environ if env is None else env
     core_tokens = worldfoundry_path_tokens(environ)
     repo_root_path = Path(environ.get("WORLDFOUNDRY_REPO_ROOT") or core_tokens["WORLDFOUNDRY_REPO_ROOT"]).expanduser()
@@ -76,15 +67,7 @@ def _path_tokens(env: Mapping[str, str] | None = None) -> dict[str, str]:
 
 
 def expand_capability_path(value: str | Path, env: Mapping[str, str] | None = None) -> Path:
-    """Expand capability path.
-
-    Args:
-        value: The value.
-        env: The env.
-
-    Returns:
-        The return value.
-    """
+    """Expand capability path."""
     expanded = str(value)
     tokens = _path_tokens(env)
     for name, replacement in tokens.items():
@@ -94,15 +77,6 @@ def expand_capability_path(value: str | Path, env: Mapping[str, str] | None = No
 
 
 def _dir_file_count_ready(path: Path, min_file_count: int | None) -> bool:
-    """Helper function to dir file count ready.
-
-    Args:
-        path: The path.
-        min_file_count: The min file count.
-
-    Returns:
-        The return value.
-    """
     if min_file_count is None:
         return True
     count = 0
@@ -121,41 +95,14 @@ def _dir_file_count_ready(path: Path, min_file_count: int | None) -> bool:
 
 
 def _required_files_ready(path: Path, required_files: tuple[str, ...]) -> bool:
-    """Helper function to required files ready.
-
-    Args:
-        path: The path.
-        required_files: The required files.
-
-    Returns:
-        The return value.
-    """
     return all((path / filename).is_file() for filename in required_files)
 
 
 def _required_paths_ready(path: Path, required_paths: tuple[str, ...]) -> bool:
-    """Helper function to required paths ready.
-
-    Args:
-        path: The path.
-        required_paths: The required paths.
-
-    Returns:
-        The return value.
-    """
     return all((path / name).exists() for name in required_paths)
 
 
 def _required_any_paths_ready(path: Path, required_any_paths: tuple[str, ...]) -> bool:
-    """Helper function to required any paths ready.
-
-    Args:
-        path: The path.
-        required_any_paths: The required any paths.
-
-    Returns:
-        The return value.
-    """
     return not required_any_paths or any((path / name).exists() for name in required_any_paths)
 
 
@@ -169,14 +116,6 @@ def _path_ready(
     required_paths: tuple[str, ...] = (),
     required_any_paths: tuple[str, ...] = (),
 ) -> bool:
-    """Helper function to path ready.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     try:
         if kind == "dir":
             return (
@@ -194,14 +133,6 @@ def _path_ready(
 
 
 def _unique_paths(paths: list[Path]) -> list[Path]:
-    """Helper function to unique paths.
-
-    Args:
-        paths: The paths.
-
-    Returns:
-        The return value.
-    """
     unique: list[Path] = []
     seen: set[str] = set()
     for path in paths:
@@ -215,16 +146,6 @@ def _unique_paths(paths: list[Path]) -> list[Path]:
 
 @lru_cache(maxsize=256)
 def _python_import_available(python_executable: str, module_name: str, pythonpath: str) -> bool:
-    """Helper function to python import available.
-
-    Args:
-        python_executable: The python executable.
-        module_name: The module name.
-        pythonpath: The pythonpath.
-
-    Returns:
-        The return value.
-    """
     executable = Path(python_executable).expanduser()
     if not executable.is_file():
         return False
@@ -248,33 +169,20 @@ def _python_import_available(python_executable: str, module_name: str, pythonpat
     try:
         return process.wait(timeout=timeout) == 0
     except subprocess.TimeoutExpired:
-        try:
+        with contextlib.suppress(ProcessLookupError):
             if os.name == "nt":
                 process.kill()
             else:
                 os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        try:
+        # Some broken external envs can block in uninterruptible filesystem
+        # or loader state. Readiness must report that import as unavailable
+        # instead of blocking the whole benchmark inventory.
+        with contextlib.suppress(subprocess.TimeoutExpired):
             process.wait(timeout=kill_timeout)
-        except subprocess.TimeoutExpired:
-            # Some broken external envs can block in uninterruptible filesystem
-            # or loader state. Readiness must report that import as unavailable
-            # instead of blocking the whole benchmark inventory.
-            pass
         return False
 
 
 def _import_available(module_name: str, python_executable: str | Path | None = None) -> bool:
-    """Helper function to import available.
-
-    Args:
-        module_name: The module name.
-        python_executable: The python executable.
-
-    Returns:
-        The return value.
-    """
     if python_executable is None:
         return importlib.util.find_spec(module_name) is not None
     return _python_import_available(str(python_executable), module_name, os.environ.get("PYTHONPATH", ""))
@@ -288,14 +196,6 @@ def _hf_download_command(
     revision: str | None = None,
     local_dir: str | Path,
 ) -> list[str]:
-    """Helper function to hf download command.
-
-    Args:
-        repo_id: The repo id.
-
-    Returns:
-        The return value.
-    """
     command = ["hf", "download", repo_id]
     if filename:
         command.append(filename)
@@ -308,15 +208,6 @@ def _hf_download_command(
 
 
 def _curl_download_command(url: str, output_path: str | Path) -> list[str]:
-    """Helper function to curl download command.
-
-    Args:
-        url: The url.
-        output_path: The output path.
-
-    Returns:
-        The return value.
-    """
     return [
         "curl",
         "-L",
@@ -359,26 +250,12 @@ class BaseModelAsset:
     note: str | None = None
 
     def local_dir(self, env: Mapping[str, str] | None = None) -> Path:
-        """Local dir.
-
-        Args:
-            env: The env.
-
-        Returns:
-            The return value.
-        """
+        """Local dir."""
         local_path = expand_capability_path(self.local_path, env)
         return local_path if self.kind == "dir" else local_path.parent
 
     def download_command(self, env: Mapping[str, str] | None = None) -> list[str] | None:
-        """Download command.
-
-        Args:
-            env: The env.
-
-        Returns:
-            The return value.
-        """
+        """Download command."""
         if self.download_command_template:
             command = str(self.download_command_template)
             for name, replacement in _path_tokens(env).items():
@@ -431,14 +308,7 @@ class BaseModelAsset:
         )
 
     def check(self, env: Mapping[str, str] | None = None) -> dict[str, Any]:
-        """Check.
-
-        Args:
-            env: The env.
-
-        Returns:
-            The return value.
-        """
+        """Check."""
         environ = os.environ if env is None else env
         local_path = expand_capability_path(self.local_path, environ)
         alternate_paths = _unique_paths([expand_capability_path(path, environ) for path in self.alternate_paths])
@@ -541,25 +411,17 @@ class BaseModelCapability:
     gpu_required: bool = True
 
     def owner_path(self) -> Path:
-        """Owner path.
-
-        Returns:
-            The return value.
-        """
+        """Owner path."""
         path = Path(self.canonical_path)
         return path if path.is_absolute() else REPO_ROOT / path
 
     def pip_package_by_import(self) -> dict[str, str]:
-        """Pip package by import.
-
-        Returns:
-            The return value.
-        """
+        """Pip package by import."""
         non_pip = set(self.non_pip_imports)
         if not self.package_imports:
             return {}
         if self.install_packages and len(self.install_packages) == len(self.package_imports):
-            pairs = zip(self.package_imports, self.install_packages)
+            pairs = zip(self.package_imports, self.install_packages, strict=False)
             return {import_name: package for import_name, package in pairs if import_name not in non_pip and package}
         pip_imports = [name for name in self.package_imports if name not in non_pip]
         install_packages = self.install_packages or tuple(pip_imports)
@@ -570,11 +432,7 @@ class BaseModelCapability:
         }
 
     def to_dict(self) -> dict[str, Any]:
-        """To dict.
-
-        Returns:
-            The return value.
-        """
+        """To dict."""
         return {
             "id": self.id,
             "family": self.family,
@@ -627,11 +485,7 @@ class BaseModelStack:
     note: str
 
     def to_dict(self) -> dict[str, Any]:
-        """To dict.
-
-        Returns:
-            The return value.
-        """
+        """To dict."""
         return {
             "id": self.id,
             "family": self.family,
@@ -653,11 +507,6 @@ def _hf_dataset_asset(
     required: bool = True,
     note: str | None = None,
 ) -> BaseModelAsset:
-    """Helper function to hf dataset asset.
-
-    Returns:
-        The return value.
-    """
     alternates = tuple(
         path
         for name in alternate_local_names
@@ -686,15 +535,6 @@ def _benchmark_dataset_capability(
     capability_id: str,
     specs: tuple[dict[str, Any], ...],
 ) -> BaseModelCapability:
-    """Helper function to benchmark dataset capability.
-
-    Args:
-        capability_id: The capability id.
-        specs: The specs.
-
-    Returns:
-        The return value.
-    """
     assets = tuple(
         _hf_dataset_asset(
             asset_id=str(spec["asset_id"]),
@@ -765,11 +605,6 @@ def _source_repo_capability(
     role: str = "benchmark_source_repo",
     note: str | None = None,
 ) -> BaseModelCapability:
-    """Helper function to source repo capability.
-
-    Returns:
-        The return value.
-    """
     try:
         in_tree_kind, in_tree_path = _IN_TREE_SOURCE_ASSETS[capability_id]
     except KeyError as exc:
@@ -821,11 +656,6 @@ def _external_dir_capability(
     manual_action: str | None = None,
     note: str | None = None,
 ) -> BaseModelCapability:
-    """Helper function to external dir capability.
-
-    Returns:
-        The return value.
-    """
     return BaseModelCapability(
         id=capability_id,
         family="benchmark_data_asset",
@@ -867,11 +697,6 @@ def _perception_data_capability(
     role: str = "perception_eval_dataset",
     note: str | None = None,
 ) -> BaseModelCapability:
-    """Helper function to perception data capability.
-
-    Returns:
-        The return value.
-    """
     return BaseModelCapability(
         id=capability_id,
         family="perception_data_asset",
@@ -4211,30 +4036,12 @@ def benchmark_base_model_dependency_ids(
 
 
 def _append_group(groups: dict[str, list[str]], key: str, value: str) -> None:
-    """Helper function to append group.
-
-    Args:
-        groups: The groups.
-        key: The key.
-        value: The value.
-
-    Returns:
-        The return value.
-    """
     group = groups.setdefault(key, [])
     if value not in group:
         group.append(value)
 
 
 def _count_asset_roles(capabilities: Mapping[str, BaseModelCapability]) -> dict[str, int]:
-    """Helper function to count asset roles.
-
-    Args:
-        capabilities: The capabilities.
-
-    Returns:
-        The return value.
-    """
     counts: dict[str, int] = {}
     for capability in capabilities.values():
         for asset in capability.assets:
@@ -4243,11 +4050,6 @@ def _count_asset_roles(capabilities: Mapping[str, BaseModelCapability]) -> dict[
 
 
 def _capabilities_by_family() -> dict[str, list[str]]:
-    """Helper function to capabilities by family.
-
-    Returns:
-        The return value.
-    """
     groups: dict[str, list[str]] = {}
     for capability_id, capability in BASE_MODEL_CAPABILITIES.items():
         _append_group(groups, capability.family, capability_id)
@@ -4255,11 +4057,6 @@ def _capabilities_by_family() -> dict[str, list[str]]:
 
 
 def _stacks_by_family() -> dict[str, list[str]]:
-    """Helper function to stacks by family.
-
-    Returns:
-        The return value.
-    """
     groups: dict[str, list[str]] = {}
     for stack_id, stack in BASE_MODEL_STACKS.items():
         _append_group(groups, stack.family, stack_id)
@@ -4267,11 +4064,7 @@ def _stacks_by_family() -> dict[str, list[str]]:
 
 
 def base_model_inventory() -> dict[str, Any]:
-    """Base model inventory.
-
-    Returns:
-        The return value.
-    """
+    """Base model inventory."""
     asset_count = sum(len(capability.assets) for capability in BASE_MODEL_CAPABILITIES.values())
     return {
         "schema_version": "worldfoundry-base-model-inventory-v1",
@@ -4304,14 +4097,6 @@ def _base_model_plan_summary(
     pip_install_packages: list[str],
     manual_actions: list[str],
 ) -> dict[str, Any]:
-    """Helper function to base model plan summary.
-
-    Args:
-        checks: The checks.
-
-    Returns:
-        The return value.
-    """
     family_counts: dict[str, dict[str, int]] = {}
     asset_counts_by_role: dict[str, int] = {}
     missing_required_asset_ids: list[str] = []
@@ -4369,14 +4154,7 @@ def _base_model_plan_summary(
 
 
 def resolve_base_model_capability_ids(capability_or_stack_ids: list[str] | tuple[str, ...]) -> list[str]:
-    """Resolve base model capability ids.
-
-    Args:
-        capability_or_stack_ids: The capability or stack ids.
-
-    Returns:
-        The return value.
-    """
+    """Resolve base model capability ids."""
     resolved: list[str] = []
     for raw_id in capability_or_stack_ids:
         item_id = str(raw_id)
@@ -4394,14 +4172,7 @@ def resolve_base_model_capability_ids(capability_or_stack_ids: list[str] | tuple
 
 
 def get_base_model_capability(capability_id: str) -> BaseModelCapability:
-    """Get base model capability.
-
-    Args:
-        capability_id: The capability id.
-
-    Returns:
-        The return value.
-    """
+    """Get base model capability."""
     try:
         return BASE_MODEL_CAPABILITIES[capability_id]
     except KeyError as exc:
@@ -4461,17 +4232,7 @@ def check_base_model_capability(
     python_executable: str | Path | None = None,
     check_imports: bool = True,
 ) -> dict[str, Any]:
-    """Check base model capability.
-
-    Args:
-        capability_id: The capability id.
-        env: The env.
-        python_executable: The python executable.
-        check_imports: The check imports.
-
-    Returns:
-        The return value.
-    """
+    """Check base model capability."""
     environ = os.environ if env is None else env
     capability = get_base_model_capability(capability_id)
     imports = []
@@ -4570,17 +4331,7 @@ def check_base_model_dependencies(
     python_executable: str | Path | None = None,
     check_imports: bool = True,
 ) -> dict[str, Any]:
-    """Check base model dependencies.
-
-    Args:
-        capability_ids: The capability ids.
-        env: The env.
-        python_executable: The python executable.
-        check_imports: The check imports.
-
-    Returns:
-        The return value.
-    """
+    """Check base model dependencies."""
     resolved_ids = resolve_base_model_capability_ids(capability_ids)
     stack_ids = [str(capability_id) for capability_id in capability_ids if str(capability_id) in BASE_MODEL_STACKS]
     checks = [
@@ -4608,16 +4359,7 @@ def base_model_materialization_plan(
     env: Mapping[str, str] | None = None,
     python_executable: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Base model materialization plan.
-
-    Args:
-        capability_ids: The capability ids.
-        env: The env.
-        python_executable: The python executable.
-
-    Returns:
-        The return value.
-    """
+    """Base model materialization plan."""
     requested_ids = sorted(BASE_MODEL_CAPABILITIES) if capability_ids is None else list(capability_ids)
     selected_ids = resolve_base_model_capability_ids(requested_ids)
     stack_ids = [str(capability_id) for capability_id in requested_ids if str(capability_id) in BASE_MODEL_STACKS]

@@ -7,6 +7,7 @@ sees the vendor checkpoint layout.
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Mapping
 from dataclasses import replace
 
@@ -220,7 +221,9 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
             raise ValueError("tensor_parallel must evenly divide Cosmos2.5 attention heads")
         if parallel is None:
             parallel = build_inference_parallel_context(
-                tensor_parallel=tp, context_parallel=cp, device=context.policy.device,
+                tensor_parallel=tp,
+                context_parallel=cp,
+                device=context.policy.device,
             )
             owns_context = True
         if not isinstance(parallel, InferenceParallelContext):
@@ -233,7 +236,9 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
 
     try:
         if parallel is not None:
-            parallel.agree(("cosmos25-load", dict(config), str(context.policy.dtype), str(context.require_checkpoint())))
+            parallel.agree(
+                ("cosmos25-load", dict(config), str(context.policy.dtype), str(context.require_checkpoint()))
+            )
         model = NativeModuleLoader().load(
             ModuleLoadSpec(
                 module_class=Cosmos25Transformer3DModel,
@@ -255,10 +260,8 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
             model.parallelize(parallel).to(device=context.policy.device)
     except BaseException:
         if owns_context:
-            try:
+            with contextlib.suppress(Exception):
                 parallel.close()
-            except Exception:
-                pass
         raise
     return Cosmos25Denoiser(model)
 
@@ -276,7 +279,8 @@ def build_cosmos25_transfer_2b_denoiser(context: ComponentBuildContext) -> Cosmo
     from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule
 
     tp, cp = validate_parallel_degrees(
-        context.component_options.get("tensor_parallel", 1), context.component_options.get("context_parallel", 1),
+        context.component_options.get("tensor_parallel", 1),
+        context.component_options.get("context_parallel", 1),
     )
     if tp * cp > 1 or context.component_options.get("parallel_context") is not None:
         raise ValueError("multi-rank Cosmos Transfer inference is not supported")

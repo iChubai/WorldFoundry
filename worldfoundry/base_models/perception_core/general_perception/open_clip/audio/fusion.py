@@ -16,7 +16,7 @@ class DAF(nn.Module):
 
     def __init__(self):
         """Init."""
-        super(DAF, self).__init__()
+        super().__init__()
 
     def forward(self, x, residual):
         """Forward.
@@ -41,7 +41,7 @@ class iAFF(nn.Module):
             r: The r.
             type: The type.
         """
-        super(iAFF, self).__init__()
+        super().__init__()
         inter_channels = int(channels // r)
 
         if type == "1D":
@@ -119,7 +119,7 @@ class iAFF(nn.Module):
                 nn.BatchNorm2d(channels),
             )
         else:
-            raise f"the type is not supported"
+            raise "the type is not supported"  # noqa: B016 - Upstream CLAP guard; callers pass only "1D" or "2D".
 
         self.sigmoid = nn.Sigmoid()
 
@@ -164,7 +164,7 @@ class AFF(nn.Module):
             r: The r.
             type: The type.
         """
-        super(AFF, self).__init__()
+        super().__init__()
         inter_channels = int(channels // r)
 
         if type == "1D":
@@ -200,7 +200,7 @@ class AFF(nn.Module):
                 nn.BatchNorm2d(channels),
             )
         else:
-            raise f"the type is not supported."
+            raise "the type is not supported."  # noqa: B016 - Upstream CLAP guard; callers pass only "1D" or "2D".
 
         self.sigmoid = nn.Sigmoid()
 

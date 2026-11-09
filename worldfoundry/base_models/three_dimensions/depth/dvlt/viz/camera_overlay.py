@@ -33,20 +33,18 @@ Geometry sizing:
 
 import json
 import struct
-from typing import Optional
 
 import numpy as np
 import trimesh
 
-
 __all__ = [
-    "scene_scale",
-    "rainbow_colors",
-    "camera_frustums_mesh",
     "camera_frustum_edges_mesh",
+    "camera_frustums_mesh",
     "camera_lines_mesh",
     "combined_overlay_mesh",
     "patch_glb_material_unlit",
+    "rainbow_colors",
+    "scene_scale",
 ]
 
 
@@ -78,8 +76,8 @@ def _default_intrinsics(image_hw: tuple[int, int], hfov_deg: float = _DEFAULT_HF
 
 
 def _resolve_intrinsics(
-    intrinsics: Optional[np.ndarray],
-    image_hw: Optional[tuple[int, int]],
+    intrinsics: np.ndarray | None,
+    image_hw: tuple[int, int] | None,
     n_cameras: int,
 ) -> tuple[np.ndarray, tuple[int, int]]:
     """Return ``(intrinsics_NxK, image_hw)``, filling defaults when missing.
@@ -104,7 +102,7 @@ def _resolve_intrinsics(
 # ---------------------------------------------------------------------------
 
 
-def scene_scale(pts: Optional[np.ndarray], cam_centers: np.ndarray) -> float:
+def scene_scale(pts: np.ndarray | None, cam_centers: np.ndarray) -> float:
     """Robust scene scale for sizing camera overlays.
 
     Uses the 99th-percentile distance from the median of the union of point
@@ -132,12 +130,9 @@ def rainbow_colors(n: int, cmap: str = "turbo") -> np.ndarray:
     """
     if n <= 0:
         return np.zeros((0, 3), dtype=np.uint8)
-    import matplotlib.cm as mpl_cm  # noqa: PLC0415 — lazy
+    import matplotlib.cm as mpl_cm  # lazy
 
-    if n == 1:
-        ts = np.array([0.5])
-    else:
-        ts = np.linspace(0.0, 1.0, n)
+    ts = np.array([0.5]) if n == 1 else np.linspace(0.0, 1.0, n)
     rgba = getattr(mpl_cm, cmap)(ts)
     return (rgba[:, :3] * 255.0).astype(np.uint8)
 
@@ -226,7 +221,7 @@ def _stride_index(n: int, stride: int) -> np.ndarray:
     return np.asarray(keep, dtype=np.int64)
 
 
-def _maybe_resolve_colors(colors_rgb: Optional[np.ndarray], n: int) -> np.ndarray:
+def _maybe_resolve_colors(colors_rgb: np.ndarray | None, n: int) -> np.ndarray:
     """Either accept supplied per-camera colours or sample the turbo ramp."""
     if colors_rgb is None:
         return rainbow_colors(n)
@@ -245,13 +240,13 @@ def camera_frustums_mesh(
     cameras_c2w: np.ndarray,
     scene_scale_abs: float,
     *,
-    intrinsics: Optional[np.ndarray] = None,
-    image_hw: Optional[tuple[int, int]] = None,
+    intrinsics: np.ndarray | None = None,
+    image_hw: tuple[int, int] | None = None,
     stride: int = 1,
     frustum_frac: float = 0.01,
     face_alpha: int = 90,
-    colors_rgb: Optional[np.ndarray] = None,
-) -> Optional[trimesh.Trimesh]:
+    colors_rgb: np.ndarray | None = None,
+) -> trimesh.Trimesh | None:
     """One concatenated mesh of all frustum pyramids (no edges, no lines).
 
     Pyramid faces carry the camera's rainbow colour with alpha
@@ -282,14 +277,14 @@ def camera_frustum_edges_mesh(
     cameras_c2w: np.ndarray,
     scene_scale_abs: float,
     *,
-    intrinsics: Optional[np.ndarray] = None,
-    image_hw: Optional[tuple[int, int]] = None,
+    intrinsics: np.ndarray | None = None,
+    image_hw: tuple[int, int] | None = None,
     stride: int = 1,
     frustum_frac: float = 0.01,
     edge_frac: float = 0.04,
     darken: float = 1.0,
-    colors_rgb: Optional[np.ndarray] = None,
-) -> Optional[trimesh.Trimesh]:
+    colors_rgb: np.ndarray | None = None,
+) -> trimesh.Trimesh | None:
     """One concatenated mesh of frustum-wireframe edge cylinders (always opaque).
 
     Each frustum contributes 8 edges (4 apex-to-corner + 4 base-loop), built
@@ -331,8 +326,8 @@ def camera_lines_mesh(
     *,
     stride: int = 1,
     line_frac: float = 0.0002,
-    colors_rgb: Optional[np.ndarray] = None,
-) -> Optional[trimesh.Trimesh]:
+    colors_rgb: np.ndarray | None = None,
+) -> trimesh.Trimesh | None:
     """One concatenated cylinder polyline through the (strided) camera centres.
 
     Segment colours are the average of the two endpoint cameras so a smooth
@@ -369,16 +364,16 @@ def combined_overlay_mesh(
     cameras_c2w: np.ndarray,
     scene_scale_abs: float,
     *,
-    intrinsics: Optional[np.ndarray] = None,
-    image_hw: Optional[tuple[int, int]] = None,
+    intrinsics: np.ndarray | None = None,
+    image_hw: tuple[int, int] | None = None,
     frustum_frac: float = 0.01,
     edge_frac: float = 0.04,
     line_frac: float = 0.0002,
     face_alpha: int = 90,
     edge_darken: float = 1.0,
-    colors_rgb: Optional[np.ndarray] = None,
+    colors_rgb: np.ndarray | None = None,
     material_name: str = "camera_overlay",
-) -> Optional[trimesh.Trimesh]:
+) -> trimesh.Trimesh | None:
     """Single concatenated Trimesh of all three overlay layers.
 
     Pyramid faces (per-vertex alpha ``face_alpha``), opaque edges, and the

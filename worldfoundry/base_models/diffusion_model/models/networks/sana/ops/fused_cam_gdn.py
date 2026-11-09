@@ -40,8 +40,6 @@ The camera-branch *scan* runs through ``cam_scan_bidi_chunkwise`` in
 ``fused_gdn_chunkwise``.
 """
 
-# ruff: noqa: E501
-
 from __future__ import annotations
 
 import torch

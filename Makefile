@@ -61,6 +61,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/studio/test_canonical_catalog_lookup.py \
 	tests/studio/test_catalog_class_constants.py \
 	tests/base_models/diffusion_model/test_module_boundaries.py \
+	tests/base_models/test_transnetv2_unsupported_options.py \
 	tests/studio/test_pipeline_owned_stream_state.py \
 	tests/studio/test_dispatch_lifecycle.py \
 	tests/studio/test_stream_init.py \
@@ -145,6 +146,7 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
 	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
+	tests/base_models/test_vqascore_llama32_molmo_gemini.py \
 	tests/pipelines/test_kandinsky6_replay_recipes.py \
 	tests/base_models/diffusion_model/test_build_purpose.py \
 	tests/synthesis/test_inspatio_v15_tensors.py \
@@ -240,6 +242,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_wonderworld_stages.py \
 	tests/core/test_gaussian_surfels.py \
 	tests/base_models/diffusion_model/models/encoders/test_wan_animate_pose_render.py \
+	tests/base_models/diffusion_model/models/encoders/test_wan_animate_pose_sequence.py \
 	tests/core/distributed \
 	tests/core/test_compile_cache_layering.py \
 	tests/core/test_cache_atomicity.py \

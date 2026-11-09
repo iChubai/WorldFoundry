@@ -4,12 +4,12 @@
 """PyTorch Qwen2 model."""
 
 import math
-from typing import List, Optional, Tuple, Union
+from typing import ClassVar
 
 import torch
 import torch.utils.checkpoint
 from torch import nn
-
+from torch.nn.attention.flex_attention import create_block_mask, flex_attention
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.generation import GenerationMixin
@@ -27,12 +27,11 @@ from transformers.utils import (
     logging,
     replace_return_docstrings,
 )
-from .configuration_qwen2 import Qwen2Config
-from torch.nn.attention.flex_attention import flex_attention, create_block_mask
 
+from .configuration_qwen2 import Qwen2Config
 
 if is_flash_attn_2_available():
-    from transformers.modeling_flash_attention_utils import _flash_attention_forward
+    pass
 
 
 logger = logging.get_logger(__name__)
@@ -45,6 +44,7 @@ _CONFIG_FOR_DOC = "Qwen2Config"
 # Copied from transformers.models.llama.modeling_llama.LlamaRMSNorm with Llama->Qwen2
 class Qwen2RMSNorm(nn.Module):
     """Qwen rms norm implementation."""
+
     def __init__(self, hidden_size, eps=1e-6):
         """
         Qwen2RMSNorm is equivalent to T5LayerNorm
@@ -54,11 +54,6 @@ class Qwen2RMSNorm(nn.Module):
         self.variance_epsilon = eps
 
     def forward(self, hidden_states):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-        """
         input_dtype = hidden_states.dtype
         hidden_states = hidden_states.to(torch.float32)
         variance = hidden_states.pow(2).mean(-1, keepdim=True)
@@ -66,13 +61,13 @@ class Qwen2RMSNorm(nn.Module):
         return self.weight * hidden_states.to(input_dtype)
 
     def extra_repr(self):
-        """Extra repr."""
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
 
 # Copied from transformers.models.llama.modeling_llama.LlamaRotaryEmbedding with Llama->Qwen2
 class Qwen2RotaryEmbedding(nn.Module):
     """Qwen rotary embedding implementation."""
+
     def __init__(
         self,
         dim=None,
@@ -81,19 +76,8 @@ class Qwen2RotaryEmbedding(nn.Module):
         device=None,
         scaling_factor=1.0,
         rope_type="default",
-        config: Optional[Qwen2Config] = None,
+        config: Qwen2Config | None = None,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            max_position_embeddings: The max position embeddings.
-            base: The base.
-            device: The device.
-            scaling_factor: The scaling factor.
-            rope_type: The rope type.
-            config: The config.
-        """
         super().__init__()
         # TODO (joao): remove the `if` below, only used for BC
         self.rope_kwargs = {}
@@ -148,12 +132,6 @@ class Qwen2RotaryEmbedding(nn.Module):
 
     @torch.no_grad()
     def forward(self, x, position_ids):
-        """Forward.
-
-        Args:
-            x: The x.
-            position_ids: The position ids.
-        """
         if "dynamic" in self.rope_type:
             self._dynamic_frequency_update(position_ids, device=x.device)
 
@@ -174,6 +152,7 @@ class Qwen2RotaryEmbedding(nn.Module):
         sin = sin * self.attention_scaling
 
         return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
+
 
 # Copied from transformers.models.llama.modeling_llama.rotate_half
 def rotate_half(x):
@@ -214,12 +193,8 @@ def apply_rotary_pos_emb(q, k, cos, sin, position_ids=None, unsqueeze_dim=1):
 # Copied from transformers.models.mistral.modeling_mistral.MistralMLP with Mistral->Qwen2
 class Qwen2MLP(nn.Module):
     """Qwen mlp implementation."""
-    def __init__(self, config):
-        """Init.
 
-        Args:
-            config: The config.
-        """
+    def __init__(self, config):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
@@ -229,11 +204,6 @@ class Qwen2MLP(nn.Module):
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, hidden_state):
-        """Forward.
-
-        Args:
-            hidden_state: The hidden state.
-        """
         return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
 
 
@@ -256,13 +226,7 @@ class Qwen2Attention(nn.Module):
     and "Generating Long Sequences with Sparse Transformers".
     """
 
-    def __init__(self, config: Qwen2Config, layer_idx: Optional[int] = None):
-        """Init.
-
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
+    def __init__(self, config: Qwen2Config, layer_idx: int | None = None):
         super().__init__()
         self.config = config
         self.layer_idx = layer_idx
@@ -296,29 +260,14 @@ class Qwen2Attention(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Cache] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: Cache | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
-        cache_position: Optional[torch.LongTensor] = None,
-        position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,  # will become mandatory in v4.46
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            attention_mask: The attention mask.
-            position_ids: The position ids.
-            past_key_value: The past key value.
-            output_attentions: The output attentions.
-            use_cache: The use cache.
-            cache_position: The cache position.
-            position_embeddings: The position embeddings.
-
-        Returns:
-            The return value.
-        """
+        cache_position: torch.LongTensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
+    ) -> tuple[torch.Tensor, torch.Tensor | None, tuple[torch.Tensor] | None]:
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(hidden_states)
@@ -353,7 +302,7 @@ class Qwen2Attention(nn.Module):
         #     # 如果是标准的 causal mask,可以使用 create_block_mask
         #     def causal_mask_mod(b, h, q_idx, kv_idx):
         #         return q_idx >= kv_idx
-            
+
         #     block_mask = create_block_mask(
         #         causal_mask_mod,
         #         B=bsz,
@@ -362,7 +311,7 @@ class Qwen2Attention(nn.Module):
         #         KV_LEN=key_states.shape[-2],
         #         device=query_states.device
         #     )
-        
+
         # 使用 flex_attention
         # attn_output = flex_attention(
         #     query_states,  # (bsz, num_heads, q_len, head_dim)
@@ -383,7 +332,7 @@ class Qwen2Attention(nn.Module):
             if attention_mask is not None:  # no matter the length, we just slice it
                 causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
                 attn_weights = attn_weights + causal_mask
-        except:
+        except BaseException:
             breakpoint()
         # upcast attention to fp32
         attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
@@ -418,7 +367,6 @@ class Qwen2FlashAttention2(Qwen2Attention):
 
     # Copied from transformers.models.llama.modeling_llama.LlamaFlashAttention2.__init__
     def __init__(self, *args, **kwargs):
-        """Init."""
         super().__init__(*args, **kwargs)
 
         # TODO: Should be removed once Flash Attention for RoCm is bumped to 2.1.
@@ -429,26 +377,14 @@ class Qwen2FlashAttention2(Qwen2Attention):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Cache] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: Cache | None = None,
         output_attentions: bool = False,
         use_cache: bool = False,
-        cache_position: Optional[torch.LongTensor] = None,
-        position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,  # will become mandatory in v4.46
+        cache_position: torch.LongTensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
     ):
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            attention_mask: The attention mask.
-            position_ids: The position ids.
-            past_key_value: The past key value.
-            output_attentions: The output attentions.
-            use_cache: The use cache.
-            cache_position: The cache position.
-            position_embeddings: The position embeddings.
-        """
         bsz, q_len, _ = hidden_states.size()
 
         query_states = self.q_proj(hidden_states)
@@ -476,10 +412,10 @@ class Qwen2FlashAttention2(Qwen2Attention):
             key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
 
         # repeat k/v heads if n_kv_heads < n_heads
-        #key_states = repeat_kv(key_states, self.num_key_value_groups)
-        #value_states = repeat_kv(value_states, self.num_key_value_groups)
+        # key_states = repeat_kv(key_states, self.num_key_value_groups)
+        # value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        dropout_rate = 0.0 if not self.training else self.attention_dropout
+        _dropout_rate = 0.0 if not self.training else self.attention_dropout
 
         # In PEFT, usually we cast the layer norms in float32 for training stability reasons
         # therefore the input hidden states gets silently casted in float32. Hence, we need
@@ -511,15 +447,8 @@ class Qwen2FlashAttention2(Qwen2Attention):
             and getattr(self.config, "sliding_window", None) is not None
             and self.layer_idx >= self.config.max_window_layers
         ):
-            def mask_mod(b, h, q_idx, kv_idx):
-                """Mask mod.
 
-                Args:
-                    b: The b.
-                    h: The h.
-                    q_idx: The q idx.
-                    kv_idx: The kv idx.
-                """
+            def mask_mod(b, h, q_idx, kv_idx):
                 causal_mask = q_idx >= kv_idx
                 if (
                     self.config.use_sliding_window
@@ -530,7 +459,7 @@ class Qwen2FlashAttention2(Qwen2Attention):
                     window_mask = q_idx - kv_idx < sliding_window
                     return causal_mask & window_mask
                 return causal_mask
-            
+
             block_mask = create_block_mask(
                 mask_mod,
                 B=bsz,
@@ -543,13 +472,13 @@ class Qwen2FlashAttention2(Qwen2Attention):
         # 使用flex_attention
         attn_output = flex_attention(
             query_states,  # (bsz, num_heads, q_len, head_dim)
-            key_states,    # (bsz, num_key_value_heads, kv_len, head_dim)
+            key_states,  # (bsz, num_key_value_heads, kv_len, head_dim)
             value_states,  # (bsz, num_key_value_heads, kv_len, head_dim)
             enable_gqa=(self.num_heads != self.num_key_value_heads),  # 启用GQA
             block_mask=block_mask,
             scale=1.0 / math.sqrt(self.head_dim),  # 手动设置scale
         )
-    
+
         # flex_attention输出shape: (bsz, num_heads, q_len, head_dim)
         # 需要转换为 (bsz, q_len, num_heads, head_dim) 然后reshape
         attn_output = attn_output.transpose(1, 2).contiguous()
@@ -582,8 +511,7 @@ class Qwen2FlashAttention2(Qwen2Attention):
         #     use_top_left_mask=self._flash_attn_uses_top_left_mask,
         # )
 
-        #attn_output = attn_output.reshape(bsz, q_len, self.hidden_size).contiguous()
-
+        # attn_output = attn_output.reshape(bsz, q_len, self.hidden_size).contiguous()
 
         attn_output = self.o_proj(attn_output)
 
@@ -598,15 +526,11 @@ QWEN2_ATTENTION_CLASSES = {
     "flash_attention_2": Qwen2FlashAttention2,
 }
 
+
 class Qwen2DecoderLayer(nn.Module):
     """Qwen decoder layer implementation."""
-    def __init__(self, config: Qwen2Config, layer_idx: int):
-        """Init.
 
-        Args:
-            config: The config.
-            layer_idx: The layer idx.
-        """
+    def __init__(self, config: Qwen2Config, layer_idx: int):
         super().__init__()
         self.hidden_size = config.hidden_size
 
@@ -623,15 +547,15 @@ class Qwen2DecoderLayer(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_value: Optional[Tuple[torch.Tensor]] = None,
-        output_attentions: Optional[bool] = False,
-        use_cache: Optional[bool] = False,
-        cache_position: Optional[torch.LongTensor] = None,
-        position_embeddings: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,  # will become mandatory in v4.46
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_value: tuple[torch.Tensor] | None = None,
+        output_attentions: bool | None = False,
+        use_cache: bool | None = False,
+        cache_position: torch.LongTensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,  # will become mandatory in v4.46
         **kwargs,
-    ) -> Tuple[torch.FloatTensor, Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]]:
+    ) -> tuple[torch.FloatTensor, tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         """
         Args:
             hidden_states (`torch.FloatTensor`): input to the layer of shape `(batch, seq_len, embed_dim)`
@@ -711,10 +635,11 @@ QWEN2_START_DOCSTRING = r"""
 )
 class Qwen2PreTrainedModel(PreTrainedModel):
     """Qwen pre trained model implementation."""
+
     config_class = Qwen2Config
     base_model_prefix = "model"
     supports_gradient_checkpointing = True
-    _no_split_modules = ["Qwen2DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["Qwen2DecoderLayer"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn_2 = True
     _supports_cache_class = True
@@ -863,16 +788,16 @@ class Qwen2Model(Qwen2PreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
-    ) -> Union[Tuple, BaseModelOutputWithPast]:
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+        cache_position: torch.LongTensor | None = None,
+    ) -> tuple | BaseModelOutputWithPast:
         """Forward.
 
         Args:
@@ -901,12 +826,11 @@ class Qwen2Model(Qwen2PreTrainedModel):
         if (input_ids is None) ^ (inputs_embeds is not None):
             raise ValueError("You must specify exactly one of input_ids or inputs_embeds")
 
-        if self.gradient_checkpointing and self.training:
-            if use_cache:
-                logger.warning_once(
-                    "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
-                )
-                use_cache = False
+        if self.gradient_checkpointing and self.training and use_cache:
+            logger.warning_once(
+                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
+            )
+            use_cache = False
 
         # kept for BC (non `Cache` `past_key_values` inputs)
         return_legacy_cache = False
@@ -933,10 +857,7 @@ class Qwen2Model(Qwen2PreTrainedModel):
         if position_ids is None:
             position_ids = cache_position.unsqueeze(0)
 
-        if attention_mask is not None and 0.0 in attention_mask:
-            causal_mask = attention_mask
-        else:
-            causal_mask = None
+        causal_mask = attention_mask if attention_mask is not None and 0.0 in attention_mask else None
 
         hidden_states = inputs_embeds
         # create position embeddings to be shared across the decoder layers
@@ -1005,14 +926,10 @@ class Qwen2Model(Qwen2PreTrainedModel):
 
 class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     """Qwen for causal lm implementation."""
-    _tied_weights_keys = ["lm_head.weight"]
+
+    _tied_weights_keys: ClassVar[list] = ["lm_head.weight"]
 
     def __init__(self, config):
-        """Init.
-
-        Args:
-            config: The config.
-        """
         super().__init__(config)
         self.model = Qwen2Model(config)
         self.vocab_size = config.vocab_size
@@ -1022,59 +939,36 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
         self.post_init()
 
     def custom_init_pretrained(self, mllm_state_dict, logger):
-        """Custom init pretrained.
-
-        Args:
-            mllm_state_dict: The mllm state dict.
-            logger: The logger.
-        """
-        print("Initializing LLM decoder from MLLM weights") 
+        print("Initializing LLM decoder from MLLM weights")
         for name, param in self.named_parameters():
             if "moe_gen" in name:
                 continue
-            
-            original_name = "language_model."+name.replace("_und", "") if "norm_und" in name \
-                            else "language_model."+name
+
+            original_name = (
+                "language_model." + name.replace("_und", "") if "norm_und" in name else "language_model." + name
+            )
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
-            except:
+            except BaseException:
                 logger.info(f"'{name}' not initialized")
         return mllm_state_dict
-    
+
     def get_input_embeddings(self):
-        """Get input embeddings."""
         return self.model.embed_tokens
 
     def set_input_embeddings(self, value):
-        """Set input embeddings.
-
-        Args:
-            value: The value.
-        """
         self.model.embed_tokens = value
 
     def get_output_embeddings(self):
-        """Get output embeddings."""
         return self.lm_head
 
     def set_output_embeddings(self, new_embeddings):
-        """Set output embeddings.
-
-        Args:
-            new_embeddings: The new embeddings.
-        """
         self.lm_head = new_embeddings
 
     def set_decoder(self, decoder):
-        """Set decoder.
-
-        Args:
-            decoder: The decoder.
-        """
         self.model = decoder
 
     def get_decoder(self):
-        """Get decoder."""
         return self.model
 
     @add_start_docstrings_to_model_forward(QWEN2_INPUTS_DOCSTRING)
@@ -1082,19 +976,19 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        return_dict: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+        cache_position: torch.LongTensor | None = None,
         num_logits_to_keep: int = 0,
         **loss_kwargs,
-    ) -> Union[Tuple, CausalLMOutputWithPast]:
+    ) -> tuple | CausalLMOutputWithPast:
         r"""
         Args:
             labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
@@ -1155,8 +1049,8 @@ class Qwen2ForCausalLM(Qwen2PreTrainedModel, GenerationMixin):
             loss = self.loss_function(logits, labels, self.vocab_size, **loss_kwargs)
 
         if not return_dict:
-            output = (logits,) + outputs[1:]
-            return (loss,) + output if loss is not None else output
+            output = (logits,) + outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+            return (loss,) + output if loss is not None else output  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return CausalLMOutputWithPast(
             loss=loss,

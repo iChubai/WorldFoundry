@@ -29,7 +29,7 @@ def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
         ),
         dim=-1,
     )
-    return matrix.reshape(q.shape[:-1] + (3, 3))
+    return matrix.reshape(q.shape[:-1] + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:

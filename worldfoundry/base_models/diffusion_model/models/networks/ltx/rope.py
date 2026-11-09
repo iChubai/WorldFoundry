@@ -8,8 +8,8 @@ midpoint (``use_middle_indices_grid``) then packed as SPLIT
 
 import functools
 import math
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable, Tuple
 
 import numpy as np
 import torch
@@ -25,7 +25,7 @@ class LTXRopeType(Enum):
 
 def apply_rotary_emb(
     input_tensor: torch.Tensor,
-    freqs_cis: Tuple[torch.Tensor, torch.Tensor],
+    freqs_cis: tuple[torch.Tensor, torch.Tensor],
     rope_type: LTXRopeType = LTXRopeType.SPLIT,
 ) -> torch.Tensor:
     """Rotate ``input_tensor`` by precomputed ``(cos, sin)`` in the requested layout."""

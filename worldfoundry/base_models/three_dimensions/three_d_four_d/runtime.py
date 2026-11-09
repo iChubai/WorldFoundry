@@ -7,9 +7,10 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import yaml
 
@@ -103,7 +104,7 @@ THREE_D_FOUR_D_RUNTIME_SPECS: Mapping[str, ThreeDFourDRuntimeSpec] = {
         artifact_kind="generated_world",
         artifact_filename="wonderjourney.mp4",
         required_input="config",
-        default_config=str(package_data_path('models', 'runtime', 'configs', 'wonderjourney', 'village.yaml')),
+        default_config=str(package_data_path("models", "runtime", "configs", "wonderjourney", "village.yaml")),
         source_repo_url="https://github.com/KovenYu/WonderJourney",
         input_schema=_CAMERA_INPUT_SCHEMA,
     ),
@@ -168,7 +169,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "ThreeDFourDRuntimeSynthesis":
+    ) -> ThreeDFourDRuntimeSynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
@@ -328,9 +329,7 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
         visualization_path = None
         if self.spec.command_kind == "monst3r_demo":
             seq_name = str(kwargs.get("seq_name", self.options.get("seq_name")) or "worldfoundry")
-            confidence_threshold = float(
-                kwargs.get("min_conf_thr", self.options.get("min_conf_thr", 1.1))
-            )
+            confidence_threshold = float(kwargs.get("min_conf_thr", self.options.get("min_conf_thr", 1.1)))
             visualization_path = _build_monst3r_rerun_recording(
                 output.parent / seq_name,
                 confidence_threshold=confidence_threshold,
@@ -405,7 +404,9 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 or options.get("data_root")
             )
             if not str(data_dir or "").strip():
-                missing.append("dataset source path required; pass data_dir/source_path/dataset_path in runtime options")
+                missing.append(
+                    "dataset source path required; pass data_dir/source_path/dataset_path in runtime options"
+                )
         return missing
 
     def _subprocess_env(self, options: Mapping[str, Any] | None = None) -> dict[str, str]:
@@ -442,7 +443,9 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             sam2_checkpoint = _monst3r_sam2_checkpoint_path()
             if sam2_checkpoint:
                 env.setdefault("WORLDFOUNDRY_MONST3R_SAM2_CHECKPOINT", str(sam2_checkpoint))
-        existing_da2_model_path = env.get("WORLDFOUNDRY_DEPTH_ANYTHING2_MODEL_PATH") or env.get("WORLDFOUNDRY_DA2_MODEL_PATH")
+        existing_da2_model_path = env.get("WORLDFOUNDRY_DEPTH_ANYTHING2_MODEL_PATH") or env.get(
+            "WORLDFOUNDRY_DA2_MODEL_PATH"
+        )
         if existing_da2_model_path and not _has_depth_anything2_checkpoint(existing_da2_model_path):
             env.pop("WORLDFOUNDRY_DEPTH_ANYTHING2_MODEL_PATH", None)
             env.pop("WORLDFOUNDRY_DA2_MODEL_PATH", None)
@@ -459,7 +462,9 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
             ckpt_root / "hfd",
             ckpt_root / "huggingface",
         ]
-        hf_home = next((candidate for candidate in hf_home_candidates if str(candidate) != "." and candidate.exists()), None)
+        hf_home = next(
+            (candidate for candidate in hf_home_candidates if str(candidate) != "." and candidate.exists()), None
+        )
         if hf_home is not None:
             env["HF_HOME"] = str(hf_home)
             env["HUGGINGFACE_HUB_CACHE"] = str(hf_home / "hub")
@@ -933,9 +938,13 @@ def _prepare_wonder_config(
     )
     if image_path:
         data["image_filepath"] = _runtime_image_path(image_path)
-    data["content_prompt"] = str(options.get("content_prompt") or prompt or data.get("content_prompt") or "village, cottages, trees")
+    data["content_prompt"] = str(
+        options.get("content_prompt") or prompt or data.get("content_prompt") or "village, cottages, trees"
+    )
     data["style_prompt"] = str(options.get("style_prompt") or data.get("style_prompt") or "photorealistic")
-    data["negative_prompt"] = str(options.get("negative_prompt") or data.get("negative_prompt") or "low quality, blurry, distorted")
+    data["negative_prompt"] = str(
+        options.get("negative_prompt") or data.get("negative_prompt") or "low quality, blurry, distorted"
+    )
     data["num_scenes"] = int(options.get("num_scenes", 1))
     data["num_keyframes"] = int(options.get("num_keyframes", 2))
     data["frames"] = int(options.get("frames", 2))
@@ -1044,7 +1053,9 @@ def _safe_name(value: str) -> str:
 
 def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(_jsonable(payload), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(_jsonable(payload), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def _tum_pose(row: Any) -> Any:
@@ -1104,7 +1115,7 @@ def _build_monst3r_rerun_recording(
         static=True,
     )
     for frame_id, (depth_path, pose, intrinsic) in enumerate(
-        zip(depth_paths[:frame_count], poses, intrinsics[:frame_count])
+        zip(depth_paths[:frame_count], poses, intrinsics[:frame_count], strict=False)
     ):
         if hasattr(rr, "set_time"):
             rr.set_time("frame", sequence=frame_id)
@@ -1118,11 +1129,7 @@ def _build_monst3r_rerun_recording(
         depth = np.load(depth_path)
         confidence = np.load(confidence_path)
         points = depth_to_world_points(depth, intrinsic, pose)
-        valid = (
-            np.isfinite(points).all(axis=-1)
-            & np.isfinite(confidence)
-            & (confidence > confidence_threshold)
-        )
+        valid = np.isfinite(points).all(axis=-1) & np.isfinite(confidence) & (confidence > confidence_threshold)
         rr.log("world/dynamic_points", rr.Points3D(points[valid], colors=color[valid], radii=0.001))
         rr.log(
             "world/current_camera",

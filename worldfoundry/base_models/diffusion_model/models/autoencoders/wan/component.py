@@ -71,7 +71,7 @@ class WanTAEPreviewDecoder:
         *,
         device: torch.device,
         dtype: torch.dtype,
-    ) -> "WanTAEPreviewDecoder":
+    ) -> WanTAEPreviewDecoder:
         from .variants.tae_22 import TAEW22StreamingDecoder
 
         return cls(
@@ -435,7 +435,7 @@ class WanVideoDecoder:
             raise ValueError("Wan VAE tile_size and tile_stride must contain two values")
         if any(value <= 0 for value in (*self.tile_size, *self.tile_stride)):
             raise ValueError("Wan VAE tile sizes and strides must be positive")
-        if any(stride > size for stride, size in zip(self.tile_stride, self.tile_size)):
+        if any(stride > size for stride, size in zip(self.tile_stride, self.tile_size, strict=False)):
             raise ValueError("Wan VAE tile stride cannot exceed tile size")
         self.temporal_chunk_size = int(temporal_chunk_size)
         if self.temporal_chunk_size < 0:
@@ -1176,14 +1176,14 @@ def build_diffusers_wan_video_codec(context: ComponentBuildContext) -> WanVideoD
 
 
 __all__ = [
+    "Wan21LightVAECodec",
     "WanTAEPreviewDecoder",
     "WanVideoDecoder",
-    "Wan21LightVAECodec",
     "build_diffusers_wan_video_codec",
     "build_wan_video_decoder",
     "build_wan_video_vae38_decoder",
-    "convert_wan21_vae_state_dict",
     "convert_diffusers_wan22_vae_state_dict",
     "convert_diffusers_wan_vae_state_dict",
+    "convert_wan21_vae_state_dict",
     "load_wan_video_codec",
 ]

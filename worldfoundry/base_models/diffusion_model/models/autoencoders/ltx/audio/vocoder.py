@@ -13,7 +13,6 @@ parallel BigVGAN port under :mod:`~...minimax_h3_audio`.
 """
 
 import math
-from typing import List
 
 import einops
 import torch
@@ -66,6 +65,7 @@ def kaiser_sinc_filter1d(cutoff: float, half_width: float, kernel_size: int) -> 
 
 class LowPassFilter1d(nn.Module):
     """Depthwise 1-D low-pass convolution used by alias-free resample."""
+
     def __init__(
         self,
         cutoff: float = 0.5,
@@ -99,6 +99,7 @@ class LowPassFilter1d(nn.Module):
 
 class UpSample1d(nn.Module):
     """Alias-free 1-D upsample used inside the LTX vocoder."""
+
     def __init__(
         self,
         ratio: int = 2,
@@ -147,6 +148,7 @@ class UpSample1d(nn.Module):
 
 class DownSample1d(nn.Module):
     """Alias-free 1-D downsample used inside the LTX vocoder."""
+
     def __init__(self, ratio: int = 2, kernel_size: int | None = None) -> None:
         super().__init__()
         self.ratio = ratio
@@ -164,6 +166,7 @@ class DownSample1d(nn.Module):
 
 class Activation1d(nn.Module):
     """Snake activation wrapped with alias-free up/down sampling."""
+
     def __init__(
         self,
         activation: nn.Module,
@@ -185,6 +188,7 @@ class Activation1d(nn.Module):
 
 class Snake(nn.Module):
     """Periodic Snake activation used by the LTX vocoder."""
+
     def __init__(
         self,
         in_features: int,
@@ -207,6 +211,7 @@ class Snake(nn.Module):
 
 class SnakeBeta(nn.Module):
     """Snake activation with a learnable beta frequency term."""
+
     def __init__(
         self,
         in_features: int,
@@ -233,6 +238,7 @@ class SnakeBeta(nn.Module):
 
 class AMPBlock1(nn.Module):
     """Anti-aliased multi-period residual block for the LTX vocoder."""
+
     def __init__(
         self,
         channels: int,
@@ -316,12 +322,12 @@ class Vocoder(torch.nn.Module):
         use_bias_at_final: Whether to use bias in the final conv layer.
     """
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
-        resblock_kernel_sizes: List[int] | None = None,
-        upsample_rates: List[int] | None = None,
-        upsample_kernel_sizes: List[int] | None = None,
-        resblock_dilation_sizes: List[List[int]] | None = None,
+        resblock_kernel_sizes: list[int] | None = None,
+        upsample_rates: list[int] | None = None,
+        upsample_kernel_sizes: list[int] | None = None,
+        resblock_dilation_sizes: list[list[int]] | None = None,
         upsample_initial_channel: int = 1024,
         resblock: str = "1",
         output_sampling_rate: int = 24000,

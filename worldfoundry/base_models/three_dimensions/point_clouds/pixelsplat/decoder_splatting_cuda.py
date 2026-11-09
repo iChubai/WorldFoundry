@@ -1,5 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> decoder_splatting_cuda.py functionality."""
-
 import torch
 from einops import rearrange, repeat
 
@@ -7,12 +5,6 @@ from .cuda_splatting import render_cuda
 
 
 def normalize_intrinsics(intrinsics, image_shape):
-    """Normalize intrinsics.
-
-    Args:
-        intrinsics: The intrinsics.
-        image_shape: The image shape.
-    """
     intrinsics = intrinsics.clone()
     intrinsics[..., 0, :] /= image_shape[1]
     intrinsics[..., 1, :] /= image_shape[0]
@@ -20,36 +12,20 @@ def normalize_intrinsics(intrinsics, image_shape):
 
 
 class DecoderSplattingCUDA(torch.nn.Module):
-    """Decoder splatting cuda implementation."""
-
     def __init__(self, background_color):
-        """Init.
-
-        Args:
-            background_color: The background color.
-        """
         super().__init__()
         self.register_buffer(
             "background_color",
             torch.tensor(background_color, dtype=torch.float32),
             persistent=False,
         )
-    
+
     def forward(self, batch, pred1, pred2, image_shape):
-        """Forward.
-
-        Args:
-            batch: The batch.
-            pred1: The pred1.
-            pred2: The pred2.
-            image_shape: The image shape.
-        """
-
-        base_pose = batch['context'][0]['camera_pose'] # [b, 4, 4]
+        base_pose = batch["context"][0]["camera_pose"]  # [b, 4, 4]
         inv_base_pose = torch.inverse(base_pose)
 
-        extrinsics = torch.stack([target_view['camera_pose'] for target_view in batch['target']], dim=1)
-        intrinsics = torch.stack([target_view['camera_intrinsics'] for target_view in batch['target']], dim=1)
+        extrinsics = torch.stack([target_view["camera_pose"] for target_view in batch["target"]], dim=1)
+        intrinsics = torch.stack([target_view["camera_intrinsics"] for target_view in batch["target"]], dim=1)
         intrinsics = normalize_intrinsics(intrinsics, image_shape)[..., :3, :3]
 
         # Rotate the ground truth extrinsics into the coordinate system used by MAST3R

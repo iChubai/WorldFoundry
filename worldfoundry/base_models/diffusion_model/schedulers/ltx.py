@@ -9,6 +9,8 @@ through the standard runner loop.
 
 from __future__ import annotations
 
+import itertools
+
 import torch
 
 from ..components import ComponentBuildContext
@@ -21,7 +23,7 @@ class LTXFixedEulerScheduler:
     def __init__(self, sigmas: tuple[float, ...]) -> None:
         if len(sigmas) < 2:
             raise ValueError("LTX sigma schedule requires at least two values")
-        if any(left < right for left, right in zip(sigmas, sigmas[1:])):
+        if any(left < right for left, right in itertools.pairwise(sigmas)):
             raise ValueError("LTX sigmas must be monotonically non-increasing")
         self.sigmas = tuple(float(value) for value in sigmas)
 

@@ -147,6 +147,7 @@ class JointMultiStageDiffusionRunner:
         guidance_scale: float,
     ) -> MultiModalDenoiserOutput:
         """Per-modality CFG. At scale==1 or without negative, return the positive branch only."""
+
         def call(branch: str) -> MultiModalDenoiserOutput:
             output = self.components.denoiser(
                 MultiModalDenoiserInput(

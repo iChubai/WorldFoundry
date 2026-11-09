@@ -12,17 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> da3.py functionality."""
-
 from __future__ import annotations
 
 import torch
 import torch.nn as nn
 from omegaconf import DictConfig, OmegaConf
 
+# isort: split
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.cfg import create_object
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.transform import pose_encoding_to_extri_intri
+
+# isort: split
 from addict import Dict
+
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.transform import (
+    pose_encoding_to_extri_intri,
+)
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.alignment import (
     apply_metric_scaling,
     compute_alignment_mask,
@@ -31,16 +35,17 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
     sample_tensor_for_quantile,
     set_sky_regions_to_max_depth,
 )
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import affine_inverse, as_homogeneous, map_pdf_to_opacity
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.ray_utils import get_extrinsic_from_camray
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    affine_inverse,
+    as_homogeneous,
+    map_pdf_to_opacity,
+)
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.ray_utils import (
+    get_extrinsic_from_camray,
+)
 
 
 def _wrap_cfg(cfg_obj):
-    """Helper function to wrap cfg.
-
-    Args:
-        cfg_obj: The cfg obj.
-    """
     return OmegaConf.create(cfg_obj)
 
 
@@ -79,29 +84,19 @@ class DepthAnything3Net(nn.Module):
         self.head = head if isinstance(head, nn.Module) else create_object(_wrap_cfg(head))
         self.cam_dec, self.cam_enc = None, None
         if cam_dec is not None:
-            self.cam_dec = (
-                cam_dec if isinstance(cam_dec, nn.Module) else create_object(_wrap_cfg(cam_dec))
-            )
-            self.cam_enc = (
-                cam_enc if isinstance(cam_enc, nn.Module) else create_object(_wrap_cfg(cam_enc))
-            )
+            self.cam_dec = cam_dec if isinstance(cam_dec, nn.Module) else create_object(_wrap_cfg(cam_dec))
+            self.cam_enc = cam_enc if isinstance(cam_enc, nn.Module) else create_object(_wrap_cfg(cam_enc))
         self.gs_adapter, self.gs_head = None, None
         if gs_head is not None and gs_adapter is not None:
-            self.gs_adapter = (
-                gs_adapter
-                if isinstance(gs_adapter, nn.Module)
-                else create_object(_wrap_cfg(gs_adapter))
-            )
+            self.gs_adapter = gs_adapter if isinstance(gs_adapter, nn.Module) else create_object(_wrap_cfg(gs_adapter))
             gs_out_dim = self.gs_adapter.d_in + 1
             if isinstance(gs_head, nn.Module):
-                assert (
-                    gs_head.out_dim == gs_out_dim
-                ), f"gs_head.out_dim should be {gs_out_dim}, got {gs_head.out_dim}"
+                assert gs_head.out_dim == gs_out_dim, f"gs_head.out_dim should be {gs_out_dim}, got {gs_head.out_dim}"
                 self.gs_head = gs_head
             else:
-                assert (
-                    gs_head["output_dim"] == gs_out_dim
-                ), f"gs_head output_dim should set to {gs_out_dim}, got {gs_head['output_dim']}"
+                assert gs_head["output_dim"] == gs_out_dim, (
+                    f"gs_head output_dim should set to {gs_out_dim}, got {gs_head['output_dim']}"
+                )
                 self.gs_head = create_object(_wrap_cfg(gs_head))
 
     def forward(
@@ -109,7 +104,7 @@ class DepthAnything3Net(nn.Module):
         x: torch.Tensor,
         extrinsics: torch.Tensor | None = None,
         intrinsics: torch.Tensor | None = None,
-        export_feat_layers: list[int] | None = [],
+        export_feat_layers: list[int] | None = [],  # noqa: B006 - Keeps the upstream default object and signature.
         infer_gs: bool = False,
         use_ray_pose: bool = False,
         ref_view_strategy: str = "saddle_balanced",
@@ -119,8 +114,8 @@ class DepthAnything3Net(nn.Module):
 
         Args:
             x: Input images (B, N, 3, H, W)
-            extrinsics: Camera extrinsics (B, N, 4, 4) 
-            intrinsics: Camera intrinsics (B, N, 3, 3) 
+            extrinsics: Camera extrinsics (B, N, 4, 4)
+            intrinsics: Camera intrinsics (B, N, 3, 3)
             feat_layers: List of layer indices to extract features from
             infer_gs: Enable Gaussian Splatting branch
             use_ray_pose: Use ray-based pose estimation
@@ -151,18 +146,15 @@ class DepthAnything3Net(nn.Module):
                 output = self._process_camera_estimation(feats, H, W, output)
             if infer_gs:
                 output = self._process_gs_head(feats, H, W, output, x, extrinsics, intrinsics)
-        
-        output = self._process_mono_sky_estimation(output)    
+
+        output = self._process_mono_sky_estimation(output)
 
         # Extract auxiliary features if requested
         output.aux = self._extract_auxiliary_features(aux_feats, export_feat_layers, H, W)
 
         return output
 
-    def _process_mono_sky_estimation(
-        self, output: Dict[str, torch.Tensor]
-    ) -> Dict[str, torch.Tensor]:
-        """Process mono sky estimation."""
+    def _process_mono_sky_estimation(self, output: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         if "sky" not in output:
             return output
         non_sky_mask = compute_sky_mask(output.sky, threshold=0.3)
@@ -170,7 +162,7 @@ class DepthAnything3Net(nn.Module):
             return output
         if (~non_sky_mask).sum() <= 10:
             return output
-        
+
         non_sky_depth = output.depth[non_sky_mask]
         if non_sky_depth.numel() > 100000:
             idx = torch.randint(0, non_sky_depth.numel(), (100000,), device=non_sky_depth.device)
@@ -180,9 +172,7 @@ class DepthAnything3Net(nn.Module):
         non_sky_max = torch.quantile(sampled_depth, 0.99)
 
         # Set sky regions to maximum depth and high confidence
-        output.depth, _ = set_sky_regions_to_max_depth(
-            output.depth, None, non_sky_mask, max_depth=non_sky_max
-        )
+        output.depth, _ = set_sky_regions_to_max_depth(output.depth, None, non_sky_mask, max_depth=non_sky_max)
         return output
 
     def _process_ray_pose_estimation(
@@ -196,9 +186,14 @@ class DepthAnything3Net(nn.Module):
                 output.ray.shape[-3],
                 output.ray.shape[-2],
             )
-            pred_extrinsic = affine_inverse(pred_extrinsic) # w2c -> c2w
+            pred_extrinsic = affine_inverse(pred_extrinsic)  # w2c -> c2w
             pred_extrinsic = pred_extrinsic[:, :, :3, :]
-            pred_intrinsic = torch.eye(3, 3)[None, None].repeat(pred_extrinsic.shape[0], pred_extrinsic.shape[1], 1, 1).clone().to(pred_extrinsic.device)
+            pred_intrinsic = (
+                torch.eye(3, 3)[None, None]
+                .repeat(pred_extrinsic.shape[0], pred_extrinsic.shape[1], 1, 1)
+                .clone()
+                .to(pred_extrinsic.device)
+            )
             pred_intrinsic[:, :, 0, 0] = pred_focal_lengths[:, :, 0] / 2 * width
             pred_intrinsic[:, :, 1, 1] = pred_focal_lengths[:, :, 1] / 2 * height
             pred_intrinsic[:, :, 0, 2] = pred_principal_points[:, :, 0] * width * 0.5
@@ -209,9 +204,7 @@ class DepthAnything3Net(nn.Module):
             output.intrinsics = pred_intrinsic
         return output
 
-    def _process_depth_head(
-        self, feats: list[torch.Tensor], H: int, W: int
-    ) -> Dict[str, torch.Tensor]:
+    def _process_depth_head(self, feats: list[torch.Tensor], H: int, W: int) -> Dict[str, torch.Tensor]:
         """Process features through the depth prediction head."""
         return self.head(feats, H, W, patch_start_idx=0)
 
@@ -254,9 +247,7 @@ class DepthAnything3Net(nn.Module):
         # we instead use the predicted camera poses for better alignment.
         ctx_extr = output.get("extrinsics", None)
         ctx_intr = output.get("intrinsics", None)
-        assert (
-            ctx_extr is not None and ctx_intr is not None
-        ), "must process camera info first if GT is not available"
+        assert ctx_extr is not None and ctx_intr is not None, "must process camera info first if GT is not available"
 
         gt_extr = extrinsics
         # homo the extr if needed
@@ -296,7 +287,7 @@ class DepthAnything3Net(nn.Module):
         """Extract auxiliary features from specified layers."""
         aux_features = Dict()
         assert len(feats) == len(feat_layers)
-        for feat, feat_layer in zip(feats, feat_layers):
+        for feat, feat_layer in zip(feats, feat_layers, strict=False):
             # Reshape features to spatial dimensions
             feat_reshaped = feat.reshape(
                 [
@@ -345,7 +336,7 @@ class NestedDepthAnything3Net(nn.Module):
         x: torch.Tensor,
         extrinsics: torch.Tensor | None = None,
         intrinsics: torch.Tensor | None = None,
-        export_feat_layers: list[int] | None = [],
+        export_feat_layers: list[int] | None = [],  # noqa: B006 - Keeps the upstream default object and signature.
         infer_gs: bool = False,
         use_ray_pose: bool = False,
         ref_view_strategy: str = "saddle_balanced",
@@ -367,7 +358,13 @@ class NestedDepthAnything3Net(nn.Module):
         """
         # Get predictions from both branches
         output = self.da3(
-            x, extrinsics, intrinsics, export_feat_layers=export_feat_layers, infer_gs=infer_gs, use_ray_pose=use_ray_pose, ref_view_strategy=ref_view_strategy
+            x,
+            extrinsics,
+            intrinsics,
+            export_feat_layers=export_feat_layers,
+            infer_gs=infer_gs,
+            use_ray_pose=use_ray_pose,
+            ref_view_strategy=ref_view_strategy,
         )
         metric_output = self.da3_metric(x)
 

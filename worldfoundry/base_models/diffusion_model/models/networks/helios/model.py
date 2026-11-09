@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
 from functools import lru_cache
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
@@ -67,9 +66,7 @@ def _shard_history_and_main(
     global_main_length = int(global_main_length)
     history_length = total_length - global_main_length
     if history_length < 0:
-        raise ValueError(
-            f"Main sequence length {global_main_length} exceeds tensor length {total_length}."
-        )
+        raise ValueError(f"Main sequence length {global_main_length} exceeds tensor length {total_length}.")
     history_start, history_size = _balanced_slice(history_length, rank, world_size)
     main_start, main_size = _balanced_slice(global_main_length, rank, world_size)
     history = tensor.narrow(dim, history_start, history_size)
@@ -190,7 +187,7 @@ class HeliosAttnProcessor:
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
     ) -> torch.Tensor:
         query, key, value = _get_qkv_projections(attn, hidden_states, encoder_hidden_states)
 
@@ -235,7 +232,7 @@ class HeliosAttnProcessor:
 
 class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
     _default_processor_cls = HeliosAttnProcessor
-    _available_processors = [HeliosAttnProcessor]
+    _available_processors: ClassVar[list] = [HeliosAttnProcessor]
 
     def __init__(
         self,
@@ -350,7 +347,7 @@ class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
         **kwargs,
     ) -> torch.Tensor:
         return self.processor(
@@ -419,7 +416,7 @@ class HeliosRotaryPosEmbed(nn.Module):
         return freqs.cos(), freqs.sin()
 
     @torch.no_grad()
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def _get_spatial_meshgrid(self, height, width, device_str):
         device = torch.device(device_str)
         grid_y_coords = torch.arange(height, device=device, dtype=torch.float32)
@@ -500,8 +497,13 @@ class HeliosTransformerBlock(nn.Module):
         self.guidance_cross_attn = guidance_cross_attn
 
     def _self_attention_residual(
-        self, hidden_states, norm_hidden_states, gate_msa, rotary_emb,
-        original_context_length, **attention_kwargs,
+        self,
+        hidden_states,
+        norm_hidden_states,
+        gate_msa,
+        rotary_emb,
+        original_context_length,
+        **attention_kwargs,
     ):
         attn_output = self.attn1(
             norm_hidden_states,
@@ -520,7 +522,7 @@ class HeliosTransformerBlock(nn.Module):
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
         rotary_emb: torch.Tensor,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
         **attention_kwargs,
     ) -> torch.Tensor:
         if temb.ndim == 4:
@@ -542,8 +544,12 @@ class HeliosTransformerBlock(nn.Module):
         # 1. Self-attention
         norm_hidden_states = (self.norm1(hidden_states.float()) * (1 + scale_msa) + shift_msa).type_as(hidden_states)
         hidden_states = self._self_attention_residual(
-            hidden_states, norm_hidden_states, gate_msa, rotary_emb,
-            original_context_length, **attention_kwargs,
+            hidden_states,
+            norm_hidden_states,
+            gate_msa,
+            rotary_emb,
+            original_context_length,
+            **attention_kwargs,
         )
 
         # 2. Cross-attention
@@ -623,7 +629,7 @@ class HeliosTransformer3DModel(
             The number of channels to use for the added key and value projections. If `None`, no projection is used.
     """
 
-    _skip_layerwise_casting_patterns = [
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
         "patch_embedding",
         "patch_short",
         "patch_mid",
@@ -631,8 +637,8 @@ class HeliosTransformer3DModel(
         "condition_embedder",
         "norm",
     ]
-    _no_split_modules = ["HeliosTransformerBlock", "HeliosOutputNorm"]
-    _keep_in_fp32_modules = [
+    _no_split_modules: ClassVar[list] = ["HeliosTransformerBlock", "HeliosOutputNorm"]
+    _keep_in_fp32_modules: ClassVar[list] = [
         "time_embedder",
         "scale_shift_table",
         "norm1",
@@ -640,13 +646,13 @@ class HeliosTransformer3DModel(
         "norm3",
         "history_key_scale",
     ]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
-    _repeated_blocks = ["HeliosTransformerBlock"]
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q"]
+    _repeated_blocks: ClassVar[list] = ["HeliosTransformerBlock"]
     # Diffusers still injects its parallel attention configuration, while the
     # model forward below owns the semantic history/main sharding. Keeping the
     # generic hook plan empty avoids three full-width split/gather boundaries
     # per block (120 gathers per transformer call).
-    _cp_plan = {}
+    _cp_plan: ClassVar[dict] = {}
     _block_class = HeliosTransformerBlock
     _history_patch_name = "patch_long"
     _history_patch_scale = 4
@@ -695,12 +701,16 @@ class HeliosTransformer3DModel(
                 kernel_size=tuple(2 * p for p in patch_size),
                 stride=tuple(2 * p for p in patch_size),
             )
-            setattr(self, self._history_patch_name, nn.Conv3d(
-                in_channels,
-                self.inner_dim,
-                kernel_size=tuple(self._history_patch_scale * p for p in patch_size),
-                stride=tuple(self._history_patch_scale * p for p in patch_size),
-            ))
+            setattr(
+                self,
+                self._history_patch_name,
+                nn.Conv3d(
+                    in_channels,
+                    self.inner_dim,
+                    kernel_size=tuple(self._history_patch_scale * p for p in patch_size),
+                    stride=tuple(self._history_patch_scale * p for p in patch_size),
+                ),
+            )
 
         # 3. Condition embeddings
         self.condition_embedder = HeliosTimeTextEmbedding(
@@ -832,8 +842,10 @@ class HeliosTransformer3DModel(
         # 5. Process long history latents
         if latents_history_long is not None and indices_latents_history_long is not None:
             latents_history_long, rotary_emb_history_long = self._long_history_tokens(
-                latents_history_long.to(hidden_states), indices_latents_history_long,
-                H1, W1,
+                latents_history_long.to(hidden_states),
+                indices_latents_history_long,
+                H1,
+                W1,
             )
 
             hidden_states = torch.cat([latents_history_long, hidden_states], dim=1)

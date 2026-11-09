@@ -8,12 +8,9 @@
 # Inspired by https://github.com/DepthAnything/Depth-Anything-V2
 
 
-import os
-from typing import List, Dict, Tuple, Union
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
 from .head_act import activate_head
 from .utils import create_uv_grid, position_grid_to_embed
 
@@ -48,13 +45,13 @@ class DPTHead(nn.Module):
         activation: str = "inv_log",
         conf_activation: str = "expp1",
         features: int = 256,
-        out_channels: List[int] = [256, 512, 1024, 1024],
-        intermediate_layer_idx: List[int] = [4, 11, 17, 23],
+        out_channels: list[int] = [256, 512, 1024, 1024],  # noqa: B006 - Keeps the upstream default object and signature.
+        intermediate_layer_idx: list[int] = [4, 11, 17, 23],  # noqa: B006 - Keeps the upstream default object and signature.
         pos_embed: bool = True,
         feature_only: bool = False,
         down_ratio: int = 1,
     ) -> None:
-        super(DPTHead, self).__init__()
+        super().__init__()
         self.patch_size = patch_size
         self.activation = activation
         self.conf_activation = conf_activation
@@ -127,11 +124,11 @@ class DPTHead(nn.Module):
 
     def forward(
         self,
-        aggregated_tokens_list: List[torch.Tensor],
+        aggregated_tokens_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
         frames_chunk_size: int = 8,
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass through the DPT head, supports processing by chunking frames.
         Args:
@@ -184,12 +181,12 @@ class DPTHead(nn.Module):
 
     def _forward_impl(
         self,
-        aggregated_tokens_list: List[torch.Tensor],
+        aggregated_tokens_list: list[torch.Tensor],
         images: torch.Tensor,
         patch_start_idx: int,
-        frames_start_idx: int = None,
-        frames_end_idx: int = None,
-    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+        frames_start_idx: int | None = None,
+        frames_end_idx: int | None = None,
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """
         Implementation of the forward pass through the DPT head.
 
@@ -234,7 +231,7 @@ class DPTHead(nn.Module):
             x = self.resize_layers[dpt_idx](x)
 
             out.append(x)
-            dpt_idx += 1
+            dpt_idx += 1  # noqa: SIM113 - Keeps the explicit loop counter.
 
         # Fuse features from multiple layers.
         out = self.scratch_forward(out)
@@ -271,7 +268,7 @@ class DPTHead(nn.Module):
         pos_embed = pos_embed.permute(2, 0, 1)[None].expand(x.shape[0], -1, -1, -1)
         return x + pos_embed
 
-    def scratch_forward(self, features: List[torch.Tensor]) -> torch.Tensor:
+    def scratch_forward(self, features: list[torch.Tensor]) -> torch.Tensor:
         """
         Forward pass through the fusion blocks.
 
@@ -309,7 +306,7 @@ class DPTHead(nn.Module):
 ################################################################################
 
 
-def _make_fusion_block(features: int, size: int = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
+def _make_fusion_block(features: int, size: int | None = None, has_residual: bool = True, groups: int = 1) -> nn.Module:
     return FeatureFusionBlock(
         features,
         nn.ReLU(inplace=True),
@@ -323,7 +320,7 @@ def _make_fusion_block(features: int, size: int = None, has_residual: bool = Tru
     )
 
 
-def _make_scratch(in_shape: List[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
+def _make_scratch(in_shape: list[int], out_shape: int, groups: int = 1, expand: bool = False) -> nn.Module:
     scratch = nn.Module()
     out_shape1 = out_shape
     out_shape2 = out_shape
@@ -358,8 +355,7 @@ class ResidualConvUnit(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features, activation, bn, groups=1):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -377,8 +373,7 @@ class ResidualConvUnit(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -400,8 +395,6 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(
         self,
         features,
@@ -414,19 +407,18 @@ class FeatureFusionBlock(nn.Module):
         has_residual=True,
         groups=1,
     ):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
-        super(FeatureFusionBlock, self).__init__()
+        super().__init__()
 
         self.deconv = deconv
         self.align_corners = align_corners
         self.groups = groups
         self.expand = expand
         out_features = features
-        if self.expand == True:
+        if self.expand == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
             out_features = features // 2
 
         self.out_conv = nn.Conv2d(
@@ -443,8 +435,7 @@ class FeatureFusionBlock(nn.Module):
         self.size = size
 
     def forward(self, *xs, size=None):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """
@@ -471,8 +462,8 @@ class FeatureFusionBlock(nn.Module):
 
 def custom_interpolate(
     x: torch.Tensor,
-    size: Tuple[int, int] = None,
-    scale_factor: float = None,
+    size: tuple[int, int] | None = None,
+    scale_factor: float | None = None,
     mode: str = "bilinear",
     align_corners: bool = True,
 ) -> torch.Tensor:

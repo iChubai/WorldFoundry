@@ -4,30 +4,28 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> perception_core -> segment -> sam2 -> modeling -> sam -> transformer.py functionality."""
-
 import math
 from functools import partial
-from typing import Tuple, Type
 
 import torch
-import torch.nn.functional as F
-from torch import nn, Tensor
+from torch import Tensor, nn
 
-from worldfoundry.base_models.perception_core.segment.sam2.modeling.position_encoding import apply_rotary_enc, compute_axial_cis
-from worldfoundry.core.nn.blocks.layers import SamHeadMLP
+from worldfoundry.base_models.perception_core.segment.sam2.modeling.position_encoding import (
+    apply_rotary_enc,
+    compute_axial_cis,
+)
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn.blocks.layers import SamHeadMLP
 
 
 class TwoWayTransformer(nn.Module):
-    """Two way transformer implementation."""
     def __init__(
         self,
         depth: int,
         embedding_dim: int,
         num_heads: int,
         mlp_dim: int,
-        activation: Type[nn.Module] = nn.ReLU,
+        activation: type[nn.Module] = nn.ReLU,
         attention_downsample_rate: int = 2,
     ) -> None:
         """
@@ -61,9 +59,7 @@ class TwoWayTransformer(nn.Module):
                 )
             )
 
-        self.final_attn_token_to_image = Attention(
-            embedding_dim, num_heads, downsample_rate=attention_downsample_rate
-        )
+        self.final_attn_token_to_image = Attention(embedding_dim, num_heads, downsample_rate=attention_downsample_rate)
         self.norm_final_attn = nn.LayerNorm(embedding_dim)
 
     def forward(
@@ -71,7 +67,7 @@ class TwoWayTransformer(nn.Module):
         image_embedding: Tensor,
         image_pe: Tensor,
         point_embedding: Tensor,
-    ) -> Tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, Tensor]:
         """
         Args:
           image_embedding (torch.Tensor): image to attend to. Should be shape
@@ -114,13 +110,12 @@ class TwoWayTransformer(nn.Module):
 
 
 class TwoWayAttentionBlock(nn.Module):
-    """Two way attention block implementation."""
     def __init__(
         self,
         embedding_dim: int,
         num_heads: int,
         mlp_dim: int = 2048,
-        activation: Type[nn.Module] = nn.ReLU,
+        activation: type[nn.Module] = nn.ReLU,
         attention_downsample_rate: int = 2,
         skip_first_layer_pe: bool = False,
     ) -> None:
@@ -141,37 +136,18 @@ class TwoWayAttentionBlock(nn.Module):
         self.self_attn = Attention(embedding_dim, num_heads)
         self.norm1 = nn.LayerNorm(embedding_dim)
 
-        self.cross_attn_token_to_image = Attention(
-            embedding_dim, num_heads, downsample_rate=attention_downsample_rate
-        )
+        self.cross_attn_token_to_image = Attention(embedding_dim, num_heads, downsample_rate=attention_downsample_rate)
         self.norm2 = nn.LayerNorm(embedding_dim)
 
-        self.mlp = SamHeadMLP(
-            embedding_dim, mlp_dim, embedding_dim, num_layers=2, activation=activation
-        )
+        self.mlp = SamHeadMLP(embedding_dim, mlp_dim, embedding_dim, num_layers=2, activation=activation)
         self.norm3 = nn.LayerNorm(embedding_dim)
 
         self.norm4 = nn.LayerNorm(embedding_dim)
-        self.cross_attn_image_to_token = Attention(
-            embedding_dim, num_heads, downsample_rate=attention_downsample_rate
-        )
+        self.cross_attn_image_to_token = Attention(embedding_dim, num_heads, downsample_rate=attention_downsample_rate)
 
         self.skip_first_layer_pe = skip_first_layer_pe
 
-    def forward(
-        self, queries: Tensor, keys: Tensor, query_pe: Tensor, key_pe: Tensor
-    ) -> Tuple[Tensor, Tensor]:
-        """Forward.
-
-        Args:
-            queries: The queries.
-            keys: The keys.
-            query_pe: The query pe.
-            key_pe: The key pe.
-
-        Returns:
-            The return value.
-        """
+    def forward(self, queries: Tensor, keys: Tensor, query_pe: Tensor, key_pe: Tensor) -> tuple[Tensor, Tensor]:
         # Self attention block
         if self.skip_first_layer_pe:
             queries = self.self_attn(q=queries, k=queries, v=queries)
@@ -215,28 +191,14 @@ class Attention(nn.Module):
         num_heads: int,
         downsample_rate: int = 1,
         dropout: float = 0.0,
-        kv_in_dim: int = None,
+        kv_in_dim: int | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            embedding_dim: The embedding dim.
-            num_heads: The num heads.
-            downsample_rate: The downsample rate.
-            dropout: The dropout.
-            kv_in_dim: The kv in dim.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.embedding_dim = embedding_dim
         self.kv_in_dim = kv_in_dim if kv_in_dim is not None else embedding_dim
         self.internal_dim = embedding_dim // downsample_rate
         self.num_heads = num_heads
-        assert (
-            self.internal_dim % num_heads == 0
-        ), "num_heads must divide embedding_dim."
+        assert self.internal_dim % num_heads == 0, "num_heads must divide embedding_dim."
 
         self.q_proj = nn.Linear(embedding_dim, self.internal_dim)
         self.k_proj = nn.Linear(self.kv_in_dim, self.internal_dim)
@@ -246,43 +208,16 @@ class Attention(nn.Module):
         self.dropout_p = dropout
 
     def _separate_heads(self, x: Tensor, num_heads: int) -> Tensor:
-        """Helper function to separate heads.
-
-        Args:
-            x: The x.
-            num_heads: The num heads.
-
-        Returns:
-            The return value.
-        """
         b, n, c = x.shape
         x = x.reshape(b, n, num_heads, c // num_heads)
         return x.transpose(1, 2)  # B x N_heads x N_tokens x C_per_head
 
     def _recombine_heads(self, x: Tensor) -> Tensor:
-        """Helper function to recombine heads.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         b, n_heads, n_tokens, c_per_head = x.shape
         x = x.transpose(1, 2)
         return x.reshape(b, n_tokens, n_heads * c_per_head)  # B x N_tokens x C
 
     def forward(self, q: Tensor, k: Tensor, v: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-
-        Returns:
-            The return value.
-        """
         # Input projections
         q = self.q_proj(q)
         k = self.k_proj(k)
@@ -316,32 +251,14 @@ class RoPEAttention(Attention):
         feat_sizes=(64, 64),  # [w, h] for stride 16 feats at 1024 resolution
         **kwargs,
     ):
-        """Init."""
         super().__init__(*args, **kwargs)
 
-        self.compute_cis = partial(
-            compute_axial_cis, dim=self.internal_dim // self.num_heads, theta=rope_theta
-        )
+        self.compute_cis = partial(compute_axial_cis, dim=self.internal_dim // self.num_heads, theta=rope_theta)
         freqs_cis = self.compute_cis(end_x=feat_sizes[0], end_y=feat_sizes[1])
-        self.freqs_cis = (
-            freqs_cis.to("cuda") if torch.cuda.is_available() else freqs_cis
-        )
+        self.freqs_cis = freqs_cis.to("cuda") if torch.cuda.is_available() else freqs_cis
         self.rope_k_repeat = rope_k_repeat
 
-    def forward(
-        self, q: Tensor, k: Tensor, v: Tensor, num_k_exclude_rope: int = 0
-    ) -> Tensor:
-        """Forward.
-
-        Args:
-            q: The q.
-            k: The k.
-            v: The v.
-            num_k_exclude_rope: The num k exclude rope.
-
-        Returns:
-            The return value.
-        """
+    def forward(self, q: Tensor, k: Tensor, v: Tensor, num_k_exclude_rope: int = 0) -> Tensor:
         # Input projections
         q = self.q_proj(q)
         k = self.k_proj(k)

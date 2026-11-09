@@ -4,11 +4,13 @@
 from functools import lru_cache
 
 import torch
-from torch import nn
-from .prope import PropeDotProductAttention
-from worldfoundry.core.attention import packed_sequence_attention as flash_attention
-from einops import rearrange, repeat, einsum
 import torch.nn.functional as F
+from einops import einsum, rearrange, repeat
+from torch import nn
+
+from worldfoundry.core.attention import packed_sequence_attention as flash_attention
+
+from .prope import PropeDotProductAttention
 
 
 def compute_fx_from_fov_xi(
@@ -111,7 +113,7 @@ def _ucm_unproject_grid(
     cy: float | torch.Tensor,
     xi: float | torch.Tensor,
     dtype: torch.dtype = torch.float32,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     y_down: bool = True,
 ) -> torch.Tensor:
     scalar_input = all(not torch.is_tensor(value) for value in (fx, fy, cx, cy, xi))
@@ -133,9 +135,7 @@ def _ucm_unproject_grid(
     if not y_down:
         y = -y
     r2 = x * x + y * y
-    alpha = xi[:, None, None] + torch.sqrt(
-        1 + (1 - xi[:, None, None] * xi[:, None, None]) * r2
-    )
+    alpha = xi[:, None, None] + torch.sqrt(1 + (1 - xi[:, None, None] * xi[:, None, None]) * r2)
     gamma = alpha / (1 + r2)
     directions = torch.stack((gamma * x, gamma * y, gamma - xi[:, None, None]), dim=-1)
     return directions[0] if scalar_input else directions
@@ -158,9 +158,7 @@ def ucm_unproject_grid_fov(
     if isinstance(device, str):
         device = torch.device(device)
 
-    is_batched = any(
-        torch.is_tensor(p) and p.reshape(-1).numel() > 1 for p in [x_fov, xi]
-    )
+    is_batched = any(torch.is_tensor(p) and p.reshape(-1).numel() > 1 for p in [x_fov, xi])
 
     # --- 计算 fx, fy ---
     fx = compute_fx_from_fov_xi(x_fov, xi, width, device, dtype)
@@ -232,21 +230,15 @@ def world_to_ray_mats(
     if c2w.ndim == 3:
         c2w = c2w.unsqueeze(0)
     if d_cam.ndim != 4 or d_cam.shape[-1] != 3:
-        raise ValueError(
-            f"d_cam must have shape [H,W,3] or [B,H,W,3], got {tuple(d_cam.shape)}"
-        )
+        raise ValueError(f"d_cam must have shape [H,W,3] or [B,H,W,3], got {tuple(d_cam.shape)}")
     if c2w.ndim != 4 or c2w.shape[-2:] != (4, 4):
-        raise ValueError(
-            f"c2w must have shape [T,4,4] or [B,T,4,4], got {tuple(c2w.shape)}"
-        )
+        raise ValueError(f"c2w must have shape [T,4,4] or [B,T,4,4], got {tuple(c2w.shape)}")
     if d_cam.shape[0] == 1 and c2w.shape[0] != 1:
         d_cam = d_cam.expand(c2w.shape[0], -1, -1, -1)
     elif c2w.shape[0] == 1 and d_cam.shape[0] != 1:
         c2w = c2w.expand(d_cam.shape[0], -1, -1, -1)
     elif d_cam.shape[0] != c2w.shape[0]:
-        raise ValueError(
-            f"d_cam and c2w batch mismatch: {d_cam.shape[0]} vs {c2w.shape[0]}"
-        )
+        raise ValueError(f"d_cam and c2w batch mismatch: {d_cam.shape[0]} vs {c2w.shape[0]}")
 
     B, H, W, _ = d_cam.shape
     T = c2w.shape[1]
@@ -306,7 +298,7 @@ def compute_up_lat_map(
     xi: torch.Tensor,
     height: int,
     width: int,
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
     delta: float = 0.1,
 ):
     """
@@ -348,18 +340,12 @@ def compute_up_lat_map(
 
     # Step3：计算纬度 map
     Xw, Yw, Zw = d_world[..., 0], d_world[..., 1], d_world[..., 2]
-    lat_map = torch.atan2(-Yw, torch.sqrt(Xw**2 + Zw**2)).unsqueeze(
-        -1
-    )  # [B, T, H, W, 1]
+    lat_map = torch.atan2(-Yw, torch.sqrt(Xw**2 + Zw**2)).unsqueeze(-1)  # [B, T, H, W, 1]
 
     # Step4：计算 up_map
     v = d_world  # 已归一化
-    up_world = torch.tensor(
-        [0, -1, 0], device=device, dtype=torch.float32
-    )  # 世界上方方向（+Y 向下设定）
-    k = torch.cross(
-        v, up_world.unsqueeze(0).unsqueeze(0).unsqueeze(0).expand_as(v), dim=-1
-    )
+    up_world = torch.tensor([0, -1, 0], device=device, dtype=torch.float32)  # 世界上方方向（+Y 向下设定）
+    k = torch.cross(v, up_world.unsqueeze(0).unsqueeze(0).unsqueeze(0).expand_as(v), dim=-1)
     k = k / torch.clamp_min(k.norm(dim=-1, keepdim=True), 1e-8)
 
     delta = torch.tensor(delta, device=device, dtype=torch.float32)
@@ -367,9 +353,7 @@ def compute_up_lat_map(
     sin_eps = torch.sin(delta)
     # Rodrigues 公式旋转 v → v_rot
     v_rot = (
-        v * cos_eps
-        + torch.cross(k, v, dim=-1) * sin_eps
-        + k * (k * (v * 1).sum(dim=-1, keepdim=True)) * (1 - cos_eps)
+        v * cos_eps + torch.cross(k, v, dim=-1) * sin_eps + k * (k * (v * 1).sum(dim=-1, keepdim=True)) * (1 - cos_eps)
     )
 
     dirs_cam = torch.einsum("btij,bthwj->bthwi", R.transpose(-1, -2), v_rot)
@@ -471,9 +455,7 @@ class UcpeSelfAttention(nn.Module):
         B, T, D = x.shape
         N = control_camera_dit_input["viewmats"].shape[1]  # number of cameras
         H, W = self.patches_y, self.patches_x
-        assert (
-            T == N * H * W or T == N
-        ), f"Expected token shape ({N}×{H}×{W} or {N}), got {T}"
+        assert T == N * H * W or T == N, f"Expected token shape ({N}×{H}×{W} or {N}), got {T}"
 
         # Camera geometry intentionally stays fp32, while WorldCrafter hidden states
         # and the UCPE adapter may independently be bf16/fp16 or fp32.  Keep
@@ -484,9 +466,7 @@ class UcpeSelfAttention(nn.Module):
         projected_x = x.to(dtype=projection_dtype)
 
         if hasattr(self, "cam_encoder") and "cam_emb" in control_camera_dit_input:
-            cam_emb = control_camera_dit_input["cam_emb"].to(
-                dtype=self.cam_encoder.weight.dtype
-            )
+            cam_emb = control_camera_dit_input["cam_emb"].to(dtype=self.cam_encoder.weight.dtype)
             y = self.cam_encoder(cam_emb)
             if y.shape[1] != T:
                 hw = T // cam_emb.shape[1]
@@ -494,28 +474,16 @@ class UcpeSelfAttention(nn.Module):
             projected_x = projected_x + y.to(dtype=projection_dtype)
 
         # Project Q, K, V
-        q = (
-            self.q_proj(projected_x)
-            .view(B, T, self.num_heads, self.head_dim)
-            .transpose(1, 2)
-        )  # [B, H, T, D_head]
-        k = (
-            self.k_proj(projected_x)
-            .view(B, T, self.num_heads, self.head_dim)
-            .transpose(1, 2)
-        )
-        v = (
-            self.v_proj(projected_x)
-            .view(B, T, self.num_heads, self.head_dim)
-            .transpose(1, 2)
-        )
+        q = self.q_proj(projected_x).view(B, T, self.num_heads, self.head_dim).transpose(1, 2)  # [B, H, T, D_head]
+        k = self.k_proj(projected_x).view(B, T, self.num_heads, self.head_dim).transpose(1, 2)
+        v = self.v_proj(projected_x).view(B, T, self.num_heads, self.head_dim).transpose(1, 2)
 
         # Precompute camera-specific functions (only once per batch)
         self.prope_attn._precompute_and_cache_apply_fns(
             viewmats=control_camera_dit_input["viewmats"],
-            Ks=control_camera_dit_input.get("K", None),
-            coeffs_x=control_camera_dit_input.get("coeffs_x", None),
-            coeffs_y=control_camera_dit_input.get("coeffs_y", None),
+            Ks=control_camera_dit_input.get("K"),
+            coeffs_x=control_camera_dit_input.get("coeffs_x"),
+            coeffs_y=control_camera_dit_input.get("coeffs_y"),
         )
 
         # PRoPE matrices and coefficients are deliberately built in the FP32

@@ -10,6 +10,7 @@ so the module runs eagerly (they were transparent wrappers that did not change
 the wrapped computation, and error out on some torch builds).
 """
 
+import itertools
 import logging
 import warnings
 
@@ -19,7 +20,6 @@ import torch.nn.functional as F
 from einops import rearrange
 
 from .config import WAN22_LATENTS_MEAN, WAN22_LATENTS_STD
-
 
 __all__ = ["Wan2_2_VAE", "get_vae2_2"]
 
@@ -101,16 +101,10 @@ class Resample(nn.Module):
             )
             self.time_conv = CausalConv3d(dim, dim * 2, (3, 1, 1), padding=(1, 0, 0))
         elif mode == "downsample2d":
-            self.resample = nn.Sequential(
-                nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2))
-            )
+            self.resample = nn.Sequential(nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2)))
         elif mode == "downsample3d":
-            self.resample = nn.Sequential(
-                nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2))
-            )
-            self.time_conv = CausalConv3d(
-                dim, dim, (3, 1, 1), stride=(2, 1, 1), padding=(0, 0, 0)
-            )
+            self.resample = nn.Sequential(nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2)))
+            self.time_conv = CausalConv3d(dim, dim, (3, 1, 1), stride=(2, 1, 1), padding=(0, 0, 0))
         else:
             self.resample = nn.Identity()
 
@@ -118,68 +112,51 @@ class Resample(nn.Module):
         self,
         x,
         feat_cache=None,
-        feat_idx=[0],
+        feat_idx=[0],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         b, c, t, h, w = x.size()
-        if self.mode == "upsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = "Rep"
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -CACHE_T:, :, :].clone()
-                    if (
-                        cache_x.shape[2] < 2
-                        and feat_cache[idx] is not None
-                        and feat_cache[idx] != "Rep"
-                    ):
-                        # cache last frame of last two chunk
-                        cache_x = torch.cat(
-                            [
-                                feat_cache[idx][:, :, -1, :, :]
-                                .unsqueeze(2)
-                                .to(cache_x.device),
-                                cache_x,
-                            ],
-                            dim=2,
-                        )
-                    if (
-                        cache_x.shape[2] < 2
-                        and feat_cache[idx] is not None
-                        and feat_cache[idx] == "Rep"
-                    ):
-                        cache_x = torch.cat(
-                            [torch.zeros_like(cache_x).to(cache_x.device), cache_x],
-                            dim=2,
-                        )
-                    if feat_cache[idx] == "Rep":
-                        x = self.time_conv(x)
-                    else:
-                        x = self.time_conv(x, feat_cache[idx])
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
-                    x = x.reshape(b, 2, c, t, h, w)
-                    x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
-                    x = x.reshape(b, c, t * 2, h, w)
+        if self.mode == "upsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = "Rep"
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -CACHE_T:, :, :].clone()
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
+                    # cache last frame of last two chunk
+                    cache_x = torch.cat(
+                        [
+                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
+                            cache_x,
+                        ],
+                        dim=2,
+                    )
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
+                    cache_x = torch.cat(
+                        [torch.zeros_like(cache_x).to(cache_x.device), cache_x],
+                        dim=2,
+                    )
+                x = self.time_conv(x) if feat_cache[idx] == "Rep" else self.time_conv(x, feat_cache[idx])
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
+                x = x.reshape(b, 2, c, t, h, w)
+                x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
+                x = x.reshape(b, c, t * 2, h, w)
         t = x.shape[2]
         x = rearrange(x, "b c t h w -> (b t) c h w")
         x = self.resample(x)
         x = rearrange(x, "(b t) c h w -> b c t h w", t=t)
 
-        if self.mode == "downsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = x.clone()
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -1:, :, :].clone()
-                    x = self.time_conv(
-                        torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2)
-                    )
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "downsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = x.clone()
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -1:, :, :].clone()
+                x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
 
         return x
 
@@ -221,15 +198,13 @@ class ResidualBlock(nn.Module):
             nn.Dropout(dropout),
             CausalConv3d(out_dim, out_dim, 3, padding=1),
         )
-        self.shortcut = (
-            CausalConv3d(in_dim, out_dim, 1) if in_dim != out_dim else nn.Identity()
-        )
+        self.shortcut = CausalConv3d(in_dim, out_dim, 1) if in_dim != out_dim else nn.Identity()
 
     def forward(
         self,
         x,
         feat_cache=None,
-        feat_idx=[0],
+        feat_idx=[0],  # noqa: B006 - Keeps the upstream default object and signature.
     ):
         h = self.shortcut(x)
         for layer in self.residual:
@@ -240,9 +215,7 @@ class ResidualBlock(nn.Module):
                     # cache last frame of last two chunk
                     cache_x = torch.cat(
                         [
-                            feat_cache[idx][:, :, -1, :, :]
-                            .unsqueeze(2)
-                            .to(cache_x.device),
+                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                             cache_x,
                         ],
                         dim=2,
@@ -277,13 +250,7 @@ class AttentionBlock(nn.Module):
         x = rearrange(x, "b c t h w -> (b t) c h w")
         x = self.norm(x)
         # compute query, key, value
-        q, k, v = (
-            self.to_qkv(x)
-            .reshape(b * t, 1, c * 3, -1)
-            .permute(0, 1, 3, 2)
-            .contiguous()
-            .chunk(3, dim=-1)
-        )
+        q, k, v = self.to_qkv(x).reshape(b * t, 1, c * 3, -1).permute(0, 1, 3, 2).contiguous().chunk(3, dim=-1)
 
         # apply attention
         x = F.scaled_dot_product_attention(q, k, v)
@@ -302,9 +269,7 @@ def patchify(x, patch_size):
     if x.dim() == 4:
         x = rearrange(x, "b c (h q) (w r) -> b (c r q) h w", q=patch_size, r=patch_size)
     elif x.dim() == 5:
-        x = rearrange(
-            x, "b c f (h q) (w r) -> b (c r q) f h w", q=patch_size, r=patch_size
-        )
+        x = rearrange(x, "b c f (h q) (w r) -> b (c r q) f h w", q=patch_size, r=patch_size)
     else:
         raise ValueError(f"Invalid input shape: {x.shape}")
 
@@ -318,9 +283,7 @@ def unpatchify(x, patch_size):
     if x.dim() == 4:
         x = rearrange(x, "b (c r q) h w -> b c (h q) (w r)", q=patch_size, r=patch_size)
     elif x.dim() == 5:
-        x = rearrange(
-            x, "b (c r q) f h w -> b c f (h q) (w r)", q=patch_size, r=patch_size
-        )
+        x = rearrange(x, "b (c r q) f h w -> b c f (h q) (w r)", q=patch_size, r=patch_size)
     return x
 
 
@@ -410,9 +373,7 @@ class DupUp3D(nn.Module):
 
 
 class DownResidualBlock(nn.Module):
-    def __init__(
-        self, in_dim, out_dim, dropout, mult, temporal_downsample=False, down_flag=False
-    ):
+    def __init__(self, in_dim, out_dim, dropout, mult, temporal_downsample=False, down_flag=False):
         super().__init__()
 
         # Shortcut path with downsample
@@ -436,7 +397,7 @@ class DownResidualBlock(nn.Module):
 
         self.downsamples = nn.Sequential(*downsamples)
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         x_copy = x.clone()
         for module in self.downsamples:
             x = module(x, feat_cache, feat_idx)
@@ -445,9 +406,7 @@ class DownResidualBlock(nn.Module):
 
 
 class UpResidualBlock(nn.Module):
-    def __init__(
-        self, in_dim, out_dim, dropout, mult, temporal_upsample=False, up_flag=False
-    ):
+    def __init__(self, in_dim, out_dim, dropout, mult, temporal_upsample=False, up_flag=False):
         super().__init__()
         # Shortcut path with upsample
         if up_flag:
@@ -477,7 +436,7 @@ class UpResidualBlock(nn.Module):
         self,
         x,
         feat_cache=None,
-        feat_idx=[0],
+        feat_idx=[0],  # noqa: B006 - Keeps the upstream default object and signature.
         first_chunk=False,
     ):
         x_main = x.clone()
@@ -495,10 +454,10 @@ class Encoder3d(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temporal_downsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temporal_downsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -510,7 +469,7 @@ class Encoder3d(nn.Module):
         self.temporal_downsample = temporal_downsample
 
         # dimensions
-        dims = [dim * u for u in [1] + dim_mult]
+        dims = [dim * u for u in [1] + dim_mult]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0
 
         # init block
@@ -518,10 +477,8 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
-            t_down_flag = (
-                temporal_downsample[i] if i < len(temporal_downsample) else False
-            )
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
+            t_down_flag = temporal_downsample[i] if i < len(temporal_downsample) else False
             downsamples.append(
                 DownResidualBlock(
                     in_dim=in_dim,
@@ -549,7 +506,7 @@ class Encoder3d(nn.Module):
             CausalConv3d(out_dim, z_dim, 3, padding=1),
         )
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         if feat_cache is not None:
             idx = feat_idx[0]
             cache_x = x[:, :, -CACHE_T:, :, :].clone()
@@ -569,10 +526,7 @@ class Encoder3d(nn.Module):
 
         # downsamples
         for layer in self.downsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         # middle
         for layer in self.middle:
@@ -589,9 +543,7 @@ class Encoder3d(nn.Module):
                 if cache_x.shape[2] < 2 and feat_cache[idx] is not None:
                     cache_x = torch.cat(
                         [
-                            feat_cache[idx][:, :, -1, :, :]
-                            .unsqueeze(2)
-                            .to(cache_x.device),
+                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                             cache_x,
                         ],
                         dim=2,
@@ -610,10 +562,10 @@ class Decoder3d(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temporal_upsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temporal_upsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -625,7 +577,7 @@ class Decoder3d(nn.Module):
         self.temporal_upsample = temporal_upsample
 
         # dimensions
-        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]
+        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         # scale = 1.0 / 2 ** (len(dim_mult) - 2)
         # init block
         self.conv1 = CausalConv3d(z_dim, dims[0], 3, padding=1)
@@ -639,7 +591,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_up_flag = temporal_upsample[i] if i < len(temporal_upsample) else False
             upsamples.append(
                 UpResidualBlock(
@@ -664,7 +616,7 @@ class Decoder3d(nn.Module):
         self,
         x,
         feat_cache=None,
-        feat_idx=[0],
+        feat_idx=[0],  # noqa: B006 - Keeps the upstream default object and signature.
         first_chunk=False,
     ):
         if feat_cache is not None:
@@ -692,10 +644,7 @@ class Decoder3d(nn.Module):
 
         # upsamples
         for layer in self.upsamples:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx, first_chunk)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx, first_chunk) if feat_cache is not None else layer(x)
 
         # head
         for layer in self.head:
@@ -705,9 +654,7 @@ class Decoder3d(nn.Module):
                 if cache_x.shape[2] < 2 and feat_cache[idx] is not None:
                     cache_x = torch.cat(
                         [
-                            feat_cache[idx][:, :, -1, :, :]
-                            .unsqueeze(2)
-                            .to(cache_x.device),
+                            feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device),
                             cache_x,
                         ],
                         dim=2,
@@ -734,10 +681,10 @@ class WanVAE_(nn.Module):
         dim=160,
         dec_dim=256,
         z_dim=16,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temporal_downsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temporal_downsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -771,7 +718,7 @@ class WanVAE_(nn.Module):
             dropout,
         )
 
-    def forward(self, x, scale=[0, 1]):
+    def forward(self, x, scale=[0, 1]):  # noqa: B006 - Keeps the upstream default object and signature.
         mu = self.encode(x, scale)
         x_recon = self.decode(mu, scale)
         return x_recon, mu
@@ -798,9 +745,7 @@ class WanVAE_(nn.Module):
                 out = torch.cat([out, out_], 2)
         mu, log_var = self.conv1(out).chunk(2, dim=1)
         if isinstance(scale[0], torch.Tensor):
-            mu = (mu - scale[0].view(1, self.z_dim, 1, 1, 1)) * scale[1].view(
-                1, self.z_dim, 1, 1, 1
-            )
+            mu = (mu - scale[0].view(1, self.z_dim, 1, 1, 1)) * scale[1].view(1, self.z_dim, 1, 1, 1)
         else:
             mu = (mu - scale[0]) * scale[1]
         self.clear_cache()
@@ -830,15 +775,15 @@ class WanVAE_(nn.Module):
 
 def _video_vae(pretrained_path=None, z_dim=16, dim=160, device="cpu", **kwargs):
     # params
-    cfg = dict(
-        dim=dim,
-        z_dim=z_dim,
-        dim_mult=[1, 2, 4, 4],
-        num_res_blocks=2,
-        attn_scales=[],
-        temporal_downsample=[True, True, True],
-        dropout=0.0,
-    )
+    cfg = {
+        "dim": dim,
+        "z_dim": z_dim,
+        "dim_mult": [1, 2, 4, 4],
+        "num_res_blocks": 2,
+        "attn_scales": [],
+        "temporal_downsample": [True, True, True],
+        "dropout": 0.0,
+    }
     cfg.update(**kwargs)
 
     # init model on meta device (weights assigned at load time)
@@ -848,9 +793,7 @@ def _video_vae(pretrained_path=None, z_dim=16, dim=160, device="cpu", **kwargs):
     # load checkpoint
     if pretrained_path is not None:
         logging.info(f"loading {pretrained_path}")
-        model.load_state_dict(
-            torch.load(pretrained_path, map_location=device), assign=True
-        )
+        model.load_state_dict(torch.load(pretrained_path, map_location=device), assign=True)
 
     return model
 
@@ -866,8 +809,8 @@ class Wan2_2_VAE:
         z_dim=48,
         c_dim=160,
         vae_pth=None,
-        dim_mult=[1, 2, 4, 4],
-        temporal_downsample=[False, True, True],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
+        temporal_downsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dtype=torch.float,
         device=None,
         **legacy_kwargs,

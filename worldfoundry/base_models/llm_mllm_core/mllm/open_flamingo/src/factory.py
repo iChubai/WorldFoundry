@@ -1,9 +1,5 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> open_flamingo -> src -> factory.py functionality."""
-
-from typing import Optional
-
-from transformers import AutoModelForCausalLM, AutoTokenizer
 import open_clip
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from .flamingo import Flamingo
 from .flamingo_lm import FlamingoLMMixin
@@ -17,9 +13,9 @@ def create_model_and_transforms(
     tokenizer_path: str,
     cross_attn_every_n_layers: int = 1,
     use_local_files: bool = False,
-    decoder_layers_attr_name: str = None,
+    decoder_layers_attr_name: str | None = None,
     freeze_lm_embeddings: bool = False,
-    cache_dir: Optional[str] = None,
+    cache_dir: str | None = None,
     **flamingo_kwargs,
 ):
     """
@@ -56,9 +52,7 @@ def create_model_and_transforms(
         cache_dir=cache_dir,
     )
     # add Flamingo special tokens to the tokenizer
-    text_tokenizer.add_special_tokens(
-        {"additional_special_tokens": ["<|endofchunk|>", "<image>", "<action>"]}
-    )
+    text_tokenizer.add_special_tokens({"additional_special_tokens": ["<|endofchunk|>", "<image>", "<action>"]})
     if text_tokenizer.pad_token is None:
         # Issue: GPT models don't have a pad token, which we use to
         # modify labels for the loss.
@@ -75,17 +69,10 @@ def create_model_and_transforms(
     if "mpt-1b-redpajama-200b" in lang_encoder_path:
 
         class EmbeddingFnMixin:
-            """Embedding fn mixin implementation."""
             def get_input_embeddings(self):
-                """Get input embeddings."""
                 return self.transformer.wte
 
             def set_input_embeddings(self, new_embeddings):
-                """Set input embeddings.
-
-                Args:
-                    new_embeddings: The new embeddings.
-                """
                 self.transformer.wte = new_embeddings
 
         extend_instance(lang_encoder, EmbeddingFnMixin)
@@ -103,9 +90,7 @@ def create_model_and_transforms(
         lang_encoder,
         text_tokenizer.encode("<|endofchunk|>")[-1],
         text_tokenizer.encode("<image>")[-1],
-        vis_dim=open_clip.get_model_config(clip_vision_encoder_path)["vision_cfg"][
-            "width"
-        ],
+        vis_dim=open_clip.get_model_config(clip_vision_encoder_path)["vision_cfg"]["width"],
         cross_attn_every_n_layers=cross_attn_every_n_layers,
         **flamingo_kwargs,
     )
@@ -129,17 +114,12 @@ def create_model_and_transforms(
 
 
 def _infer_decoder_layers_attr_name(model):
-    """Helper function to infer decoder layers attr name.
-
-    Args:
-        model: The model.
-    """
     for k in __KNOWN_DECODER_LAYERS_ATTR_NAMES:
         if k.lower() in model.__class__.__name__.lower():
             return __KNOWN_DECODER_LAYERS_ATTR_NAMES[k]
 
     raise ValueError(
-        f"We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually."
+        "We require the attribute name for the nn.ModuleList in the decoder storing the transformer block layers. Please supply this string manually."
     )
 
 

@@ -2,8 +2,6 @@
 # https://github.com/YvanYin/Metric3D
 # Licensed under the BSD-2 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> three_dimensions -> depth -> metric3d -> model_fn.py functionality."""
-
 import os
 
 import torch
@@ -13,35 +11,16 @@ from .model.dense_pipeline import BaseDepthModel
 
 
 class DepthModel(BaseDepthModel):
-    """Depth model implementation."""
     def __init__(self, cfg, **kwards):
-        """Init.
-
-        Args:
-            cfg: The cfg.
-        """
-        super(DepthModel, self).__init__(cfg)
+        super().__init__(cfg)
 
     def inference(self, data):
-        """Inference.
-
-        Args:
-            data: The data.
-        """
         with torch.no_grad():
             pred_depth, confidence, output_dict = self.forward(data)
         return pred_depth, confidence, output_dict
 
 
 def get_monodepth_model(cfg: dict, **kwargs) -> nn.Module:
-    """Get monodepth model.
-
-    Args:
-        cfg: The cfg.
-
-    Returns:
-        The return value.
-    """
     # config depth  model
     model = DepthModel(cfg, **kwargs)
     # model.init_weights(load_imagenet_model, imagenet_ckpt_fpath)
@@ -72,7 +51,7 @@ def config_from_py_file(file_path: str) -> dict:
     # config: dict containing all configs.
     """
     namespace = {}
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         exec(f.read(), namespace)
     return namespace["config"]
 

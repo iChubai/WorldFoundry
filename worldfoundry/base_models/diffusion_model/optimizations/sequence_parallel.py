@@ -108,9 +108,7 @@ class SequenceParallelSelfAttentionProcessor:
         sp_rank = dist.get_rank(group) if dist.is_initialized() else 0
         fused_table = kwargs.pop("_worldfoundry_rope_table", None)
         fused_grid = kwargs.pop("_worldfoundry_rope_grid", None)
-        rope_precision = str(
-            kwargs.pop("_worldfoundry_rope_precision", "fp64")
-        ).strip().casefold()
+        rope_precision = str(kwargs.pop("_worldfoundry_rope_precision", "fp64")).strip().casefold()
         if rope_precision not in {"fp32", "fp64"}:
             raise ValueError("Wan RoPE precision must be 'fp32' or 'fp64'")
         if (fused_table is None) != (fused_grid is None):
@@ -165,9 +163,7 @@ class SequenceParallelSelfAttentionProcessor:
             q = attention.norm_q(q)
             k = attention.norm_k(k)
             freqs_rank = _rank_slice_freqs(freqs, sp_rank, s_local)
-            rope_dtype = (
-                torch.float32 if rope_precision == "fp32" else torch.float64
-            )
+            rope_dtype = torch.float32 if rope_precision == "fp32" else torch.float64
             q = rope_apply(q, freqs_rank, num_heads, compute_dtype=rope_dtype)
             k = rope_apply(k, freqs_rank, num_heads, compute_dtype=rope_dtype)
             self._state.complex_rope_calls += 1
@@ -200,9 +196,7 @@ class SequenceParallelSelfAttentionProcessor:
             k=k.flatten(2),
             v=v.flatten(2),
             num_heads=local_heads,
-            compatibility_mode=bool(
-                getattr(attention_module, "compatibility_mode", False)
-            ),
+            compatibility_mode=bool(getattr(attention_module, "compatibility_mode", False)),
             backend=getattr(attention_module, "attention_backend", None),
         ).reshape(b, -1, local_heads, head_dim)
 
@@ -240,10 +234,7 @@ def enable_sequence_parallel(model: nn.Module, sp_degree: int) -> _SPState:
         ):
             heads_seen.add(module.num_heads)
             if module.num_heads % sp_degree != 0:
-                raise ValueError(
-                    f"Wan num_heads={module.num_heads} is not divisible by "
-                    f"sequence_parallel={sp_degree}"
-                )
+                raise ValueError(f"Wan num_heads={module.num_heads} is not divisible by sequence_parallel={sp_degree}")
             # QKV fusion installs an instance-level fast forward that bypasses
             # processors. Restore the class forward so this Ulysses processor
             # owns dispatch while retaining the merged ``qkv`` projection.
@@ -266,17 +257,13 @@ def require_sequence_parallel_runtime(sp_degree: int) -> None:
     )
 
     if not dist.is_initialized():
-        raise RuntimeError(
-            "sequence_parallel requires torchrun/NCCL initialization before model loading"
-        )
+        raise RuntimeError("sequence_parallel requires torchrun/NCCL initialization before model loading")
     group = get_sequence_parallel_group()
     if group is None:
         raise RuntimeError("sequence_parallel process group is not initialized")
     actual = int(dist.get_world_size(group))
     if actual != int(sp_degree):
-        raise ValueError(
-            f"sequence_parallel={sp_degree} but the active group has size {actual}"
-        )
+        raise ValueError(f"sequence_parallel={sp_degree} but the active group has size {actual}")
 
 
 def sequence_parallel_report(state: _SPState) -> dict[str, Any]:

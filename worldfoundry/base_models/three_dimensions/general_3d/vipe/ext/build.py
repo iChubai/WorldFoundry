@@ -103,7 +103,10 @@ def _architecture_key(torch) -> str:
         return explicit
     if torch.cuda.is_available():
         capabilities = sorted(
-            {".".join(str(value) for value in torch.cuda.get_device_capability(index)) for index in range(torch.cuda.device_count())}
+            {
+                ".".join(str(value) for value in torch.cuda.get_device_capability(index))
+                for index in range(torch.cuda.device_count())
+            }
         )
         return ";".join(capabilities)
     return "unset"

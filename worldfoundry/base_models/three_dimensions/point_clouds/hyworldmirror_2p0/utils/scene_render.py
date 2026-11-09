@@ -7,9 +7,9 @@ renders each frame via gsplat, and saves MP4 videos.
 
 from pathlib import Path
 
+import imageio
 import numpy as np
 import torch
-import imageio
 from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.point_clouds.hyworldmirror_2p0.models.models.rasterization import (
@@ -25,7 +25,7 @@ def rotation_matrix_to_quaternion(R):
     """
     trace = R[..., 0, 0] + R[..., 1, 1] + R[..., 2, 2]
 
-    q = torch.zeros(R.shape[:-2] + (4,), device=R.device, dtype=R.dtype)
+    q = torch.zeros(R.shape[:-2] + (4,), device=R.device, dtype=R.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     mask1 = trace > 0
     s = torch.sqrt(trace[mask1] + 1.0) * 2
@@ -62,20 +62,20 @@ def quaternion_to_rotation_matrix(q):
     """Convert quaternion (scalar-first: [w, x, y, z]) to rotation matrix."""
     w, x, y, z = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
 
-    norm = torch.sqrt(w*w + x*x + y*y + z*z)
-    w, x, y, z = w/norm, x/norm, y/norm, z/norm
+    norm = torch.sqrt(w * w + x * x + y * y + z * z)
+    w, x, y, z = w / norm, x / norm, y / norm, z / norm
 
-    R = torch.zeros(q.shape[:-1] + (3, 3), device=q.device, dtype=q.dtype)
+    R = torch.zeros(q.shape[:-1] + (3, 3), device=q.device, dtype=q.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
-    R[..., 0, 0] = 1 - 2*(y*y + z*z)
-    R[..., 0, 1] = 2*(x*y - w*z)
-    R[..., 0, 2] = 2*(x*z + w*y)
-    R[..., 1, 0] = 2*(x*y + w*z)
-    R[..., 1, 1] = 1 - 2*(x*x + z*z)
-    R[..., 1, 2] = 2*(y*z - w*x)
-    R[..., 2, 0] = 2*(x*z - w*y)
-    R[..., 2, 1] = 2*(y*z + w*x)
-    R[..., 2, 2] = 1 - 2*(x*x + y*y)
+    R[..., 0, 0] = 1 - 2 * (y * y + z * z)
+    R[..., 0, 1] = 2 * (x * y - w * z)
+    R[..., 0, 2] = 2 * (x * z + w * y)
+    R[..., 1, 0] = 2 * (x * y + w * z)
+    R[..., 1, 1] = 1 - 2 * (x * x + z * z)
+    R[..., 1, 2] = 2 * (y * z - w * x)
+    R[..., 2, 0] = 2 * (x * z - w * y)
+    R[..., 2, 1] = 2 * (y * z + w * x)
+    R[..., 2, 2] = 1 - 2 * (x * x + y * y)
 
     return R
 
@@ -116,17 +116,19 @@ def slerp_quaternions(q1, q2, t):
     return result
 
 
-def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
-                              splats: dict,
-                              camtoworlds: torch.Tensor,
-                              intrinsics: torch.Tensor,
-                              hw: tuple,
-                              out_path: Path,
-                              interp_per_pair: int = 20,
-                              loop_reverse: bool = True,
-                              save_mode: str = "split",
-                              frame_times: list = None,
-                              render_depth: bool = False) -> None:
+def render_interpolated_video(
+    gs_renderer: GaussianSplatRenderer,
+    splats: dict,
+    camtoworlds: torch.Tensor,
+    intrinsics: torch.Tensor,
+    hw: tuple,
+    out_path: Path,
+    interp_per_pair: int = 20,
+    loop_reverse: bool = True,
+    save_mode: str = "split",
+    frame_times: list | None = None,
+    render_depth: bool = False,
+) -> None:
     """Render an interpolated fly-through video from Gaussian splat predictions.
 
     Args:
@@ -146,12 +148,6 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
     h, w = hw
 
     def build_interpolated_traj(index, base_interp_per_pair: int):
-        """Build interpolated traj.
-
-        Args:
-            index: The index.
-            base_interp_per_pair: The base interp per pair.
-        """
         exts, ints = [], []
         tmp_camtoworlds = camtoworlds[:, index]
         tmp_intrinsics = intrinsics[:, index]
@@ -168,9 +164,9 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
             gaps = None
             gap_scale = None
 
-        for i in range(len(index)-1):
-            exts.append(tmp_camtoworlds[:, i:i+1])
-            ints.append(tmp_intrinsics[:, i:i+1])
+        for i in range(len(index) - 1):
+            exts.append(tmp_camtoworlds[:, i : i + 1])
+            ints.append(tmp_intrinsics[:, i : i + 1])
             R0, t0 = tmp_camtoworlds[:, i, :3, :3], tmp_camtoworlds[:, i, :3, 3]
             R1, t1 = tmp_camtoworlds[:, i + 1, :3, :3], tmp_camtoworlds[:, i + 1, :3, 3]
 
@@ -179,7 +175,7 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
 
             if use_time_based:
                 gap = float(gaps[i]) if gaps is not None else 0.0
-                num_interp = max(0, int(round(gap * gap_scale)))
+                num_interp = max(0, int(round(gap * gap_scale)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             else:
                 num_interp = base_interp_per_pair
 
@@ -210,12 +206,6 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
         return exts, ints
 
     def build_wobble_traj(nums, delta):
-        """Build wobble traj.
-
-        Args:
-            nums: The nums.
-            delta: The delta.
-        """
         if s != 1:
             raise ValueError("Wobble trajectory requires exactly 1 input view")
         t = torch.linspace(0, 1, nums, dtype=torch.float32, device=camtoworlds.device)
@@ -232,7 +222,7 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
         return exts, ints
 
     if s > 1:
-        all_ext, all_int = build_interpolated_traj([i for i in range(s)], interp_per_pair)
+        all_ext, all_int = build_interpolated_traj(list(range(s)), interp_per_pair)
     else:
         means = splats["means"][0]
         center = means.median(dim=0).values
@@ -251,11 +241,16 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
     for st in tqdm(range(0, all_ext.shape[1], chunk)):
         ed = min(st + chunk, all_ext.shape[1])
         colors, depths, _ = gs_renderer.rasterizer.rasterize_batches(
-            pruned_splats["means"][:1], pruned_splats["quats"][:1], pruned_splats["scales"][:1],
+            pruned_splats["means"][:1],
+            pruned_splats["quats"][:1],
+            pruned_splats["scales"][:1],
             pruned_splats["opacities"][:1],
             pruned_splats["sh"][:1] if "sh" in pruned_splats else pruned_splats["colors"][:1],
-            all_ext[:, st:ed].to(torch.float32), all_int[:, st:ed].to(torch.float32),
-            width=w, height=h, sh_degree=gs_renderer.sh_degree if "sh" in pruned_splats else None,
+            all_ext[:, st:ed].to(torch.float32),
+            all_int[:, st:ed].to(torch.float32),
+            width=w,
+            height=h,
+            sh_degree=gs_renderer.sh_degree if "sh" in pruned_splats else None,
         )
         rendered_rgbs.append(colors)
         if render_depth:
@@ -269,11 +264,9 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
     def _depth_vis(d: torch.Tensor) -> torch.Tensor:
         """Simple turbo colormap depth visualization."""
         import matplotlib.pyplot as plt
+
         valid = d > 0
-        if valid.any():
-            near = d[valid].float().quantile(0.01).log()
-        else:
-            near = torch.tensor(0.0, device=d.device)
+        near = d[valid].float().quantile(0.01).log() if valid.any() else torch.tensor(0.0, device=d.device)
         far = d.flatten().float().quantile(0.99).log()
         x = d.float().clamp(min=1e-9).log()
         x = 1.0 - (x - near) / (far - near + 1e-9)
@@ -285,7 +278,7 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
     depth_frames = []
 
     if render_depth:
-        for rgb, dep in zip(rgbs, depths_all):
+        for rgb, dep in zip(rgbs, depths_all, strict=False):
             rgb_frames.append(rgb.permute(2, 0, 1))
             depth_frames.append(_depth_vis(dep))
     else:
@@ -293,12 +286,6 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
             rgb_frames.append(rgb.permute(2, 0, 1))
 
     def _make_video(frames, path):
-        """Helper function to make video.
-
-        Args:
-            frames: The frames.
-            path: The path.
-        """
         video = torch.stack([f.cpu() for f in frames]).clamp(0, 1)
         video = video.permute(0, 2, 3, 1)
         video = (video * 255).to(torch.uint8).numpy()
@@ -308,12 +295,12 @@ def render_interpolated_video(gs_renderer: GaussianSplatRenderer,
 
     out_path = Path(out_path)
     out_path.mkdir(parents=True, exist_ok=True)
-    if save_mode == 'split':
+    if save_mode == "split":
         _make_video(rgb_frames, out_path / "rendered_rgb.mp4")
         if render_depth:
             _make_video(depth_frames, out_path / "rendered_depth.mp4")
-    elif save_mode == 'both' and render_depth:
-        combined = [torch.cat([r, d], dim=1) for r, d in zip(rgb_frames, depth_frames)]
+    elif save_mode == "both" and render_depth:
+        combined = [torch.cat([r, d], dim=1) for r, d in zip(rgb_frames, depth_frames, strict=False)]
         _make_video(combined, out_path / "rendered.mp4")
 
     print(f"Video saved to {out_path} (mode: {save_mode})")

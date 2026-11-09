@@ -6,8 +6,6 @@
 
 """Some utilities for backbones, in particular for windowing"""
 
-from typing import Tuple
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,7 +16,6 @@ def window_partition(x, window_size):
     Partition into non-overlapping windows with padding if needed.
     Args:
         x (tensor): input tokens with [B, H, W, C].
-        window_size (int): window size.
     Returns:
         windows: windows after partition with [B * num_windows, window_size, window_size, C].
         (Hp, Wp): padded height and width before partition
@@ -41,7 +38,6 @@ def window_unpartition(windows, window_size, pad_hw, hw):
     Window unpartition into original sequences and removing padding.
     Args:
         x (tensor): input tokens with [B * num_windows, window_size, window_size, C].
-        window_size (int): window size.
         pad_hw (Tuple): padded height and width (Hp, Wp).
         hw (Tuple): original height and width (H, W) before padding.
     Returns:
@@ -50,9 +46,7 @@ def window_unpartition(windows, window_size, pad_hw, hw):
     Hp, Wp = pad_hw
     H, W = hw
     B = windows.shape[0] // (Hp * Wp // window_size // window_size)
-    x = windows.reshape(
-        B, Hp // window_size, Wp // window_size, window_size, window_size, -1
-    )
+    x = windows.reshape(B, Hp // window_size, Wp // window_size, window_size, window_size, -1)
     x = x.permute(0, 1, 3, 2, 4, 5).reshape(B, Hp, Wp, -1)
 
     if Hp > H or Wp > W:
@@ -67,9 +61,9 @@ class PatchEmbed(nn.Module):
 
     def __init__(
         self,
-        kernel_size: Tuple[int, ...] = (7, 7),
-        stride: Tuple[int, ...] = (4, 4),
-        padding: Tuple[int, ...] = (3, 3),
+        kernel_size: tuple[int, ...] = (7, 7),
+        stride: tuple[int, ...] = (4, 4),
+        padding: tuple[int, ...] = (3, 3),
         in_chans: int = 3,
         embed_dim: int = 768,
     ):
@@ -82,19 +76,9 @@ class PatchEmbed(nn.Module):
             embed_dim (int):  embed_dim (int): Patch embedding dimension.
         """
         super().__init__()
-        self.proj = nn.Conv2d(
-            in_chans, embed_dim, kernel_size=kernel_size, stride=stride, padding=padding
-        )
+        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=kernel_size, stride=stride, padding=padding)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = self.proj(x)
         # B C H W -> B H W C
         x = x.permute(0, 2, 3, 1)

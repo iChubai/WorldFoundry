@@ -2,8 +2,6 @@
 # https://github.com/z-x-yang/Segment-and-Track-Anything
 # Licensed under the AGPL-3.0 License. See repository-root THIRD-PARTY-NOTICES for details.
 
-"""Module for base_models -> perception_core -> tracking -> track_anything -> aot -> networks -> layers -> transformer.py functionality."""
-
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -20,13 +18,6 @@ from .basic import DropPath, GNActDWConv2d, GroupNorm1D, seq_to_2d
 
 
 def _get_norm(indim, type="ln", groups=8):
-    """Helper function to get norm.
-
-    Args:
-        indim: The indim.
-        type: The type.
-        groups: The groups.
-    """
     if type == "gn":
         return GroupNorm1D(indim, groups)
     else:
@@ -45,7 +36,6 @@ def _get_activation_fn(activation):
 
 
 class LongShortTermTransformer(nn.Module):
-    """Long short term transformer implementation."""
     def __init__(
         self,
         num_layers=2,
@@ -65,26 +55,6 @@ class LongShortTermTransformer(nn.Module):
         final_norm=True,
         block_version="v1",
     ):
-        """Init.
-
-        Args:
-            num_layers: The num layers.
-            d_model: The d model.
-            self_nhead: The self nhead.
-            att_nhead: The att nhead.
-            dim_feedforward: The dim feedforward.
-            emb_dropout: The emb dropout.
-            droppath: The droppath.
-            lt_dropout: The lt dropout.
-            st_dropout: The st dropout.
-            droppath_lst: The droppath lst.
-            droppath_scaling: The droppath scaling.
-            activation: The activation.
-            return_intermediate: The return intermediate.
-            intermediate_norm: The intermediate norm.
-            final_norm: The final norm.
-            block_version: The block version.
-        """
         super().__init__()
         self.intermediate_norm = intermediate_norm
         self.final_norm = final_norm
@@ -106,10 +76,7 @@ class LongShortTermTransformer(nn.Module):
         layers = []
         for idx in range(num_layers):
             if droppath_scaling:
-                if num_layers == 1:
-                    droppath_rate = 0
-                else:
-                    droppath_rate = droppath * idx / (num_layers - 1)
+                droppath_rate = 0 if num_layers == 1 else droppath * idx / (num_layers - 1)
             else:
                 droppath_rate = droppath
             layers.append(
@@ -144,16 +111,6 @@ class LongShortTermTransformer(nn.Module):
         self_pos=None,
         size_2d=None,
     ):
-        """Forward.
-
-        Args:
-            tgt: The tgt.
-            long_term_memories: The long term memories.
-            short_term_memories: The short term memories.
-            curr_id_emb: The curr id emb.
-            self_pos: The self pos.
-            size_2d: The size 2d.
-        """
         output = self.emb_dropout(tgt)
 
         # output = mask_out(output, self.mask_token, 0.15, self.training)
@@ -194,7 +151,6 @@ class LongShortTermTransformer(nn.Module):
 
 
 class DualBranchGPM(nn.Module):
-    """Dual branch gpm implementation."""
     def __init__(
         self,
         num_layers=2,
@@ -213,25 +169,6 @@ class DualBranchGPM(nn.Module):
         intermediate_norm=True,
         final_norm=True,
     ):
-        """Init.
-
-        Args:
-            num_layers: The num layers.
-            d_model: The d model.
-            self_nhead: The self nhead.
-            att_nhead: The att nhead.
-            dim_feedforward: The dim feedforward.
-            emb_dropout: The emb dropout.
-            droppath: The droppath.
-            lt_dropout: The lt dropout.
-            st_dropout: The st dropout.
-            droppath_lst: The droppath lst.
-            droppath_scaling: The droppath scaling.
-            activation: The activation.
-            return_intermediate: The return intermediate.
-            intermediate_norm: The intermediate norm.
-            final_norm: The final norm.
-        """
         super().__init__()
         self.intermediate_norm = intermediate_norm
         self.final_norm = final_norm
@@ -246,10 +183,7 @@ class DualBranchGPM(nn.Module):
         layers = []
         for idx in range(num_layers):
             if droppath_scaling:
-                if num_layers == 1:
-                    droppath_rate = 0
-                else:
-                    droppath_rate = droppath * idx / (num_layers - 1)
+                droppath_rate = 0 if num_layers == 1 else droppath * idx / (num_layers - 1)
             else:
                 droppath_rate = droppath
             layers.append(
@@ -287,16 +221,6 @@ class DualBranchGPM(nn.Module):
         self_pos=None,
         size_2d=None,
     ):
-        """Forward.
-
-        Args:
-            tgt: The tgt.
-            long_term_memories: The long term memories.
-            short_term_memories: The short term memories.
-            curr_id_emb: The curr id emb.
-            self_pos: The self pos.
-            size_2d: The size 2d.
-        """
         output = self.emb_dropout(tgt)
 
         # output = mask_out(output, self.mask_token, 0.15, self.training)
@@ -341,7 +265,6 @@ class DualBranchGPM(nn.Module):
 
 
 class LongShortTermTransformerBlock(nn.Module):
-    """Long short term transformer block implementation."""
     def __init__(
         self,
         d_model,
@@ -356,21 +279,6 @@ class LongShortTermTransformerBlock(nn.Module):
         local_dilation=1,
         enable_corr=True,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            self_nhead: The self nhead.
-            att_nhead: The att nhead.
-            dim_feedforward: The dim feedforward.
-            droppath: The droppath.
-            lt_dropout: The lt dropout.
-            st_dropout: The st dropout.
-            droppath_lst: The droppath lst.
-            activation: The activation.
-            local_dilation: The local dilation.
-            enable_corr: The enable corr.
-        """
         super().__init__()
 
         # Long Short-Term Attention
@@ -381,10 +289,7 @@ class LongShortTermTransformerBlock(nn.Module):
         self.long_term_attn = MultiheadAttention(d_model, att_nhead, use_linear=False, dropout=lt_dropout)
 
         # MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
-        if enable_corr:
-            MultiheadLocalAttention = MultiheadLocalAttentionV2
-        else:
-            MultiheadLocalAttention = MultiheadLocalAttentionV3
+        MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
         self.short_term_attn = MultiheadLocalAttention(
             d_model,
             att_nhead,
@@ -409,12 +314,6 @@ class LongShortTermTransformerBlock(nn.Module):
         self._init_weight()
 
     def with_pos_embed(self, tensor, pos=None):
-        """With pos embed.
-
-        Args:
-            tensor: The tensor.
-            pos: The pos.
-        """
         size = tensor.size()
         if len(size) == 4 and pos is not None:
             n, c, h, w = size
@@ -430,16 +329,6 @@ class LongShortTermTransformerBlock(nn.Module):
         self_pos=None,
         size_2d=(30, 30),
     ):
-        """Forward.
-
-        Args:
-            tgt: The tgt.
-            long_term_memory: The long term memory.
-            short_term_memory: The short term memory.
-            curr_id_emb: The curr id emb.
-            self_pos: The self pos.
-            size_2d: The size 2d.
-        """
         # Self-attention
         _tgt = self.norm1(tgt)
         q = k = self.with_pos_embed(_tgt, self_pos)
@@ -468,10 +357,7 @@ class LongShortTermTransformerBlock(nn.Module):
         tgt2 = self.long_term_attn(curr_Q, global_K, global_V)[0]
         tgt3 = self.short_term_attn(local_Q, local_K, local_V)[0]
 
-        if self.droppath_lst:
-            tgt = tgt + self.droppath(tgt2 + tgt3)
-        else:
-            tgt = tgt + self.lst_dropout(tgt2 + tgt3)
+        tgt = tgt + self.droppath(tgt2 + tgt3) if self.droppath_lst else tgt + self.lst_dropout(tgt2 + tgt3)
 
         # Feed-forward
         _tgt = self.norm3(tgt)
@@ -483,19 +369,11 @@ class LongShortTermTransformerBlock(nn.Module):
         return tgt, [[curr_K, curr_V], [global_K, global_V], [local_K, local_V]]
 
     def fuse_key_value_id(self, key, value, id_emb):
-        """Fuse key value id.
-
-        Args:
-            key: The key.
-            value: The value.
-            id_emb: The id emb.
-        """
         K = key
         V = self.linear_V(value + id_emb)
         return K, V
 
     def _init_weight(self):
-        """Helper function to init weight."""
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
@@ -503,6 +381,7 @@ class LongShortTermTransformerBlock(nn.Module):
 
 class LongShortTermTransformerBlockV2(nn.Module):
     """Long short term transformer block implementation."""
+
     def __init__(
         self,
         d_model,
@@ -517,21 +396,6 @@ class LongShortTermTransformerBlockV2(nn.Module):
         local_dilation=1,
         enable_corr=True,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            self_nhead: The self nhead.
-            att_nhead: The att nhead.
-            dim_feedforward: The dim feedforward.
-            droppath: The droppath.
-            lt_dropout: The lt dropout.
-            st_dropout: The st dropout.
-            droppath_lst: The droppath lst.
-            activation: The activation.
-            local_dilation: The local dilation.
-            enable_corr: The enable corr.
-        """
         super().__init__()
         self.d_model = d_model
         self.att_nhead = att_nhead
@@ -548,10 +412,7 @@ class LongShortTermTransformerBlockV2(nn.Module):
         self.long_term_attn = MultiheadAttention(d_model, att_nhead, use_linear=False, dropout=lt_dropout)
 
         # MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
-        if enable_corr:
-            MultiheadLocalAttention = MultiheadLocalAttentionV2
-        else:
-            MultiheadLocalAttention = MultiheadLocalAttentionV3
+        MultiheadLocalAttention = MultiheadLocalAttentionV2 if enable_corr else MultiheadLocalAttentionV3
         self.short_term_attn = MultiheadLocalAttention(
             d_model,
             att_nhead,
@@ -572,12 +433,6 @@ class LongShortTermTransformerBlockV2(nn.Module):
         self._init_weight()
 
     def with_pos_embed(self, tensor, pos=None):
-        """With pos embed.
-
-        Args:
-            tensor: The tensor.
-            pos: The pos.
-        """
         size = tensor.size()
         if len(size) == 4 and pos is not None:
             n, c, h, w = size
@@ -593,16 +448,6 @@ class LongShortTermTransformerBlockV2(nn.Module):
         self_pos=None,
         size_2d=(30, 30),
     ):
-        """Forward.
-
-        Args:
-            tgt: The tgt.
-            long_term_memory: The long term memory.
-            short_term_memory: The short term memory.
-            curr_id_emb: The curr id emb.
-            self_pos: The self pos.
-            size_2d: The size 2d.
-        """
         # Self-attention
         _tgt = self.norm1(tgt)
         q = k = self.with_pos_embed(_tgt, self_pos)
@@ -633,10 +478,7 @@ class LongShortTermTransformerBlockV2(nn.Module):
         tgt2 = self.long_term_attn(curr_Q, global_K, global_V)[0]
         tgt3 = self.short_term_attn(local_Q, local_K, local_V)[0]
 
-        if self.droppath_lst:
-            tgt = tgt + self.droppath(tgt2 + tgt3)
-        else:
-            tgt = tgt + self.lst_dropout(tgt2 + tgt3)
+        tgt = tgt + self.droppath(tgt2 + tgt3) if self.droppath_lst else tgt + self.lst_dropout(tgt2 + tgt3)
 
         # Feed-forward
         _tgt = self.norm3(tgt)
@@ -648,13 +490,6 @@ class LongShortTermTransformerBlockV2(nn.Module):
         return tgt, [[curr_K, curr_V], [global_K, global_V], [local_K, local_V]]
 
     def fuse_key_value_id(self, key, value, id_emb):
-        """Fuse key value id.
-
-        Args:
-            key: The key.
-            value: The value.
-            id_emb: The id emb.
-        """
         ID_KV = self.linear_ID_KV(id_emb)
         ID_K, ID_V = torch.split(ID_KV, [self.att_nhead, self.d_model], dim=2)
         bs = key.size(1)
@@ -664,14 +499,12 @@ class LongShortTermTransformerBlockV2(nn.Module):
         return K, V
 
     def _init_weight(self):
-        """Helper function to init weight."""
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
 
 class GatedPropagationModule(nn.Module):
-    """Gated propagation module implementation."""
     def __init__(
         self,
         d_model,
@@ -689,24 +522,6 @@ class GatedPropagationModule(nn.Module):
         layer_idx=0,
         expand_ratio=2.0,
     ):
-        """Init.
-
-        Args:
-            d_model: The d model.
-            self_nhead: The self nhead.
-            att_nhead: The att nhead.
-            dim_feedforward: The dim feedforward.
-            droppath: The droppath.
-            lt_dropout: The lt dropout.
-            st_dropout: The st dropout.
-            droppath_lst: The droppath lst.
-            activation: The activation.
-            local_dilation: The local dilation.
-            enable_corr: The enable corr.
-            max_local_dis: The max local dis.
-            layer_idx: The layer idx.
-            expand_ratio: The expand ratio.
-        """
         super().__init__()
         expand_ratio = expand_ratio
         expand_d_model = int(d_model * expand_ratio)
@@ -766,12 +581,6 @@ class GatedPropagationModule(nn.Module):
         self._init_weight()
 
     def with_pos_embed(self, tensor, pos=None):
-        """With pos embed.
-
-        Args:
-            tensor: The tensor.
-            pos: The pos.
-        """
         size = tensor.size()
         if len(size) == 4 and pos is not None:
             n, c, h, w = size
@@ -788,17 +597,6 @@ class GatedPropagationModule(nn.Module):
         self_pos=None,
         size_2d=(30, 30),
     ):
-        """Forward.
-
-        Args:
-            tgt: The tgt.
-            tgt_id: The tgt id.
-            long_term_memory: The long term memory.
-            short_term_memory: The short term memory.
-            curr_id_emb: The curr id emb.
-            self_pos: The self pos.
-            size_2d: The size 2d.
-        """
         # Long Short-Term Attention
         _tgt = self.norm1(tgt)
 
@@ -869,13 +667,6 @@ class GatedPropagationModule(nn.Module):
         )
 
     def fuse_key_value_id(self, key, value, id_emb):
-        """Fuse key value id.
-
-        Args:
-            key: The key.
-            value: The value.
-            id_emb: The id emb.
-        """
         ID_K = None
         if value is not None:
             ID_V = silu(self.linear_ID_V(torch.cat([value, id_emb], dim=2)))
@@ -884,7 +675,6 @@ class GatedPropagationModule(nn.Module):
         return ID_K, ID_V
 
     def _init_weight(self):
-        """Helper function to init weight."""
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)

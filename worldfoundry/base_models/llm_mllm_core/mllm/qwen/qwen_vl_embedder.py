@@ -1,11 +1,8 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen_vl_embedder.py functionality."""
-
-from typing import List, Optional, Tuple, Union
-
 import torch
 from PIL import Image
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
+
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
 
 
 class QwenVLEmbedder:
@@ -14,7 +11,7 @@ class QwenVLEmbedder:
     specifically isolating the embeddings for the user's text within a larger template.
     """
 
-    def __init__(self, model_id: str = "Qwen/Qwen2.5-VL-3B-Instruct", device: Optional[str] = None):
+    def __init__(self, model_id: str = "Qwen/Qwen2.5-VL-3B-Instruct", device: str | None = None):
         """
         Initializes the tokenizer and text encoder model.
 
@@ -37,7 +34,8 @@ class QwenVLEmbedder:
         # AutoProcessor 包含了 Tokenizer，并且还能处理图像，因此对两个功能都适用。
         self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
         self.text_encoder = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_id, torch_dtype=torch.bfloat16  # Use bfloat16 for efficiency
+            model_id,
+            torch_dtype=torch.bfloat16,  # Use bfloat16 for efficiency
         ).to(self.device)
         self.processor.tokenizer.padding_side = "left"
 
@@ -53,7 +51,7 @@ class QwenVLEmbedder:
         self.image_prompt_template_encode = "<|im_start|>system\nDescribe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate.<|im_end|>\n<|im_start|>user\n<|vision_start|><|image_pad|><|vision_end|>{}<|im_end|>\n<|im_start|>assistant\n"
         self.image_prompt_template_encode_start_idx = 64
 
-    def _extract_masked_hidden(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor) -> List[torch.Tensor]:
+    def _extract_masked_hidden(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor) -> list[torch.Tensor]:
         """
         Helper function to extract non-padded token embeddings from a batch.
 
@@ -80,8 +78,8 @@ class QwenVLEmbedder:
     # function: get_prompt_embeds
     # ===================================================================
     def get_prompt_embeds(
-        self, prompt: Union[str, List[str]], max_length: Optional[int] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        self, prompt: str | list[str], max_length: int | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Generates embeddings and an attention mask for the given prompt(s),
         stripping the template part.
@@ -129,10 +127,7 @@ class QwenVLEmbedder:
         attn_mask_list = [torch.ones(e.size(0), dtype=torch.long, device=e.device) for e in prompt_only_states]
 
         # 7. Pad the sequences back into a single tensor for batch processing
-        if max_length is None:
-            max_seq_len = max([e.size(0) for e in prompt_only_states])
-        else:
-            max_seq_len = max_length
+        max_seq_len = max([e.size(0) for e in prompt_only_states]) if max_length is None else max_length
 
         prompt_embeds = torch.stack(
             [torch.cat([u, u.new_zeros(max_seq_len - u.size(0), u.size(1))]) for u in prompt_only_states]
@@ -148,10 +143,10 @@ class QwenVLEmbedder:
     # ===================================================================
     def get_image_prompt_embeds(
         self,
-        prompt: Union[str, List[str]],
-        image: Union[Image.Image, List[Image.Image]],
-        max_length: Optional[int] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        prompt: str | list[str],
+        image: Image.Image | list[Image.Image],
+        max_length: int | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Generates embeddings and an attention mask for the given prompt(s) and image(s),
         stripping the template part.
@@ -192,10 +187,7 @@ class QwenVLEmbedder:
         split_hidden_states = self._extract_masked_hidden(hidden_states, model_inputs.attention_mask)
         split_hidden_states = [e[drop_idx:] for e in split_hidden_states]
         attn_mask_list = [torch.ones(e.size(0), dtype=torch.long, device=e.device) for e in split_hidden_states]
-        if max_length is None:
-            max_seq_len = max([e.size(0) for e in split_hidden_states])
-        else:
-            max_seq_len = max_length
+        max_seq_len = max([e.size(0) for e in split_hidden_states]) if max_length is None else max_length
 
         prompt_embeds = torch.stack(
             [torch.nn.functional.pad(u, (0, 0, 0, max_seq_len - u.size(0))) for u in split_hidden_states]
@@ -210,7 +202,7 @@ class QwenVLEmbedder:
     # ===================================================================
     # function: chat
     # ===================================================================
-    def chat(self, prompt: str, image_path: Optional[str] = None) -> str:
+    def chat(self, prompt: str, image_path: str | None = None) -> str:
         """
         Chatbot function to generate responses based on the given prompt and optional image.
         """
@@ -249,7 +241,9 @@ class QwenVLEmbedder:
         with torch.no_grad():
             generated_ids = self.text_encoder.generate(**inputs, max_new_tokens=128)
 
-        generated_ids_trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)]
+        generated_ids_trimmed = [
+            out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids, strict=False)
+        ]
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )

@@ -1266,6 +1266,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+JoyAI-Echo inference runtimes
+-----------------------------
+Source: https://github.com/jd-opensource/JoyAI-Echo/tree/a08f1274573d7cd6ec66719f204951f4227a5173 (echo_wm)
+        https://github.com/jd-opensource/JoyAI-Echo/tree/0b931fd42f5ef51410019ae41b261eb3b8936410 (echo_longvideo)
+Files: worldfoundry/synthesis/visual_generation/joyai_echo/echo_wm_runtime/**,
+       worldfoundry/synthesis/visual_generation/joyai_echo/echo_longvideo_runtime/**,
+       worldfoundry/data/models/runtime/configs/joyai-echo-longvideo/**,
+       worldfoundry/data/models/runtime/configs/joyai-echo-wm/**
+License: LTX-2 Community License Agreement; the complete license text is retained in the
+HelixWorld block of this bundle. Every file in the runtime directories was modified by
+WorldFoundry; each runtime's PROVENANCE.md lists the changes. The upstream notice follows.
+
+Original-File: jd-opensource/JoyAI-Echo/THIRD_PARTY_NOTICES.md
+Based on LTX-2 by Lightricks Ltd.
+Modified by JD.com for academic and research purposes only.
+Not for commercial use. For commercial use, please contact Lightricks Ltd.
+Original copyright, license, and attribution notices are retained.
+
 LTX-2.5 inference runtime
 -------------------------
 Source: https://github.com/Lightricks/LTX-2/tree/a95ab856bf29407b6b066ede0abe1846050db56c

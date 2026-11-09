@@ -49,23 +49,20 @@ def _pop_runner_metadata(options: dict[str, Any]) -> None:
         "runner",
         "runner_target",
         "install_profile",
+        "acquisition_root",
     ):
         options.pop(key, None)
 
 
-def _external_roots(options: dict[str, Any], *, checkpoint_repo_dir: str) -> tuple[Any, Any, Any]:
-    acquisition_root = options.pop("acquisition_root", None)
+def _checkpoint_roots(options: dict[str, Any], *, checkpoint_repo_dir: str) -> tuple[Any, Any]:
     hf_models_root = options.pop("hf_models_root", None)
-    source_root = options.pop("source_root", options.pop("repo_root", options.pop("runtime_root", None)))
-    if source_root is None and acquisition_root is not None:
-        source_root = Path(acquisition_root).expanduser() / "jd-opensource--JoyAI-Echo"
     checkpoint_dir = options.pop(
         "checkpoint_dir",
         options.pop("model_dir", options.pop("model_path", options.pop("pretrained_model_path", None))),
     )
     if checkpoint_dir is None and hf_models_root is not None:
         checkpoint_dir = Path(hf_models_root).expanduser() / checkpoint_repo_dir
-    return source_root, checkpoint_dir, hf_models_root
+    return checkpoint_dir, hf_models_root
 
 
 def _merge_request_kwargs(
@@ -137,7 +134,7 @@ class JoyAIEchoLongVideoPipeline(PipelineABC):
         resolved_model_id = str(options.pop("model_id", model_id or cls.MODEL_ID))
         _pop_runner_metadata(options)
         python_executable = _python_executable(options)
-        source_root, checkpoint_dir, hf_models_root = _external_roots(
+        checkpoint_dir, hf_models_root = _checkpoint_roots(
             options,
             checkpoint_repo_dir="jdopensource--JoyAI-Echo",
         )
@@ -147,7 +144,6 @@ class JoyAIEchoLongVideoPipeline(PipelineABC):
         runtime = JoyAIEchoLongVideoRuntime(
             checkpoint_dir=checkpoint_dir,
             gemma_path=gemma_path,
-            source_root=source_root,
             python_executable=python_executable,
             config_path=options.pop("config_path", None),
             precision=str(options.pop("precision", "bf16")),
@@ -218,8 +214,8 @@ class JoyAIEchoLongVideoPipeline(PipelineABC):
             "artifact_kind": "generated_video",
             "artifact_path": resolved_artifact,
             "artifact_files": generated_files,
-            "runtime": "joyai_echo.official_external_runtime",
-            "backend_quality": "official_external_runtime",
+            "runtime": "joyai_echo.official_in_tree_runtime",
+            "backend_quality": "official_in_tree_runtime",
             "request": request,
             "preflight": preflight,
             "runtime_result": run_result,
@@ -266,7 +262,7 @@ class JoyAIEchoWMPipeline(PipelineABC):
         resolved_model_id = str(options.pop("model_id", model_id or cls.MODEL_ID))
         _pop_runner_metadata(options)
         python_executable = _python_executable(options)
-        source_root, checkpoint_dir, hf_models_root = _external_roots(
+        checkpoint_dir, hf_models_root = _checkpoint_roots(
             options,
             checkpoint_repo_dir="Echo-Team--Echo-WM",
         )
@@ -276,7 +272,6 @@ class JoyAIEchoWMPipeline(PipelineABC):
         runtime = JoyAIEchoWMRuntime(
             checkpoint_dir=checkpoint_dir,
             gemma_path=gemma_path,
-            source_root=source_root,
             python_executable=python_executable,
             config_path=options.pop("config_path", None),
             variant=str(options.pop("variant", "base")),
@@ -345,8 +340,8 @@ class JoyAIEchoWMPipeline(PipelineABC):
             "artifact_kind": "generated_world",
             "artifact_path": resolved_artifact,
             "artifact_files": generated_files,
-            "runtime": "joyai_echo.official_external_runtime",
-            "backend_quality": "official_external_runtime",
+            "runtime": "joyai_echo.official_in_tree_runtime",
+            "backend_quality": "official_in_tree_runtime",
             "request": request,
             "preflight": preflight,
             "runtime_result": run_result,

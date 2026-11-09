@@ -17,7 +17,7 @@ from worldfoundry.core.execution.inference import (
     InferenceVariantSpec,
     ModelInferenceSpec,
 )
-from worldfoundry.core.io.paths import hfd_root_path, official_runtime_repo_path, package_data_path
+from worldfoundry.core.io.paths import hfd_root_path, package_data_path
 
 
 def _field(name, kind="string", default=None, *, target="call_kwargs", required=False, description=""):
@@ -211,7 +211,6 @@ ECHO = _spec(
             name,
             "Echo-Team/Echo-WM",
             variant=name,
-            source_root=str(official_runtime_repo_path("jd-opensource--JoyAI-Echo")),
             gemma_path=str(hfd_root_path("google--gemma-3-12b-it-qat-q4_0-unquantized")),
         )
         for name in ("base", "flash")
@@ -250,7 +249,6 @@ ECHO = _spec(
                 ("timesteps", "json"),
             )
         ),
-        _asset("source_root"),
     ),
     aliases=("echo-wm",),
 )

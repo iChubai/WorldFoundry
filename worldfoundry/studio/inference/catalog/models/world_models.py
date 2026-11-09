@@ -835,7 +835,6 @@ def _joyai_echo_wm_default_ref() -> str:
 
 def _joyai_echo_wm_default_load_kwargs() -> dict[str, Any]:
     return {
-        "source_root": resolve._joyai_echo_source_root(),
         "checkpoint_dir": _joyai_echo_wm_default_ref(),
         "gemma_path": resolve._checkpoint_model_ref(
             "google--gemma-3-12b-it-qat-q4_0-unquantized",
@@ -2527,9 +2526,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "supports_from_pretrained": True,
         "default_model_ref": _joyai_echo_wm_default_ref,
         "default_load_kwargs": _joyai_echo_wm_default_load_kwargs,
-        "default_input_path": lambda: str(
-            Path(resolve._joyai_echo_source_root()) / "echo_wm" / "examples" / "wm_cases" / "0004" / "input.png"
-        ),
         "default_interactions": ("w-60", "a-60"),
         "default_prompt": (
             "Environment: A warm fantasy workshop with arched windows, hanging lanterns, herbs, and glass "
@@ -2563,7 +2559,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "load_params": (
             "model_path",
             "required_components",
-            "source_root",
             "checkpoint_dir",
             "gemma_path",
             "python_executable",

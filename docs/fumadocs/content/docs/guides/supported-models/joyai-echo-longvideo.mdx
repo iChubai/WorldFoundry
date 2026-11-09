@@ -19,7 +19,7 @@ Project page: [echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page](https://
 
 Use `joyai-echo-longvideo` for catalog text-to-video inference. The recipe exists so you can launch a recorded T2V profile without assembling an upstream demo.
 
-The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry keeps the official Python 3.11, PyTorch 2.8, CUDA 12.8 runtime external and communicates through the checked-in CLI contract. It is published by JD.com (JoyAI / Echo Team).
+The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry vendors the official inference code from jd-opensource/JoyAI-Echo at 0b931fd4 and runs it in the dedicated Python 3.11, PyTorch 2.8, CUDA 12.8 environment through its CLI contract. It is published by JD.com (JoyAI / Echo Team).
 
 Catalog tasks include reference-to-video, audio-video-generation, and long-video-generation. Catalog aliases include `joyai-echo`, `echo-longvideo`, and `joyai-echo-1.5`. Documented modalities: image in, video out.
 
@@ -35,7 +35,7 @@ Family status: **Runner parity pending**.
 
 Recorded `interactive-video` defaults: frames=241, fps=25, height=736, width=1280, seed=42.
 
-Clone JoyAI-Echo at the recorded revision, prepare its dedicated environment, and pass source_root plus local Echo and gated Gemma checkpoints. Generation is safety-gated behind execute=True. FP4 also needs NVIDIA ModelOpt; production voice-memory extraction needs the upstream MSST setup.
+Prepare the dedicated environment and pass the local Echo and gated Gemma checkpoints. Generation is safety-gated behind execute=True. FP4 also needs NVIDIA ModelOpt.
 
 ## Running in WorldFoundry
 

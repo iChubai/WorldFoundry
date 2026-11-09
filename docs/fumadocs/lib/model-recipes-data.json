@@ -47682,7 +47682,7 @@
         "pipelineTarget": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoWMPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_external_runtime",
+        "backendStage": "official_in_tree_runtime",
         "runtimeStatus": "command_contract_validated_checkpoint_gpu_pending",
         "environmentId": "joyai-echo-wm",
         "environmentName": "joyai-echo-wm",
@@ -47740,8 +47740,8 @@
           "omegaconf"
         ],
         "notes": [
-          "variant=base routes to inference_wm.py; variant=flash routes to inference_wm_causal.py.",
-          "Prediction never clones source or downloads checkpoints; source_root, checkpoint_dir, and gemma_path are preflighted.",
+          "variant=base runs the vendored inference_wm module; variant=flash runs inference_wm_causal.",
+          "Prediction never downloads checkpoints; the interpreter, configuration, checkpoint, and gemma_path are preflighted.",
           "Director Agent, local-server, Gradio, training, and evaluation surfaces are outside this inference-only integration.",
           "The upstream license marks this release for academic research and non-commercial use.",
           "Pins mirror the upstream Echo-WM Python 3.11 / PyTorch 2.9.1 / CUDA 12.8 environment.",
@@ -48135,13 +48135,13 @@
         }
       ],
       "notes": [
-        "The Base and Flash Preview entrypoints share one WorldFoundry pipeline and select variant-specific official CLIs.",
+        "The Base and Flash Preview entrypoints share one WorldFoundry pipeline and select variant-specific vendored CLIs.",
         "Action DSL, first-frame, audio toggles, guidance, cache-window, and action-overlay controls are mapped explicitly.",
         "Checkpoint-backed GPU artifact parity remains pending because this workspace has no CUDA device or weights.",
         "Base and Flash command construction, control mapping, and frame-count validation are CPU-tested.",
         "Checkpoint-backed audio-video quality parity requires CUDA and external assets.",
-        "variant=base routes to inference_wm.py; variant=flash routes to inference_wm_causal.py.",
-        "Prediction never clones source or downloads checkpoints; source_root, checkpoint_dir, and gemma_path are preflighted.",
+        "variant=base runs the vendored inference_wm module; variant=flash runs inference_wm_causal.",
+        "Prediction never downloads checkpoints; the interpreter, configuration, checkpoint, and gemma_path are preflighted.",
         "Director Agent, local-server, Gradio, training, and evaluation surfaces are outside this inference-only integration.",
         "The upstream license marks this release for academic research and non-commercial use."
       ],
@@ -48159,16 +48159,16 @@
           "Echo-WM 是在连续导航控制下联合演化视频、环境音、音乐与语音的全模态世界模型。Base 生成约十秒内容；Flash Preview 使用四步去噪与有界 sink-plus-FIFO 缓存进行自回归滚动。"
         ],
         "architecture": [
-          "Both public variants use an LTX-2.3 audio-visual backbone with UCPE camera conditioning. Base is bidirectional with separate video/audio CFG, while Flash distills guidance with DMD and maintains bounded video, audio, cross-modal, and camera-attention caches."
+          "Both public variants use an LTX-2.3 audio-visual backbone with UCPE camera conditioning. Base is bidirectional with separate video/audio CFG, while Flash distills guidance with DMD and maintains bounded video, audio, cross-modal, and camera-attention caches. WorldFoundry vendors the official inference code from jd-opensource/JoyAI-Echo at a08f1274."
         ],
         "architectureZh": [
-          "两个公开变体均使用带 UCPE 相机条件的 LTX-2.3 音视频骨干。Base 为双向模型并分别使用视频/音频 CFG；Flash 以 DMD 蒸馏 guidance，并维护有界的视频、音频、跨模态及相机注意力缓存。"
+          "两个公开变体均使用带 UCPE 相机条件的 LTX-2.3 音视频骨干。Base 为双向模型并分别使用视频/音频 CFG；Flash 以 DMD 蒸馏 guidance，并维护有界的视频、音频、跨模态及相机注意力缓存。WorldFoundry vendor 了官方推理代码（jd-opensource/JoyAI-Echo，a08f1274）。"
         ],
         "usageNotes": [
-          "Supply a first-frame image, prompt, and Action DSL such as w-60,a-60. Select variant=base or variant=flash at load time. The official source checkout, dedicated CUDA environment, Echo checkpoint, and gated unquantized Gemma encoder must be staged before execute=True."
+          "Supply a first-frame image, prompt, and Action DSL such as w-60,a-60. Select variant=base or variant=flash at load time. The dedicated CUDA environment, Echo checkpoint, and gated unquantized Gemma encoder must be staged before execute=True."
         ],
         "usageNotesZh": [
-          "需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或 variant=flash。执行 execute=True 前必须准备官方源码检出、专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。"
+          "需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或 variant=flash。执行 execute=True 前必须准备专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。"
         ],
         "highlights": [
           "Image To World Video",
@@ -59373,7 +59373,7 @@
         "pipelineTarget": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoLongVideoPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_external_runtime",
+        "backendStage": "official_in_tree_runtime",
         "runtimeStatus": "command_contract_validated_gpu_blocked_gated_encoder_and_environment",
         "environmentId": "joyai-echo-longvideo",
         "environmentName": "joyai-echo-longvideo",
@@ -59426,13 +59426,13 @@
         ],
         "notes": [
           "Echo-LongVideo and Echo-WM deliberately use different upstream Python environments.",
-          "Prediction never clones source or downloads checkpoints; source_root, checkpoint_dir, and gemma_path are preflighted.",
+          "Prediction never downloads checkpoints; the interpreter, configuration, checkpoint_dir, and gemma_path are preflighted.",
           "Director Agent, local-server, Gradio, training, and evaluation surfaces are outside this inference-only integration.",
           "The upstream license marks this release for academic research and non-commercial use.",
           "Pins mirror the upstream Echo-LongVideo Python 3.11 / CUDA 12.8 reference environment.",
           "TorchAudio 2.8 media writing uses TorchCodec; its 0.7 release matches PyTorch 2.8 and requires shared FFmpeg libraries from the conda ffmpeg package.",
           "FP4 additionally requires the optional requirements-fp4.txt NVIDIA ModelOpt dependency.",
-          "Production voice-memory extraction additionally requires the upstream requirements-msst.txt and scripts/setup_msst.py assets."
+          "The MSST-WebUI separator behind the upstream production voice filter is not part of the vendored runtime and is not installed."
         ]
       },
       "sources": [
@@ -59666,13 +59666,13 @@
         }
       ],
       "notes": [
-        "WorldFoundry normalizes R2V requests and launches the official Echo-LongVideo CLI in its dedicated environment.",
+        "WorldFoundry normalizes R2V requests and runs the vendored Echo-LongVideo CLI as a package module in its dedicated environment.",
         "BF16, FP8, FP4, consumer, and low-VRAM upstream configuration routes are represented.",
         "The local BF16, FP8, and FP4 Echo checkpoints and CUDA devices are present, but GPU inference is blocked by the gated Gemma 3 12B encoder and missing dedicated environment.",
         "Command construction and official request-schema mapping are CPU-tested.",
         "Checkpoint-backed audio-video quality parity requires CUDA and external assets.",
         "Echo-LongVideo and Echo-WM deliberately use different upstream Python environments.",
-        "Prediction never clones source or downloads checkpoints; source_root, checkpoint_dir, and gemma_path are preflighted.",
+        "Prediction never downloads checkpoints; the interpreter, configuration, checkpoint_dir, and gemma_path are preflighted.",
         "Director Agent, local-server, Gradio, training, and evaluation surfaces are outside this inference-only integration.",
         "The upstream license marks this release for academic research and non-commercial use."
       ],
@@ -59690,16 +59690,16 @@
           "JoyAI-Echo 1.5 是仅推理的长时程音视频生成模型。R2V 请求可组合提示词、可选首帧与最多七个有序图像/音频记忆槽，使角色身份、声音与故事上下文在可独立编辑的镜头间延续。"
         ],
         "architecture": [
-          "The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry keeps the official Python 3.11, PyTorch 2.8, CUDA 12.8 runtime external and communicates through the checked-in CLI contract."
+          "The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry vendors the official inference code from jd-opensource/JoyAI-Echo at 0b931fd4 and runs it in the dedicated Python 3.11, PyTorch 2.8, CUDA 12.8 environment through its CLI contract."
         ],
         "architectureZh": [
-          "该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry 将官方 Python 3.11、PyTorch 2.8、CUDA 12.8 运行环境保持外置，并通过已发布 CLI 契约调用。"
+          "该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry vendor 了官方推理代码（jd-opensource/JoyAI-Echo，0b931fd4），在专用的 Python 3.11、PyTorch 2.8、CUDA 12.8 环境中通过其 CLI 契约运行。"
         ],
         "usageNotes": [
-          "Clone JoyAI-Echo at the recorded revision, prepare its dedicated environment, and pass source_root plus local Echo and gated Gemma checkpoints. Generation is safety-gated behind execute=True. FP4 also needs NVIDIA ModelOpt; production voice-memory extraction needs the upstream MSST setup."
+          "Prepare the dedicated environment and pass the local Echo and gated Gemma checkpoints. Generation is safety-gated behind execute=True. FP4 also needs NVIDIA ModelOpt."
         ],
         "usageNotesZh": [
-          "请检出记录的 JoyAI-Echo revision，准备专用环境，并传入 source_root、本地 Echo checkpoint 与受限访问的 Gemma checkpoint。生成必须显式设置 execute=True。FP4 还需 NVIDIA ModelOpt，生产级语音记忆提取需完成上游 MSST 设置。"
+          "请准备专用环境，并传入本地 Echo checkpoint 与受限访问的 Gemma checkpoint。生成必须显式设置 execute=True。FP4 还需 NVIDIA ModelOpt。"
         ],
         "highlights": [
           "Reference To Video",
@@ -59758,12 +59758,13 @@
         ],
         "limitations": [
           "The upstream release is marked for academic research and non-commercial use and remains subject to the LTX-2 Community License.",
-          "Checkpoints, Gemma access, MSST assets, and the upstream source checkout are external and are never downloaded during prediction."
+          "Checkpoints and Gemma access are external and are never downloaded during prediction."
         ],
         "limitationsZh": [
           "上游版本标注为学术研究与非商业用途，并受 LTX-2 Community License 约束。",
           "本地 Echo 权重与 CUDA 设备已就位，但当前账户无法访问受限的 Gemma 3 12B 编码器，且专用环境缺失，因此尚未验证 GPU 产物与视觉一致性。",
-          "Checkpoint、Gemma 权限、MSST 资产与上游源码检出均为外部资源，预测期间不会自动下载。"
+          "Checkpoint 与 Gemma 权限为外部资源，预测期间不会自动下载。",
+          "memory.voice_filter 启用时不接受音频记忆槽：生产级语音过滤所用的 MSST-WebUI 语音分离器是独立的 AGPL-3.0 作品，不包含在运行时中。"
         ],
         "paper": null,
         "figures": []

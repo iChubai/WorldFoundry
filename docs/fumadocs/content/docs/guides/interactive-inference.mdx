@@ -12,9 +12,9 @@ These routes generate video using local weights. Catalog browsing and configurat
 | `solarwm` | Official `solarwm infer`, vendored in WorldFoundry; indexed image/caption/camera cases | Matching backend environment |
 | `alayaworld` | Existing native LTX-2.3 + DA3 merged checkpoint route | None |
 | `alayaworld-v1.1` | Inference-only ViGeo rollout and Alaya LTX-2.3 transformer vendored in WorldFoundry, with shared loaders/VAE/history/text/ViGeo | None |
-| `joyai-echo-wm` | Official Base or Flash audio/video inference | JoyAI-Echo checkout |
+| `joyai-echo-wm` | Official Base or Flash audio/video inference, vendored in WorldFoundry | None |
 
-Runtime settings live under `worldfoundry/data/models/runtime/configs/`. Training loops, optimizers, losses and data preparation pipelines are not part of these integrations. External checkouts stay outside the WorldFoundry source tree. SolarWM's released inference configurations are bundled under `configs/solarwm/examples/`.
+Runtime settings live under `worldfoundry/data/models/runtime/configs/`. Training loops, optimizers, losses and data preparation pipelines are not part of these integrations. SolarWM's released inference configurations are bundled under `configs/solarwm/examples/`.
 
 ## Workspace, TUI and CLI
 
@@ -151,13 +151,12 @@ Omit `camera_path` to synthesize the released forward trajectory; optional `forw
 
 ## Echo-WM
 
-The existing `JoyAIEchoWMPipeline` supports `variant="base"` and `variant="flash"`. Use JoyAI-Echo revision `a08f1274573d7cd6ec66719f204951f4227a5173` and `Echo-Team/Echo-WM` weights.
+`JoyAIEchoWMPipeline` supports `variant="base"` and `variant="flash"`. Both entrypoints are vendored from JoyAI-Echo revision `a08f1274573d7cd6ec66719f204951f4227a5173`; use `Echo-Team/Echo-WM` weights.
 
 ```python
 from worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo import JoyAIEchoWMPipeline
 
 pipe = JoyAIEchoWMPipeline.from_pretrained(
-    source_root="/path/to/JoyAI-Echo",
     checkpoint_dir="/path/to/Echo-WM",
     gemma_path="/path/to/gemma-3-12b-it-qat-q4_0-unquantized",
     python_executable="/path/to/echo-wm-env/bin/python",

@@ -1060,7 +1060,6 @@ def _joyai_echo_longvideo_default_ref() -> str:
 
 def _joyai_echo_longvideo_default_load_kwargs() -> dict[str, Any]:
     return {
-        "source_root": resolve._joyai_echo_source_root(),
         "checkpoint_dir": _joyai_echo_longvideo_default_ref(),
         "gemma_path": resolve._checkpoint_model_ref(
             "google--gemma-3-12b-it",
@@ -3696,7 +3695,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "load_params": (
             "model_path",
             "required_components",
-            "source_root",
             "checkpoint_dir",
             "gemma_path",
             "python_executable",

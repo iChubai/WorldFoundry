@@ -12,9 +12,9 @@ description: Zing、Astronex-World、SolarWM、AlayaWorld v1.1 和 Echo-WM 的�
 | `solarwm` | 官方 `solarwm infer`，已 vendor 进 WorldFoundry；读取索引中的图像、描述和相机轨迹 | 对应后端环境 |
 | `alayaworld` | 保留已有原生 LTX-2.3 + DA3 合并权重路线 | 无外部模型仓库 |
 | `alayaworld-v1.1` | 仓库内 vendor 的纯推理 ViGeo rollout 与 Alaya LTX-2.3 Transformer，复用共享加载器、VAE、历史、文本编码器和 ViGeo | 无 |
-| `joyai-echo-wm` | 官方 Base / Flash 音视频推理 | JoyAI-Echo 源码与环境 |
+| `joyai-echo-wm` | 官方 Base / Flash 音视频推理，已 vendor 进 WorldFoundry | 无（需独立环境） |
 
-配置统一位于 `worldfoundry/data/models/runtime/configs/`。本次集成不包含训练循环、优化器、损失函数或训练数据准备流程。外部源码放在 WorldFoundry 仓库外；SolarWM 官方发布的推理配置位于 `configs/solarwm/examples/`。
+配置统一位于 `worldfoundry/data/models/runtime/configs/`。本次集成不包含训练循环、优化器、损失函数或训练数据准备流程。SolarWM 官方发布的推理配置位于 `configs/solarwm/examples/`。
 
 ## Workspace、TUI 与 CLI
 
@@ -152,13 +152,12 @@ result = pipe(
 
 ## Echo-WM
 
-`JoyAIEchoWMPipeline` 提供 `variant="base"` 与 `variant="flash"`。源码版本为 `a08f1274573d7cd6ec66719f204951f4227a5173`，使用 `Echo-Team/Echo-WM` 权重。
+`JoyAIEchoWMPipeline` 提供 `variant="base"` 与 `variant="flash"`。两个入口均 vendor 自源码版本 `a08f1274573d7cd6ec66719f204951f4227a5173`，使用 `Echo-Team/Echo-WM` 权重。
 
 ```python
 from worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo import JoyAIEchoWMPipeline
 
 pipe = JoyAIEchoWMPipeline.from_pretrained(
-    source_root="/path/to/JoyAI-Echo",
     checkpoint_dir="/path/to/Echo-WM",
     gemma_path="/path/to/gemma-3-12b-it-qat-q4_0-unquantized",
     python_executable="/path/to/echo-wm-env/bin/python",

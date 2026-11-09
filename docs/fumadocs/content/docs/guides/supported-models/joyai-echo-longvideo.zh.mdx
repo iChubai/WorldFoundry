@@ -17,7 +17,7 @@ JoyAI-Echo 1.5 是仅推理的长时程音视频生成模型。R2V 请求可组�
 
 在 WorldFoundry 里用 `joyai-echo-longvideo` 做 catalog 文生视频推理。这条配方让你按已记录的 T2V profile 启动，而不用自己拼上游 demo。
 
-该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry 将官方 Python 3.11、PyTorch 2.8、CUDA 12.8 运行环境保持外置，并通过已发布 CLI 契约调用。该模型由京东（JoyAI / Echo 团队）发布。
+该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry vendor 了官方推理代码（jd-opensource/JoyAI-Echo，0b931fd4），在专用的 Python 3.11、PyTorch 2.8、CUDA 12.8 环境中通过其 CLI 契约运行。该模型由京东（JoyAI / Echo 团队）发布。
 
 catalog 记录的任务包括 参考图生成视频、音视频联合生成、长视频生成。别名包括 `joyai-echo`、`echo-longvideo`、`joyai-echo-1.5`。
 
@@ -33,7 +33,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `JoyAIEchoLon
 
 系列状态：**Runner 一致性待确认**。
 
-请检出记录的 JoyAI-Echo revision，准备专用环境，并传入 source_root、本地 Echo checkpoint 与受限访问的 Gemma checkpoint。 生成必须显式设置 execute=True。 FP4 还需 NVIDIA ModelOpt，生产级语音记忆提取需完成上游 MSST 设置。
+请准备专用环境，并传入本地 Echo checkpoint 与受限访问的 Gemma checkpoint。 生成必须显式设置 execute=True。 FP4 还需 NVIDIA ModelOpt。
 
 Command construction and official request-schema mapping are CPU-tested.
 

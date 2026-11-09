@@ -26,20 +26,17 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import os
+import subprocess
 import sys
+import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import cv2
-import numpy as np
 import imageio_ffmpeg
-
-import subprocess
-import tempfile
-
+import numpy as np
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -48,7 +45,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import (
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
@@ -58,9 +55,7 @@ from model.vlm import (
 try:
     from ultralytics.models.sam import SAM3VideoSemanticPredictor
 except ImportError as exc:  # pragma: no cover - depends on optional package
-    raise ImportError(
-        "ultralytics with SAM3 support is required. Install with: pip install ultralytics"
-    ) from exc
+    raise ImportError("ultralytics with SAM3 support is required. Install with: pip install ultralytics") from exc
 
 # ── Monkey-patch Results.verbose() so it never crashes on missing/mistyped names ──
 try:
@@ -75,6 +70,7 @@ try:
             # Fallback: build a safe string ourselves
             try:
                 import numpy as _np
+
                 if self.boxes is None or self.boxes.cls is None:
                     return ""
                 counts = _np.bincount(
@@ -113,7 +109,7 @@ DEFAULT_MIN_MASK_AREA_RATIO = 0.005
 DEFAULT_MAX_MASKS_PER_FRAME = 3
 
 
-def encode_video_to_data_url(video_path: str) -> Dict:
+def encode_video_to_data_url(video_path: str) -> dict:
     with open(video_path, "rb") as video_file:
         base64_video = base64.b64encode(video_file.read()).decode("utf-8")
     return {
@@ -122,12 +118,13 @@ def encode_video_to_data_url(video_path: str) -> Dict:
     }
 
 
-def _make_safe_names(text_prompts: List[str]) -> defaultdict:
+def _make_safe_names(text_prompts: list[str]) -> defaultdict:
     """
     Return a defaultdict that maps any integer key to a prompt name.
     This prevents KeyError in ultralytics verbose() regardless of the
     class indices returned by the model.
     """
+
     class _SafeNames(defaultdict):
         def __missing__(self, key):
             try:
@@ -138,7 +135,7 @@ def _make_safe_names(text_prompts: List[str]) -> defaultdict:
                 return text_prompts[idx % len(text_prompts)]
             return f"object_{idx}"
 
-    return _SafeNames(str, {i: name for i, name in enumerate(text_prompts)})
+    return _SafeNames(str, dict(enumerate(text_prompts)))
 
 
 def extract_dynamic_objects(
@@ -147,7 +144,7 @@ def extract_dynamic_objects(
     model_name: str | None = None,
     backend: str | None = None,
     max_objects: int = DEFAULT_MAX_OBJECTS,
-) -> List[str]:
+) -> list[str]:
     """
     Use VLM to list key moving/deforming objects in the video.
     """
@@ -215,7 +212,7 @@ def _init_video_writer(video_path: str | Path, fps: float, width: int, height: i
     return writer
 
 
-def _remove_non_h264_intermediates(video_paths: List[str]) -> None:
+def _remove_non_h264_intermediates(video_paths: list[str]) -> None:
     for video_path in video_paths:
         path = Path(video_path)
         try:
@@ -228,7 +225,7 @@ def _remove_non_h264_intermediates(video_paths: List[str]) -> None:
             print(f"Removed non-H264 intermediate video: {path}")
 
 
-def _probe_video(video_path: str) -> Dict[str, float | int]:
+def _probe_video(video_path: str) -> dict[str, float | int]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {video_path}")
@@ -251,7 +248,7 @@ def _probe_video(video_path: str) -> Dict[str, float | int]:
     }
 
 
-def _compute_sample_indices(total_frames: int, max_frames: int) -> List[int]:
+def _compute_sample_indices(total_frames: int, max_frames: int) -> list[int]:
     if total_frames <= 0:
         return []
     if max_frames <= 0 or total_frames <= max_frames:
@@ -268,7 +265,7 @@ def _build_sampled_video(
     video_path: str,
     work_dir: Path,
     max_frames: int,
-) -> tuple[str, Dict[str, float | int | str]]:
+) -> tuple[str, dict[str, float | int | str]]:
     video_meta = _probe_video(video_path)
     total_frames = int(video_meta["frame_count"])
     selected_indices = _compute_sample_indices(total_frames, max_frames)
@@ -335,7 +332,7 @@ def _build_sampled_video(
 def _init_writers(
     video_path: str,
     output_video_path: str | None = None,
-) -> Tuple[cv2.VideoWriter, cv2.VideoWriter, cv2.VideoWriter, cv2.VideoWriter]:
+) -> tuple[cv2.VideoWriter, cv2.VideoWriter, cv2.VideoWriter, cv2.VideoWriter]:
     """Prepare mask, bbox, binary dynamic mask, and dynamic-object-masked writers."""
     video_meta = _probe_video(video_path)
     output_stem_video = output_video_path or video_path
@@ -386,21 +383,20 @@ def _mask_area_ratio(mask: np.ndarray, frame_area: int) -> float:
 
 
 def _inpaint_video_background(
-    frames: List[np.ndarray],
-    dynamic_masks: List[np.ndarray],
-) -> List[np.ndarray]:
+    frames: list[np.ndarray],
+    dynamic_masks: list[np.ndarray],
+) -> list[np.ndarray]:
     """Fill dynamic regions using unmasked pixels from neighboring video frames first."""
     if len(frames) != len(dynamic_masks):
         raise ValueError(f"Frame/mask count mismatch: {len(frames)} vs {len(dynamic_masks)}")
 
-    inpainted_frames: List[np.ndarray] = []
+    inpainted_frames: list[np.ndarray] = []
     frame_count = len(frames)
     valid_source_masks = [
-        (~mask) & ~((frame <= 8).all(axis=2))
-        for frame, mask in zip(frames, dynamic_masks)
+        (~mask) & ~((frame <= 8).all(axis=2)) for frame, mask in zip(frames, dynamic_masks, strict=False)
     ]
 
-    for frame_idx, (frame, dynamic_mask) in enumerate(zip(frames, dynamic_masks)):
+    for frame_idx, (frame, dynamic_mask) in enumerate(zip(frames, dynamic_masks, strict=False)):
         output_frame = frame.copy()
         remaining_mask = dynamic_mask.copy()
 
@@ -417,7 +413,7 @@ def _inpaint_video_background(
                     break
 
         if remaining_mask.any():
-            mask_uint8 = (remaining_mask.astype(np.uint8) * 255)
+            mask_uint8 = remaining_mask.astype(np.uint8) * 255
             output_frame = cv2.inpaint(output_frame, mask_uint8, inpaintRadius=3, flags=cv2.INPAINT_TELEA)
 
         inpainted_frames.append(output_frame)
@@ -433,26 +429,26 @@ def build_sam3_predictor(
     iou: float = 0.7,
 ) -> Any:
     """Build a SAM3 predictor that can be reused across multiple videos."""
-    overrides = dict(
-        conf=conf,
-        iou=iou,
-        task="segment",
-        mode="predict",
-        imgsz=800,
-        model=sam3_model_path,
-        half=True,
-        save=False,
-        device=device,
-        show_boxes=True,
-        show_labels=False,
-        show_conf=False,
-    )
+    overrides = {
+        "conf": conf,
+        "iou": iou,
+        "task": "segment",
+        "mode": "predict",
+        "imgsz": 800,
+        "model": sam3_model_path,
+        "half": True,
+        "save": False,
+        "device": device,
+        "show_boxes": True,
+        "show_labels": False,
+        "show_conf": False,
+    }
     return SAM3VideoSemanticPredictor(overrides=overrides)
 
 
 def segment_with_sam3(
     video_path: str,
-    text_prompts: List[str],
+    text_prompts: list[str],
     sam3_model_path: str = "./weights/sam3/sam3.pt",
     device: str = "cuda:1",
     conf: float = DEFAULT_SAM_CONF,
@@ -461,7 +457,7 @@ def segment_with_sam3(
     predictor: Any | None = None,
     min_mask_area_ratio: float = DEFAULT_MIN_MASK_AREA_RATIO,
     max_masks_per_frame: int = DEFAULT_MAX_MASKS_PER_FRAME,
-) -> Tuple[str, str, str, str]:
+) -> tuple[str, str, str, str]:
     """
     Run SAM3 segmentation and write mask, bbox, binary dynamic mask, and video-inpainted outputs.
     """
@@ -470,7 +466,7 @@ def segment_with_sam3(
 
     start = time.perf_counter()
 
-    print("开始计算时间")
+    print("Timing started")
     mask_writer, bbox_writer, binary_mask_writer, masked_writer = _init_writers(
         video_path,
         output_video_path=output_video_path,
@@ -495,8 +491,8 @@ def segment_with_sam3(
 
     print(f"Segmenting video with prompts: {text_prompts}")
     results = predictor(source=video_path, text=text_prompts, stream=True)
-    source_frames: List[np.ndarray] = []
-    dynamic_masks_for_inpainting: List[np.ndarray] = []
+    source_frames: list[np.ndarray] = []
+    dynamic_masks_for_inpainting: list[np.ndarray] = []
 
     for frame_idx, r in enumerate(results):
         if frame_idx % 10 == 0:
@@ -538,9 +534,7 @@ def segment_with_sam3(
                 )
 
             large_candidates = [
-                candidate
-                for candidate in raw_candidates
-                if float(candidate["area_ratio"]) >= min_mask_area_ratio
+                candidate for candidate in raw_candidates if float(candidate["area_ratio"]) >= min_mask_area_ratio
             ]
             used_small_fallback = bool(raw_candidates) and not large_candidates
             candidates = large_candidates if large_candidates else raw_candidates
@@ -602,18 +596,15 @@ def segment_with_sam3(
     masked_writer.release()
 
     end = time.perf_counter()
-    print("计算时间结束")
+    print("Timing finished")
 
     print(f"SAM3 segmentation completed in {end - start:.6f} seconds.")
 
     def remux_h264(src: str, dst: str):
         ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-        subprocess.run([
-            ffmpeg_exe, "-y", "-i", src,
-            "-c:v", "libx264", "-crf", "18",
-            "-pix_fmt", "yuv420p", dst
-        ], check=True)
-
+        subprocess.run(
+            [ffmpeg_exe, "-y", "-i", src, "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", dst], check=True
+        )
 
     mask_mp4_path = str(_mask_path(video_path, output_video_path=output_video_path))
     bbox_mp4_path = str(_bbox_path(video_path, output_video_path=output_video_path))
@@ -623,7 +614,6 @@ def segment_with_sam3(
     bbox_final = bbox_mp4_path.replace(".mp4", "_h264.mp4")
     binary_mask_final = binary_mask_mp4_path.replace(".mp4", "_h264.mp4")
     masked_final = masked_mp4_path.replace(".mp4", "_h264.mp4")
-
 
     non_h264_outputs = [
         mask_mp4_path,
@@ -653,7 +643,7 @@ def run_sam_process(
     sam_iou: float = 0.7,
     min_mask_area_ratio: float = DEFAULT_MIN_MASK_AREA_RATIO,
     max_masks_per_frame: int = DEFAULT_MAX_MASKS_PER_FRAME,
-) -> Dict:
+) -> dict:
     print("=" * 80)
     print("PHYSICAL SAM PROCESS")
     print("=" * 80)
@@ -673,10 +663,7 @@ def run_sam_process(
             work_dir=Path(temp_dir),
             max_frames=max_frames,
         )
-        print(
-            f"Processing video source: {sampling_info['source']} "
-            f"({sampling_info['processing_frame_count']} frames)"
-        )
+        print(f"Processing video source: {sampling_info['source']} ({sampling_info['processing_frame_count']} frames)")
 
         print("\nStep 1: Extract moving/deforming objects via VLM...")
         vlm_start = time.perf_counter()

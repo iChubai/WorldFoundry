@@ -1,43 +1,43 @@
-import yaml
-import torch
+from collections.abc import Callable
+from pathlib import Path
+
 import decord
 import numpy as np
+import torch
+import yaml
 from einops import rearrange
-from pathlib import Path
-from typing import Callable, Optional
+
 from .traj_dset import TrajDataset, get_train_val_sliced
+
 decord.bridge.set_bridge("torch")
+
 
 def load_yaml(filename):
     # load YAML file
-    return yaml.safe_load(open(filename, "r"))
+    return yaml.safe_load(open(filename))
+
 
 class DeformDataset(TrajDataset):
     def __init__(
         self,
         data_path: str = "data/deformable",
         object_name: str = "rope",
-        n_rollout: Optional[int] = None,
-        transform: Optional[Callable] = None,
+        n_rollout: int | None = None,
+        transform: Callable | None = None,
         normalize_action: bool = False,
         action_scale=1.0,
     ):
         self.data_path = Path(data_path) / object_name
         self.transform = transform
         self.normalize_action = normalize_action
-        self.states = torch.load(
-            self.data_path / "states.pth"
-        ).float()  # (n_rollout, n_timestep, n_particles, 4)
+        self.states = torch.load(self.data_path / "states.pth").float()  # (n_rollout, n_timestep, n_particles, 4)
         self.states = rearrange(self.states, "N T P D -> N T (P D)")
 
         self.actions = torch.load(self.data_path / "actions.pth").float()
         self.actions = self.actions / action_scale  # scaled back up in env
 
         self.n_rollout = n_rollout
-        if self.n_rollout:
-            n = self.n_rollout
-        else:
-            n = len(self.states)
+        n = self.n_rollout or len(self.states)
 
         self.states = self.states[:n]
         self.actions = self.actions[:n]
@@ -46,21 +46,13 @@ class DeformDataset(TrajDataset):
 
         self.seq_lengths = torch.tensor([self.states.shape[1]] * len(self.states))
 
-        self.proprios = torch.zeros(
-            (self.states.shape[0], self.states.shape[1], 1)
-        )  # dummy proprio
+        self.proprios = torch.zeros((self.states.shape[0], self.states.shape[1], 1))  # dummy proprio
         self.proprio_dim = self.proprios.shape[-1]
 
         if normalize_action:
-            self.action_mean, self.action_std = self.get_data_mean_std(
-                self.actions, self.seq_lengths
-            )
-            self.state_mean, self.state_std = self.get_data_mean_std(
-                self.states, self.seq_lengths
-            )
-            self.proprio_mean, self.proprio_std = self.get_data_mean_std(
-                self.proprios, self.seq_lengths
-            )
+            self.action_mean, self.action_std = self.get_data_mean_std(self.actions, self.seq_lengths)
+            self.state_mean, self.state_std = self.get_data_mean_std(self.states, self.seq_lengths)
+            self.proprio_mean, self.proprio_std = self.get_data_mean_std(self.proprios, self.seq_lengths)
         else:
             self.action_mean = torch.zeros(self.action_dim)
             self.action_std = torch.ones(self.action_dim)
@@ -71,7 +63,6 @@ class DeformDataset(TrajDataset):
 
         self.actions = (self.actions - self.action_mean) / self.action_std
         self.proprios = (self.proprios - self.proprio_mean) / self.proprio_std
-
 
     def get_data_mean_std(self, data, traj_lengths):
         all_data = []
@@ -106,7 +97,7 @@ class DeformDataset(TrajDataset):
         if self.transform:
             image = self.transform(image)
         obs = {"visual": image, "proprio": proprio}
-        return obs, act, state, {} # infos is None
+        return obs, act, state, {}  # infos is None
 
     def __getitem__(self, idx):
         return self.get_frames(idx, range(self.get_seq_length(idx)))

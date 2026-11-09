@@ -198,10 +198,7 @@ def score_trajectory_pose(
     except np.linalg.LinAlgError:
         return {"pose_status": "invalid_pose"}
     predicted = alignment @ predicted
-    rot_errors = [
-        _rotation_angle_deg(target[idx, :3, :3].T @ predicted[idx, :3, :3])
-        for idx in range(len(target))
-    ]
+    rot_errors = [_rotation_angle_deg(target[idx, :3, :3].T @ predicted[idx, :3, :3]) for idx in range(len(target))]
     rot_error = float(np.mean(rot_errors))
     trans_error = _translation_shape_error(target, predicted)
     reward = math.exp(-(rot_error / max(float(rot_scale_deg), 1e-8) + trans_error / max(float(trans_scale), 1e-8)))

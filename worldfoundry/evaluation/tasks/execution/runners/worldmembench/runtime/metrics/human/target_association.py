@@ -54,7 +54,9 @@ def hungarian_matches(
             "Human Entity association requires scipy; install the WorldMemBench metric requirements"
         ) from error
     rows, columns = linear_sum_assignment(matrix, maximize=True)
-    return {int(row): int(column) for row, column in zip(rows, columns) if matrix[row, column] >= threshold}
+    return {
+        int(row): int(column) for row, column in zip(rows, columns, strict=False) if matrix[row, column] >= threshold
+    }
 
 
 def assign_faces_to_person_boxes(
@@ -81,5 +83,7 @@ def assign_faces_to_person_boxes(
         ) from error
     rows, columns = linear_sum_assignment(scores, maximize=True)
     return {
-        target_ids[int(row)]: person_boxes[int(column)][0] for row, column in zip(rows, columns) if valid[row, column]
+        target_ids[int(row)]: person_boxes[int(column)][0]
+        for row, column in zip(rows, columns, strict=False)
+        if valid[row, column]
     }

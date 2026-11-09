@@ -1,4 +1,3 @@
-
 from vbench.spatial_relationship import compute_spatial_relationship
 from vbench2_beta_long.utils import reorganize_clips_results
 

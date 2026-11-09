@@ -8,8 +8,12 @@ from pathlib import Path
 import numpy as np
 from omegaconf import OmegaConf, open_dict
 
+# isort: split
 from official_plan import planning_main
+
+# isort: split
 from utils import cfg_to_dict
+
 from worldfoundry.core.io.paths import resolve_data_path
 
 
@@ -29,7 +33,9 @@ def parse_args() -> argparse.Namespace:
         help="DINO-WM planning config YAML.",
     )
     parser.add_argument("--ckpt-base-path", required=True, help="Directory containing outputs/<model_name>/...")
-    parser.add_argument("--model-name", required=True, help="Official DINO-WM checkpoint run name under ckpt-base-path/outputs.")
+    parser.add_argument(
+        "--model-name", required=True, help="Official DINO-WM checkpoint run name under ckpt-base-path/outputs."
+    )
     parser.add_argument("--model-epoch", default="latest", help="Checkpoint epoch suffix, e.g. latest or final.")
     parser.add_argument("--output-dir", required=True, help="Directory for planning logs/artifacts.")
     parser.add_argument("--dataset-dir", default=None, help="Resolved DINO-WM task trajectory root.")
@@ -66,7 +72,10 @@ def main() -> int:
     os.chdir(output_dir)
     logs = planning_main(cfg_to_dict(cfg))
     (output_dir / "worldfoundry_dino_wm_result.json").write_text(
-        json.dumps({"status": "succeeded", "logs": logs}, default=_json_default, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        json.dumps(
+            {"status": "succeeded", "logs": logs}, default=_json_default, ensure_ascii=False, indent=2, sort_keys=True
+        )
+        + "\n",
         encoding="utf-8",
     )
     return 0

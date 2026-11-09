@@ -1,23 +1,37 @@
+import contextlib
 import math
+from typing import Any
+
 import torch
 import torch.nn as nn
+from einops import rearrange, repeat
+from torch import einsum
 
 from src.models.autoencoder import AutoencoderKL
-from src.modules.ae_modules import Normalize, nonlinearity
-from src.modules.attention_temporal_videoae import *
+from src.modules.ae_modules import nonlinearity
+from src.modules.attention_temporal_videoae import (
+    Normalize,
+    QKVAttention,
+    RelativePosition,
+    default,
+    exists,
+    zero_module,
+)
+from src.modules.utils import conv_nd, normalization
+
 try:
     from src.modules.t5 import T5Embedder
 except ImportError:
     T5Embedder = None
 from src.distributions import DiagonalGaussianDistribution
-from src.models.autoencoder_temporal import EncoderTemporal1DCNN, DecoderTemporal1DCNN
+from src.models.autoencoder_temporal import DecoderTemporal1DCNN, EncoderTemporal1DCNN
 
 try:
-    import xformers
+    import xformers  # noqa: F401 - Availability probe for XFORMERS_IS_AVAILBLE.
     import xformers.ops as xops
 
     XFORMERS_IS_AVAILBLE = True
-except:
+except BaseException:
     XFORMERS_IS_AVAILBLE = False
 
 
@@ -127,10 +141,7 @@ class ResnetBlock2plus1D(nn.Module):
 
         # skip connections
         if self.in_channels != self.out_channels:
-            if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
-            else:
-                x = self.nin_shortcut(x)
+            x = self.conv_shortcut(x) if self.use_conv_shortcut else self.nin_shortcut(x)
             if not mask_temporal:
                 x = self.conv3_tmp(x) + x
 
@@ -143,18 +154,10 @@ class AttnBlock3D(nn.Module):
         self.in_channels = in_channels
 
         self.norm = Normalize(in_channels)
-        self.q = torch.nn.Conv3d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
-        self.k = torch.nn.Conv3d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
-        self.v = torch.nn.Conv3d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
-        self.proj_out = torch.nn.Conv3d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
+        self.q = torch.nn.Conv3d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
+        self.k = torch.nn.Conv3d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
+        self.v = torch.nn.Conv3d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
+        self.proj_out = torch.nn.Conv3d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
         h_ = x
@@ -218,10 +221,8 @@ class CrossAttention(nn.Module):
         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, patch_dim), nn.Dropout(dropout)
-        )
-        self.attention_op: Optional[Any] = None
+        self.to_out = nn.Sequential(nn.Linear(inner_dim, patch_dim), nn.Dropout(dropout))
+        self.attention_op: Any | None = None
 
     def forward(self, x, context=None, mask=None):
         b, c, t, height, width = x.shape
@@ -246,9 +247,7 @@ class CrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(
-            lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=self.heads), (q, k, v)
-        )
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=self.heads) for t in (q, k, v))
 
         if exists(mask):
             mask = rearrange(mask, "b ... -> b (...)")
@@ -273,9 +272,7 @@ class CrossAttention(nn.Module):
                     dtype=attn_bias.dtype,
                     device=attn_bias.device,
                 )
-                attn_bias_expansion[:, : attn_bias.shape[1], : attn_bias.shape[2]] = (
-                    attn_bias
-                )
+                attn_bias_expansion[:, : attn_bias.shape[1], : attn_bias.shape[2]] = attn_bias
 
                 attn_bias = attn_bias.detach().cpu()
 
@@ -283,9 +280,7 @@ class CrossAttention(nn.Module):
                     q,
                     k,
                     v,
-                    attn_bias=attn_bias_expansion[
-                        :, : attn_bias.shape[1], : attn_bias.shape[2]
-                    ],
+                    attn_bias=attn_bias_expansion[:, : attn_bias.shape[1], : attn_bias.shape[2]],
                     scale=self.scale,
                 )
             else:
@@ -333,9 +328,9 @@ class TemporalAttention(nn.Module):
         if num_head_channels == -1:
             self.num_heads = num_heads
         else:
-            assert (
-                channels % num_head_channels == 0
-            ), f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
+            assert channels % num_head_channels == 0, (
+                f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
+            )
             self.num_heads = channels // num_head_channels
 
         self.norm = normalization(channels)
@@ -425,15 +420,11 @@ class Upsample2plus1D(nn.Module):
     def forward(self, x, mask_temporal):
         # print(f'[Decoder-Upsample] input={x.shape}')
         if self.temp_up and not mask_temporal:
-            x = torch.nn.functional.interpolate(
-                x, scale_factor=(2.0, 2.0, 2.0), mode="nearest"
-            )
+            x = torch.nn.functional.interpolate(x, scale_factor=(2.0, 2.0, 2.0), mode="nearest")
         else:
             t = x.shape[2]
             x = rearrange(x, "b c t h w -> b (c t) h w")
-            x = torch.nn.functional.interpolate(
-                x, scale_factor=(2.0, 2.0), mode="nearest"
-            )
+            x = torch.nn.functional.interpolate(x, scale_factor=(2.0, 2.0), mode="nearest")
             x = rearrange(x, "b (c t) h w -> b c t h w", t=t)
 
         if self.with_conv:
@@ -468,24 +459,20 @@ class Encoder2plus1D(nn.Module):
     ):
         super().__init__()
         if use_linear_attn:
-            attn_type = "linear"
+            attn_type = "linear"  # noqa: F841 - Upstream ignores use_linear_attn in this encoder; kept with its condition.
         self.ch = ch
         self.temb_ch = 0
         self.num_resolutions = len(ch_mult)  # spatial resolutions
-        self.n_temporal_down = int(
-            math.log2(temporal_down_factor)
-        )  # temporal resolutions
+        self.n_temporal_down = int(math.log2(temporal_down_factor))  # temporal resolutions
         self.num_res_blocks = num_res_blocks
         self.resolution = resolution
         self.in_channels = in_channels
 
         # downsampling
-        self.conv_in = torch.nn.Conv3d(
-            in_channels, self.ch, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1)
-        )
+        self.conv_in = torch.nn.Conv3d(in_channels, self.ch, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1))
 
         curr_res = resolution
-        in_ch_mult = (1,) + tuple(ch_mult)
+        in_ch_mult = (1, *tuple(ch_mult))
         self.in_ch_mult = in_ch_mult
         self.down = nn.ModuleList()
         cur_patch_size = 8
@@ -495,7 +482,7 @@ class Encoder2plus1D(nn.Module):
             attn = nn.ModuleList()
             block_in = ch * in_ch_mult[i_level]
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks):
+            for _i_block in range(self.num_res_blocks):
                 block.append(
                     ResnetBlock2plus1D(
                         in_channels=block_in,
@@ -518,9 +505,7 @@ class Encoder2plus1D(nn.Module):
             down.attn = attn
             if i_level != self.num_resolutions - 1:
                 temp_down = i_level <= self.n_temporal_down - 1
-                down.downsample = Downsample2plus1D(
-                    block_in, resamp_with_conv, temp_down
-                )
+                down.downsample = Downsample2plus1D(block_in, resamp_with_conv, temp_down)
                 curr_res = curr_res // 2
                 cur_patch_size //= 2
             self.down.append(down)
@@ -552,9 +537,7 @@ class Encoder2plus1D(nn.Module):
             padding=(0, 1, 1),
         )
 
-    def forward(
-        self, x, text_embeddings=None, text_attn_mask=None, mask_temporal=False
-    ):
+    def forward(self, x, text_embeddings=None, text_attn_mask=None, mask_temporal=False):
         # timestep embedding
         temb = None
 
@@ -565,9 +548,7 @@ class Encoder2plus1D(nn.Module):
             for i_block in range(self.num_res_blocks):
                 h = self.down[i_level].block[i_block](hs[-1], temb, mask_temporal)
                 if len(self.down[i_level].attn) > 0:
-                    h = h + self.down[i_level].attn[i_block](
-                        h, context=text_embeddings, mask=text_attn_mask
-                    )
+                    h = h + self.down[i_level].attn[i_block](h, context=text_embeddings, mask=text_attn_mask)
                 # print(f'[Encoder] after down block={h.shape}')
                 hs.append(h)
             if i_level != self.num_resolutions - 1:
@@ -616,13 +597,11 @@ class Decoder2plus1D(nn.Module):
     ):
         super().__init__()
         if use_linear_attn:
-            attn_type = "linear"
+            attn_type = "linear"  # noqa: F841 - Upstream ignores use_linear_attn in this encoder; kept with its condition.
         self.ch = ch
         self.temb_ch = 0
         self.num_resolutions = len(ch_mult)  # spatial resolutions
-        self.n_temporal_up = int(
-            math.log2(temporal_down_factor)
-        )  # temporal resolutions
+        self.n_temporal_up = int(math.log2(temporal_down_factor))  # temporal resolutions
         self.n_spatial_up = self.num_resolutions - 1  # 3
         self.num_res_blocks = num_res_blocks
         self.resolution = resolution
@@ -631,15 +610,12 @@ class Decoder2plus1D(nn.Module):
         self.tanh_out = tanh_out
 
         # compute in_ch_mult, block_in and curr_res at lowest res
-        in_ch_mult = (1,) + tuple(ch_mult)
         block_in = ch * ch_mult[self.num_resolutions - 1]
         curr_res = resolution // 2 ** (self.num_resolutions - 1)
         self.z_shape = (1, z_channels, curr_res, curr_res)
 
         # z to block_in
-        self.conv_in = torch.nn.Conv3d(
-            z_channels, block_in, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1)
-        )
+        self.conv_in = torch.nn.Conv3d(z_channels, block_in, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1))
 
         # middle
         self.mid = nn.Module()
@@ -667,7 +643,7 @@ class Decoder2plus1D(nn.Module):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_out = ch * ch_mult[i_level]
-            for i_block in range(self.num_res_blocks + 1):
+            for _i_block in range(self.num_res_blocks + 1):
                 block.append(
                     ResnetBlock2plus1D(
                         in_channels=block_in,
@@ -689,9 +665,7 @@ class Decoder2plus1D(nn.Module):
             up.block = block
             up.attn = attn
             if i_level != 0:
-                temp_up = i_level <= self.num_resolutions - 1 - (
-                    self.n_spatial_up - self.n_temporal_up
-                )
+                temp_up = i_level <= self.num_resolutions - 1 - (self.n_spatial_up - self.n_temporal_up)
                 up.upsample = Upsample2plus1D(block_in, resamp_with_conv, temp_up)
                 curr_res = curr_res * 2
                 cur_patch_size *= 2
@@ -699,13 +673,9 @@ class Decoder2plus1D(nn.Module):
 
         # end
         self.norm_out = Normalize(block_in)
-        self.conv_out = torch.nn.Conv3d(
-            block_in, out_ch, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1)
-        )
+        self.conv_out = torch.nn.Conv3d(block_in, out_ch, kernel_size=(1, 3, 3), stride=1, padding=(0, 1, 1))
 
-    def forward(
-        self, z, text_embeddings=None, text_attn_mask=None, mask_temporal=False
-    ):
+    def forward(self, z, text_embeddings=None, text_attn_mask=None, mask_temporal=False):
         self.last_z_shape = z.shape
 
         # print(f'[Decoder] input={z.shape}')
@@ -731,9 +701,7 @@ class Decoder2plus1D(nn.Module):
             for i_block in range(self.num_res_blocks + 1):
                 h = self.up[i_level].block[i_block](h, temb, mask_temporal)
                 if len(self.up[i_level].attn) > 0:
-                    h = h + self.up[i_level].attn[i_block](
-                        h, context=text_embeddings, mask=text_attn_mask
-                    )
+                    h = h + self.up[i_level].attn[i_block](h, context=text_embeddings, mask=text_attn_mask)
                 # print(f'[Decoder] after up block ={h.shape}')
             if i_level != 0:
                 h = self.up[i_level].upsample(h, mask_temporal)
@@ -764,7 +732,7 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
         ckpt_path=None,
         ckpt_path_2d=None,
         ckpt_path_4temporal=None,
-        ignore_keys_3d=[],
+        ignore_keys_3d=[],  # noqa: B006 - Read-only default; retain the public signature.
         img_video_joint_train=False,
         video_key="",
         caption_guide=False,
@@ -772,7 +740,7 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
         *args,
         **kwargs,
     ):
-        super(AutoencoderKL2plus1D_1dcnn, self).__init__(
+        super().__init__(
             ddconfig,
             lossconfig,
             embed_dim,
@@ -796,9 +764,7 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
         if use_quant_conv:
             assert embed_dim
             self.embed_dim = embed_dim
-            self.quant_conv = torch.nn.Conv3d(
-                2 * ddconfig["z_channels"], 2 * embed_dim, 1
-            )
+            self.quant_conv = torch.nn.Conv3d(2 * ddconfig["z_channels"], 2 * embed_dim, 1)
             self.post_quant_conv = torch.nn.Conv3d(embed_dim, ddconfig["z_channels"], 1)
 
         if ckpt_path is not None:
@@ -815,12 +781,10 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
 
     def init_from_2dckpt(self, ckpt_path_2d):
         sd = torch.load(ckpt_path_2d, map_location="cpu")
-        try:
+        with contextlib.suppress(BaseException):
             sd = sd["state_dict"]
-        except:
-            pass
         sd_new = {}
-        for k in sd.keys():
+        for k in sd:
             if k.startswith("first_stage_model."):
                 new_key = k.split("first_stage_model.")[-1]
                 # print(f"k={k},para={sd[k].shape}")
@@ -837,9 +801,7 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
         # print(f"{self.device} enable T5?: {self.enable_text_embedder}")
         if not self.enable_text_embedder:
             self.enable_text_embedder = True
-            self.text_embedder = T5Embedder(
-                device=self.device, model_max_length=self.t5_model_max_length
-            )
+            self.text_embedder = T5Embedder(device=self.device, model_max_length=self.t5_model_max_length)
         return self.text_embedder.get_text_embeddings(captions)
 
     def encode_temporal(self, x, text_embeddings=None, text_attn_mask=None):
@@ -855,25 +817,17 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
         dec = self.decoder_temporal(z, text_embeddings, text_attn_mask)
         return dec
 
-    def encode_2plus1d(
-        self, x, text_embeddings=None, text_attn_mask=None, mask_temporal=False
-    ):
-        h = self.encoder(
-            x, text_embeddings, text_attn_mask, mask_temporal=mask_temporal
-        )
+    def encode_2plus1d(self, x, text_embeddings=None, text_attn_mask=None, mask_temporal=False):
+        h = self.encoder(x, text_embeddings, text_attn_mask, mask_temporal=mask_temporal)
         if self.use_quant_conv:
             h = self.quant_conv(h)
         posterior = DiagonalGaussianDistribution(h)
         return posterior
 
-    def decode_2plus1d(
-        self, z, text_embeddings=None, text_attn_mask=None, mask_temporal=False
-    ):
+    def decode_2plus1d(self, z, text_embeddings=None, text_attn_mask=None, mask_temporal=False):
         if self.use_quant_conv:
             z = self.post_quant_conv(z)
-        dec = self.decoder(
-            z, text_embeddings, text_attn_mask, mask_temporal=mask_temporal
-        )
+        dec = self.decoder(z, text_embeddings, text_attn_mask, mask_temporal=mask_temporal)
         return dec
 
     def encode(
@@ -885,21 +839,13 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
         mask_temporal=False,
     ):
         # [b, c, t, h, w]
-        posterior = self.encode_2plus1d(
-            x, text_embeddings, text_attn_mask, mask_temporal=mask_temporal
-        )
-        if sample_posterior:
-            z = posterior.sample()
-        else:
-            z = posterior.mode()
+        posterior = self.encode_2plus1d(x, text_embeddings, text_attn_mask, mask_temporal=mask_temporal)
+        z = posterior.sample() if sample_posterior else posterior.mode()
         z = z.to(device=self.device, dtype=self.dtype)
 
         if not mask_temporal:
             posterior = self.encode_temporal(z, text_embeddings, text_attn_mask)
-            if sample_posterior:
-                z = posterior.sample()
-            else:
-                z = posterior.mode()
+            z = posterior.sample() if sample_posterior else posterior.mode()
             z = z.to(device=self.device, dtype=self.dtype)
 
         return z, posterior
@@ -907,9 +853,7 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
     def decode(self, z, text_embeddings=None, text_attn_mask=None, mask_temporal=False):
         if not mask_temporal:
             z = self.decode_temporal(z, text_embeddings, text_attn_mask)
-        dec = self.decode_2plus1d(
-            z, text_embeddings, text_attn_mask, mask_temporal=mask_temporal
-        )
+        dec = self.decode_2plus1d(z, text_embeddings, text_attn_mask, mask_temporal=mask_temporal)
         return dec
 
     def forward(
@@ -928,7 +872,5 @@ class AutoencoderKL2plus1D_1dcnn(AutoencoderKL):
             sample_posterior,
             mask_temporal=mask_temporal,
         )
-        dec = self.decode(
-            z, text_embeddings, text_attn_mask, mask_temporal=mask_temporal
-        )
+        dec = self.decode(z, text_embeddings, text_attn_mask, mask_temporal=mask_temporal)
         return dec, posterior

@@ -143,9 +143,7 @@ def build_camera_trajectory(
             frame_r = start_r.copy()
             for action in seg:
                 if action.kind in {"yaw", "pitch", "roll"}:
-                    frame_r = frame_r @ _rotation_matrix(
-                        action.kind, _signed_rotation_degrees(action) * alpha
-                    )
+                    frame_r = frame_r @ _rotation_matrix(action.kind, _signed_rotation_degrees(action) * alpha)
 
             frame_t = start_t.copy()
             for action in seg:

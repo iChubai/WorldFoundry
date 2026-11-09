@@ -232,7 +232,7 @@ def prepare_face_tracks(
         raise EvaluationError("ArcFace anchors have inconsistent dimensions")
     seeded_association = {
         target_id: FaceObservation(box, anchor)
-        for target_id, (box, anchor) in enumerate(zip(protocol.target_face_boxes, anchors))
+        for target_id, (box, anchor) in enumerate(zip(protocol.target_face_boxes, anchors, strict=False))
     }
     candidates_by_frame: dict[int, list[FaceObservation]] = {}
     for frame_index in range(1, protocol.total_frames):

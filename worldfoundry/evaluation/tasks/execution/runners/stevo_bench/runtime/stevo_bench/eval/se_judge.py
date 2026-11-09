@@ -24,17 +24,17 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any
 
-from eval.control_judge import _load_task_fields, _ensemble_decide
+from eval.control_judge import _ensemble_decide, _load_task_fields
 from eval.judge_client import make_judge_client
 from eval.task_resolver import ResolvedTask
 from eval.utils import _path_to_rel
 
-
 # ---------------------------------------------------------------------------
 # Result dataclass
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class SEJudgeResult:
@@ -52,6 +52,7 @@ class SEJudgeResult:
 # Response parsers
 # ---------------------------------------------------------------------------
 
+
 def _parse_process_line(response_text: str) -> str:
     """Extract concise process from 'Process: ...' line (last occurrence).
     Falls back to the full response text if no such line is found."""
@@ -67,7 +68,7 @@ def _parse_verdict(response_text: str) -> bool:
     for line in response_text.split("\n"):
         lower = line.lower().strip()
         if lower.startswith("verdict:"):
-            verdict_part = lower[len("verdict:"):].strip()
+            verdict_part = lower[len("verdict:") :].strip()
             if "yes" in verdict_part:
                 return True
             elif "no" in verdict_part:
@@ -79,13 +80,14 @@ def _parse_verdict(response_text: str) -> bool:
 # Prompt builders
 # ---------------------------------------------------------------------------
 
-def build_se_predict_prompt(action_prompt: Optional[str]) -> str:
+
+def build_se_predict_prompt(action_prompt: str | None) -> str:
     """Prompt for step 1: init image (+ optional trigger) → expected physical process."""
     if action_prompt:
         return (
             f"You are analyzing a video generation task. You are given:\n"
             f"1. An initial image showing the starting state\n"
-            f"2. An action/event that will occur: \"{action_prompt}\"\n"
+            f'2. An action/event that will occur: "{action_prompt}"\n'
             f"\n"
             f"Based on the initial image and the action described, what physical process or state evolution should happen?\n"
             f"Describe the expected changes in the scene, including:\n"
@@ -160,6 +162,7 @@ def build_se_verify_prompt(expected_process: str, camera_controlled: bool) -> st
 # Per-task evaluator
 # ---------------------------------------------------------------------------
 
+
 def evaluate_se_one_task(
     task: ResolvedTask,
     *,
@@ -176,7 +179,7 @@ def evaluate_se_one_task(
     # For image_implied tasks camera_WM is empty → action_prompt=None (image-only prediction).
     # For simple_trigger tasks camera_WM holds the kick-off action.
     _, camera_wm, _ = _load_task_fields(Path(task.task_yaml))
-    action_prompt: Optional[str] = camera_wm.strip() or None
+    action_prompt: str | None = camera_wm.strip() or None
 
     n = max(1, ensemble_size)
 
@@ -192,8 +195,8 @@ def evaluate_se_one_task(
         try:
             existing = json.loads(report_path.read_text(encoding="utf-8"))
             existing_responses = existing.get("responses", [])
-            concise_process    = existing.get("expected_process_concise", "")
-            full_prediction    = existing.get("expected_process_full", "")
+            concise_process = existing.get("expected_process_concise", "")
+            full_prediction = existing.get("expected_process_full", "")
         except Exception:
             pass
 
@@ -209,7 +212,7 @@ def evaluate_se_one_task(
     # Step 2: verify process in video (ensemble over this step)
     verify_prompt = build_se_verify_prompt(concise_process, camera_controlled=camera_controlled)
 
-    def _single_verify(_: int) -> Dict[str, Any]:
+    def _single_verify(_: int) -> dict[str, Any]:
         raw = client.judge(prompt=verify_prompt, video_path=Path(task.wm_video))
         return {
             "state_evol": _parse_verdict(raw),
@@ -232,22 +235,22 @@ def evaluate_se_one_task(
     else:
         notes = ""
 
-    payload: Dict[str, Any] = {
-        "task_id":                    task.task_id,
-        "provider":                   client.provider,
-        "model":                      model,
-        "wm_video":                   _path_to_rel(task.wm_video),
-        "action_prompt":              action_prompt,
-        "camera_controlled":          camera_controlled,
-        "ensemble_size":              n,
-        "ensemble_mode":              ensemble_mode,
-        "expected_process_concise":   concise_process,
-        "expected_process_full":      full_prediction,
-        "state_evol":                 state_evol,
-        "notes":                      notes,
-        "predict_prompt":             predict_prompt,
-        "verify_prompt":              verify_prompt,
-        "raw_text":                   responses[0]["raw_text"],
+    payload: dict[str, Any] = {
+        "task_id": task.task_id,
+        "provider": client.provider,
+        "model": model,
+        "wm_video": _path_to_rel(task.wm_video),
+        "action_prompt": action_prompt,
+        "camera_controlled": camera_controlled,
+        "ensemble_size": n,
+        "ensemble_mode": ensemble_mode,
+        "expected_process_concise": concise_process,
+        "expected_process_full": full_prediction,
+        "state_evol": state_evol,
+        "notes": notes,
+        "predict_prompt": predict_prompt,
+        "verify_prompt": verify_prompt,
+        "raw_text": responses[0]["raw_text"],
     }
     if n > 1:
         payload["votes_state_evol"] = votes_true
@@ -270,8 +273,9 @@ def evaluate_se_one_task(
 # Summary aggregation
 # ---------------------------------------------------------------------------
 
+
 def append_se_results_to_summary(
-    tasks: List[ResolvedTask],
+    tasks: list[ResolvedTask],
     *,
     judge_slug: str,
     report_filename: str,
@@ -307,6 +311,4 @@ def append_se_results_to_summary(
         ev = task_entries[task.task_id].setdefault("llm_evals", {}).setdefault(judge_slug, {})
         ev["state_evol"] = bool(data.get("state_evol", False))
 
-    summary_path.write_text(
-        json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")

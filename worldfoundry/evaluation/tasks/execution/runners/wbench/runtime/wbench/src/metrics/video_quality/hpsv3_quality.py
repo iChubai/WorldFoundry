@@ -1,13 +1,15 @@
 """HPSv3 human preference score — Qwen2-VL-7B based preference model."""
+
 import os
-from typing import Dict, Any, List
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 
-from ..base import BaseMetric
 from worldfoundry.base_models.perception_core.video_quality import hpsv3 as hpsv3_base
+
+from ..base import BaseMetric
 
 
 class HPSv3QualityMetric(BaseMetric):
@@ -19,7 +21,7 @@ class HPSv3QualityMetric(BaseMetric):
     def name(self):
         return "hpsv3_quality"
 
-    def compute(self, frames: List[Image.Image], **kwargs) -> Dict[str, Any]:
+    def compute(self, frames: list[Image.Image], **kwargs) -> dict[str, Any]:
         tmp_paths = []
         for i, frame in enumerate(frames):
             p = f"/tmp/_hpsv3_{os.getpid()}_{i}.png"

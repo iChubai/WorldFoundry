@@ -5,15 +5,15 @@ from __future__ import annotations
 import json
 import subprocess
 from collections import Counter
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from ..io import atomic_write_json, atomic_write_text, file_fingerprint, read_json
 from ..protocols import FAMILIES
 from .planner import initial_observation_path
-
 
 INVENTORY_SCHEMA = "harnesseval.inventory"
 VideoProbe = Callable[[Path, bool], dict[str, Any]]
@@ -48,7 +48,7 @@ def probe_video(video_path: Path, full_decode: bool = False) -> dict[str, Any]:
     completed = subprocess.run(command, capture_output=True, text=True, timeout=120)
     if completed.returncode:
         raise RuntimeError(completed.stderr.strip() or "ffprobe failed")
-    streams = (json.loads(completed.stdout).get("streams") or [])
+    streams = json.loads(completed.stdout).get("streams") or []
     if not streams:
         raise RuntimeError("video has no readable video stream")
     stream = streams[0]
@@ -268,10 +268,7 @@ def build_inventory(
             )
         )
 
-    expected = {
-        (row["primary_axis"], row["probe_family"], row["model_id"], row["case_id"])
-        for row in rows
-    }
+    expected = {(row["primary_axis"], row["probe_family"], row["model_id"], row["case_id"]) for row in rows}
     actual = set()
     outputs_root = generation_root / "outputs"
     if outputs_root.is_dir():

@@ -23,12 +23,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import List, Optional
 
 import cv2
 
 
-def parse_frames_arg(arg: Optional[str]) -> Optional[List[int]]:
+def parse_frames_arg(arg: str | None) -> list[int] | None:
     if not arg:
         return None
     parts = []
@@ -39,7 +38,7 @@ def parse_frames_arg(arg: Optional[str]) -> Optional[List[int]]:
         try:
             parts.append(int(token))
         except ValueError:
-            raise ValueError(f"Invalid frame index: {token}")
+            raise ValueError(f"Invalid frame index: {token}")  # noqa: B904 - Preserve the implicit context.
     return sorted(set(parts))
 
 
@@ -47,9 +46,9 @@ def extract_frames(
     video_path: str,
     output_dir: str,
     start: int = 0,
-    end: Optional[int] = None,
+    end: int | None = None,
     stride: int = 1,
-    explicit_frames: Optional[List[int]] = None,
+    explicit_frames: list[int] | None = None,
 ):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -58,7 +57,7 @@ def extract_frames(
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     last_idx = total - 1 if end is None else min(end, total - 1)
 
-    targets: List[int]
+    targets: list[int]
     if explicit_frames is not None:
         targets = [f for f in explicit_frames if 0 <= f < total]
     else:

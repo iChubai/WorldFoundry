@@ -15,13 +15,13 @@ Usage:
     bounds = split_turns("unknown", total_frames=484, chunk_lengths=[4,4,4,4])
     # [(0, 121), (121, 242), (242, 363), (363, 484)]
 """
+
 import math
 import os
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional
 
 
-def _split_equal(total_frames: int, n_turns: int) -> List[Tuple[int, int]]:
+def _split_equal(total_frames: int, n_turns: int) -> list[tuple[int, int]]:
     """Equal splitting (fallback for API models)."""
     bounds = []
     for i in range(n_turns):
@@ -35,7 +35,8 @@ def _split_equal(total_frames: int, n_turns: int) -> List[Tuple[int, int]]:
 # Model-specific splitting formulas
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _split_model_a(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+
+def _split_model_a(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model A: 15fps, first segment int(s*15)+1, continuation int(s*15)+1-13 (overlap 13)"""
     segs = [int(s * 15) + 1 for s in chunk_lengths]
     bounds = [(0, segs[0])]
@@ -45,7 +46,7 @@ def _split_model_a(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[
     return bounds
 
 
-def _split_model_b(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+def _split_model_b(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model B: 16fps, each segment ceil(s/2)*29, no overlap"""
     bounds, pos = [], 0
     for s in chunk_lengths:
@@ -55,16 +56,16 @@ def _split_model_b(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[
     return bounds
 
 
-def _split_model_c(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+def _split_model_c(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model C: 16fps, first segment 81 frames, continuation 80 frames"""
     bounds = [(0, 81)]
-    for i in range(1, len(chunk_lengths)):
+    for _i in range(1, len(chunk_lengths)):
         start = bounds[-1][1]
         bounds.append((start, start + 80))
     return bounds
 
 
-def _split_model_d(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+def _split_model_d(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model D: 24fps, single-shot, latent_rate=6/s, VAE tail correction"""
     latents = [int(s * 6) for s in chunk_lengths]
     tl = sum(latents)
@@ -76,24 +77,21 @@ def _split_model_d(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[
     for i, ll in enumerate(latents):
         start = cum * 4
         cum += ll
-        if i < len(latents) - 1:
-            end = cum * 4
-        else:
-            end = total_pixel
+        end = cum * 4 if i < len(latents) - 1 else total_pixel
         bounds.append((start, end))
     return bounds
 
 
-def _split_model_e(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+def _split_model_e(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model E: 8fps, first segment 29 frames, continuation 32 frames"""
     bounds = [(0, 29)]
-    for i in range(1, len(chunk_lengths)):
+    for _i in range(1, len(chunk_lengths)):
         start = bounds[-1][1]
         bounds.append((start, start + 32))
     return bounds
 
 
-def _split_model_f(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+def _split_model_f(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model F: 30fps, first segment has condition frame, each iteration 80 frames"""
     model_chunks = [max(1, round(s * 30 / 80)) for s in chunk_lengths]
     bounds = [(0, 1 + model_chunks[0] * 80)]
@@ -103,7 +101,7 @@ def _split_model_f(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[
     return bounds
 
 
-def _split_model_g(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+def _split_model_g(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model G: 12fps, single-shot, proportional by duration"""
     bounds, cum = [], 0.0
     for s in chunk_lengths:
@@ -114,7 +112,7 @@ def _split_model_g(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[
     return bounds
 
 
-def _split_model_h(total_frames: int, chunk_lengths: List[float]) -> List[Tuple[int, int]]:
+def _split_model_h(total_frames: int, chunk_lengths: list[float]) -> list[tuple[int, int]]:
     """Model H: 20fps, FramePack sliding window, first latent*4+1, rest latent*4"""
     latents = [round(s * 5) for s in chunk_lengths]
     tl = 1 + sum(latents)
@@ -145,17 +143,20 @@ _SPLITTER_REGISTRY = {
 }
 
 _EQUAL_SPLIT_MODELS = {
-    "i2v_model_1", "i2v_model_2", "i2v_model_3", "i2v_model_4",
+    "i2v_model_1",
+    "i2v_model_2",
+    "i2v_model_3",
+    "i2v_model_4",
 }
 
 
 def split_turns(
     model: str,
     total_frames: int,
-    chunk_lengths: Optional[List[float]] = None,
-    n_turns: Optional[int] = None,
+    chunk_lengths: list[float] | None = None,
+    n_turns: int | None = None,
     case_id=None,
-) -> List[Tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """Compute per-turn frame boundaries based on model.
 
     Args:
@@ -188,8 +189,9 @@ def split_turns(
 @dataclass
 class TurnInfo:
     """Parsed result for one turn."""
+
     index: int
-    clip_path: Optional[str] = None
+    clip_path: str | None = None
     start_frame: int = 0
     end_frame: int = 0
 
@@ -201,13 +203,14 @@ class TurnInfo:
 @dataclass
 class ResolvedTurns:
     """Return value of resolve_turns."""
+
     source: str
     video_path: str
-    turns: List[TurnInfo] = field(default_factory=list)
+    turns: list[TurnInfo] = field(default_factory=list)
     n_turns: int = 0
 
     @property
-    def bounds(self) -> List[Tuple[int, int]]:
+    def bounds(self) -> list[tuple[int, int]]:
         return [(t.start_frame, t.end_frame) for t in self.turns]
 
 
@@ -215,8 +218,8 @@ def resolve_turns(
     model: str,
     case_id: int,
     video_path: str,
-    interactions: List[dict],
-    clips_dir: Optional[str] = None,
+    interactions: list[dict],
+    clips_dir: str | None = None,
 ) -> ResolvedTurns:
     """Unified turn resolution: prefer pre-cut clips, fallback to split_turns."""
     import cv2
@@ -236,21 +239,23 @@ def resolve_turns(
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     cap.release()
 
-    chunk_lengths = [
-        inter.get("chunk_length", 4) for inter in interactions
-    ] if interactions else None
-    bounds = split_turns(model, total_frames, chunk_lengths=chunk_lengths,
-                         n_turns=n_turns, case_id=case_id)
+    chunk_lengths = [inter.get("chunk_length", 4) for inter in interactions] if interactions else None
+    bounds = split_turns(model, total_frames, chunk_lengths=chunk_lengths, n_turns=n_turns, case_id=case_id)
 
     turns = []
     for i, (s, e) in enumerate(bounds):
-        turns.append(TurnInfo(
-            index=i,
-            clip_path=clip_paths[i] if clips_exist else None,
-            start_frame=s, end_frame=e,
-        ))
+        turns.append(
+            TurnInfo(
+                index=i,
+                clip_path=clip_paths[i] if clips_exist else None,
+                start_frame=s,
+                end_frame=e,
+            )
+        )
 
     return ResolvedTurns(
         source="clips" if clips_exist else "bounds",
-        video_path=video_path, turns=turns, n_turns=n_turns,
+        video_path=video_path,
+        turns=turns,
+        n_turns=n_turns,
     )

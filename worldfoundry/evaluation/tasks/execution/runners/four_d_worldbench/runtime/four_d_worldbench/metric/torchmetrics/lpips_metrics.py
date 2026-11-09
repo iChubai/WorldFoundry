@@ -1,8 +1,8 @@
 import numpy as np
 
-from ..base_metrics import BaseMetric
-
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
+
+from ..base_metrics import BaseMetric
 
 
 class LearnedPerceptualImagePatchSimilarityMetric(BaseMetric):
@@ -19,9 +19,7 @@ class LearnedPerceptualImagePatchSimilarityMetric(BaseMetric):
 
     def __init__(self) -> None:
         super().__init__()
-        self._metric = LearnedPerceptualImagePatchSimilarity(net_type="alex").to(
-            self._device
-        )
+        self._metric = LearnedPerceptualImagePatchSimilarity(net_type="alex").to(self._device)
 
     def _compute_scores(
         self,

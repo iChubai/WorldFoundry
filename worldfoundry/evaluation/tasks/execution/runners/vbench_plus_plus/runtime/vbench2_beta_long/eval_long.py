@@ -1,23 +1,27 @@
-import torch
 import os
 import sys
+
+import torch
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from vbench2_beta_long import VBenchLong
-from datetime import datetime
 import argparse
 import json
+from datetime import datetime
+
+from vbench2_beta_long import VBenchLong
+
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
-def parse_args():
 
+def parse_args():
     CUR_DIR = os.path.dirname(os.path.abspath(__file__))
     bundled_full_json = bundled_benchmark_asset("vbench-plus-plus", "long", "VBench_full_info.json")
-    default_full_json = str(bundled_full_json) if bundled_full_json.is_file() else f'{CUR_DIR}/VBench_full_info.json'
-    parser = argparse.ArgumentParser(description='VBench', formatter_class=argparse.RawTextHelpFormatter)
+    default_full_json = str(bundled_full_json) if bundled_full_json.is_file() else f"{CUR_DIR}/VBench_full_info.json"
+    parser = argparse.ArgumentParser(description="VBench", formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--output_path",
         type=str,
-        default='./evaluation_results/',
+        default="./evaluation_results/",
         help="output path to save the evaluation results",
     )
     parser.add_argument(
@@ -34,7 +38,7 @@ def parse_args():
     )
     parser.add_argument(
         "--dimension",
-        nargs='+',
+        nargs="+",
         required=True,
         help="list of evaluation dimensions, usage: --dimension <dim_1> <dim_2>",
     )
@@ -52,8 +56,8 @@ def parse_args():
     )
     parser.add_argument(
         "--mode",
-        choices=['custom_input', 'vbench_standard', 'vbench_category', 'long_vbench_standard', 'long_custom_input'],
-        default='vbench_standard',
+        choices=["custom_input", "vbench_standard", "vbench_category", "long_vbench_standard", "long_custom_input"],
+        default="vbench_standard",
         help="""This flags determine the mode of evaluations, choose one of the following:
         1. "custom_input": receive input prompt from either --prompt/--prompt_file flags or the filename
         2. "vbench_standard": evaluate on standard prompt suite of VBench
@@ -64,7 +68,7 @@ def parse_args():
         "--custom_input",
         action="store_true",
         required=False,
-        help="(deprecated) use --mode=\"custom_input\" instead",
+        help='(deprecated) use --mode="custom_input" instead',
     )
     parser.add_argument(
         "--prompt",
@@ -74,7 +78,7 @@ def parse_args():
         If not specified, filenames will be used as input prompts
         * Mutually exclusive to --prompt_file.
         ** This option must be used with --custom_input flag
-        """
+        """,
     )
     parser.add_argument(
         "--prompt_file",
@@ -84,7 +88,7 @@ def parse_args():
         If not specified, filenames will be used as input prompts
         * Mutually exclusive to --prompt.
         ** This option must be used with --custom_input flag
-        """
+        """,
     )
     parser.add_argument(
         "--category",
@@ -100,7 +104,7 @@ def parse_args():
         "--imaging_quality_preprocessing_mode",
         type=str,
         required=False,
-        default='longer',
+        default="longer",
         help="""This is for setting preprocessing in imaging_quality
         1. 'shorter': if the shorter side is more than 512, the image is resized so that the shorter side is 512.
         2. 'longer': if the longer side is more than 512, the image is resized so that the longer side is 512.
@@ -109,7 +113,6 @@ def parse_args():
         4. 'None': no preprocessing
         """,
     )
-
 
     parser.add_argument(
         "--use_semantic_splitting",
@@ -123,8 +126,8 @@ def parse_args():
     parser.add_argument(
         "--bg_clip2clip_feat_extractor",
         type=str,
-        default='dreamsim',
-        choices=['clip', 'dreamsim'],
+        default="dreamsim",
+        choices=["clip", "dreamsim"],
         help="""This will select the model to caculate background
         consistency dimension's scores.
         """,
@@ -133,8 +136,8 @@ def parse_args():
     parser.add_argument(
         "--sb_clip2clip_feat_extractor",
         type=str,
-        default='dinov2',
-        choices=['dino', 'dinov2', 'dreamsim'],
+        default="dinov2",
+        choices=["dino", "dinov2", "dreamsim"],
         help="""This will select the model to caculate subject 
         consistency dimension's scores.
         """,
@@ -158,7 +161,7 @@ def parse_args():
     parser.add_argument(
         "--subject_mapping_file_path",
         type=str,
-        default=f'{CUR_DIR}/configs/subject_mapping_table.yaml',
+        default=f"{CUR_DIR}/configs/subject_mapping_table.yaml",
         help="""Mapping table of subject consistency.
         """,
     )
@@ -166,7 +169,7 @@ def parse_args():
     parser.add_argument(
         "--background_mapping_file_path",
         type=str,
-        default=f'{CUR_DIR}/configs/background_mapping_table.yaml',
+        default=f"{CUR_DIR}/configs/background_mapping_table.yaml",
         help="""Mapping table of background consistency.
         """,
     )
@@ -175,7 +178,7 @@ def parse_args():
     parser.add_argument(
         "--slow_fast_eval_config",
         type=str,
-        default=f'{CUR_DIR}/configs/slow_fast_params.yaml',
+        default=f"{CUR_DIR}/configs/slow_fast_params.yaml",
         help="""Config files for different clip length.
         """,
     )
@@ -184,7 +187,7 @@ def parse_args():
     parser.add_argument(
         "--clip_length_config",
         type=str,
-        default='clip_length_mix.yaml',
+        default="clip_length_mix.yaml",
         help="""Config files for different clip length.
         """,
     )
@@ -219,67 +222,67 @@ def parse_args():
 
 def main():
     args = parse_args()
-    print(f'args: {args}')
+    print(f"args: {args}")
 
     device = torch.device("cuda")
     my_VBench = VBenchLong(device, args.full_json_dir, args.output_path)
-    
-    print(f'start evaluation')
 
-    current_time = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+    print("start evaluation")
+
+    current_time = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
 
     kwargs = {}
 
     prompt = []
 
-    assert args.custom_input == False, "(Deprecated) use --mode=custom_input instead"
-    
+    assert not args.custom_input, "(Deprecated) use --mode=custom_input instead"
+
     if (args.prompt_file is not None) and (args.prompt != ""):
         raise Exception("--prompt_file and --prompt cannot be used together")
-    if (args.prompt_file is not None or args.prompt != "") and (not args.mode=='custom_input'):
+    if (args.prompt_file is not None or args.prompt != "") and (not args.mode == "custom_input"):
         raise Exception("must set --mode=custom_input for using external prompt")
 
     if args.prompt_file:
-        with open(args.prompt_file, 'r') as f:
+        with open(args.prompt_file) as f:
             prompt = json.load(f)
-        assert type(prompt) == dict, "Invalid prompt file format. The correct format is {\"video_path\": prompt, ... }"
+        assert type(prompt) is dict, 'Invalid prompt file format. The correct format is {"video_path": prompt, ... }'
     elif args.prompt != "":
         prompt = [args.prompt]
 
     if args.category != "":
-        kwargs['category'] = args.category
+        kwargs["category"] = args.category
 
     if not args.dev_flag:
-        args.sb_clip2clip_feat_extractor = 'dino'
-        args.bg_clip2clip_feat_extractor = 'clip'
+        args.sb_clip2clip_feat_extractor = "dino"
+        args.bg_clip2clip_feat_extractor = "clip"
         args.w_inclip = 1.0
         args.w_clip2clip = 0.0
 
-    kwargs['sb_clip2clip_feat_extractor'] = args.sb_clip2clip_feat_extractor
-    kwargs['bg_clip2clip_feat_extractor'] = args.bg_clip2clip_feat_extractor
-    kwargs['imaging_quality_preprocessing_mode'] = args.imaging_quality_preprocessing_mode
-    kwargs['clip_length_config'] = args.clip_length_config
-    kwargs['w_inclip'] = args.w_inclip
-    kwargs['w_clip2clip'] = args.w_clip2clip
-    kwargs['use_semantic_splitting'] = args.use_semantic_splitting
-    kwargs['slow_fast_eval_config'] = args.slow_fast_eval_config
-    kwargs['dev_flag'] = args.dev_flag
-    kwargs['sb_mapping_file_path'] = args.subject_mapping_file_path
-    kwargs['bg_mapping_file_path'] = args.background_mapping_file_path
-    kwargs['num_of_samples_per_prompt'] = args.num_of_samples_per_prompt
-    kwargs['static_filter_flag'] = args.static_filter_flag
+    kwargs["sb_clip2clip_feat_extractor"] = args.sb_clip2clip_feat_extractor
+    kwargs["bg_clip2clip_feat_extractor"] = args.bg_clip2clip_feat_extractor
+    kwargs["imaging_quality_preprocessing_mode"] = args.imaging_quality_preprocessing_mode
+    kwargs["clip_length_config"] = args.clip_length_config
+    kwargs["w_inclip"] = args.w_inclip
+    kwargs["w_clip2clip"] = args.w_clip2clip
+    kwargs["use_semantic_splitting"] = args.use_semantic_splitting
+    kwargs["slow_fast_eval_config"] = args.slow_fast_eval_config
+    kwargs["dev_flag"] = args.dev_flag
+    kwargs["sb_mapping_file_path"] = args.subject_mapping_file_path
+    kwargs["bg_mapping_file_path"] = args.background_mapping_file_path
+    kwargs["num_of_samples_per_prompt"] = args.num_of_samples_per_prompt
+    kwargs["static_filter_flag"] = args.static_filter_flag
 
     my_VBench.evaluate(
-        videos_path = args.videos_path,
-        name = f'results_{current_time}',
-        prompt_list=prompt, # pass in [] to read prompt from filename
-        dimension_list = args.dimension,
+        videos_path=args.videos_path,
+        name=f"results_{current_time}",
+        prompt_list=prompt,  # pass in [] to read prompt from filename
+        dimension_list=args.dimension,
         local=args.load_ckpt_from_local,
         read_frame=args.read_frame,
         mode=args.mode,
-        **kwargs
+        **kwargs,
     )
-    print('done')
+    print("done")
 
 
 if __name__ == "__main__":

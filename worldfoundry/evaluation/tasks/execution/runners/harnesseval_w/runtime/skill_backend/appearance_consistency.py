@@ -17,7 +17,6 @@ from .common import (
     _validate_video,
 )
 
-
 BACKEND_ID = "harnesseval.appearance_consistency"
 BACKEND_VERSION = "harnesseval.appearance_consistency.clip_b32"
 CONFIG_DIGEST = value_digest(

@@ -7,14 +7,13 @@
 #
 # thanks!
 
-import torch.nn as nn
-from utils.common_utils import instantiate_from_config
-
 import math
 from inspect import isfunction
+
 import torch
-from torch import nn
 import torch.distributed as dist
+from torch import nn
+from utils.common_utils import instantiate_from_config
 
 
 def gather_data(data, return_np=True):
@@ -45,10 +44,12 @@ def extract_into_tensor(a, t, x_shape):
 
 
 def noise_like(shape, device, repeat=False):
-    repeat_noise = lambda: torch.randn((1, *shape[1:]), device=device).repeat(
-        shape[0], *((1,) * (len(shape) - 1))
-    )
-    noise = lambda: torch.randn(shape, device=device)
+    def repeat_noise():
+        return torch.randn((1, *shape[1:]), device=device).repeat(shape[0], *((1,) * (len(shape) - 1)))
+
+    def noise():
+        return torch.randn(shape, device=device)
+
     return repeat_noise() if repeat else noise()
 
 
@@ -67,7 +68,7 @@ def identity(*args, **kwargs):
 
 
 def uniq(arr):
-    return {el: True for el in arr}.keys()
+    return dict.fromkeys(arr, True).keys()
 
 
 def mean_flat(tensor):
@@ -206,7 +207,6 @@ def normalization(channels, num_groups=32):
 
 
 class HybridConditioner(nn.Module):
-
     def __init__(self, c_concat_config, c_crossattn_config):
         super().__init__()
         self.concat_conditioner = instantiate_from_config(c_concat_config)

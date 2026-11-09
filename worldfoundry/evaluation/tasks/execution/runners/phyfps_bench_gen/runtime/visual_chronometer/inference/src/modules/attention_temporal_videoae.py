@@ -1,24 +1,24 @@
-from inspect import isfunction
 import math
+from inspect import isfunction
+from typing import Any
+
 import torch
 import torch as th
 import torch.nn.functional as F
-from torch import nn, einsum
 from einops import rearrange, repeat
-from typing import Optional, Any
+from torch import einsum, nn
 
 try:
     import xformers
     import xformers.ops
 
     XFORMERS_IS_AVAILBLE = True
-except:
+except BaseException:
     XFORMERS_IS_AVAILBLE = False
 
 from src.modules.utils import (
     checkpoint,
     conv_nd,
-    zero_module,
     normalization,
 )
 
@@ -28,7 +28,7 @@ def exists(val):
 
 
 def uniq(arr):
-    return {el: True for el in arr}.keys()
+    return dict.fromkeys(arr, True).keys()
 
 
 def default(val, d):
@@ -64,15 +64,9 @@ class FeedForward(nn.Module):
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = default(dim_out, dim)
-        project_in = (
-            nn.Sequential(nn.Linear(dim, inner_dim), nn.GELU())
-            if not glu
-            else GEGLU(dim, inner_dim)
-        )
+        project_in = nn.Sequential(nn.Linear(dim, inner_dim), nn.GELU()) if not glu else GEGLU(dim, inner_dim)
 
-        self.net = nn.Sequential(
-            project_in, nn.Dropout(dropout), nn.Linear(inner_dim, dim_out)
-        )
+        self.net = nn.Sequential(project_in, nn.Dropout(dropout), nn.Linear(inner_dim, dim_out))
 
     def forward(self, x):
         return self.net(x)
@@ -88,9 +82,7 @@ def zero_module(module):
 
 
 def Normalize(in_channels, num_groups=32):
-    return torch.nn.GroupNorm(
-        num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True
-    )
+    return torch.nn.GroupNorm(num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True)
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -101,9 +93,7 @@ class RelativePosition(nn.Module):
         super().__init__()
         self.num_units = num_units
         self.max_relative_position = max_relative_position
-        self.embeddings_table = nn.Parameter(
-            th.Tensor(max_relative_position * 2 + 1, num_units)
-        )
+        self.embeddings_table = nn.Parameter(th.Tensor(max_relative_position * 2 + 1, num_units))
         nn.init.xavier_uniform_(self.embeddings_table)
 
     def forward(self, length_q, length_k):
@@ -111,9 +101,7 @@ class RelativePosition(nn.Module):
         range_vec_q = th.arange(length_q, device=device)
         range_vec_k = th.arange(length_k, device=device)
         distance_mat = range_vec_k[None, :] - range_vec_q[:, None]
-        distance_mat_clipped = th.clamp(
-            distance_mat, -self.max_relative_position, self.max_relative_position
-        )
+        distance_mat_clipped = th.clamp(distance_mat, -self.max_relative_position, self.max_relative_position)
         final_mat = distance_mat_clipped + self.max_relative_position
         # final_mat = th.LongTensor(final_mat).to(self.embeddings_table.device)
         # final_mat = th.tensor(final_mat, device=self.embeddings_table.device, dtype=torch.long)
@@ -160,23 +148,15 @@ class TemporalCrossAttention(nn.Module):
         if tempoal_attn_type:
             assert tempoal_attn_type in ["sparse_causal", "sparse_causal_first"]
             assert not use_tempoal_causal_attn
-            assert not (
-                img_video_joint_train and (self.joint_train_mode == "same_batch")
-            )
+            assert not (img_video_joint_train and (self.joint_train_mode == "same_batch"))
         self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        assert not (
-            img_video_joint_train
-            and (self.joint_train_mode == "same_batch")
-            and use_tempoal_causal_attn
-        )
+        assert not (img_video_joint_train and (self.joint_train_mode == "same_batch") and use_tempoal_causal_attn)
         if img_video_joint_train:
             if self.joint_train_mode == "same_batch":
-                mask = torch.ones(
-                    [1, temporal_length + image_length, temporal_length + image_length]
-                )
+                mask = torch.ones([1, temporal_length + image_length, temporal_length + image_length])
                 # mask[:, image_length:, :] = 0
                 # mask[:, :, image_length:] = 0
                 mask[:, temporal_length:, :] = 0
@@ -189,12 +169,8 @@ class TemporalCrossAttention(nn.Module):
             self.mask = torch.tril(torch.ones([1, temporal_length, temporal_length]))
         elif tempoal_attn_type == "sparse_causal":
             # all frames interact with only the `prev` & self frame
-            mask1 = torch.tril(
-                torch.ones([1, temporal_length, temporal_length])
-            ).bool()  # true indicates keeping
-            mask2 = torch.zeros(
-                [1, temporal_length, temporal_length]
-            )  # initialize to same shape with mask1
+            mask1 = torch.tril(torch.ones([1, temporal_length, temporal_length])).bool()  # true indicates keeping
+            mask2 = torch.zeros([1, temporal_length, temporal_length])  # initialize to same shape with mask1
             mask2[:, 2:temporal_length, : temporal_length - 2] = torch.tril(
                 torch.ones([1, temporal_length - 2, temporal_length - 2])
             )
@@ -202,9 +178,7 @@ class TemporalCrossAttention(nn.Module):
             self.mask = mask1 & mask2
         elif tempoal_attn_type == "sparse_causal_first":
             # all frames interact with only the `first` & self frame
-            mask1 = torch.tril(
-                torch.ones([1, temporal_length, temporal_length])
-            ).bool()  # true indicates keeping
+            mask1 = torch.tril(torch.ones([1, temporal_length, temporal_length])).bool()  # true indicates keeping
             mask2 = torch.zeros([1, temporal_length, temporal_length])
             mask2[:, 2:temporal_length, 1 : temporal_length - 1] = torch.tril(
                 torch.ones([1, temporal_length - 2, temporal_length - 2])
@@ -216,16 +190,10 @@ class TemporalCrossAttention(nn.Module):
 
         if use_relative_position:
             assert temporal_length is not None
-            self.relative_position_k = RelativePosition(
-                num_units=dim_head, max_relative_position=temporal_length
-            )
-            self.relative_position_v = RelativePosition(
-                num_units=dim_head, max_relative_position=temporal_length
-            )
+            self.relative_position_k = RelativePosition(num_units=dim_head, max_relative_position=temporal_length)
+            self.relative_position_v = RelativePosition(num_units=dim_head, max_relative_position=temporal_length)
 
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, query_dim), nn.Dropout(dropout)
-        )
+        self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
 
         nn.init.constant_(self.to_q.weight, 0)
         nn.init.constant_(self.to_k.weight, 0)
@@ -251,7 +219,7 @@ class TemporalCrossAttention(nn.Module):
         v = self.to_v(context)
         # print(f'q ={q.shape},k={k.shape}')
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=nh), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=nh) for t in (q, k, v))
         sim = einsum("b i d, b j d -> b i j", q, k) * self.scale
 
         if self.use_relative_position:
@@ -261,7 +229,7 @@ class TemporalCrossAttention(nn.Module):
             sim += sim2
         # print('mask',mask)
         if exists(self.mask):
-            if mask is None:
+            if mask is None:  # noqa: SIM108 - Branch comments document each case.
                 mask = self.mask.to(sim.device)
             else:
                 mask = self.mask.to(sim.device).bool() & mask  # .to(sim.device)
@@ -308,11 +276,7 @@ class TemporalCrossAttention(nn.Module):
         out = einsum("b i j, b j d -> b i d", attn, v)
 
         if self.bidirectional_causal_attn:
-            mask_reverse = torch.triu(
-                torch.ones(
-                    [1, self.temporal_length, self.temporal_length], device=sim.device
-                )
-            )
+            mask_reverse = torch.triu(torch.ones([1, self.temporal_length, self.temporal_length], device=sim.device))
             sim_reverse = sim.float().masked_fill(mask_reverse == 0, max_neg_value)
             attn_reverse = sim_reverse.softmax(dim=-1)
             out_reverse = einsum("b i j, b j d -> b i d", attn_reverse, v)
@@ -321,7 +285,7 @@ class TemporalCrossAttention(nn.Module):
         if self.use_relative_position:
             v2 = self.relative_position_v(len_q, len_v)
             out2 = einsum("b t s, t s d -> b t d", attn, v2)  # TODO check
-            out += out2  # TODO check：先add还是先merge head？先计算rpr，on split head之后的数据，然后再merge。
+            out += out2  # TODO check: add before or after merging heads? The relative-position term is computed on the split heads, then merged.
         out = rearrange(out, "(b h) n d -> b n (h d)", h=nh)  # merge head
         return self.to_out(out)
 
@@ -335,18 +299,10 @@ class SpatialSelfAttention(nn.Module):
         self.in_channels = in_channels
 
         self.norm = Normalize(in_channels)
-        self.q = torch.nn.Conv2d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
-        self.k = torch.nn.Conv2d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
-        self.v = torch.nn.Conv2d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
-        self.proj_out = torch.nn.Conv2d(
-            in_channels, in_channels, kernel_size=1, stride=1, padding=0
-        )
+        self.q = torch.nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
+        self.k = torch.nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
+        self.v = torch.nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
+        self.proj_out = torch.nn.Conv2d(in_channels, in_channels, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
         h_ = x
@@ -409,10 +365,8 @@ class CrossAttention(nn.Module):
         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, query_dim), nn.Dropout(dropout)
-        )
-        self.attention_op: Optional[Any] = None
+        self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
+        self.attention_op: Any | None = None
 
     def forward(self, x, context=None, mask=None):
         h = self.heads
@@ -424,16 +378,11 @@ class CrossAttention(nn.Module):
         v = self.to_v(context)
         if self.sa_shared_kv:
             if self.shared_type == "only_first":
-                k, v = map(
-                    lambda xx: rearrange(xx[0].unsqueeze(0), "b n c -> (b n) c")
-                    .unsqueeze(0)
-                    .repeat(b, 1, 1),
-                    (k, v),
-                )
+                k, v = (rearrange(xx[0].unsqueeze(0), "b n c -> (b n) c").unsqueeze(0).repeat(b, 1, 1) for xx in (k, v))
             else:
                 raise NotImplementedError
 
-        q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (q, k, v))
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=h) for t in (q, k, v))
 
         sim = einsum("b i d, b j d -> b i j", q, k) * self.scale
 
@@ -457,18 +406,16 @@ class CrossAttention(nn.Module):
         v = self.to_v(context)
 
         b, _, _ = q.shape
-        q, k, v = map(
-            lambda t: t.unsqueeze(3)
+        q, k, v = (
+            t.unsqueeze(3)
             .reshape(b, t.shape[1], self.heads, self.dim_head)
             .permute(0, 2, 1, 3)
             .reshape(b * self.heads, t.shape[1], self.dim_head)
-            .contiguous(),
-            (q, k, v),
+            .contiguous()
+            for t in (q, k, v)
         )
         # actually compute the attention, what we cannot get enough of
-        out = xformers.ops.memory_efficient_attention(
-            q, k, v, attn_bias=None, op=self.attention_op
-        )
+        out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=self.attention_op)
 
         if exists(mask):
             raise NotImplementedError
@@ -579,9 +526,7 @@ class BasicTransformerBlockST(nn.Module):
             dim_head=d_head,
             dropout=dropout,
             # cross attn
-            context_dim=(
-                temporal_context_dim if temporal_crossattn_type == "crossattn" else None
-            ),
+            context_dim=(temporal_context_dim if temporal_crossattn_type == "crossattn" else None),
             # temporal attn
             temporal_length=temporal_length,
             image_length=image_length,
@@ -615,20 +560,11 @@ class BasicTransformerBlockST(nn.Module):
             # self-attention models
             if no_temporal_attn:
                 raise NotImplementedError
-            return checkpoint(
-                self._forward_nocontext, (x), self.parameters(), self.checkpoint
-            )
+            return checkpoint(self._forward_nocontext, (x), self.parameters(), self.checkpoint)
         else:
             # cross-attention models
-            if no_temporal_attn:
-                forward_func = self._forward_no_temporal_attn
-            else:
-                forward_func = self._forward
-            inputs = (
-                (x, context, temporal_context)
-                if temporal_context is not None
-                else (x, context)
-            )
+            forward_func = self._forward_no_temporal_attn if no_temporal_attn else self._forward
+            inputs = (x, context, temporal_context) if temporal_context is not None else (x, context)
             return checkpoint(forward_func, inputs, self.parameters(), self.checkpoint)
             # if attn_mask is not None:
             #     return checkpoint(self._forward, (x, context, temporal_context, attn_mask), self.parameters(), self.checkpoint)
@@ -713,13 +649,9 @@ class BasicTransformerBlockST(nn.Module):
         b, c, t, h, w = x.shape
 
         if self.order in ["stst", "sstt"]:
-            x = self._st_cross_attn(
-                x, order=self.order, no_temporal_attn=no_temporal_attn
-            )
+            x = self._st_cross_attn(x, order=self.order, no_temporal_attn=no_temporal_attn)
         elif self.order == "st_parallel":
-            x = self._st_cross_attn_parallel(
-                x, order=self.order, no_temporal_attn=no_temporal_attn
-            )
+            x = self._st_cross_attn_parallel(x, order=self.order, no_temporal_attn=no_temporal_attn)
         else:
             raise NotImplementedError
 
@@ -730,9 +662,7 @@ class BasicTransformerBlockST(nn.Module):
 
     ##############################################################################################################################################
 
-    def _st_cross_attn(
-        self, x, context=None, temporal_context=None, order="stst", mask=None
-    ):  # no_temporal_attn=None,
+    def _st_cross_attn(self, x, context=None, temporal_context=None, order="stst", mask=None):  # no_temporal_attn=None,
         b, c, t, h, w = x.shape
         # if context is not None:
         #     print(f'[_st_cross_attn input] x={x.shape}, context={context.shape}')
@@ -756,9 +686,7 @@ class BasicTransformerBlockST(nn.Module):
             x = self.attn1_tmp(self.norm4(x), mask=mask) + x
 
             if self.local_spatial_temporal_attn:
-                x = local_spatial_temporal_attn_reshape_back(
-                    x, window_size=self.window_size, b=b, h=h, w=w, t=t
-                )
+                x = local_spatial_temporal_attn_reshape_back(x, window_size=self.window_size, b=b, h=h, w=w, t=t)
             else:
                 x = rearrange(x, "(b h w) t c -> b c t h w", b=b, h=h, w=w)  # 3d -> 5d
 
@@ -800,19 +728,14 @@ class BasicTransformerBlockST(nn.Module):
                 # tmporal cross attention
                 if temporal_context is not None:
                     # print(f'STATTN context={context.shape}, temporal_context={temporal_context.shape}')
-                    temporal_context = torch.cat(
-                        [context, temporal_context], dim=1
-                    )  # blc
+                    temporal_context = torch.cat([context, temporal_context], dim=1)  # blc
                     # print(f'STATTN after concat temporal_context={temporal_context.shape}')
                     temporal_context = temporal_context.repeat(h * w, 1, 1)
                     # print(f'after repeat temporal_context={temporal_context.shape}')
                 else:
                     temporal_context = context[0:1, ...].repeat(h * w, 1, 1)
                 # print(f'STATTN after concat x={x.shape}')
-                x = (
-                    self.attn2_tmp(self.norm5(x), context=temporal_context, mask=mask)
-                    + x
-                )
+                x = self.attn2_tmp(self.norm5(x), context=temporal_context, mask=mask) + x
             elif self.temporal_crossattn_type == "selfattn":
                 # temporal self attention
                 x = self.attn2_tmp(self.norm5(x), context=None, mask=mask) + x
@@ -832,18 +755,13 @@ class BasicTransformerBlockST(nn.Module):
             x = self.attn2(self.norm2(x), context=context_) + x
             x = rearrange(x, "(b t) (h w) c -> b c t h w", b=b, h=h)
 
-            if (no_temporal_attn is None) or (not no_temporal_attn):
+            if (no_temporal_attn is None) or (not no_temporal_attn):  # noqa: F821 - Undefined upstream; only reached with order='sstt' (default 'stst').
                 if self.temporalcrossfirst:
                     # temporal cross attention
                     if self.temporal_crossattn_type == "crossattn":
                         # if temporal_context is not None:
                         temporal_context = context.repeat(h * w, 1, 1)
-                        x = (
-                            self.attn2_tmp(
-                                self.norm5(x), context=temporal_context, mask=mask
-                            )
-                            + x
-                        )
+                        x = self.attn2_tmp(self.norm5(x), context=temporal_context, mask=mask) + x
                     elif self.temporal_crossattn_type == "selfattn":
                         x = self.attn2_tmp(self.norm5(x), context=None, mask=mask) + x
                     elif self.temporal_crossattn_type == "skip":
@@ -861,12 +779,7 @@ class BasicTransformerBlockST(nn.Module):
                     if self.temporal_crossattn_type == "crossattn":
                         if temporal_context is not None:
                             temporal_context = context.repeat(h * w, 1, 1)
-                        x = (
-                            self.attn2_tmp(
-                                self.norm5(x), context=temporal_context, mask=mask
-                            )
-                            + x
-                        )
+                        x = self.attn2_tmp(self.norm5(x), context=temporal_context, mask=mask) + x
                     elif self.temporal_crossattn_type == "selfattn":
                         x = self.attn2_tmp(self.norm5(x), context=None, mask=mask) + x
                     elif self.temporal_crossattn_type == "skip":
@@ -878,9 +791,7 @@ class BasicTransformerBlockST(nn.Module):
 
         return x
 
-    def _st_cross_attn_parallel(
-        self, x, context=None, temporal_context=None, order="sst", no_temporal_attn=None
-    ):
+    def _st_cross_attn_parallel(self, x, context=None, temporal_context=None, order="sst", no_temporal_attn=None):
         """order: x -> Self Attn -> Cross Attn -> attn_s
         x -> Temp Self Attn -> attn_t
         x' = x + attn_s + attn_t
@@ -948,9 +859,7 @@ def local_spatial_temporal_attn_reshape(x, window_size):
         wh=window_size,
         ww=window_size,
     ).contiguous()  # # B, C, T, NH, NW, window_size, window_size
-    x = rearrange(
-        x, "b c t nh wh nw ww -> (b nh nw) (t wh ww) c"
-    )  # (B, NH, NW) (T, window_size, window_size) C
+    x = rearrange(x, "b c t nh wh nw ww -> (b nh nw) (t wh ww) c")  # (B, NH, NW) (T, window_size, window_size) C
     return x
 
 
@@ -1007,9 +916,7 @@ class SpatialTemporalTransformer(nn.Module):
         inner_dim = n_heads * d_head
 
         self.norm = Normalize(in_channels)
-        self.proj_in = nn.Conv3d(
-            in_channels, inner_dim, kernel_size=1, stride=1, padding=0
-        )
+        self.proj_in = nn.Conv3d(in_channels, inner_dim, kernel_size=1, stride=1, padding=0)
 
         self.transformer_blocks = nn.ModuleList(
             [
@@ -1036,9 +943,7 @@ class SpatialTemporalTransformer(nn.Module):
             ]
         )
 
-        self.proj_out = zero_module(
-            nn.Conv3d(inner_dim, in_channels, kernel_size=1, stride=1, padding=0)
-        )
+        self.proj_out = zero_module(nn.Conv3d(inner_dim, in_channels, kernel_size=1, stride=1, padding=0))
 
     def forward(self, x, context=None, temporal_context=None, **kwargs):
         # note: if no context is given, cross-attention defaults to self-attention
@@ -1084,9 +989,9 @@ class STAttentionBlock2(nn.Module):
         if num_head_channels == -1:
             self.num_heads = num_heads
         else:
-            assert (
-                channels % num_head_channels == 0
-            ), f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
+            assert channels % num_head_channels == 0, (
+                f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
+            )
             self.num_heads = channels // num_head_channels
         self.use_checkpoint = use_checkpoint
 
@@ -1106,9 +1011,7 @@ class STAttentionBlock2(nn.Module):
         self.qkv_t = conv_nd(1, channels, channels * 3, 1)
 
         if self.img_video_joint_train:
-            mask = th.ones(
-                [1, temporal_length + image_length, temporal_length + image_length]
-            )
+            mask = th.ones([1, temporal_length + image_length, temporal_length + image_length])
             mask[:, temporal_length:, :] = 0
             mask[:, :, temporal_length:] = 0
             self.register_buffer("mask", mask)
@@ -1146,10 +1049,7 @@ class STAttentionBlock2(nn.Module):
 
         # spatial
         out = rearrange(x, "b c t h w -> (b t) c (h w)")
-        if self.attn_norm_type == "no_norm":
-            qkv = self.qkv_s(out)
-        else:
-            qkv = self.qkv_s(self.norm_s(out))
+        qkv = self.qkv_s(out) if self.attn_norm_type == "no_norm" else self.qkv_s(self.norm_s(out))
         out = self.attention_s(qkv)
         out = self.proj_out_s(out)
         out = rearrange(out, "(b t) c (h w) -> b c t h w", b=b, h=h)
@@ -1157,10 +1057,7 @@ class STAttentionBlock2(nn.Module):
 
         # temporal
         out = rearrange(x, "b c t h w -> (b h w) c t")
-        if self.attn_norm_type == "no_norm":
-            qkv = self.qkv_t(out)
-        else:
-            qkv = self.qkv_t(self.norm_t(out))
+        qkv = self.qkv_t(out) if self.attn_norm_type == "no_norm" else self.qkv_t(self.norm_t(out))
 
         # relative positional embedding
         if self.use_relative_position:
@@ -1214,16 +1111,14 @@ class QKVAttentionLegacy(nn.Module):
         ch = width // (3 * self.n_heads)
         q, k, v = qkv.reshape(bs * self.n_heads, ch * 3, length).split(ch, dim=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
-        weight = th.einsum(
-            "bct,bcs->bts", q * scale, k * scale
-        )  # More stable with f16 than dividing afterwards
+        weight = th.einsum("bct,bcs->bts", q * scale, k * scale)  # More stable with f16 than dividing afterwards
         weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
         a = th.einsum("bts,bcs->bct", weight, v)
         return a.reshape(bs, -1, length)
 
     @staticmethod
     def count_flops(model, _x, y):
-        return count_flops_attn(model, _x, y)
+        return count_flops_attn(model, _x, y)  # noqa: F821 - Undefined upstream; thop FLOP-counting hook, never called.
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -1262,14 +1157,12 @@ class QKVAttention(nn.Module):
 
         if rp is not None:
             k_rp, v_rp = rp  # [length, length, head_dim] [8, 8, 48]
-            weight2 = th.einsum(
-                "bct,tsc->bst", (q * scale).view(bs * self.n_heads, ch, length), k_rp
-            )
+            weight2 = th.einsum("bct,tsc->bst", (q * scale).view(bs * self.n_heads, ch, length), k_rp)
             weight += weight2
 
         if use_tempoal_causal_attn:
             # weight = torch.tril(weight)
-            assert mask is None, f"Not implemented for merging two masks!"
+            assert mask is None, "Not implemented for merging two masks!"
             mask = torch.tril(torch.ones(weight.shape))
         else:
             if mask is not None:  # only keep upper-left matrix
@@ -1284,9 +1177,7 @@ class QKVAttention(nn.Module):
                     mask_[:, :t_, :t_] = mask
                     mask = mask_
                 else:
-                    assert (
-                        weight.shape[-1] == mask.shape[-1]
-                    ), f"weight={weight.shape}, mask={mask.shape}"
+                    assert weight.shape[-1] == mask.shape[-1], f"weight={weight.shape}, mask={mask.shape}"
 
         if mask is not None:
             INF = -1e8  # float('-inf')
@@ -1296,9 +1187,7 @@ class QKVAttention(nn.Module):
             weight.dtype
         )  # [256, 8, 8] [b, t, t] b=bs*n_heads*h*w,t=nframes
         # weight = F.softmax(weight, dim=-1)#[256, 8, 8] [b, t, t] b=bs*n_heads*h*w,t=nframes
-        a = th.einsum(
-            "bts,bcs->bct", weight, v.reshape(bs * self.n_heads, ch, length)
-        )  # [256, 48, 8] [b, head_dim, t]
+        a = th.einsum("bts,bcs->bct", weight, v.reshape(bs * self.n_heads, ch, length))  # [256, 48, 8] [b, head_dim, t]
 
         if rp is not None:
             a2 = th.einsum("bts,tsc->btc", weight, v_rp).transpose(1, 2)  # btc->bct

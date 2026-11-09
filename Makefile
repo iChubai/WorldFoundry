@@ -23,10 +23,22 @@ INFER_TENSOR_MANIFEST ?= tmp/inference-cpu-selection.json
 INFER_TENSOR_JUNIT ?= tmp/inference-cpu-contracts.xml
 STRICT_TEST_RUNNER = $(PYTHON) tests/manual/validate_junit_contract.py run
 PUBLIC_GATE_CONTRACTS = \
+	tests/evaluation/execution/test_videobench_text_alignment.py \
+	tests/evaluation/execution/test_wbench_sam2_tracking_summary.py \
+	tests/evaluation/execution/test_stevo_bench_eval_utils.py \
+	tests/evaluation/execution/test_t2vworldbench_evaluator_imports.py \
+	tests/evaluation/execution/test_t2v_compbench_mllm_metric_imports.py \
+	tests/evaluation/execution/test_fetv_blip_modes.py \
+	tests/evaluation/execution/test_fetv_video_frames.py \
+	tests/evaluation/execution/test_vmbench_qalign_helpers.py \
+	tests/evaluation/execution/test_vmbench_cas_writer.py \
+	tests/evaluation/execution/test_vbench_sampling.py \
+	tests/evaluation/execution/test_vbench_metadata_errors.py \
 	tests/evaluation/metrics/test_nexus_configuration.py \
 	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
 	tests/evaluation/test_source_cache.py \
+	tests/evaluation/metrics/test_fvmd_colormaps.py \
 	tests/eval_core/test_videoverse_local_vlm.py \
 	tests/eval_core/test_vendi_molecule_kernel.py \
 	tests/eval_core/test_libero_mem_recording.py \
@@ -131,6 +143,8 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_image_request_batching.py \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
+	tests/synthesis/test_ac3d_controlnet_pipeline.py \
+	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
 	tests/pipelines/test_kandinsky6_replay_recipes.py \
 	tests/base_models/diffusion_model/test_build_purpose.py \
 	tests/synthesis/test_inspatio_v15_tensors.py \
@@ -172,6 +186,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/pipelines/test_reason1_runtime_options.py \
 	tests/pipelines/test_cosmos_inference_parallel_options.py \
 	tests/pipelines/test_hunyuan_video_checkpoint_paths.py \
+	tests/pipelines/test_hunyuan_mirror_masks.py \
 	tests/studio/test_cosmos_predict25_local_overrides.py \
 	tests/studio/test_cosmos_predict2_workspace_defaults.py \
 	tests/studio/test_hunyuan_safe_checkpoint_overrides.py \
@@ -246,6 +261,17 @@ INFER_TENSOR_CONTRACTS = \
 	tests/eval_core/test_catalog_integration_status.py \
 	$(EVALUATION_CPU_CONTRACTS)
 EVALUATION_CPU_CONTRACTS = \
+	tests/evaluation/execution/test_videobench_text_alignment.py \
+	tests/evaluation/execution/test_wbench_sam2_tracking_summary.py \
+	tests/evaluation/execution/test_stevo_bench_eval_utils.py \
+	tests/evaluation/execution/test_t2vworldbench_evaluator_imports.py \
+	tests/evaluation/execution/test_t2v_compbench_mllm_metric_imports.py \
+	tests/evaluation/execution/test_fetv_blip_modes.py \
+	tests/evaluation/execution/test_fetv_video_frames.py \
+	tests/evaluation/execution/test_vmbench_qalign_helpers.py \
+	tests/evaluation/execution/test_vmbench_cas_writer.py \
+	tests/evaluation/execution/test_vbench_sampling.py \
+	tests/evaluation/execution/test_vbench_metadata_errors.py \
 	tests/evaluation/metrics/test_nexus_configuration.py \
 	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/eval_core/test_worldmembench_official_runner.py \
@@ -264,6 +290,7 @@ EVALUATION_CPU_CONTRACTS = \
 	tests/evaluation/metrics/test_worldscore_aggregation.py \
 	tests/evaluation/metrics/test_fvd_batch_preprocessing.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
+	tests/evaluation/metrics/test_fvmd_colormaps.py \
 	tests/evaluation/metrics/test_artscore_loader.py \
 	tests/cli/test_cli_mcp_contracts.py \
 	tests/cli/test_cli_mcp_usage_context.py \

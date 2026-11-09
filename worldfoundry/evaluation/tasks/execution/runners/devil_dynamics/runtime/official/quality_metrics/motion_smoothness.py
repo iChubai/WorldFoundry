@@ -1,19 +1,23 @@
-import os
-import cv2
 import glob
-import torch
-import numpy as np
-from tqdm import tqdm
-from omegaconf import OmegaConf
+import itertools
+import os
 
+import cv2
+import numpy as np
+import torch
+from omegaconf import OmegaConf
 from vbench.utils import load_dimension_info
 
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
-    img2tensor, tensor2img,
-    check_dim_and_resize
-    )
+    InputPadder,
+    check_dim_and_resize,
+    img2tensor,
+    tensor2img,
+)
+
+# isort: split
 from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.build_utils import build_from_cfg
-from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import InputPadder
 
 
 class FrameProcess:
@@ -32,13 +36,10 @@ class FrameProcess:
                 break
         video.release()
         assert frame_list != []
-        return frame_list 
-    
+        return frame_list
 
     def get_frames_from_img_folder(self, img_folder):
-        exts = ['jpg', 'png', 'jpeg', 'bmp', 'tif', 
-                'tiff', 'JPG', 'PNG', 'JPEG', 'BMP', 
-                'TIF', 'TIFF']
+        exts = ["jpg", "png", "jpeg", "bmp", "tif", "tiff", "JPG", "PNG", "JPEG", "BMP", "TIF", "TIFF"]
         frame_list = []
         imgs = sorted([p for p in glob.glob(os.path.join(img_folder, "*")) if os.path.splitext(p)[1][1:] in exts])
         # imgs = sorted(glob.glob(os.path.join(img_folder, "*.png")))
@@ -48,7 +49,6 @@ class FrameProcess:
             frame_list.append(frame)
         assert frame_list != []
         return frame_list
-
 
     def extract_frame(self, frame_list, start_from=0):
         extract = []
@@ -60,25 +60,23 @@ class FrameProcess:
 class MotionSmoothness:
     def __init__(self, config, device):
         self.device = device
-        self.config = config['config']
-        self.ckpt = config['ckpt']
+        self.config = config["config"]
+        self.ckpt = config["ckpt"]
         self.niters = 1
         self.initialization()
         self.load_model()
 
-    
     def load_model(self):
         cfg_path = self.config
         ckpt_path = self.ckpt
         network_cfg = OmegaConf.load(cfg_path).network
         network_name = network_cfg.name
-        print(f'Loading [{network_name}] from [{ckpt_path}]...')
+        print(f"Loading [{network_name}] from [{ckpt_path}]...")
         self.model = build_from_cfg(network_cfg)
         ckpt = torch.load(ckpt_path)
-        self.model.load_state_dict(ckpt['state_dict'])
+        self.model.load_state_dict(ckpt["state_dict"])
         self.model = self.model.to(self.device)
         self.model.eval()
-
 
     def initialization(self):
         # if self.device == 'cuda':
@@ -86,7 +84,7 @@ class MotionSmoothness:
         self.anchor_memory = 1500 * 1024**2
         self.anchor_memory_bias = 2500 * 1024**2
         self.vram_avail = torch.cuda.get_device_properties(self.device).total_memory
-        print("VRAM available: {:.1f} MB".format(self.vram_avail / 1024 ** 2))
+        print(f"VRAM available: {self.vram_avail / 1024**2:.1f} MB")
         # else:
         #     # Do not resize in cpu mode
         #     self.anchor_resolution = 8192*8192
@@ -94,14 +92,13 @@ class MotionSmoothness:
         #     self.anchor_memory_bias = 0
         #     self.vram_avail = 1
 
-        self.embt = torch.tensor(1/2).float().view(1, 1, 1, 1).to(self.device)
+        self.embt = torch.tensor(1 / 2).float().view(1, 1, 1, 1).to(self.device)
         self.fp = FrameProcess()
-
 
     def motion_score(self, video_path):
         iters = int(self.niters)
         # get inputs
-        if video_path.endswith('.mp4'):
+        if video_path.endswith(".mp4"):
             frames = self.fp.get_frames(video_path)
         elif os.path.isdir(video_path):
             frames = self.fp.get_frames_from_img_folder(video_path)
@@ -113,7 +110,9 @@ class MotionSmoothness:
         assert len(inputs) > 1, f"The number of input should be more than one (current {len(inputs)})"
         inputs = check_dim_and_resize(inputs)
         h, w = inputs[0].shape[-2:]
-        scale = self.anchor_resolution / (h * w) * np.sqrt((self.vram_avail - self.anchor_memory_bias) / self.anchor_memory)
+        scale = (
+            self.anchor_resolution / (h * w) * np.sqrt((self.vram_avail - self.anchor_memory_bias) / self.anchor_memory)
+        )
         scale = 1 if scale > 1 else scale
         scale = 1 / np.floor(1 / np.sqrt(scale) * 16) * 16
         if scale < 1:
@@ -122,17 +121,17 @@ class MotionSmoothness:
         padder = InputPadder(inputs[0].shape, padding)
         inputs = padder.pad(*inputs)
 
-        # -----------------------  Interpolater ----------------------- 
+        # -----------------------  Interpolater -----------------------
         # print(f'Start frame interpolation:')
-        for i in range(iters):
+        for _i in range(iters):
             # print(f'Iter {i+1}. input_frames={len(inputs)} output_frames={2*len(inputs)-1}')
             outputs = [inputs[0]]
-            for in_0, in_1 in zip(inputs[:-1], inputs[1:]):
+            for in_0, in_1 in itertools.pairwise(inputs):
                 in_0 = in_0.to(self.device)
                 in_1 = in_1.to(self.device)
                 with torch.no_grad():
-                # try:
-                    imgt_pred = self.model(in_0, in_1, self.embt, scale_factor=scale, eval=True)['imgt_pred']
+                    # try:
+                    imgt_pred = self.model(in_0, in_1, self.embt, scale_factor=scale, eval=True)["imgt_pred"]
                     # except BaseException as e:
                     #     print(e)
                     #     import pdb; pdb.set_trace()
@@ -140,13 +139,12 @@ class MotionSmoothness:
                 outputs += [imgt_pred.cpu(), in_1.cpu()]
             inputs = outputs
 
-        # -----------------------  cal_vfi_score ----------------------- 
+        # -----------------------  cal_vfi_score -----------------------
         outputs = padder.unpad(*outputs)
         outputs = [tensor2img(out) for out in outputs]
         vfi_score = self.vfi_score(frames, outputs)
-        norm = (255.0 - vfi_score)/255.0
+        norm = (255.0 - vfi_score) / 255.0
         return norm
-
 
     def vfi_score(self, ori_frames, interpolate_frames):
         ori = self.fp.extract_frame(ori_frames, start_from=1)
@@ -156,7 +154,6 @@ class MotionSmoothness:
             scores.append(self.get_diff(ori[i], interpolate[i]))
         return np.mean(np.array(scores))
 
-
     def get_diff(self, img1, img2):
         img = cv2.absdiff(img1, img2)
         return np.mean(img)
@@ -164,7 +161,7 @@ class MotionSmoothness:
 
 def motion_smoothness(config, video_path, motion, device):
     sim = []
-    video_results = dict()
+    video_results = {}
     score_per_video = motion.motion_score(video_path)
     video_results.update({os.path.basename(video_path): score_per_video})
     sim.append(score_per_video)
@@ -172,10 +169,9 @@ def motion_smoothness(config, video_path, motion, device):
     return video_results
 
 
-
 def compute_motion_smoothness(json_dir, device, submodules_list, **kwargs):
-    config = submodules_list["config"] # pretrained/amt_model/AMT-S.yaml
-    ckpt = submodules_list["ckpt"] # pretrained/amt_model/amt-s.pth
-    video_list, _ = load_dimension_info(json_dir, dimension='motion_smoothness', lang='en')
+    config = submodules_list["config"]  # pretrained/amt_model/AMT-S.yaml
+    ckpt = submodules_list["ckpt"]  # pretrained/amt_model/amt-s.pth
+    video_list, _ = load_dimension_info(json_dir, dimension="motion_smoothness", lang="en")
     all_results, video_results = motion_smoothness(config, video_list, ckpt, device)
     return all_results, video_results

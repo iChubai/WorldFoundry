@@ -200,7 +200,7 @@ def question_type(question: str) -> str:
 
 def _canonical_answer(value: Any) -> str:
     text = str(value or "").strip().casefold()
-    text = text.translate(str.maketrans({char: " " for char in string.punctuation}))
+    text = text.translate(str.maketrans(dict.fromkeys(string.punctuation, " ")))
     return " ".join(text.split())
 
 

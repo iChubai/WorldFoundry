@@ -6,17 +6,26 @@ Loads benchmark cases from JSON files. Each case defines:
 - interactions (multi-turn actions)
 - eval_dimensions and eval_questions
 """
+
 import glob
 import json
 import logging
 from pathlib import Path
-from typing import List, Optional, Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 VALID_STYLES = {
-    "realistic", "cartoon", "anime", "cinematic", "CG",
-    "oil_painting", "ink", "pencil", "flat", "abstract",
+    "realistic",
+    "cartoon",
+    "anime",
+    "cinematic",
+    "CG",
+    "oil_painting",
+    "ink",
+    "pencil",
+    "flat",
+    "abstract",
 }
 
 
@@ -49,8 +58,7 @@ class Rule:
 
 
 class Settings:
-    def __init__(self, scene, style, perspective, subject, rule,
-                 image_prompt, initial_image, subject_mask=None):
+    def __init__(self, scene, style, perspective, subject, rule, image_prompt, initial_image, subject_mask=None):
         self.scene = scene
         self.style = style
         self.perspective = perspective
@@ -77,9 +85,19 @@ class EvalQuestion:
 
 
 class Case:
-    def __init__(self, id, comment, description, settings, interactions,
-                 eval_dimensions, eval_questions,
-                 environment_prompt="", character_prompt="", perspective_prompt=""):
+    def __init__(
+        self,
+        id,
+        comment,
+        description,
+        settings,
+        interactions,
+        eval_dimensions,
+        eval_questions,
+        environment_prompt="",
+        character_prompt="",
+        perspective_prompt="",
+    ):
         self.id = id
         self.comment = comment
         self.description = description
@@ -92,7 +110,7 @@ class Case:
         self.eval_questions = eval_questions
 
 
-def _migrate_case(case_dict: Dict[str, Any]) -> Case:
+def _migrate_case(case_dict: dict[str, Any]) -> Case:
     """Parse a case dict into Case object."""
     settings_dict = case_dict.get("settings", {})
 
@@ -100,7 +118,7 @@ def _migrate_case(case_dict: Dict[str, Any]) -> Case:
     scene = Scene(
         environment=scene_dict.get("environment", ""),
         attribute=scene_dict.get("attribute", ""),
-        name=scene_dict.get("name", "")
+        name=scene_dict.get("name", ""),
     )
 
     subject_dict = settings_dict.get("subject")
@@ -111,7 +129,7 @@ def _migrate_case(case_dict: Dict[str, Any]) -> Case:
         subject = Subject(
             type=subject_dict.get("type", ""),
             desc=subject_dict.get("desc", ""),
-            movement=subject_dict.get("movement", "")
+            movement=subject_dict.get("movement", ""),
         )
 
     rule_dict = settings_dict.get("rule", {})
@@ -130,12 +148,14 @@ def _migrate_case(case_dict: Dict[str, Any]) -> Case:
 
     interactions = []
     for inter_dict in case_dict.get("interactions", []):
-        interactions.append(Interaction(
-            turn=inter_dict.get("turn", 0),
-            type=inter_dict.get("type", ""),
-            action=inter_dict.get("action", ""),
-            prompt=inter_dict.get("prompt", "")
-        ))
+        interactions.append(
+            Interaction(
+                turn=inter_dict.get("turn", 0),
+                type=inter_dict.get("type", ""),
+                action=inter_dict.get("action", ""),
+                prompt=inter_dict.get("prompt", ""),
+            )
+        )
 
     eval_dims_dict = case_dict.get("eval_dimensions", {})
 
@@ -144,10 +164,7 @@ def _migrate_case(case_dict: Dict[str, Any]) -> Case:
         if isinstance(value, bool):
             return EvalDimension(enabled=value, focus=[])
         elif isinstance(value, dict):
-            return EvalDimension(
-                enabled=value.get("enabled", False),
-                focus=value.get("focus", [])
-            )
+            return EvalDimension(enabled=value.get("enabled", False), focus=value.get("focus", []))
         return EvalDimension(enabled=False, focus=[])
 
     eval_dimensions = {
@@ -155,18 +172,20 @@ def _migrate_case(case_dict: Dict[str, Any]) -> Case:
         "setting_adherence": parse_eval_dim("setting_adherence"),
         "interaction_adherence": parse_eval_dim("interaction_adherence"),
         "consistency": parse_eval_dim("consistency"),
-        "causality": parse_eval_dim("causality")
+        "causality": parse_eval_dim("causality"),
     }
 
     eval_questions = []
     for q_dict in case_dict.get("eval_questions", []):
-        eval_questions.append(EvalQuestion(
-            dimension=q_dict.get("dimension", ""),
-            question=q_dict.get("question", ""),
-            expected=q_dict.get("expected", ""),
-            turn=q_dict.get("turn"),
-            sub_dim=q_dict.get("sub_dim")
-        ))
+        eval_questions.append(
+            EvalQuestion(
+                dimension=q_dict.get("dimension", ""),
+                question=q_dict.get("question", ""),
+                expected=q_dict.get("expected", ""),
+                turn=q_dict.get("turn"),
+                sub_dim=q_dict.get("sub_dim"),
+            )
+        )
 
     return Case(
         id=case_dict.get("id", 0),
@@ -182,7 +201,7 @@ def _migrate_case(case_dict: Dict[str, Any]) -> Case:
     )
 
 
-def _collect_json_files(path: str) -> List[str]:
+def _collect_json_files(path: str) -> list[str]:
     """Collect case JSON file paths from a file or directory."""
     p = Path(path)
     if p.is_file():
@@ -199,12 +218,12 @@ def _collect_json_files(path: str) -> List[str]:
     raise FileNotFoundError(f"Path does not exist: {path}")
 
 
-def load_cases(json_path: str) -> List[Case]:
+def load_cases(json_path: str) -> list[Case]:
     """Load cases from a JSON file or directory of case files."""
     files = _collect_json_files(json_path)
     cases = []
     for f in files:
-        with open(f, "r", encoding="utf-8") as fp:
+        with open(f, encoding="utf-8") as fp:
             data = json.load(fp)
         if isinstance(data, dict):
             data = [data]
@@ -214,12 +233,12 @@ def load_cases(json_path: str) -> List[Case]:
     return cases
 
 
-def load_cases_raw(json_path: str) -> List[dict]:
+def load_cases_raw(json_path: str) -> list[dict]:
     """Load cases as raw dicts."""
     files = _collect_json_files(json_path)
     cases = []
     for f in files:
-        with open(f, 'r', encoding='utf-8') as fp:
+        with open(f, encoding="utf-8") as fp:
             data = json.load(fp)
         if isinstance(data, list):
             cases.extend(data)

@@ -9,9 +9,10 @@ interactions.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
 from worldfoundry.synthesis.action_generation.wan_va import RUNTIME_ROOT, WAN_VA_PACKAGE, WAN_VA_ROOT
@@ -510,7 +511,7 @@ def _normalize_lingbot_va_frame(source: Any, camera_keys: Sequence[str]) -> dict
             if key in source:
                 values.append(source[key])
         if not values:
-            values = list(source.values()) # Fallback: use all values if no specific camera_keys match
+            values = list(source.values())  # Fallback: use all values if no specific camera_keys match
         if not values:
             raise ValueError("LingBot-VA observation mapping is empty.")
 
@@ -534,7 +535,7 @@ def _normalize_lingbot_va_frame(source: Any, camera_keys: Sequence[str]) -> dict
 
     # If the source is a single image (not a mapping or sequence), normalize it and replicate for all keys.
     image = _as_hwc_uint8_image(source)
-    return {key: image for key in camera_keys}
+    return dict.fromkeys(camera_keys, image)
 
 
 def _normalize_lingbot_va_obs(source: Any, camera_keys: Sequence[str]) -> list[dict[str, Any]]:
@@ -666,11 +667,13 @@ class LingBotVAWebsocketRuntime:
                     image_source = request[key]
                     break
             if image_source is None:
-                raise ValueError("LingBot-VA live inference requires obs, rgb_views, image, images, image_path, or input_path.")
+                raise ValueError(
+                    "LingBot-VA live inference requires obs, rgb_views, image, images, image_path, or input_path."
+                )
             request["obs"] = _normalize_lingbot_va_obs(image_source, camera_keys)
 
         # Normalize robot state data.
-        state = request.pop("robot_state", None) # Pop 'robot_state' if present.
+        state = request.pop("robot_state", None)  # Pop 'robot_state' if present.
         if "state" in request:
             # If 'state' key is present, normalize its content.
             request["state"] = _normalize_lingbot_va_state(request["state"])
@@ -695,10 +698,10 @@ class LingBotVAWebsocketRuntime:
 
 
 __all__ = [
-    "LingBotVARuntimeConfig",
-    "LingBotVAWebsocketRuntime",
     "RUNTIME_ROOT",
     "WAN_VA_ROOT",
+    "LingBotVARuntimeConfig",
+    "LingBotVAWebsocketRuntime",
     "build_server_command",
     "config_name_for_checkpoint",
     "read_transformer_attn_mode",

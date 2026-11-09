@@ -6,7 +6,6 @@ Extracts expected_process_concise from evaluation results and generates full pro
 import json
 import sys
 from pathlib import Path
-from collections import defaultdict
 
 
 def get_occlusion_text(model_type: str) -> str:
@@ -49,7 +48,7 @@ VERDICT: [Yes/No]
 EXPLANATION: [Your detailed explanation]"""
 
 
-def extract_prompts_from_results(results_file: str, output_file: str = None):
+def extract_prompts_from_results(results_file: str, output_file: str | None = None):
     """
     Extract all tasks and generate complete prompts from evaluation results.
 
@@ -76,35 +75,34 @@ def extract_prompts_from_results(results_file: str, output_file: str = None):
                 "model_type": result.get("model_type", "unknown"),
                 "task_level": result.get("task_level"),
                 "action_prompt": result.get("action_prompt"),
-                "expected_process_concise": result.get("expected_process_concise", "")
+                "expected_process_concise": result.get("expected_process_concise", ""),
             }
 
     # Generate prompts for each task
     prompts_data = []
 
-    for key, info in sorted(tasks_info.items()):
+    for _key, info in sorted(tasks_info.items()):
         # Generate complete Gemini prompt
-        gemini_prompt = generate_gemini_prompt(
-            info["expected_process_concise"],
-            info["model_type"]
-        )
+        gemini_prompt = generate_gemini_prompt(info["expected_process_concise"], info["model_type"])
 
-        prompts_data.append({
-            "task_id": info["task_id"],
-            "run_name": info["run_name"],
-            "model_type": info["model_type"],
-            "task_level": info["task_level"],
-            "action_prompt": info["action_prompt"],
-            "expected_process_concise": info["expected_process_concise"],
-            "gemini_verification_prompt": gemini_prompt
-        })
+        prompts_data.append(
+            {
+                "task_id": info["task_id"],
+                "run_name": info["run_name"],
+                "model_type": info["model_type"],
+                "task_level": info["task_level"],
+                "action_prompt": info["action_prompt"],
+                "expected_process_concise": info["expected_process_concise"],
+                "gemini_verification_prompt": gemini_prompt,
+            }
+        )
 
     # Create output structure
     output = {
         "source_file": str(results_file),
         "num_tasks": len(prompts_data),
         "prompt_template": "Gemini verification prompt (step 2)",
-        "tasks": prompts_data
+        "tasks": prompts_data,
     }
 
     # Determine output filename
@@ -123,8 +121,8 @@ def extract_prompts_from_results(results_file: str, output_file: str = None):
     # Print sample
     if prompts_data:
         print(f"\nSample prompt for {prompts_data[0]['task_id']}:")
-        print("="*60)
-        print(prompts_data[0]['gemini_verification_prompt'][:300] + "...")
+        print("=" * 60)
+        print(prompts_data[0]["gemini_verification_prompt"][:300] + "...")
 
     return output_path
 

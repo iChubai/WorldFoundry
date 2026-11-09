@@ -3,13 +3,15 @@ Analyze GPT accuracy from evaluation results.
 Extracts GPT verdicts and compares against ground truth.
 """
 
+import contextlib
 import json
 import sys
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 try:
     from sklearn.metrics import roc_auc_score
+
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -50,7 +52,7 @@ class GPTAccuracyAnalyzer:
             {
                 "run_name": "wan22_wan_run_1",
                 "summary_path": "wan22_wan_run_1",
-            }
+            },
         ]
 
         runs_dir = self.project_root / "runs"
@@ -170,21 +172,17 @@ class GPTAccuracyAnalyzer:
                 "accuracy": accuracy,
                 "precision": precision,
                 "recall": recall,
-                "f1": f1
+                "f1": f1,
             }
 
-        return {
-            "overall": overall_metrics,
-            "by_model": model_metrics,
-            "num_tasks": len(gpt_verdicts)
-        }
+        return {"overall": overall_metrics, "by_model": model_metrics, "num_tasks": len(gpt_verdicts)}
 
     def _calculate_metrics(self, verdicts, ground_truth, scores):
         """Calculate confusion matrix and metrics."""
-        tp = sum(1 for v, gt in zip(verdicts, ground_truth) if v and gt)
-        fp = sum(1 for v, gt in zip(verdicts, ground_truth) if v and not gt)
-        tn = sum(1 for v, gt in zip(verdicts, ground_truth) if not v and not gt)
-        fn = sum(1 for v, gt in zip(verdicts, ground_truth) if not v and gt)
+        tp = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if v and gt)
+        fp = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if v and not gt)
+        tn = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if not v and not gt)
+        fn = sum(1 for v, gt in zip(verdicts, ground_truth, strict=False) if not v and gt)
 
         total = tp + fp + tn + fn
 
@@ -196,23 +194,16 @@ class GPTAccuracyAnalyzer:
         # Calculate ROC AUC if sklearn available
         roc_auc = None
         if SKLEARN_AVAILABLE and len(set(ground_truth)) > 1:
-            try:
+            with contextlib.suppress(BaseException):
                 roc_auc = roc_auc_score(ground_truth, scores)
-            except:
-                pass
 
         return {
-            "confusion_matrix": {
-                "tp": tp,
-                "fp": fp,
-                "tn": tn,
-                "fn": fn
-            },
+            "confusion_matrix": {"tp": tp, "fp": fp, "tn": tn, "fn": fn},
             "accuracy": accuracy,
             "precision": precision,
             "recall": recall,
             "f1": f1,
-            "roc_auc": roc_auc
+            "roc_auc": roc_auc,
         }
 
     def _extract_model_name(self, run_name: str) -> str:
@@ -245,8 +236,8 @@ class GPTAccuracyAnalyzer:
         cm = overall["confusion_matrix"]
 
         # Check if all ground truth is negative
-        total_positive_gt = cm['tp'] + cm['fn']
-        total_negative_gt = cm['tn'] + cm['fp']
+        total_positive_gt = cm["tp"] + cm["fn"]
+        total_negative_gt = cm["tn"] + cm["fp"]
         all_negative = total_positive_gt == 0
 
         print(f"\nGround Truth Distribution ({analysis['num_tasks']} tasks):")
@@ -257,13 +248,13 @@ class GPTAccuracyAnalyzer:
             print("\nNOTE: All ground truth labels are negative (fail).")
             print("      Precision/Recall/F1 are not meaningful in this case.")
 
-        print(f"\nGPT Predictions:")
-        gpt_positive = cm['tp'] + cm['fp']
-        gpt_negative = cm['tn'] + cm['fn']
-        print(f"  Predicted Pass: {gpt_positive} ({gpt_positive/analysis['num_tasks']*100:.1f}%)")
-        print(f"  Predicted Fail: {gpt_negative} ({gpt_negative/analysis['num_tasks']*100:.1f}%)")
+        print("\nGPT Predictions:")
+        gpt_positive = cm["tp"] + cm["fp"]
+        gpt_negative = cm["tn"] + cm["fn"]
+        print(f"  Predicted Pass: {gpt_positive} ({gpt_positive / analysis['num_tasks'] * 100:.1f}%)")
+        print(f"  Predicted Fail: {gpt_negative} ({gpt_negative / analysis['num_tasks'] * 100:.1f}%)")
 
-        print(f"\nOverall Performance:")
+        print("\nOverall Performance:")
         print(f"  Accuracy:  {overall['accuracy']:.1%}")
 
         if not all_negative:
@@ -272,20 +263,20 @@ class GPTAccuracyAnalyzer:
             print(f"  F1 Score:  {overall['f1']:.3f}")
         else:
             # Calculate false positive rate
-            fpr = cm['fp'] / total_negative_gt if total_negative_gt > 0 else 0
+            fpr = cm["fp"] / total_negative_gt if total_negative_gt > 0 else 0
             print(f"  False Positive Rate: {fpr:.1%} ({cm['fp']}/{total_negative_gt})")
 
         if overall.get("roc_auc") is not None:
             print(f"  ROC AUC:   {overall['roc_auc']:.3f}")
 
-        print(f"\nConfusion Matrix:")
+        print("\nConfusion Matrix:")
         print(f"  True Negatives:  {cm['tn']} (correctly identified as fail)")
         print(f"  False Positives: {cm['fp']} (incorrectly said pass)")
         if not all_negative:
             print(f"  True Positives:  {cm['tp']} (correctly identified as pass)")
             print(f"  False Negatives: {cm['fn']} (incorrectly said fail)")
 
-        print(f"\nPer-Model Performance:")
+        print("\nPer-Model Performance:")
         by_model = analysis["by_model"]
 
         # Sort by accuracy
@@ -293,8 +284,8 @@ class GPTAccuracyAnalyzer:
 
         for model, metrics in sorted_models:
             mcm = metrics["confusion_matrix"]
-            model_negative_gt = mcm['tn'] + mcm['fp']
-            fpr = mcm['fp'] / model_negative_gt if model_negative_gt > 0 else 0
+            model_negative_gt = mcm["tn"] + mcm["fp"]
+            fpr = mcm["fp"] / model_negative_gt if model_negative_gt > 0 else 0
 
             print(f"\n  {model} ({metrics['total']} tasks):")
             print(f"    Accuracy:  {metrics['accuracy']:.1%}")

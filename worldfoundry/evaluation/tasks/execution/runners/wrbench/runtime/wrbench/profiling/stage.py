@@ -11,10 +11,10 @@ import contextlib
 import json
 import os
 import time
+from collections.abc import Iterator
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterator
-
+from typing import Any
 
 STAGE_EVENT_SCHEMA_VERSION = "wrbench_stage_event_v1"
 
@@ -33,7 +33,7 @@ class StageRecorder:
             self.path.parent.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def from_env(cls) -> "StageRecorder":
+    def from_env(cls) -> StageRecorder:
         return cls(
             os.environ.get("WRBENCH_STAGE_EVENTS_PATH"),
             command_id=os.environ.get("WRBENCH_RESOURCE_COMMAND_ID"),

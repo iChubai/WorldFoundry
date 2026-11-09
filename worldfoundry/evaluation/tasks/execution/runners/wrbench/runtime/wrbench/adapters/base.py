@@ -9,8 +9,9 @@ import so the registry is fully populated.
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Protocol
+from typing import Protocol
 
 from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key, is_deferred_model
@@ -30,8 +31,7 @@ class CameraAdapter(Protocol):
         num_frames: int,
         work_dir: str | Path | None = None,
         device: str | None = None,
-    ) -> CameraPayload:
-        ...
+    ) -> CameraPayload: ...
 
 
 _REGISTRY: dict[str, CameraAdapter] = {}

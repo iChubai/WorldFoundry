@@ -7,9 +7,10 @@ import hashlib
 import json
 import os
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 
 def read_json(path: Path) -> Any:
@@ -62,9 +63,7 @@ def atomic_write_json(path: Path, value: Any) -> None:
 
 
 @contextmanager
-def exclusive_lock(
-    path: Path, owner: dict[str, Any], *, wait: bool = False
-) -> Iterator[None]:
+def exclusive_lock(path: Path, owner: dict[str, Any], *, wait: bool = False) -> Iterator[None]:
     """Acquire a process lock and leave useful owner metadata."""
 
     path.parent.mkdir(parents=True, exist_ok=True)

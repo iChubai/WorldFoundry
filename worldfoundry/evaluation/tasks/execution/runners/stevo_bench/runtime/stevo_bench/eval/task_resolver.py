@@ -12,7 +12,7 @@ Output:
       - evaluation questions from YAML
   - create per-task folders under run_root/per_task to store run
   artifacts for each task (WM video output, final frame, init_frame etc.)
-      
+
 This module also performs "ingredient extraction" (final frame extraction).
 
 Conventions (per task folder):
@@ -27,19 +27,19 @@ Video link can be:
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-
-from benchmark.runners.utils import (
-    load_yaml, resolve_task_paths
-)
+from benchmark.runners.utils import load_yaml, resolve_task_paths
 from eval.utils import (
-    _resolve_video_source, _download, occlusion_base,
+    _download,
+    _resolve_video_source,
+    occlusion_base,
 )
 
 # -----------------------------
 # Data structures
 # -----------------------------
+
 
 @dataclass
 class Question:
@@ -56,7 +56,7 @@ class ResolvedTask:
     task_dir: Path
     task_yaml: Path
     init_frame: Path
-    gt_final_frame: Optional[Path]  # None if not yet generated
+    gt_final_frame: Path | None  # None if not yet generated
 
     # Model output (normalized into run directory)
     wm_video: Path
@@ -65,14 +65,16 @@ class ResolvedTask:
     final_frame: Path
 
     # Eval spec
-    questions: List[Question]
-    spec_prompt: Optional[str] = None  # evaluation.init2final_edit_prompt (optional)
+    questions: list[Question]
+    spec_prompt: str | None = None  # evaluation.init2final_edit_prompt (optional)
+
 
 # -----------------------------
 # YAML / task discovery
 # -----------------------------
 
-def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]:
+
+def discover_tasks(tasks_root: Path) -> dict[str, tuple[Path, Path, Path, Path]]:
     """
     Scan for task folders under tasks_root.
 
@@ -85,7 +87,7 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
     if not tasks_root.exists():
         raise FileNotFoundError(tasks_root)
 
-    mapping: Dict[str, Tuple[Path, Path, Path]] = {}
+    mapping: dict[str, tuple[Path, Path, Path]] = {}
 
     for d in tasks_root.rglob("*"):
         if not d.is_dir():
@@ -101,17 +103,13 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
             continue
 
         # GT final frame path
-        gt_final_frame = (task_dir / f'{folder_name}_gt_final_frame.png').resolve()
+        gt_final_frame = (task_dir / f"{folder_name}_gt_final_frame.png").resolve()
 
         task = load_yaml(task_yaml)  # your existing YAML loader
         task_id = str(task.get("id") or folder_name)
 
         if task_id in mapping:
-            raise ValueError(
-                f"Duplicate task_id discovered: {task_id}\n"
-                f"  - {task_dir}\n"
-                f"  - {mapping[task_id][0]}"
-            )
+            raise ValueError(f"Duplicate task_id discovered: {task_id}\n  - {task_dir}\n  - {mapping[task_id][0]}")
 
         mapping[task_id] = (task_dir, task_yaml, init_frame, gt_final_frame)
 
@@ -121,7 +119,7 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
     # Add base-name aliases so camera-controlled runs (whose output JSON keys
     # use the base name, e.g. "ice_on_burner") can resolve to the correct task
     # yaml and init frame.  sorted() ensures _cardboard wins over _curtain/_lightoff.
-    base_aliases: Dict[str, Tuple[Path, Path, Path, Path]] = {}
+    base_aliases: dict[str, tuple[Path, Path, Path, Path]] = {}
     for task_id in sorted(mapping):
         base = occlusion_base(task_id)
         if base != task_id and base not in mapping and base not in base_aliases:
@@ -131,23 +129,20 @@ def discover_tasks(tasks_root: Path) -> Dict[str, Tuple[Path, Path, Path, Path]]
     return mapping
 
 
-def _load_task_level(task_yaml: Path) -> Optional[int]:
+def _load_task_level(task_yaml: Path) -> int | None:
     task = load_yaml(task_yaml)
     return task.get("level")
 
 
-def _load_questions(task_yaml: Path) -> Tuple[List[Question], Optional[str]]:
+def _load_questions(task_yaml: Path) -> tuple[list[Question], str | None]:
     task = load_yaml(task_yaml)
     eval_block = task.get("evaluation", {}) or {}
 
     spec_prompt = eval_block.get("init2final_edit_prompt")
-    if isinstance(spec_prompt, str):
-        spec_prompt = spec_prompt.strip()
-    else:
-        spec_prompt = None
+    spec_prompt = spec_prompt.strip() if isinstance(spec_prompt, str) else None
 
     q_raw = eval_block.get("questions", []) or []
-    questions: List[Question] = []
+    questions: list[Question] = []
     for i, q in enumerate(q_raw, start=1):
         qid = str(q.get("id") or f"q{i:02d}").strip()
         questions.append(
@@ -161,11 +156,13 @@ def _load_questions(task_yaml: Path) -> Tuple[List[Question], Optional[str]]:
 
     return questions, spec_prompt
 
+
 # -----------------------------
 # Ingredient extraction (final frame)
 # -----------------------------
 
-def extract_final_frame(video_path: Path, out_png: Path) -> Dict[str, Any]:
+
+def extract_final_frame(video_path: Path, out_png: Path) -> dict[str, Any]:
     """
     Extract the last frame of a video and save to out_png.
     Uses OpenCV if available; falls back to imageio.
@@ -213,6 +210,7 @@ def extract_final_frame(video_path: Path, out_png: Path) -> Dict[str, Any]:
         # BGR -> RGB, write PNG
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         from PIL import Image  # type: ignore
+
         Image.fromarray(frame_rgb).save(out_png)
 
         return {
@@ -241,9 +239,11 @@ def extract_final_frame(video_path: Path, out_png: Path) -> Dict[str, Any]:
     #     "backend": "imageio_pyav",
     # }
 
+
 # -----------------------------
 # Main resolver
 # -----------------------------
+
 
 def resolve_one_task(
     *,
@@ -307,9 +307,9 @@ def resolve_one_task(
         task_level=task_level,
         task_dir=task_dir,
         task_yaml=task_yaml,
-        init_frame=init_frame,       # original path
+        init_frame=init_frame,  # original path
         gt_final_frame=gt_final_frame if gt_final_frame.exists() else None,
-        wm_video=wm_video,           # original path (or downloaded)
+        wm_video=wm_video,  # original path (or downloaded)
         final_frame=final_frame,
         questions=questions,
         spec_prompt=spec_prompt,
@@ -322,9 +322,9 @@ def resolve_tasks_from_outputs_json(
     outputs_json: Path,
     run_dir: Path,
     download_urls: bool = True,
-    pattern: Optional[str] = None,
+    pattern: str | None = None,
     exclude_baseline: bool = False,
-) -> List[ResolvedTask]:
+) -> list[ResolvedTask]:
     """
     Loop over (task_id -> video_link) pairs in outputs_json and resolve each task.
 
@@ -356,7 +356,7 @@ def resolve_tasks_from_outputs_json(
     if exclude_baseline:
         outputs_data = {k: v for k, v in outputs_data.items() if not str(k).endswith("_00")}
 
-    resolved: List[ResolvedTask] = []
+    resolved: list[ResolvedTask] = []
     failed = 0
     for task_id, video_link in outputs_data.items():
         try:
@@ -377,6 +377,7 @@ def resolve_tasks_from_outputs_json(
         print(f"[WARN] {failed} tasks skipped during resolution")
 
     return resolved
+
 
 # def resolve_tasks_from_outputs_json(
 #     *,

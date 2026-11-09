@@ -15,7 +15,8 @@
 
 # from neophilia; Author: Qsh (qsh.zh27@gmail.com) Kaiwen Zheng (zkwthu@gmail.com)
 
-from typing import Any, Callable, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any
 
 import torch
 import torch.distributed as dist
@@ -46,14 +47,18 @@ def single_all_to_all(input, local_seq_2_local_head, group, async_op=False):
     # b, s, n, h
     if local_seq_2_local_head:
         bs, local_seq_len, num_total_head, head_dim = input.shape
-        assert (
-            num_total_head % seq_world_size == 0
-        ), f"Number of heads ({num_total_head}) must be divisible by the sequence parallel size ({seq_world_size})!"
-        input_t = rearrange(input, "bs seq_len (w h) d -> w bs seq_len h d", w=seq_world_size, h=num_total_head // seq_world_size).contiguous()
+        assert num_total_head % seq_world_size == 0, (
+            f"Number of heads ({num_total_head}) must be divisible by the sequence parallel size ({seq_world_size})!"
+        )
+        input_t = rearrange(
+            input, "bs seq_len (w h) d -> w bs seq_len h d", w=seq_world_size, h=num_total_head // seq_world_size
+        ).contiguous()
         post_all2all_fun = post_all2all(local_seq_2_local_head, seq_world_size)
     else:
         bs, global_seq_len, num_local_head, head_dim = input.shape
-        input_t = rearrange(input, "bs (w s) h d -> w bs s h d", w=seq_world_size, s=global_seq_len // seq_world_size).contiguous()
+        input_t = rearrange(
+            input, "bs (w s) h d -> w bs s h d", w=seq_world_size, s=global_seq_len // seq_world_size
+        ).contiguous()
         post_all2all_fun = post_all2all(local_seq_2_local_head, seq_world_size)
 
     output = torch.empty_like(input_t)
@@ -64,12 +69,12 @@ def single_all_to_all(input, local_seq_2_local_head, group, async_op=False):
 
 
 def async_a2a_communicate(
-    a2a_inputs: Union[torch.Tensor, List[torch.Tensor]],
+    a2a_inputs: torch.Tensor | list[torch.Tensor],
     cp_size: int,
     cp_group: ProcessGroup,
     cp_stream: torch.cuda.Stream,
     local_seq_2_local_head: bool,
-) -> Union[torch.Tensor, List[torch.Tensor]]:
+) -> torch.Tensor | list[torch.Tensor]:
     """
     A2A communication for context parallelism. best used in communicate qkv
     Modified from Nvidia Transformer Engine.
@@ -81,19 +86,25 @@ def async_a2a_communicate(
         for i in range(len(a2a_inputs) + 2):
             if 0 < i < len(a2a_inputs) + 1:
                 a2a_outputs[i - 1] = torch.empty_like(a2a_inputs[i - 1])
-                a2a_reqs[i - 1] = torch.distributed.all_to_all_single(a2a_outputs[i - 1], a2a_inputs[i - 1], group=cp_group, async_op=True)
+                a2a_reqs[i - 1] = torch.distributed.all_to_all_single(
+                    a2a_outputs[i - 1], a2a_inputs[i - 1], group=cp_group, async_op=True
+                )
                 a2a_post_fns[i - 1] = post_all2all(local_seq_2_local_head, cp_size)
             if i > 1:
                 with torch.cuda.stream(cp_stream):
                     a2a_reqs[i - 2].wait()
                     a2a_outputs[i - 2] = a2a_post_fns[i - 2](a2a_outputs[i - 2])
             if i < len(a2a_inputs):
-                a2a_inputs[i] = rearrange(a2a_inputs[i], "bs seq_len (w h) d -> w bs seq_len h d", w=cp_size).contiguous()
+                a2a_inputs[i] = rearrange(
+                    a2a_inputs[i], "bs seq_len (w h) d -> w bs seq_len h d", w=cp_size
+                ).contiguous()
     else:
         for i in range(len(a2a_inputs) + 2):
             if 0 < i < len(a2a_inputs) + 1:
                 a2a_outputs[i - 1] = torch.empty_like(a2a_inputs[i - 1])
-                a2a_reqs[i - 1] = torch.distributed.all_to_all_single(a2a_outputs[i - 1], a2a_inputs[i - 1], group=cp_group, async_op=True)
+                a2a_reqs[i - 1] = torch.distributed.all_to_all_single(
+                    a2a_outputs[i - 1], a2a_inputs[i - 1], group=cp_group, async_op=True
+                )
                 a2a_post_fns[i - 1] = post_all2all(local_seq_2_local_head, cp_size)
             if i < len(a2a_inputs):
                 a2a_inputs[i] = rearrange(a2a_inputs[i], "bs (w s) h d -> w bs s h d", w=cp_size).contiguous()
@@ -114,7 +125,7 @@ class _SeqAllToAll(torch.autograd.Function):
         return res
 
     @staticmethod
-    def backward(ctx: Any, *grad_output: torch.Tensor) -> Tuple[None, torch.Tensor, None]:
+    def backward(ctx: Any, *grad_output: torch.Tensor) -> tuple[None, torch.Tensor, None]:
         return (None, _SeqAllToAll.apply(ctx.group, *grad_output, not ctx.local_seq_2_local_head), None)
 
 
@@ -129,7 +140,7 @@ class _SeqAllToAllQKV(torch.autograd.Function):
         cp_size: int,
         cp_stream: torch.cuda.Stream,
         local_seq_2_local_head: bool,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         ctx.group = group
         ctx.cp_size = cp_size
         ctx.cp_stream = cp_stream
@@ -138,15 +149,19 @@ class _SeqAllToAllQKV(torch.autograd.Function):
         return q, k, v
 
     @staticmethod
-    def backward(ctx: Any, *grad_output: torch.Tensor) -> Tuple[None, torch.Tensor, torch.Tensor, torch.Tensor, None, None, None]:
-        q_grad, k_grad, v_grad = _SeqAllToAllQKV.apply(ctx.group, *grad_output, ctx.cp_size, ctx.cp_stream, not ctx.local_seq_2_local_head)
+    def backward(
+        ctx: Any, *grad_output: torch.Tensor
+    ) -> tuple[None, torch.Tensor, torch.Tensor, torch.Tensor, None, None, None]:
+        q_grad, k_grad, v_grad = _SeqAllToAllQKV.apply(
+            ctx.group, *grad_output, ctx.cp_size, ctx.cp_stream, not ctx.local_seq_2_local_head
+        )
         return (None, q_grad, k_grad, v_grad, None, None, None)
 
 
 class DistributedAttention(torch.nn.Module):
     """Wraps a local attention op with optional Ulysses-style CP (A2A) + optional KV cache."""
 
-    def __init__(self, local_attention: Union[torch.nn.Module, Callable]) -> None:
+    def __init__(self, local_attention: torch.nn.Module | Callable) -> None:
         super().__init__()
         self.local_attn = local_attention
         self.pg = None
@@ -156,7 +171,9 @@ class DistributedAttention(torch.nn.Module):
         self.pg = group
         self.stream = stream
 
-    def _materialize_kv(self, key: torch.Tensor, value: torch.Tensor, attn_ctx: Optional[AttnContext]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _materialize_kv(
+        self, key: torch.Tensor, value: torch.Tensor, attn_ctx: AttnContext | None
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         if attn_ctx is None or attn_ctx.kv_cache is None:
             return key, value
 
@@ -187,7 +204,7 @@ class DistributedAttention(torch.nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         key_current: torch.Tensor,
-        attn_ctx: Optional[AttnContext],
+        attn_ctx: AttnContext | None,
     ):
         if attn_ctx is None or attn_ctx.attn_observer is None:
             return
@@ -203,7 +220,13 @@ class DistributedAttention(torch.nn.Module):
         )
 
     def forward(
-        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, *args: Any, attn_ctx: Optional[AttnContext] = None, **kwargs
+        self,
+        query: torch.Tensor,
+        key: torch.Tensor,
+        value: torch.Tensor,
+        *args: Any,
+        attn_ctx: AttnContext | None = None,
+        **kwargs,
     ) -> torch.Tensor:
         """
         query/key/value expected layout (before CP):
@@ -249,12 +272,14 @@ class DistributedAttention(torch.nn.Module):
 class MinimalA2AAttnOp(DistributedAttention):
     def __init__(self, local_attn=attention, *args, **kwargs):
         del args, kwargs
-        super(MinimalA2AAttnOp, self).__init__(local_attn)
+        super().__init__(local_attn)
 
     def set_context_parallel_group(self, process_group, ranks, stream):
         del ranks
         super().set_context_parallel_group(process_group, stream)
 
-    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, *args: Any, **kwargs) -> torch.Tensor:
+    def forward(
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, *args: Any, **kwargs
+    ) -> torch.Tensor:
         results = super().forward(query, key, value, *args, **kwargs)
         return rearrange(results, "b ... h l -> b ... (h l)")

@@ -1,16 +1,20 @@
 import math
+from typing import Any
+
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from einops import rearrange, repeat
+from torch import einsum
 
-from src.modules.attention_temporal_videoae import *
-from einops import rearrange, reduce, repeat
+from src.modules.attention_temporal_videoae import default, exists
 
 try:
-    import xformers
+    import xformers  # noqa: F401 - Availability probe for XFORMERS_IS_AVAILBLE.
     import xformers.ops as xops
 
     XFORMERS_IS_AVAILBLE = True
-except:
+except BaseException:
     XFORMERS_IS_AVAILBLE = False
 
 
@@ -21,7 +25,7 @@ def silu(x):
 
 class SiLU(nn.Module):
     def __init__(self):
-        super(SiLU, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         return silu(x)
@@ -30,9 +34,7 @@ class SiLU(nn.Module):
 def Normalize(in_channels, norm_type="group"):
     assert norm_type in ["group", "batch"]
     if norm_type == "group":
-        return torch.nn.GroupNorm(
-            num_groups=32, num_channels=in_channels, eps=1e-6, affine=True
-        )
+        return torch.nn.GroupNorm(num_groups=32, num_channels=in_channels, eps=1e-6, affine=True)
     elif norm_type == "batch":
         return torch.nn.SyncBatchNorm(in_channels)
 
@@ -57,17 +59,15 @@ class SamePadConv3d(nn.Module):
             stride = (stride,) * 3
 
         # assumes that the input shape is divisible by stride
-        total_pad = tuple([k - s for k, s in zip(kernel_size, stride)])
+        total_pad = tuple([k - s for k, s in zip(kernel_size, stride, strict=False)])
         pad_input = []
         for p in total_pad[::-1]:  # reverse since F.pad starts from last dim
             pad_input.append((p // 2 + p % 2, p // 2))
-        pad_input = sum(pad_input, tuple())
+        pad_input = sum(pad_input, ())
         self.pad_input = pad_input
         self.padding_type = padding_type
 
-        self.conv = nn.Conv3d(
-            in_channels, out_channels, kernel_size, stride=stride, padding=0, bias=bias
-        )
+        self.conv = nn.Conv3d(in_channels, out_channels, kernel_size, stride=stride, padding=0, bias=bias)
 
     def forward(self, x):
         # print(x.dtype)
@@ -90,11 +90,11 @@ class SamePadConvTranspose3d(nn.Module):
         if isinstance(stride, int):
             stride = (stride,) * 3
 
-        total_pad = tuple([k - s for k, s in zip(kernel_size, stride)])
+        total_pad = tuple([k - s for k, s in zip(kernel_size, stride, strict=False)])
         pad_input = []
         for p in total_pad[::-1]:  # reverse since F.pad starts from last dim
             pad_input.append((p // 2 + p % 2, p // 2))
-        pad_input = sum(pad_input, tuple())
+        pad_input = sum(pad_input, ())
         self.pad_input = pad_input
         self.padding_type = padding_type
 
@@ -128,18 +128,12 @@ class ResBlock(nn.Module):
         self.use_conv_shortcut = conv_shortcut
 
         self.norm1 = Normalize(in_channels, norm_type)
-        self.conv1 = SamePadConv3d(
-            in_channels, out_channels, kernel_size=3, padding_type=padding_type
-        )
+        self.conv1 = SamePadConv3d(in_channels, out_channels, kernel_size=3, padding_type=padding_type)
         self.dropout = torch.nn.Dropout(dropout)
         self.norm2 = Normalize(in_channels, norm_type)
-        self.conv2 = SamePadConv3d(
-            out_channels, out_channels, kernel_size=3, padding_type=padding_type
-        )
+        self.conv2 = SamePadConv3d(out_channels, out_channels, kernel_size=3, padding_type=padding_type)
         if self.in_channels != self.out_channels:
-            self.conv_shortcut = SamePadConv3d(
-                in_channels, out_channels, kernel_size=3, padding_type=padding_type
-            )
+            self.conv_shortcut = SamePadConv3d(in_channels, out_channels, kernel_size=3, padding_type=padding_type)
 
     def forward(self, x):
         h = x
@@ -184,10 +178,8 @@ class SpatialCrossAttention(nn.Module):
         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, patch_dim), nn.Dropout(dropout)
-        )
-        self.attention_op: Optional[Any] = None
+        self.to_out = nn.Sequential(nn.Linear(inner_dim, patch_dim), nn.Dropout(dropout))
+        self.attention_op: Any | None = None
 
     def forward(self, x, context=None, mask=None):
         b, c, t, height, width = x.shape
@@ -212,9 +204,7 @@ class SpatialCrossAttention(nn.Module):
         k = self.to_k(context)
         v = self.to_v(context)
 
-        q, k, v = map(
-            lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=self.heads), (q, k, v)
-        )
+        q, k, v = (rearrange(t, "b n (h d) -> (b h) n d", h=self.heads) for t in (q, k, v))
 
         if exists(mask):
             mask = rearrange(mask, "b ... -> b (...)")
@@ -239,9 +229,7 @@ class SpatialCrossAttention(nn.Module):
                     dtype=attn_bias.dtype,
                     device=attn_bias.device,
                 )
-                attn_bias_expansion[:, : attn_bias.shape[1], : attn_bias.shape[2]] = (
-                    attn_bias
-                )
+                attn_bias_expansion[:, : attn_bias.shape[1], : attn_bias.shape[2]] = attn_bias
 
                 attn_bias = attn_bias.detach().cpu()
 
@@ -249,9 +237,7 @@ class SpatialCrossAttention(nn.Module):
                     q,
                     k,
                     v,
-                    attn_bias=attn_bias_expansion[
-                        :, : attn_bias.shape[1], : attn_bias.shape[2]
-                    ],
+                    attn_bias=attn_bias_expansion[:, : attn_bias.shape[1], : attn_bias.shape[2]],
                     scale=self.scale,
                 )
             else:
@@ -289,10 +275,10 @@ class EncoderTemporal1DCNN(nn.Module):
         *,
         ch,
         out_ch,
-        attn_temporal_factor=[],
+        attn_temporal_factor=[],  # noqa: B006 - Read-only default; retain the public signature.
         temporal_scale_factor=4,
         hidden_channel=128,
-        **ignore_kwargs
+        **ignore_kwargs,
     ):
         super().__init__()
 
@@ -301,9 +287,7 @@ class EncoderTemporal1DCNN(nn.Module):
         self.temporal_scale_factor = temporal_scale_factor
 
         # conv_in + resblock + down_block + resblock + down_block + final_block
-        self.conv_in = SamePadConv3d(
-            ch, hidden_channel, kernel_size=3, padding_type="replicate"
-        )
+        self.conv_in = SamePadConv3d(ch, hidden_channel, kernel_size=3, padding_type="replicate")
 
         self.mid_blocks = nn.ModuleList()
 
@@ -330,9 +314,7 @@ class EncoderTemporal1DCNN(nn.Module):
 
             block.attn = nn.ModuleList()
             if curr_temporal_factor in attn_temporal_factor:
-                block.attn.append(
-                    SpatialCrossAttention(query_dim=out_channels, context_dim=1024)
-                )
+                block.attn.append(SpatialCrossAttention(query_dim=out_channels, context_dim=1024))
 
             self.mid_blocks.append(block)
             # n_times_downsample -= 1
@@ -340,9 +322,7 @@ class EncoderTemporal1DCNN(nn.Module):
         self.final_block = nn.Sequential(
             Normalize(out_channels, norm_type),
             SiLU(),
-            SamePadConv3d(
-                out_channels, out_ch * 2, kernel_size=3, padding_type="replicate"
-            ),
+            SamePadConv3d(out_channels, out_ch * 2, kernel_size=3, padding_type="replicate"),
         )
 
         self.initialize_weights()
@@ -350,11 +330,10 @@ class EncoderTemporal1DCNN(nn.Module):
     def initialize_weights(self):
         # Initialize transformer layers:
         def _basic_init(module):
-            if isinstance(module, nn.Linear):
-                if module.weight.requires_grad_:
-                    torch.nn.init.xavier_uniform_(module.weight)
-                    if module.bias is not None:
-                        nn.init.constant_(module.bias, 0)
+            if isinstance(module, nn.Linear) and module.weight.requires_grad_:
+                torch.nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
             if isinstance(module, nn.Conv3d):
                 torch.nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
@@ -380,10 +359,8 @@ class EncoderTemporal1DCNN(nn.Module):
 
 
 class TemporalUpsample(nn.Module):
-    def __init__(
-        self, size=None, scale_factor=None, mode="nearest", align_corners=None
-    ):
-        super(TemporalUpsample, self).__init__()
+    def __init__(self, size=None, scale_factor=None, mode="nearest", align_corners=None):
+        super().__init__()
         self.size = size
         self.scale_factor = scale_factor
         self.mode = mode
@@ -405,10 +382,10 @@ class DecoderTemporal1DCNN(nn.Module):
         *,
         ch,
         out_ch,
-        attn_temporal_factor=[],
+        attn_temporal_factor=[],  # noqa: B006 - Read-only default; retain the public signature.
         temporal_scale_factor=4,
         hidden_channel=128,
-        **ignore_kwargs
+        **ignore_kwargs,
     ):
         super().__init__()
 
@@ -422,20 +399,15 @@ class DecoderTemporal1DCNN(nn.Module):
         # conv_in, mid_blocks, final_block
         # out channel of encoder, before the last conv layer
         enc_out_channels = hidden_channel * 2**num_us
-        self.conv_in = SamePadConv3d(
-            ch, enc_out_channels, kernel_size=3, padding_type="replicate"
-        )
+        self.conv_in = SamePadConv3d(ch, enc_out_channels, kernel_size=3, padding_type="replicate")
 
         self.mid_blocks = nn.ModuleList()
         curr_temporal_factor = self.temporal_scale_factor
 
         for i in range(num_us):
             block = nn.Module()
-            in_channels = (
-                enc_out_channels if i == 0 else hidden_channel * 2 ** (num_us - i + 1)
-            )  # max_us: 3
+            in_channels = enc_out_channels if i == 0 else hidden_channel * 2 ** (num_us - i + 1)  # max_us: 3
             out_channels = hidden_channel * 2 ** (num_us - i)
-            temporal_stride = 2
             # block.up = SamePadConvTranspose3d(in_channels, out_channels, kernel_size=3, stride=(temporal_stride, 1, 1))
             block.up = torch.nn.ConvTranspose3d(
                 in_channels,
@@ -449,17 +421,13 @@ class DecoderTemporal1DCNN(nn.Module):
             block.attn1 = nn.ModuleList()
 
             if curr_temporal_factor in attn_temporal_factor:
-                block.attn1.append(
-                    SpatialCrossAttention(query_dim=out_channels, context_dim=1024)
-                )
+                block.attn1.append(SpatialCrossAttention(query_dim=out_channels, context_dim=1024))
 
             block.res2 = ResBlock(out_channels, out_channels, norm_type=norm_type)
 
             block.attn2 = nn.ModuleList()
             if curr_temporal_factor in attn_temporal_factor:
-                block.attn2.append(
-                    SpatialCrossAttention(query_dim=out_channels, context_dim=1024)
-                )
+                block.attn2.append(SpatialCrossAttention(query_dim=out_channels, context_dim=1024))
 
             curr_temporal_factor = curr_temporal_factor / 2
             self.mid_blocks.append(block)
@@ -471,11 +439,10 @@ class DecoderTemporal1DCNN(nn.Module):
     def initialize_weights(self):
         # Initialize transformer layers:
         def _basic_init(module):
-            if isinstance(module, nn.Linear):
-                if module.weight.requires_grad_:
-                    torch.nn.init.xavier_uniform_(module.weight)
-                    if module.bias is not None:
-                        nn.init.constant_(module.bias, 0)
+            if isinstance(module, nn.Linear) and module.weight.requires_grad_:
+                torch.nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
             if isinstance(module, nn.Conv3d):
                 torch.nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
@@ -490,7 +457,7 @@ class DecoderTemporal1DCNN(nn.Module):
     def forward(self, x, text_embeddings=None, text_attn_mask=None):
         # x: [b c t h w]
         h = self.conv_in(x)
-        for i, block in enumerate(self.mid_blocks):
+        for _i, block in enumerate(self.mid_blocks):
             h = block.up(h)
             h = block.res1(h)
             if len(block.attn1) > 0:

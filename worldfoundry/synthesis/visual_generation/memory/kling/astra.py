@@ -105,7 +105,7 @@ class AstraMemory(BaseMemory):
                 current_length - available_frames, current_length, device=camera_embedding_full.device
             )
             # A short retained window includes the pinned first frame.
-            if T < current_length and available_frames == T:
+            if current_length > T and available_frames == T:
                 history_positions[0] = 0
             combined_camera[start_pos:19] = camera_embedding_full[history_positions]
         combined_camera[19 : 19 + target_frames_to_generate] = camera_embedding_full[

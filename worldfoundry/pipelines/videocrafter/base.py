@@ -47,7 +47,6 @@ def _videocrafter_runtime_inputs(
     device: str,
     overrides: Mapping[str, Any],
 ) -> tuple[Any, dict[str, Any]]:
-    """Videocrafter runtime inputs helper function."""
     runtime_overrides = {
         key: value
         for source in (required_components or {}, overrides)

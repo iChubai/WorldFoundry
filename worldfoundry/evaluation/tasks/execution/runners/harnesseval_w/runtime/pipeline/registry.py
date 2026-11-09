@@ -2,23 +2,25 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from ..protocols import SKILLS
-from ..skills import skill_appearance_consistency
-from ..skills import skill_drift_degradation
-from ..skills import skill_intentional_change_vlm
-from ..skills import skill_motion_quality
-from ..skills import skill_offscreen_evolution
-from ..skills import skill_physical_law
-from ..skills import skill_physical_plausibility
-from ..skills import skill_physical_response_vlm
-from ..skills import skill_render_quality
-from ..skills import skill_return_consistency
-from ..skills import skill_viewpoint_trajectory
-
+from ..skills import (
+    skill_appearance_consistency,
+    skill_drift_degradation,
+    skill_intentional_change_vlm,
+    skill_motion_quality,
+    skill_offscreen_evolution,
+    skill_physical_law,
+    skill_physical_plausibility,
+    skill_physical_response_vlm,
+    skill_render_quality,
+    skill_return_consistency,
+    skill_viewpoint_trajectory,
+)
 
 SkillEvaluator = Callable[..., dict[str, Any]]
 

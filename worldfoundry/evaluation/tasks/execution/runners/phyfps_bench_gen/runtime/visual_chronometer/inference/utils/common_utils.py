@@ -1,6 +1,8 @@
 import importlib
+import os
+
+import cv2
 import numpy as np
-import cv2, os
 import torch
 import torch.distributed as dist
 
@@ -8,7 +10,7 @@ import torch.distributed as dist
 def count_params(model, verbose=False):
     total_params = sum(p.numel() for p in model.parameters())
     if verbose:
-        print(f"{model.__class__.__name__} has {total_params*1.e-6:.2f} M params.")
+        print(f"{model.__class__.__name__} has {total_params * 1.0e-6:.2f} M params.")
     return total_params
 
 
@@ -25,14 +27,12 @@ def check_istarget(name, para_list):
 
 
 def instantiate_from_config(config):
-    if not "target" in config:
-        if config == "__is_first_stage__":
-            return None
-        elif config == "__is_unconditional__":
+    if "target" not in config:
+        if config == "__is_first_stage__" or config == "__is_unconditional__":
             return None
         raise KeyError("Expected key `target` to instantiate.")
 
-    return get_obj_from_str(config["target"])(**config.get("params", dict()))
+    return get_obj_from_str(config["target"])(**config.get("params", {}))
 
 
 def get_obj_from_str(string, reload=False):
@@ -44,10 +44,7 @@ def get_obj_from_str(string, reload=False):
 
 
 def load_npz_from_dir(data_dir):
-    data = [
-        np.load(os.path.join(data_dir, data_name))["arr_0"]
-        for data_name in os.listdir(data_dir)
-    ]
+    data = [np.load(os.path.join(data_dir, data_name))["arr_0"] for data_name in os.listdir(data_dir)]
     data = np.concatenate(data, axis=0)
     return data
 

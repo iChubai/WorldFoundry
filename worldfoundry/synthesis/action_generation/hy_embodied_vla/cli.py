@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from worldfoundry.core.io.formats.serialization import write_json
 
@@ -55,9 +56,7 @@ def _add_runtime_arguments(parser: argparse.ArgumentParser) -> None:
         default=None,
         help="local checkpoint directory or repo ID (defaults to the selected official variant)",
     )
-    parser.add_argument(
-        "--variant", choices=tuple(OFFICIAL_REPOSITORIES), default=DEFAULT_VARIANT
-    )
+    parser.add_argument("--variant", choices=tuple(OFFICIAL_REPOSITORIES), default=DEFAULT_VARIANT)
     parser.add_argument(
         "--revision",
         help="checkpoint revision (official repos default to the audited immutable revision)",

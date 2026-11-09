@@ -1,4 +1,5 @@
 import os
+
 import cv2
 import numpy as np
 
@@ -9,7 +10,7 @@ def _resize_max_side(img: np.ndarray, max_side: int) -> np.ndarray:
     if m <= max_side:
         return img
     scale = max_side / float(m)
-    return cv2.resize(img, (int(round(w * scale)), int(round(h * scale))), interpolation=cv2.INTER_AREA)
+    return cv2.resize(img, (round(w * scale), round(h * scale)), interpolation=cv2.INTER_AREA)
 
 
 class FrameReader:
@@ -40,8 +41,7 @@ class FrameReader:
     def iter_indices(self, start: int, end: int, step: int):
         start = max(0, start)
         end = min(self._n - 1, end)
-        for i in range(start, end + 1, step):
-            yield i
+        yield from range(start, end + 1, step)
 
 
 class VideoReader:
@@ -54,9 +54,9 @@ class VideoReader:
 
     def __init__(self, video_path: str, max_side: int = 640):
         self.video_path = video_path
-        self.max_side   = max_side
+        self.max_side = max_side
         self._cap = cv2.VideoCapture(video_path)
-        self._n   = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self._n = int(self._cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self._pos = -1
         if self._n <= 0:
             self._cap.release()
@@ -86,5 +86,4 @@ class VideoReader:
     def iter_indices(self, start: int, end: int, step: int):
         start = max(0, start)
         end = min(self._n - 1, end)
-        for i in range(start, end + 1, step):
-            yield i
+        yield from range(start, end + 1, step)

@@ -1,14 +1,20 @@
-from .helpers import get_kwarg, vassert, vprint, process_deprecations
+from .helpers import get_kwarg, process_deprecations, vassert, vprint
 from .metric_fid import (
-    fid_inputs_to_metric,
     fid_featuresdict_to_statistics_cached,
+    fid_inputs_to_metric,
     fid_statistics_to_metric,
 )
 from .metric_isc import isc_featuresdict_to_metric
 from .metric_kid import kid_featuresdict_to_metric
 from .metric_mind import mind_featuresdict_to_metric
+
+# isort: split
 from .metric_prc import prc_featuresdict_to_metric
+
+# isort: split
 from .metric_ppl import calculate_ppl
+
+# isort: split
 from .utils import (
     create_feature_extractor,
     extract_featuresdict_from_input_id_cached,
@@ -76,11 +82,11 @@ def calculate_metrics_one_feature_extractor(**kwargs):
             metrics.update(metric_fid)
             return metrics
 
-        vprint(verbose, f"Extracting features from input1")
+        vprint(verbose, "Extracting features from input1")
         featuresdict_1 = extract_featuresdict_from_input_id_cached(1, feat_extractor, **kwargs)
         featuresdict_2 = None
         if input2 is not None:
-            vprint(verbose, f"Extracting features from input2")
+            vprint(verbose, "Extracting features from input2")
             featuresdict_2 = extract_featuresdict_from_input_id_cached(2, feat_extractor, **kwargs)
 
         if have_isc:

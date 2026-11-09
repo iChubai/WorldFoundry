@@ -2,10 +2,10 @@ import sys
 from contextlib import redirect_stdout
 
 import torch
+import torchvision.transforms.functional as F
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision.datasets import CIFAR10, STL10, CIFAR100
-import torchvision.transforms.functional as F
+from torchvision.datasets import CIFAR10, CIFAR100, STL10
 
 from .helpers import vassert
 

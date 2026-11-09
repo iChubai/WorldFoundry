@@ -3,7 +3,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from einops import rearrange
 
 
@@ -38,7 +37,6 @@ class Upsample3D(nn.Module):
         self.use_conv_transpose = use_conv_transpose
         self.name = name
 
-        conv = None
         if use_conv_transpose:
             raise NotImplementedError
         elif use_conv:
@@ -138,7 +136,7 @@ class ResnetBlock3D(nn.Module):
         if groups_out is None:
             groups_out = groups
 
-        assert use_inflated_groupnorm != None
+        assert use_inflated_groupnorm != None  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
         if use_inflated_groupnorm:
             self.norm1 = InflatedGroupNorm(num_groups=groups, num_channels=in_channels, eps=eps, affine=True)
         else:

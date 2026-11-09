@@ -13,7 +13,6 @@ from ..aggregate import clean_float, mean_valid, numeric, skill_result
 from ..io import atomic_write_json, file_fingerprint, read_json, value_digest
 from .common import MetricCacheContract, SkillBackendIdentity, skill_cache_path
 
-
 SKILL_ID = "offscreen_evolution_verifier"
 DEFINITION_VERSION = "harnesseval.offscreen_evolution"
 PROMPT_VERSION = "harnesseval.offscreen_evolution.prompt"
@@ -55,27 +54,27 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
+    "ANALYZE_AGENT_CACHE_SCHEMA",
+    "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
     "DEFINITION_VERSION",
     "PROMPT_VERSION",
-    "RESULT_CACHE_SCHEMA",
-    "ANALYZE_AGENT_CACHE_SCHEMA",
-    "VERIFY_AGENT_CACHE_SCHEMA",
-    "BACKEND_OUTPUT_SCHEMA",
-    "SAMPLING",
     "Q_FIELDS",
     "Q_LEVELS",
-    "CACHE_CONTRACT",
+    "RESULT_CACHE_SCHEMA",
+    "SAMPLING",
+    "SKILL_ID",
+    "VERIFY_AGENT_CACHE_SCHEMA",
     "OffscreenEvolutionBackend",
-    "canonical_spec",
-    "expected_spec_messages",
-    "video_judge_messages",
-    "normalize_q_scores",
     "aggregate_q_scores",
-    "result_from_judgment",
-    "is_compatible_result",
     "cache_paths",
+    "canonical_spec",
     "evaluate",
+    "expected_spec_messages",
+    "is_compatible_result",
+    "normalize_q_scores",
+    "result_from_judgment",
+    "video_judge_messages",
 ]
 
 
@@ -155,9 +154,7 @@ def _visibility_groups(value: Any) -> dict[str, list[str]]:
     return groups
 
 
-def _visibility_from_window(
-    non_model: Mapping[str, Any], chunk_ids: list[str]
-) -> dict[str, list[str]]:
+def _visibility_from_window(non_model: Mapping[str, Any], chunk_ids: list[str]) -> dict[str, list[str]]:
     window = non_model.get("offscreen_window") or {}
     if not isinstance(window, Mapping):
         return {}
@@ -195,8 +192,7 @@ def canonical_spec(case: Mapping[str, Any]) -> dict[str, Any]:
     visibility = non_model.get("visibility_plan")
     if isinstance(visibility, Mapping):
         visibility = {
-            name: _chunk_list(visibility.get(name))
-            for name in ("pre_visible", "offscreen", "return_visible")
+            name: _chunk_list(visibility.get(name)) for name in ("pre_visible", "offscreen", "return_visible")
         }
     else:
         visibility = _visibility_from_window(non_model, chunk_ids)
@@ -213,9 +209,7 @@ def canonical_spec(case: Mapping[str, Any]) -> dict[str, Any]:
         {
             "target_process": evolution.get("target_process"),
             "evolvable_elements": evolvable,
-            "stable_anchors": non_model.get("stable_anchors")
-            or non_model.get("protected_anchors")
-            or [],
+            "stable_anchors": non_model.get("stable_anchors") or non_model.get("protected_anchors") or [],
             "visibility_plan": visibility,
             "expected_evolution": evolution.get("expected_evolution") or [],
             "failure_modes": evolution.get("failure_modes") or [],
@@ -230,8 +224,7 @@ def canonical_spec(case: Mapping[str, Any]) -> dict[str, Any]:
 def _expected_spec_is_resolved(expected_spec: Mapping[str, Any]) -> bool:
     visibility = _visibility_groups(expected_spec.get("visibility_timeline"))
     return bool(expected_spec.get("target_process")) and all(
-        _chunk_list(visibility.get(name))
-        for name in ("pre_visible", "offscreen", "return_visible")
+        _chunk_list(visibility.get(name)) for name in ("pre_visible", "offscreen", "return_visible")
     )
 
 
@@ -247,9 +240,7 @@ def _jpeg_data_url_from_rgb(frame: Any, max_side: int = 512, quality: int = 76) 
             interpolation=cv2.INTER_AREA,
         )
     bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    ok, encoded = cv2.imencode(
-        ".jpg", bgr, [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)]
-    )
+    ok, encoded = cv2.imencode(".jpg", bgr, [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)])
     if not ok:
         raise RuntimeError("failed to encode sampled Offscreen frame")
     payload = base64.b64encode(encoded.tobytes()).decode("ascii")
@@ -277,11 +268,7 @@ def _sample_video(video_path: Path) -> tuple[list[Any], dict[str, Any]]:
         cap.release()
         raise RuntimeError(f"video has no frames: {video_path}")
     count = min(int(SAMPLING["max_frames"]), frame_count)
-    indices = (
-        [0]
-        if count == 1
-        else [int(index * (frame_count - 1) / (count - 1)) for index in range(count)]
-    )
+    indices = [0] if count == 1 else [int(index * (frame_count - 1) / (count - 1)) for index in range(count)]
     frames = []
     wanted = set(indices)
     cursor = 0
@@ -304,9 +291,7 @@ def _sample_video(video_path: Path) -> tuple[list[Any], dict[str, Any]]:
     }
 
 
-def expected_spec_messages(
-    spec: Mapping[str, Any], initial_observation_path: Path
-) -> list[dict[str, Any]]:
+def expected_spec_messages(spec: Mapping[str, Any], initial_observation_path: Path) -> list[dict[str, Any]]:
     action_view = {
         "top_level_action_text": spec.get("top_level_action_text"),
         "chunks": spec.get("chunks"),
@@ -348,9 +333,7 @@ def expected_spec_messages(
     ]
 
 
-def _frame_chunk_labels(
-    spec: Mapping[str, Any], sampling: Mapping[str, Any]
-) -> list[str]:
+def _frame_chunk_labels(spec: Mapping[str, Any], sampling: Mapping[str, Any]) -> list[str]:
     chunk_ids = [
         str(item.get("chunk_id"))
         for item in spec.get("chunks") or []
@@ -359,9 +342,7 @@ def _frame_chunk_labels(
     indices = sampling.get("sample_indices") or []
     frame_count = int(sampling.get("source_frame_count") or 0)
     if not chunk_ids or frame_count <= 0 or len(indices) == 0:
-        raise ValueError(
-            "Offscreen frame-to-chunk labeling requires chunks and samples"
-        )
+        raise ValueError("Offscreen frame-to-chunk labeling requires chunks and samples")
     return [
         chunk_ids[
             min(
@@ -420,9 +401,7 @@ def video_judge_messages(
     ]
     labels = _frame_chunk_labels(spec, sampling)
     indices = sampling.get("sample_indices") or []
-    for position, (frame, chunk_id, frame_index) in enumerate(
-        zip(frames, labels, indices)
-    ):
+    for position, (frame, chunk_id, frame_index) in enumerate(zip(frames, labels, indices, strict=False)):
         content.append(
             {
                 "type": "text",
@@ -432,9 +411,7 @@ def video_judge_messages(
                 ),
             }
         )
-        content.append(
-            {"type": "image_url", "image_url": _jpeg_data_url_from_rgb(frame)}
-        )
+        content.append({"type": "image_url", "image_url": _jpeg_data_url_from_rgb(frame)})
     return [
         {
             "role": "system",
@@ -482,14 +459,8 @@ def normalize_q_scores(judgment: Mapping[str, Any]) -> dict[str, float | None]:
     return result
 
 
-def _weighted_mean(
-    values: Mapping[str, Any], weights: Mapping[str, float]
-) -> float | None:
-    valid = [
-        (float(values[key]), weight)
-        for key, weight in weights.items()
-        if numeric(values.get(key)) is not None
-    ]
+def _weighted_mean(values: Mapping[str, Any], weights: Mapping[str, float]) -> float | None:
+    valid = [(float(values[key]), weight) for key, weight in weights.items() if numeric(values.get(key)) is not None]
     total_weight = sum(weight for _, weight in valid)
     if not total_weight:
         return None
@@ -539,11 +510,7 @@ def _text_tokens(value: Any) -> set[str]:
         value = " ".join(str(item) for item in value)
     elif isinstance(value, Mapping):
         value = json.dumps(value, ensure_ascii=False)
-    return {
-        token
-        for token in re.findall(r"[a-zA-Z0-9_]+", str(value or "").lower())
-        if len(token) >= 4
-    }
+    return {token for token in re.findall(r"[a-zA-Z0-9_]+", str(value or "").lower()) if len(token) >= 4}
 
 
 def _overlap(reference: Any, candidate: Any) -> float | None:
@@ -554,9 +521,7 @@ def _overlap(reference: Any, candidate: Any) -> float | None:
     return round(len(reference_tokens & candidate_tokens) / len(reference_tokens), 6)
 
 
-def case_audit(
-    spec: Mapping[str, Any], expected_spec: Mapping[str, Any]
-) -> dict[str, Any]:
+def case_audit(spec: Mapping[str, Any], expected_spec: Mapping[str, Any]) -> dict[str, Any]:
     target = _overlap(
         [
             spec.get("target_process"),
@@ -639,23 +604,16 @@ def is_compatible_result(value: Mapping[str, Any] | None) -> bool:
         or diagnostics.get("cache_contract_version") != CACHE_CONTRACT.version
     ):
         return False
-    return all(
-        numeric(metrics.get(name)) is not None and float(metrics[name]) in Q_LEVELS
-        for name in Q_FIELDS
-    )
+    return all(numeric(metrics.get(name)) is not None and float(metrics[name]) in Q_LEVELS for name in Q_FIELDS)
 
 
-def cache_paths(
-    video_path: Path, case_id: str, cache_root: Path | None = None
-) -> dict[str, Path]:
+def cache_paths(video_path: Path, case_id: str, cache_root: Path | None = None) -> dict[str, Path]:
     result = skill_cache_path(video_path, "offscreen_evolution/results", cache_root)
     skill_root = result.parents[3]
     model_id, family = result.parents[1].name, result.parent.name
     return {
         "analyze_agent": skill_root / "analyze_agent" / f"{case_id}.json",
-        "verify_agent": (
-            skill_root / "verify_agent" / model_id / family / f"{case_id}.json"
-        ),
+        "verify_agent": (skill_root / "verify_agent" / model_id / family / f"{case_id}.json"),
         "result": result,
     }
 
@@ -747,9 +705,7 @@ def _agent_payload(
     return payload
 
 
-def _result_response(
-    paths: Mapping[str, Path], payload: Mapping[str, Any], cache_hit: bool
-) -> dict[str, Any]:
+def _result_response(paths: Mapping[str, Path], payload: Mapping[str, Any], cache_hit: bool) -> dict[str, Any]:
     return {
         "cache_hit": cache_hit,
         "cache_path": str(paths["result"]),
@@ -778,18 +734,15 @@ def evaluate(
     case_id = str(case.get("case_id") or "").strip()
     if not case_id:
         raise ValueError("Offscreen case_id is required")
-    family = str(((case.get("taxonomy") or {}).get("probe_family") or ""))
+    family = str((case.get("taxonomy") or {}).get("probe_family") or "")
     if family != "offscreen_evolution":
         raise ValueError(f"Offscreen skill does not accept family {family!r}")
     spec = canonical_spec(case)
     visibility = spec.get("visibility_plan") or {}
     if not spec.get("target_process") or not all(
-        _chunk_list(visibility.get(name))
-        for name in ("pre_visible", "offscreen", "return_visible")
+        _chunk_list(visibility.get(name)) for name in ("pre_visible", "offscreen", "return_visible")
     ):
-        raise ValueError(
-            "Offscreen canonical spec requires target_process and complete visibility_plan"
-        )
+        raise ValueError("Offscreen canonical spec requires target_process and complete visibility_plan")
 
     paths = cache_paths(video_path, case_id, cache_root)
     identity = _backend_identity(backend)
@@ -805,16 +758,10 @@ def evaluate(
         "initial_observation": initial,
         "backend": identity,
     }
-    analyze_agent_digest = value_digest(
-        {**common_input, "schema": ANALYZE_AGENT_CACHE_SCHEMA}
-    )
-    analyze_agent = _load_cache(
-        paths["analyze_agent"], ANALYZE_AGENT_CACHE_SCHEMA, analyze_agent_digest
-    )
+    analyze_agent_digest = value_digest({**common_input, "schema": ANALYZE_AGENT_CACHE_SCHEMA})
+    analyze_agent = _load_cache(paths["analyze_agent"], ANALYZE_AGENT_CACHE_SCHEMA, analyze_agent_digest)
     expected_spec = analyze_agent.get("expected_spec") if analyze_agent else None
-    if not isinstance(expected_spec, Mapping) or not _expected_spec_is_resolved(
-        expected_spec
-    ):
+    if not isinstance(expected_spec, Mapping) or not _expected_spec_is_resolved(expected_spec):
         analyze_agent = None
     analyze_agent_hit = analyze_agent is not None
     if analyze_agent is None:
@@ -834,9 +781,7 @@ def evaluate(
         if not isinstance(expected_spec, Mapping):
             raise RuntimeError("Offscreen analyze_agent response has no expected_spec")
         if not _expected_spec_is_resolved(expected_spec):
-            raise ValueError(
-                "Offscreen analyze_agent did not resolve the target process and visibility plan"
-            )
+            raise ValueError("Offscreen analyze_agent did not resolve the target process and visibility plan")
         atomic_write_json(paths["analyze_agent"], analyze_agent)
     expected_spec = analyze_agent.get("expected_spec")
     if not isinstance(expected_spec, Mapping):
@@ -851,15 +796,11 @@ def evaluate(
             "analyze_agent_evidence_digest": analyze_agent.get("evidence_digest"),
         }
     )
-    verify_agent = _load_cache(
-        paths["verify_agent"], VERIFY_AGENT_CACHE_SCHEMA, verify_agent_digest
-    )
+    verify_agent = _load_cache(paths["verify_agent"], VERIFY_AGENT_CACHE_SCHEMA, verify_agent_digest)
     verify_agent_hit = verify_agent is not None
     if verify_agent is None:
         frames, sampling = _sample_video(video_path)
-        messages = video_judge_messages(
-            spec, expected_spec, initial_observation_path, frames, sampling
-        )
+        messages = video_judge_messages(spec, expected_spec, initial_observation_path, frames, sampling)
         output = _backend_output(backend.infer(messages))
         verify_agent = _agent_payload(
             schema=VERIFY_AGENT_CACHE_SCHEMA,

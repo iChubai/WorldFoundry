@@ -28,13 +28,15 @@ def run_metric_eval(metric, gen_strings, gt_strings, metric_type):
             return metric(gen_strings, gt_strings).detach().cpu().numpy()
         raise ValueError("Invalid metric type")
     except Exception as e:
-        print(f"Error in computing {metric_type} score with generated string: {gen_strings} and ground-truth string: {gt_strings}")
+        print(
+            f"Error in computing {metric_type} score with generated string: {gen_strings} and ground-truth string: {gt_strings}"
+        )
         print(e)
         return 0.0
 
 
 def get_strings(json_path, key):
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
     all_idxs = []
     all_strings = []
@@ -61,7 +63,7 @@ def compute_metric_scores(semantics_model, metric_type, list_gen_strings, list_g
     scores = [
         run_metric_eval(metric, gen_strings, gt_strings, metric_type)
         for gen_strings, gt_strings in tqdm(
-            list(zip(list_gen_strings, list_gt_strings)), desc="Compute metric scores"
+            list(zip(list_gen_strings, list_gt_strings, strict=False)), desc="Compute metric scores"
         )
     ]
     return scores
@@ -76,13 +78,10 @@ def evaluate_run(semantics_model, eval_config, dt_json, gt_json):
     gt_idxs, gt_strings = get_strings(gt_json, key)
     expanded_gt_strings = []
 
-    for gen_id, _gen_string in zip(gen_idxs, gen_strings):
+    for gen_id, _gen_string in zip(gen_idxs, gen_strings, strict=False):
         task_eps_trail = gen_id.split("_dataset_")[-1].split("_")
         task_id = task_eps_trail[0]
-        if len(task_eps_trail) == 3:
-            eps_id = task_eps_trail[1]
-        else:
-            eps_id = "_".join(task_eps_trail[1:-1])
+        eps_id = task_eps_trail[1] if len(task_eps_trail) == 3 else "_".join(task_eps_trail[1:-1])
 
         gt_idx = f"gt_dataset_{task_id}_{eps_id}"
         gt_string = gt_strings[gt_idxs.index(gt_idx)]

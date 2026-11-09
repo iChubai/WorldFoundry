@@ -14,7 +14,7 @@
 
 """Native Cosmos component."""
 
-from typing import Optional, Tuple
+from typing import ClassVar
 
 import numpy as np
 import torch
@@ -36,35 +36,15 @@ if is_torchvision_available():
 
 
 class CosmosPatchEmbed(nn.Module):
-    """Cosmos patch embed implementation."""
     def __init__(
-        self, in_channels: int, out_channels: int, patch_size: Tuple[int, int, int], bias: bool = True
+        self, in_channels: int, out_channels: int, patch_size: tuple[int, int, int], bias: bool = True
     ) -> None:
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            patch_size: The patch size.
-            bias: The bias.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.patch_size = patch_size
 
         self.proj = nn.Linear(in_channels * patch_size[0] * patch_size[1] * patch_size[2], out_channels, bias=bias)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-
-        Returns:
-            The return value.
-        """
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
         p_t, p_h, p_w = self.patch_size
         hidden_states = hidden_states.reshape(
@@ -76,31 +56,13 @@ class CosmosPatchEmbed(nn.Module):
 
 
 class CosmosTimestepEmbedding(nn.Module):
-    """Cosmos timestep embedding implementation."""
     def __init__(self, in_features: int, out_features: int) -> None:
-        """Init.
-
-        Args:
-            in_features: The in features.
-            out_features: The out features.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.linear_1 = nn.Linear(in_features, out_features, bias=False)
         self.activation = nn.SiLU()
         self.linear_2 = nn.Linear(out_features, 3 * out_features, bias=False)
 
     def forward(self, timesteps: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            timesteps: The timesteps.
-
-        Returns:
-            The return value.
-        """
         emb = self.linear_1(timesteps)
         emb = self.activation(emb)
         emb = self.linear_2(emb)
@@ -108,17 +70,7 @@ class CosmosTimestepEmbedding(nn.Module):
 
 
 class CosmosEmbedding(nn.Module):
-    """Cosmos embedding implementation."""
     def __init__(self, embedding_dim: int, condition_dim: int) -> None:
-        """Init.
-
-        Args:
-            embedding_dim: The embedding dim.
-            condition_dim: The condition dim.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.time_proj = Timesteps(embedding_dim, flip_sin_to_cos=True, downscale_freq_shift=0.0)
@@ -126,15 +78,6 @@ class CosmosEmbedding(nn.Module):
         self.norm = RMSNorm(embedding_dim, eps=1e-6, elementwise_affine=True)
 
     def forward(self, hidden_states: torch.Tensor, timestep: torch.LongTensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            timestep: The timestep.
-
-        Returns:
-            The return value.
-        """
         timesteps_proj = self.time_proj(timestep).type_as(hidden_states)
         temb = self.t_embedder(timesteps_proj)
         embedded_timestep = self.norm(timesteps_proj)
@@ -142,17 +85,7 @@ class CosmosEmbedding(nn.Module):
 
 
 class CosmosAdaLayerNorm(nn.Module):
-    """Cosmos ada layer norm implementation."""
     def __init__(self, in_features: int, hidden_features: int) -> None:
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.embedding_dim = in_features
 
@@ -162,18 +95,8 @@ class CosmosAdaLayerNorm(nn.Module):
         self.linear_2 = nn.Linear(hidden_features, 2 * in_features, bias=False)
 
     def forward(
-        self, hidden_states: torch.Tensor, embedded_timestep: torch.Tensor, temb: Optional[torch.Tensor] = None
+        self, hidden_states: torch.Tensor, embedded_timestep: torch.Tensor, temb: torch.Tensor | None = None
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            embedded_timestep: The embedded timestep.
-            temb: The temb.
-
-        Returns:
-            The return value.
-        """
         embedded_timestep = self.activation(embedded_timestep)
         embedded_timestep = self.linear_1(embedded_timestep)
         embedded_timestep = self.linear_2(embedded_timestep)
@@ -192,17 +115,7 @@ class CosmosAdaLayerNorm(nn.Module):
 
 
 class CosmosAdaLayerNormZero(nn.Module):
-    """Cosmos ada layer norm zero implementation."""
-    def __init__(self, in_features: int, hidden_features: Optional[int] = None) -> None:
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-
-        Returns:
-            The return value.
-        """
+    def __init__(self, in_features: int, hidden_features: int | None = None) -> None:
         super().__init__()
 
         self.norm = nn.LayerNorm(in_features, elementwise_affine=False, eps=1e-6)
@@ -219,18 +132,8 @@ class CosmosAdaLayerNormZero(nn.Module):
         self,
         hidden_states: torch.Tensor,
         embedded_timestep: torch.Tensor,
-        temb: Optional[torch.Tensor] = None,
+        temb: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            embedded_timestep: The embedded timestep.
-            temb: The temb.
-
-        Returns:
-            The return value.
-        """
         embedded_timestep = self.activation(embedded_timestep)
         embedded_timestep = self.linear_1(embedded_timestep)
         embedded_timestep = self.linear_2(embedded_timestep)
@@ -250,8 +153,8 @@ class CosmosAdaLayerNormZero(nn.Module):
 
 class CosmosAttnProcessor2_0:
     """Cosmos attn processor implementation."""
+
     def __init__(self):
-        """Init."""
         if not hasattr(F, "scaled_dot_product_attention"):
             raise ImportError("CosmosAttnProcessor2_0 requires PyTorch 2.0. To use it, please upgrade PyTorch to 2.0.")
 
@@ -259,22 +162,10 @@ class CosmosAttnProcessor2_0:
         self,
         attn: Attention,
         hidden_states: torch.Tensor,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        image_rotary_emb: Optional[torch.Tensor] = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        image_rotary_emb: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Call.
-
-        Args:
-            attn: The attn.
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-            image_rotary_emb: The image rotary emb.
-
-        Returns:
-            The return value.
-        """
         # 1. QKV projections
         if encoder_hidden_states is None:
             encoder_hidden_states = hidden_states
@@ -293,7 +184,6 @@ class CosmosAttnProcessor2_0:
 
         # 3. Apply RoPE
         if image_rotary_emb is not None:
-
             query = apply_rotary_emb(query, image_rotary_emb, use_real=True, use_real_unbind_dim=-2)
             key = apply_rotary_emb(key, image_rotary_emb, use_real=True, use_real_unbind_dim=-2)
 
@@ -318,7 +208,6 @@ class CosmosAttnProcessor2_0:
 
 
 class CosmosTransformerBlock(nn.Module):
-    """Cosmos transformer block implementation."""
     def __init__(
         self,
         num_attention_heads: int,
@@ -329,20 +218,6 @@ class CosmosTransformerBlock(nn.Module):
         qk_norm: str = "rms_norm",
         out_bias: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            cross_attention_dim: The cross attention dim.
-            mlp_ratio: The mlp ratio.
-            adaln_lora_dim: The adaln lora dim.
-            qk_norm: The qk norm.
-            out_bias: The out bias.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         hidden_size = num_attention_heads * attention_head_dim
@@ -379,25 +254,11 @@ class CosmosTransformerBlock(nn.Module):
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
         embedded_timestep: torch.Tensor,
-        temb: Optional[torch.Tensor] = None,
-        image_rotary_emb: Optional[torch.Tensor] = None,
-        extra_pos_emb: Optional[torch.Tensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        temb: torch.Tensor | None = None,
+        image_rotary_emb: torch.Tensor | None = None,
+        extra_pos_emb: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            encoder_hidden_states: The encoder hidden states.
-            embedded_timestep: The embedded timestep.
-            temb: The temb.
-            image_rotary_emb: The image rotary emb.
-            extra_pos_emb: The extra pos emb.
-            attention_mask: The attention mask.
-
-        Returns:
-            The return value.
-        """
         if extra_pos_emb is not None:
             hidden_states = hidden_states + extra_pos_emb
 
@@ -422,30 +283,17 @@ class CosmosTransformerBlock(nn.Module):
 
 
 class CosmosRotaryPosEmbed(nn.Module):
-    """Cosmos rotary pos embed implementation."""
     def __init__(
         self,
         hidden_size: int,
-        max_size: Tuple[int, int, int] = (128, 240, 240),
-        patch_size: Tuple[int, int, int] = (1, 2, 2),
+        max_size: tuple[int, int, int] = (128, 240, 240),
+        patch_size: tuple[int, int, int] = (1, 2, 2),
         base_fps: int = 24,
-        rope_scale: Tuple[float, float, float] = (2.0, 1.0, 1.0),
+        rope_scale: tuple[float, float, float] = (2.0, 1.0, 1.0),
     ) -> None:
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            max_size: The max size.
-            patch_size: The patch size.
-            base_fps: The base fps.
-            rope_scale: The rope scale.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
-        self.max_size = [size // patch for size, patch in zip(max_size, patch_size)]
+        self.max_size = [size // patch for size, patch in zip(max_size, patch_size, strict=False)]
         self.patch_size = patch_size
         self.base_fps = base_fps
 
@@ -458,21 +306,8 @@ class CosmosRotaryPosEmbed(nn.Module):
         self.t_ntk_factor = rope_scale[0] ** (self.dim_t / (self.dim_t - 2))
 
     def forward(
-        self,
-        hidden_states: torch.Tensor,
-        fps: Optional[int] = None,
-        **kwargs
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            fps: The fps.
-
-        Returns:
-            The return value.
-        """
-
+        self, hidden_states: torch.Tensor, fps: int | None = None, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
         pe_size = [num_frames // self.patch_size[0], height // self.patch_size[1], width // self.patch_size[2]]
         device = hidden_states.device
@@ -514,28 +349,16 @@ class CosmosRotaryPosEmbed(nn.Module):
 
 
 class CosmosLearnablePositionalEmbed(nn.Module):
-    """Cosmos learnable positional embed implementation."""
     def __init__(
         self,
         hidden_size: int,
-        max_size: Tuple[int, int, int],
-        patch_size: Tuple[int, int, int],
+        max_size: tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         eps: float = 1e-6,
     ) -> None:
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            max_size: The max size.
-            patch_size: The patch size.
-            eps: The eps.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
-        self.max_size = [size // patch for size, patch in zip(max_size, patch_size)]
+        self.max_size = [size // patch for size, patch in zip(max_size, patch_size, strict=False)]
         self.patch_size = patch_size
         self.eps = eps
 
@@ -544,14 +367,6 @@ class CosmosLearnablePositionalEmbed(nn.Module):
         self.pos_emb_w = nn.Parameter(torch.zeros(self.max_size[2], hidden_size))
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-
-        Returns:
-            The return value.
-        """
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
         pe_size = [num_frames // self.patch_size[0], height // self.patch_size[1], width // self.patch_size[2]]
 
@@ -601,9 +416,9 @@ class CosmosTransformer3DModel(ModelMixin, ConfigMixin):
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = ["patch_embed", "final_layer", "norm"]
-    _no_split_modules = ["CosmosTransformerBlock"]
-    _keep_in_fp32_modules = ["learnable_pos_embed"]
+    _skip_layerwise_casting_patterns: ClassVar[list] = ["patch_embed", "final_layer", "norm"]
+    _no_split_modules: ClassVar[list] = ["CosmosTransformerBlock"]
+    _keep_in_fp32_modules: ClassVar[list] = ["learnable_pos_embed"]
 
     @register_to_config
     def __init__(
@@ -616,32 +431,12 @@ class CosmosTransformer3DModel(ModelMixin, ConfigMixin):
         mlp_ratio: float = 4.0,
         text_embed_dim: int = 1024,
         adaln_lora_dim: int = 256,
-        max_size: Tuple[int, int, int] = (128, 240, 240),
-        patch_size: Tuple[int, int, int] = (1, 2, 2),
-        rope_scale: Tuple[float, float, float] = (2.0, 1.0, 1.0),
+        max_size: tuple[int, int, int] = (128, 240, 240),
+        patch_size: tuple[int, int, int] = (1, 2, 2),
+        rope_scale: tuple[float, float, float] = (2.0, 1.0, 1.0),
         concat_padding_mask: bool = True,
-        extra_pos_embed_type: Optional[str] = "learnable",
+        extra_pos_embed_type: str | None = "learnable",
     ) -> None:
-        """Init.
-
-        Args:
-            in_channels: The in channels.
-            out_channels: The out channels.
-            num_attention_heads: The num attention heads.
-            attention_head_dim: The attention head dim.
-            num_layers: The num layers.
-            mlp_ratio: The mlp ratio.
-            text_embed_dim: The text embed dim.
-            adaln_lora_dim: The adaln lora dim.
-            max_size: The max size.
-            patch_size: The patch size.
-            rope_scale: The rope scale.
-            concat_padding_mask: The concat padding mask.
-            extra_pos_embed_type: The extra pos embed type.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         hidden_size = num_attention_heads * attention_head_dim
         self.hidden_size = hidden_size
@@ -684,9 +479,7 @@ class CosmosTransformer3DModel(ModelMixin, ConfigMixin):
 
         # 5. Output norm & projection
         self.norm_out = CosmosAdaLayerNorm(hidden_size, adaln_lora_dim)
-        self.proj_out = nn.Linear(
-            hidden_size, patch_size[0] * patch_size[1] * patch_size[2] * out_channels, bias=False
-        )
+        self.proj_out = nn.Linear(hidden_size, patch_size[0] * patch_size[1] * patch_size[2] * out_channels, bias=False)
 
         self.gradient_checkpointing = False
 
@@ -695,27 +488,12 @@ class CosmosTransformer3DModel(ModelMixin, ConfigMixin):
         hidden_states: torch.Tensor,
         timestep: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        fps: Optional[int] = None,
-        condition_mask: Optional[torch.Tensor] = None,
-        padding_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        fps: int | None = None,
+        condition_mask: torch.Tensor | None = None,
+        padding_mask: torch.Tensor | None = None,
         return_dict: bool = True,
     ) -> torch.Tensor:
-        """Forward.
-
-        Args:
-            hidden_states: The hidden states.
-            timestep: The timestep.
-            encoder_hidden_states: The encoder hidden states.
-            attention_mask: The attention mask.
-            fps: The fps.
-            condition_mask: The condition mask.
-            padding_mask: The padding mask.
-            return_dict: The return dict.
-
-        Returns:
-            The return value.
-        """
         batch_size, num_channels, num_frames, height, width = hidden_states.shape
 
         # 1. Concatenate padding mask if needed & prepare attention mask
@@ -762,7 +540,7 @@ class CosmosTransformer3DModel(ModelMixin, ConfigMixin):
                 for x in (temb, embedded_timestep)
             )  # [BT, C] -> [B, T, 1, 1, C] -> [B, T, H, W, C] -> [B, THW, C]
         else:
-            assert False
+            assert False  # noqa: B011 - Keeps the assertion semantics under -O.
 
         # 5. Transformer blocks
         for block in self.transformer_blocks:

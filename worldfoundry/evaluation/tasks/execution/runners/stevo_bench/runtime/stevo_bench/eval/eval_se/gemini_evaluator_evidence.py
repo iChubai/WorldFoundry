@@ -8,29 +8,24 @@ Two-step evaluation:
 
 import os
 import time
-from pathlib import Path
-from typing import Dict, Optional, Tuple
+
 import google.generativeai as genai
 from PIL import Image
 
 
 class GeminiEvidenceEvaluator:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """Initialize Gemini evaluator with API key."""
         if api_key is None:
             api_key = os.environ.get("GOOGLE_API_KEY")
             if not api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-3-pro-preview")
-        print(f"Using model: gemini-3-pro-preview (evidence-based mode)")
+        print("Using model: gemini-3-pro-preview (evidence-based mode)")
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: str | None = None) -> tuple[str, str]:
         """
         First Gemini call: Given initial image and optional action prompt,
         predict what process should happen.
@@ -78,7 +73,7 @@ After your full explanation, provide a one-sentence summary on the last line in 
 Process: [concise one-sentence description of the expected evolution]"""
 
         # Make API call
-        print(f"    Calling Gemini API for process prediction...")
+        print("    Calling Gemini API for process prediction...")
         try:
             response = self.model.generate_content([prompt, image])
             elapsed = time.time() - start_time
@@ -113,7 +108,7 @@ Process: [concise one-sentence description of the expected evolution]"""
 
     def verify_process_in_video(
         self, video_path: str, expected_process: str, model_type: str = "unknown"
-    ) -> Tuple[str, bool]:
+    ) -> tuple[str, bool]:
         """
         Second Gemini call: Given video and expected process,
         verify if the process actually happened using evidence-based approach.
@@ -128,13 +123,13 @@ Process: [concise one-sentence description of the expected evolution]"""
         """
         # Upload video file
         upload_start = time.time()
-        print(f"    Uploading video...")
+        print("    Uploading video...")
         video_file = genai.upload_file(path=video_path)
         upload_time = time.time() - upload_start
         print(f"    Upload took {upload_time:.1f}s")
 
         # Wait for video processing
-        print(f"    Waiting for video processing...")
+        print("    Waiting for video processing...")
         process_start = time.time()
         wait_count = 0
         while video_file.state.name == "PROCESSING":
@@ -190,7 +185,7 @@ VERDICT: [Yes/No]
 EXPLANATION: [List your observations and evidence]"""
 
         # Make API call
-        print(f"    Calling Gemini API for video verification...")
+        print("    Calling Gemini API for video verification...")
         verify_start = time.time()
         response = self.model.generate_content([video_file, prompt])
         response_text = response.text
@@ -222,11 +217,8 @@ EXPLANATION: [List your observations and evidence]"""
 
         # Fallback: check if "yes" appears in first few lines
         first_100_chars = response_text[:100].lower()
-        if "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars:
-            return True
-
         # Default to False if unclear
-        return False
+        return "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars
 
     def _get_model_type(self, run_name: str) -> str:
         """Determine model type from run name."""
@@ -246,9 +238,7 @@ EXPLANATION: [List your observations and evidence]"""
         else:
             return "unknown"
 
-    def evaluate_task(
-        self, task_data: Dict
-    ) -> Dict:
+    def evaluate_task(self, task_data: dict) -> dict:
         """
         Evaluate a single task with two-step Gemini evaluation.
 
@@ -266,7 +256,7 @@ EXPLANATION: [List your observations and evidence]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process

@@ -22,7 +22,11 @@ class BaseOperator:
         self.interaction_history = []
 
     def interaction_template_init(self):
-        """Interaction template init implementation."""
+        """Check that ``interaction_template`` is a list.
+
+        Raises:
+            ValueError: ``interaction_template`` is not a list.
+        """
         if type(self.interaction_template) is not list:
             raise ValueError("interaction_template should be a list")
 
@@ -48,11 +52,11 @@ class BaseOperator:
         """
 
     def get_interaction_template(self):
-        """Get interaction template implementation."""
+        """Return the interactions this operator accepts."""
         return self.interaction_template
 
     def get_interaction_history(self):
-        """Get interaction history implementation."""
+        """Return the interactions processed so far."""
         return self.interaction_history
 
     def delete_last_interaction(self):

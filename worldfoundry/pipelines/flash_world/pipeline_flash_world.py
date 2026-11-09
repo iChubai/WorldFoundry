@@ -18,14 +18,12 @@ from ..pipeline_utils import PipelineABC
 
 
 def _flash_world_operator_cls():
-    """Flash world operator cls helper function."""
     from ...operators.flash_world_operator import FlashWorldOperator
 
     return FlashWorldOperator
 
 
 def _flash_world_representation_cls():
-    """Flash world representation cls helper function."""
     from worldfoundry.base_models.three_dimensions.point_clouds.flash_world.runtime import (
         FlashWorldRepresentation,
     )
@@ -34,7 +32,6 @@ def _flash_world_representation_cls():
 
 
 def _export_gaussians(*args, **kwargs):
-    """Export gaussians helper function."""
     from ...base_models.three_dimensions.point_clouds.flash_world.utils import (
         export_gaussians,
     )
@@ -309,8 +306,6 @@ class FlashWorldPipeline(PipelineABC):
                 - 'position': [x, y, z]
                 - 'quaternion': [w, x, y, z]
                 - 'fx', 'fy', 'cx', 'cy': camera intrinsics
-            image_width: Image width
-            image_height: Image height
 
         Returns:
             Camera tensor of shape (N, 11)
@@ -419,8 +414,6 @@ class FlashWorldPipeline(PipelineABC):
 
         Args:
             num_frames: Number of frames
-            image_width: Image width
-            image_height: Image height
 
         Returns:
             List of camera dictionaries

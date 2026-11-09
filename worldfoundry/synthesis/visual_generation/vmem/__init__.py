@@ -7,12 +7,14 @@ and `worldfoundry.synthesis.visual_generation.vmem.vmem_synthesis`, providing a 
 accessing them. This includes default repository paths, runtime root directories, configuration utilities,
 runtime environment setup functions, and the core `VMemSynthesis` class.
 """
+
 from worldfoundry.synthesis.visual_generation.vmem.runtime_env import (
     DEFAULT_VMEM_RUNTIME_ROOT,
     default_config_path,
     ensure_vmem_runtime,
     runtime_root,
 )
+
 from .vmem_synthesis import DEFAULT_VMEM_REPO, DEFAULT_VMEM_SURFEL_REPO, VMemSynthesis
 
 __all__ = [

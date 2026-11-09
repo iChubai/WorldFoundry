@@ -14,7 +14,6 @@ class GenerativeModelBase(ABC, torch.nn.Module):
         """
         Size of the noise dimension of the generative model (positive integer).
         """
-        pass
 
     @property
     @abstractmethod
@@ -23,7 +22,6 @@ class GenerativeModelBase(ABC, torch.nn.Module):
         Type of the noise used by the generative model (see :ref:`registry <Registry>` for a list of preregistered noise
         types, see :func:`register_noise_source` for registering a new noise type).
         """
-        pass
 
     @property
     @abstractmethod
@@ -31,4 +29,3 @@ class GenerativeModelBase(ABC, torch.nn.Module):
         """
         Number of classes used by a conditional generative model. Must return zero for unconditional models.
         """
-        pass

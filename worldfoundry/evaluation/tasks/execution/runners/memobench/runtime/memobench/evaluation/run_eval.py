@@ -1,12 +1,12 @@
+import argparse
+import logging
 import os
 import re
-import logging
-import argparse
-import cv2
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from datetime import datetime
 
 # Do not mutate the process-wide root logger. Quiet only the noisy
 # third-party loggers this script actually triggers.
@@ -14,40 +14,44 @@ logging.getLogger("open_clip").setLevel(logging.WARNING)
 logging.getLogger("ImageReward").setLevel(logging.WARNING)
 logging.getLogger(__name__).setLevel(logging.WARNING)
 
-from automated.io.frames import FrameReader, VideoReader
-from automated.io.metadata import (
-    load_intrinsics,
-    load_gt_frame_count_synthetic,
-    load_intrinsics_json,
-    load_gt_frame_count_real,
+from automated.io.frames import FrameReader, VideoReader  # noqa: E402 - After logger setup.
+from automated.io.metadata import (  # noqa: E402 - After logger setup.
     extract_gt_frame_at,
     extract_gt_frames_batch,
+    load_gt_frame_count_real,
+    load_gt_frame_count_synthetic,
+    load_intrinsics,
+    load_intrinsics_json,
 )
-from automated.metrics.reference_fidelity import gt_phase_pixel_fidelity
-from automated.metrics.temporal import temporal_flow_score
-from automated.metrics.visual_quality import aesthetic_score, image_quality_score, image_reward_score
-from automated.metrics.geometry import (
+from automated.metrics.camera_controllability import (  # noqa: E402 - After logger setup.
+    camera_controllability_score,
+    load_gt_poses_real,
+    load_gt_poses_synthetic,
+    load_intrinsics_real,
+    load_intrinsics_synthetic,
+)
+from automated.metrics.clip_metrics import clip_frame_similarity  # noqa: E402 - After logger setup.
+from automated.metrics.geometry import (  # noqa: E402 - After logger setup.
     geometry_3d_consistency,
     object_centric_identity_consistency,
 )
-from automated.metrics.camera_controllability import (
-    load_gt_poses_synthetic,
-    load_gt_poses_real,
-    load_intrinsics_synthetic,
-    load_intrinsics_real,
-    camera_controllability_score,
+from automated.metrics.reference_fidelity import gt_phase_pixel_fidelity  # noqa: E402 - After logger setup.
+from automated.metrics.temporal import temporal_flow_score  # noqa: E402 - After logger setup.
+from automated.metrics.visual_quality import (  # noqa: E402 - After logger setup.
+    aesthetic_score,
+    image_quality_score,
+    image_reward_score,
 )
-from automated.metrics.clip_metrics import clip_frame_similarity
 
-GT_ROOT_SYNTHETIC  = "data/Synthetic_processed"
-GEN_ROOT_SYNTHETIC = "output/Synthetic"                      # default; override with --gen_root
-KEYFRAMES_SYN_XLS  = "data/Synthetic_processed/Synthetic_ExitReenter.xlsx"
-GT_VIDEOS_SYNTHETIC = "data/Synthetic_videos"                # original UE5 MP4s
+GT_ROOT_SYNTHETIC = "data/Synthetic_processed"
+GEN_ROOT_SYNTHETIC = "output/Synthetic"  # default; override with --gen_root
+KEYFRAMES_SYN_XLS = "data/Synthetic_processed/Synthetic_ExitReenter.xlsx"
+GT_VIDEOS_SYNTHETIC = "data/Synthetic_videos"  # original UE5 MP4s
 
-GT_ROOT_REAL       = "data/Real_Raw"
-GEN_ROOT_REAL      = "output/Real"                           # default; override with --gen_root
+GT_ROOT_REAL = "data/Real_Raw"
+GEN_ROOT_REAL = "output/Real"  # default; override with --gen_root
 KEYFRAMES_REAL_XLS = "data/Real_Raw/Real_ExitReenter.xlsx"
-REAL_SELECTED_XLS  = "data/Real_Selected.xls"                # Availability filter
+REAL_SELECTED_XLS = "data/Real_Selected.xls"  # Availability filter
 
 
 def _synthetic_gt_video_path(video_folder: str) -> str:
@@ -59,26 +63,28 @@ def _synthetic_gt_video_path(video_folder: str) -> str:
     from the clip number.  e.g. Japanese_Street_003 → JapaneseStreet3.mp4
     """
     import re
-    m = re.match(r'^(.+)_(\d+)$', video_folder)
+
+    m = re.match(r"^(.+)_(\d+)$", video_folder)
     if not m:
         return ""
-    scene_raw = m.group(1)           # e.g. "Middle_Age"
-    num       = str(int(m.group(2))) # strip leading zeros: "005" → "5"
-    scene     = scene_raw.replace("_", "")  # "MiddleAge"
+    scene_raw = m.group(1)  # e.g. "Middle_Age"
+    num = str(int(m.group(2)))  # strip leading zeros: "005" → "5"
+    scene = scene_raw.replace("_", "")  # "MiddleAge"
     return os.path.join(GT_VIDEOS_SYNTHETIC, f"{scene}{num}.mp4")
+
 
 OUT_DIR = "outputs"
 
 _RAW_NORM = {
-    "TemporalScore":      (0,    1),
-    "AestheticScore":     (0,   10),
-    "ImageQuality":       (0,    1),
-    "GeoConsistencyMean": (0,    1),
-    "GeoConsistencyMin":  (0,    1),
-    "ImageRewardScore":   (0,    1),   # already sigmoid-normalised
-    "GTRevisitSim":       (0,    1),   # CLIP sim: generated R-phase vs GT R-phase
-    "ObjIdentityMean":    (0,    1),   # object-centric patch-token sim (mean)
-    "ObjIdentityMin":     (0,    1),   # object-centric patch-token sim (min)
+    "TemporalScore": (0, 1),
+    "AestheticScore": (0, 10),
+    "ImageQuality": (0, 1),
+    "GeoConsistencyMean": (0, 1),
+    "GeoConsistencyMin": (0, 1),
+    "ImageRewardScore": (0, 1),  # already sigmoid-normalised
+    "GTRevisitSim": (0, 1),  # CLIP sim: generated R-phase vs GT R-phase
+    "ObjIdentityMean": (0, 1),  # object-centric patch-token sim (mean)
+    "ObjIdentityMin": (0, 1),  # object-centric patch-token sim (min)
     "CameraControllability": (0, 1),  # geodesic rotation error → exp score
     # GT_R_PSNR / GT_R_SSIM / GT_R_LPIPS are reported as raw values (no fixed range)
 }
@@ -86,11 +92,11 @@ _RAW_NORM = {
 _COMPOSITE_COLS = [
     "MotionSmoothness",
     "VisualQuality",
-    "ObjIdentityConsistency",   # object-centric DINOv2 patch-token identity (R phase)
+    "ObjIdentityConsistency",  # object-centric DINOv2 patch-token identity (R phase)
     "Geo3DConsistency",
-    "GTRevisitSim",             # CLIP sim: generated R-phase vs GT R-phase frames
-    "ImageRewardScore",         # human preference score (NaN when no prompt → skipped in mean)
-    "CameraControllability",    # geodesic rotation score in [0,1] (NaN for N/A models)
+    "GTRevisitSim",  # CLIP sim: generated R-phase vs GT R-phase frames
+    "ImageRewardScore",  # human preference score (NaN when no prompt → skipped in mean)
+    "CameraControllability",  # geodesic rotation score in [0,1] (NaN for N/A models)
 ]
 
 
@@ -108,11 +114,9 @@ def _compute_composite(df: pd.DataFrame) -> pd.DataFrame:
 
     # Geo3DConsistency (V+R phases)
     has_geo_mean = "GeoConsistencyMean_pct" in df.columns
-    has_geo_min  = "GeoConsistencyMin_pct"  in df.columns
+    has_geo_min = "GeoConsistencyMin_pct" in df.columns
     if has_geo_mean and has_geo_min:
-        df["Geo3DConsistency"] = (
-            0.7 * df["GeoConsistencyMean_pct"] + 0.3 * df["GeoConsistencyMin_pct"]
-        ).round(2)
+        df["Geo3DConsistency"] = (0.7 * df["GeoConsistencyMean_pct"] + 0.3 * df["GeoConsistencyMin_pct"]).round(2)
     elif has_geo_mean:
         df["Geo3DConsistency"] = df["GeoConsistencyMean_pct"].round(2)
 
@@ -126,11 +130,9 @@ def _compute_composite(df: pd.DataFrame) -> pd.DataFrame:
 
     # ObjIdentityConsistency — object-centric DINOv2 patch-token identity (R phase)
     has_obj_mean = "ObjIdentityMean_pct" in df.columns
-    has_obj_min  = "ObjIdentityMin_pct"  in df.columns
+    has_obj_min = "ObjIdentityMin_pct" in df.columns
     if has_obj_mean and has_obj_min:
-        df["ObjIdentityConsistency"] = (
-            0.7 * df["ObjIdentityMean_pct"] + 0.3 * df["ObjIdentityMin_pct"]
-        ).round(2)
+        df["ObjIdentityConsistency"] = (0.7 * df["ObjIdentityMean_pct"] + 0.3 * df["ObjIdentityMin_pct"]).round(2)
     elif has_obj_mean:
         df["ObjIdentityConsistency"] = df["ObjIdentityMean_pct"].round(2)
 
@@ -164,7 +166,7 @@ def load_keyframe_map_synthetic() -> dict:
         result[vid] = {
             "h_start": h,
             "r_start": r,
-            "prompt":  str(row.get("prompt", "")).strip(),
+            "prompt": str(row.get("prompt", "")).strip(),
         }
     return result
 
@@ -227,9 +229,9 @@ def load_prompt_map_synthetic(prompt_src: str) -> dict:
         return {}
     result = {}
     for _, row in df.iterrows():
-        vid    = str(row["video_folder"]).strip()
+        vid = str(row["video_folder"]).strip()
         prompt = str(row["prompt"]).strip()
-        skip   = str(row.get("skip", "no")).strip().lower()
+        skip = str(row.get("skip", "no")).strip().lower()
         if vid and prompt and prompt.lower() != "nan" and skip != "yes":
             result[vid] = prompt
     return result
@@ -271,7 +273,7 @@ def load_prompt_map_real(prompt_src: str) -> dict:
         try:
             raw_id = str(row[id_col]).strip()
             clip_id = str(int(float(raw_id))).zfill(3)
-            prompt  = str(row["prompt"]).strip()
+            prompt = str(row["prompt"]).strip()
         except (ValueError, TypeError):
             continue
         if prompt and prompt.lower() != "nan":
@@ -311,57 +313,58 @@ def _find_frames_dir(clip_path: str):
     then {clip_path} itself (PNG-direct layout used by OpenSora).
     """
     frames_subdir = os.path.join(clip_path, "frames")
-    if os.path.isdir(frames_subdir):
-        if any(f.endswith(".png") for f in os.listdir(frames_subdir)):
-            return frames_subdir
+    if os.path.isdir(frames_subdir) and any(f.endswith(".png") for f in os.listdir(frames_subdir)):
+        return frames_subdir
     samples_subdir = os.path.join(clip_path, "samples-rgb")
-    if os.path.isdir(samples_subdir):
-        if any(f.endswith(".png") for f in os.listdir(samples_subdir)):
-            return samples_subdir
+    if os.path.isdir(samples_subdir) and any(f.endswith(".png") for f in os.listdir(samples_subdir)):
+        return samples_subdir
     if any(f.endswith(".png") for f in os.listdir(clip_path)):
         return clip_path
     return None
 
 
-def _add_synthetic_clip(clips: list, clip_name: str, scene: str,
-                         frames_dir: str, kf_map: dict,
-                         prompt_map: dict = None,
-                         video_path: str = None) -> None:
+def _add_synthetic_clip(
+    clips: list,
+    clip_name: str,
+    scene: str,
+    frames_dir: str,
+    kf_map: dict,
+    prompt_map: dict | None = None,
+    video_path: str | None = None,
+) -> None:
     """frames_dir: path to PNG frames dir (None for mp4-based models).
-       video_path: path to generated video mp4 (None for PNG-based models).
+    video_path: path to generated video mp4 (None for PNG-based models).
     """
     if clip_name not in kf_map:
         return
-    gt_dir        = os.path.join(GT_ROOT_SYNTHETIC, scene, clip_name)
+    gt_dir = os.path.join(GT_ROOT_SYNTHETIC, scene, clip_name)
     gt_image_path = os.path.join(gt_dir, "image.jpg")
-    gt_intr_path  = os.path.join(gt_dir, "intrinsics.npy")
+    gt_intr_path = os.path.join(gt_dir, "intrinsics.npy")
     if not (os.path.exists(gt_image_path) and os.path.exists(gt_intr_path)):
         return
     gt_video_path = _synthetic_gt_video_path(clip_name)
     if not os.path.exists(gt_video_path):
         return
     kf = kf_map[clip_name]
-    if prompt_map is not None:
-        prompt = prompt_map.get(clip_name, kf.get("prompt", ""))
-    else:
-        prompt = kf.get("prompt", "")
-    clips.append({
-        "id":            clip_name,
-        "scene":         scene,
-        "data_type":     "synthetic",
-        "frames_dir":    frames_dir,    # None for mp4-based models
-        "video_path":    video_path,    # None for PNG-based models
-        "gt_image":      gt_image_path,
-        "gt_intrinsics": gt_intr_path,
-        "gt_video":      gt_video_path,
-        "h_start_gt":    kf["h_start"],
-        "r_start_gt":    kf["r_start"],
-        "prompt":        prompt,
-    })
+    prompt = prompt_map.get(clip_name, kf.get("prompt", "")) if prompt_map is not None else kf.get("prompt", "")
+    clips.append(
+        {
+            "id": clip_name,
+            "scene": scene,
+            "data_type": "synthetic",
+            "frames_dir": frames_dir,  # None for mp4-based models
+            "video_path": video_path,  # None for PNG-based models
+            "gt_image": gt_image_path,
+            "gt_intrinsics": gt_intr_path,
+            "gt_video": gt_video_path,
+            "h_start_gt": kf["h_start"],
+            "r_start_gt": kf["r_start"],
+            "prompt": prompt,
+        }
+    )
 
 
-def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC,
-                              prompt_map: dict = None) -> list:
+def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC, prompt_map: dict | None = None) -> list:
     """Scan gen_root for synthetic clips. Auto-detects five layouts:
 
       Nested + frames/  {Scene}/{clip}/frames/*.png  — LingBot-World, Wan2.2
@@ -373,7 +376,7 @@ def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC,
     prompt_map: optional {video_folder: prompt} from load_prompt_map_synthetic().
     """
     kf_map = load_keyframe_map_synthetic()
-    clips  = []
+    clips = []
     for top_name in sorted(os.listdir(gen_root)):
         top_path = os.path.join(gen_root, top_name)
 
@@ -381,8 +384,7 @@ def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC,
         if top_name.endswith(".mp4") and _CLIP_NAME_RE.match(top_name[:-4]):
             clip_name = top_name[:-4]
             scene = clip_name.rsplit("_", 1)[0]
-            _add_synthetic_clip(clips, clip_name, scene, None, kf_map, prompt_map,
-                                video_path=top_path)
+            _add_synthetic_clip(clips, clip_name, scene, None, kf_map, prompt_map, video_path=top_path)
             continue
 
         if not os.path.isdir(top_path):
@@ -396,8 +398,7 @@ def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC,
             mp4_path = os.path.join(top_path, "video.mp4")
             if os.path.exists(mp4_path):
                 scene = top_name.rsplit("_", 1)[0]
-                _add_synthetic_clip(clips, top_name, scene, None, kf_map, prompt_map,
-                                    video_path=mp4_path)
+                _add_synthetic_clip(clips, top_name, scene, None, kf_map, prompt_map, video_path=mp4_path)
                 continue
             frames_dir = _find_frames_dir(top_path)
             if frames_dir is None:
@@ -415,8 +416,7 @@ def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC,
                 mp4_path = os.path.join(clip_path, "video.mp4")
                 if os.path.exists(mp4_path):
                     scene = clip_name.rsplit("_", 1)[0]
-                    _add_synthetic_clip(clips, clip_name, scene, None, kf_map, prompt_map,
-                                        video_path=mp4_path)
+                    _add_synthetic_clip(clips, clip_name, scene, None, kf_map, prompt_map, video_path=mp4_path)
                     continue
                 frames_dir = _find_frames_dir(clip_path)
                 if frames_dir is None:
@@ -427,8 +427,7 @@ def discover_clips_synthetic(gen_root: str = GEN_ROOT_SYNTHETIC,
     return clips
 
 
-def discover_clips_real(gen_root: str = GEN_ROOT_REAL,
-                        prompt_map: dict = None) -> list:
+def discover_clips_real(gen_root: str = GEN_ROOT_REAL, prompt_map: dict | None = None) -> list:
     """Scan gen_root for real clips. Auto-detects four layouts:
 
       Standard  {NNN}/frames/*.png      — LingBot-World, Wan2.2, Matrix-Game
@@ -439,15 +438,15 @@ def discover_clips_real(gen_root: str = GEN_ROOT_REAL,
     prompt_map: optional {clip_id: prompt_text} from load_prompt_map_real().
     Clips not marked 'yes' in Real_Selected.xls are excluded automatically.
     """
-    kf_map     = load_keyframe_map_real()
-    selected   = load_real_selected_ids()
+    kf_map = load_keyframe_map_real()
+    selected = load_real_selected_ids()
     prompt_map = prompt_map or {}
-    clips      = []
+    clips = []
 
     def _add_real_clip(clip_id, frames_dir=None, video_path=None):
-        gt_dir        = os.path.join(GT_ROOT_REAL, clip_id)
-        gt_mp4        = os.path.join(gt_dir, f"{clip_id}.mp4")
-        gt_intr_json  = os.path.join(gt_dir, f"{clip_id}-intrinsics.json")
+        gt_dir = os.path.join(GT_ROOT_REAL, clip_id)
+        gt_mp4 = os.path.join(gt_dir, f"{clip_id}.mp4")
+        gt_intr_json = os.path.join(gt_dir, f"{clip_id}-intrinsics.json")
         gt_timestamps = os.path.join(gt_dir, "timestamps.txt")
         if not all(os.path.exists(p) for p in [gt_mp4, gt_intr_json, gt_timestamps]):
             return
@@ -456,19 +455,21 @@ def discover_clips_real(gen_root: str = GEN_ROOT_REAL,
         if selected is not None and clip_id not in selected:
             return
         kf = kf_map[clip_id]
-        clips.append({
-            "id":                 clip_id,
-            "scene":              "real",
-            "data_type":          "real",
-            "frames_dir":         frames_dir,
-            "video_path":         video_path,
-            "gt_mp4":             gt_mp4,
-            "gt_intrinsics_json": gt_intr_json,
-            "gt_timestamps":      gt_timestamps,
-            "h_start_gt":         kf["h_start"],
-            "r_start_gt":         kf["r_start"],
-            "prompt":             prompt_map.get(clip_id, ""),
-        })
+        clips.append(
+            {
+                "id": clip_id,
+                "scene": "real",
+                "data_type": "real",
+                "frames_dir": frames_dir,
+                "video_path": video_path,
+                "gt_mp4": gt_mp4,
+                "gt_intrinsics_json": gt_intr_json,
+                "gt_timestamps": gt_timestamps,
+                "h_start_gt": kf["h_start"],
+                "r_start_gt": kf["r_start"],
+                "prompt": prompt_map.get(clip_id, ""),
+            }
+        )
 
     for entry in sorted(os.listdir(gen_root)):
         entry_path = os.path.join(gen_root, entry)
@@ -510,50 +511,54 @@ def discover_clips_real(gen_root: str = GEN_ROOT_REAL,
 
 def main():
     ap = argparse.ArgumentParser(description="MemoBench evaluation.")
-    ap.add_argument("--mode", choices=["synthetic", "real", "both"],
-                    default="synthetic",
-                    help="Which data type to evaluate. Default: synthetic.")
-    ap.add_argument("--gen_root", default=None,
-                    help="Override generated clips root (single --mode only).")
-    ap.add_argument("--gen_root_syn", default=None,
-                    help="Synthetic gen root for --mode both.")
-    ap.add_argument("--gen_root_real", default=None,
-                    help="Real gen root for --mode both.")
-    ap.add_argument("--prompt_src_syn", default=None,
-                    help="Path to synthetic prompt CSV with video_folder+prompt columns. "
-                         "All models share the same synthetic prompts; use "
-                         "data/Synthetic_processed/metadata.csv "
-                         "for LingBot-World, Wan2.2, Matrix-Game, and OpenSora.")
-    ap.add_argument("--prompt_src_real", default=None,
-                    help="Path to real prompt CSV (enables ImageReward for real clips). "
-                         "Supported: Lingbot/Wan2.2 metadata.csv (video_folder col), "
-                         "OpenSora prompts_real.csv (id col).")
-    ap.add_argument("--clip", default=None,
-                    help="Evaluate only this clip ID (e.g. Barnyard_001). Default: all.")
-    ap.add_argument("--scene", default=None,
-                    help="Evaluate only clips from this scene. Default: all.")
-    ap.add_argument("--max_side", type=int, default=640,
-                    help="Resize frames to this max side length. Default: 640.")
-    ap.add_argument("--sample_step", type=int, default=4,
-                    help="Frame step for temporal + quality metrics. Default: 4.")
-    ap.add_argument("--device", default=None,
-                    help="Device: 'cuda', 'cuda:1', 'cpu'. Default: auto-detect.")
-    ap.add_argument("--out_csv", default=None,
-                    help="Output CSV path. Default: outputs/eval_{mode}_{timestamp}.csv")
-    ap.add_argument("--camera_ctrl", action="store_true", default=True,
-                    help="Compute CameraControllability via MapAnything pose estimation "
-                         "vs GT poses. Enabled by default for all models.")
+    ap.add_argument(
+        "--mode",
+        choices=["synthetic", "real", "both"],
+        default="synthetic",
+        help="Which data type to evaluate. Default: synthetic.",
+    )
+    ap.add_argument("--gen_root", default=None, help="Override generated clips root (single --mode only).")
+    ap.add_argument("--gen_root_syn", default=None, help="Synthetic gen root for --mode both.")
+    ap.add_argument("--gen_root_real", default=None, help="Real gen root for --mode both.")
+    ap.add_argument(
+        "--prompt_src_syn",
+        default=None,
+        help="Path to synthetic prompt CSV with video_folder+prompt columns. "
+        "All models share the same synthetic prompts; use "
+        "data/Synthetic_processed/metadata.csv "
+        "for LingBot-World, Wan2.2, Matrix-Game, and OpenSora.",
+    )
+    ap.add_argument(
+        "--prompt_src_real",
+        default=None,
+        help="Path to real prompt CSV (enables ImageReward for real clips). "
+        "Supported: Lingbot/Wan2.2 metadata.csv (video_folder col), "
+        "OpenSora prompts_real.csv (id col).",
+    )
+    ap.add_argument("--clip", default=None, help="Evaluate only this clip ID (e.g. Barnyard_001). Default: all.")
+    ap.add_argument("--scene", default=None, help="Evaluate only clips from this scene. Default: all.")
+    ap.add_argument("--max_side", type=int, default=640, help="Resize frames to this max side length. Default: 640.")
+    ap.add_argument("--sample_step", type=int, default=4, help="Frame step for temporal + quality metrics. Default: 4.")
+    ap.add_argument("--device", default=None, help="Device: 'cuda', 'cuda:1', 'cpu'. Default: auto-detect.")
+    ap.add_argument("--out_csv", default=None, help="Output CSV path. Default: outputs/eval_{mode}_{timestamp}.csv")
+    ap.add_argument(
+        "--camera_ctrl",
+        action="store_true",
+        default=True,
+        help="Compute CameraControllability via MapAnything pose estimation "
+        "vs GT poses. Enabled by default for all models.",
+    )
     args = ap.parse_args()
 
     clips = []
     if args.mode in ("synthetic", "both"):
-        gen_root        = args.gen_root_syn or args.gen_root or GEN_ROOT_SYNTHETIC
-        syn_prompt_map  = load_prompt_map_synthetic(args.prompt_src_syn)
-        clips          += discover_clips_synthetic(gen_root, prompt_map=syn_prompt_map)
+        gen_root = args.gen_root_syn or args.gen_root or GEN_ROOT_SYNTHETIC
+        syn_prompt_map = load_prompt_map_synthetic(args.prompt_src_syn)
+        clips += discover_clips_synthetic(gen_root, prompt_map=syn_prompt_map)
     if args.mode in ("real", "both"):
-        gen_root    = args.gen_root_real or args.gen_root or GEN_ROOT_REAL
-        prompt_map  = load_prompt_map_real(args.prompt_src_real)
-        clips      += discover_clips_real(gen_root, prompt_map=prompt_map)
+        gen_root = args.gen_root_real or args.gen_root or GEN_ROOT_REAL
+        prompt_map = load_prompt_map_real(args.prompt_src_real)
+        clips += discover_clips_real(gen_root, prompt_map=prompt_map)
 
     if args.clip:
         clips = [c for c in clips if c["id"] == args.clip]
@@ -566,19 +571,17 @@ def main():
 
     os.makedirs(OUT_DIR, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_csv   = args.out_csv or os.path.join(OUT_DIR, f"eval_{args.mode}_{timestamp}.csv")
+    out_csv = args.out_csv or os.path.join(OUT_DIR, f"eval_{args.mode}_{timestamp}.csv")
 
     print(f"Evaluating {len(clips)} clip(s) [{args.mode}] → {out_csv}")
 
     rows = []
     for clip in tqdm(clips, desc="Evaluating"):
         try:
-            row = _eval_clip(clip, args.max_side, args.sample_step, args.device,
-                             camera_ctrl=args.camera_ctrl)
+            row = _eval_clip(clip, args.max_side, args.sample_step, args.device, camera_ctrl=args.camera_ctrl)
         except Exception as e:
             print(f"\n[WARN] {clip['id']} failed: {e}")
-            row = {"id": clip["id"], "scene": clip["scene"],
-                   "data_type": clip["data_type"], "error": str(e)}
+            row = {"id": clip["id"], "scene": clip["scene"], "data_type": clip["data_type"], "error": str(e)}
         rows.append(row)
 
     df = pd.DataFrame(rows)
@@ -586,9 +589,7 @@ def main():
     # Normalize raw diagnostics → 0-100
     for metric, (lo, hi) in _RAW_NORM.items():
         if metric in df.columns:
-            df[f"{metric}_pct"] = (
-                (df[metric] - lo) / (hi - lo) * 100
-            ).clip(0, 100).round(1)
+            df[f"{metric}_pct"] = ((df[metric] - lo) / (hi - lo) * 100).clip(0, 100).round(1)
 
     df = _compute_composite(df)
 
@@ -602,110 +603,115 @@ def main():
 
     print("\nDiagnostic means (raw):")
     diag_cols = [
-        "AestheticScore", "ImageQuality",
-        "ObjIdentityMean", "ObjIdentityMin",
-        "GeoConsistencyMean", "GeoConsistencyMin",
-        "CameraControllability", "MeanRotErrorDeg",
+        "AestheticScore",
+        "ImageQuality",
+        "ObjIdentityMean",
+        "ObjIdentityMin",
+        "GeoConsistencyMean",
+        "GeoConsistencyMin",
+        "CameraControllability",
+        "MeanRotErrorDeg",
         "ImageRewardScore",
         "GTRevisitSim",
-        "GT_O_PSNR", "GT_O_SSIM", "GT_O_LPIPS",
-        "GT_H_PSNR", "GT_H_SSIM", "GT_H_LPIPS",
-        "GT_R_PSNR", "GT_R_SSIM", "GT_R_LPIPS",
-        "GT_ALL_PSNR", "GT_ALL_SSIM", "GT_ALL_LPIPS",
+        "GT_O_PSNR",
+        "GT_O_SSIM",
+        "GT_O_LPIPS",
+        "GT_H_PSNR",
+        "GT_H_SSIM",
+        "GT_H_LPIPS",
+        "GT_R_PSNR",
+        "GT_R_SSIM",
+        "GT_R_LPIPS",
+        "GT_ALL_PSNR",
+        "GT_ALL_SSIM",
+        "GT_ALL_LPIPS",
     ]
     present_diag = [c for c in diag_cols if c in df.columns]
     if present_diag:
         print(df[present_diag].mean().to_string())
 
 
-def _eval_clip(clip: dict, max_side: int, sample_step: int, device: str,
-               camera_ctrl: bool = False) -> dict:
+def _eval_clip(clip: dict, max_side: int, sample_step: int, device: str, camera_ctrl: bool = False) -> dict:
     data_type = clip["data_type"]
 
     # --- Intrinsics and GT frame count ---
     if data_type == "synthetic":
         intrinsics = load_intrinsics(clip["gt_intrinsics"])
-        gt_total   = load_gt_frame_count_synthetic(clip["gt_video"])
+        gt_total = load_gt_frame_count_synthetic(clip["gt_video"])
     else:  # real
         intrinsics = load_intrinsics_json(clip["gt_intrinsics_json"])
-        gt_total   = load_gt_frame_count_real(clip["gt_timestamps"])
+        gt_total = load_gt_frame_count_real(clip["gt_timestamps"])
 
     # --- Generated frames ---
     gen = _make_reader(clip, max_side=max_side)
-    N   = gen.num_frames
+    N = gen.num_frames
 
     # --- Scale GT keyframe indices → generated video frame space ---
-    h_start, r_start = map_keyframes(
-        clip["h_start_gt"], clip["r_start_gt"], gt_total, N
-    )
+    h_start, r_start = map_keyframes(clip["h_start_gt"], clip["r_start_gt"], gt_total, N)
 
     # 1. Motion smoothness — V + R phases only (D phase excluded)
     temp_scores = []
     if h_start >= 2:
-        temp_scores.append(temporal_flow_score(gen, start=0, end=h_start,
-                                               sample_step=sample_step, device=device))
+        temp_scores.append(temporal_flow_score(gen, start=0, end=h_start, sample_step=sample_step, device=device))
     if (N - 1 - r_start) >= 2:
-        temp_scores.append(temporal_flow_score(gen, start=r_start, end=N - 1,
-                                               sample_step=sample_step, device=device))
+        temp_scores.append(temporal_flow_score(gen, start=r_start, end=N - 1, sample_step=sample_step, device=device))
     temp_score = float(np.mean(temp_scores)) if temp_scores else 0.0
 
     # 3. Visual quality (aesthetic + sharpness, full video)
     aes = aesthetic_score(gen, sample_step=sample_step, device=device)
-    iq  = image_quality_score(gen, sample_step=sample_step, device=device)
+    iq = image_quality_score(gen, sample_step=sample_step, device=device)
 
     # 4. Object-centric identity consistency — DINOv2 patch tokens (top-40% stable patches)
-    obj_id_res = object_centric_identity_consistency(gen, n_sample=9, device=device,
-                                                     start=r_start, end=N - 1)
+    obj_id_res = object_centric_identity_consistency(gen, n_sample=9, device=device, start=r_start, end=N - 1)
 
     # 5. Geo3D consistency — V + R phases (Depth Anything V2 cosine similarity)
-    geo_o = geometry_3d_consistency(gen, device=device, n_sample=3,
-                                    start=0, end=h_start)
-    geo_r = geometry_3d_consistency(gen, device=device, n_sample=3,
-                                    start=r_start, end=N - 1)
-    geo_mean = round((geo_o["geo_consistency"]     + geo_r["geo_consistency"])     / 2, 4)
-    geo_min  = round(min(geo_o["min_geo_consistency"], geo_r["min_geo_consistency"]), 4)
+    geo_o = geometry_3d_consistency(gen, device=device, n_sample=3, start=0, end=h_start)
+    geo_r = geometry_3d_consistency(gen, device=device, n_sample=3, start=r_start, end=N - 1)
+    geo_mean = round((geo_o["geo_consistency"] + geo_r["geo_consistency"]) / 2, 4)
+    geo_min = round(min(geo_o["min_geo_consistency"], geo_r["min_geo_consistency"]), 4)
 
     # 6. Prompt-based metrics (both synthetic and real when prompt available)
     prompt = clip.get("prompt", "")
-    ir = image_reward_score(gen, prompt, n_sample=5, device=device) \
-         if prompt else None
+    ir = image_reward_score(gen, prompt, n_sample=5, device=device) if prompt else None
 
     # 9. GT-grounded fidelity — per-frame PSNR/SSIM/LPIPS for each phase and
     #    the whole video.  GT frames are resampled to match the generated frame
     #    count within each phase.  GTRevisitSim (CLIP) unchanged (3 pairs).
-    gt_r_clip_sim  = None
-    gt_o_psnr = gt_o_ssim = gt_o_lpips   = None
-    gt_h_psnr = gt_h_ssim = gt_h_lpips   = None
-    gt_r_psnr = gt_r_ssim = gt_r_lpips   = None
+    gt_r_clip_sim = None
+    gt_o_psnr = gt_o_ssim = gt_o_lpips = None
+    gt_h_psnr = gt_h_ssim = gt_h_lpips = None
+    gt_r_psnr = gt_r_ssim = gt_r_lpips = None
     gt_all_psnr = gt_all_ssim = gt_all_lpips = None
     try:
         gt_video_path = clip.get("gt_video") or clip.get("gt_mp4")
         if gt_video_path and os.path.exists(gt_video_path):
-            h_gt      = clip["h_start_gt"]
-            r_gt      = clip["r_start_gt"]
+            h_gt = clip["h_start_gt"]
+            r_gt = clip["r_start_gt"]
             n_gt_last = gt_total - 1
 
             # GTRevisitSim: CLIP sim on 3 uniformly spaced R-phase pairs (unchanged)
-            gt_r_idx3  = [int(r_gt     + k * (n_gt_last - r_gt)     / 2) for k in range(3)]
-            gen_r_idx3 = [int(r_start  + k * (N - 1     - r_start)  / 2) for k in range(3)]
+            gt_r_idx3 = [int(r_gt + k * (n_gt_last - r_gt) / 2) for k in range(3)]
+            gen_r_idx3 = [int(r_start + k * (N - 1 - r_start) / 2) for k in range(3)]
             sims = []
-            for gt_idx, gen_idx in zip(gt_r_idx3, gen_r_idx3):
-                gt_frame  = extract_gt_frame_at(gt_video_path, gt_idx)
+            for gt_idx, gen_idx in zip(gt_r_idx3, gen_r_idx3, strict=False):
+                gt_frame = extract_gt_frame_at(gt_video_path, gt_idx)
                 gen_frame = gen.get(gen_idx)
                 sims.append(clip_frame_similarity(gt_frame, gen_frame, device=device))
             gt_r_clip_sim = round(float(np.mean(sims)), 4)
 
             # Per-phase and full-video pixel-level fidelity (all frames)
             def _resample_gt_idx(gt_s, gt_e, n):
-                if n <= 0: return []
-                if n == 1 or gt_s == gt_e: return [gt_s] * n
+                if n <= 0:
+                    return []
+                if n == 1 or gt_s == gt_e:
+                    return [gt_s] * n
                 return [round(gt_s + i * (gt_e - gt_s) / (n - 1)) for i in range(n)]
 
             phase_defs = [
-                ("O",   0,        h_start,  0,    h_gt      ),
-                ("H",   h_start,  r_start,  h_gt, r_gt      ),
-                ("R",   r_start,  N - 1,    r_gt, n_gt_last ),
-                ("ALL", 0,        N - 1,    0,    n_gt_last ),
+                ("O", 0, h_start, 0, h_gt),
+                ("H", h_start, r_start, h_gt, r_gt),
+                ("R", r_start, N - 1, r_gt, n_gt_last),
+                ("ALL", 0, N - 1, 0, n_gt_last),
             ]
 
             phase_results = {}
@@ -714,90 +720,91 @@ def _eval_clip(clip: dict, max_side: int, sample_step: int, device: str,
                 n = len(gen_indices)
                 if n == 0:
                     continue
-                gt_indices     = _resample_gt_idx(gt_s, gt_e, n)
+                gt_indices = _resample_gt_idx(gt_s, gt_e, n)
                 gt_frames_list = extract_gt_frames_batch(gt_video_path, gt_indices)
                 gen_frames_list = [gen.get(i) for i in gen_indices]
-                psnr, ssim, lpips_val = gt_phase_pixel_fidelity(
-                    gt_frames_list, gen_frames_list, device=device
-                )
+                psnr, ssim, lpips_val = gt_phase_pixel_fidelity(gt_frames_list, gen_frames_list, device=device)
                 phase_results[pname] = (round(psnr, 4), round(ssim, 4), round(lpips_val, 4))
 
-            if "O"   in phase_results: gt_o_psnr,   gt_o_ssim,   gt_o_lpips   = phase_results["O"]
-            if "H"   in phase_results: gt_h_psnr,   gt_h_ssim,   gt_h_lpips   = phase_results["H"]
-            if "R"   in phase_results: gt_r_psnr,   gt_r_ssim,   gt_r_lpips   = phase_results["R"]
-            if "ALL" in phase_results: gt_all_psnr, gt_all_ssim, gt_all_lpips = phase_results["ALL"]
+            if "O" in phase_results:
+                gt_o_psnr, gt_o_ssim, gt_o_lpips = phase_results["O"]
+            if "H" in phase_results:
+                gt_h_psnr, gt_h_ssim, gt_h_lpips = phase_results["H"]
+            if "R" in phase_results:
+                gt_r_psnr, gt_r_ssim, gt_r_lpips = phase_results["R"]
+            if "ALL" in phase_results:
+                gt_all_psnr, gt_all_ssim, gt_all_lpips = phase_results["ALL"]
     except Exception:
-        gt_r_clip_sim  = None
-        gt_o_psnr = gt_o_ssim = gt_o_lpips   = None
-        gt_h_psnr = gt_h_ssim = gt_h_lpips   = None
-        gt_r_psnr = gt_r_ssim = gt_r_lpips   = None
+        gt_r_clip_sim = None
+        gt_o_psnr = gt_o_ssim = gt_o_lpips = None
+        gt_h_psnr = gt_h_ssim = gt_h_lpips = None
+        gt_r_psnr = gt_r_ssim = gt_r_lpips = None
         gt_all_psnr = gt_all_ssim = gt_all_lpips = None
 
     # 10. Camera Controllability — geodesic rotation error vs GT poses
     #     Only computed when --camera_ctrl is passed (lingbot-world, wan2.2).
     #     N/A for matrix-game (keyboard/mouse input) and open-sora (no camera control).
-    cam_ctrl_score   = None
-    mean_rot_err     = None
-    ate_rot_deg      = None
+    cam_ctrl_score = None
+    mean_rot_err = None
+    ate_rot_deg = None
     total_gt_rot_deg = None
     if camera_ctrl:
         try:
             if data_type == "synthetic":
                 gt_poses_cam = load_gt_poses_synthetic(clip["scene"], clip["id"], N)
-                K_cam        = load_intrinsics_synthetic(clip["scene"], clip["id"])
+                K_cam = load_intrinsics_synthetic(clip["scene"], clip["id"])
             else:
                 gt_poses_cam = load_gt_poses_real(clip["id"], N)
-                K_cam        = load_intrinsics_real(clip["id"])
+                K_cam = load_intrinsics_real(clip["id"])
             if gt_poses_cam is not None and K_cam is not None:
-                cam_res          = camera_controllability_score(gen, gt_poses_cam, K_cam,
-                                                                device=device)
-                cam_ctrl_score   = cam_res["camera_controllability"]
-                mean_rot_err     = cam_res["mean_rot_error_deg"]
-                ate_rot_deg      = cam_res["ate_rot_deg"]
+                cam_res = camera_controllability_score(gen, gt_poses_cam, K_cam, device=device)
+                cam_ctrl_score = cam_res["camera_controllability"]
+                mean_rot_err = cam_res["mean_rot_error_deg"]
+                ate_rot_deg = cam_res["ate_rot_deg"]
                 total_gt_rot_deg = cam_res["total_gt_rotation_deg"]
         except Exception:
             pass
 
     return {
-        "id":         clip["id"],
-        "scene":      clip["scene"],
-        "data_type":  data_type,
+        "id": clip["id"],
+        "scene": clip["scene"],
+        "data_type": data_type,
         "num_frames": N,
-        "h_start":    h_start,
-        "r_start":    r_start,
-        "gt_frames":  gt_total,
+        "h_start": h_start,
+        "r_start": r_start,
+        "gt_frames": gt_total,
         # Motion (V+R only)
         "TemporalScore": round(temp_score, 4),
         # Visual quality
         "AestheticScore": aes,
-        "ImageQuality":   iq,
+        "ImageQuality": iq,
         # Object-centric identity (R phase) — patch tokens, top-40%
         "ObjIdentityMean": obj_id_res["obj_identity_consistency"],
-        "ObjIdentityMin":  obj_id_res["obj_min_identity_consistency"],
+        "ObjIdentityMin": obj_id_res["obj_min_identity_consistency"],
         # Geo3D consistency (V+R)
         "GeoConsistencyMean": geo_mean,
-        "GeoConsistencyMin":  geo_min,
+        "GeoConsistencyMin": geo_min,
         # Prompt-based (when prompt available)
-        "ImageRewardScore":   ir,   # ImageReward (2023) human preference
+        "ImageRewardScore": ir,  # ImageReward (2023) human preference
         # GT-grounded fidelity (CLIP sim R-phase; PSNR/SSIM/LPIPS per-frame all phases)
-        "GTRevisitSim":  gt_r_clip_sim,  # CLIP sim: generated R-phase vs GT R-phase (3 pairs)
-        "GT_O_PSNR":     gt_o_psnr,      # V-phase pixel PSNR  (all gen frames vs GT resampled)
-        "GT_O_SSIM":     gt_o_ssim,      # V-phase SSIM
-        "GT_O_LPIPS":    gt_o_lpips,     # V-phase LPIPS (lower=better)
-        "GT_H_PSNR":     gt_h_psnr,      # D-phase pixel PSNR
-        "GT_H_SSIM":     gt_h_ssim,      # D-phase SSIM
-        "GT_H_LPIPS":    gt_h_lpips,     # D-phase LPIPS (lower=better)
-        "GT_R_PSNR":     gt_r_psnr,      # R-phase pixel PSNR
-        "GT_R_SSIM":     gt_r_ssim,      # R-phase SSIM
-        "GT_R_LPIPS":    gt_r_lpips,     # R-phase LPIPS (lower=better)
-        "GT_ALL_PSNR":   gt_all_psnr,    # whole-video pixel PSNR
-        "GT_ALL_SSIM":   gt_all_ssim,    # whole-video SSIM
-        "GT_ALL_LPIPS":  gt_all_lpips,   # whole-video LPIPS (lower=better)
+        "GTRevisitSim": gt_r_clip_sim,  # CLIP sim: generated R-phase vs GT R-phase (3 pairs)
+        "GT_O_PSNR": gt_o_psnr,  # V-phase pixel PSNR  (all gen frames vs GT resampled)
+        "GT_O_SSIM": gt_o_ssim,  # V-phase SSIM
+        "GT_O_LPIPS": gt_o_lpips,  # V-phase LPIPS (lower=better)
+        "GT_H_PSNR": gt_h_psnr,  # D-phase pixel PSNR
+        "GT_H_SSIM": gt_h_ssim,  # D-phase SSIM
+        "GT_H_LPIPS": gt_h_lpips,  # D-phase LPIPS (lower=better)
+        "GT_R_PSNR": gt_r_psnr,  # R-phase pixel PSNR
+        "GT_R_SSIM": gt_r_ssim,  # R-phase SSIM
+        "GT_R_LPIPS": gt_r_lpips,  # R-phase LPIPS (lower=better)
+        "GT_ALL_PSNR": gt_all_psnr,  # whole-video pixel PSNR
+        "GT_ALL_SSIM": gt_all_ssim,  # whole-video SSIM
+        "GT_ALL_LPIPS": gt_all_lpips,  # whole-video LPIPS (lower=better)
         # Camera Controllability (None unless --camera_ctrl passed)
-        "CameraControllability": cam_ctrl_score,   # ATE-based rotation coverage [0,1]
-        "ATE_RotDeg":            ate_rot_deg,       # ATE rotation RMSE in degrees
-        "TotalGT_RotDeg":        total_gt_rot_deg,  # end-to-end GT rotation in degrees
-        "MeanRotErrorDeg":       mean_rot_err,      # frame-to-frame diagnostic
+        "CameraControllability": cam_ctrl_score,  # ATE-based rotation coverage [0,1]
+        "ATE_RotDeg": ate_rot_deg,  # ATE rotation RMSE in degrees
+        "TotalGT_RotDeg": total_gt_rot_deg,  # end-to-end GT rotation in degrees
+        "MeanRotErrorDeg": mean_rot_err,  # frame-to-frame diagnostic
         # Intrinsics metadata
         "fx": round(intrinsics["fx"], 2),
         "fy": round(intrinsics["fy"], 2),

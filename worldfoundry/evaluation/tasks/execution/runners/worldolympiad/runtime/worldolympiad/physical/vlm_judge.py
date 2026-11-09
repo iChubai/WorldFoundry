@@ -11,9 +11,9 @@ Prompts borrow the domain phrasing from:
 - material/vlm_judge.py
 - mechanics/vlm_judge.py
 
- python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/zip_bag_longlive_bbox_h264.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4 
+ python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/zip_bag_longlive_bbox_h264.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4
 
-python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/output.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4 
+python physical/vlm_judge.py --gen-video data/robotics_test/zip_bag/output.mp4 --gt-video data/robotics_test/zip_bag/output_fixed.mp4
 """
 
 from __future__ import annotations
@@ -21,10 +21,8 @@ from __future__ import annotations
 import argparse
 import base64
 import json
-import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -32,37 +30,43 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import (
+from material.prompt import (  # noqa: E402 - Follows the sys.path setup.
+    build_compliance_prompt as build_material_compliance_prompt,
+)
+from material.prompt import (  # noqa: E402 - Follows the sys.path setup.
+    build_relevance_prompt as build_material_relevance_prompt,
+)
+from mechanics.prompt import (  # noqa: E402 - Follows the sys.path setup.
+    build_compliance_prompt as build_mechanics_compliance_prompt,
+)
+from mechanics.prompt import (  # noqa: E402 - Follows the sys.path setup.
+    build_relevance_prompt as build_mechanics_relevance_prompt,
+)
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
     chat_vlm_call,
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
     video_vlm_call,
 )
-from material.prompt import (
-    build_compliance_prompt as build_material_compliance_prompt,
-    build_relevance_prompt as build_material_relevance_prompt,
-)
-from mechanics.prompt import (
-    build_compliance_prompt as build_mechanics_compliance_prompt,
-    build_relevance_prompt as build_mechanics_relevance_prompt,
-)
-from problem.problem_set import ALL_QUESTIONS, get_question_by_id
-from thermotics.prompt import (
+from problem.problem_set import ALL_QUESTIONS, get_question_by_id  # noqa: E402 - Follows the sys.path setup.
+from thermotics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_compliance_prompt as build_thermotics_compliance_prompt,
+)
+from thermotics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_relevance_prompt as build_thermotics_relevance_prompt,
 )
 
 load_dotenv()
 
 
-def encode_video_to_data_url(video_path: str) -> Dict:
+def encode_video_to_data_url(video_path: str) -> dict:
     with open(video_path, "rb") as f:
         b64 = base64.b64encode(f.read()).decode("utf-8")
     return {"type": "video_url", "video_url": {"url": f"data:video/mp4;base64,{b64}"}}
 
 
-def relevance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def relevance_prompts(question_id: str, video_prompt: str) -> tuple[str, str]:
     q = get_question_by_id(question_id)
     if q is None:
         raise ValueError(f"Unknown question id: {question_id}")
@@ -74,7 +78,7 @@ def relevance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
     return build_mechanics_relevance_prompt(question_id, video_prompt)
 
 
-def compliance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def compliance_prompts(question_id: str, video_prompt: str) -> tuple[str, str]:
     q = get_question_by_id(question_id)
     if q is None:
         raise ValueError(f"Unknown question id: {question_id}")
@@ -92,7 +96,7 @@ def call_relevance_vlm(
     user_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     data_url = encode_video_to_data_url(video_path)
     resp = video_vlm_call(
         data_url=data_url,
@@ -112,7 +116,7 @@ def call_compliance_vlm(
     user_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     gen_data = encode_video_to_data_url(gen_video)
     gt_data = encode_video_to_data_url(gt_video)
     messages = [
@@ -144,9 +148,9 @@ def evaluate_video(
     video_prompt: str,
     model_name: str | None = None,
     backend: str | None = None,
-    question_ids: Optional[List[str]] = None,
-) -> List[Dict]:
-    results: List[Dict] = []
+    question_ids: list[str] | None = None,
+) -> list[dict]:
+    results: list[dict] = []
     if question_ids:
         selected_questions = []
         for qid in question_ids:
@@ -243,7 +247,9 @@ def evaluate_video(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="VLM judge comparing generated video vs ground-truth across all physics questions")
+    parser = argparse.ArgumentParser(
+        description="VLM judge comparing generated video vs ground-truth across all physics questions"
+    )
     parser.add_argument("--gen-video", required=True, help="Path to generated/candidate video")
     parser.add_argument("--gt-video", required=True, help="Path to ground-truth reference video")
     parser.add_argument(

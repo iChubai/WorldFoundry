@@ -9,11 +9,7 @@ from .base_operator import BaseOperator
 
 
 class Wan2p6Operator(BaseOperator):
-    """
-    Wan2.6 数据处理 Operator
-
-    负责图像编码、参考素材校验和提示词预处理。
-    """
+    """Prepare prompts, encoded images and validated reference media for Wan2.6 requests."""
 
     def __init__(
         self,
@@ -54,7 +50,6 @@ class Wan2p6Operator(BaseOperator):
         self,
         reference_urls: list[str] | None,
     ) -> list[str] | None:
-        """Validate reference urls implementation."""
         if reference_urls is None:
             return None
 

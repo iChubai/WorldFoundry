@@ -8,16 +8,15 @@
 import math
 import os
 import sys
+from collections.abc import Iterable
 from multiprocessing import Pool
-from typing import Iterable, Optional
 
 import numpy as np
 import torch
+import utils
 from scipy.special import softmax
 from timm.data import Mixup
 from timm.utils import ModelEma, accuracy
-
-import utils
 
 
 def train_class_batch(model, samples, target, criterion):
@@ -28,33 +27,32 @@ def train_class_batch(model, samples, target, criterion):
 
 def get_loss_scale_for_deepspeed(model):
     optimizer = model.optimizer
-    return optimizer.loss_scale if hasattr(
-        optimizer, "loss_scale") else optimizer.cur_scale
+    return optimizer.loss_scale if hasattr(optimizer, "loss_scale") else optimizer.cur_scale
 
 
-def train_one_epoch(model: torch.nn.Module,
-                    criterion: torch.nn.Module,
-                    data_loader: Iterable,
-                    optimizer: torch.optim.Optimizer,
-                    device: torch.device,
-                    epoch: int,
-                    loss_scaler,
-                    max_norm: float = 0,
-                    model_ema: Optional[ModelEma] = None,
-                    mixup_fn: Optional[Mixup] = None,
-                    log_writer=None,
-                    start_steps=None,
-                    lr_schedule_values=None,
-                    wd_schedule_values=None,
-                    num_training_steps_per_epoch=None,
-                    update_freq=None):
+def train_one_epoch(
+    model: torch.nn.Module,
+    criterion: torch.nn.Module,
+    data_loader: Iterable,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+    epoch: int,
+    loss_scaler,
+    max_norm: float = 0,
+    model_ema: ModelEma | None = None,
+    mixup_fn: Mixup | None = None,
+    log_writer=None,
+    start_steps=None,
+    lr_schedule_values=None,
+    wd_schedule_values=None,
+    num_training_steps_per_epoch=None,
+    update_freq=None,
+):
     model.train(True)
     metric_logger = utils.MetricLogger(delimiter="  ")
-    metric_logger.add_meter(
-        'lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    metric_logger.add_meter(
-        'min_lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    header = 'Epoch: [{}]'.format(epoch)
+    metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value:.6f}"))
+    metric_logger.add_meter("min_lr", utils.SmoothedValue(window_size=1, fmt="{value:.6f}"))
+    header = f"Epoch: [{epoch}]"
     print_freq = 20
 
     if loss_scaler is None:
@@ -63,20 +61,17 @@ def train_one_epoch(model: torch.nn.Module,
     else:
         optimizer.zero_grad()
 
-    for data_iter_step, (samples, targets, _, _) in enumerate(
-            metric_logger.log_every(data_loader, print_freq, header)):
+    for data_iter_step, (samples, targets, _, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
         step = data_iter_step // update_freq
         if step >= num_training_steps_per_epoch:
             continue
         it = start_steps + step  # global training iteration
         # Update LR & WD for the first acc
-        if lr_schedule_values is not None or wd_schedule_values is not None and data_iter_step % update_freq == 0:
-            for i, param_group in enumerate(optimizer.param_groups):
+        if lr_schedule_values is not None or (wd_schedule_values is not None and data_iter_step % update_freq == 0):
+            for _i, param_group in enumerate(optimizer.param_groups):
                 if lr_schedule_values is not None:
-                    param_group["lr"] = lr_schedule_values[it] * param_group[
-                        "lr_scale"]
-                if wd_schedule_values is not None and param_group[
-                        "weight_decay"] > 0:
+                    param_group["lr"] = lr_schedule_values[it] * param_group["lr_scale"]
+                if wd_schedule_values is not None and param_group["weight_decay"] > 0:
                     param_group["weight_decay"] = wd_schedule_values[it]
 
         samples = samples.to(device, non_blocking=True)
@@ -91,17 +86,15 @@ def train_one_epoch(model: torch.nn.Module,
 
         if loss_scaler is None:
             samples = samples.half()
-            loss, output = train_class_batch(model, samples, targets,
-                                             criterion)
+            loss, output = train_class_batch(model, samples, targets, criterion)
         else:
             with torch.cuda.amp.autocast(dtype=torch.bfloat16):
-                loss, output = train_class_batch(model, samples, targets,
-                                                 criterion)
+                loss, output = train_class_batch(model, samples, targets, criterion)
 
         loss_value = loss.item()
 
         if not math.isfinite(loss_value):
-            print("Loss is {}, stopping training".format(loss_value))
+            print(f"Loss is {loss_value}, stopping training")
             sys.exit(1)
 
         if loss_scaler is None:
@@ -111,15 +104,13 @@ def train_one_epoch(model: torch.nn.Module,
 
             model.step()
 
-            if (data_iter_step + 1) % update_freq == 0:
-                # Deepspeed will call step() & model.zero_grad() automatic
-                if model_ema is not None:
-                    model_ema.update(model)
+            # Deepspeed will call step() & model.zero_grad() automatic
+            if (data_iter_step + 1) % update_freq == 0 and model_ema is not None:
+                model_ema.update(model)
             loss_scale_value = get_loss_scale_for_deepspeed(model)
         else:
             # this attribute is added by timm on one optimizer (adahessian)
-            is_second_order = hasattr(
-                optimizer, 'is_second_order') and optimizer.is_second_order
+            is_second_order = hasattr(optimizer, "is_second_order") and optimizer.is_second_order
             loss /= update_freq
             grad_norm = loss_scaler(
                 loss,
@@ -127,7 +118,8 @@ def train_one_epoch(model: torch.nn.Module,
                 clip_grad=max_norm,
                 parameters=model.parameters(),
                 create_graph=is_second_order,
-                update_grad=(data_iter_step + 1) % update_freq == 0)
+                update_grad=(data_iter_step + 1) % update_freq == 0,
+            )
             if (data_iter_step + 1) % update_freq == 0:
                 optimizer.zero_grad()
                 if model_ema is not None:
@@ -136,15 +128,12 @@ def train_one_epoch(model: torch.nn.Module,
 
         torch.cuda.synchronize()
 
-        if mixup_fn is None:
-            class_acc = (output.max(-1)[-1] == targets).float().mean()
-        else:
-            class_acc = None
+        class_acc = (output.max(-1)[-1] == targets).float().mean() if mixup_fn is None else None
         metric_logger.update(loss=loss_value)
         metric_logger.update(class_acc=class_acc)
         metric_logger.update(loss_scale=loss_scale_value)
-        min_lr = 10.
-        max_lr = 0.
+        min_lr = 10.0
+        max_lr = 0.0
         for group in optimizer.param_groups:
             min_lr = min(min_lr, group["lr"])
             max_lr = max(max_lr, group["lr"])
@@ -180,7 +169,7 @@ def validation_one_epoch(data_loader, model, device):
     criterion = torch.nn.CrossEntropyLoss()
 
     metric_logger = utils.MetricLogger(delimiter="  ")
-    header = 'Val:'
+    header = "Val:"
 
     # switch to evaluation mode
     model.eval()
@@ -200,16 +189,13 @@ def validation_one_epoch(data_loader, model, device):
 
         batch_size = images.shape[0]
         metric_logger.update(loss=loss.item())
-        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
-        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+        metric_logger.meters["acc1"].update(acc1.item(), n=batch_size)
+        metric_logger.meters["acc5"].update(acc5.item(), n=batch_size)
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print(
-        '* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
-        .format(
-            top1=metric_logger.acc1,
-            top5=metric_logger.acc5,
-            losses=metric_logger.loss))
+        f"* Acc@1 {metric_logger.acc1.global_avg:.3f} Acc@5 {metric_logger.acc5.global_avg:.3f} loss {metric_logger.loss.global_avg:.3f}"
+    )
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
@@ -219,7 +205,7 @@ def final_test(data_loader, model, device, file):
     criterion = torch.nn.CrossEntropyLoss()
 
     metric_logger = utils.MetricLogger(delimiter="  ")
-    header = 'Test:'
+    header = "Test:"
 
     # switch to evaluation mode
     model.eval()
@@ -240,63 +226,56 @@ def final_test(data_loader, model, device, file):
             loss = criterion(output, target)
 
         for i in range(output.size(0)):
-            string = "{} {} {} {} {}\n".format(
-                ids[i], str(output.data[i].cpu().numpy().tolist()),
-                str(int(target[i].cpu().numpy())),
-                str(int(chunk_nb[i].cpu().numpy())),
-                str(int(split_nb[i].cpu().numpy())))
+            string = f"{ids[i]} {output.data[i].cpu().numpy().tolist()!s} {int(target[i].cpu().numpy())!s} {int(chunk_nb[i].cpu().numpy())!s} {int(split_nb[i].cpu().numpy())!s}\n"
             final_result.append(string)
 
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
 
         batch_size = images.shape[0]
         metric_logger.update(loss=loss.item())
-        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
-        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+        metric_logger.meters["acc1"].update(acc1.item(), n=batch_size)
+        metric_logger.meters["acc5"].update(acc5.item(), n=batch_size)
 
     if not os.path.exists(file):
         os.mknod(file)
-    with open(file, 'w') as f:
-        f.write("{}, {}\n".format(acc1, acc5))
+    with open(file, "w") as f:
+        f.write(f"{acc1}, {acc5}\n")
         for line in final_result:
             f.write(line)
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print(
-        '* Acc@1 {top1.global_avg:.3f} Acc@5 {top5.global_avg:.3f} loss {losses.global_avg:.3f}'
-        .format(
-            top1=metric_logger.acc1,
-            top5=metric_logger.acc5,
-            losses=metric_logger.loss))
+        f"* Acc@1 {metric_logger.acc1.global_avg:.3f} Acc@5 {metric_logger.acc5.global_avg:.3f} loss {metric_logger.loss.global_avg:.3f}"
+    )
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
 
 
-def merge(eval_path, num_tasks, method='prob'):
-    assert method in ['prob', 'score']
+def merge(eval_path, num_tasks, method="prob"):
+    assert method in ["prob", "score"]
     dict_feats = {}
     dict_label = {}
     dict_pos = {}
     print("Reading individual output files")
 
     for x in range(num_tasks):
-        file = os.path.join(eval_path, str(x) + '.txt')
-        lines = open(file, 'r').readlines()[1:]
+        file = os.path.join(eval_path, str(x) + ".txt")
+        with open(file) as stream:
+            lines = stream.readlines()[1:]
         for line in lines:
             line = line.strip()
-            name = line.split('[')[0]
-            label = line.split(']')[1].split(' ')[1]
-            chunk_nb = line.split(']')[1].split(' ')[2]
-            split_nb = line.split(']')[1].split(' ')[3]
-            data = np.fromstring(
-                line.split('[')[1].split(']')[0], dtype=float, sep=',')
+            name = line.split("[")[0]
+            label = line.split("]")[1].split(" ")[1]
+            chunk_nb = line.split("]")[1].split(" ")[2]
+            split_nb = line.split("]")[1].split(" ")[3]
+            data = np.fromstring(line.split("[")[1].split("]")[0], dtype=float, sep=",")
             if name not in dict_feats:
                 dict_feats[name] = []
                 dict_label[name] = 0
                 dict_pos[name] = []
             if chunk_nb + split_nb in dict_pos[name]:
                 continue
-            if method == 'prob':
+            if method == "prob":
                 dict_feats[name].append(softmax(data))
             else:
                 dict_feats[name].append(data)
@@ -320,7 +299,7 @@ def merge(eval_path, num_tasks, method='prob'):
 
 def compute_video(lst):
     i, video_id, data, label = lst
-    feat = [x for x in data]
+    feat = list(data)
     feat = np.mean(feat, axis=0)
     pred = np.argmax(feat)
     top1 = (int(pred) == int(label)) * 1.0

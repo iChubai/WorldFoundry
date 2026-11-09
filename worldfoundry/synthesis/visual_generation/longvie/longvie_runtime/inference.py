@@ -1,9 +1,11 @@
-import os
-import json
 import argparse
+import json
+import os
+
+import decord
 import torch.distributed as dist
 from PIL import Image
-import decord
+
 from worldfoundry.core.io import save_video
 from worldfoundry.synthesis.visual_generation.longvie.worldfoundry_runtime import (
     LongVieOfficialRuntime,
@@ -36,7 +38,7 @@ def main(args):
     )
     pipe = runtime.load()
 
-    with open(args.json_file, "r") as f:
+    with open(args.json_file) as f:
         samples = json.load(f)
 
     image = load_image(args.image_path)

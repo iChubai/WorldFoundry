@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import base64
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Protocol
+from typing import Protocol
 
 
 class ControlJudgeClient(Protocol):
@@ -34,6 +34,7 @@ class ControlJudgeClient(Protocol):
 # Gemini
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class GeminiControlJudgeClient:
     model: str = "gemini-3.1-pro-preview"
@@ -42,20 +43,19 @@ class GeminiControlJudgeClient:
 
     def __post_init__(self) -> None:
         from google import genai  # type: ignore
+
         api_key = os.environ.get("GOOGLE_API_KEY", "").strip()
         if not api_key:
             raise RuntimeError("Missing GOOGLE_API_KEY environment variable.")
         self._client = genai.Client(api_key=api_key)
-        print(f"Using GOOGLE_API_KEY")
+        print("Using GOOGLE_API_KEY")
 
     def _sample_frames_bytes(self, video_path: Path) -> list[bytes]:
         """Sample self.n_frames uniformly from video; return raw JPEG bytes per frame."""
         try:
             import cv2  # type: ignore
         except ImportError:
-            raise RuntimeError(
-                "opencv-python is required for Gemini frame-sampling mode: pip install opencv-python"
-            )
+            raise RuntimeError("opencv-python is required for Gemini frame-sampling mode: pip install opencv-python")  # noqa: B904 - Keeps the implicit ImportError context.
 
         cap = cv2.VideoCapture(str(video_path))
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -85,6 +85,7 @@ class GeminiControlJudgeClient:
 
         # Full-video upload mode (Gemini controls frame sampling internally).
         import time
+
         print(f"  [gemini] uploading {video_path.name} ...")
         uploaded = self._client.files.upload(file=str(video_path))
         while True:
@@ -139,20 +140,22 @@ class GeminiControlJudgeClient:
 # OpenAI
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class OpenAIControlJudgeClient:
     model: str = "gpt-4o"
     provider: str = "openai"
-    n_frames: int = 32   # frames sampled from the video for judging
+    n_frames: int = 32  # frames sampled from the video for judging
     max_side: int = 1024  # longest frame dimension before encoding; controls token cost
 
     def __post_init__(self) -> None:
         import openai  # type: ignore
+
         api_key = os.environ.get("OPENAI_API_KEY", "").strip()
         if not api_key:
             raise RuntimeError("Missing OPENAI_API_KEY environment variable.")
         self._client = openai.OpenAI(api_key=api_key)
-        print(f"Using OPENAI_API_KEY")
+        print("Using OPENAI_API_KEY")
 
     def _encode_bytes(self, data: bytes) -> str:
         return base64.b64encode(data).decode("utf-8")
@@ -162,9 +165,7 @@ class OpenAIControlJudgeClient:
         try:
             import cv2  # type: ignore
         except ImportError:
-            raise RuntimeError(
-                "opencv-python is required for OpenAI video judging: pip install opencv-python"
-            )
+            raise RuntimeError("opencv-python is required for OpenAI video judging: pip install opencv-python")  # noqa: B904 - Keeps the implicit ImportError context.
 
         cap = cv2.VideoCapture(str(video_path))
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -198,10 +199,12 @@ class OpenAIControlJudgeClient:
         frames_b64 = self._sample_frames_b64(video_path)
         content: list = [{"type": "text", "text": prompt}]
         for f_b64 in frames_b64:
-            content.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{f_b64}", "detail": "low"},
-            })
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{f_b64}", "detail": "low"},
+                }
+            )
 
         resp = self._client.chat.completions.create(
             model=self.model,
@@ -221,13 +224,15 @@ class OpenAIControlJudgeClient:
 
         resp = self._client.chat.completions.create(
             model=self.model,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{img_b64}"}},
-                    {"type": "text", "text": prompt},
-                ],
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{img_b64}"}},
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
             max_completion_tokens=2048,
         )
         return resp.choices[0].message.content or ""
@@ -237,20 +242,22 @@ class OpenAIControlJudgeClient:
 # Anthropic / Claude
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class AnthropicControlJudgeClient:
     model: str = "claude-opus-4-7"
     provider: str = "anthropic"
-    n_frames: int = 32   # frames sampled from the video for judging
+    n_frames: int = 32  # frames sampled from the video for judging
     max_side: int = 1024  # longest frame dimension before encoding; Anthropic hard-caps at 5 MB/image
 
     def __post_init__(self) -> None:
         import anthropic  # type: ignore
+
         api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
         if not api_key:
             raise RuntimeError("Missing ANTHROPIC_API_KEY environment variable.")
         self._client = anthropic.Anthropic(api_key=api_key)
-        print(f"Using ANTHROPIC_API_KEY")
+        print("Using ANTHROPIC_API_KEY")
 
     def _encode_bytes(self, data: bytes) -> str:
         return base64.b64encode(data).decode("utf-8")
@@ -260,9 +267,7 @@ class AnthropicControlJudgeClient:
         try:
             import cv2  # type: ignore
         except ImportError:
-            raise RuntimeError(
-                "opencv-python is required for Claude video judging: pip install opencv-python"
-            )
+            raise RuntimeError("opencv-python is required for Claude video judging: pip install opencv-python")  # noqa: B904 - Keeps the implicit ImportError context.
 
         cap = cv2.VideoCapture(str(video_path))
         total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -317,6 +322,7 @@ class AnthropicControlJudgeClient:
 
         try:
             import cv2  # type: ignore
+
             img = cv2.imread(str(image_path))
             if img is not None:
                 h, w = img.shape[:2]
@@ -340,13 +346,15 @@ class AnthropicControlJudgeClient:
         resp = self._client.messages.create(
             model=self.model,
             max_tokens=2048,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "image", "source": {"type": "base64", "media_type": mime, "data": img_b64}},
-                    {"type": "text", "text": prompt},
-                ],
-            }],
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "source": {"type": "base64", "media_type": mime, "data": img_b64}},
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
         )
         return resp.content[0].text or ""
 
@@ -362,8 +370,8 @@ _GEMINI_PREFIXES = ("gemini",)
 
 def make_judge_client(
     model: str,
-    provider: Optional[str] = None,
-    n_frames: Optional[int] = None,
+    provider: str | None = None,
+    n_frames: int | None = None,
 ) -> ControlJudgeClient:
     """
     Instantiate the right judge client for (provider, model).

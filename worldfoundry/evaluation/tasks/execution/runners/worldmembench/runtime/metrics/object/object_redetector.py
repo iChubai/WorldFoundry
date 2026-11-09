@@ -90,7 +90,7 @@ def object_query_crop(
     ys, xs = np.nonzero(mask)
     x1, x2 = int(xs.min()), int(xs.max()) + 1
     y1, y2 = int(ys.min()), int(ys.max()) + 1
-    padding = max(2, int(round(max(x2 - x1, y2 - y1) * context_fraction)))
+    padding = max(2, round(max(x2 - x1, y2 - y1) * context_fraction))
     height, width = mask.shape
     x1 = max(0, x1 - padding)
     y1 = max(0, y1 - padding)
@@ -519,8 +519,8 @@ class GroundingDinoClipObjectRedetector:
 
 
 __all__ = [
-    "ObjectRedetectorBackend",
     "GroundingDinoClipObjectRedetector",
+    "ObjectRedetectorBackend",
     "confirm_redetection_prompts",
     "object_query_crop",
     "reid_match_is_accepted",

@@ -1,6 +1,5 @@
 import subprocess
 from pathlib import Path
-from typing import List, Optional
 
 from .base import WorldModelRunner
 
@@ -33,26 +32,24 @@ class LocalScriptRunner(WorldModelRunner):
         super().__init__(name, config)
         repo_path_str = config.get("repo_path", "")
         if not repo_path_str:
-            raise ValueError(
-                f"[{name}] 'repo_path' is required in the model config."
-            )
+            raise ValueError(f"[{name}] 'repo_path' is required in the model config.")
         self.repo_path = Path(repo_path_str).expanduser().resolve()
         self.script: str = config.get("script", "run.sh")
-        self.extra_args: List[str] = list(config.get("extra_args") or [])
-        self.camera_control_default: Optional[str] = config.get("camera_control_default") or None
-        self.n_gpu: Optional[int] = config.get("n_gpu") or None
-        self.gpu_per_task: Optional[int] = config.get("gpu_per_task") or None
+        self.extra_args: list[str] = list(config.get("extra_args") or [])
+        self.camera_control_default: str | None = config.get("camera_control_default") or None
+        self.n_gpu: int | None = config.get("n_gpu") or None
+        self.gpu_per_task: int | None = config.get("gpu_per_task") or None
         self.verbose: bool = bool(config.get("verbose", False))
-        self.daemon_script: Optional[str] = config.get("daemon_script") or None
-        self.daemon_args: List[str] = list(config.get("daemon_args") or [])
+        self.daemon_script: str | None = config.get("daemon_script") or None
+        self.daemon_args: list[str] = list(config.get("daemon_args") or [])
         self.torchrun_path: str = config.get("torchrun_path") or "torchrun"
 
     def build_daemon_cmd(
         self,
         tasks_json_path: str,
-        nproc_per_node: Optional[int] = None,
-        master_port: Optional[int] = None,
-    ) -> List[str]:
+        nproc_per_node: int | None = None,
+        master_port: int | None = None,
+    ) -> list[str]:
         """Return the torchrun command to launch the batch daemon.
 
         Subclasses may override to append runner-specific flags.
@@ -75,19 +72,16 @@ class LocalScriptRunner(WorldModelRunner):
         ]
         if master_port is not None:
             cmd.append(f"--master_port={master_port}")
-        cmd += [
-            str(script_path),
-            "--tasks_json", tasks_json_path,
-        ] + self.daemon_args
+        cmd += [str(script_path), "--tasks_json", tasks_json_path, *self.daemon_args]
         return cmd
 
     def generate(
         self,
         task_id: str,
         prompt: str,
-        init_frame: Optional[Path],
+        init_frame: Path | None,
         output_path: Path,
-        camera_control: Optional[str] = None,
+        camera_control: str | None = None,
     ) -> bool:
         script_path = self.repo_path / self.script
         if not script_path.exists():
@@ -97,9 +91,12 @@ class LocalScriptRunner(WorldModelRunner):
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         cmd = [
-            "bash", str(script_path),
-            "--prompt", prompt,
-            "--output", str(output_path),
+            "bash",
+            str(script_path),
+            "--prompt",
+            prompt,
+            "--output",
+            str(output_path),
         ]
         if init_frame and init_frame.exists():
             cmd += ["--init_frame", str(init_frame)]
@@ -124,15 +121,11 @@ class LocalScriptRunner(WorldModelRunner):
                 print(result.stderr, end="")
 
         if result.returncode != 0:
-            print(
-                f"[{self.name}] Script exited {result.returncode} for task {task_id}"
-            )
+            print(f"[{self.name}] Script exited {result.returncode} for task {task_id}")
             return False
 
         if not output_path.exists():
-            print(
-                f"[{self.name}] Script exited 0 but output not found: {output_path}"
-            )
+            print(f"[{self.name}] Script exited 0 but output not found: {output_path}")
             return False
 
         return True

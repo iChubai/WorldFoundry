@@ -6,7 +6,6 @@ from worldfoundry.synthesis.visual_generation.vid2world.config_paths import (
     runtime_config_root,
 )
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "main" / "inference.py"
 CONFIG_ROOT = runtime_config_root()
@@ -67,7 +66,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
                 }
             )
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Vid2World main/inference.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Vid2World main/inference.py is missing"}
+        )
     return missing
 
 

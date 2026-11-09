@@ -3,7 +3,10 @@ import os
 from omegaconf import OmegaConf
 
 from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloaders import dataloader_general
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.dataloaders import (
+    dataloader_general,
+)
+
 
 def config_path(*relative):
     root = os.environ.get("WORLDSCORE_CONFIG_ROOT")
@@ -11,10 +14,10 @@ def config_path(*relative):
         return os.path.join(os.path.expanduser(root), *relative)
     return str(bundled_benchmark_asset("worldscore", "config", *relative))
 
+
 def GetDataloader(visual_movement, json_file=None, noise=False, noise_type="simple"):
     if json_file is None:
         json_file = f"{visual_movement}.json"
-    root_path = os.getenv("WORLDSCORE_PATH")
     dataset_root = os.getenv("DATA_PATH")
     json_path = os.path.join(dataset_root, "WorldScore-Dataset", visual_movement, json_file)
 
@@ -28,5 +31,5 @@ def GetDataloader(visual_movement, json_file=None, noise=False, noise_type="simp
     config = OmegaConf.to_container(config, resolve=True)
 
     loader = dataloader_general(config)
-    
+
     return loader.data

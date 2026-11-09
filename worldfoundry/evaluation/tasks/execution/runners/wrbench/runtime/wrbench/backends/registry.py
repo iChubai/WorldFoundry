@@ -16,7 +16,7 @@ def resolve_backend(
 ) -> GenerationBackend:
     """Return the backend selected by explicit config and model support."""
 
-    key = canonical_model_key(model)
+    _key = canonical_model_key(model)
     if backend_name == "dry_run":
         return DryRunBackend()
     if backend_name in (None, "", "worldfoundry", "worldfoundry_pipeline", "in_tree"):

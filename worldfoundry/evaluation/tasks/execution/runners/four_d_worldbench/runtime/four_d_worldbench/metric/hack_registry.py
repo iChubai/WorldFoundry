@@ -1,15 +1,11 @@
 #  hack_registry.py
 import logging
 
-from mmengine.registry import Registry
 from mmengine.logging import print_log
-from typing import Type, Optional, Union, List
+from mmengine.registry import Registry
 
 
-def _register_module(self,
-                     module: Type,
-                     module_name: Optional[Union[str, List[str]]] = None,
-                     force: bool = False) -> None:
+def _register_module(self, module: type, module_name: str | list[str] | None = None, force: bool = False) -> None:
     """Register a module.
 
     Args:
@@ -22,7 +18,7 @@ def _register_module(self,
             name. Defaults to False.
     """
     if not callable(module):
-        raise TypeError(f'module must be Callable, but got {type(module)}')
+        raise TypeError(f"module must be Callable, but got {type(module)}")
 
     if module_name is None:
         module_name = module.__name__
@@ -34,10 +30,9 @@ def _register_module(self,
             # raise KeyError(f'{name} is already registered in {self.name} '
             #                f'at {existed_module.__module__}')
             print_log(
-                f'{name} is already registered in {self.name} '
-                f'at {existed_module.__module__}. Registration ignored.',
-                logger='current',
-                level=logging.INFO
+                f"{name} is already registered in {self.name} at {existed_module.__module__}. Registration ignored.",
+                logger="current",
+                level=logging.INFO,
             )
         self._module_dict[name] = module
 

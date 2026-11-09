@@ -16,7 +16,6 @@ from typing import Any
 
 import numpy as np
 
-
 OPENCV_C2W = "opencv_c2w"
 BENCHMARK_TARGET_ROLE = "benchmark_intended_control"
 CANONICAL_PROFILE = "canonical_60deg"
@@ -73,7 +72,7 @@ def _image_size_from_intrinsics(intrinsics: np.ndarray) -> list[int]:
     cx = float(intrinsics[0, 0, 2])
     cy = float(intrinsics[0, 1, 2])
     if cx > 1.0 and cy > 1.0:
-        return [int(round(cx * 2.0)), int(round(cy * 2.0))]
+        return [round(cx * 2.0), round(cy * 2.0)]
     return [832, 480]
 
 
@@ -116,7 +115,7 @@ class CameraTrajectory:
     def to_w2c(self) -> np.ndarray:
         return np.linalg.inv(self.c2w).astype(np.float32)
 
-    def resample(self, frame_count: int) -> "CameraTrajectory":
+    def resample(self, frame_count: int) -> CameraTrajectory:
         if frame_count <= 0:
             raise ValueError("frame_count must be positive")
         if frame_count == self.frame_count:
@@ -154,7 +153,7 @@ class CameraTrajectory:
         }
 
     @classmethod
-    def from_json_dict(cls, payload: dict[str, Any]) -> "CameraTrajectory":
+    def from_json_dict(cls, payload: dict[str, Any]) -> CameraTrajectory:
         return cls(
             c2w=payload["c2w"],
             intrinsics=payload["intrinsics"],

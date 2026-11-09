@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
 OPENCV_C2W_VALUES = {
     "opencv_c2w",
     "opencv camera-to-world, x-right y-down z-forward",
@@ -65,10 +64,7 @@ def is_opencv_c2w(value: Any) -> bool:
     if raw in OPENCV_C2W_VALUES:
         return True
     normalized = raw.replace("_", " ").replace("-", " ")
-    return all(
-        token in normalized
-        for token in ("opencv", "camera to world", "x right", "y down", "z forward")
-    )
+    return all(token in normalized for token in ("opencv", "camera to world", "x right", "y down", "z forward"))
 
 
 def payload_convention(payload: dict[str, Any]) -> Any:
@@ -249,7 +245,10 @@ def validate_camera_control_target(
 
     if any("convention" in note for note in notes):
         status = "coordinate_mismatch"
-    elif any("profile" in note or "yaw_peak_deg is not 60" in note or "control_family does not match" in note for note in notes):
+    elif any(
+        "profile" in note or "yaw_peak_deg is not 60" in note or "control_family does not match" in note
+        for note in notes
+    ):
         status = "profile_mismatch"
     elif any("artifact is missing" in note or "is missing" in note for note in notes):
         status = "missing_gt"

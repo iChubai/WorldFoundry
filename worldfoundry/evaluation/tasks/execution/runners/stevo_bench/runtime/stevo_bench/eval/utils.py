@@ -1,9 +1,8 @@
-from urllib.parse import urlparse
-from pathlib import Path
-from typing import Optional
-import requests
 import shutil
-import yaml
+from pathlib import Path
+from urllib.parse import urlparse
+
+import requests
 
 # ---------------------------------------------------------------------------
 # Occlusion-variant helpers
@@ -24,9 +23,11 @@ def occlusion_base(task_id: str) -> str:
             return task_id[: -len(s)]
     return task_id
 
+
 # -----------------------------
 # Output links / paths
 # -----------------------------
+
 
 def _is_url(s: str) -> bool:
     try:
@@ -36,7 +37,7 @@ def _is_url(s: str) -> bool:
         return False
 
 
-def _resolve_video_source(link: str, outputs_json_path: Path) -> Tuple[str, Path]:
+def _resolve_video_source(link: str, outputs_json_path: Path) -> tuple[str, Path]:
     """
     Returns ("url", dummy_path) or ("file", resolved_path).
     If file path is relative, resolve relative to outputs_json parent directory.
@@ -46,10 +47,7 @@ def _resolve_video_source(link: str, outputs_json_path: Path) -> Tuple[str, Path
         return "url", Path(link)  # keep as "Path-like" for uniformity
 
     p = Path(link)
-    if not p.is_absolute():
-        p = (outputs_json_path.parent / p).resolve()
-    else:
-        p = p.resolve()
+    p = (outputs_json_path.parent / p).resolve() if not p.is_absolute() else p.resolve()
     return "file", p
 
 
@@ -63,6 +61,7 @@ def _resolve_video_source(link: str, outputs_json_path: Path) -> Tuple[str, Path
 #     else:
 #         # symlink by default (fast)
 #         dst.symlink_to(src)
+
 
 def _copy_or_symlink(src: Path, dst: Path, *, mode: str = "symlink") -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
@@ -88,7 +87,8 @@ def _copy_or_symlink(src: Path, dst: Path, *, mode: str = "symlink") -> None:
 # Portable path helpers
 # -----------------------------
 
-def _path_to_rel(path: Path, base: Optional[Path] = None) -> str:
+
+def _path_to_rel(path: Path, base: Path | None = None) -> str:
     """
     Serialize a path for storage in JSON.
 
@@ -104,7 +104,7 @@ def _path_to_rel(path: Path, base: Optional[Path] = None) -> str:
         return path.resolve().as_posix()
 
 
-def _path_from_rel(s: str, base: Optional[Path] = None) -> Path:
+def _path_from_rel(s: str, base: Path | None = None) -> Path:
     """
     Deserialize a path stored by `_path_to_rel`.
 

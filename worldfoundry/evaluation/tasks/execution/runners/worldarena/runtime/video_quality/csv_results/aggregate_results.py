@@ -2,10 +2,9 @@ import csv
 import glob
 import json
 import os
-from typing import Dict, List, Optional
 
 # Column order for the final CSV
-COLUMN_ORDER: List[str] = [
+COLUMN_ORDER: list[str] = [
     "Model_Name",
     "Video_ID",
     "Subject Consistency",
@@ -27,7 +26,7 @@ COLUMN_ORDER: List[str] = [
 ]
 
 # Map metric keys from JSON to CSV column names
-METRIC_KEY_MAP: Dict[str, str] = {
+METRIC_KEY_MAP: dict[str, str] = {
     "subject_consistency": "Subject Consistency",
     "aesthetic_quality": "Aesthetic Quality",
     "image_quality": "Image Quality",
@@ -48,7 +47,7 @@ METRIC_KEY_MAP: Dict[str, str] = {
 
 
 def _read_json(path: str):
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -61,7 +60,7 @@ def _parse_video_id_from_path(path: str) -> str:
     def _normalize_episode_token(token: str) -> str:
         lower = token.lower()
         if lower.startswith("episode"):
-            rest = token[len("episode"):].lstrip("._")
+            rest = token[len("episode") :].lstrip("._")
             if rest:
                 return f"episode{rest}"
             return "episode"
@@ -82,7 +81,7 @@ def _parse_video_id_from_path(path: str) -> str:
                 episode = _normalize_episode_token(episode_raw)
                 # Avoid duplicating "episode" prefix
                 if episode.lower().startswith("episode"):
-                    suffix = episode[len("episode"):]
+                    suffix = episode[len("episode") :]
                     video_id = f"{task}_episode{suffix}"
                 else:
                     video_id = f"{task}_{episode}"
@@ -94,14 +93,14 @@ def _parse_video_id_from_path(path: str) -> str:
     return name or norm
 
 
-def _upsert(result: Dict[str, Dict[str, float]], video_id: str, metric_key: str, value: Optional[float]):
+def _upsert(result: dict[str, dict[str, float]], video_id: str, metric_key: str, value: float | None):
     if value is None:
         return
     column = METRIC_KEY_MAP.get(metric_key, metric_key)
     result.setdefault(video_id, {})[column] = value
 
 
-def _ingest_metric_json(path: str, result: Dict[str, Dict[str, float]]):
+def _ingest_metric_json(path: str, result: dict[str, dict[str, float]]):
     data = _read_json(path)
     # Expected format: {metric_name: [overall, [{"video_path":..., "video_results_normalized":...}, ...]], ...}
     for metric_key, payload in data.items():
@@ -125,7 +124,7 @@ def _ingest_metric_json(path: str, result: Dict[str, Dict[str, float]]):
             _upsert(result, video_id, metric_key, value)
 
 
-def _ingest_vlm_json(path: str, result: Dict[str, Dict[str, float]]):
+def _ingest_vlm_json(path: str, result: dict[str, dict[str, float]]):
     # Expected format: list of {"video": "name.mp4", "metrics": {<Metric>: {"score_normalized": ...}}}
     data = _read_json(path)
     if not isinstance(data, list):
@@ -144,7 +143,7 @@ def _ingest_vlm_json(path: str, result: Dict[str, Dict[str, float]]):
             _upsert(result, video_id, normalized_key, value)
 
 
-def _ingest_jepa_score(path: str) -> Optional[float]:
+def _ingest_jepa_score(path: str) -> float | None:
     if not os.path.exists(path):
         return None
     data = _read_json(path)
@@ -157,8 +156,8 @@ def aggregate_results(
     base_dir: str,
     model_name: str,
     csv_name: str = "aggregated_results.csv",
-    vlm_model_dir: Optional[str] = None,
-    jepa_result_path: Optional[str] = None,
+    vlm_model_dir: str | None = None,
+    jepa_result_path: str | None = None,
 ) -> str:
     """
     Aggregate metric outputs into a single CSV.
@@ -174,7 +173,7 @@ def aggregate_results(
         Path to the written CSV file.
     """
 
-    result: Dict[str, Dict[str, float]] = {}
+    result: dict[str, dict[str, float]] = {}
 
     # Core metric JSONs
     core_metric_files = [
@@ -200,16 +199,17 @@ def aggregate_results(
         candidates = [
             os.path.join(base_dir, "output_JEDi", "generated_results.json"),
             os.path.join(base_dir, "output_JEDi", "results.json"),
-        ] + glob.glob(os.path.join(base_dir, "output_JEDi", "*.json"))
+            *glob.glob(os.path.join(base_dir, "output_JEDi", "*.json")),
+        ]
         for cand in candidates:
             jepa_score = _ingest_jepa_score(cand)
             if jepa_score is not None:
                 break
 
     # Prepare rows
-    csv_rows: List[Dict[str, str]] = []
+    csv_rows: list[dict[str, str]] = []
     for video_id in sorted(result.keys()):
-        row: Dict[str, str] = {col: "" for col in COLUMN_ORDER}
+        row: dict[str, str] = dict.fromkeys(COLUMN_ORDER, "")
         row["Model_Name"] = model_name
         row["Video_ID"] = video_id
         for metric_col, value in result[video_id].items():
@@ -239,8 +239,10 @@ if __name__ == "__main__":
     parser.add_argument("--base_dir", default=os.path.dirname(__file__), help="Path to video_quality directory")
     parser.add_argument("--model_name", required=True, help="Model name for the CSV column and VLM folder")
     parser.add_argument("--csv_name", default="aggregated_results.csv", help="Output CSV file name")
-    parser.add_argument("--vlm_model_dir", default=None, help="Override VLM output folder name if different from model name")
-    parser.add_argument("--jepa_result_path", default=None, help="Optional path to JEPA result JSON {\"score\": float}")
+    parser.add_argument(
+        "--vlm_model_dir", default=None, help="Override VLM output folder name if different from model name"
+    )
+    parser.add_argument("--jepa_result_path", default=None, help='Optional path to JEPA result JSON {"score": float}')
     args = parser.parse_args()
 
     csv_path = aggregate_results(

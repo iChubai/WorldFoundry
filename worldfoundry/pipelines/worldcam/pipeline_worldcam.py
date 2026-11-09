@@ -18,7 +18,6 @@ _DEFAULT_WAN_CKPT = _DEFAULT_HFD_ROOT / "Wan-AI--Wan2.1-T2V-1.3B"
 
 
 def _resolve_local_path(value: Any, repo_id: str, default_path: Path, label: str) -> str:
-    """Resolve local path helper function."""
     text = str(value or default_path)
     path = Path(text).expanduser()
     if path.exists():

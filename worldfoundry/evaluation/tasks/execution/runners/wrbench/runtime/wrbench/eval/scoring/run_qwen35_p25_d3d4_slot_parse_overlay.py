@@ -17,7 +17,6 @@ from typing import Any
 
 from wrbench.eval.scoring import run_qwen35_p22_overlay as p22
 
-
 P25_PROMPT_MODE = "runtime_v2_probe_logprob_p25_d3d4_slot_parse"
 
 P25_D3D4_QUESTIONS: dict[str, str] = {
@@ -63,10 +62,10 @@ def _sampling_text(*, fps: str | None, frames_used: int | None) -> str:
 
 
 def _is_native_d3d4_score(probe: Any) -> bool:
-    return (
-        str(getattr(probe, "role", "")) == "score"
-        and str(getattr(probe, "dimension", "")) in {"spatial_fidelity", "state_fidelity"}
-    )
+    return str(getattr(probe, "role", "")) == "score" and str(getattr(probe, "dimension", "")) in {
+        "spatial_fidelity",
+        "state_fidelity",
+    }
 
 
 def _is_spatial_fidelity(probe: Any) -> bool:

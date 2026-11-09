@@ -75,7 +75,8 @@ def get_mask_chedule(method, **schedule_kwargs):
     elif method == "sigmoid":
         return partial(sigmoid_schedule, **schedule_kwargs)
     else:
-        raise ValueError("Unknown schedule method: {}".format(method))
+        raise ValueError(f"Unknown schedule method: {method}")
+
 
 def top_k_top_p_filtering(
     logits: torch.Tensor,

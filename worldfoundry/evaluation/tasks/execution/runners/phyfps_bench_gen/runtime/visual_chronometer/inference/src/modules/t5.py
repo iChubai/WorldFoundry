@@ -1,33 +1,21 @@
-# -*- coding: utf-8 -*-
+import html
 import os
 import re
-import html
 import urllib.parse as ul
+from typing import ClassVar
 
 import ftfy
 import torch
 from bs4 import BeautifulSoup
-from transformers import T5EncoderModel, AutoTokenizer
 from huggingface_hub import hf_hub_download
+from transformers import AutoTokenizer, T5EncoderModel
 
 
 class T5Embedder:
-    available_models = ["flan-t5-large"]
+    available_models: ClassVar[list[str]] = ["flan-t5-large"]
     bad_punct_regex = re.compile(
-        r"["
-        + "#®•©™&@·º½¾¿¡§~"
-        + "\)"
-        + "\("
-        + "\]"
-        + "\["
-        + "\}"
-        + "\{"
-        + "\|"
-        + "\\"
-        + "\/"
-        + "\*"
-        + r"]{1,}"
-    )  # noqa
+        r"[" + "#®•©™&@·º½¾¿¡§~" + "\)" + "\(" + "\]" + "\[" + "\}" + "\{" + "\|" + "\\" + "\/" + "\*" + r"]{1,}"
+    )
 
     def __init__(
         self,
@@ -106,7 +94,6 @@ class T5Embedder:
                 "tokenizer_config.json",
                 "pytorch_model.bin",
             ]:
-
                 hf_hub_download(
                     repo_id=f"google/{dir_or_name}",
                     filename=filename,
@@ -184,12 +171,12 @@ class T5Embedder:
         caption = re.sub("<person>", "person", caption)
         # urls:
         caption = re.sub(
-            r"\b((?:https?:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",  # noqa
+            r"\b((?:https?:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",
             "",
             caption,
         )  # regex for urls
         caption = re.sub(
-            r"\b((?:www:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",  # noqa
+            r"\b((?:www:(?:\/{1,3}|[a-zA-Z0-9%])|[a-zA-Z0-9.\-]+[.](?:com|co|ru|net|org|edu|gov|it)[\w/-]*\b\/?(?!@)))",
             "",
             caption,
         )  # regex for urls
@@ -217,7 +204,7 @@ class T5Embedder:
 
         # все виды тире / all types of dash --> "-"
         caption = re.sub(
-            r"[\u002D\u058A\u05BE\u1400\u1806\u2010-\u2015\u2E17\u2E1A\u2E3A\u2E3B\u2E40\u301C\u3030\u30A0\uFE31\uFE32\uFE58\uFE63\uFF0D]+",  # noqa
+            r"[\u002D\u058A\u05BE\u1400\u1806\u2010-\u2015\u2E17\u2E1A\u2E3A\u2E3B\u2E40\u301C\u3030\u30A0\uFE31\uFE32\uFE58\uFE63\uFF0D]+",
             "-",
             caption,
         )
@@ -247,17 +234,13 @@ class T5Embedder:
         # "123456.."
         caption = re.sub(r"\b\d{6,}\b", "", caption)
         # filenames:
-        caption = re.sub(
-            r"[\S]+\.(?:png|jpg|jpeg|bmp|webp|eps|pdf|apk|mp4)", "", caption
-        )
+        caption = re.sub(r"[\S]+\.(?:png|jpg|jpeg|bmp|webp|eps|pdf|apk|mp4)", "", caption)
 
         #
         caption = re.sub(r"[\"\']{2,}", r'"', caption)  # """AUSVERKAUFT"""
         caption = re.sub(r"[\.]{2,}", r" ", caption)  # """AUSVERKAUFT"""
 
-        caption = re.sub(
-            self.bad_punct_regex, r" ", caption
-        )  # ***AUSVERKAUFT***, #AUSVERKAUFT
+        caption = re.sub(self.bad_punct_regex, r" ", caption)  # ***AUSVERKAUFT***, #AUSVERKAUFT
         caption = re.sub(r"\s+\.\s+", r" ", caption)  # " . "
 
         # this-is-my-cute-cat / this_is_my_cute_cat
@@ -274,14 +257,10 @@ class T5Embedder:
         caption = re.sub(r"(worldwide\s+)?(free\s+)?shipping", "", caption)
         caption = re.sub(r"(free\s)?download(\sfree)?", "", caption)
         caption = re.sub(r"\bclick\b\s(?:for|on)\s\w+", "", caption)
-        caption = re.sub(
-            r"\b(?:png|jpg|jpeg|bmp|webp|eps|pdf|apk|mp4)(\simage[s]?)?", "", caption
-        )
+        caption = re.sub(r"\b(?:png|jpg|jpeg|bmp|webp|eps|pdf|apk|mp4)(\simage[s]?)?", "", caption)
         caption = re.sub(r"\bpage\s+\d+\b", "", caption)
 
-        caption = re.sub(
-            r"\b\d*[a-zA-Z]+\d+[a-zA-Z]+\d+[a-zA-Z\d]*\b", r" ", caption
-        )  # j2d1a2a...
+        caption = re.sub(r"\b\d*[a-zA-Z]+\d+[a-zA-Z]+\d+[a-zA-Z\d]*\b", r" ", caption)  # j2d1a2a...
 
         caption = re.sub(r"\b\d+\.?\d*[xх×]\d+\.?\d*\b", "", caption)
 

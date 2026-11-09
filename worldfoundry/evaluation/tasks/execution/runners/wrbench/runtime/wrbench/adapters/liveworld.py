@@ -49,8 +49,7 @@ class LiveWorldAdapter:
                 depth_arr = np.asarray(template[depth_key])
                 if len(depth_arr) != len(composed_poses):
                     raise ValueError(
-                        f"LiveWorld template depth length {len(depth_arr)} "
-                        f"!= pose count {len(composed_poses)}"
+                        f"LiveWorld template depth length {len(depth_arr)} != pose count {len(composed_poses)}"
                     )
             payload_npz = {key: template[key] for key in template}
             payload_npz["poses_c2w"] = composed_poses.astype(np.float32)
@@ -80,7 +79,7 @@ class LiveWorldAdapter:
             target_frame_indices=list(range(int(target.frame_count))),
             control_sample_kind="geometry_pose",
             control_sample_count=int(target.frame_count) + 1,
-            source_frame_indices=[0] + list(range(int(target.frame_count))),
+            source_frame_indices=[0, *list(range(int(target.frame_count)))],
             sampling_rule="anchor_pose_plus_target_pose_sequence",
             model_control_extra={
                 "anchor_frame_index": 0,

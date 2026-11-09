@@ -42,13 +42,15 @@ def scene_consistency(model, video_list, device):
         padded_images = F.pad(images, (pad_left, pad_right, pad_top, pad_bottom))
         images = image_transform(padded_images)
         if len(images) < 2:
-            video_results.append({
-                "video_path": video_path,
-                "video_results": 0.0,
-                "video_sim": 0.0,
-                "cnt_per_video": 0,
-                "error": "insufficient_frames",
-            })
+            video_results.append(
+                {
+                    "video_path": video_path,
+                    "video_results": 0.0,
+                    "video_sim": 0.0,
+                    "cnt_per_video": 0,
+                    "error": "insufficient_frames",
+                }
+            )
             continue
         if torch.device(device).type == "cuda":
             images = images.pin_memory()
@@ -71,12 +73,14 @@ def scene_consistency(model, video_list, device):
         cnt += transition_count
 
         sim += video_sim
-        video_results.append({
-            "video_path": video_path,
-            "video_results": sim_per_images,
-            "video_sim": video_sim,
-            "cnt_per_video": transition_count,
-        })
+        video_results.append(
+            {
+                "video_path": video_path,
+                "video_results": sim_per_images,
+                "video_sim": video_sim,
+                "cnt_per_video": transition_count,
+            }
+        )
     sim_per_frame = sim / cnt if cnt else 0.0
     return sim_per_frame, video_results
 
@@ -102,7 +106,7 @@ def compute_scene_consistency(json_dir, submodules_list, **kwargs):
         if k.startswith("teacher"):
             k_toload = k.replace("teacher.", "")
             k_toload = k_toload.replace("backbone.", "")
-            if k_toload in ori_state_dict.keys():
+            if k_toload in ori_state_dict:
                 state_dict_toload.update({k_toload: v})
     print(dino_model.load_state_dict(state_dict_toload, strict=False))
     print("Initialize DINO success")

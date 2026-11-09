@@ -7,8 +7,9 @@ import os
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping, Protocol
+from typing import Any, Literal, Protocol
 
 from .requests import JudgeRequest
 from .responses import JudgeResponse, parse_judge_response

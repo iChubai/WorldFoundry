@@ -120,7 +120,7 @@ class MaskedDinoV2Features:
                 if self.torch.cuda.is_available():
                     self.torch.cuda.empty_cache()
                 continue
-            for result_index, vector in zip(result_indices, vectors):
+            for result_index, vector in zip(result_indices, vectors, strict=False):
                 results[result_index] = normalized_embedding(vector)
             position += chunk_size
         return results

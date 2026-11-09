@@ -6,8 +6,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, ClassVar
 
 import numpy as np
 
@@ -276,7 +277,7 @@ class _ForcingRuntime:
     """Shared in-tree runtime bridge for forcing-family official runners."""
 
     MODEL_ID: str | None = None
-    DISPLAY_NAMES = {
+    DISPLAY_NAMES: ClassVar[dict] = {
         "self-forcing": "Self-Forcing",
         "causal-forcing": "Causal-Forcing",
         "rolling-forcing": "RollingForcing",
@@ -334,7 +335,7 @@ class _ForcingRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "_ForcingRuntime":
+    ) -> _ForcingRuntime:
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["checkpoint_path"] = str(pretrained_model_path)
@@ -528,7 +529,7 @@ class _ForcingRuntime:
         del video, fps, return_dict, show_progress
         options = {**self.defaults, **kwargs}
         if interactions and "seed" not in options:
-            first = list(interactions)[0]
+            first = list(interactions)[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if isinstance(first, int):
                 options["seed"] = first
         output_target = Path(output_path).expanduser() if output_path is not None else None

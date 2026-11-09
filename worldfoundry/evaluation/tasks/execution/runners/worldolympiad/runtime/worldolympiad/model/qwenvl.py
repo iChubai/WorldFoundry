@@ -10,14 +10,14 @@ import threading
 import time
 import uuid
 import warnings
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Sequence
+from typing import Any
 
 import cv2
 import numpy as np
 
 from model.openrouter import clean_json_content, parse_json_content
-
 
 DEFAULT_QWEN_MODEL_NAME = "Qwen/Qwen3-VL-8B-Instruct"
 DEFAULT_LOCAL_MODEL_PATH = Path(__file__).resolve().parent.parent / "weights" / "QwenVL"
@@ -25,7 +25,7 @@ DEFAULT_MAX_FRAMES = 8
 DEFAULT_MAX_IMAGE_SIDE = 1024
 DEFAULT_MAX_NEW_TOKENS = 1024
 
-_MODEL_CACHE: Dict[tuple, Dict[str, Any]] = {}
+_MODEL_CACHE: dict[tuple, dict[str, Any]] = {}
 _MODEL_LOCK = threading.Lock()
 
 
@@ -102,7 +102,7 @@ def _torch_cuda_available(torch_module: Any) -> bool:
             return False
 
 
-def _load_model_bundle(model_name: str | None) -> Dict[str, Any]:
+def _load_model_bundle(model_name: str | None) -> dict[str, Any]:
     resolved_model_path = _resolve_model_path(model_name)
     display_model_name = model_name or DEFAULT_QWEN_MODEL_NAME
 
@@ -140,7 +140,7 @@ def _load_model_bundle(model_name: str | None) -> Dict[str, Any]:
                 "`pip install git+https://github.com/huggingface/transformers`"
             ) from exc
 
-        load_kwargs: Dict[str, Any] = {"torch_dtype": model_dtype}
+        load_kwargs: dict[str, Any] = {"torch_dtype": model_dtype}
         if attn_implementation:
             load_kwargs["attn_implementation"] = attn_implementation
         if device_map:
@@ -203,8 +203,8 @@ def _resize_image(image: np.ndarray, max_side: int) -> np.ndarray:
     if longest_side <= max_side:
         return image
     scale = max_side / float(longest_side)
-    resized_width = max(1, int(round(width * scale)))
-    resized_height = max(1, int(round(height * scale)))
+    resized_width = max(1, round(width * scale))
+    resized_height = max(1, round(height * scale))
     return cv2.resize(image, (resized_width, resized_height), interpolation=cv2.INTER_AREA)
 
 
@@ -294,7 +294,7 @@ def _materialize_video_source(source: Any, temp_dir: Path) -> str:
     raise FileNotFoundError(f"Video source does not exist: {source}")
 
 
-def _sample_frame_indices(total_frames: int, max_frames: int) -> List[int]:
+def _sample_frame_indices(total_frames: int, max_frames: int) -> list[int]:
     if total_frames <= 0:
         return []
     if max_frames <= 1 or total_frames == 1:
@@ -302,12 +302,9 @@ def _sample_frame_indices(total_frames: int, max_frames: int) -> List[int]:
     if total_frames <= max_frames:
         return list(range(total_frames))
 
-    positions = [
-        int(round(index * (total_frames - 1) / float(max_frames - 1)))
-        for index in range(max_frames)
-    ]
+    positions = [round(index * (total_frames - 1) / float(max_frames - 1)) for index in range(max_frames)]
 
-    deduplicated: List[int] = []
+    deduplicated: list[int] = []
     seen = set()
     for position in positions:
         if position not in seen:
@@ -316,7 +313,7 @@ def _sample_frame_indices(total_frames: int, max_frames: int) -> List[int]:
     return deduplicated
 
 
-def _sample_video_to_qwen_images(video_path: str, temp_dir: Path) -> List[Dict[str, str]]:
+def _sample_video_to_qwen_images(video_path: str, temp_dir: Path) -> list[dict[str, str]]:
     max_frames = _env_int("QWENVL_MAX_FRAMES", DEFAULT_MAX_FRAMES)
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
@@ -325,7 +322,7 @@ def _sample_video_to_qwen_images(video_path: str, temp_dir: Path) -> List[Dict[s
     total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT)) or 0
     frame_indices = _sample_frame_indices(total_frames, max_frames)
 
-    image_items: List[Dict[str, str]] = []
+    image_items: list[dict[str, str]] = []
     for frame_index in frame_indices:
         capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
         ok, frame = capture.read()
@@ -341,7 +338,7 @@ def _sample_video_to_qwen_images(video_path: str, temp_dir: Path) -> List[Dict[s
     return image_items
 
 
-def _media_item_to_qwen_content(item: Dict[str, Any], temp_dir: Path) -> List[Dict[str, str]]:
+def _media_item_to_qwen_content(item: dict[str, Any], temp_dir: Path) -> list[dict[str, str]]:
     item_type = item.get("type")
 
     if item_type == "text" or "text" in item:
@@ -394,7 +391,7 @@ def _normalize_content(content: Any, temp_dir: Path) -> Any:
         return _media_item_to_qwen_content(content, temp_dir)
 
     if isinstance(content, Sequence):
-        normalized_items: List[Dict[str, str]] = []
+        normalized_items: list[dict[str, str]] = []
         for item in content:
             if isinstance(item, str):
                 if item.startswith("data:image/"):
@@ -433,7 +430,7 @@ def _flatten_text_content(content: Any) -> str:
             return str(content["text"])
         return str(content)
     if isinstance(content, Sequence):
-        chunks: List[str] = []
+        chunks: list[str] = []
         for item in content:
             if isinstance(item, dict) and "text" in item:
                 chunks.append(str(item["text"]))
@@ -443,8 +440,8 @@ def _flatten_text_content(content: Any) -> str:
     return str(content)
 
 
-def _normalize_messages(messages: List[Dict[str, Any]], temp_dir: Path) -> List[Dict[str, Any]]:
-    normalized_messages: List[Dict[str, Any]] = []
+def _normalize_messages(messages: list[dict[str, Any]], temp_dir: Path) -> list[dict[str, Any]]:
+    normalized_messages: list[dict[str, Any]] = []
     for message in messages:
         role = str(message.get("role", "user"))
         content = _normalize_content(message.get("content", ""), temp_dir)
@@ -481,8 +478,8 @@ def _move_batch_to_device(batch: Any, device: Any) -> Any:
     return batch
 
 
-def _generation_kwargs() -> Dict[str, Any]:
-    kwargs: Dict[str, Any] = {
+def _generation_kwargs() -> dict[str, Any]:
+    kwargs: dict[str, Any] = {
         "max_new_tokens": _env_int("QWENVL_MAX_NEW_TOKENS", DEFAULT_MAX_NEW_TOKENS),
         "do_sample": _env_bool("QWENVL_DO_SAMPLE", False),
     }
@@ -498,8 +495,8 @@ def _build_response(
     model_name: str,
     prompt_tokens: int | None = None,
     completion_tokens: int | None = None,
-) -> Dict[str, Any]:
-    response: Dict[str, Any] = {
+) -> dict[str, Any]:
+    response: dict[str, Any] = {
         "id": f"qwenvl-{uuid.uuid4().hex}",
         "object": "chat.completion",
         "created": int(time.time()),
@@ -522,11 +519,11 @@ def _build_response(
 
 
 def chat_qwenvl_call(
-    messages: List[Dict],
+    messages: list[dict],
     model_name: str = DEFAULT_QWEN_MODEL_NAME,
     timeout: int = 240,
     max_retries: int = 1,
-) -> Dict:
+) -> dict:
     """
     Local Qwen3-VL chat interface compatible with `chat_openrouter_call`.
 
@@ -570,8 +567,7 @@ def chat_qwenvl_call(
                 generated_ids = model.generate(**inputs, **_generation_kwargs())
 
             generated_ids_trimmed = [
-                output_ids[len(input_row):]
-                for input_row, output_ids in zip(input_ids, generated_ids)
+                output_ids[len(input_row) :] for input_row, output_ids in zip(input_ids, generated_ids, strict=False)
             ]
             output_text = processor.batch_decode(
                 generated_ids_trimmed,
@@ -600,7 +596,7 @@ def text_qwenvl_call(
     system_prompt: str,
     user_content: str,
     model_name: str = DEFAULT_QWEN_MODEL_NAME,
-) -> Dict:
+) -> dict:
     """Text-only helper aligned with `text_openrouter_call`."""
     messages = [
         {"role": "system", "content": system_prompt},
@@ -614,7 +610,7 @@ def video_qwenvl_call(
     system_prompt: str,
     user_content: str,
     model_name: str = DEFAULT_QWEN_MODEL_NAME,
-) -> Dict:
+) -> dict:
     """
     Multimodal helper aligned with `video_openrouter_call`.
 
@@ -624,7 +620,7 @@ def video_qwenvl_call(
     - a list of OpenRouter-style image/frame items
     """
     if not isinstance(data_url, list):
-        content: List[Any] = [{"type": "text", "text": user_content}, data_url]
+        content: list[Any] = [{"type": "text", "text": user_content}, data_url]
     else:
         content = [{"type": "text", "text": user_content}]
         if data_url:
@@ -640,9 +636,9 @@ def video_qwenvl_call(
 
 __all__ = [
     "DEFAULT_QWEN_MODEL_NAME",
+    "chat_qwenvl_call",
     "clean_json_content",
     "parse_json_content",
     "text_qwenvl_call",
     "video_qwenvl_call",
-    "chat_qwenvl_call",
 ]

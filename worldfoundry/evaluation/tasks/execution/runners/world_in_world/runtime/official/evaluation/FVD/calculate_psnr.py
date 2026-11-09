@@ -1,7 +1,9 @@
+import math
+
 import numpy as np
 import torch
 from tqdm import tqdm
-import math
+
 
 def img_psnr(img1, img2):
     # [0,1]
@@ -14,8 +16,10 @@ def img_psnr(img1, img2):
     psnr = 20 * math.log10(1 / math.sqrt(mse))
     return psnr
 
+
 def trans(x):
     return x
+
 
 def calculate_psnr(videos1, videos2, only_final=False):
     print("calculate_psnr...")
@@ -55,15 +59,13 @@ def calculate_psnr(videos1, videos2, only_final=False):
     psnr_std = []
 
     if only_final:
-
         psnr.append(np.mean(psnr_results))
         psnr_std.append(np.std(psnr_results))
 
     else:
-
         for clip_timestamp in range(len(video1)):
-            psnr.append(np.mean(psnr_results[:,clip_timestamp]))
-            psnr_std.append(np.std(psnr_results[:,clip_timestamp]))
+            psnr.append(np.mean(psnr_results[:, clip_timestamp]))
+            psnr_std.append(np.std(psnr_results[:, clip_timestamp]))
 
     result = {
         "value": psnr,
@@ -72,7 +74,9 @@ def calculate_psnr(videos1, videos2, only_final=False):
 
     return result
 
+
 # test code / using example
+
 
 def main():
     NUMBER_OF_VIDEOS = 8
@@ -85,6 +89,7 @@ def main():
     result = calculate_psnr(videos1, videos2)
     print("[psnr avg]", result["value"])
     print("[psnr std]", result["value_std"])
+
 
 if __name__ == "__main__":
     main()

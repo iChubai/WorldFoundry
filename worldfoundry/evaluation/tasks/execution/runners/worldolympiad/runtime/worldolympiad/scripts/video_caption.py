@@ -20,7 +20,6 @@ import base64
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List
 
 from dotenv import load_dotenv
 
@@ -28,8 +27,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import resolve_model_name, resolve_vlm_backend, video_vlm_call
-from judge_pipeline import parse_llm_response
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
+    resolve_model_name,
+    resolve_vlm_backend,
+    video_vlm_call,
+)
+
+# isort: split
+from judge_pipeline import parse_llm_response  # noqa: E402 - Follows the sys.path setup.
 
 load_dotenv()
 
@@ -41,18 +46,13 @@ Keep the writing observational, specific, and technical enough to match what is 
 Always respond with strict JSON only."""
 
 
-def encode_video_to_data_url(video_path: str) -> Dict:
+def encode_video_to_data_url(video_path: str) -> dict:
     """Encode a video file as a data URL payload for the VLM interface."""
     path = Path(video_path)
     if not path.exists():
         raise FileNotFoundError(f"Video not found: {video_path}")
     encoded = base64.b64encode(path.read_bytes()).decode("ascii")
-    return {
-        "type": "video_url",
-        "video_url": {
-            "url": f"data:video/mp4;base64,{encoded}"
-        }
-    }
+    return {"type": "video_url", "video_url": {"url": f"data:video/mp4;base64,{encoded}"}}
 
 
 def build_user_prompt(num_segments: int) -> str:
@@ -77,7 +77,7 @@ Rules:
 - No bullet markers, numbering, markdown fences, or extra keys—only the JSON object above."""
 
 
-def parse_model_content(content: str) -> Dict[str, List[str]]:
+def parse_model_content(content: str) -> dict[str, list[str]]:
     """
     Clean and parse the model output into a prompts list.
 
@@ -117,7 +117,7 @@ def generate_captions(
     model_name: str | None = None,
     backend: str | None = None,
     num_segments: int = 6,
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """Call the VLM and return the parsed caption JSON."""
     data_url = encode_video_to_data_url(video_path)
     user_prompt = build_user_prompt(num_segments)
@@ -138,9 +138,7 @@ def generate_captions(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate video captions in the scripts/example.jsonl format"
-    )
+    parser = argparse.ArgumentParser(description="Generate video captions in the scripts/example.jsonl format")
     parser.add_argument("--video", required=True, help="Path to the input video file")
     parser.add_argument(
         "--segments",

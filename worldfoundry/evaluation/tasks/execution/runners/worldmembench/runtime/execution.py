@@ -115,7 +115,8 @@ def evaluate_parallel(samples, metrics, devices, weights_dir, config):
             except Empty:
                 for index, process in enumerate(processes):
                     if index not in received and process.exitcode is not None and process.exitcode != 0:
-                        raise RuntimeError(f"worker {active[index]} exited with code {process.exitcode}")
+                        # Preserve the queue timeout as implicit exception context.
+                        raise RuntimeError(f"worker {active[index]} exited with code {process.exitcode}")  # noqa: B904
                 continue
             if error:
                 raise RuntimeError(error)

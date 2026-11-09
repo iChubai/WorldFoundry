@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from wrbench.registry import RegistryError, canonical_model_key, model_record
+from wrbench.registry import RegistryError as RegistryError
+from wrbench.registry import canonical_model_key, model_record
 
 
 class ContractError(ValueError):

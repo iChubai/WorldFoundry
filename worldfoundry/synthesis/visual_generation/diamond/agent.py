@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
+
 import torch
 import torch.nn as nn
-
 from models.actor_critic import ActorCritic, ActorCriticConfig
 from models.diffusion import Denoiser, DenoiserConfig
 from models.rew_end_model import RewEndModel, RewEndModelConfig
@@ -32,7 +32,6 @@ class Agent(nn.Module):
     @property
     def device(self):
         return self.denoiser.device
-
 
     def load(
         self,

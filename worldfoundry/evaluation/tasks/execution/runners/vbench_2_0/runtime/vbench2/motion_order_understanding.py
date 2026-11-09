@@ -1,23 +1,26 @@
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import get_model_name_from_path, process_images, tokenizer_image_token
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN, IGNORE_INDEX
-from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates, SeparatorStyle
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from PIL import Image
-from tqdm import tqdm
-from worldfoundry.core.io import sample_video_frames
-from worldfoundry.core.execution.device import resolve_inference_dtype
-from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
-import requests
 import copy
-import torch
-import sys
-import warnings
 import re
-import json
-import os
-import argparse
+import warnings
+
+from tqdm import tqdm
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.constants import (
+    DEFAULT_IMAGE_TOKEN,
+    IMAGE_TOKEN_INDEX,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.conversation import conv_templates
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils import (
+    tokenizer_image_token,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
+from worldfoundry.core.execution.device import resolve_inference_dtype
+from worldfoundry.core.io import sample_video_frames
+from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
+
+# isort: split
 from vbench2.utils import load_dimension_info
+
 warnings.filterwarnings("ignore")
 
 sys_prompt = """You are Qwen, created by Alibaba Cloud. You are a helpful assistant and a brilliant action order judger. 
@@ -43,12 +46,10 @@ prompt1: drinking a glass of water
 prompt2: A person is holding a glass of water in their hand
 """
 
+
 def judge(prompt, model, tokenizer):
     messages = [
-        {
-            "role": "system", 
-            "content": sys_prompt
-        },
+        {"role": "system", "content": sys_prompt},
         {
             "role": "user",
             "content": template_prompt1,
@@ -81,55 +82,47 @@ def judge(prompt, model, tokenizer):
             "role": "assistant",
             "content": 'No. "holding a glass of water" is not consistency with "drink water" in prompt1.',
         },
-        {
-            "role": "user", 
-            "content": prompt
-        }
+        {"role": "user", "content": prompt},
     ]
-    text = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True
-    )
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
 
-    generated_ids = model.generate(
-        **model_inputs,
-        do_sample=False,
-        temperature=0,
-        max_new_tokens=512
-    )
+    generated_ids = model.generate(**model_inputs, do_sample=False, temperature=0, max_new_tokens=512)
     generated_ids = [
-        output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        output_ids[len(input_ids) :]
+        for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids, strict=False)
     ]
 
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
     return response
 
+
 def split_by_numbered_list(text):
-    pattern = r'\d+\.\s*'  # 匹配形如 "1. " 的编号
-    parts = re.split(pattern, text)  # 按编号分割
-    parts = [part.strip() for part in parts if part.strip()]  # 去除空字符串和多余空白
+    pattern = r"\d+\.\s*"  # list numbers such as "1. "
+    parts = re.split(pattern, text)
+    parts = [part.strip() for part in parts if part.strip()]
     return parts
 
+
 load_video = sample_video_frames
+
 
 def LLaVA_Video(prompt_dict_ls, llava_model, llava_tokenizer, image_processor, qwen_model, qwen_tokenizer, device):
     final_score = 0
     valid_num = 0
-    processed_json=[]
+    processed_json = []
     inference_dtype = resolve_inference_dtype(device)
     max_new_tokens = resolve_generation_max_new_tokens(512, scope="vbench2")
     for prompt_dict in tqdm(prompt_dict_ls):
-        video_paths = prompt_dict['video_list']
-        ground_truth_text = prompt_dict['auxiliary_info']
-        
+        video_paths = prompt_dict["video_list"]
+        ground_truth_text = prompt_dict["auxiliary_info"]
+
         for video_path in video_paths:
             new_item = {
                 "video_path": video_path,
             }
             max_frames_num = 64
-            video,frame_time,video_time = load_video(video_path, max_frames_num, 1, force_sample=True)
+            video, frame_time, video_time = load_video(video_path, max_frames_num, 1, force_sample=True)
             video = image_processor.preprocess(video, return_tensors="pt")["pixel_values"].to(
                 device=device, dtype=inference_dtype, non_blocking=True
             )
@@ -137,33 +130,37 @@ def LLaVA_Video(prompt_dict_ls, llava_model, llava_tokenizer, image_processor, q
             conv_template = "qwen_1_5"  # Make sure you use correct chat template for different models
             time_instruciton = f"The video lasts for {video_time:.2f} seconds, and {len(video[0])} frames are uniformly sampled from it. These frames are located at {frame_time}. Return the action order in video. Here is the template."
             template = "1. ; 2. ."
-            question = DEFAULT_IMAGE_TOKEN + f"{time_instruciton}\n"+f"{template}"
+            question = DEFAULT_IMAGE_TOKEN + f"{time_instruciton}\n" + f"{template}"
             conv = copy.deepcopy(conv_templates[conv_template])
             conv.append_message(conv.roles[0], question)
             conv.append_message(conv.roles[1], None)
             prompt_question = conv.get_prompt()
-            input_ids = tokenizer_image_token(prompt_question, llava_tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).to(device)
+            input_ids = (
+                tokenizer_image_token(prompt_question, llava_tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt")
+                .unsqueeze(0)
+                .to(device)
+            )
             cont = llava_model.generate(
                 input_ids,
                 images=video,
-                modalities= ["video"],
+                modalities=["video"],
                 do_sample=False,
                 temperature=0,
-                    max_new_tokens=max_new_tokens,
+                max_new_tokens=max_new_tokens,
             )
             answer_llava = llava_tokenizer.batch_decode(cont, skip_special_tokens=True)[0].strip()
-            flag=False
+            flag = False
             try:
-                prompts=answer_llava.split('2.')
-                if len(prompts)<2:
-                    flag=True
-            except:
-                flag=True
+                prompts = answer_llava.split("2.")
+                if len(prompts) < 2:
+                    flag = True
+            except BaseException:
+                flag = True
             if flag:
-                new_item['video_results']=-1
+                new_item["video_results"] = -1
                 processed_json.append(new_item)
                 continue
-            score=0
+            score = 0
             for q in range(2):
                 prompt1 = ground_truth_text[q]
                 prompt2 = prompts[q]
@@ -173,62 +170,62 @@ def LLaVA_Video(prompt_dict_ls, llava_model, llava_tokenizer, image_processor, q
                 """
                 response = judge(prompt, qwen_model, qwen_tokenizer)
                 if extract_yes_no_answer(response) == "yes":
-                    score+=1
-            if score==2:
-                final_score+=1
-                new_item['video_results']=1
+                    score += 1
+            if score == 2:
+                final_score += 1
+                new_item["video_results"] = 1
             else:
-                new_item['video_results']=0
-            valid_num+=1
+                new_item["video_results"] = 0
+            valid_num += 1
             processed_json.append(new_item)
-        
+
     return (final_score / valid_num if valid_num else 0.0), processed_json
-        
-        
+
+
 def compute_motion_order_understanding(json_dir, device, submodules_dict, **kwargs):
-    _, prompt_dict_ls = load_dimension_info(json_dir, dimension='motion_order_understanding', lang='en')
-    
+    _, prompt_dict_ls = load_dimension_info(json_dir, dimension="motion_order_understanding", lang="en")
+
     model_name = "llava_qwen"
     device_map = "auto"
-    
+
     try:
-        pretrained = submodules_dict['llava']
-        llava_tokenizer, llava_model, image_processor, max_length = load_pretrained_model(pretrained, None, model_name, torch_dtype=resolve_inference_dtype(device), device_map=device_map)  # Add any other thing you want to pass in llava_model_args
-    except:
+        pretrained = submodules_dict["llava"]
+        llava_tokenizer, llava_model, image_processor, max_length = load_pretrained_model(
+            pretrained, None, model_name, torch_dtype=resolve_inference_dtype(device), device_map=device_map
+        )  # Add any other thing you want to pass in llava_model_args
+    except BaseException:
         pretrained = "lmms-lab/LLaVA-Video-7B-Qwen2"
-        llava_tokenizer, llava_model, image_processor, max_length = load_pretrained_model(pretrained, None, model_name, torch_dtype=resolve_inference_dtype(device), device_map=device_map)  # Add any other thing you want to pass in llava_model_args
+        llava_tokenizer, llava_model, image_processor, max_length = load_pretrained_model(
+            pretrained, None, model_name, torch_dtype=resolve_inference_dtype(device), device_map=device_map
+        )  # Add any other thing you want to pass in llava_model_args
     llava_model.eval()
-    
+
     try:
-        qwen_model_name = submodules_dict['qwen']
+        qwen_model_name = submodules_dict["qwen"]
         qwen_model = AutoModelForCausalLM.from_pretrained(
-            qwen_model_name,
-            torch_dtype="auto",
-            device_map="auto",
-            cache_dir=submodules_dict['qwen']
+            qwen_model_name, torch_dtype="auto", device_map="auto", cache_dir=submodules_dict["qwen"]
         )
-        qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_model_name, cache_dir=submodules_dict['qwen'])
-    except:
-        qwen_model_name = 'Qwen/Qwen2.5-7B-Instruct'
+        qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_model_name, cache_dir=submodules_dict["qwen"])
+    except BaseException:
+        qwen_model_name = "Qwen/Qwen2.5-7B-Instruct"
         qwen_model = AutoModelForCausalLM.from_pretrained(
-            qwen_model_name,
-            torch_dtype="auto",
-            device_map="auto",
-            cache_dir=submodules_dict['qwen']
+            qwen_model_name, torch_dtype="auto", device_map="auto", cache_dir=submodules_dict["qwen"]
         )
-        qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_model_name, cache_dir=submodules_dict['qwen'])
-        
-    all_results, video_results = LLaVA_Video(prompt_dict_ls, llava_model, llava_tokenizer, image_processor, qwen_model, qwen_tokenizer, device)
-    score=0
-    num=0
-    count=0
+        qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_model_name, cache_dir=submodules_dict["qwen"])
+
+    all_results, video_results = LLaVA_Video(
+        prompt_dict_ls, llava_model, llava_tokenizer, image_processor, qwen_model, qwen_tokenizer, device
+    )
+    score = 0
+    num = 0
+    count = 0
     for d in video_results:
-        if d['video_results']!=-1:
-            num+=1
-            score+= d['video_results']
+        if d["video_results"] != -1:
+            num += 1
+            score += d["video_results"]
         else:
-            count+=1
-    if count>0.9*len(video_results):
-        return 0, video_results 
+            count += 1
+    if count > 0.9 * len(video_results):
+        return 0, video_results
     all_results = score / num if num else 0.0
     return all_results, video_results

@@ -9,7 +9,6 @@ from .aggregate import mean_valid, numeric
 from .model_order import MODEL_REGISTRY
 from .protocols import FAMILIES, get_protocol
 
-
 OBSERVATION_SKILLS = get_protocol("harnesseval").observation_skills
 QUALITY_OBSERVATION_SKILLS = (
     "render_quality_inspector",
@@ -34,14 +33,10 @@ def leaderboard_case_components(score: dict[str, Any]) -> dict[str, Any]:
     core = numeric((score.get("case_score") or {}).get("score"))
     dimensions = (score.get("observation_quality") or {}).get("dimensions") or {}
     observation_values = [
-        value
-        for skill_id in OBSERVATION_SKILLS
-        if numeric(value := dimensions.get(skill_id)) is not None
+        value for skill_id in OBSERVATION_SKILLS if numeric(value := dimensions.get(skill_id)) is not None
     ]
     observation = (
-        sum(float(value) for value in observation_values) / len(observation_values)
-        if observation_values
-        else None
+        sum(float(value) for value in observation_values) / len(observation_values) if observation_values else None
     )
     published = (
         round(CORE_WEIGHT * core + OBSERVATION_WEIGHT * observation, 6)
@@ -78,9 +73,7 @@ def build_report(scores: list[dict[str, Any]]) -> dict[str, Any]:
             by_model_family[(model, family)][case_id] = value
             by_model_family_core[(model, family)][case_id] = components["core_score"]
             if components["observation_score"] is not None:
-                by_model_family_observation[(model, family)][case_id] = components[
-                    "observation_score"
-                ]
+                by_model_family_observation[(model, family)][case_id] = components["observation_score"]
             dimensions = (score.get("observation_quality") or {}).get("dimensions") or {}
             quality_values = [
                 float(value)
@@ -88,9 +81,7 @@ def build_report(scores: list[dict[str, Any]]) -> dict[str, Any]:
                 if numeric(value := dimensions.get(skill_id)) is not None
             ]
             if quality_values:
-                by_model_family_quality[(model, family)][case_id] = round(
-                    sum(quality_values) / len(quality_values), 6
-                )
+                by_model_family_quality[(model, family)][case_id] = round(sum(quality_values) / len(quality_values), 6)
             physical = numeric(dimensions.get(PHYSICAL_PLAUSIBILITY_SKILL))
             if physical is not None:
                 by_model_family_physical[(model, family)][case_id] = physical
@@ -118,16 +109,13 @@ def build_report(scores: list[dict[str, Any]]) -> dict[str, Any]:
                 by_model_family_core[(model, family)].get(case_id) for case_id in case_ids
             )
             family_observation_scores[family] = mean_valid(
-                by_model_family_observation[(model, family)].get(case_id)
-                for case_id in case_ids
+                by_model_family_observation[(model, family)].get(case_id) for case_id in case_ids
             )
             family_quality_scores[family] = mean_valid(
-                by_model_family_quality[(model, family)].get(case_id)
-                for case_id in case_ids
+                by_model_family_quality[(model, family)].get(case_id) for case_id in case_ids
             )
             family_physical_plausibility_scores[family] = mean_valid(
-                by_model_family_physical[(model, family)].get(case_id)
-                for case_id in case_ids
+                by_model_family_physical[(model, family)].get(case_id) for case_id in case_ids
             )
         overall = (
             mean_valid(family_scores.values())
@@ -141,10 +129,7 @@ def build_report(scores: list[dict[str, Any]]) -> dict[str, Any]:
         )
         overall_observation = (
             mean_valid(family_observation_scores.values())
-            if all(
-                numeric(value) is not None
-                for value in family_observation_scores.values()
-            )
+            if all(numeric(value) is not None for value in family_observation_scores.values())
             else None
         )
         observation_quality = (
@@ -154,10 +139,7 @@ def build_report(scores: list[dict[str, Any]]) -> dict[str, Any]:
         )
         observation_physical_plausibility = (
             mean_valid(family_physical_plausibility_scores.values())
-            if all(
-                numeric(value) is not None
-                for value in family_physical_plausibility_scores.values()
-            )
+            if all(numeric(value) is not None for value in family_physical_plausibility_scores.values())
             else None
         )
         rows.append(
@@ -167,19 +149,13 @@ def build_report(scores: list[dict[str, Any]]) -> dict[str, Any]:
                 "overall_core_macro": overall_core,
                 "overall_observation_macro": overall_observation,
                 "observation_quality_macro": observation_quality,
-                "observation_physical_plausibility_macro": (
-                    observation_physical_plausibility
-                ),
+                "observation_physical_plausibility_macro": (observation_physical_plausibility),
                 "family_scores": family_scores,
                 "family_core_scores": family_core_scores,
                 "family_observation_scores": family_observation_scores,
                 "family_quality_scores": family_quality_scores,
-                "family_physical_plausibility_scores": (
-                    family_physical_plausibility_scores
-                ),
-                "coverage": {
-                    family: coverage[(model, family)] for family in FAMILIES
-                },
+                "family_physical_plausibility_scores": (family_physical_plausibility_scores),
+                "coverage": {family: coverage[(model, family)] for family in FAMILIES},
             }
         )
     rows.sort(
@@ -200,8 +176,6 @@ def build_report(scores: list[dict[str, Any]]) -> dict[str, Any]:
             "quality": list(QUALITY_OBSERVATION_SKILLS),
             "physical_plausibility": [PHYSICAL_PLAUSIBILITY_SKILL],
         },
-        "observation_count_distribution": dict(
-            sorted(observation_count_distribution.items())
-        ),
+        "observation_count_distribution": dict(sorted(observation_count_distribution.items())),
         "leaderboard": rows,
     }

@@ -12,7 +12,6 @@ from ..aggregate import mean_valid, numeric, skill_result
 from ..io import atomic_write_json, file_fingerprint, read_json, value_digest
 from .common import MetricCacheContract, SkillBackendIdentity, skill_cache_path
 
-
 SKILL_ID = "physical_law_validator"
 DEFINITION_VERSION = "harnesseval.physical_law"
 SIGNAL_CACHE_SCHEMA = "harnesseval.physical_law.signals"
@@ -54,19 +53,19 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "SIGNAL_CACHE_SCHEMA",
-    "RESULT_CACHE_SCHEMA",
     "BACKEND_OUTPUT_SCHEMA",
-    "ENGINE_MODEL_BY_SCENE",
     "CACHE_CONTRACT",
+    "DEFINITION_VERSION",
+    "ENGINE_MODEL_BY_SCENE",
+    "RESULT_CACHE_SCHEMA",
+    "SIGNAL_CACHE_SCHEMA",
+    "SKILL_ID",
     "PhysicalLawBackend",
-    "engine_spec",
-    "selected_law_names",
-    "score_signals",
     "cache_paths",
+    "engine_spec",
     "evaluate",
+    "score_signals",
+    "selected_law_names",
 ]
 
 
@@ -74,9 +73,7 @@ class PhysicalLawBackend(SkillBackendIdentity, Protocol):
     def infer(self, video_path: Path) -> Mapping[str, Any]: ...
 
 
-def engine_spec(
-    case: Mapping[str, Any], action_id: str | None = None
-) -> dict[str, Any]:
+def engine_spec(case: Mapping[str, Any], action_id: str | None = None) -> dict[str, Any]:
     non_model = case.get("non_model_facing") or {}
     explicit = non_model.get("physical_engine") or non_model.get("law_engine") or {}
     if isinstance(explicit, Mapping) and explicit.get("model_id"):
@@ -94,9 +91,7 @@ def engine_spec(
         }
     source_tags = (case.get("world") or {}).get("source_tags") or {}
     scene = str(source_tags.get("scene") or "")
-    case_action_id = ((case.get("interaction") or {}).get("action") or {}).get(
-        "action_id"
-    )
+    case_action_id = ((case.get("interaction") or {}).get("action") or {}).get("action_id")
     return {
         "source": "scene_mapping",
         "scene": scene,
@@ -148,9 +143,7 @@ def _projectile_arc(sig: Mapping[str, Any], gt: Mapping[str, Any]) -> tuple[floa
     x, y = cx[order], cy[order]
     a, b, c = np.polyfit(x, y, 2)
     predicted = a * x * x + b * x + c
-    r2 = 1 - np.sum((y - predicted) ** 2) / (
-        np.sum((y - y.mean()) ** 2) + 1e-9
-    )
+    r2 = 1 - np.sum((y - predicted) ** 2) / (np.sum((y - y.mean()) ** 2) + 1e-9)
     score = np.clip(0.5 * max(float(r2), 0.0) + 0.5 * (a > 0), 0.0, 1.0)
     return float(score), f"R2={r2:.2f} a={'+' if a > 0 else '-'}"
 
@@ -179,15 +172,13 @@ def _bounce_peak_decay(sig: Mapping[str, Any], gt: Mapping[str, Any]) -> tuple[f
     peaks = [
         height[index]
         for index in range(1, len(height) - 1)
-        if height[index] >= height[index - 1] and height[index] > height[index + 1]
+        if height[index] >= height[index - 1]
+        and height[index] > height[index + 1]
         and height[index] > height.min() + 0.03
     ]
     if len(peaks) < 2:
         return 0.3, f"only {len(peaks)} peak(s) detected"
-    decreasing = sum(
-        peaks[index] <= peaks[index - 1] + 0.02
-        for index in range(1, len(peaks))
-    )
+    decreasing = sum(peaks[index] <= peaks[index - 1] + 0.02 for index in range(1, len(peaks)))
     return decreasing / (len(peaks) - 1), f"{decreasing}/{len(peaks) - 1} decreasing"
 
 
@@ -209,9 +200,7 @@ def _event_order(
     return 0.5 * monotonicity + 0.5 * reach, f"monotonicity={monotonicity:.2f} right_reach={right_reach:.2f}"
 
 
-def _monotonic_motion(
-    sig: Mapping[str, Any], gt: Mapping[str, Any], direction: str = "any"
-) -> tuple[float, str]:
+def _monotonic_motion(sig: Mapping[str, Any], gt: Mapping[str, Any], direction: str = "any") -> tuple[float, str]:
     del gt
     cy = _interp(sig["cy"])
     if cy is None:
@@ -240,9 +229,7 @@ def _straight_after_release(sig: Mapping[str, Any], gt: Mapping[str, Any]) -> tu
     x, y = cx[len(cx) // 2 :], cy[len(cy) // 2 :]
     if len(x) < 4 or (np.std(x) < 0.02 and np.std(y) < 0.02):
         return 0.3, "insufficient late motion"
-    slope, offset = np.linalg.lstsq(
-        np.vstack([x, np.ones_like(x)]).T, y, rcond=None
-    )[0]
+    slope, offset = np.linalg.lstsq(np.vstack([x, np.ones_like(x)]).T, y, rcond=None)[0]
     residual = float(np.sqrt(np.mean((y - (slope * x + offset)) ** 2)))
     return max(0.0, 1 - 20 * residual), f"late_line_residual={residual:.3f}"
 
@@ -362,7 +349,7 @@ def score_signals(
         try:
             score, detail = check(signals, gt or {})
             value = round(float(np.clip(score, 0, 1)), 4)
-        except Exception as exc:  # noqa: BLE001 - retain per-law failure evidence
+        except Exception as exc:  # retain per-law failure evidence
             value, detail = None, f"error: {exc!r}"
         laws.append({"law": name, "score": value, "detail": detail})
     mean_score = mean_valid(item["score"] for item in laws)
@@ -396,7 +383,11 @@ def _load(path: Path, schema: str, digest: str) -> dict[str, Any] | None:
         payload = read_json(path)
     except (OSError, ValueError):
         return None
-    if not isinstance(payload, dict) or payload.get("schema_version") != schema or payload.get("input_digest") != digest:
+    if (
+        not isinstance(payload, dict)
+        or payload.get("schema_version") != schema
+        or payload.get("input_digest") != digest
+    ):
         return None
     return payload
 
@@ -431,9 +422,7 @@ def _result(
                 "moderate inter-frame displacement",
             ],
         },
-        notes=[
-            "This diagnostic uses only final.md optical-flow laws; unavailable laws are not forced to zero."
-        ],
+        notes=["This diagnostic uses only final.md optical-flow laws; unavailable laws are not forced to zero."],
     )
 
 
@@ -519,9 +508,7 @@ def evaluate(
             return _response(paths, cached, False, False)
         return _response(paths, cached, True, False)
 
-    signal_digest = value_digest(
-        {"schema": SIGNAL_CACHE_SCHEMA, "video": video, "backend": identity}
-    )
+    signal_digest = value_digest({"schema": SIGNAL_CACHE_SCHEMA, "video": video, "backend": identity})
     signal_cache = _load(paths["signals"], SIGNAL_CACHE_SCHEMA, signal_digest)
     signal_hit = signal_cache is not None
     if signal_cache is None:

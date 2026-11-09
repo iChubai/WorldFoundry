@@ -46,9 +46,7 @@ class DiffusionTransformer(nn.Module):
         self.register_tokens = None
         self.n_register_tokens = config.n_register_tokens
         if self.n_register_tokens > 0:
-            self.register_tokens = nn.Parameter(
-                0.02 * torch.randn(1, self.n_register_tokens, 1, 1, hidden_dim)
-            )
+            self.register_tokens = nn.Parameter(0.02 * torch.randn(1, self.n_register_tokens, 1, 1, hidden_dim))
 
         self.latent_tokens_proj = nn.Linear(latent_dim * self.patch_size**2, hidden_dim)
         # Only created when past-conditioning is enabled so that checkpoints trained

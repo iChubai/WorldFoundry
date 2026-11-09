@@ -3,24 +3,18 @@ import json
 import os
 import os.path as osp
 import pickle
-
-import pandas as pd
-import numpy as np
-from torch.utils.data import Dataset, Subset
-from torch.utils.data._utils.collate import default_collate
-from collections import defaultdict
-import random
-from typing import List, Dict, Any, Optional
 from pathlib import Path
-import os
+from typing import Any
 
+from torch.utils.data import Dataset, Subset
 
-BACKGROUND_CLASS = ['wall', 'floor', 'ceiling', 'carpet', 'door', 'rug', 'bath mat']
+BACKGROUND_CLASS = ["wall", "floor", "ceiling", "carpet", "door", "rug", "bath mat"]
+
 
 def get_indoor_classes(type):
     if type == "scannet200":
         classes_file_path = Path("downstream/others/scannet200_classes.txt")
-        with open(classes_file_path, "r") as f:
+        with open(classes_file_path) as f:
             all_lines = [cls.strip() for cls in f.readlines()]
             all_classes = list(set(all_lines))
             all_classes = [cls for cls in all_classes if cls != "unknown"]
@@ -83,12 +77,11 @@ class ARDataset(TaskDataset):
         self,
         subset=None,
         debug_len=2000,
-        data_dir="data/WIW_datasets/eval_datasets/AR/", # as default
+        data_dir="data/WIW_datasets/eval_datasets/AR/",  # as default
     ):
-
         self.data = []
         self.mp3d_dir = "data/scene_datasets/mp3d"
-        exclude_scenes, exclude_ep = set(), dict()
+        exclude_scenes, exclude_ep = set(), {}
         filtered_count = 0
 
         # Iterate over each scene folder in the data_dir
@@ -105,10 +98,9 @@ class ARDataset(TaskDataset):
                         if original_scene in exclude_scenes:
                             filtered_count += 1
                             continue
-                        if original_scene in exclude_ep:
-                            if episode["episode_id"] in exclude_ep[original_scene]:
-                                filtered_count += 1
-                                continue
+                        if original_scene in exclude_ep and episode["episode_id"] in exclude_ep[original_scene]:
+                            filtered_count += 1
+                            continue
                         # Update scene_id to include the full path to the .glb file
                         # episode["scene_id"] = osp.join(
                         #     self.mp3d_dir, original_scene, f"{original_scene}.glb"
@@ -116,11 +108,7 @@ class ARDataset(TaskDataset):
                         self.data.append(episode)
 
         if subset is not None:
-            self.data = [
-                x
-                for x in self.data
-                if x["difficulty"] == self.DIFFICULTYS.index(subset)
-            ]
+            self.data = [x for x in self.data if x["difficulty"] == self.DIFFICULTYS.index(subset)]
         if debug_len is not None:
             self.data = self.data[:debug_len]
 
@@ -136,9 +124,7 @@ class ARDataset(TaskDataset):
 
     def get_stats(self):
         return {
-            diff_name: len(
-                self.filter_by_lambda(lambda x: x["difficulty"] == diff_value)
-            )
+            diff_name: len(self.filter_by_lambda(lambda x: x["difficulty"] == diff_value))  # noqa: B023 - filter_by_lambda evaluates the predicate eagerly within the iteration.
             for diff_value, diff_name in enumerate(self.DIFFICULTYS)
         }
 
@@ -147,7 +133,7 @@ class ARDataset(TaskDataset):
         return osp.join(
             x["scene_id"],
             "images",
-            f'{x["target_categrory"]}_{x["target_id"]}_000***.png',
+            f"{x['target_categrory']}_{x['target_id']}_000***.png",
         )
 
 
@@ -162,9 +148,9 @@ class IGDataset(TaskDataset):
         debug_len=None,
         inputs_json: str = "downstream/process_IGnav_dataset/inputs.json",
         hm3d_root: str = "data/scene_datasets/hm3d/val",
-        exclude_ep_path: Optional[List[str]] = "downstream/others/IGNav_exclude_unique.txt",
-        min_step_to_goal: Optional[int] = None,
-        max_step_to_goal: Optional[int] = None,
+        exclude_ep_path: list[str] | None = "downstream/others/IGNav_exclude_unique.txt",
+        min_step_to_goal: int | None = None,
+        max_step_to_goal: int | None = None,
     ) -> None:
         # This method should not be called directly. See the child class implementation
         # in downstream/process_IGnav_dataset/pickle_dataset.py for the actual initialization logic.
@@ -172,7 +158,7 @@ class IGDataset(TaskDataset):
             "IGDataset should not be initialized directly. Use IGDatasetPortable or other subclasses."
         )
 
-    def __getitem__(self, idx: int) -> Dict[str, Any]:
+    def __getitem__(self, idx: int) -> dict[str, Any]:
         return self.data[idx]
 
 
@@ -207,7 +193,7 @@ class AEQADataset(TaskDataset):
 
         # * load qa data
         self.qa_data_path = osp.join(data_dir, f"open-eqa-{subset_size}.json")
-        with open(self.qa_data_path, "r") as f:
+        with open(self.qa_data_path) as f:
             self.qa_data = json.load(f)
         assert len(self.qa_data) == subset_size
         # self.qa_data = [
@@ -220,9 +206,7 @@ class AEQADataset(TaskDataset):
         self.frame_dir = osp.join(data_dir, "frames")
         for qa_datum in self.qa_data:
             # * get the first frame
-            pkl_path = osp.join(
-                self.frame_dir, qa_datum["episode_history"], "00000.pkl"
-            )
+            pkl_path = osp.join(self.frame_dir, qa_datum["episode_history"], "00000.pkl")
             with open(pkl_path, "rb") as f:
                 pkl_data = pickle.load(f)
                 agent_state = pkl_data["agent_state"]
@@ -267,4 +251,3 @@ class AEQADataset(TaskDataset):
         if self.reverse_order:
             idx = len(self.data) - 1 - idx
         return self.data[idx]
-

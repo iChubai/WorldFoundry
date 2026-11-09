@@ -4,19 +4,17 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import re
 import shlex
 from pathlib import Path
-from typing import List, Dict, Optional
-
-import os
 
 # ----- exact column names
 REQUIRED_COLUMNS = [
     "Expected phenomenon",  # -> --phenomenon
-    "Prompts",              # -> --description / text_prompt
-    "Source",               # -> kept for schema; not used for path resolution
-    "Unique ID",            # -> naming + ID mapping
+    "Prompts",  # -> --description / text_prompt
+    "Source",  # -> kept for schema; not used for path resolution
+    "Unique ID",  # -> naming + ID mapping
 ]
 
 # Files look like: vid_45_run_1.mp4, vid_050_run_2.mp4, etc.
@@ -44,7 +42,7 @@ def uid_to_folder(uid: str, prefix: str = "vid_", pad: int = 3) -> str:
     return f"{prefix}{slugify(uid)}"
 
 
-def vid_int_from_any(s: str) -> Optional[int]:
+def vid_int_from_any(s: str) -> int | None:
     """Return integer ID from 'vid_50', 'vid_050', '50', etc."""
     if not s:
         return None
@@ -57,19 +55,16 @@ def vid_int_from_any(s: str) -> Optional[int]:
     return None
 
 
-def read_rows(csv_path: Path) -> List[Dict[str, str]]:
+def read_rows(csv_path: Path) -> list[dict[str, str]]:
     with csv_path.open(newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         missing = [c for c in REQUIRED_COLUMNS if c not in (reader.fieldnames or [])]
         if missing:
-            raise SystemExit(
-                f"CSV missing required columns: {missing}\n"
-                f"Found columns: {reader.fieldnames}"
-            )
+            raise SystemExit(f"CSV missing required columns: {missing}\nFound columns: {reader.fieldnames}")
         return [dict(r) for r in reader]
 
 
-def infer_ref_path_for_vid(ref_dir: Optional[Path], vid_num: int) -> Optional[str]:
+def infer_ref_path_for_vid(ref_dir: Path | None, vid_num: int) -> str | None:
     """Try both non-padded and padded reference names under ref_dir."""
     if not ref_dir:
         return None
@@ -83,9 +78,7 @@ def infer_ref_path_for_vid(ref_dir: Optional[Path], vid_num: int) -> Optional[st
 
 
 def main():
-    ap = argparse.ArgumentParser(
-        description="Extract experiment info from CSV and emit run_all.sh for VLM judging."
-    )
+    ap = argparse.ArgumentParser(description="Extract experiment info from CSV and emit run_all.sh for VLM judging.")
     ap.add_argument("--csv", required=True, help="Path to CSV with exact columns.")
     ap.add_argument("--provider", default="openai", help="Provider (default: openai).")
     ap.add_argument("--model", default="gpt-5-pro", help="Model (default: gpt-5-pro).")
@@ -140,8 +133,7 @@ def main():
         "--checklist-dir",
         default="",
         help=(
-            "Directory containing checklist_*.json files (optional). "
-            "If omitted, will use CHECKLIST_DIR env var if set."
+            "Directory containing checklist_*.json files (optional). If omitted, will use CHECKLIST_DIR env var if set."
         ),
     )
 
@@ -149,9 +141,7 @@ def main():
     ap.add_argument(
         "--enable-cv",
         action="store_true",
-        help=(
-            "If set, run cv_tools/cv_metrics.py for each run and pass its JSON as --cv_json to the judge."
-        ),
+        help=("If set, run cv_tools/cv_metrics.py for each run and pass its JSON as --cv_json to the judge."),
     )
     ap.add_argument(
         "--cv-metrics-script",
@@ -173,13 +163,13 @@ def main():
     if args.mode == "ready":
         rows = [r for r in rows if (r.get("finalized?") or "").strip().lower() == "done"]
 
-    authors_filter: List[str] = []
+    authors_filter: list[str] = []
     if args.author.strip():
         authors_filter = [a.strip() for a in args.author.split(",") if a.strip()]
         rows = [r for r in rows if (r.get("Author") or "").strip() in authors_filter]
 
     # Map from normalized vid integer -> CSV row
-    selected_by_vid_int: Dict[int, Dict[str, str]] = {}
+    selected_by_vid_int: dict[int, dict[str, str]] = {}
     for r in rows:
         uid_raw = (r.get("Unique ID") or "").strip()
         vid_num = vid_int_from_any(uid_raw)
@@ -205,7 +195,7 @@ def main():
     ref_dir = Path(args.reference_dir).resolve() if args.reference_dir else None
 
     # Checklist dir: CLI > env > None
-    checklist_dir: Optional[Path] = None
+    checklist_dir: Path | None = None
     if args.checklist_dir:
         checklist_dir = Path(args.checklist_dir).resolve()
     else:
@@ -215,13 +205,11 @@ def main():
 
     # CV metrics script path (if enabled)
     cv_metrics_enabled = bool(args.enable_cv)
-    cv_metrics_script_path: Optional[Path] = None
+    cv_metrics_script_path: Path | None = None
     if cv_metrics_enabled:
         cv_metrics_script_path = Path(args.cv_metrics_script).resolve()
         if not cv_metrics_script_path.exists():
-            raise SystemExit(
-                f"--enable-cv was set but cv-metrics-script not found: {cv_metrics_script_path}"
-            )
+            raise SystemExit(f"--enable-cv was set but cv-metrics-script not found: {cv_metrics_script_path}")
 
     # Scan root: source_dir/<eval_target>
     source_root = Path(args.source_dir).resolve() / args.eval_target
@@ -229,22 +217,20 @@ def main():
         raise SystemExit(f"--source-dir target not found: {source_root}")
 
     # -------- build run script --------
-    run_lines: List[str] = []
+    run_lines: list[str] = []
     run_lines.append("#!/usr/bin/env bash")
     run_lines.append("set -euo pipefail")
     run_lines.append("")
-    run_lines.append(f'PROVIDER={shlex.quote(args.provider)}')
-    run_lines.append(f'MODEL={shlex.quote(args.model)}')
-    run_lines.append(f'JUDGE_SCRIPT={shlex.quote(str(Path(args.script).resolve()))}')
-    run_lines.append(f'BASE_OUT_DIR={shlex.quote(str(base_out))}')
+    run_lines.append(f"PROVIDER={shlex.quote(args.provider)}")
+    run_lines.append(f"MODEL={shlex.quote(args.model)}")
+    run_lines.append(f"JUDGE_SCRIPT={shlex.quote(str(Path(args.script).resolve()))}")
+    run_lines.append(f"BASE_OUT_DIR={shlex.quote(str(base_out))}")
     run_lines.append("")
 
     # CV env vars (only meaningful if --enable-cv was used)
     if cv_metrics_enabled and cv_metrics_script_path is not None:
-        run_lines.append(
-            f'CV_METRICS_SCRIPT={shlex.quote(str(cv_metrics_script_path))}'
-        )
-        run_lines.append(f'CV_MODULES={shlex.quote(args.cv_modules)}')
+        run_lines.append(f"CV_METRICS_SCRIPT={shlex.quote(str(cv_metrics_script_path))}")
+        run_lines.append(f"CV_MODULES={shlex.quote(args.cv_modules)}")
     else:
         run_lines.append('CV_METRICS_SCRIPT=""')
         run_lines.append('CV_MODULES=""')
@@ -253,17 +239,17 @@ def main():
         run_lines.append(f'MAX_RUNS="${{MAX_RUNS:-{args.max_runs}}}"')
     else:
         run_lines.append('MAX_RUNS="${MAX_RUNS:-0}"')
-    run_lines.append('RUN_COUNT=0')
+    run_lines.append("RUN_COUNT=0")
     run_lines.append("")
-    run_lines.append('run() {')
+    run_lines.append("run() {")
     run_lines.append('  if [[ "${MAX_RUNS}" != "0" && "${RUN_COUNT}" -ge "${MAX_RUNS}" ]]; then')
     run_lines.append('    echo "[cap] Reached MAX_RUNS=${MAX_RUNS}, halting." >&2')
-    run_lines.append('    exit 0')
-    run_lines.append('  fi')
-    run_lines.append('  RUN_COUNT=$((RUN_COUNT+1))')
+    run_lines.append("    exit 0")
+    run_lines.append("  fi")
+    run_lines.append("  RUN_COUNT=$((RUN_COUNT+1))")
     run_lines.append('  echo "[run ${RUN_COUNT}] $*"')
     run_lines.append('  eval "$@"')
-    run_lines.append('}')
+    run_lines.append("}")
     run_lines.append("")
     run_lines.append("# ----- Generated runs -----")
 
@@ -274,8 +260,8 @@ def main():
         m = RUN_RE.match(p.name)
         if not m:
             continue
-        vid_key = m.group(1)   # e.g. "vid_50" or "vid_050"
-        run_idx = m.group(2)   # e.g. "1"
+        vid_key = m.group(1)  # e.g. "vid_50" or "vid_050"
+        run_idx = m.group(2)  # e.g. "1"
         vid_num = vid_int_from_any(vid_key)
         if vid_num is None:
             continue
@@ -317,18 +303,13 @@ def main():
             cv_ref_arg = f" --ref_video {shlex.quote(ref_path)}" if ref_path else ""
 
             cv_prefix = (
-                "python3 ${{CV_METRICS_SCRIPT}} "
-                "--video {video} "
-                "--text_prompt {desc}"
-                "{cv_ref} "
-                "--modules \"${{CV_MODULES:-grounding,bytetrack,raft,clip4clip,lpips}}\" "
+                "python3 ${CV_METRICS_SCRIPT} "
+                f"--video {shlex.quote(str(p))} "
+                f"--text_prompt {shlex.quote(description)}"
+                f"{cv_ref_arg} "
+                '--modules "${CV_MODULES:-grounding,bytetrack,raft,clip4clip,lpips}" '
                 "--max_frames 128 "
-                "--output_json {cv_json} && "
-            ).format(
-                video=shlex.quote(str(p)),
-                desc=shlex.quote(description),
-                cv_ref=cv_ref_arg,
-                cv_json=cv_json_quoted,
+                f"--output_json {cv_json_quoted} && "
             )
 
             cv_arg = f" --cv_json {cv_json_quoted}"
@@ -376,18 +357,13 @@ def main():
         "model": args.model,
         "max_runs_cap": args.max_runs,
         "mode": args.mode,
-        "author_filter": [
-            a for a in (args.author.split(",") if args.author else []) if a.strip()
-        ],
+        "author_filter": [a for a in (args.author.split(",") if args.author else []) if a.strip()],
         "cv_metrics_enabled": cv_metrics_enabled,
         "cv_metrics_script": str(cv_metrics_script_path) if cv_metrics_script_path else "",
         "cv_modules": args.cv_modules if cv_metrics_enabled else "",
     }
     print(json.dumps(summary, indent=2))
-    print(
-        f"\nUsage:\n  {runner_path}           # uses built-in cap or MAX_RUNS env\n"
-        f"  MAX_RUNS=3 {runner_path}"
-    )
+    print(f"\nUsage:\n  {runner_path}           # uses built-in cap or MAX_RUNS env\n  MAX_RUNS=3 {runner_path}")
 
 
 if __name__ == "__main__":

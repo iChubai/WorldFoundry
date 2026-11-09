@@ -223,7 +223,9 @@ def main(argv: list[str] | None = None) -> int:
             "evidence": raw.get("evidence", {}),
             "raw": raw.get("raw", {}),
         }
-        (per_sample_dir / f"{video_id}.json").write_text(json.dumps(item, indent=2, ensure_ascii=False), encoding="utf-8")
+        (per_sample_dir / f"{video_id}.json").write_text(
+            json.dumps(item, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
         results.append(item)
 
     output = {

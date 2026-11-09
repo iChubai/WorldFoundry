@@ -16,21 +16,21 @@ from tqdm import tqdm
 warnings.filterwarnings("ignore", message="The argument 'device' of Tensor", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message="Caught DeprecationWarning in pin memory thread", category=DeprecationWarning)
 
-from . import GenerativeModelModuleWrapper
-from .datasets import ImagesPathDataset, TransformPILtoRGBTensor
-from .defaults import DEFAULTS
-from .feature_extractor_base import FeatureExtractorBase
-from .generative_model_base import GenerativeModelBase
-from .generative_model_onnx import GenerativeModelONNX
-from .helpers import get_kwarg, vassert, vprint
-from .registry import (
+from . import GenerativeModelModuleWrapper  # noqa: E402 - After the warning filters.
+from .datasets import ImagesPathDataset, TransformPILtoRGBTensor  # noqa: E402 - After the warning filters.
+from .defaults import DEFAULTS  # noqa: E402 - After the warning filters.
+from .feature_extractor_base import FeatureExtractorBase  # noqa: E402 - After the warning filters.
+from .generative_model_base import GenerativeModelBase  # noqa: E402 - After the warning filters.
+from .generative_model_onnx import GenerativeModelONNX  # noqa: E402 - After the warning filters.
+from .helpers import get_kwarg, vassert, vprint  # noqa: E402 - After the warning filters.
+from .registry import (  # noqa: E402 - After the warning filters.
     DATASETS_REGISTRY,
     FEATURE_EXTRACTORS_REGISTRY,
-    SAMPLE_SIMILARITY_REGISTRY,
     INTERPOLATION_REGISTRY,
     NOISE_SOURCE_REGISTRY,
+    SAMPLE_SIMILARITY_REGISTRY,
 )
-from .utils_torch import torch_maybe_compile, torch_atomic_save
+from .utils_torch import torch_atomic_save, torch_maybe_compile  # noqa: E402 - After the warning filters.
 
 DEFAULT_FEATURE_EXTRACTOR = {
     "isc": "inception-v3-compat",
@@ -56,7 +56,7 @@ def glob_samples_paths(path, samples_find_deep, samples_find_ext, samples_ext_lo
         samples_ext_lossy = [a.strip() for a in samples_ext_lossy.split(",") if a.strip() != ""]
     have_lossy = False
     files = []
-    for r, d, ff in os.walk(path):
+    for r, _d, ff in os.walk(path):
         if not samples_find_deep and os.path.realpath(r) != os.path.realpath(path):
             continue
         for f in ff:
@@ -71,8 +71,7 @@ def glob_samples_paths(path, samples_find_deep, samples_find_ext, samples_ext_lo
     files = sorted(files)
     vprint(
         verbose,
-        f"Found {len(files)} samples"
-        f'{", some are lossy-compressed - this may affect metrics" if have_lossy else ""}',
+        f"Found {len(files)} samples{', some are lossy-compressed - this may affect metrics' if have_lossy else ''}",
     )
     return files
 
@@ -141,10 +140,11 @@ def get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_
 
     out = None
 
-    with tqdm(
-        disable=not verbose, leave=False, unit="samples", total=len(input), desc="Processing samples"
-    ) as t, torch.no_grad():
-        for bid, batch in enumerate(dataloader):
+    with (
+        tqdm(disable=not verbose, leave=False, unit="samples", total=len(input), desc="Processing samples") as t,
+        torch.no_grad(),
+    ):
+        for _bid, batch in enumerate(dataloader):
             if cuda:
                 batch = batch.cuda(non_blocking=True)
 
@@ -152,10 +152,7 @@ def get_featuresdict_from_dataset(input, feat_extractor, batch_size, cuda, save_
             featuresdict = feat_extractor.convert_features_tuple_to_dict(features)
             featuresdict = {k: [v.cpu()] for k, v in featuresdict.items()}
 
-            if out is None:
-                out = featuresdict
-            else:
-                out = {k: out[k] + featuresdict[k] for k in out.keys()}
+            out = featuresdict if out is None else {k: out[k] + featuresdict[k] for k in out}
             t.update(batch.shape[0])
 
     vprint(verbose, "Processing samples")
@@ -181,9 +178,10 @@ def get_featuresdict_from_generative_model(gen_model, feat_extractor, num_sample
     if cuda:
         gen_model.cuda()
 
-    with tqdm(
-        disable=not verbose, leave=False, unit="samples", total=num_samples, desc="Processing samples"
-    ) as t, torch.no_grad():
+    with (
+        tqdm(disable=not verbose, leave=False, unit="samples", total=num_samples, desc="Processing samples") as t,
+        torch.no_grad(),
+    ):
         for sample_start in range(0, num_samples, batch_size):
             sample_end = min(sample_start + batch_size, num_samples)
             sz = sample_end - sample_start
@@ -203,10 +201,7 @@ def get_featuresdict_from_generative_model(gen_model, feat_extractor, num_sample
             featuresdict = feat_extractor.convert_features_tuple_to_dict(features)
             featuresdict = {k: [v.cpu()] for k, v in featuresdict.items()}
 
-            if out is None:
-                out = featuresdict
-            else:
-                out = {k: out[k] + featuresdict[k] for k in out.keys()}
+            out = featuresdict if out is None else {k: out[k] + featuresdict[k] for k in out}
             t.update(sz)
 
     vprint(verbose, "Processing samples")
@@ -296,14 +291,14 @@ def prepare_input_from_descriptor(input_desc, **kwargs):
             )
         else:
             bad_input = True
-    elif isinstance(input, Dataset) or isinstance(input, GenerativeModelBase):
+    elif isinstance(input, (Dataset, GenerativeModelBase)):
         pass
     else:
         bad_input = True
     vassert(
         not bad_input,
         f'Input descriptor "input" field can be either an instance of Dataset, GenerativeModelBase class, or a string, '
-        f'such as a path to a name of a registered dataset ({", ".join(DATASETS_REGISTRY.keys())}), a directory with '
+        f"such as a path to a name of a registered dataset ({', '.join(DATASETS_REGISTRY.keys())}), a directory with "
         f"file samples, or a path to an ONNX or PTH (JIT) module",
     )
     return input
@@ -311,7 +306,7 @@ def prepare_input_from_descriptor(input_desc, **kwargs):
 
 def prepare_input_descriptor_from_input_id(input_id, **kwargs):
     vassert(
-        type(input_id) is int or type(input_id) is str and input_id in DATASETS_REGISTRY,
+        type(input_id) is int or (type(input_id) is str and input_id in DATASETS_REGISTRY),
         "Input can be either integer (1 or 2) specifying the first or the second set of kwargs, or a string as a "
         "shortcut for registered datasets",
     )
@@ -340,7 +335,7 @@ def resolve_feature_extractor(**kwargs):
                 default_fe = DEFAULT_FEATURE_EXTRACTOR[metric]
                 vassert(out in (None, default_fe), "Cannot have several feature extractors in one call")
                 out = default_fe
-        vassert(out is not None, f"Feature extractor was not resolved")
+        vassert(out is not None, "Feature extractor was not resolved")
     vassert(out in FEATURE_EXTRACTORS_REGISTRY, f'Feature extractor "{out}" not registered')
     return out
 
@@ -383,14 +378,14 @@ def cache_lookup_group_recompute_all_on_any_miss(cached_filename_prefix, item_na
         cache_root = os.path.join(torch.hub._get_torch_home(), "fidelity_cache")
     os.makedirs(cache_root, exist_ok=True)
     cached_paths = [os.path.join(cache_root, cached_filename_prefix + a + ".pt") for a in item_names]
-    if all([os.path.exists(a) for a in cached_paths]):
+    if all(os.path.exists(a) for a in cached_paths):
         out = {}
-        for n, p in zip(item_names, cached_paths):
+        for n, p in zip(item_names, cached_paths, strict=False):
             vprint(verbose, f"Loading cached {p}")
             out[n] = torch.load(p, map_location="cpu", weights_only=False)
         return out
     items = fn_recompute()
-    for n, p in zip(item_names, cached_paths):
+    for n, p in zip(item_names, cached_paths, strict=False):
         vprint(verbose, f"Caching {p}")
         torch_atomic_save(items[n], p)
     return items

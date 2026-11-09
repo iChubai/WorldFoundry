@@ -8,7 +8,6 @@ from worldfoundry.base_models.perception_core.frame_interpolation.amt.motion_smo
     FrameProcess,
     MotionSmoothness,
 )
-
 from worldfoundry.core.distributed.collectives.evaluation import (
     distribute_list_to_rank,
     gather_list_of_dict,
@@ -36,9 +35,7 @@ def compute_motion_smoothness(json_dir, device, submodules_list, **kwargs):
     if get_world_size() > 1:
         video_results = gather_list_of_dict(video_results)
         all_results = (
-            sum(float(row["video_results"]) for row in video_results) / len(video_results)
-            if video_results
-            else 0.0
+            sum(float(row["video_results"]) for row in video_results) / len(video_results) if video_results else 0.0
         )
     return all_results, video_results
 

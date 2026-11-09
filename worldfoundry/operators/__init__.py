@@ -104,7 +104,6 @@ __all__ = sorted(_OPERATOR_MODULES)
 
 
 def __getattr__(name):
-    """Getattr   implementation."""
     if name not in _OPERATOR_MODULES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
@@ -115,5 +114,4 @@ def __getattr__(name):
 
 
 def __dir__():
-    """Dir   implementation."""
     return sorted([*globals(), *__all__])

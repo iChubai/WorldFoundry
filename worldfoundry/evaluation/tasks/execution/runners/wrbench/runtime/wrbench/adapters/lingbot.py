@@ -42,11 +42,26 @@ class LingBotAdapter:
             idx += frames
         return actions
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         key = canonical_model_key(model_name)
         target, amp = model_target_trajectory(trajectory, key, num_frames)
         ks4 = np.stack(
-            [target.intrinsics[:, 0, 0], target.intrinsics[:, 1, 1], target.intrinsics[:, 0, 2], target.intrinsics[:, 1, 2]],
+            [
+                target.intrinsics[:, 0, 0],
+                target.intrinsics[:, 1, 1],
+                target.intrinsics[:, 0, 2],
+                target.intrinsics[:, 1, 2],
+            ],
             axis=1,
         ).astype(np.float32)
         payload_type = "lingbot_pose_arrays"

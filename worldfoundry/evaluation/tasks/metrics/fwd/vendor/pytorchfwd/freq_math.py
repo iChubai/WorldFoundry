@@ -1,7 +1,6 @@
 """Wavelet utils."""
 
 from itertools import product
-from typing import Optional
 
 import numpy as np
 import ptwt
@@ -27,9 +26,7 @@ def get_freq_order(level: int):
     def _get_graycode_order(level, x="a", y="d"):
         graycode_order = [x, y]
         for _ in range(level - 1):
-            graycode_order = [x + path for path in graycode_order] + [
-                y + path for path in graycode_order[::-1]
-            ]
+            graycode_order = [x + path for path in graycode_order] + [y + path for path in graycode_order[::-1]]
         return graycode_order
 
     def _expand_2d_path(path):
@@ -40,9 +37,7 @@ def get_freq_order(level: int):
         )
 
     nodes: dict = {}
-    for (row_path, col_path), node in [
-        (_expand_2d_path(node), node) for node in wp_natural_path
-    ]:
+    for (row_path, col_path), node in [(_expand_2d_path(node), node) for node in wp_natural_path]:
         nodes.setdefault(row_path, {})[col_path] = node
     graycode_order = _get_graycode_order(level, x="l", y="h")
     nodes_list: list = [nodes[path] for path in graycode_order if path in nodes]
@@ -110,11 +105,8 @@ def generate_frequency_packet_image(packet_array: np.ndarray, degree: int):
     return np.concatenate(image, 2)
 
 
-def compute_kl_divergence(
-    output: torch.Tensor, target: torch.Tensor, eps: Optional[float] = 1e-30
-) -> torch.Tensor:
-    """Compute KL Divergence.
-
+def compute_kl_divergence(output: torch.Tensor, target: torch.Tensor, eps: float | None = 1e-30) -> torch.Tensor:
+    """
     Args:
         output (torch.Tensor): Output Images
         target (torch.Tensor): Target Images
@@ -159,22 +151,15 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     sigma1 = np.atleast_2d(sigma1)
     sigma2 = np.atleast_2d(sigma2)
 
-    assert (
-        mu1.shape == mu2.shape
-    ), "Training and test mean vectors have different lengths"
-    assert (
-        sigma1.shape == sigma2.shape
-    ), "Training and test covariances have different dimensions"
+    assert mu1.shape == mu2.shape, "Training and test mean vectors have different lengths"
+    assert sigma1.shape == sigma2.shape, "Training and test covariances have different dimensions"
 
     diff = mu1 - mu2
 
     # Product might be almost singular
     covmean = linalg.sqrtm(sigma1.dot(sigma2))
     if not np.isfinite(covmean).all():
-        msg = (
-            "fid calculation produces singular product; "
-            "adding %s to diagonal of cov estimates"
-        ) % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -183,7 +168,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            raise ValueError("Imaginary component {}".format(m))
+            raise ValueError(f"Imaginary component {m}")
         covmean = covmean.real
 
     tr_covmean = np.trace(covmean)

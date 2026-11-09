@@ -12,7 +12,6 @@ from ..aggregate import clip01, numeric, skill_result, soft_threshold
 from ..io import atomic_write_json, file_fingerprint, read_json, value_digest
 from .common import MetricCacheContract, SkillBackendIdentity, skill_cache_path
 
-
 SKILL_ID = "return_consistency_verifier"
 DEFINITION_VERSION = "harnesseval.return_consistency"
 CACHE_SCHEMA = "harnesseval.return_consistency.cache"
@@ -50,23 +49,23 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
     "FRAME_COMPONENTS",
-    "SAMPLING",
-    "PAIR_WEIGHTS",
     "MULTI_PAIR_WEIGHTS",
+    "PAIR_WEIGHTS",
+    "SAMPLING",
+    "SKILL_ID",
     "ReturnConsistencyBackend",
     "cache_path_for_video",
+    "evaluate",
     "frame_similarity",
+    "import_evidence",
     "resolve_sample_plan",
     "result_from_evidence",
     "validate_evidence",
-    "import_evidence",
-    "evaluate",
 ]
 
 
@@ -87,10 +86,7 @@ def _action_chunks(case: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def _chunk_ids(case: Mapping[str, Any]) -> list[str]:
-    ids = [
-        str(chunk.get("chunk_id") or f"c{index + 1:02d}")
-        for index, chunk in enumerate(_action_chunks(case))
-    ]
+    ids = [str(chunk.get("chunk_id") or f"c{index + 1:02d}") for index, chunk in enumerate(_action_chunks(case))]
     if len(ids) != len(set(ids)):
         raise ValueError("case action chunk ids must be unique")
     return ids
@@ -111,20 +107,10 @@ def _return_pairs(case: Mapping[str, Any]) -> list[dict[str, str]]:
         candidates = [single] if isinstance(single, Mapping) else []
     output = []
     for pair in candidates:
-        reference = (
-            pair.get("reference_chunk")
-            or pair.get("start_chunk")
-            or pair.get("source_chunk")
-        )
-        returned = (
-            pair.get("return_chunk")
-            or pair.get("end_chunk")
-            or pair.get("target_chunk")
-        )
+        reference = pair.get("reference_chunk") or pair.get("start_chunk") or pair.get("source_chunk")
+        returned = pair.get("return_chunk") or pair.get("end_chunk") or pair.get("target_chunk")
         if reference and returned:
-            output.append(
-                {"reference_chunk": str(reference), "return_chunk": str(returned)}
-            )
+            output.append({"reference_chunk": str(reference), "return_chunk": str(returned)})
     return output
 
 
@@ -145,12 +131,7 @@ def _uniform_indices(frame_count: int, maximum: int = 12) -> list[int]:
     count = min(maximum, frame_count)
     if count < 2:
         raise ValueError("Return requires at least two sampled frames")
-    return sorted(
-        {
-            math.floor(position * (frame_count - 1) / (count - 1))
-            for position in range(count)
-        }
-    )
+    return sorted({math.floor(position * (frame_count - 1) / (count - 1)) for position in range(count)})
 
 
 def _chunk_position(chunk_id: str, chunk_ids: list[str]) -> int | None:
@@ -166,11 +147,7 @@ def _chunk_position(chunk_id: str, chunk_ids: list[str]) -> int | None:
 def _samples_for_chunk(position: int, chunk_count: int, sample_count: int) -> list[int]:
     start = position / chunk_count
     end = (position + 1) / chunk_count
-    selected = [
-        index
-        for index in range(sample_count)
-        if start <= (index + 0.5) / sample_count < end
-    ]
+    selected = [index for index in range(sample_count) if start <= (index + 0.5) / sample_count < end]
     if selected:
         return selected
     center = (start + end) / 2.0
@@ -201,12 +178,8 @@ def resolve_sample_plan(video_path: Path, case: Mapping[str, Any]) -> dict[str, 
         resolved.append(
             {
                 **pair,
-                "reference_sample_indices": _samples_for_chunk(
-                    reference_position, len(chunk_ids), len(sampled_frames)
-                ),
-                "return_sample_indices": _samples_for_chunk(
-                    return_position, len(chunk_ids), len(sampled_frames)
-                ),
+                "reference_sample_indices": _samples_for_chunk(reference_position, len(chunk_ids), len(sampled_frames)),
+                "return_sample_indices": _samples_for_chunk(return_position, len(chunk_ids), len(sampled_frames)),
             }
         )
     fallback = not resolved
@@ -237,19 +210,13 @@ def frame_similarity(components: Mapping[str, Any]) -> float:
     if values["rgb_pixel_similarity"] is None:
         rgb_diff = _finite_unit(components.get("rgb_mean_abs_diff"))
         if rgb_diff is not None:
-            values["rgb_pixel_similarity"] = clip01(
-                1.0 - soft_threshold(rgb_diff, 0.05, 0.35)
-            )
+            values["rgb_pixel_similarity"] = clip01(1.0 - soft_threshold(rgb_diff, 0.05, 0.35))
     missing = [name for name, value in values.items() if value is None]
     if missing:
         raise ValueError(f"missing or invalid Return components: {', '.join(missing)}")
-    gray_structure = statistics.mean(
-        values[name] for name in ("ncc_score", "histogram_score", "edge_iou")
-    )
+    gray_structure = statistics.mean(values[name] for name in ("ncc_score", "histogram_score", "edge_iou"))
     return clip01(
-        0.25 * gray_structure
-        + 0.25 * float(values["rgb_pixel_similarity"])
-        + 0.50 * float(values["clip_similarity"])
+        0.25 * gray_structure + 0.25 * float(values["rgb_pixel_similarity"]) + 0.50 * float(values["clip_similarity"])
     )
 
 
@@ -266,9 +233,7 @@ def _invalid(message: str, **diagnostics: Any) -> dict[str, Any]:
     )
 
 
-def result_from_evidence(
-    evidence: Mapping[str, Any], *, fallback_first_last: bool = False
-) -> dict[str, Any]:
+def result_from_evidence(evidence: Mapping[str, Any], *, fallback_first_last: bool = False) -> dict[str, Any]:
     """Aggregate normalized frame evidence with the confirmed Return weights."""
 
     pairs = evidence.get("pairs")
@@ -283,14 +248,10 @@ def result_from_evidence(
             if not isinstance(pair, Mapping):
                 raise ValueError("Return pair evidence must be an object")
             similarities = [
-                frame_similarity(item)
-                for item in (pair.get("similarities") or [])
-                if isinstance(item, Mapping)
+                frame_similarity(item) for item in (pair.get("similarities") or []) if isinstance(item, Mapping)
             ]
             if not similarities:
-                raise ValueError(
-                    f"Return pair {pair.get('reference_chunk')} has no comparisons"
-                )
+                raise ValueError(f"Return pair {pair.get('reference_chunk')} has no comparisons")
             best = max(similarities)
             average = statistics.mean(similarities)
             pair_score = 0.5 * best + 0.5 * average
@@ -398,14 +359,11 @@ def _same_plan(actual: Mapping[str, Any], expected: Mapping[str, Any]) -> bool:
     return (
         actual.get("sampled_frame_indices") == expected["sampled_frame_indices"]
         and actual.get("pairs") == expected["pairs"]
-        and bool(actual.get("fallback_first_last"))
-        == bool(expected["fallback_first_last"])
+        and bool(actual.get("fallback_first_last")) == bool(expected["fallback_first_last"])
     )
 
 
-def _normalize_backend_evidence(
-    raw: Mapping[str, Any], plan: Mapping[str, Any]
-) -> dict[str, Any]:
+def _normalize_backend_evidence(raw: Mapping[str, Any], plan: Mapping[str, Any]) -> dict[str, Any]:
     if raw.get("schema_version") != BACKEND_OUTPUT_SCHEMA:
         raise RuntimeError("Return backend output schema mismatch")
     if not _same_plan(raw, plan):
@@ -419,7 +377,7 @@ def _normalize_backend_evidence(
     if not isinstance(raw_pairs, list) or len(raw_pairs) != len(expected_pairs):
         raise RuntimeError("Return backend returned the wrong pair count")
     pairs = []
-    for expected, returned in zip(expected_pairs, raw_pairs):
+    for expected, returned in zip(expected_pairs, raw_pairs, strict=False):
         if not isinstance(returned, Mapping):
             raise RuntimeError("Return backend pair must be an object")
         if (
@@ -442,18 +400,12 @@ def _normalize_backend_evidence(
                 raise RuntimeError("Return frame comparison must be an object")
             key = (comparison.get("reference_sample"), comparison.get("return_sample"))
             actual_cross_product.add(key)
-            components = {
-                name: _finite_unit(comparison.get(name)) for name in FRAME_COMPONENTS
-            }
+            components = {name: _finite_unit(comparison.get(name)) for name in FRAME_COMPONENTS}
             if any(value is None for value in components.values()):
-                raise RuntimeError(
-                    f"Return backend has invalid frame components at {key}"
-                )
+                raise RuntimeError(f"Return backend has invalid frame components at {key}")
             rgb_diff = _finite_unit(comparison.get("rgb_mean_abs_diff"))
             if rgb_diff is None:
-                raise RuntimeError(
-                    f"Return backend has invalid RGB difference at {key}"
-                )
+                raise RuntimeError(f"Return backend has invalid RGB difference at {key}")
             expected_rgb = clip01(1.0 - soft_threshold(rgb_diff, 0.05, 0.35))
             if not math.isclose(
                 components["rgb_pixel_similarity"],
@@ -461,9 +413,7 @@ def _normalize_backend_evidence(
                 rel_tol=0.0,
                 abs_tol=1e-6,
             ):
-                raise RuntimeError(
-                    f"Return RGB score does not match its raw difference at {key}"
-                )
+                raise RuntimeError(f"Return RGB score does not match its raw difference at {key}")
             normalized_comparisons.append(
                 {
                     "reference_sample": key[0],
@@ -472,12 +422,8 @@ def _normalize_backend_evidence(
                     "rgb_mean_abs_diff": rgb_diff,
                 }
             )
-        if actual_cross_product != expected_cross_product or len(comparisons) != len(
-            expected_cross_product
-        ):
-            raise RuntimeError(
-                "Return backend comparisons do not match the planned cross product"
-            )
+        if actual_cross_product != expected_cross_product or len(comparisons) != len(expected_cross_product):
+            raise RuntimeError("Return backend comparisons do not match the planned cross product")
         pairs.append(
             {
                 "reference_chunk": expected["reference_chunk"],
@@ -493,19 +439,13 @@ def _normalize_backend_evidence(
         "clip_model": clip_model,
         "clip_model_fingerprint": clip_fingerprint,
     }
-    result = result_from_evidence(
-        evidence, fallback_first_last=bool(plan["fallback_first_last"])
-    )
+    result = result_from_evidence(evidence, fallback_first_last=bool(plan["fallback_first_last"]))
     if result["status"] not in {"ok", "fallback_first_last"}:
-        raise RuntimeError(
-            f"Return backend produced invalid evidence: {result['diagnostics']}"
-        )
+        raise RuntimeError(f"Return backend produced invalid evidence: {result['diagnostics']}")
     return evidence
 
 
-def validate_evidence(
-    raw: Mapping[str, Any], sample_plan: Mapping[str, Any]
-) -> dict[str, Any]:
+def validate_evidence(raw: Mapping[str, Any], sample_plan: Mapping[str, Any]) -> dict[str, Any]:
     """Validate raw backend/import evidence against an exact sample plan."""
 
     return _normalize_backend_evidence(raw, sample_plan)
@@ -549,17 +489,13 @@ def _load_cache(path: Path, digest: str) -> dict[str, Any] | None:
         normalized = _normalize_backend_evidence(raw, plan)
     except (KeyError, RuntimeError, TypeError, ValueError):
         return None
-    result = result_from_evidence(
-        normalized, fallback_first_last=bool(plan.get("fallback_first_last"))
-    )
+    result = result_from_evidence(normalized, fallback_first_last=bool(plan.get("fallback_first_last")))
     payload = dict(payload)
     payload["evidence"] = normalized
     return payload if result["status"] in {"ok", "fallback_first_last"} else None
 
 
-def _response(
-    path: Path, payload: Mapping[str, Any], cache_hit: bool
-) -> dict[str, Any]:
+def _response(path: Path, payload: Mapping[str, Any], cache_hit: bool) -> dict[str, Any]:
     plan = payload.get("sample_plan") or {}
     return {
         "cache_hit": cache_hit,

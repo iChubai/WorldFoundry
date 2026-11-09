@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping, Protocol
+from typing import Any, Literal, Protocol
 
 import yaml
 
@@ -249,7 +250,10 @@ def _validate_preflight(samples: list[JudgmentSample], adapter: JudgeAdapter, co
         if sample.track not in TRACKS:
             raise JudgmentPreflightError("invalid_track")
         identity = sample.row_identity
-        if not all(isinstance(value, str) and value for value in (identity.sample_id, identity.scene_id, identity.model_or_lane)):
+        if not all(
+            isinstance(value, str) and value
+            for value in (identity.sample_id, identity.scene_id, identity.model_or_lane)
+        ):
             raise JudgmentPreflightError("invalid_row_identity")
         if not isinstance(identity.repeat_index, int) or identity.repeat_index < 0:
             raise JudgmentPreflightError("invalid_row_identity")

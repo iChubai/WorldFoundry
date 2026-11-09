@@ -4,16 +4,13 @@ import argparse
 import ast
 import importlib.util
 import json
-import os
 import os.path as osp
 import re
-import shutil
-import tempfile
 from copy import deepcopy
 
 import yaml
 
-__all__ = ["Config", "pretty_text"]
+__all__ = ["Config", "pretty_text"]  # noqa: F822 - Upstream export list; pretty_text is a Config classmethod and nothing star-imports this module.
 
 
 BASE_KEY = "_base_"
@@ -21,6 +18,7 @@ BASE_KEY = "_base_"
 BASE_CONFIG = {}
 
 cfg = None
+
 
 class EasyDict(dict):
     """
@@ -142,8 +140,8 @@ class EasyDict(dict):
         for k, v in d.items():
             setattr(self, k, v)
         # Class attributes
-        for k in self.__class__.__dict__.keys():
-            if not (k.startswith("__") and k.endswith("__")) and not k in ("update", "pop"):
+        for k in self.__class__.__dict__:
+            if not (k.startswith("__") and k.endswith("__")) and k not in ("update", "pop"):
                 setattr(self, k, getattr(self, k))
 
     def __setattr__(self, name, value):
@@ -151,13 +149,13 @@ class EasyDict(dict):
             value = [self.__class__(x) if isinstance(x, dict) else x for x in value]
         elif isinstance(value, dict) and not isinstance(value, self.__class__):
             value = self.__class__(value)
-        super(EasyDict, self).__setattr__(name, value)
-        super(EasyDict, self).__setitem__(name, value)
+        super().__setattr__(name, value)
+        super().__setitem__(name, value)
 
     __setitem__ = __setattr__
 
     def update(self, e=None, **f):
-        d = e or dict()
+        d = e or {}
         d.update(f)
         for k in d:
             setattr(self, k, d[k])
@@ -165,11 +163,10 @@ class EasyDict(dict):
     def pop(self, k, d=None):
         if hasattr(self, k):
             delattr(self, k)
-        return super(EasyDict, self).pop(k, d)
+        return super().pop(k, d)
 
-class Config(object):
-    """config"""
 
+class Config:
     @classmethod
     def pretty_text(cls, cfg: dict, indent=2) -> str:
         """format dict to a string
@@ -185,7 +182,7 @@ class Config(object):
             if isinstance(v, dict):
                 v = cls.pretty_text(v, indent + 4)
             spaces = " " * indent
-            msg += spaces + "{}: {}".format(k, v)
+            msg += spaces + f"{k}: {v}"
             if i == len(cfg) - 1:
                 msg += " }"
             else:
@@ -205,10 +202,11 @@ class Config(object):
         """
         if savepath is None:
             savepath = osp.join(cfg.WORKSPACE, "config.json")
-        json.dump(cfg, open(savepath, "w"), indent=2)
+        with open(savepath, "w") as f:
+            json.dump(cfg, f, indent=2)
 
     @classmethod
-    def get_config(cls, default_config: dict = None):
+    def get_config(cls, default_config: dict | None = None):
         """get a `Config` instance.
 
         Args:
@@ -224,9 +222,7 @@ class Config(object):
         # define arg parser.
         parser = argparse.ArgumentParser()
         # parser.add_argument("--cfg", help="load configs from yaml file", default="", type=str)
-        parser.add_argument(
-            "config_file", help="the configuration file to load. support: .yaml, .json, .py"
-        )
+        parser.add_argument("config_file", help="the configuration file to load. support: .yaml, .json, .py")
         parser.add_argument(
             "opts",
             default=None,
@@ -259,7 +255,7 @@ class Config(object):
         """
         filepath = osp.abspath(osp.expanduser(filepath))
         if not osp.isfile(filepath):
-            raise IOError(f"File does not exist: {filepath}")
+            raise OSError(f"File does not exist: {filepath}")
         if filepath.endswith(".py"):
             module_name = f"_worldfoundry_config_{abs(hash(filepath))}"
             spec = importlib.util.spec_from_file_location(module_name, filepath)
@@ -267,36 +263,32 @@ class Config(object):
                 raise ImportError(f"Could not load config module from {filepath}")
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
-            cfg_dict = {
-                name: value
-                for name, value in mod.__dict__.items()
-                if not name.startswith("__")
-            }
+            cfg_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
 
         elif filepath.endswith((".yml", ".yaml")):
-            cfg_dict = yaml.load(open(filepath, "r"), Loader=yaml.Loader)
+            with open(filepath) as f:
+                cfg_dict = yaml.load(f, Loader=yaml.Loader)
         elif filepath.endswith(".json"):
-            cfg_dict = json.load(open(filepath, "r"))
+            with open(filepath) as f:
+                cfg_dict = json.load(f)
         else:
-            raise IOError("Only py/yml/yaml/json type are supported now!")
+            raise OSError("Only py/yml/yaml/json type are supported now!")
 
         cfg_text = filepath + "\n"
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             cfg_text += f.read()
 
         if BASE_KEY in cfg_dict:  # load configs in `BASE_KEY`
             cfg_dir = osp.dirname(filepath)
             base_filename = cfg_dict.pop(BASE_KEY)
-            base_filename = (
-                base_filename if isinstance(base_filename, list) else [base_filename]
-            )
+            base_filename = base_filename if isinstance(base_filename, list) else [base_filename]
 
-            cfg_dict_list = list()
+            cfg_dict_list = []
             for f in base_filename:
                 _cfg_dict = Config.from_file(osp.join(cfg_dir, f))
                 cfg_dict_list.append(_cfg_dict)
 
-            base_cfg_dict = dict()
+            base_cfg_dict = {}
             for c in cfg_dict_list:
                 if len(base_cfg_dict.keys() & c.keys()) > 0:
                     raise KeyError("Duplicate key is not allowed among bases")
@@ -414,6 +406,6 @@ def eval_string(string, d):
 
     try:
         v = ast.literal_eval(string)
-    except:
+    except BaseException:
         v = string
     return v

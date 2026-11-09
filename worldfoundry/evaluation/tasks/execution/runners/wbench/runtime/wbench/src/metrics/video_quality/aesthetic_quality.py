@@ -1,8 +1,8 @@
 """Aesthetic quality metric — LAION aesthetic predictor on CLIP ViT-L/14 features."""
+
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image
 
 from worldfoundry.base_models.perception_core.general_perception import openai_clip
 from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (

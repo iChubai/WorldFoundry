@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 AxisName = Literal["outcome_readout", "trustworthiness_audit"]
+
 
 @dataclass(frozen=True)
 class RowIdentity:
@@ -21,7 +23,7 @@ class RowIdentity:
         *,
         model_or_lane: str | None = None,
         repeat_index: int | None = None,
-    ) -> "RowIdentity":
+    ) -> RowIdentity:
         value = repeat_index if repeat_index is not None else row.get("repeat_index", row.get("repeat"))
         if not isinstance(value, int):
             raise ValueError("repeat_index must be an integer")

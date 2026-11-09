@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import json
 import math
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Mapping
-
+from typing import Any
 
 SCHEMA_VERSION = "wrbench_latest_d1_d6_metrics_v3"
 MAIN_TABLE_HYPERPARAMETERS = {
@@ -300,9 +300,7 @@ def require_metric_value(row: Mapping[str, Any], spec: MetricSpec, *, context: s
     missing_primary = spec.score_field not in row
     forbidden_present = [field for field in spec.forbidden_fallback_fields if field in row]
     if forbidden_present:
-        raise ValueError(
-            f"{context}: forbidden fallback field(s) present for {spec.dimension_id}: {forbidden_present}"
-        )
+        raise ValueError(f"{context}: forbidden fallback field(s) present for {spec.dimension_id}: {forbidden_present}")
     if spec.required_status_field:
         if spec.required_status_field not in row:
             raise ValueError(f"{context}: missing required status field {spec.required_status_field}")
@@ -387,9 +385,7 @@ def metric_contract_markdown(payload: Mapping[str, Any] | None = None) -> str:
         for exclusion in d1_exclusions:
             lines.append(
                 "- D1-CamPrec excludes `{rows}` `{model}` `{camera}` rows from the "
-                "reporting denominator (`{reason}`); raw row scoring remains auditable.".format(
-                    **exclusion
-                )
+                "reporting denominator (`{reason}`); raw row scoring remains auditable.".format(**exclusion)
             )
 
     d2 = metric_by_dimension("D2")

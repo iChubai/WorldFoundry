@@ -1,19 +1,18 @@
-from typing import Dict, Optional, Union
 import json
 import os
-import sys
 
 import torch
 import torch.nn as nn
 from accelerate import Accelerator
 from diffusers.utils.torch_utils import is_compiled_module
-from safetensors.torch import save_model, load_file, save_file
+from safetensors.torch import load_file
 
 
 def unwrap_model(accelerator: Accelerator, model):
     model = accelerator.unwrap_model(model)
     model = model._orig_mod if is_compiled_module(model) else model
     return model
+
 
 def count_model_parameters(model: nn.Module):
     total_params = sum(p.numel() for p in model.parameters())
@@ -28,12 +27,13 @@ def load_index_file(index_filename):
 
     if "weight_map" in index:
         index = index["weight_map"]
-    checkpoint_files = sorted(list(set(index.values())))
+    checkpoint_files = sorted(set(index.values()))
     checkpoint_files = [os.path.join(checkpoint_folder, f) for f in checkpoint_files]
     state_dict = {}
     for checkpoint_file in checkpoint_files:
         state_dict.update(load_file(checkpoint_file))
     return state_dict
+
 
 def _find_mismatched_keys(
     state_dict,
@@ -44,16 +44,14 @@ def _find_mismatched_keys(
     for checkpoint_key in loaded_keys:
         model_key = checkpoint_key
 
-        if (
-            model_key in model_state_dict
-            and state_dict[checkpoint_key].shape != model_state_dict[model_key].shape
-        ):
+        if model_key in model_state_dict and state_dict[checkpoint_key].shape != model_state_dict[model_key].shape:
             mismatched_keys.append(
                 (checkpoint_key, state_dict[checkpoint_key].shape, model_state_dict[model_key].shape)
             )
             del state_dict[checkpoint_key]
 
     return mismatched_keys
+
 
 def load_checkpoints(model, pretrained_ckpt, strict=False, ignore_mismatched_sizes=True):
     """
@@ -81,11 +79,10 @@ def load_checkpoints(model, pretrained_ckpt, strict=False, ignore_mismatched_siz
             mismatched_keys = []
         missing, unexpected = model.load_state_dict(state_dict, strict=False)
 
-        print(">>> mismatched_keys: %s" % mismatched_keys)
-        print(">>> missing: %s" % missing)
-        print(">>> unexpected: %s" % unexpected)
-    print(">>> Loaded weights from pretrained checkpoint: %s"%pretrained_ckpt)
-
+        print(">>> mismatched_keys: %s" % mismatched_keys)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+        print(">>> missing: %s" % missing)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+        print(">>> unexpected: %s" % unexpected)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+    print(">>> Loaded weights from pretrained checkpoint: %s" % pretrained_ckpt)  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
 
 def load_condition_models(
@@ -93,35 +90,23 @@ def load_condition_models(
     textenc_class,
     model_id: str = "a-r-r-o-w/LTX-Video-0.9.1-diffusers",
     text_encoder_dtype: torch.dtype = torch.bfloat16,
-    revision: Optional[str] = None,
-    cache_dir: Optional[str] = None,
+    revision: str | None = None,
+    cache_dir: str | None = None,
     load_weights: bool = True,
     **kwargs,
-) -> Dict[str, nn.Module]:
-    tokenizer = tokenizer_class.from_pretrained(
-        model_id,
-        subfolder="tokenizer",
-        revision=revision,
-        cache_dir=cache_dir
-    )
+) -> dict[str, nn.Module]:
+    tokenizer = tokenizer_class.from_pretrained(model_id, subfolder="tokenizer", revision=revision, cache_dir=cache_dir)
 
     if load_weights:
         text_encoder = textenc_class.from_pretrained(
-            model_id,
-            subfolder="text_encoder",
-            torch_dtype=text_encoder_dtype,
-            revision=revision,
-            cache_dir=cache_dir
+            model_id, subfolder="text_encoder", torch_dtype=text_encoder_dtype, revision=revision, cache_dir=cache_dir
         )
     else:
         # logger.warning('You are not lodding the checkpoint of the text Embedder, please check the code!!!')
         config = textenc_class.config_class.from_pretrained(
-            model_id,
-            subfolder="text_encoder",
-            revision=revision,
-            cache_dir=cache_dir
+            model_id, subfolder="text_encoder", revision=revision, cache_dir=cache_dir
         )
-        text_encoder = textenc_class(config)  # 仅初始化模型，不加载权重
+        text_encoder = textenc_class(config)  # Initialize from the config without loading weights.
 
     return {"tokenizer": tokenizer, "text_encoder": text_encoder}
 
@@ -130,10 +115,10 @@ def load_latent_models(
     model_cls,
     model_id,
     vae_dtype: torch.dtype = torch.bfloat16,
-    revision: Optional[str] = None,
-    cache_dir: Optional[str] = None,
+    revision: str | None = None,
+    cache_dir: str | None = None,
     **kwargs,
-) -> Dict[str, nn.Module]:
+) -> dict[str, nn.Module]:
     vae = model_cls.from_pretrained(
         model_id, subfolder="vae", torch_dtype=vae_dtype, revision=revision, cache_dir=cache_dir
     )
@@ -149,14 +134,13 @@ def load_diffusion_model(model_cls, model_dir, load_weights=True, **kwargs):
 
 
 def load_vae_models(model_cls, model_dir, load_weights=True):
-    with open(os.path.join(model_dir, 'config.json'), 'r', encoding='utf-8') as f:
+    with open(os.path.join(model_dir, "config.json"), encoding="utf-8") as f:
         vae_kwargs = json.load(f)
     model = model_cls(**vae_kwargs)
     if load_weights:
-        load_checkpoints(model, pretrained_ckpt=os.path.join(model_dir, 'diffusion_pytorch_model.safetensors'))
+        load_checkpoints(model, pretrained_ckpt=os.path.join(model_dir, "diffusion_pytorch_model.safetensors"))
     else:
-        print('You are not loading the weights of the vae model, please check your code.')
-        pass
+        print("You are not loading the weights of the vae model, please check your code.")
     return model
 
 
@@ -170,14 +154,14 @@ def forward_pass(
     height: int,
     width: int,
     n_view: int = 1,
-    frame_rate = 30,
-    temporal_compression_ratio = 8,
-    spatial_compression_ratio = 32,
+    frame_rate=30,
+    temporal_compression_ratio=8,
+    spatial_compression_ratio=32,
     **kwargs,
 ) -> torch.Tensor:
     latent_frame_rate = frame_rate / temporal_compression_ratio
     rope_interpolation_scale = [1 / latent_frame_rate, spatial_compression_ratio, spatial_compression_ratio]
-    
+
     denoised_latents = model(
         hidden_states=noisy_latents,
         encoder_hidden_states=prompt_embeds,

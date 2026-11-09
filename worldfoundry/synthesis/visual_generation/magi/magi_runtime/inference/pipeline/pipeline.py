@@ -14,9 +14,9 @@
 
 
 import torch
-
 from inference.common.config import MagiConfig
 from inference.model.dit import get_dit
+
 from worldfoundry.core import print_rank_0, set_random_seed
 from worldfoundry.core.distributed import dist_init
 
@@ -57,9 +57,7 @@ class MagiPipeline:
         )
         requested_frames = self.config.runtime_config.num_frames
         if videos.shape[0] < requested_frames:
-            raise RuntimeError(
-                f"MAGI decoded {videos.shape[0]} frames, fewer than the requested {requested_frames}"
-            )
+            raise RuntimeError(f"MAGI decoded {videos.shape[0]} frames, fewer than the requested {requested_frames}")
         videos = videos[:requested_frames]
         save_video_to_disk(videos, output_path, fps=self.config.runtime_config.fps)
 

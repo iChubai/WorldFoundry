@@ -19,7 +19,23 @@ def interpolate_camera_poses(
     src_trans_vec: np.ndarray,
     tgt_indices: np.ndarray,
 ) -> torch.Tensor:
-    """Interpolate camera poses implementation."""
+    """Resample camera poses at ``tgt_indices``: translations linearly, rotations by slerp.
+
+    Translations are extrapolated outside the source range; quaternion signs are aligned with the
+    previous frame before slerp so the interpolation takes the short path.
+
+    Args:
+        src_indices: Source frame indices of shape ``[N]``.
+        src_rot_mat: Source rotation matrices of shape ``[N, 3, 3]``.
+        src_trans_vec: Source translations of shape ``[N, 3]``.
+        tgt_indices: Target frame indices of shape ``[M]``.
+
+    Returns:
+        Float32 homogeneous poses of shape ``[M, 4, 4]``.
+
+    Raises:
+        ValueError: A target index lies outside the source range (raised by SciPy ``Slerp``).
+    """
     from scipy.interpolate import interp1d
     from scipy.spatial.transform import Rotation, Slerp
 
@@ -54,7 +70,7 @@ def interpolate_camera_poses(
 
 
 def SE3_inverse(T: torch.Tensor) -> torch.Tensor:
-    """Se3 inverse implementation."""
+    """Invert a batch of rigid transforms ``[B, 4, 4]`` as ``[R^T | -R^T t]``."""
     Rot = T[:, :3, :3]  # [B,3,3]
     trans = T[:, :3, 3:]  # [B,3,1]
     R_inv = Rot.transpose(-1, -2)
@@ -70,7 +86,13 @@ def compute_relative_poses(
     framewise: bool = False,
     normalize_trans: bool = True,
 ) -> torch.Tensor:
-    """Compute relative poses implementation."""
+    """Express camera-to-world poses ``[F, 4, 4]`` relative to the first frame, whose pose becomes the identity.
+
+    Args:
+        c2ws_mat: Camera-to-world poses of shape ``[F, 4, 4]``.
+        framewise: Replace each pose after the first with the transform from the previous frame.
+        normalize_trans: Divide translations by the largest translation norm when it is positive.
+    """
     ref_w2cs = SE3_inverse(c2ws_mat[0:1])
     relative_poses = torch.matmul(ref_w2cs, c2ws_mat)
     # Ensure identity matrix for 1st frame
@@ -92,7 +114,7 @@ def compute_relative_poses(
 def create_meshgrid(
     n_frames: int, height: int, width: int, bias: float = 0.5, device="cuda", dtype=torch.float32
 ) -> torch.Tensor:
-    """Create meshgrid implementation."""
+    """Return pixel coordinates ``(x, y)`` plus ``bias`` (0.5 gives pixel centers) as a ``[n_frames, height * width, 2]`` tensor."""
     x_range = torch.arange(width, device=device, dtype=dtype)
     y_range = torch.arange(height, device=device, dtype=dtype)
     grid_y, grid_x = torch.meshgrid(y_range, x_range, indexing="ij")
@@ -107,7 +129,17 @@ def get_plucker_embeddings(
     height: int,
     width: int,
 ):
-    """Get plucker embeddings implementation."""
+    """Compute per-pixel Plucker ray embeddings ``(origin, direction)`` in world space.
+
+    Args:
+        c2ws_mat: OpenCV camera-to-world poses of shape ``[F, 4, 4]``.
+        Ks: Intrinsics ``(fx, fy, cx, cy)`` in pixels, shape ``[F, 4]``.
+        height: Image height in pixels.
+        width: Image width in pixels.
+
+    Returns:
+        Tensor of shape ``[F, height, width, 6]`` holding ray origins and unit directions.
+    """
     n_frames = c2ws_mat.shape[0]
     grid_xy = create_meshgrid(n_frames, height, width, device=c2ws_mat.device, dtype=c2ws_mat.dtype)  # [f, h*w, 2]
     fx, fy, cx, cy = Ks.chunk(4, dim=-1)  # [f, 1]
@@ -126,7 +158,7 @@ def get_plucker_embeddings(
     rays_o = rays_o[:, None, :].expand_as(rays_d)  # [f, h*w, 3]
 
     plucker_embeddings = torch.cat([rays_o, rays_d], dim=-1)  # [f, h*w, 6]
-    plucker_embeddings = plucker_embeddings.view([n_frames, height, width, 6])  # [f*h*w, 6]
+    plucker_embeddings = plucker_embeddings.view([n_frames, height, width, 6])  # [f, h, w, 6]
     return plucker_embeddings
 
 
@@ -139,7 +171,7 @@ def get_Ks_transformed(
     height_final: int,
     width_final: int,
 ):
-    """Get ks transformed implementation."""
+    """Adjust intrinsics ``(fx, fy, cx, cy)`` of shape ``[F, 4]`` for a resize followed by a center crop."""
     fx, fy, cx, cy = Ks.chunk(4, dim=-1)  # [f, 1]
 
     scale_x = width_resize / width_org

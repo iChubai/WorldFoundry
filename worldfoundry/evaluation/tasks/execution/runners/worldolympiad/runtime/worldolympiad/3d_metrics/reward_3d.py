@@ -7,22 +7,21 @@ from _bootstrap import setup_paths
 
 setup_paths()
 
-import torch
-import numpy as np
-from PIL import Image
-from io import BytesIO
-import multiprocessing as mp
-import os
-import json
-import datetime
-import base64
-import re
-import uuid
-from pathlib import Path
-from typing import Any, Optional
-from dotenv import load_dotenv
+import base64  # noqa: E402 - Follows setup_paths().
+import datetime  # noqa: E402 - Follows setup_paths().
+import json  # noqa: E402 - Follows setup_paths().
+import multiprocessing as mp  # noqa: E402 - Follows setup_paths().
+import os  # noqa: E402 - Follows setup_paths().
+import re  # noqa: E402 - Follows setup_paths().
+import uuid  # noqa: E402 - Follows setup_paths().
+from io import BytesIO  # noqa: E402 - Follows setup_paths().
+from pathlib import Path  # noqa: E402 - Follows setup_paths().
+from typing import Any  # noqa: E402 - Follows setup_paths().
 
-from model.vlm import (
+import numpy as np  # noqa: E402 - Follows setup_paths().
+import torch  # noqa: E402 - Follows setup_paths().
+from dotenv import load_dotenv  # noqa: E402 - Follows setup_paths().
+from model.vlm import (  # noqa: E402 - Follows setup_paths().
     DEFAULT_VLM_BACKEND,
     chat_vlm_call,
     clean_json_content,
@@ -31,7 +30,8 @@ from model.vlm import (
     resolve_model_name,
     resolve_vlm_backend,
 )
-from reward_3d_backend import DEFAULT_RECONSTRUCTION_MODEL, Reward3DBackend
+from PIL import Image  # noqa: E402 - Follows setup_paths().
+from reward_3d_backend import DEFAULT_RECONSTRUCTION_MODEL, Reward3DBackend  # noqa: E402 - Follows setup_paths().
 
 load_dotenv()
 
@@ -158,10 +158,7 @@ class VLMScorer:
         self.backend = resolve_vlm_backend(backend)
         self.model_name = resolve_model_name(model_name, self.backend)
         if self.backend == "openrouter" and not get_openrouter_api_key():
-            raise RuntimeError(
-                "Missing OpenRouter key; set WORLDFOUNDRY_OPENROUTER_API_KEY "
-                "or OPENROUTER_API_KEY"
-            )
+            raise RuntimeError("Missing OpenRouter key; set WORLDFOUNDRY_OPENROUTER_API_KEY or OPENROUTER_API_KEY")
         self.timeout = timeout
         self.video_task_template = """You are a calibrated 3D consistency judge for static-scene reconstruction.
 You will be given several sampled frames from a Gaussian-Splat render reconstructed from a source video after dynamic foreground regions were masked and video-inpainted.
@@ -308,6 +305,7 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
     """
     try:
         import torch as torch_local
+
         visible_devices = _parse_visible_gpu_env()
         physical_gpu = visible_devices[gpu_id] if gpu_id < len(visible_devices) else str(gpu_id)
         device = torch_local.device(f"cuda:{gpu_id}")
@@ -340,7 +338,9 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                 lpips_model.eval()
 
             if gs_video_tensor.dim() != 4 or input_video_tensor.dim() != 4:
-                print(f"[Process {os.getpid()}] Invalid LPIPS tensor shapes: gs={gs_video_tensor.shape}, input={input_video_tensor.shape}")
+                print(
+                    f"[Process {os.getpid()}] Invalid LPIPS tensor shapes: gs={gs_video_tensor.shape}, input={input_video_tensor.shape}"
+                )
                 return 0.0
 
             num_frames = min(gs_video_tensor.shape[0], input_video_tensor.shape[0])
@@ -412,12 +412,13 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                     poses_c2w = affine_inverse_np(extrinsics)
                     trajectory = {
                         f"frame{frame_idx}": pose.tolist()
-                        for frame_idx, pose in zip(frame_indices, poses_c2w)
+                        for frame_idx, pose in zip(frame_indices, poses_c2w, strict=False)
                     }
                     result_queue.put(("TRAJECTORY", request_id, trajectory))
                 except Exception as e:
                     print(f"[Process {os.getpid()}] Error extracting trajectory: {e}")
                     import traceback
+
                     traceback.print_exc()
                     result_queue.put(("TRAJECTORY_ERROR", request_id, traceback.format_exc()))
                 continue
@@ -442,8 +443,8 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                 # Convert PIL images to tensor
                 frames_tensors = []
                 for img in video_frames:
-                    if img.mode != 'RGB':
-                        img = img.convert('RGB')
+                    if img.mode != "RGB":
+                        img = img.convert("RGB")
                     # Convert to tensor (C, H, W) in range [0, 1]
                     frame_tensor = torch_local.from_numpy(np.array(img)).float() / 255.0
                     frame_tensor = frame_tensor.permute(2, 0, 1)  # HWC -> CHW
@@ -466,7 +467,7 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                 gs_video_path = os.path.join(save_dir, f"batch_{batch_idx}_gs_video.mp4")
                 gs_frames_np = (gs_video.permute(0, 2, 3, 1).cpu().numpy() * 255).astype(np.uint8)
                 height, width = gs_frames_np.shape[1:3]
-                fourcc = cv2_local.VideoWriter_fourcc(*'mp4v')
+                fourcc = cv2_local.VideoWriter_fourcc(*"mp4v")
                 gs_writer = cv2_local.VideoWriter(gs_video_path, fourcc, 24, (width, height))
                 for frame in gs_frames_np:
                     # Convert RGB to BGR for OpenCV
@@ -491,8 +492,12 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                     print(f"[Process {os.getpid()}] Saved trajectory comparison to {trajectory_comparison_path}")
 
                 # Debug: Check tensor properties
-                print(f"[Process {os.getpid()}] gs_video shape: {gs_video.shape}, dtype: {gs_video.dtype}, range: [{gs_video.min():.3f}, {gs_video.max():.3f}]")
-                print(f"[Process {os.getpid()}] meta_view shape: {meta_view.shape}, dtype: {meta_view.dtype}, range: [{meta_view.min():.3f}, {meta_view.max():.3f}]")
+                print(
+                    f"[Process {os.getpid()}] gs_video shape: {gs_video.shape}, dtype: {gs_video.dtype}, range: [{gs_video.min():.3f}, {gs_video.max():.3f}]"
+                )
+                print(
+                    f"[Process {os.getpid()}] meta_view shape: {meta_view.shape}, dtype: {meta_view.dtype}, range: [{meta_view.min():.3f}, {meta_view.max():.3f}]"
+                )
 
                 # Score GS reconstruction with LPIPS or the selected VLM backend.
                 print(f"[Process {os.getpid()}] Scoring GS video for batch {batch_idx} (lpips={use_lpips})")
@@ -522,29 +527,34 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
                 final_score = gs_score + meta_score + camera_motion_score
 
                 print(f"[Process {os.getpid()}] Batch {batch_idx} completed:")
-                print(f"  GS score: {gs_score:.3f}, Meta score: {meta_score:.3f}, Camera motion: {camera_motion_score:.3f}, Final: {final_score:.3f}")
+                print(
+                    f"  GS score: {gs_score:.3f}, Meta score: {meta_score:.3f}, Camera motion: {camera_motion_score:.3f}, Final: {final_score:.3f}"
+                )
 
-                result_queue.put((
-                    batch_idx,
-                    gs_score,
-                    meta_score,
-                    camera_motion_score,
-                    final_score,
-                    gs_video_path,
-                    meta_view_path,
-                    trajectory_comparison_path,
-                ))
+                result_queue.put(
+                    (
+                        batch_idx,
+                        gs_score,
+                        meta_score,
+                        camera_motion_score,
+                        final_score,
+                        gs_video_path,
+                        meta_view_path,
+                        trajectory_comparison_path,
+                    )
+                )
 
             except Exception as e:
                 print(f"[Process {os.getpid()}] Error processing batch {batch_idx}: {e}")
                 import traceback
+
                 traceback.print_exc()
 
                 # Try to recover CUDA state
                 try:
                     torch_local.cuda.empty_cache()
                     torch_local.cuda.synchronize()
-                except:
+                except BaseException:
                     pass
 
                 result_queue.put((batch_idx, 0.0, 0.0, 0.0, 0.0, "", "", ""))
@@ -552,6 +562,7 @@ def reward_3d_worker_process(gpu_id, model_name, scorer_type, scoring_model_name
     except Exception as e:
         print(f"[Process {os.getpid()}] Fatal error in worker process: {e}")
         import traceback
+
         traceback.print_exc()
         result_queue.put(("ERROR", gpu_id))
 
@@ -614,7 +625,7 @@ class MultiGPUReward3DManager:
                     self.scoring_model_name,
                     task_queue,
                     self.result_queue,
-                )
+                ),
             )
             process.start()
             self.processes.append(process)
@@ -676,10 +687,10 @@ class MultiGPUReward3DManager:
 
         batch_size = len(batch_videos)
         results = {
-            'final_scores': [0.0] * batch_size,
-            'gs_scores': [0.0] * batch_size,
-            'meta_scores': [0.0] * batch_size,
-            'camera_motion_scores': [0.0] * batch_size,
+            "final_scores": [0.0] * batch_size,
+            "gs_scores": [0.0] * batch_size,
+            "meta_scores": [0.0] * batch_size,
+            "camera_motion_scores": [0.0] * batch_size,
         }
 
         # Create output directory for logging
@@ -711,11 +722,11 @@ class MultiGPUReward3DManager:
         # Prepare tasks
         tasks = []
         for batch_idx, (video_frames, prompt, camera_trajectory, video_dynamic_masks) in enumerate(
-            zip(batch_videos, batch_prompts, camera_trajectories, dynamic_masks)
+            zip(batch_videos, batch_prompts, camera_trajectories, dynamic_masks, strict=False)
         ):
             try:
                 # Convert frame bytes to PIL Images
-                frames = [Image.open(BytesIO(frame_bytes)).convert('RGB') for frame_bytes in video_frames]
+                frames = [Image.open(BytesIO(frame_bytes)).convert("RGB") for frame_bytes in video_frames]
                 print(f"Preparing batch {batch_idx}: {len(frames)} frames")
                 tasks.append((batch_idx, frames, prompt, use_lpips, camera_trajectory, video_dynamic_masks))
             except Exception as e:
@@ -737,30 +748,43 @@ class MultiGPUReward3DManager:
         per_video_results = []
 
         while completed < len(tasks):
-            batch_idx, gs_score, meta_score, camera_motion_score, final_score, gs_video_path, meta_view_path, trajectory_comparison_path = self.result_queue.get()
-            results['gs_scores'][batch_idx] = gs_score
-            results['meta_scores'][batch_idx] = meta_score
-            results['camera_motion_scores'][batch_idx] = camera_motion_score
-            results['final_scores'][batch_idx] = final_score
+            (
+                batch_idx,
+                gs_score,
+                meta_score,
+                camera_motion_score,
+                final_score,
+                gs_video_path,
+                meta_view_path,
+                trajectory_comparison_path,
+            ) = self.result_queue.get()
+            results["gs_scores"][batch_idx] = gs_score
+            results["meta_scores"][batch_idx] = meta_score
+            results["camera_motion_scores"][batch_idx] = camera_motion_score
+            results["final_scores"][batch_idx] = final_score
             completed += 1
 
             # Store result for logging
-            per_video_results.append({
-                "video_id": batch_idx,
-                "prompt": batch_prompts[batch_idx],
-                "gs_score": float(gs_score),
-                "meta_score": float(meta_score),
-                "camera_motion_score": float(camera_motion_score),
-                "final_score": float(final_score),
-                "lpips": bool(use_lpips),
-                "scorer_type": self.scorer_type,
-                "scoring_model_name": self.scoring_model_name,
-                "gs_video_path": gs_video_path,
-                "meta_view_path": meta_view_path,
-                "trajectory_comparison_path": trajectory_comparison_path,
-            })
+            per_video_results.append(
+                {
+                    "video_id": batch_idx,
+                    "prompt": batch_prompts[batch_idx],
+                    "gs_score": float(gs_score),
+                    "meta_score": float(meta_score),
+                    "camera_motion_score": float(camera_motion_score),
+                    "final_score": float(final_score),
+                    "lpips": bool(use_lpips),
+                    "scorer_type": self.scorer_type,
+                    "scoring_model_name": self.scoring_model_name,
+                    "gs_video_path": gs_video_path,
+                    "meta_view_path": meta_view_path,
+                    "trajectory_comparison_path": trajectory_comparison_path,
+                }
+            )
 
-            print(f"Received result for batch {batch_idx}: GS={gs_score:.3f}, Meta={meta_score:.3f}, Motion={camera_motion_score:.3f}, Final={final_score:.3f}")
+            print(
+                f"Received result for batch {batch_idx}: GS={gs_score:.3f}, Meta={meta_score:.3f}, Motion={camera_motion_score:.3f}, Final={final_score:.3f}"
+            )
             if gs_video_path:
                 print(f"  GS video: {gs_video_path}")
             if meta_view_path:
@@ -785,7 +809,7 @@ class MultiGPUReward3DManager:
             "per_video_results": per_video_results,
         }
 
-        return results['final_scores']
+        return results["final_scores"]
 
     def extract_camera_trajectory(
         self,
@@ -797,9 +821,7 @@ class MultiGPUReward3DManager:
         if not self.processes:
             raise RuntimeError("3D reward worker processes not initialized")
         if len(video_frames) != len(frame_indices):
-            raise ValueError(
-                f"Frame/index count mismatch: frames={len(video_frames)}, indices={len(frame_indices)}"
-            )
+            raise ValueError(f"Frame/index count mismatch: frames={len(video_frames)}, indices={len(frame_indices)}")
 
         pil_frames = []
         for frame_bytes in video_frames:
@@ -856,22 +878,19 @@ class MultiGPUReward3DManager:
         self.num_gpus = 0
 
 
-def _sample_indices(total_frames: int, max_frames: Optional[int]) -> list[int]:
+def _sample_indices(total_frames: int, max_frames: int | None) -> list[int]:
     if total_frames <= 0:
         return []
     if max_frames is None or max_frames <= 0 or total_frames <= max_frames:
         return list(range(total_frames))
     if max_frames == 1:
         return [0]
-    return [
-        int(round(i * (total_frames - 1) / (max_frames - 1)))
-        for i in range(max_frames)
-    ]
+    return [round(i * (total_frames - 1) / (max_frames - 1)) for i in range(max_frames)]
 
 
 def load_video_frames_as_jpeg_with_indices(
     video_path: str | os.PathLike[str],
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
 ) -> tuple[list[bytes], list[int]]:
     """Read a video file and return sampled JPEG-encoded frames plus source indices."""
     import cv2
@@ -908,7 +927,7 @@ def load_video_frames_as_jpeg_with_indices(
 
 def load_video_frames_as_jpeg(
     video_path: str | os.PathLike[str],
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
 ) -> list[bytes]:
     """Read a video file and return sampled JPEG-encoded frames."""
     encoded_frames, _ = load_video_frames_as_jpeg_with_indices(video_path, max_frames=max_frames)
@@ -917,7 +936,7 @@ def load_video_frames_as_jpeg(
 
 def load_dynamic_masks(
     mask_video_path: str | os.PathLike[str],
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
     threshold: int = 16,
 ) -> list[np.ndarray]:
     """Read sampled binary dynamic masks from a video file."""
@@ -949,12 +968,12 @@ def load_dynamic_masks(
 
 
 def load_camera_trajectory(
-    camera_trajectory_path: Optional[str | os.PathLike[str]] = None,
-    camera_trajectory_json: Optional[str] = None,
+    camera_trajectory_path: str | os.PathLike[str] | None = None,
+    camera_trajectory_json: str | None = None,
 ) -> Any:
     """Load camera trajectory from a JSON file or a raw JSON string."""
     if camera_trajectory_path:
-        with open(camera_trajectory_path, "r", encoding="utf-8") as f:
+        with open(camera_trajectory_path, encoding="utf-8") as f:
             return json.load(f)
     if camera_trajectory_json:
         return json.loads(camera_trajectory_json)
@@ -970,7 +989,7 @@ def score_video_file(
     scoring_model_name: str | None = DEFAULT_SCORING_MODEL,
     use_lpips: bool = False,
     num_workers: int = 1,
-    max_frames: Optional[int] = 32,
+    max_frames: int | None = 32,
     camera_trajectory: Any = None,
     dynamic_mask_video_path: str | os.PathLike[str] | None = None,
 ) -> dict[str, Any]:

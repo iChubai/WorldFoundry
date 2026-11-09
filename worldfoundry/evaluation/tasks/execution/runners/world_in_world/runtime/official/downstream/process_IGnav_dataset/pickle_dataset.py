@@ -1,18 +1,14 @@
 # igdataset_pack.py
-import os
-import os.path as osp
+import gzip
 import io
 import json
-import random
+import os.path as osp
 import pickle
-import gzip
 import zipfile
-from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-import numpy as np
-from PIL import Image
 from downstream.downstream_datasets import IGDataset
+from PIL import Image
 
 PORTABLE_VERSION = "1.1"
 
@@ -26,7 +22,7 @@ def _encode_image_as_png_bytes(img_path: str) -> bytes:
         return buf.getvalue()
 
 
-def _to_portable_item(item: Dict[str, Any], hm3d_root: str, img_zip_relpath: str, png_bytes: bytes) -> Dict[str, Any]:
+def _to_portable_item(item: dict[str, Any], hm3d_root: str, img_zip_relpath: str, png_bytes: bytes) -> dict[str, Any]:
     full_scene_path = item["scene_id"]
     rel_scene_path = osp.relpath(full_scene_path, hm3d_root).replace("\\", "/")
 
@@ -41,7 +37,7 @@ def _to_portable_item(item: Dict[str, Any], hm3d_root: str, img_zip_relpath: str
     return portable
 
 
-def _from_portable_item(item: Dict[str, Any], hm3d_root: str, unzipped_img_root: str) -> Dict[str, Any]:
+def _from_portable_item(item: dict[str, Any], hm3d_root: str, unzipped_img_root: str) -> dict[str, Any]:
     rebuilt = dict(item)
     rel_scene_path = rebuilt.pop("scene_relpath")
     rebuilt["scene_id"] = osp.join(hm3d_root, rel_scene_path).replace("\\", "/")
@@ -88,12 +84,12 @@ def save_igdataset(
 
     zf.close()
 
-    blob = dict(
-        version=PORTABLE_VERSION,
-        num_items=len(ds),
-        meta=dict(original_hm3d_root=hm3d_root, img_zip_filename=osp.basename(out_img_zip_path)),
-        data=portable_data,
-    )
+    blob = {
+        "version": PORTABLE_VERSION,
+        "num_items": len(ds),
+        "meta": {"original_hm3d_root": hm3d_root, "img_zip_filename": osp.basename(out_img_zip_path)},
+        "data": portable_data,
+    }
 
     opener = gzip.open if compress_pickle else open
     with opener(out_pkl_path, "wb") as f:
@@ -108,11 +104,12 @@ class IGDatasetPortable(IGDataset):
     goal_image_png_bytes. __len__ and __getitem__ work as usual.
     """
 
-    def __init__(self, rebuilt_data: List[Dict[str, Any]]):
+    def __init__(self, rebuilt_data: list[dict[str, Any]]):
         self.data = rebuilt_data
 
         print("IGDataset")
         print(f"Total kept   : {len(self.data)}")
+
     # __len__ and __getitem__ inherited from IGDataset
 
 
@@ -122,7 +119,7 @@ def load_igdataset(
     unzipped_img_root: str,
 ) -> IGDatasetPortable:
     # Determine if it's JSON or pickle based on file extension
-    is_json = pkl_path.endswith(".json") or pkl_path.endswith(".json.gz")
+    is_json = pkl_path.endswith((".json", ".json.gz"))
 
     if is_json:
         # JSON files: use text mode
@@ -145,14 +142,12 @@ def decode_png_bytes(png_bytes: bytes) -> Image.Image:
     return Image.open(io.BytesIO(png_bytes)).convert("RGB")
 
 
-
 def load_igdataset_from_zip(
     zip_path: str,
     pkl_path: str,
     remote_hm3d_root: str = "data/scene_datasets/hm3d/val",
     remote_img_folder: str = "goal_imgs_unzipped",
 ) -> IGDatasetPortable:
-
     remote_img_path = osp.join(osp.dirname(zip_path), remote_img_folder)
     # unzip once
     if not osp.exists(remote_img_path):

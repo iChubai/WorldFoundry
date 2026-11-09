@@ -27,7 +27,6 @@ DEFAULT_MATRIX_GAME3_COMPONENTS: dict[str, Any] = {
 
 
 def _looks_like_matrix_game3_code_path(path_value: str | None) -> bool:
-    """Looks like matrix game3 code path helper function."""
     if path_value is None:
         return False
     candidate = Path(str(path_value)).expanduser()

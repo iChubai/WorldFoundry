@@ -10,13 +10,12 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Iterable, Sequence
 
+from worldfoundry.core.io.paths import checkpoint_root_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.runtime.env import resolve_hfd_root
-from worldfoundry.core.io.paths import checkpoint_root_path
-
 
 # Default Hugging Face repository IDs for various LongVie components and dependencies.
 DEFAULT_LONGVIE2_REPO = "Vchitect/LongVie2"
@@ -46,12 +45,7 @@ def video_depth_anything_runtime_root() -> Path:
     This path is relative to the current file, navigating up three directories
     then down into a specific `three_dimensions` structure.
     """
-    return (
-        Path(__file__).resolve().parents[3]
-        / "three_dimensions"
-        / "depth"
-        / "video_depth_anything_longvie"
-    )
+    return Path(__file__).resolve().parents[3] / "three_dimensions" / "depth" / "video_depth_anything_longvie"
 
 
 def project_root() -> Path:

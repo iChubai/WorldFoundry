@@ -5,9 +5,13 @@ import torch
 from einops import repeat
 
 from worldfoundry.core.model_loading.factory import (
-    count_params,
+    count_params as count_params,
+)
+from worldfoundry.core.model_loading.factory import (
     get_obj_from_str as _get_obj_from_str,
-    instantiate_from_config,
+)
+from worldfoundry.core.model_loading.factory import (
+    instantiate_from_config as instantiate_from_config,
 )
 
 
@@ -26,9 +30,7 @@ def disabled_train(self):
 def autocast(f, enabled=True):
     def do_autocast(*args, **kwargs):
         with torch.cuda.amp.autocast(
-                enabled=enabled,
-                dtype=torch.get_autocast_gpu_dtype(),
-                cache_enabled=torch.is_autocast_cache_enabled()
+            enabled=enabled, dtype=torch.get_autocast_gpu_dtype(), cache_enabled=torch.is_autocast_cache_enabled()
         ):
             return f(*args, **kwargs)
 

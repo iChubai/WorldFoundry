@@ -9,10 +9,11 @@ A module-level flag (`set_fp32_noise(False)`) restores the original
 bf16-direct sampling for ablation / config-toggle.
 """
 
-import numpy as np
 import random
-import torch
 from contextlib import contextmanager
+
+import numpy as np
+import torch
 
 
 def set_seed(seed: int, deterministic: bool = False):

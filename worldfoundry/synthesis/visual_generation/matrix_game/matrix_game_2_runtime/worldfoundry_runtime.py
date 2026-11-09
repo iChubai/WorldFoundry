@@ -90,19 +90,59 @@ def _enable_torch_compile() -> bool:
 
 
 _MATRIX_GAME2_OPTIMIZATION_KEYS = {
-    "fuse_qkv", "qkv_strategy", "qkv_split_threshold", "quantization", "compile",
-    "compile_backend", "compile_mode", "compile_dynamic", "compile_fullgraph", "compile_options",
-    "attention", "attention_backend", "offload", "offload_mode",
-    "vae_channels_last", "vae_channels_last_3d", "overlap_vae_decode",
+    "fuse_qkv",
+    "qkv_strategy",
+    "qkv_split_threshold",
+    "quantization",
+    "compile",
+    "compile_backend",
+    "compile_mode",
+    "compile_dynamic",
+    "compile_fullgraph",
+    "compile_options",
+    "attention",
+    "attention_backend",
+    "offload",
+    "offload_mode",
+    "vae_channels_last",
+    "vae_channels_last_3d",
+    "overlap_vae_decode",
 }
 _MATRIX_GAME2_UNSUPPORTED_OPTIONS = {
-    "adacache", "approximate_attention", "blocktaylorseer", "cfg_gate_fraction", "cfg_gate_step",
-    "cfg_parallel", "cfg_parallel_degree", "cuda_graph", "custom", "device_map", "dit_weight_dtype",
-    "feature_cache", "fused_residual_adaln", "fused_rope", "inplace_residual", "magcache",
-    "rope_precision", "rms_norm_precision", "sequence_parallel", "sp_degree", "static_cross_kv",
-    "taylorseer", "teacache", "teacache_thresh", "vae_decode_autocast",
-    "vae_parallel", "vae_parallel_degree", "vae_preview_decoder_path", "vae_spatial_tiling",
-    "vae_temporal_chunk_size", "vae_tile_size", "vae_tile_stride", "vae_tiled_decode", "vae_weight_dtype",
+    "adacache",
+    "approximate_attention",
+    "blocktaylorseer",
+    "cfg_gate_fraction",
+    "cfg_gate_step",
+    "cfg_parallel",
+    "cfg_parallel_degree",
+    "cuda_graph",
+    "custom",
+    "device_map",
+    "dit_weight_dtype",
+    "feature_cache",
+    "fused_residual_adaln",
+    "fused_rope",
+    "inplace_residual",
+    "magcache",
+    "rope_precision",
+    "rms_norm_precision",
+    "sequence_parallel",
+    "sp_degree",
+    "static_cross_kv",
+    "taylorseer",
+    "teacache",
+    "teacache_thresh",
+    "vae_decode_autocast",
+    "vae_parallel",
+    "vae_parallel_degree",
+    "vae_preview_decoder_path",
+    "vae_spatial_tiling",
+    "vae_temporal_chunk_size",
+    "vae_tile_size",
+    "vae_tile_stride",
+    "vae_tiled_decode",
+    "vae_weight_dtype",
 }
 
 
@@ -159,9 +199,11 @@ def _matrix_game2_runtime_policy(kwargs, *, device, dtype):
             if offload.mode is not OffloadMode.NONE:
                 raise ValueError(f"Matrix-Game-2 does not support requested {key}")
     policy = RuntimePolicy(
-        device=device or "cpu", dtype=dtype,
+        device=device or "cpu",
+        dtype=dtype,
         quantization=parse_quantization_policy(options.get("quantization"), owner="Matrix-Game-2"),
-        compile=options.get("compile", False), options=options,
+        compile=options.get("compile", False),
+        options=options,
     )
     # Validate backend/mode/options even before lazy compiler installation.
     _compile_policy_from_runtime(policy)
@@ -189,15 +231,24 @@ def _apply_matrix_game2_optimizations(model, policy):
         compile_policy, compile_options = _compile_policy_from_runtime(policy)
         eager_forward = model.forward
         compiled_forward = compile_callable_cached(
-            eager_forward, policy=compile_policy, options=compile_options, namespace="matrix-game-2-dit-forward",
+            eager_forward,
+            policy=compile_policy,
+            options=compile_options,
+            namespace="matrix-game-2-dit-forward",
         )
         installed = compiled_forward is not eager_forward
         compile_runtime = {
-            "wrapper_installed": installed, "calls": 0, "failures": 0, "last_error": None,
-            "request_calls": 0, "request_failures": 0, "request_last_error": None,
+            "wrapper_installed": installed,
+            "calls": 0,
+            "failures": 0,
+            "last_error": None,
+            "request_calls": 0,
+            "request_failures": 0,
+            "request_last_error": None,
             "attention_provider_graph_traces": {},
         }
         if installed:
+
             def audited_compiled_forward(*args, **kwargs):
                 try:
                     with attention_compile_receipt_scope(compile_runtime["attention_provider_graph_traces"]):
@@ -215,8 +266,11 @@ def _apply_matrix_game2_optimizations(model, policy):
             model.forward = audited_compiled_forward
         model._worldfoundry_compile_runtime = compile_runtime
         model._worldfoundry_compile_config = {
-            "backend": compile_policy.backend, "mode": compile_policy.mode,
-            "fullgraph": compile_policy.fullgraph, "dynamic": compile_policy.dynamic, "options": compile_options,
+            "backend": compile_policy.backend,
+            "mode": compile_policy.mode,
+            "fullgraph": compile_policy.fullgraph,
+            "dynamic": compile_policy.dynamic,
+            "options": compile_options,
         }
         applied.record_compile(requested=True, compiled=installed, details=model._worldfoundry_compile_config)
     return applied
@@ -248,7 +302,7 @@ class MatrixGame2Runtime:
         device=None,
         weight_dtype: torch.dtype | None = None,
         **kwargs,
-    ) -> "MatrixGame2Runtime":
+    ) -> MatrixGame2Runtime:
         checkpoint_path = kwargs.pop("checkpoint_path", None)
         if mode not in ["universal", "gta_drive", "templerun"]:
             raise NotImplementedError("mode should be one of ['universal', 'gta_drive', 'templerun']")
@@ -304,7 +358,9 @@ class MatrixGame2Runtime:
         current_vae_decoder.requires_grad_(False)
         current_vae_decoder.eval()
         vae_layout = None
-        if runtime_policy.options.get("vae_channels_last", False) or runtime_policy.options.get("vae_channels_last_3d", False):
+        if runtime_policy.options.get("vae_channels_last", False) or runtime_policy.options.get(
+            "vae_channels_last_3d", False
+        ):
             from worldfoundry.core.acceleration.convolution_layout import convert_convolution_weight_layouts
 
             vae_layout = convert_convolution_weight_layouts(
@@ -398,16 +454,24 @@ class MatrixGame2Runtime:
             "visual_context": visual_context.to(device=self.device, dtype=self.weight_dtype),
         }
         if "mouse_condition" in operator_condition:
-            mouse_condition = operator_condition["mouse_condition"].unsqueeze(0).to(
-                device=self.device,
-                dtype=self.weight_dtype,
+            mouse_condition = (
+                operator_condition["mouse_condition"]
+                .unsqueeze(0)
+                .to(
+                    device=self.device,
+                    dtype=self.weight_dtype,
+                )
             )
             conditional_dict["mouse_cond"] = mouse_condition
         if "keyboard_condition" not in operator_condition:
             raise ValueError("keyboard_condition must be provided in operator_condition")
-        keyboard_condition = operator_condition["keyboard_condition"].unsqueeze(0).to(
-            device=self.device,
-            dtype=self.weight_dtype,
+        keyboard_condition = (
+            operator_condition["keyboard_condition"]
+            .unsqueeze(0)
+            .to(
+                device=self.device,
+                dtype=self.weight_dtype,
+            )
         )
         conditional_dict["keyboard_cond"] = keyboard_condition
 

@@ -20,7 +20,6 @@ from typing import Any
 
 from wrbench.datasets import model_configs_dir
 
-
 MODELS_DIR = model_configs_dir()
 
 VALID_INPUT_KINDS = {"image", "none", "source_video"}
@@ -136,14 +135,18 @@ def _parse_record(path: Path, payload: dict[str, Any]) -> ModelRecord:
     if status == "active" and not adapter:
         raise RegistryError(f"{key}: active model requires 'adapter'")
     aliases = tuple(dict.fromkeys([_norm(key)] + [_norm(a) for a in payload.get("aliases", []) or []]))
-    amplitude = _parse_amplitude(key, payload) if status == "active" else CameraAmplitude(
-        model_key=key,
-        rotation_gain=1.0,
-        translation_gain=1.0,
-        max_amount=0.5,
-        translation_unit="canonical_scene",
-        calibration_status="deferred",
-        metadata={},
+    amplitude = (
+        _parse_amplitude(key, payload)
+        if status == "active"
+        else CameraAmplitude(
+            model_key=key,
+            rotation_gain=1.0,
+            translation_gain=1.0,
+            max_amount=0.5,
+            translation_unit="canonical_scene",
+            calibration_status="deferred",
+            metadata={},
+        )
     )
     execution_contract = payload.get("execution_contract")
     if execution_contract is not None and not isinstance(execution_contract, dict):
@@ -155,14 +158,24 @@ def _parse_record(path: Path, payload: dict[str, Any]) -> ModelRecord:
         status=status,
         input_kind=input_kind,
         adapter=adapter,
-        payload_type=_require_str(payload, "payload_type", key=key) if status == "active" else str(payload.get("payload_type") or ""),
+        payload_type=_require_str(payload, "payload_type", key=key)
+        if status == "active"
+        else str(payload.get("payload_type") or ""),
         amplitude=amplitude,
         capabilities=dict(payload.get("capabilities", {}) or {}),
         notes=str(payload.get("notes") or ""),
-        default_width=_require_int(payload, "default_width", key=key) if status == "active" else int(payload.get("default_width", 0)),
-        default_height=_require_int(payload, "default_height", key=key) if status == "active" else int(payload.get("default_height", 0)),
-        default_frames=_require_int(payload, "default_frames", key=key) if status == "active" else int(payload.get("default_frames", 0)),
-        default_fps=_require_int(payload, "default_fps", key=key) if status == "active" else int(payload.get("default_fps", 0)),
+        default_width=_require_int(payload, "default_width", key=key)
+        if status == "active"
+        else int(payload.get("default_width", 0)),
+        default_height=_require_int(payload, "default_height", key=key)
+        if status == "active"
+        else int(payload.get("default_height", 0)),
+        default_frames=_require_int(payload, "default_frames", key=key)
+        if status == "active"
+        else int(payload.get("default_frames", 0)),
+        default_fps=_require_int(payload, "default_fps", key=key)
+        if status == "active"
+        else int(payload.get("default_fps", 0)),
         execution_contract=dict(execution_contract) if execution_contract else None,
     )
 

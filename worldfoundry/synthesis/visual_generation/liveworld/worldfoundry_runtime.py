@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -99,7 +100,7 @@ class LiveWorldRuntime:
         return Path(__file__).resolve().parent / "liveworld_runtime"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "LiveWorldRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> LiveWorldRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     def plan(self, **kwargs: Any) -> dict[str, Any]:
@@ -179,9 +180,7 @@ class LiveWorldRuntime:
         # The official Hub snapshot stores the two runtime weights under ``ckpts/``.
         # Also accept an explicit path to that directory for backwards compatibility.
         nested_checkpoint_root = checkpoint_snapshot / "ckpts"
-        checkpoint_root = (
-            nested_checkpoint_root if nested_checkpoint_root.is_dir() else checkpoint_snapshot
-        )
+        checkpoint_root = nested_checkpoint_root if nested_checkpoint_root.is_dir() else checkpoint_snapshot
         require_path(checkpoint_root / "lora" / "model.pt", "LiveWorld LoRA", kind="file")
         require_path(checkpoint_root / "state_adapter" / "model.pt", "LiveWorld state adapter", kind="file")
         base = require_path(self.base_model_path, "Wan2.1-T2V-14B base model", kind="dir")

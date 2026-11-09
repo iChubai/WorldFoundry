@@ -13,15 +13,13 @@ from __future__ import annotations
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import math
 from functools import lru_cache
-from typing import Any
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin, PeftAdapterMixin
 from diffusers.models._modeling_parallel import ContextParallelInput, ContextParallelOutput
@@ -33,15 +31,19 @@ from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.models.normalization import FP32LayerNorm
 from diffusers.utils import logging
+
 try:
     from diffusers.utils import apply_lora_scale
 except ImportError:
+
     def apply_lora_scale(_scale_key):
         def decorator(fn):
             return fn
-        return decorator
-from diffusers.utils.torch_utils import maybe_allow_in_graph
 
+        return decorator
+
+
+from diffusers.utils.torch_utils import maybe_allow_in_graph
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
@@ -137,7 +139,7 @@ def apply_rotary_emb_transposed(
     return out.type_as(hidden_states)
 
 
-def _get_qkv_projections(attn: "HeliosAttention", hidden_states: torch.Tensor, encoder_hidden_states: torch.Tensor):
+def _get_qkv_projections(attn: HeliosAttention, hidden_states: torch.Tensor, encoder_hidden_states: torch.Tensor):
     # encoder_hidden_states is only passed for cross-attention
     if encoder_hidden_states is None:
         encoder_hidden_states = hidden_states
@@ -184,12 +186,12 @@ class HeliosAttnProcessor:
 
     def __call__(
         self,
-        attn: "HeliosAttention",
+        attn: HeliosAttention,
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
     ) -> torch.Tensor:
         query, key, value = _get_qkv_projections(attn, hidden_states, encoder_hidden_states)
 
@@ -215,11 +217,7 @@ class HeliosAttnProcessor:
 
         history_key_boost_mask = getattr(attn, "history_key_boost_mask", None)
         history_key_boost_scale = float(getattr(attn, "history_key_boost_scale", 1.0) or 1.0)
-        if (
-            not attn.is_cross_attention
-            and history_key_boost_mask is not None
-            and history_key_boost_scale != 1.0
-        ):
+        if not attn.is_cross_attention and history_key_boost_mask is not None and history_key_boost_scale != 1.0:
             boost_mask = history_key_boost_mask.to(device=key.device, dtype=torch.bool)
             if boost_mask.ndim != 1:
                 raise ValueError(f"history_key_boost_mask must be 1D, got {tuple(boost_mask.shape)}.")
@@ -256,7 +254,7 @@ class HeliosAttnProcessor:
 
 class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
     _default_processor_cls = HeliosAttnProcessor
-    _available_processors = [HeliosAttnProcessor]
+    _available_processors: ClassVar[list] = [HeliosAttnProcessor]
 
     def __init__(
         self,
@@ -371,7 +369,7 @@ class HeliosAttention(torch.nn.Module, AttentionModuleMixin):
         encoder_hidden_states: torch.Tensor | None = None,
         attention_mask: torch.Tensor | None = None,
         rotary_emb: tuple[torch.Tensor, torch.Tensor] | None = None,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
         **kwargs,
     ) -> torch.Tensor:
         return self.processor(
@@ -439,7 +437,7 @@ class HeliosRotaryPosEmbed(nn.Module):
         return freqs.cos(), freqs.sin()
 
     @torch.no_grad()
-    @lru_cache(maxsize=32)
+    @lru_cache(maxsize=32)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def _get_spatial_meshgrid(self, height, width, device_str):
         device = torch.device(device_str)
         grid_y_coords = torch.arange(height, device=device, dtype=torch.float32)
@@ -537,7 +535,7 @@ class HeliosTransformerBlock(nn.Module):
         encoder_hidden_states: torch.Tensor,
         temb: torch.Tensor,
         rotary_emb: torch.Tensor,
-        original_context_length: int = None,
+        original_context_length: int | None = None,
     ) -> torch.Tensor:
         if temb.ndim == 4:
             shift_msa, scale_msa, gate_msa, c_shift_msa, c_scale_msa, c_gate_msa = (
@@ -644,7 +642,7 @@ class HeliosTransformer3DModel(
     """
 
     _supports_gradient_checkpointing = True
-    _skip_layerwise_casting_patterns = [
+    _skip_layerwise_casting_patterns: ClassVar[list] = [
         "patch_embedding",
         "patch_short",
         "patch_mid",
@@ -652,8 +650,8 @@ class HeliosTransformer3DModel(
         "condition_embedder",
         "norm",
     ]
-    _no_split_modules = ["HeliosTransformerBlock", "HeliosOutputNorm"]
-    _keep_in_fp32_modules = [
+    _no_split_modules: ClassVar[list] = ["HeliosTransformerBlock", "HeliosOutputNorm"]
+    _keep_in_fp32_modules: ClassVar[list] = [
         "time_embedder",
         "scale_shift_table",
         "norm1",
@@ -661,9 +659,9 @@ class HeliosTransformer3DModel(
         "norm3",
         "history_key_scale",
     ]
-    _keys_to_ignore_on_load_unexpected = ["norm_added_q"]
-    _repeated_blocks = ["HeliosTransformerBlock"]
-    _cp_plan = {
+    _keys_to_ignore_on_load_unexpected: ClassVar[list] = ["norm_added_q"]
+    _repeated_blocks: ClassVar[list] = ["HeliosTransformerBlock"]
+    _cp_plan: ClassVar[dict] = {
         # Input split at attn level and ffn level.
         "blocks.*.attn1": {
             "hidden_states": ContextParallelInput(split_dim=1, expected_dims=3, split_output=False),
@@ -807,10 +805,15 @@ class HeliosTransformer3DModel(
         if delta is None:
             return rotary_emb
         delta = delta.to(device=device, dtype=torch.float32)
-        if delta.ndim != 5 or delta.shape[1] != 3 or delta.shape[-3:] != (
-            frame_indices.shape[1],
-            height,
-            width,
+        if (
+            delta.ndim != 5
+            or delta.shape[1] != 3
+            or delta.shape[-3:]
+            != (
+                frame_indices.shape[1],
+                height,
+                width,
+            )
         ):
             return rotary_emb
 
@@ -863,10 +866,14 @@ class HeliosTransformer3DModel(
             history_invisible_token_mode = str(attention_kwargs.get("history_invisible_token_mode", "none") or "none")
             history_key_boost_mode = str(attention_kwargs.get("history_key_boost_mode", "none") or "none")
             history_key_boost_scale = float(attention_kwargs.get("history_key_boost_scale", 1.0) or 1.0)
-        history_key_boost_enabled = history_key_boost_mode in {
-            "short_last_latent",
-            "warp_last_latent",
-        } and history_key_boost_scale != 1.0
+        history_key_boost_enabled = (
+            history_key_boost_mode
+            in {
+                "short_last_latent",
+                "warp_last_latent",
+            }
+            and history_key_boost_scale != 1.0
+        )
         # 1. Input
         batch_size = hidden_states.shape[0]
         p_t, p_h, p_w = self.config.patch_size

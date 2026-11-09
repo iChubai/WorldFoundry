@@ -1,16 +1,25 @@
-import cv2
-import os
-import glob
 import argparse
+import glob
+import os
+
+import cv2
 from tqdm import tqdm
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description='Process videos and extract frames.')
-    parser.add_argument('--input_dir', required=True, help='Input directory containing videos.')
-    parser.add_argument('--output_dir', required=True, help='Output directory for extracted frames.')
-    parser.add_argument('--model_names', nargs='+', default=["test"], help="Name of the models.")
-    parser.add_argument('--eval_type', type=str, choices=["open", "close"], default="open", help="Specify the evaluation mode: 'open' for open-source models or 'close' for closed-source models.")
+    parser = argparse.ArgumentParser(description="Process videos and extract frames.")
+    parser.add_argument("--input_dir", required=True, help="Input directory containing videos.")
+    parser.add_argument("--output_dir", required=True, help="Output directory for extracted frames.")
+    parser.add_argument("--model_names", nargs="+", default=["test"], help="Name of the models.")
+    parser.add_argument(
+        "--eval_type",
+        type=str,
+        choices=["open", "close"],
+        default="open",
+        help="Specify the evaluation mode: 'open' for open-source models or 'close' for closed-source models.",
+    )
     return parser.parse_args()
+
 
 def resize_frame(frame, short_edge=256):
     height, width = frame.shape[:2]
@@ -23,6 +32,7 @@ def resize_frame(frame, short_edge=256):
         resized_frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
         return resized_frame
 
+
 def extract_frames(video_path, output_folder, num_frames=8):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -30,7 +40,7 @@ def extract_frames(video_path, output_folder, num_frames=8):
         return
 
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    frames_to_capture = set([0, total_frames - 1])
+    frames_to_capture = {0, total_frames - 1}
     frames_interval = (total_frames - 1) // (num_frames - 1)
     for i in range(1, num_frames - 1):
         frames_to_capture.add(i * frames_interval)
@@ -52,10 +62,11 @@ def extract_frames(video_path, output_folder, num_frames=8):
 
     cap.release()
 
+
 def process_all_videos(folder_path, output_folder):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    
+
     video_files = [f for f in os.listdir(folder_path) if f.endswith((".mp4", ".avi", ".mov"))]
     total_videos = len(video_files)
     skipped_videos = 0
@@ -96,6 +107,7 @@ def main():
             input_folder = os.path.join(args.input_dir, model_name)
             output_folder = os.path.join(args.output_dir, model_name)
             process_all_videos(input_folder, output_folder)
+
 
 if __name__ == "__main__":
     main()

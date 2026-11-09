@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """Build the WRBench vNext main-table candidate from the D1-D6 metric contract."""
+
 from __future__ import annotations
 
 import argparse
 import csv
 import json
 from collections import defaultdict
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean
-from typing import Any, Mapping
+from typing import Any
 
 from . import latest_d1_d6_metrics as metric_contract
 
-EXCLUDED_MAIN_TABLE_MODELS = set(
-    metric_contract.MAIN_TABLE_HYPERPARAMETERS["excluded_main_table_models"]
-)
+EXCLUDED_MAIN_TABLE_MODELS = set(metric_contract.MAIN_TABLE_HYPERPARAMETERS["excluded_main_table_models"])
 DIMENSION_SPECS = metric_contract.latest_metric_specs()
 D1_SPEC = metric_contract.metric_by_dimension("D1")
 D2_SPEC = metric_contract.metric_by_dimension("D2")
@@ -67,7 +67,12 @@ VIEWPOINT_CONDITION_BY_MODEL: dict[str, str] = {
 def _viewpoint_condition(model: str) -> str:
     key = str(model).replace("_", "-")
     alt = str(model).replace("-", "_")
-    return VIEWPOINT_CONDITION_BY_MODEL.get(model) or VIEWPOINT_CONDITION_BY_MODEL.get(key) or VIEWPOINT_CONDITION_BY_MODEL.get(alt) or "unknown"
+    return (
+        VIEWPOINT_CONDITION_BY_MODEL.get(model)
+        or VIEWPOINT_CONDITION_BY_MODEL.get(key)
+        or VIEWPOINT_CONDITION_BY_MODEL.get(alt)
+        or "unknown"
+    )
 
 
 def _gate_applicable(row: Mapping[str, Any]) -> bool | None:
@@ -132,13 +137,11 @@ def build_table(
     d2_records: list[dict[str, Any]],
     d1_camalign_records: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    camalign_spec = metric_contract.metric_by_dimension("D1-CamAlign")
+    _camalign_spec = metric_contract.metric_by_dimension("D1-CamAlign")
     d1_by_id = _index(d1_records, artifact_name="D1 score artifact")
     d2_by_id = _index(d2_records, artifact_name="D2 score artifact")
     camalign_by_id = (
-        _index(d1_camalign_records, artifact_name="D1 CamAlign artifact")
-        if d1_camalign_records is not None
-        else {}
+        _index(d1_camalign_records, artifact_name="D1 CamAlign artifact") if d1_camalign_records is not None else {}
     )
     d1_by_model = _index_by_model(d1_records)
     d2_by_model = _index_by_model(d2_records)
@@ -157,12 +160,13 @@ def build_table(
     models_without_d2_d3_d6_artifacts: set[str] = set()
     for model in sorted(runtime_models | d1_models | d2_models):
         rows = (
-            buckets.get(model)
-            or d1_by_model.get(model)
-            or camalign_by_model.get(model)
-            or d2_by_model.get(model, [])
+            buckets.get(model) or d1_by_model.get(model) or camalign_by_model.get(model) or d2_by_model.get(model, [])
         )
-        out: dict[str, Any] = {"model": model, "n_records": len(rows), "viewpoint_condition_type": _viewpoint_condition(model)}
+        out: dict[str, Any] = {
+            "model": model,
+            "n_records": len(rows),
+            "viewpoint_condition_type": _viewpoint_condition(model),
+        }
         ready = True
         gate_values: list[bool] = []
         for spec in DIMENSION_SPECS:
@@ -208,9 +212,7 @@ def build_table(
                         continue
                     eligible += 1
                     d2_row = d2_by_id.get(video_id)
-                    if d2_row is None:
-                        value = None
-                    elif "d2_status" in d2_row and d2_row.get("d2_status") != "ok":
+                    if d2_row is None or ("d2_status" in d2_row and d2_row.get("d2_status") != "ok"):
                         value = None
                     else:
                         value = metric_contract.require_metric_value(
@@ -257,9 +259,7 @@ def build_table(
         "forbidden_fallback_fields": {
             spec.dimension_id: list(spec.forbidden_fallback_fields) for spec in DIMENSION_SPECS
         },
-        "metric_hyperparameters": {
-            spec.dimension_id: dict(spec.hyperparameters or {}) for spec in DIMENSION_SPECS
-        },
+        "metric_hyperparameters": {spec.dimension_id: dict(spec.hyperparameters or {}) for spec in DIMENSION_SPECS},
         "metric_evidence_status": metric_contract.metric_evidence_status(),
         "pending_evidence_dimensions": pending_evidence_dimensions,
         "table_hyperparameters": dict(metric_contract.MAIN_TABLE_HYPERPARAMETERS),

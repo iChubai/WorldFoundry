@@ -10,19 +10,19 @@ Method:
 3. per-case: score = 0.0 if has_cut else 1.0 (higher = better)
 4. model-level: overall.score = continuity_rate = fraction without cuts
 """
+
 from __future__ import annotations
 
-import datetime
-import json
-import os
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import cv2
 import numpy as np
 import torch
+
 from worldfoundry.base_models.perception_core.video_quality.transnetv2 import (
     TransNetV2,
+)
+from worldfoundry.base_models.perception_core.video_quality.transnetv2 import (
     checkpoint_path as transnetv2_checkpoint_path,
 )
 
@@ -78,7 +78,7 @@ def detect_scene_cuts(
     video_path: str,
     threshold: float = DEFAULT_THRESHOLD,
     min_scene_len: int = DEFAULT_MIN_SCENE_LEN,
-) -> List[int]:
+) -> list[int]:
     """Detect scene cuts using TransNetV2. Returns list of cut frame indices."""
     model = _get_transnet_model()
     frames = _read_frames_cv2(video_path)
@@ -95,9 +95,9 @@ def detect_scene_cuts(
     return filtered
 
 
-def compute_case(video_path: str, case_id: str,
-                 threshold: float = DEFAULT_THRESHOLD,
-                 min_scene_len: int = DEFAULT_MIN_SCENE_LEN) -> Dict[str, Any]:
+def compute_case(
+    video_path: str, case_id: str, threshold: float = DEFAULT_THRESHOLD, min_scene_len: int = DEFAULT_MIN_SCENE_LEN
+) -> dict[str, Any]:
     """Evaluate a single video for segment continuity."""
     try:
         cut_frames = detect_scene_cuts(video_path, threshold, min_scene_len)
@@ -122,7 +122,7 @@ def compute_case(video_path: str, case_id: str,
         }
 
 
-def summarize_model_results(case_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarize_model_results(case_records: list[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate per-case results into model-level summary."""
     valid = [r for r in case_records if r.get("score") is not None]
     if not valid:

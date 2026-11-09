@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-
 HPSV3_NORMALIZATION_VERSION = "harnesseval.hpsv3_affine"
 HPSV3_LOWER_BOUND = -8.0
 HPSV3_UPPER_BOUND = 12.0
 
 __all__ = [
-    "HPSV3_NORMALIZATION_VERSION",
     "HPSV3_LOWER_BOUND",
+    "HPSV3_NORMALIZATION_VERSION",
     "HPSV3_UPPER_BOUND",
-    "hpsv3_to_unit",
     "hpsv3_from_unit",
+    "hpsv3_to_unit",
 ]
 
 

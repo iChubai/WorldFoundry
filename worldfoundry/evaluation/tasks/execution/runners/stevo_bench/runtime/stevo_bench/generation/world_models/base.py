@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional
 
 
 class WorldModelRunner(ABC):
@@ -21,16 +20,16 @@ class WorldModelRunner(ABC):
         self.name = name
         self.config = config
         self.prompt_field: str = config.get("prompt_field", "video_WM")
-        self.camera_control_field: Optional[str] = config.get("camera_control_field")
+        self.camera_control_field: str | None = config.get("camera_control_field")
 
     @abstractmethod
     def generate(
         self,
         task_id: str,
         prompt: str,
-        init_frame: Optional[Path],
+        init_frame: Path | None,
         output_path: Path,
-        camera_control: Optional[str] = None,
+        camera_control: str | None = None,
     ) -> bool:
         """Generate a video for one task.
 

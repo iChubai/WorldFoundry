@@ -1,4 +1,3 @@
-
 import argparse
 import binascii
 import logging
@@ -11,14 +10,14 @@ import imageio
 import torch
 import torchvision
 
-__all__ = ['save_video', 'save_image', 'str2bool', 'merge_video_audio']
+__all__ = ["merge_video_audio", "save_image", "save_video", "str2bool"]
 
 
-def rand_name(length=8, suffix=''):
-    name = binascii.b2a_hex(os.urandom(length)).decode('utf-8')
+def rand_name(length=8, suffix=""):
+    name = binascii.b2a_hex(os.urandom(length)).decode("utf-8")
     if suffix:
-        if not suffix.startswith('.'):
-            suffix = '.' + suffix
+        if not suffix.startswith("."):
+            suffix = "." + suffix
         name += suffix
     return name
 
@@ -42,29 +41,28 @@ def merge_video_audio(video_path: str, audio_path: str):
     base, ext = os.path.splitext(video_path)
     temp_output = f"{base}_temp{ext}"
     command = [
-        'ffmpeg',
-        '-y',
-        '-i',
+        "ffmpeg",
+        "-y",
+        "-i",
         video_path,
-        '-i',
+        "-i",
         audio_path,
-        '-c:v',
-        'copy',
-        '-c:a',
-        'aac',
-        '-b:a',
-        '192k',
-        '-map',
-        '0:v:0',
-        '-map',
-        '1:a:0',
-        '-shortest',
-        temp_output
+        "-c:v",
+        "copy",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "192k",
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a:0",
+        "-shortest",
+        temp_output,
     ]
 
     logging.info("Start merging video and audio...")
-    result = subprocess.run(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = subprocess.run(command, capture_output=True, text=True)
     if result.returncode != 0:
         if os.path.exists(temp_output):
             os.remove(temp_output)
@@ -73,28 +71,21 @@ def merge_video_audio(video_path: str, audio_path: str):
     logging.info(f"Merge completed, saved to {video_path}")
 
 
-def save_video(tensor,
-               save_file=None,
-               fps=30,
-               suffix='.mp4',
-               nrow=8,
-               normalize=True,
-               value_range=(-1, 1)):
+def save_video(tensor, save_file=None, fps=30, suffix=".mp4", nrow=8, normalize=True, value_range=(-1, 1)):
     # cache file
-    cache_file = osp.join('/tmp', rand_name(
-        suffix=suffix)) if save_file is None else save_file
+    cache_file = osp.join("/tmp", rand_name(suffix=suffix)) if save_file is None else save_file
 
     tensor = tensor.clamp(min(value_range), max(value_range))
-    tensor = torch.stack([
-        torchvision.utils.make_grid(
-            u, nrow=nrow, normalize=normalize, value_range=value_range)
-        for u in tensor.unbind(2)
-    ],
-                         dim=1).permute(1, 2, 3, 0)
+    tensor = torch.stack(
+        [
+            torchvision.utils.make_grid(u, nrow=nrow, normalize=normalize, value_range=value_range)
+            for u in tensor.unbind(2)
+        ],
+        dim=1,
+    ).permute(1, 2, 3, 0)
     tensor = (tensor * 255).type(torch.uint8).cpu()
 
-    writer = imageio.get_writer(
-        cache_file, fps=fps, codec='libx264', quality=8)
+    writer = imageio.get_writer(cache_file, fps=fps, codec="libx264", quality=8)
     for frame in tensor.numpy():
         writer.append_data(frame)
     writer.close()
@@ -103,18 +94,11 @@ def save_video(tensor,
 def save_image(tensor, save_file, nrow=8, normalize=True, value_range=(-1, 1)):
     # cache file
     suffix = osp.splitext(save_file)[1]
-    if suffix.lower() not in [
-            '.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp'
-    ]:
-        suffix = '.png'
+    if suffix.lower() not in [".jpg", ".jpeg", ".png", ".tiff", ".gif", ".webp"]:
+        suffix = ".png"
 
     tensor = tensor.clamp(min(value_range), max(value_range))
-    torchvision.utils.save_image(
-        tensor,
-        save_file,
-        nrow=nrow,
-        normalize=normalize,
-        value_range=value_range)
+    torchvision.utils.save_image(tensor, save_file, nrow=nrow, normalize=normalize, value_range=value_range)
     return save_file
 
 
@@ -137,9 +121,9 @@ def str2bool(v):
     if isinstance(v, bool):
         return v
     v_lower = v.lower()
-    if v_lower in ('yes', 'true', 't', 'y', '1'):
+    if v_lower in ("yes", "true", "t", "y", "1"):
         return True
-    elif v_lower in ('no', 'false', 'f', 'n', '0'):
+    elif v_lower in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected (True/False)')
+        raise argparse.ArgumentTypeError("Boolean value expected (True/False)")

@@ -103,7 +103,7 @@ class ClipEncoder:
     def encode(self, text):
         _, pooled_embeddings = self.text_encoder.encode(text)
         y = pooled_embeddings.unsqueeze(1).unsqueeze(1)
-        return dict(y=y)
+        return {"y": y}
 
     def null(self, n):
         null_y = self.y_embedder.y_embedding[None].repeat(n, 1, 1)[:, None]

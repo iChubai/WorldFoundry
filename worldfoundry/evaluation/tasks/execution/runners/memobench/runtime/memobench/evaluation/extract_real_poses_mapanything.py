@@ -1,10 +1,10 @@
-import os
-import sys
-import json
 import argparse
+import json
+import os
 import tempfile
-import numpy as np
+
 import cv2
+import numpy as np
 from tqdm import tqdm
 
 GT_REAL_DIR = "data/Real_Raw"
@@ -91,11 +91,9 @@ def get_all_clip_ids() -> list:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--clip-ids", nargs="*", default=None,
-                        help="Specific clip IDs to process. Default: all.")
+    parser.add_argument("--clip-ids", nargs="*", default=None, help="Specific clip IDs to process. Default: all.")
     parser.add_argument("--output-dir", default=OUTPUT_DIR)
-    parser.add_argument("--skip-existing", action="store_true",
-                        help="Skip clips that already have output.")
+    parser.add_argument("--skip-existing", action="store_true", help="Skip clips that already have output.")
     parser.add_argument("--device", default="cuda")
     args = parser.parse_args()
 

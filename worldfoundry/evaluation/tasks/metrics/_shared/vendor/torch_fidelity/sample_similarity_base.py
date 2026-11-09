@@ -13,7 +13,7 @@ class SampleSimilarityBase(nn.Module):
             name (str): Unique name of the subclassed sample similarity measure, must be the same as used in
                 :func:`register_sample_similarity`.
         """
-        super(SampleSimilarityBase, self).__init__()
+        super().__init__()
         vassert(type(name) is str, "Sample similarity name must be a string")
         self.name = name
 

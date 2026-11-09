@@ -10,8 +10,9 @@ imports an adjacent source checkout.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 import torch
 import torch.nn.functional as F
@@ -286,7 +287,7 @@ class ActionHeadConfig:
     diffusion_model_cfg: Mapping[str, Any] | None = None
 
     @classmethod
-    def from_mapping(cls, value: Mapping[str, Any]) -> "ActionHeadConfig":
+    def from_mapping(cls, value: Mapping[str, Any]) -> ActionHeadConfig:
         fields = cls.__dataclass_fields__
         return cls(**{key: item for key, item in value.items() if key in fields})
 
@@ -317,9 +318,7 @@ class FlowmatchingActionHead(nn.Module):
         self.action_horizon = config.action_horizon
         self.num_inference_timesteps = config.num_inference_timesteps
         self.state_encoder = (
-            MLP(config.state_dim, config.hidden_size, self.input_embedding_dim)
-            if config.state_dim
-            else None
+            MLP(config.state_dim, config.hidden_size, self.input_embedding_dim) if config.state_dim else None
         )
         self.action_encoder = ActionEncoder(config.action_dim, self.input_embedding_dim)
         self.action_decoder = MLP(self.model.config.output_dim, config.hidden_size, config.action_dim)

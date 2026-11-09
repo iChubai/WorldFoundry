@@ -31,10 +31,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import os
+
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from loguru import logger
+
 import numpy as np
+from loguru import logger
 from scipy import linalg
 
 try:
@@ -73,10 +74,8 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-5):
     sigma1 = np.atleast_2d(sigma1)
     sigma2 = np.atleast_2d(sigma2)
 
-    assert mu1.shape == mu2.shape, \
-        'Training and test mean vectors have different lengths'
-    assert sigma1.shape == sigma2.shape, \
-        'Training and test covariances have different dimensions'
+    assert mu1.shape == mu2.shape, "Training and test mean vectors have different lengths"
+    assert sigma1.shape == sigma2.shape, "Training and test covariances have different dimensions"
 
     diff = mu1 - mu2
 
@@ -84,8 +83,7 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-5):
     offset = np.eye(sigma1.shape[0]) * eps
     covmean, _ = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset), disp=False)
     if not np.isfinite(covmean).all():
-        msg = ('fid calculation produces singular product; '
-               'adding %s to diagonal of cov estimates') % eps
+        msg = f"fid calculation produces singular product; adding {eps} to diagonal of cov estimates"
         print(msg)
         offset = np.eye(sigma1.shape[0]) * eps
         covmean = linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
@@ -94,12 +92,12 @@ def calculate_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-5):
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
             m = np.max(np.abs(covmean.imag))
-            raise ValueError('Imaginary component {}'.format(m))
+            raise ValueError(f"Imaginary component {m}")
         covmean = covmean.real
 
     tr_covmean = np.trace(covmean)
-    return (diff.dot(diff) + np.trace(sigma1)
-            + np.trace(sigma2) - 2 * tr_covmean)
+    return diff.dot(diff) + np.trace(sigma1) + np.trace(sigma2) - 2 * tr_covmean
+
 
 def calculate_activation_statistics(v):
     """Calculation of the statistics used by the FID.
@@ -125,6 +123,7 @@ def calculate_activation_statistics(v):
     sigma = np.cov(act, rowvar=False)
     return mu, sigma
 
+
 def calculate_fd_given_vectors(feat1, feat2):
     """Calculates the Frechet Distance of two set of vectors
     Params:
@@ -143,8 +142,7 @@ def calculate_fd_given_vectors(feat1, feat2):
 
 def main():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('path', type=str, nargs=2,
-                        help=('Paths to the feature .npy files'))
+    parser.add_argument("path", type=str, nargs=2, help=("Paths to the feature .npy files"))
     args = parser.parse_args()
 
     feat1 = np.load(args.path[0])
@@ -152,8 +150,8 @@ def main():
 
     fvmd_value = calculate_fd_given_vectors(feat1, feat2)
 
-    logger.info(f'FVMD: {fvmd_value}')
+    logger.info(f"FVMD: {fvmd_value}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

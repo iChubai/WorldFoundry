@@ -14,7 +14,6 @@ from .base_operator import BaseOperator
 
 
 def _to_rgb_pil_image(data: Any) -> Image.Image:
-    """To rgb pil image implementation."""
     if isinstance(data, Image.Image):
         return data.convert("RGB")
 
@@ -39,7 +38,6 @@ def _to_rgb_pil_image(data: Any) -> Image.Image:
 
 
 def _is_pose_sequence(value: Any) -> bool:
-    """Is pose sequence implementation."""
     try:
         array = np.asarray(value, dtype=np.float64)
     except Exception:

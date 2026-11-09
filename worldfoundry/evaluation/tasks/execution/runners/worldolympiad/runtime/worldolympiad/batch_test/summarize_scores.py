@@ -10,7 +10,6 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any
 
-
 SCORE_FIELDS = {
     "three_d": ("three_d", "final_score_normalized"),
     "interaction": ("interaction", "score"),
@@ -199,11 +198,7 @@ def aggregate(case_rows: list[dict[str, Any]], summary_rows: list[dict[str, Any]
 
     score_summary = {}
     for name in SCORE_FIELDS:
-        values = [
-            value
-            for value in (as_float(row.get(f"{name}_score")) for row in case_rows)
-            if value is not None
-        ]
+        values = [value for value in (as_float(row.get(f"{name}_score")) for row in case_rows) if value is not None]
         score_summary[name] = score_stats(values)
 
     physical_counts = empty_physical_counts()

@@ -12,10 +12,9 @@ import os
 import subprocess
 import tempfile
 import time
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
-
-
+from typing import Any
 
 N1_RELEASE_COMMIT = "755876a9afdb41ca6eb6383b36f4a0adb085c73f"
 
@@ -60,9 +59,7 @@ def _official_source(path: str | Path | None) -> Path:
     )
     revision = result.stdout.strip()
     if revision != N1_RELEASE_COMMIT:
-        raise ValueError(
-            f"GR00T-N1 source revision is {revision}; expected n1-release {N1_RELEASE_COMMIT}"
-        )
+        raise ValueError(f"GR00T-N1 source revision is {revision}; expected n1-release {N1_RELEASE_COMMIT}")
     dirty = subprocess.run(
         ["git", "-C", str(root), "status", "--porcelain", "--", "gr00t"],
         capture_output=True,

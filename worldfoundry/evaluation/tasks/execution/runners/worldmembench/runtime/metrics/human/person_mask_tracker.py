@@ -81,7 +81,7 @@ class YoloWorldPersonDetector:
             return detections
         coordinates = boxes.xyxy.detach().float().cpu().numpy()
         confidences = boxes.conf.detach().float().cpu().numpy()
-        for raw_box, confidence in zip(coordinates, confidences):
+        for raw_box, confidence in zip(coordinates, confidences, strict=False):
             try:
                 box = BoundingBox.from_value(raw_box.tolist(), field_name="YOLO person")
             except ValueError:

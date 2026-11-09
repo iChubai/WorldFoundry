@@ -1,13 +1,15 @@
+import contextlib
 import csv
 import json
 import os
 from collections import defaultdict
 
 from worldfoundry.core.distributed.collectives.evaluation import print0
+
 from .utils import init_submodules, save_json
 
 
-class EmbodiedWorldModelBenchmark(object):
+class EmbodiedWorldModelBenchmark:
     def __init__(self, device, output_path):
         self.device = device
         self.output_path = output_path
@@ -67,7 +69,7 @@ class EmbodiedWorldModelBenchmark(object):
     def merge_all_metrics_to_csv(self, data_name, data, save_path="final_results.csv"):
         rows = []
         metrics = defaultdict(list)
-        all_fields = set(["task_id", "episode_id", "trial_id"])
+        all_fields = {"task_id", "episode_id", "trial_id"}
         scene_dict = {}
         logic_dict = {}
         diversity_data = data.get("diversity", {})
@@ -92,10 +94,7 @@ class EmbodiedWorldModelBenchmark(object):
                     gid_contents = gid.split("_dataset_")[-1].split("_")
                     task_id = gid_contents[0]
                     trail_id = gid_contents[-1]
-                    if len(gid_contents) == 3:
-                        episode_id = gid_contents[1]
-                    else:
-                        episode_id = "_".join(gid_contents[1:-1])
+                    episode_id = gid_contents[1] if len(gid_contents) == 3 else "_".join(gid_contents[1:-1])
                     logic_dict[(task_id, episode_id, trail_id)] = val
                     all_triplets.add((task_id, episode_id, trail_id))
                 except Exception:
@@ -111,7 +110,7 @@ class EmbodiedWorldModelBenchmark(object):
                 continue
             for task_id, epis in data[dim].items():
                 for episode_id, trials in epis.items():
-                    for trial_id in trials.keys():
+                    for trial_id in trials:
                         all_triplets.add((task_id, episode_id, trial_id))
 
         for task_id, episode_id, trial_id in sorted(all_triplets):
@@ -150,10 +149,8 @@ class EmbodiedWorldModelBenchmark(object):
                     if k in traj:
                         row[k] = traj[k]
                         all_fields.add(k)
-                        try:
+                        with contextlib.suppress(Exception):
                             metrics[k].append(float(traj[k]))
-                        except Exception:
-                            pass
 
             sc = scene_dict.get((task_id, episode_id, trial_id), "")
             if sc != "":
@@ -165,10 +162,8 @@ class EmbodiedWorldModelBenchmark(object):
             if logic != "":
                 row["logic_constraints"] = logic
                 all_fields.add("logic_constraints")
-                try:
+                with contextlib.suppress(Exception):
                     metrics["logic_constraints"].append(int(logic))
-                except Exception:
-                    pass
 
             str_task_id = str(task_id)
             str_episode_id = str(episode_id)
@@ -186,15 +181,13 @@ class EmbodiedWorldModelBenchmark(object):
             rows.append(row)
 
         field_list = []
-        for f in ["task_id", "episode_id", "trial_id"] + sorted(
-            all_fields - {"task_id", "episode_id", "trial_id"}
-        ):
+        for f in ["task_id", "episode_id", "trial_id", *sorted(all_fields - {"task_id", "episode_id", "trial_id"})]:
             if any(f in r and r[f] != "" for r in rows):
                 field_list.append(f)
 
         non_empty_fields = list(field_list)
 
-        mean_row = {f: "" for f in non_empty_fields}
+        mean_row = dict.fromkeys(non_empty_fields, "")
         mean_row["task_id"] = "MEAN"
         for f in non_empty_fields:
             if f in metrics:
@@ -211,7 +204,9 @@ class EmbodiedWorldModelBenchmark(object):
             writer.writerow({})
             writer.writerow(
                 {
-                    non_empty_fields[0]: "# Diversity is calculated based on the generation results of different trails within the same episode. Only shown in trial_id=1. Others are marked with '-'."
+                    non_empty_fields[
+                        0
+                    ]: "# Diversity is calculated based on the generation results of different trails within the same episode. Only shown in trial_id=1. Others are marked with '-'."
                 }
             )
 
@@ -260,7 +255,7 @@ class EmbodiedWorldModelBenchmark(object):
                         **kwargs,
                     )
                     caption_json = os.path.join(self.output_path, f"{data_name}_caption_responses.json")
-                    with open(caption_json, "r") as f:
+                    with open(caption_json) as f:
                         data = json.load(f)
 
                     result = {}
@@ -299,9 +294,7 @@ class EmbodiedWorldModelBenchmark(object):
                 elif dimension == "psnr_ssim":
                     from .basic_metrics import compute_basic_metrics
 
-                    results = compute_basic_metrics(
-                        gt_path=gt_path, pd_path=data_base, metric_names=["psnr", "ssim"]
-                    )
+                    results = compute_basic_metrics(gt_path=gt_path, pd_path=data_base, metric_names=["psnr", "ssim"])
 
                 elif dimension == "psnr":
                     from .basic_metrics import compute_basic_metrics
@@ -327,7 +320,7 @@ class EmbodiedWorldModelBenchmark(object):
                 json.dump(results_dict, f, indent=2)
 
         else:
-            with open(json_path, "r") as f:
+            with open(json_path) as f:
                 results_dict = json.load(f)
 
         csv_save_path = os.path.join(self.output_path, "ewmbm_final_table.csv")

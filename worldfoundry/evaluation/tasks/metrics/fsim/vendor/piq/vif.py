@@ -5,17 +5,22 @@ https://live.ece.utexas.edu/research/Quality/VIF.htm
 References:
     https://ieeexplore.ieee.org/abstract/document/1576816/
 """
+
 import torch
-from torch.nn.modules.loss import _Loss
 import torch.nn.functional as F
-from typing import Union
+from torch.nn.modules.loss import _Loss
 
 from piq.functional import gaussian_filter
-from piq.utils import _validate_input, _reduce
+from piq.utils import _reduce, _validate_input
 
 
-def vif_p(x: torch.Tensor, y: torch.Tensor, sigma_n_sq: float = 2.0,
-          data_range: Union[int, float] = 1.0, reduction: str = 'mean') -> torch.Tensor:
+def vif_p(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    sigma_n_sq: float = 2.0,
+    data_range: int | float = 1.0,
+    reduction: str = "mean",
+) -> torch.Tensor:
     r"""Compute Visiual Information Fidelity in **pixel** domain for a batch of images.
     This metric isn't symmetric, so make sure to place arguments in correct order.
     Both inputs supposed to have RGB channels order.
@@ -47,7 +52,7 @@ def vif_p(x: torch.Tensor, y: torch.Tensor, sigma_n_sq: float = 2.0,
 
     min_size = 41
     if x.size(-1) < min_size or x.size(-2) < min_size:
-        raise ValueError(f'Invalid size of the input images, expected at least {min_size}x{min_size}.')
+        raise ValueError(f"Invalid size of the input images, expected at least {min_size}x{min_size}.")
 
     x = x / float(data_range) * 255
     y = y / float(data_range) * 255
@@ -81,8 +86,8 @@ def vif_p(x: torch.Tensor, y: torch.Tensor, sigma_n_sq: float = 2.0,
         mu_x_sq, mu_y_sq, mu_xy = mu_x * mu_x, mu_y * mu_y, mu_x * mu_y
 
         # Good
-        sigma_x_sq = F.conv2d(x ** 2, kernel) - mu_x_sq
-        sigma_y_sq = F.conv2d(y ** 2, kernel) - mu_y_sq
+        sigma_x_sq = F.conv2d(x**2, kernel) - mu_x_sq
+        sigma_y_sq = F.conv2d(y**2, kernel) - mu_y_sq
         sigma_xy = F.conv2d(x * y, kernel) - mu_xy
 
         # Zero small negative values
@@ -104,7 +109,7 @@ def vif_p(x: torch.Tensor, y: torch.Tensor, sigma_n_sq: float = 2.0,
 
         sigma_v_sq = torch.where(sigma_v_sq > EPS, sigma_v_sq, torch.ones_like(sigma_v_sq) * EPS)
 
-        x_vif_scale = torch.log10(1.0 + (g ** 2.) * sigma_y_sq / (sigma_v_sq + sigma_n_sq))
+        x_vif_scale = torch.log10(1.0 + (g**2.0) * sigma_y_sq / (sigma_v_sq + sigma_n_sq))
         x_vif = x_vif + torch.sum(x_vif_scale, dim=[1, 2, 3])
         y_vif = y_vif + torch.sum(torch.log10(1.0 + sigma_y_sq / sigma_n_sq), dim=[1, 2, 3])
 
@@ -138,7 +143,7 @@ class VIFLoss(_Loss):
         DOI: 10.1109/TIP.2005.859378.
     """
 
-    def __init__(self, sigma_n_sq: float = 2.0, data_range: Union[int, float] = 1.0, reduction: str = 'mean'):
+    def __init__(self, sigma_n_sq: float = 2.0, data_range: int | float = 1.0, reduction: str = "mean"):
         super().__init__()
         self.sigma_n_sq = sigma_n_sq
         self.data_range = data_range

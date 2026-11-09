@@ -1,14 +1,16 @@
 """HPSv3 human preference score — Qwen2-VL-7B based preference model."""
+
 import os
 import tempfile
 from contextlib import contextmanager
-from typing import Dict, Any, List
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 
 from ..base import BaseMetric
+
 
 class HPSv3QualityMetric(BaseMetric):
     def __init__(self, device="cuda"):
@@ -21,12 +23,12 @@ class HPSv3QualityMetric(BaseMetric):
     def name(self):
         return "hpsv3_quality"
 
-    def compute(self, frames: List[Image.Image], **kwargs) -> Dict[str, Any]:
+    def compute(self, frames: list[Image.Image], **kwargs) -> dict[str, Any]:
         with self.prepare_cpu(frames) as prepared:
             return self.compute_prepared(prepared)
 
     @contextmanager
-    def prepare_cpu(self, frames: List[Image.Image], *, executor=None):
+    def prepare_cpu(self, frames: list[Image.Image], *, executor=None):
         with tempfile.TemporaryDirectory(prefix=f"hpsv3_{os.getpid()}_") as tmp_dir:
             tmp_paths = [os.path.join(tmp_dir, f"frame_{i}.png") for i in range(len(frames))]
 
@@ -45,7 +47,7 @@ class HPSv3QualityMetric(BaseMetric):
             prompts = [""] * len(tmp_paths)
             yield (tmp_paths, prompts)
 
-    def compute_prepared(self, batch) -> Dict[str, Any]:
+    def compute_prepared(self, batch) -> dict[str, Any]:
         with torch.no_grad():
             rewards = self.inferencer.reward(*batch)
         raw_scores = [rewards[i][0].item() for i in range(len(rewards))]

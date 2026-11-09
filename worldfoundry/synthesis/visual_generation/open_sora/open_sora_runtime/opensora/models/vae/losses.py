@@ -62,7 +62,7 @@ class VAELoss(nn.Module):
     ):
         super().__init__()
 
-        if type(dtype) == str:
+        if type(dtype) is str:
             if dtype == "bf16":
                 dtype = torch.bfloat16
             elif dtype == "fp16":
@@ -170,7 +170,7 @@ class AdversarialLoss(nn.Module):
                 sigmoid_cross_entropy_with_logits(labels=torch.ones_like(fake_logits), logits=fake_logits)
             )
         else:
-            raise ValueError("Generator loss {} not supported".format(self.generator_loss_type))
+            raise ValueError(f"Generator loss {self.generator_loss_type} not supported")
 
         if self.discriminator_factor is not None and self.discriminator_factor > 0.0:
             try:

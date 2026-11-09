@@ -2,12 +2,17 @@ import json
 import os
 
 import torch
+
+# isort: split
 from EWMBench.utils import load_dimension_info
+
+# isort: split
+from tqdm import tqdm
+from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
+
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import process_vision_info
 from worldfoundry.core.execution.device import get_current_torch_device, resolve_inference_dtype
 from worldfoundry.core.execution.inference_runtime import resolve_generation_max_new_tokens
-from tqdm import tqdm
-from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
 try:
     import json_repair
@@ -55,13 +60,13 @@ def inference(
         with torch.inference_mode():
             outputs = model.generate(**inputs, max_new_tokens=max_new_tokens)
 
-        generated_ids = [output_ids[len(input_ids) :] for input_ids, output_ids in zip(inputs.input_ids, outputs)]
-        output_text = processor.batch_decode(
-            generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True
-        )
+        generated_ids = [
+            output_ids[len(input_ids) :] for input_ids, output_ids in zip(inputs.input_ids, outputs, strict=False)
+        ]
+        output_text = processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=True)
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error: {e!s}")
         output_text = ["Error: " + str(e)]
 
     return output_text[0]
@@ -124,7 +129,7 @@ def caption_reference(model_name, model_path, video_folder_root, save_path, **kw
             try:
                 response = json_repair.loads(inference(model, processor, mp4_file, prompt))
             except Exception as e:
-                print(f"Error: {str(e)}")
+                print(f"Error: {e!s}")
                 response = "Error: " + str(e)
 
             parts = mp4_file.split("/")
@@ -133,7 +138,7 @@ def caption_reference(model_name, model_path, video_folder_root, save_path, **kw
                 start_index = parts.index(model_dataset) + 1
                 video_index = parts.index("video")
                 selected_parts = parts[start_index:video_index]
-                mp4_file_name = "_".join([model_dataset] + selected_parts)
+                mp4_file_name = "_".join([model_dataset, *selected_parts])
             except ValueError:
                 mp4_file_name = "error_in_filename_construction"
 

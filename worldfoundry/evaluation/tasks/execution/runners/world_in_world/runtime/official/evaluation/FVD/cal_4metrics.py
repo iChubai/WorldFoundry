@@ -1,15 +1,17 @@
-
 import torch
 import torch.nn.functional as F
-from .calculate_fvd import calculate_fvd
+
 from .calculate_psnr import calculate_psnr
 from .calculate_ssim import calculate_ssim
+
+# isort: split
 from .calculate_lpips import calculate_lpips
+
 
 def evaluate_video_metrics(
     ground_truth_frames,
     generated_frames,
-    device='cpu',
+    device="cpu",
     only_final=False,
     fvd_method="styleganv",
     resize_hw=None,
@@ -31,21 +33,22 @@ def evaluate_video_metrics(
     # 1. Concatenate all videos
     # Example: if ground_truth_frames is a list of shape [B, T, C, H, W]
     # for each batch, we can concatenate along dim=0 to combine them.
-    if ground_truth_frames[0].dim() == 3:   # shape: [C, H, W]
+    if ground_truth_frames[0].dim() == 3:  # shape: [C, H, W]
         ground_truth_frames = [frame.reshape(1, 1, *frame.shape) for frame in ground_truth_frames]
         generated_frames = [frame.reshape(1, 1, *frame.shape) for frame in generated_frames]
-    if ground_truth_frames[0].dim() == 4:   # shape: [N, C, H, W]
+    if ground_truth_frames[0].dim() == 4:  # shape: [N, C, H, W]
         ground_truth_frames = [frame.unsqueeze(0) for frame in ground_truth_frames]
         generated_frames = [frame.unsqueeze(0) for frame in generated_frames]
     elif ground_truth_frames[0].dim() == 5:
         pass
-    gt_videos = torch.cat(ground_truth_frames, dim=0).to(device)       # shape: [N, T, C, H, W]
-    gen_videos = torch.cat(generated_frames, dim=0).to(device)         # shape: [N, T, C, H, W]
+    gt_videos = torch.cat(ground_truth_frames, dim=0).to(device)  # shape: [N, T, C, H, W]
+    gen_videos = torch.cat(generated_frames, dim=0).to(device)  # shape: [N, T, C, H, W]
 
     # 2. Optional: Ensure data is in [0,1] & resize
     # If your data is already [0,1], you can skip normalization.
-    assert gt_videos.dim() == 5 and gt_videos.shape == gen_videos.shape, \
+    assert gt_videos.dim() == 5 and gt_videos.shape == gen_videos.shape, (
         f"Shape mismatch: {gt_videos.shape} vs {gen_videos.shape}"
+    )
     assert gt_videos.min() >= 0 and gt_videos.max() <= 1
     assert gen_videos.min() >= 0 and gen_videos.max() <= 1
 
@@ -59,11 +62,11 @@ def evaluate_video_metrics(
         N, T, C, H, W = gt_videos.shape
 
         # Flatten the video dimension for resizing
-        gt_videos_2d = gt_videos.view(N*T, C, H, W)
-        gen_videos_2d = gen_videos.view(N*T, C, H, W)
+        gt_videos_2d = gt_videos.view(N * T, C, H, W)
+        gen_videos_2d = gen_videos.view(N * T, C, H, W)
 
-        gt_videos_2d = F.interpolate(gt_videos_2d, size=(new_h, new_w), mode='bilinear', align_corners=False)
-        gen_videos_2d = F.interpolate(gen_videos_2d, size=(new_h, new_w), mode='bilinear', align_corners=False)
+        gt_videos_2d = F.interpolate(gt_videos_2d, size=(new_h, new_w), mode="bilinear", align_corners=False)
+        gen_videos_2d = F.interpolate(gen_videos_2d, size=(new_h, new_w), mode="bilinear", align_corners=False)
 
         # Restore the time dimension
         gt_videos = gt_videos_2d.view(N, T, C, new_h, new_w)

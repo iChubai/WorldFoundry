@@ -62,9 +62,7 @@ class AdaSTBlock(nn.Module):
         self.time_attn_ln, self.time_attn = None, None
         if self.time_attention:
             self.time_attn_ln = (
-                AdaptiveLayerNorm(config.embed_dim, cond_dim)
-                if ada_attn_ln
-                else nn.LayerNorm(config.embed_dim)
+                AdaptiveLayerNorm(config.embed_dim, cond_dim) if ada_attn_ln else nn.LayerNorm(config.embed_dim)
             )
             self.time_attn = SelfAttention(config, causal=causal)
 

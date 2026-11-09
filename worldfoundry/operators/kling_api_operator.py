@@ -9,16 +9,11 @@ from .base_operator import BaseOperator
 
 
 def _image_to_data_url(image_input: Image.Image | str) -> str:
-    """Image to data url implementation."""
     return image_or_string_to_png_data_url(image_input, load_existing_path=True)
 
 
 class KlingApiOperator(BaseOperator):
-    """
-    Kling API 数据处理 Operator。
-
-    当前主要覆盖 text-to-video 和 image-to-video。
-    """
+    """Prepare prompts and image payloads for Kling API text-to-video and image-to-video requests."""
 
     def __init__(
         self,
@@ -64,17 +59,12 @@ class KlingApiOperator(BaseOperator):
             return result
 
         if isinstance(images, str) and images.startswith(("http://", "https://")):
-            result["image_payload"] = {
-                "field": image_field or "image_url",
-                "value": images,
-            }
-            result["images"] = images
-            return result
-
-        encoded = _image_to_data_url(images)
+            value = images
+        else:
+            value = _image_to_data_url(images)
         result["image_payload"] = {
             "field": image_field or "image_url",
-            "value": encoded,
+            "value": value,
         }
         result["images"] = images
         return result

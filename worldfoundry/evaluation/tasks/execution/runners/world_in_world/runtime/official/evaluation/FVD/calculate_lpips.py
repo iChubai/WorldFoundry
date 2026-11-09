@@ -1,19 +1,20 @@
+# ignore torchvision UserWarning of 'weights'
+import warnings
+
 import numpy as np
 import torch
 from tqdm import tqdm
-import math
 
-import torch
 from .lpips import lpips
-# ignore torchvision UserWarning of 'weights'
-import warnings
+
 warnings.filterwarnings("ignore")
 
-spatial = True         # Return a spatial map of perceptual distance.
+spatial = True  # Return a spatial map of perceptual distance.
 
 # Linearly calibrated models (LPIPS)
-loss_fn = lpips.LPIPS(net='alex', spatial=spatial) # Can also set net = 'squeeze' or 'vgg'
+loss_fn = lpips.LPIPS(net="alex", spatial=spatial)  # Can also set net = 'squeeze' or 'vgg'
 # loss_fn = lpips.LPIPS(net='alex', spatial=spatial, lpips=False) # Can also set net = 'squeeze' or 'vgg'
+
 
 def trans(x):
     # if greyscale images add channel
@@ -24,6 +25,7 @@ def trans(x):
     x = x * 2 - 1
 
     return x
+
 
 def calculate_lpips(videos1, videos2, device, only_final=False):
     # image should be RGB, IMPORTANT: normalized to [-1,1]
@@ -68,15 +70,13 @@ def calculate_lpips(videos1, videos2, device, only_final=False):
     per_video = lpips_results.mean(axis=1).tolist() if lpips_results.ndim == 2 else [float(lpips_results.mean())]
 
     if only_final:
-
         lpips.append(np.mean(lpips_results))
         lpips_std.append(np.std(lpips_results))
 
     else:
-
         for clip_timestamp in range(len(video1)):
-            lpips.append(np.mean(lpips_results[:,clip_timestamp]))
-            lpips_std.append(np.std(lpips_results[:,clip_timestamp]))
+            lpips.append(np.mean(lpips_results[:, clip_timestamp]))
+            lpips_std.append(np.std(lpips_results[:, clip_timestamp]))
 
     result = {
         "value": lpips,
@@ -86,7 +86,9 @@ def calculate_lpips(videos1, videos2, device, only_final=False):
 
     return result
 
+
 # test code / using example
+
 
 def main():
     NUMBER_OF_VIDEOS = 8
@@ -101,6 +103,7 @@ def main():
     result = calculate_lpips(videos1, videos2, device)
     print("[lpips avg]", result["value"])
     print("[lpips std]", result["value_std"])
+
 
 if __name__ == "__main__":
     main()

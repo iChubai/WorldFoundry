@@ -24,7 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.qwenvl import DEFAULT_QWEN_MODEL_NAME, chat_qwenvl_call
+from model.qwenvl import DEFAULT_QWEN_MODEL_NAME, chat_qwenvl_call  # noqa: E402 - Follows the sys.path setup.
 
 
 class QwenVLRequestHandler(BaseHTTPRequestHandler):
@@ -102,7 +102,7 @@ def main() -> None:
         chat_qwenvl_call(
             messages=[
                 {"role": "system", "content": "You are a concise assistant."},
-                {"role": "user", "content": "Return JSON: {\"ok\": true}"},
+                {"role": "user", "content": 'Return JSON: {"ok": true}'},
             ],
             model_name=args.model,
             timeout=args.timeout,

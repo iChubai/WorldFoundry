@@ -12,33 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint
-
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.loaders import FromOriginalModelMixin
-from diffusers.utils import logging
-from diffusers.utils.accelerate_utils import apply_forward_hook
 from diffusers.models.activations import get_activation
+from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
 from diffusers.models.modeling_outputs import AutoencoderKLOutput
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from diffusers.utils import logging
+from diffusers.utils.accelerate_utils import apply_forward_hook
 
+from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 CACHE_T = 2
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D
+import itertools  # noqa: E402 - Follows module-level setup, as upstream.
 
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import DupUp3D
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (  # noqa: E402 - Follows module-level setup, as upstream.
+    AvgDown3D,
+    DupUp3D,
+)
 
 
 class WanCausalConv3d(nn.Conv3d):
@@ -60,9 +60,9 @@ class WanCausalConv3d(nn.Conv3d):
         self,
         in_channels: int,
         out_channels: int,
-        kernel_size: Union[int, Tuple[int, int, int]],
-        stride: Union[int, Tuple[int, int, int]] = 1,
-        padding: Union[int, Tuple[int, int, int]] = 0,
+        kernel_size: int | tuple[int, int, int],
+        stride: int | tuple[int, int, int] = 1,
+        padding: int | tuple[int, int, int] = 0,
     ) -> None:
         super().__init__(
             in_channels=in_channels,
@@ -141,7 +141,7 @@ class WanResample(nn.Module):
             - 'downsample3d': 3D downsampling with zero-padding, convolution, and causal 3D convolution.
     """
 
-    def __init__(self, dim: int, mode: str, upsample_out_dim: int = None) -> None:
+    def __init__(self, dim: int, mode: str, upsample_out_dim: int | None = None) -> None:
         super().__init__()
         self.dim = dim
         self.mode = mode
@@ -172,49 +172,44 @@ class WanResample(nn.Module):
         else:
             self.resample = nn.Identity()
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         b, c, t, h, w = x.size()
-        if self.mode == "upsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = "Rep"
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -CACHE_T:, :, :].clone()
-                    if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
-                        # cache last frame of last two chunk
-                        cache_x = torch.cat(
-                            [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
-                        )
-                    if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
-                        cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
-                    if feat_cache[idx] == "Rep":
-                        x = self.time_conv(x)
-                    else:
-                        x = self.time_conv(x, feat_cache[idx])
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "upsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = "Rep"
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -CACHE_T:, :, :].clone()
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
+                    # cache last frame of last two chunk
+                    cache_x = torch.cat(
+                        [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
+                    )
+                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
+                    cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
+                x = self.time_conv(x) if feat_cache[idx] == "Rep" else self.time_conv(x, feat_cache[idx])
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
 
-                    x = x.reshape(b, 2, c, t, h, w)
-                    x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
-                    x = x.reshape(b, c, t * 2, h, w)
+                x = x.reshape(b, 2, c, t, h, w)
+                x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
+                x = x.reshape(b, c, t * 2, h, w)
         t = x.shape[2]
         x = x.permute(0, 2, 1, 3, 4).reshape(b * t, c, h, w)
         x = self.resample(x)
         x = x.view(b, t, x.size(1), x.size(2), x.size(3)).permute(0, 2, 1, 3, 4)
 
-        if self.mode == "downsample3d":
-            if feat_cache is not None:
-                idx = feat_idx[0]
-                if feat_cache[idx] is None:
-                    feat_cache[idx] = x.clone()
-                    feat_idx[0] += 1
-                else:
-                    cache_x = x[:, :, -1:, :, :].clone()
-                    x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
-                    feat_cache[idx] = cache_x
-                    feat_idx[0] += 1
+        if self.mode == "downsample3d" and feat_cache is not None:
+            idx = feat_idx[0]
+            if feat_cache[idx] is None:
+                feat_cache[idx] = x.clone()
+                feat_idx[0] += 1
+            else:
+                cache_x = x[:, :, -1:, :, :].clone()
+                x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
+                feat_cache[idx] = cache_x
+                feat_idx[0] += 1
         return x
 
 
@@ -249,7 +244,7 @@ class WanResidualBlock(nn.Module):
         self.conv2 = WanCausalConv3d(out_dim, out_dim, 3, padding=1)
         self.conv_shortcut = WanCausalConv3d(in_dim, out_dim, 1) if in_dim != out_dim else nn.Identity()
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         # Apply shortcut connection
         h = self.conv_shortcut(x)
 
@@ -362,12 +357,12 @@ class WanMidBlock(nn.Module):
 
         self.gradient_checkpointing = False
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         # First residual block
         x = self.resnets[0](x, feat_cache, feat_idx)
 
         # Process through attention and residual blocks
-        for attn, resnet in zip(self.attentions, self.resnets[1:]):
+        for attn, resnet in zip(self.attentions, self.resnets[1:], strict=False):
             if attn is not None:
                 x = attn(x)
 
@@ -402,7 +397,7 @@ class WanResidualDownBlock(nn.Module):
         else:
             self.downsampler = None
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         x_copy = x.clone()
         for resnet in self.resnets:
             x = resnet(x, feat_cache, feat_idx)
@@ -432,10 +427,10 @@ class WanEncoder3d(nn.Module):
         in_channels: int = 3,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
         non_linearity: str = "silu",
         is_residual: bool = False,  # wan 2.2 vae use a residual downblock
@@ -450,7 +445,7 @@ class WanEncoder3d(nn.Module):
         self.nonlinearity = get_activation(non_linearity)
 
         # dimensions
-        dims = [dim * u for u in [1] + dim_mult]
+        dims = [dim * u for u in [1] + dim_mult]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0
 
         # init block
@@ -458,7 +453,7 @@ class WanEncoder3d(nn.Module):
 
         # downsample blocks
         self.down_blocks = nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if is_residual:
                 self.down_blocks.append(
@@ -493,7 +488,7 @@ class WanEncoder3d(nn.Module):
 
         self.gradient_checkpointing = False
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         if feat_cache is not None:
             idx = feat_idx[0]
             cache_x = x[:, :, -CACHE_T:, :, :].clone()
@@ -508,10 +503,7 @@ class WanEncoder3d(nn.Module):
 
         ## downsamples
         for layer in self.down_blocks:
-            if feat_cache is not None:
-                x = layer(x, feat_cache, feat_idx)
-            else:
-                x = layer(x)
+            x = layer(x, feat_cache, feat_idx) if feat_cache is not None else layer(x)
 
         ## middle
         x = self.mid_block(x, feat_cache, feat_idx)
@@ -589,7 +581,7 @@ class WanResidualUpBlock(nn.Module):
 
         self.gradient_checkpointing = False
 
-    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):
+    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):  # noqa: B006 - Keeps the upstream default object and signature.
         """
         Forward pass through the upsampling block.
 
@@ -604,16 +596,10 @@ class WanResidualUpBlock(nn.Module):
         x_copy = x.clone()
 
         for resnet in self.resnets:
-            if feat_cache is not None:
-                x = resnet(x, feat_cache, feat_idx)
-            else:
-                x = resnet(x)
+            x = resnet(x, feat_cache, feat_idx) if feat_cache is not None else resnet(x)
 
         if self.upsampler is not None:
-            if feat_cache is not None:
-                x = self.upsampler(x, feat_cache, feat_idx)
-            else:
-                x = self.upsampler(x)
+            x = self.upsampler(x, feat_cache, feat_idx) if feat_cache is not None else self.upsampler(x)
 
         if self.avg_shortcut is not None:
             x = x + self.avg_shortcut(x_copy, first_chunk=first_chunk)
@@ -640,7 +626,7 @@ class WanUpBlock(nn.Module):
         out_dim: int,
         num_res_blocks: int,
         dropout: float = 0.0,
-        upsample_mode: Optional[str] = None,
+        upsample_mode: str | None = None,
         non_linearity: str = "silu",
     ):
         super().__init__()
@@ -664,7 +650,7 @@ class WanUpBlock(nn.Module):
 
         self.gradient_checkpointing = False
 
-    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=None):
+    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=None):  # noqa: B006 - Keeps the upstream default object and signature.
         """
         Forward pass through the upsampling block.
 
@@ -677,16 +663,10 @@ class WanUpBlock(nn.Module):
             torch.Tensor: Output tensor
         """
         for resnet in self.resnets:
-            if feat_cache is not None:
-                x = resnet(x, feat_cache, feat_idx)
-            else:
-                x = resnet(x)
+            x = resnet(x, feat_cache, feat_idx) if feat_cache is not None else resnet(x)
 
         if self.upsamplers is not None:
-            if feat_cache is not None:
-                x = self.upsamplers[0](x, feat_cache, feat_idx)
-            else:
-                x = self.upsamplers[0](x)
+            x = self.upsamplers[0](x, feat_cache, feat_idx) if feat_cache is not None else self.upsamplers[0](x)
         return x
 
 
@@ -709,10 +689,10 @@ class WanDecoder3d(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_upsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_upsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
         non_linearity: str = "silu",
         out_channels: int = 3,
@@ -729,7 +709,7 @@ class WanDecoder3d(nn.Module):
         self.nonlinearity = get_activation(non_linearity)
 
         # dimensions
-        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]
+        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         # init block
         self.conv_in = WanCausalConv3d(z_dim, dims[0], 3, padding=1)
@@ -739,7 +719,7 @@ class WanDecoder3d(nn.Module):
 
         # upsample blocks
         self.up_blocks = nn.ModuleList([])
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if i > 0 and not is_residual:
                 # wan vae 2.1
@@ -781,7 +761,7 @@ class WanDecoder3d(nn.Module):
 
         self.gradient_checkpointing = False
 
-    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):
+    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):  # noqa: B006 - Keeps the upstream default object and signature.
         ## conv1
         if feat_cache is not None:
             idx = feat_idx[0]
@@ -877,14 +857,14 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     def __init__(
         self,
         base_dim: int = 96,
-        decoder_base_dim: Optional[int] = None,
+        decoder_base_dim: int | None = None,
         z_dim: int = 16,
-        dim_mult: Tuple[int] = [1, 2, 4, 4],
+        dim_mult: tuple[int] = [1, 2, 4, 4],
         num_res_blocks: int = 2,
-        attn_scales: List[float] = [],
-        temperal_downsample: List[bool] = [False, True, True],
+        attn_scales: list[float] = [],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample: list[bool] = [False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout: float = 0.0,
-        latents_mean: List[float] = [
+        latents_mean: list[float] = [  # noqa: B006 - Keeps the upstream default object and signature.
             -0.7571,
             -0.7089,
             -0.9113,
@@ -902,7 +882,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
             0.2503,
             -0.2921,
         ],
-        latents_std: List[float] = [
+        latents_std: list[float] = [  # noqa: B006 - Keeps the upstream default object and signature.
             2.8184,
             1.4541,
             2.3275,
@@ -923,9 +903,9 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         is_residual: bool = False,
         in_channels: int = 3,
         out_channels: int = 3,
-        patch_size: Optional[int] = None,
-        scale_factor_temporal: Optional[int] = 4,
-        scale_factor_spatial: Optional[int] = 8,
+        patch_size: int | None = None,
+        scale_factor_temporal: int | None = 4,
+        scale_factor_spatial: int | None = 8,
     ) -> None:
         super().__init__()
 
@@ -993,10 +973,10 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
 
     def enable_tiling(
         self,
-        tile_sample_min_height: Optional[int] = None,
-        tile_sample_min_width: Optional[int] = None,
-        tile_sample_stride_height: Optional[float] = None,
-        tile_sample_stride_width: Optional[float] = None,
+        tile_sample_min_height: int | None = None,
+        tile_sample_min_width: int | None = None,
+        tile_sample_stride_height: float | None = None,
+        tile_sample_stride_width: float | None = None,
     ) -> None:
         r"""
         Enable tiled VAE decoding. When this option is enabled, the VAE will split the input tensor into tiles to
@@ -1082,7 +1062,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
     @apply_forward_hook
     def encode(
         self, x: torch.Tensor, return_dict: bool = True
-    ) -> Union[AutoencoderKLOutput, Tuple[DiagonalGaussianDistribution]]:
+    ) -> AutoencoderKLOutput | tuple[DiagonalGaussianDistribution]:
         r"""
         Encode a batch of images into latents.
 
@@ -1138,7 +1118,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         return DecoderOutput(sample=out)
 
     @apply_forward_hook
-    def decode(self, z: torch.Tensor, return_dict: bool = True) -> Union[DecoderOutput, torch.Tensor]:
+    def decode(self, z: torch.Tensor, return_dict: bool = True) -> DecoderOutput | torch.Tensor:
         r"""
         Decode a batch of images.
 
@@ -1244,7 +1224,7 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         enc = torch.cat(result_rows, dim=3)[:, :, :, :latent_height, :latent_width]
         return enc
 
-    def tiled_decode(self, z: torch.Tensor, return_dict: bool = True) -> Union[DecoderOutput, torch.Tensor]:
+    def tiled_decode(self, z: torch.Tensor, return_dict: bool = True) -> DecoderOutput | torch.Tensor:
         r"""
         Decode a batch of images using a tiled decoder.
 
@@ -1312,8 +1292,8 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         sample: torch.Tensor,
         sample_posterior: bool = False,
         return_dict: bool = True,
-        generator: Optional[torch.Generator] = None,
-    ) -> Union[DecoderOutput, torch.Tensor]:
+        generator: torch.Generator | None = None,
+    ) -> DecoderOutput | torch.Tensor:
         """
         Args:
             sample (`torch.Tensor`): Input sample.
@@ -1322,9 +1302,6 @@ class AutoencoderKLWan(ModelMixin, ConfigMixin, FromOriginalModelMixin):
         """
         x = sample
         posterior = self.encode(x).latent_dist
-        if sample_posterior:
-            z = posterior.sample(generator=generator)
-        else:
-            z = posterior.mode()
+        z = posterior.sample(generator=generator) if sample_posterior else posterior.mode()
         dec = self.decode(z, return_dict=return_dict)
         return dec

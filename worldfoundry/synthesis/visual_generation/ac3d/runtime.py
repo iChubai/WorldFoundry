@@ -7,8 +7,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import imageio.v3 as iio
 import numpy as np
@@ -216,14 +217,18 @@ def stage_direct_camera_dataset(
     for directory in (video_dir, pose_dir, annotation_dir):
         directory.mkdir(parents=True, exist_ok=True)
 
-    source_path = Path(
-        materialize_video_input(
-            video,
-            output_dir=str(video_dir),
-            filename="input.mp4",
-            fps=int(fps),
+    source_path = (
+        Path(
+            materialize_video_input(
+                video,
+                output_dir=str(video_dir),
+                filename="input.mp4",
+                fps=int(fps),
+            )
         )
-    ).expanduser().resolve()
+        .expanduser()
+        .resolve()
+    )
     suffix = source_path.suffix.lower() or ".mp4"
     staged_video = video_dir / f"input{suffix}"
     if source_path != staged_video.resolve(strict=False):
@@ -334,7 +339,7 @@ class AC3DRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "AC3DRuntime":
+    ) -> AC3DRuntime:
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["controlnet_model_path"] = str(pretrained_model_path)
@@ -580,7 +585,9 @@ class AC3DRuntime:
                 stderr=stderr,
             )
         except subprocess.CalledProcessError as error:
-            raise RuntimeError("AC3D generation failed. Check runtime dependencies, dataset paths, and GPU memory.") from error
+            raise RuntimeError(
+                "AC3D generation failed. Check runtime dependencies, dataset paths, and GPU memory."
+            ) from error
 
         start_idx = int(options["start_camera_idx"])
         generated_path = output_dir / f"{start_idx:05d}_out.mp4"

@@ -10,10 +10,11 @@ Method: Track1 (overall physics + causal consistency) + Track2 (per-dimension sc
 Requires: case_data['causal_fidelity']['dims'] for Track2 dimension selection.
 Frames: 3fps full video, original resolution (no resize).
 """
+
 import logging
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any
 
 from PIL import Image
 
@@ -168,7 +169,7 @@ TRACK2_SYSTEM_PROMPT = (
 )
 
 
-def _parse_score(response: str, max_score: int = 3) -> Tuple[Optional[int], str]:
+def _parse_score(response: str, max_score: int = 3) -> tuple[int | None, str]:
     """Extract score from 'Reason: ...\nScore: N' format."""
     reason = ""
     # Try to extract Reason:
@@ -182,7 +183,7 @@ def _parse_score(response: str, max_score: int = 3) -> Tuple[Optional[int], str]
         return min(int(score_match.group(1)), max_score), reason
 
     # Fallback: any single digit 0-3
-    match = re.search(r'\b([0-3])\b', response)
+    match = re.search(r"\b([0-3])\b", response)
     if match:
         return int(match.group(1)), reason or response
     return None, reason or response
@@ -190,10 +191,10 @@ def _parse_score(response: str, max_score: int = 3) -> Tuple[Optional[int], str]
 
 def evaluate_case(
     client: VLMClient,
-    frames: List[Image.Image],
-    case_data: Dict,
+    frames: list[Image.Image],
+    case_data: dict,
     nproc: int = 1,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Dual-track physics evaluation on full video frames (3fps, original resolution).
 
@@ -209,8 +210,9 @@ def evaluate_case(
     scene_name = scene.get("name", "")
 
     interactions = case_data.get("interactions", [])
-    actions = [it.get("action", "") for it in interactions
-               if it.get("type") != "perspective_switch" and it.get("action")]
+    actions = [
+        it.get("action", "") for it in interactions if it.get("type") != "perspective_switch" and it.get("action")
+    ]
     actions_str = " -> ".join(actions) if actions else "navigation"
 
     # Get annotated dims
@@ -232,9 +234,7 @@ def evaluate_case(
     # --- Track 2: per-dimension ---
     with ThreadPoolExecutor(max_workers=max(1, nproc)) as executor:
         # Submit T1
-        t1_future = executor.submit(
-            _ask_score, client, t1_question, frames, TRACK1_SYSTEM_PROMPT
-        )
+        t1_future = executor.submit(_ask_score, client, t1_question, frames, TRACK1_SYSTEM_PROMPT)
 
         # Submit T2 for each dim
         t2_futures = {}
@@ -242,9 +242,7 @@ def evaluate_case(
             dim = PHYSICS_DIMENSIONS[dim_key]
             q = f"Actions in this video: {actions_str}\n"
             q += f"\nEvaluating: {dim['name']}\n{dim['prompt']}"
-            t2_futures[executor.submit(
-                _ask_score, client, q, frames, TRACK2_SYSTEM_PROMPT
-            )] = dim_key
+            t2_futures[executor.submit(_ask_score, client, q, frames, TRACK2_SYSTEM_PROMPT)] = dim_key
 
         # Collect T1
         try:
@@ -263,11 +261,15 @@ def evaluate_case(
             except Exception as e:
                 logger.warning(f"Track2 {dim_key} failed: {e}")
                 s, r = None, str(e)
-            t2_details.append({
-                "dim": dim_key,
-                "dim_name": PHYSICS_DIMENSIONS[dim_key]["name"],
-                "score": s, "max": 3, "reason": r,
-            })
+            t2_details.append(
+                {
+                    "dim": dim_key,
+                    "dim_name": PHYSICS_DIMENSIONS[dim_key]["name"],
+                    "score": s,
+                    "max": 3,
+                    "reason": r,
+                }
+            )
             if s is not None:
                 valid_t2_scores.append(s)
 
@@ -298,8 +300,9 @@ def evaluate_case(
     }
 
 
-def _ask_score(client: VLMClient, question: str, frames: List[Image.Image],
-               system_prompt: str) -> Tuple[Optional[int], str]:
+def _ask_score(
+    client: VLMClient, question: str, frames: list[Image.Image], system_prompt: str
+) -> tuple[int | None, str]:
     """Ask VLM to score 0-3. System prompt as separate role, question + format in user."""
     full_question = f"{question}\n\n{REASON_FORMAT}{SCORE_SUFFIX}"
     response = client.ask(full_question, frames, max_tokens=300, system_prompt=system_prompt)

@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Any
+
 try:
     from .api_providers import (
-        OpenAIVLMAPI,
-        GeminiVLMAPI,
         AnthropicVLMAPI,
+        GeminiVLMAPI,
+        OpenAIVLMAPI,
     )
 except ImportError:
     from judge.api_providers import (
-        OpenAIVLMAPI,
-        GeminiVLMAPI,
         AnthropicVLMAPI,
+        GeminiVLMAPI,
+        OpenAIVLMAPI,
     )
 
 RUBRIC_TEXT = (
@@ -32,37 +33,40 @@ SCHEMA_HINT = (
     '    "immutability":1-4,\n'
     '    "dynamism":1-4,\n'
     '    "coherence":1-4\n'
-    '  },\n'
+    "  },\n"
     '  "explanations": {"summary": string, "issues": [string]},\n'
     '  "evidence": {"candidate": [{"t":"0.0s","observation":""}],'
     '               "reference": [{"t":"0.0s","observation":""}]}\n'
-    '}\n'
+    "}\n"
 )
+
 
 def _build_prompt(
     phenomenon: str,
     gt_description: str,
-    checklist: Optional[Dict[str, Any]] = None,
-    cv_metrics: Optional[Dict[str, Any]] = None,
+    checklist: dict[str, Any] | None = None,
+    cv_metrics: dict[str, Any] | None = None,
 ) -> str:
     base = (
-        RUBRIC_TEXT + "\n" +
-        SCHEMA_HINT + "\n" +
-        f"Ground-truth phenomenon: {phenomenon}\n\n" +
-        "Ground-truth description (authoritative):\n" +
-        gt_description.strip()
+        RUBRIC_TEXT
+        + "\n"
+        + SCHEMA_HINT
+        + "\n"
+        + f"Ground-truth phenomenon: {phenomenon}\n\n"
+        + "Ground-truth description (authoritative):\n"
+        + gt_description.strip()
     )
 
     if checklist:
         base += "\n\n" + _format_checklist_for_prompt(checklist)
-    
+
     if cv_metrics:
         base += "\n\n" + _format_cv_metrics_for_prompt(cv_metrics)
 
     return base
 
 
-def _format_checklist_for_prompt(checklist: Dict[str, Any]) -> str:
+def _format_checklist_for_prompt(checklist: dict[str, Any]) -> str:
     """
     Turn checklist JSON into human-readable bullets for the judge prompt.
     """
@@ -98,7 +102,8 @@ def _format_checklist_for_prompt(checklist: Dict[str, Any]) -> str:
 
     return "\n".join(lines)
 
-def _format_cv_metrics_for_prompt(cv_metrics: Dict[str, Any]) -> str:
+
+def _format_cv_metrics_for_prompt(cv_metrics: dict[str, Any]) -> str:
     """
     Take CV metrics JSON (from cv_tools/cv_metrics.py) and format a concise,
     human-readable summary for the judge prompt.
@@ -115,7 +120,7 @@ def _format_cv_metrics_for_prompt(cv_metrics: Dict[str, Any]) -> str:
         "Computer-vision analysis (noisy; use as secondary evidence, not ground truth):",
     ]
 
-    def _safe_float(d: Dict[str, Any] | None, key: str) -> Optional[float]:
+    def _safe_float(d: dict[str, Any] | None, key: str) -> float | None:
         if not isinstance(d, dict):
             return None
         v = d.get(key)
@@ -129,9 +134,7 @@ def _format_cv_metrics_for_prompt(cv_metrics: Dict[str, Any]) -> str:
     if isinstance(gd, dict):
         ratio = _safe_float(gd, "frames_with_any_detection_ratio")
         if ratio is not None:
-            lines.append(
-                f"- GroundingDINO: target entities detected in ~{ratio * 100:.1f}% of analyzed frames."
-            )
+            lines.append(f"- GroundingDINO: target entities detected in ~{ratio * 100:.1f}% of analyzed frames.")
 
     # ByteTrack – coherence of tracked identities
     bt = results.get("bytetrack")
@@ -200,23 +203,23 @@ def judge_experiment(
     video_path: str,
     phenomenon: str,
     gt_description: str,
-    ref_video_path: Optional[str] = None,
+    ref_video_path: str | None = None,
     *,
     max_frames: int = 24,
-    fps: Optional[float] = None,
+    fps: float | None = None,
     timeout_s: int = 600,
-    extra: Dict[str, Any] | None = None,
-) -> Dict[str, Any]:
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Dispatch to a VLM provider. Providers return unparsed `output_text` and minimal evidence.
     The frontend is responsible for parsing/normalization/scoring.
     """
     extra = dict(extra or {})
-    
+
     # Pull out optional checklist so we don't accidentally pass it to providers
     checklist = extra.pop("checklist", None)
     cv_metrics = extra.pop("cv_metrics", None)
-    
+
     extra["judge_prompt"] = _build_prompt(phenomenon, gt_description, checklist, cv_metrics)
 
     p = (provider or "").lower()

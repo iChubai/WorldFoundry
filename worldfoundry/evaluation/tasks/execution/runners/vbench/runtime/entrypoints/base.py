@@ -6,6 +6,7 @@ from datetime import datetime
 
 import torch
 from vbench import VBench
+
 from worldfoundry.core.distributed.collectives.evaluation import dist_init, print0
 
 
@@ -25,7 +26,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dimension", nargs="+", required=True)
     parser.add_argument("--load_ckpt_from_local", type=_str_bool, default=False)
     parser.add_argument("--read_frame", type=_str_bool, default=False)
-    parser.add_argument("--mode", choices=["custom_input", "vbench_standard", "vbench_category"], default="vbench_standard")
+    parser.add_argument(
+        "--mode", choices=["custom_input", "vbench_standard", "vbench_category"], default="vbench_standard"
+    )
     parser.add_argument("--prompt", default="None")
     parser.add_argument("--prompt_file")
     parser.add_argument("--category")
@@ -43,7 +46,7 @@ def main() -> None:
     if (args.prompt_file is not None or args.prompt != "None") and args.mode != "custom_input":
         raise ValueError("must set --mode=custom_input for using external prompt")
     if args.prompt_file:
-        with open(args.prompt_file, "r", encoding="utf-8") as handle:
+        with open(args.prompt_file, encoding="utf-8") as handle:
             prompt = json.load(handle)
         if not isinstance(prompt, dict):
             raise ValueError('invalid prompt file format; expected {"video_path": "prompt", ...}')

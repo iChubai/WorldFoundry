@@ -8,8 +8,8 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -17,6 +17,8 @@ import pandas as pd
 from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
 from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     checkpoint_path as amt_checkpoint_path,
+)
+from worldfoundry.base_models.perception_core.frame_interpolation.amt import (
     config_path as amt_config_path,
 )
 from worldfoundry.base_models.perception_core.optical_flow.raft import checkpoint_path as raft_checkpoint_path
@@ -75,7 +77,7 @@ def _resolve_required_file(
     for candidate in ordered:
         if candidate is not None and candidate.is_file():
             return candidate
-    hints = [name for name in env_names]
+    hints = list(env_names)
     if explicit:
         hints.insert(0, str(explicit))
     raise FileNotFoundError(f"missing DEVIL {label}; set one of: {', '.join(hints) or label}")
@@ -92,7 +94,7 @@ def _prompt_dynamic_grades(video_names: pd.Series) -> np.ndarray:
     grades = np.zeros(len(video_names), dtype=int)
     for index, name in enumerate(video_names):
         normalized = str(name).lower()
-        for keyword, value in zip(keywords, values):
+        for keyword, value in zip(keywords, values, strict=False):
             if keyword in normalized:
                 grades[index] = value
                 break
@@ -108,7 +110,7 @@ def _controllability_winning_rate(prompt_dynamics: np.ndarray, video_dynamics: n
         y_degree_other[int(degree)] = prompt_dynamics[~mask]
 
     winning_rates = []
-    for video_score, prompt_score in zip(video_dynamics, prompt_dynamics):
+    for video_score, prompt_score in zip(video_dynamics, prompt_dynamics, strict=False):
         x_other = x_degree_other[int(prompt_score)]
         y_other = y_degree_other[int(prompt_score)]
         if len(x_other) == 0:
@@ -154,7 +156,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--num-gpus", type=int, default=int(os.environ.get("WORLDFOUNDRY_DEVIL_NUM_GPUS", "1")))
     parser.add_argument("--gemini-api-key", default=_first_env("WORLDFOUNDRY_DEVIL_GEMINI_API_KEY", "GEMINI_API_KEY"))
     parser.add_argument("--naturalness-path", type=Path)
-    parser.add_argument("--model-weights-dir", type=Path, default=_maybe_path(_first_env("WORLDFOUNDRY_DEVIL_MODEL_WEIGHTS_DIR")))
+    parser.add_argument(
+        "--model-weights-dir", type=Path, default=_maybe_path(_first_env("WORLDFOUNDRY_DEVIL_MODEL_WEIGHTS_DIR"))
+    )
     parser.add_argument("--regression-ckpt")
     parser.add_argument("--raft-ckpt")
     parser.add_argument("--clip-vit-l14")
@@ -186,19 +190,28 @@ def main(argv: list[str] | None = None) -> int:
         label="RAFT checkpoint",
         explicit=args.raft_ckpt,
         env_names=("WORLDFOUNDRY_DEVIL_RAFT_CKPT", "WORLDFOUNDRY_RAFT_THINGS_CKPT"),
-        candidates=(_model_weights_candidate(model_weights_dir, "raft-things.pth"), _callable_path(raft_checkpoint_path)),
+        candidates=(
+            _model_weights_candidate(model_weights_dir, "raft-things.pth"),
+            _callable_path(raft_checkpoint_path),
+        ),
     )
     clip_vit_l14 = _resolve_required_file(
         label="CLIP ViT-L/14 checkpoint",
         explicit=args.clip_vit_l14,
         env_names=("WORLDFOUNDRY_DEVIL_CLIP_VIT_L14_PT", "WORLDFOUNDRY_VBENCH_CLIP_VIT_L14_PT"),
-        candidates=(_model_weights_candidate(model_weights_dir, "ViT-L-14.pt"), _capability_asset_path("vbench_metric_checkpoint_assets", "vbench_clip_vit_l14_checkpoint")),
+        candidates=(
+            _model_weights_candidate(model_weights_dir, "ViT-L-14.pt"),
+            _capability_asset_path("vbench_metric_checkpoint_assets", "vbench_clip_vit_l14_checkpoint"),
+        ),
     )
     clip_vit_b32 = _resolve_required_file(
         label="CLIP ViT-B/32 checkpoint",
         explicit=args.clip_vit_b32,
         env_names=("WORLDFOUNDRY_DEVIL_CLIP_VIT_B32_PT", "WORLDFOUNDRY_VBENCH_CLIP_VIT_B32_PT"),
-        candidates=(_model_weights_candidate(model_weights_dir, "ViT-B-32.pt"), _capability_asset_path("vbench_metric_checkpoint_assets", "vbench_clip_vit_b32_checkpoint")),
+        candidates=(
+            _model_weights_candidate(model_weights_dir, "ViT-B-32.pt"),
+            _capability_asset_path("vbench_metric_checkpoint_assets", "vbench_clip_vit_b32_checkpoint"),
+        ),
     )
     viclip_ckpt = _resolve_required_file(
         label="ViCLIP checkpoint",
@@ -230,12 +243,17 @@ def main(argv: list[str] | None = None) -> int:
         env_names=("WORLDFOUNDRY_DEVIL_AMT_CKPT", "WORLDFOUNDRY_VBENCH_AMT_S_CKPT"),
         candidates=(_model_weights_candidate(model_weights_dir, "amt-s.pth"), _callable_path(amt_checkpoint_path)),
     )
-    dino_source = _maybe_path(args.dino_source_dir) or _capability_asset_path("vbench_metric_checkpoint_assets", "vbench_dino_source")
+    dino_source = _maybe_path(args.dino_source_dir) or _capability_asset_path(
+        "vbench_metric_checkpoint_assets", "vbench_dino_source"
+    )
     dino_vitb16_ckpt = _resolve_required_file(
         label="DINO ViT-B/16 checkpoint",
         explicit=args.dino_vitb16_ckpt,
         env_names=("WORLDFOUNDRY_DEVIL_DINO_VITB16_CKPT", "WORLDFOUNDRY_VBENCH_DINO_VITB16_CKPT"),
-        candidates=(_model_weights_candidate(model_weights_dir, "dino_vitbase16_pretrain.pth"), _capability_asset_path("vbench_metric_checkpoint_assets", "vbench_dino_vitb16_checkpoint")),
+        candidates=(
+            _model_weights_candidate(model_weights_dir, "dino_vitbase16_pretrain.pth"),
+            _capability_asset_path("vbench_metric_checkpoint_assets", "vbench_dino_vitb16_checkpoint"),
+        ),
     )
     if dino_source is None or not (dino_source / "hubconf.py").exists():
         raise FileNotFoundError("missing in-tree DINO source shim for DEVIL quality scoring")

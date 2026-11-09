@@ -6,11 +6,10 @@ and downloads.  ``compute_metrics`` is the complete public metric seam.
 
 from __future__ import annotations
 
+import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
-import math
 from typing import Any
-
 
 EXPECTED_ROLLOUTS = 50
 EXPECTED_SCENES_PER_TRACK = 25
@@ -19,9 +18,7 @@ TRACKS = ("calibration", "coverage")
 OBSERVATIONS = ("outcome", "null_observation", "infrastructure_failure")
 
 
-def compute_metrics(
-    rows: Sequence[Mapping[str, Any]], scene_policy: Mapping[str, Any]
-) -> dict[str, Any]:
+def compute_metrics(rows: Sequence[Mapping[str, Any]], scene_policy: Mapping[str, Any]) -> dict[str, Any]:
     """Compute official PAWBench metrics from normalized rows and scene policy.
 
     Each row identifies one ``model_or_lane × track × scene × repeat_index``
@@ -169,9 +166,7 @@ def _index_rows(
         for scene in scenes
         for repeat in scene["expected_repeat_indices"]
     }
-    policy_by_scene = {
-        (track, scene["scene_id"]): scene for track, scenes in policies.items() for scene in scenes
-    }
+    policy_by_scene = {(track, scene["scene_id"]): scene for track, scenes in policies.items() for scene in scenes}
     indexed: dict[tuple[str, str, str, str, int | str], Mapping[str, Any]] = {}
     observed_slots: dict[tuple[str, str, str, int | str], tuple[str, str, str, str, int | str]] = {}
     sample_ids: dict[tuple[str, str, str], set[str]] = {}
@@ -249,7 +244,9 @@ def _compute_scene(
     if track == "calibration":
         counts = Counter(valid_labels)
         reference = scene["reference_distribution"]
-        tvd = 0.5 * sum(abs(counts[label] / len(valid_labels) - float(probability)) for label, probability in reference.items())
+        tvd = 0.5 * sum(
+            abs(counts[label] / len(valid_labels) - float(probability)) for label, probability in reference.items()
+        )
         metric = {"name": "calibration_tvd_percent", "value": round(tvd * 100, 12)}
     else:
         support = set(scene["support_labels"])
@@ -272,7 +269,9 @@ def _compute_track(
         "status": "blocked" if blockers else "ok",
         "blockers": sorted(blockers),
         "models": {
-            model: _compute_model_track(track, scene_specs, [scene for scene in scenes if scene["model_or_lane"] == model])
+            model: _compute_model_track(
+                track, scene_specs, [scene for scene in scenes if scene["model_or_lane"] == model]
+            )
             for model in models
         },
     }
@@ -298,7 +297,9 @@ def _compute_model_track(
         "scenes": list(scenes),
         "groups": groups,
         "track_average": None if blockers else _average_metric(track, passing),
-        "scene_pass_rate": None if blockers else {
+        "scene_pass_rate": None
+        if blockers
+        else {
             "passing_scenes": len(passing),
             "scene_denominator": EXPECTED_SCENES_PER_TRACK,
             "value": round(len(passing) / EXPECTED_SCENES_PER_TRACK * 100, 12),

@@ -5,9 +5,8 @@ Compares pairwise model rankings based on ground truth vs Gemini verdicts.
 
 import json
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple, Set
 from collections import defaultdict
+from pathlib import Path
 
 
 class PairwiseAgreementAnalyzer:
@@ -15,16 +14,16 @@ class PairwiseAgreementAnalyzer:
         self.project_root = Path(project_root)
         self.runs_dir = self.project_root / "runs"
 
-    def load_evaluation_results(self, results_file: str) -> Dict:
+    def load_evaluation_results(self, results_file: str) -> dict:
         """Load the evaluation results JSON file."""
         results_path = Path(results_file)
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, 'r') as f:
+        with open(results_path) as f:
             return json.load(f)
 
-    def load_summary_json(self, run_name: str) -> Dict:
+    def load_summary_json(self, run_name: str) -> dict:
         """Load summary.json for a specific run."""
         run_mapping = {
             "sora_pro_sora_pro_subset_run_3": "sora_pro_output_map_sora_pro_subset_run_3",
@@ -32,7 +31,7 @@ class PairwiseAgreementAnalyzer:
             "LingBot_lingbot_run_1": "LingBot_output_map_lingbot_run_1",
             "HY-WorldPlay_hunyuan_run_2": "HY-WorldPlay_output_map_hunyuan_run_2",
             "genie_genie_run_1": "genie",
-            "wan22_wan_run_1": "wan22_wan_run_1"
+            "wan22_wan_run_1": "wan22_wan_run_1",
         }
 
         summary_path_key = run_mapping.get(run_name, run_name)
@@ -42,10 +41,10 @@ class PairwiseAgreementAnalyzer:
             print(f"Warning: Could not find summary.json at {summary_path}")
             return {}
 
-        with open(summary_path, 'r') as f:
+        with open(summary_path) as f:
             return json.load(f)
 
-    def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
+    def get_ground_truth_label(self, summary: dict, task_id: str) -> bool:
         """Get ground truth label for a task from summary.json."""
         for task in summary.get("tasks", []):
             if task.get("task_id") == task_id:
@@ -59,7 +58,7 @@ class PairwiseAgreementAnalyzer:
                     return None
         return None
 
-    def organize_by_task(self, results_file: str) -> Dict[str, Dict[str, Dict]]:
+    def organize_by_task(self, results_file: str) -> dict[str, dict[str, dict]]:
         """
         Organize evaluation results by task_id.
 
@@ -85,7 +84,7 @@ class PairwiseAgreementAnalyzer:
 
             task_data[task_id][run_name] = {
                 "gemini_verdict": gemini_verdict,
-                "ground_truth": None  # Will fill in next
+                "ground_truth": None,  # Will fill in next
             }
 
         # Second pass: add ground truth labels
@@ -144,7 +143,7 @@ class PairwiseAgreementAnalyzer:
         # Reversal: complete disagreement (A_wins vs B_wins)
         return 0.0
 
-    def get_model_pairs(self, run_names: List[str]) -> List[Tuple[str, str]]:
+    def get_model_pairs(self, run_names: list[str]) -> list[tuple[str, str]]:
         """Generate all unique pairs of models."""
         pairs = []
         for i in range(len(run_names)):
@@ -168,7 +167,7 @@ class PairwiseAgreementAnalyzer:
             return "wan22"
         return run_name
 
-    def analyze_pairwise_agreement(self, results_file: str) -> Dict:
+    def analyze_pairwise_agreement(self, results_file: str) -> dict:
         """
         Analyze pairwise agreement between ground truth and Gemini rankings.
 
@@ -192,15 +191,17 @@ class PairwiseAgreementAnalyzer:
         model_pairs = self.get_model_pairs(all_run_names)
 
         # Track pairwise comparisons with weighted scores
-        pairwise_stats = defaultdict(lambda: {
-            "total_score": 0.0,
-            "count": 0,
-            "full_agreement": 0,
-            "partial_agreement": 0,
-            "reversal": 0,
-            "unknown": 0,
-            "details": []
-        })
+        pairwise_stats = defaultdict(
+            lambda: {
+                "total_score": 0.0,
+                "count": 0,
+                "full_agreement": 0,
+                "partial_agreement": 0,
+                "reversal": 0,
+                "unknown": 0,
+                "details": [],
+            }
+        )
 
         overall_total_score = 0.0
         overall_count = 0
@@ -221,16 +222,10 @@ class PairwiseAgreementAnalyzer:
                 data_b = run_data[model_b]
 
                 # Compare based on ground truth
-                gt_comparison = self.compare_pairwise(
-                    data_a["ground_truth"],
-                    data_b["ground_truth"]
-                )
+                gt_comparison = self.compare_pairwise(data_a["ground_truth"], data_b["ground_truth"])
 
                 # Compare based on Gemini verdict
-                gemini_comparison = self.compare_pairwise(
-                    data_a["gemini_verdict"],
-                    data_b["gemini_verdict"]
-                )
+                gemini_comparison = self.compare_pairwise(data_a["gemini_verdict"], data_b["gemini_verdict"])
 
                 # Calculate agreement score
                 agreement_score = self.calculate_agreement_score(gt_comparison, gemini_comparison)
@@ -258,24 +253,23 @@ class PairwiseAgreementAnalyzer:
                         overall_reversal += 1
 
                         # Track reversal details
-                        pairwise_stats[pair_key]["details"].append({
-                            "task_id": task_id,
-                            "ground_truth": gt_comparison,
-                            "gemini": gemini_comparison,
-                            "score": agreement_score,
-                            f"{self.simplify_run_name(model_a)}_gt": data_a["ground_truth"],
-                            f"{self.simplify_run_name(model_b)}_gt": data_b["ground_truth"],
-                            f"{self.simplify_run_name(model_a)}_gemini": data_a["gemini_verdict"],
-                            f"{self.simplify_run_name(model_b)}_gemini": data_b["gemini_verdict"],
-                        })
+                        pairwise_stats[pair_key]["details"].append(
+                            {
+                                "task_id": task_id,
+                                "ground_truth": gt_comparison,
+                                "gemini": gemini_comparison,
+                                "score": agreement_score,
+                                f"{self.simplify_run_name(model_a)}_gt": data_a["ground_truth"],
+                                f"{self.simplify_run_name(model_b)}_gt": data_b["ground_truth"],
+                                f"{self.simplify_run_name(model_a)}_gemini": data_a["gemini_verdict"],
+                                f"{self.simplify_run_name(model_b)}_gemini": data_b["gemini_verdict"],
+                            }
+                        )
 
         # Calculate weighted agreement rates
         pairwise_agreement_rates = {}
         for pair, stats in pairwise_stats.items():
-            if stats["count"] > 0:
-                agreement_rate = stats["total_score"] / stats["count"]
-            else:
-                agreement_rate = 0
+            agreement_rate = stats["total_score"] / stats["count"] if stats["count"] > 0 else 0
             pairwise_agreement_rates[pair] = agreement_rate
 
         overall_agreement_rate = overall_total_score / overall_count if overall_count > 0 else 0
@@ -291,48 +285,46 @@ class PairwiseAgreementAnalyzer:
                 "unknown": overall_unknown,
             },
             "by_pair": dict(pairwise_stats),
-            "agreement_rates": pairwise_agreement_rates
+            "agreement_rates": pairwise_agreement_rates,
         }
 
-    def print_pairwise_analysis(self, analysis: Dict):
+    def print_pairwise_analysis(self, analysis: dict):
         """Pretty print the pairwise analysis."""
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("PAIRWISE AGREEMENT ANALYSIS (WEIGHTED)")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print("Scoring: Full agreement=1.0, Partial (tie vs non-tie)=0.5, Reversal=0.0")
 
         overall = analysis["overall"]
-        print(f"\nOverall Statistics:")
+        print("\nOverall Statistics:")
         print(f"  Total pairwise comparisons: {overall['count']}")
-        print(f"  Weighted agreement rate: {overall['weighted_agreement_rate']:.3f} ({overall['weighted_agreement_rate']*100:.1f}%)")
+        print(
+            f"  Weighted agreement rate: {overall['weighted_agreement_rate']:.3f} ({overall['weighted_agreement_rate'] * 100:.1f}%)"
+        )
         print(f"  Full agreements: {overall['full_agreement']} (score=1.0)")
         print(f"  Partial agreements: {overall['partial_agreement']} (score=0.5)")
         print(f"  Reversals: {overall['reversal']} (score=0.0)")
         print(f"  Unknown: {overall['unknown']}")
 
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("Agreement by Model Pair:")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         # Sort pairs by agreement rate
-        sorted_pairs = sorted(
-            analysis["agreement_rates"].items(),
-            key=lambda x: x[1],
-            reverse=True
-        )
+        sorted_pairs = sorted(analysis["agreement_rates"].items(), key=lambda x: x[1], reverse=True)
 
         for pair, agreement_rate in sorted_pairs:
             stats = analysis["by_pair"][pair]
             print(f"\n{pair}:")
             print(f"  Total comparisons: {stats['count']}")
-            print(f"  Weighted agreement: {agreement_rate:.3f} ({agreement_rate*100:.1f}%)")
+            print(f"  Weighted agreement: {agreement_rate:.3f} ({agreement_rate * 100:.1f}%)")
             print(f"  Full agreements: {stats['full_agreement']}")
             print(f"  Partial agreements: {stats['partial_agreement']}")
             print(f"  Reversals: {stats['reversal']}")
 
             # Show reversal examples
             if stats["details"]:
-                print(f"  Reversals (wrong winner):")
+                print("  Reversals (wrong winner):")
                 for detail in stats["details"][:3]:  # Show first 3
                     print(f"    - {detail['task_id']}: GT={detail['ground_truth']}, Gemini={detail['gemini']}")
 
@@ -354,10 +346,10 @@ def main():
     output_file = Path(results_file).stem + "_pairwise_agreement.json"
     output_path = Path(project_root) / "eval_se" / "results" / output_file
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(analysis, f, indent=2)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Analysis saved to: {output_path}")
 
 

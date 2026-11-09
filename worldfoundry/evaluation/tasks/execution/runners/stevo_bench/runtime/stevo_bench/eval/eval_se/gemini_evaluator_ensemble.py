@@ -5,30 +5,25 @@ Runs 3 different prompt variations and uses majority vote for final verdict.
 
 import os
 import time
-from pathlib import Path
-from typing import Dict, Optional, Tuple, List
+from collections import Counter
+
 import google.generativeai as genai
 from PIL import Image
-from collections import Counter
 
 
 class GeminiEnsembleEvaluator:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """Initialize Gemini ensemble evaluator with API key."""
         if api_key is None:
             api_key = os.environ.get("GOOGLE_API_KEY")
             if not api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-3-pro-preview")
-        print(f"Using model: gemini-3-pro-preview (ensemble mode)")
+        print("Using model: gemini-3-pro-preview (ensemble mode)")
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: str | None = None) -> tuple[str, str]:
         """
         First Gemini call: Given initial image and optional action prompt,
         predict what process should happen.
@@ -76,7 +71,7 @@ After your full explanation, provide a one-sentence summary on the last line in 
 Process: [concise one-sentence description of the expected evolution]"""
 
         # Make API call
-        print(f"    Calling Gemini API for process prediction...")
+        print("    Calling Gemini API for process prediction...")
         try:
             response = self.model.generate_content([prompt, image])
             elapsed = time.time() - start_time
@@ -109,9 +104,7 @@ Process: [concise one-sentence description of the expected evolution]"""
         print("    Warning: Could not find 'Process:' line, using full response")
         return response_text
 
-    def _get_verification_prompts(
-        self, expected_process: str, model_type: str
-    ) -> List[str]:
+    def _get_verification_prompts(self, expected_process: str, model_type: str) -> list[str]:
         """
         Generate 3 different prompt variations for ensemble voting.
 
@@ -207,7 +200,7 @@ EXPLANATION: [Your analysis]"""
 
     def verify_process_in_video_ensemble(
         self, video_path: str, expected_process: str, model_type: str = "unknown"
-    ) -> Tuple[Dict, bool]:
+    ) -> tuple[dict, bool]:
         """
         Ensemble verification: Run 3 different prompts and use majority voting.
 
@@ -221,13 +214,13 @@ EXPLANATION: [Your analysis]"""
         """
         # Upload video file
         upload_start = time.time()
-        print(f"    Uploading video...")
+        print("    Uploading video...")
         video_file = genai.upload_file(path=video_path)
         upload_time = time.time() - upload_start
         print(f"    Upload took {upload_time:.1f}s")
 
         # Wait for video processing
-        print(f"    Waiting for video processing...")
+        print("    Waiting for video processing...")
         process_start = time.time()
         wait_count = 0
         while video_file.state.name == "PROCESSING":
@@ -263,12 +256,7 @@ EXPLANATION: [Your analysis]"""
                 # Parse verdict
                 verdict = self._parse_verdict(response_text)
 
-                results.append({
-                    "prompt_id": i,
-                    "response": response_text,
-                    "verdict": verdict,
-                    "time": verify_time
-                })
+                results.append({"prompt_id": i, "response": response_text, "verdict": verdict, "time": verify_time})
                 verdicts.append(verdict)
 
                 print(f"    Verdict {i}: {'PASS' if verdict else 'FAIL'}")
@@ -276,12 +264,14 @@ EXPLANATION: [Your analysis]"""
             except Exception as e:
                 print(f"    ERROR in verification {i}: {e}")
                 # Continue with other prompts even if one fails
-                results.append({
-                    "prompt_id": i,
-                    "response": f"ERROR: {str(e)}",
-                    "verdict": None,
-                    "time": time.time() - verify_start
-                })
+                results.append(
+                    {
+                        "prompt_id": i,
+                        "response": f"ERROR: {e!s}",
+                        "verdict": None,
+                        "time": time.time() - verify_start,
+                    }
+                )
 
         # Unanimous voting: all 3 judges must agree (exclude None values from failed calls)
         valid_verdicts = [v for v in verdicts if v is not None]
@@ -291,18 +281,20 @@ EXPLANATION: [Your analysis]"""
             final_verdict = False
         else:
             # Require ALL judges to say YES
-            final_verdict = all(v == True for v in valid_verdicts)
+            final_verdict = all(v == True for v in valid_verdicts)  # noqa: E712 - Equality keeps the upstream verdict comparison.
 
             # Print voting summary
             yes_votes = sum(1 for v in valid_verdicts if v)
             no_votes = sum(1 for v in valid_verdicts if not v)
-            print(f"    Ensemble vote (UNANIMOUS): Yes={yes_votes}, No={no_votes} -> Final: {'PASS' if final_verdict else 'FAIL'}")
+            print(
+                f"    Ensemble vote (UNANIMOUS): Yes={yes_votes}, No={no_votes} -> Final: {'PASS' if final_verdict else 'FAIL'}"
+            )
 
         detailed_results = {
             "individual_results": results,
             "verdicts": verdicts,
             "final_verdict": final_verdict,
-            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {}
+            "vote_counts": dict(Counter(valid_verdicts)) if valid_verdicts else {},
         }
 
         return detailed_results, final_verdict
@@ -327,11 +319,8 @@ EXPLANATION: [Your analysis]"""
 
         # Fallback: check if "yes" appears in first few lines
         first_100_chars = response_text[:100].lower()
-        if "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars:
-            return True
-
         # Default to False if unclear
-        return False
+        return "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars
 
     def _get_model_type(self, run_name: str) -> str:
         """Determine model type from run name."""
@@ -351,7 +340,7 @@ EXPLANATION: [Your analysis]"""
         else:
             return "unknown"
 
-    def evaluate_task(self, task_data: Dict) -> Dict:
+    def evaluate_task(self, task_data: dict) -> dict:
         """
         Evaluate a single task with ensemble evaluation.
 
@@ -369,7 +358,7 @@ EXPLANATION: [Your analysis]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process

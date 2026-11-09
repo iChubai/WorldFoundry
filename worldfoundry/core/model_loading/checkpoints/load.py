@@ -871,7 +871,6 @@ def _load_checkpoint_from_s3(
     credential_path: str,
     map_location: str | torch.device = "cpu",
 ) -> dict[str, torch.Tensor]:
-    """Load checkpoint from S3."""
     from worldfoundry.core.io.filesystem.s3_filesystem import S3FileSystem
 
     logger.info(f"Downloading checkpoint from S3: {s3_path}")

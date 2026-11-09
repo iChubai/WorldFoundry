@@ -8,6 +8,6 @@ METRIC_MAPPING_VERSION = "paweval.metric_mapping/v1"
 
 __all__ = [
     "EVALUATOR_NAME",
-    "PROTOCOL_VERSION",
     "METRIC_MAPPING_VERSION",
+    "PROTOCOL_VERSION",
 ]

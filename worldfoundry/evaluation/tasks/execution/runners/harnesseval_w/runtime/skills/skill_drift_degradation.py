@@ -18,21 +18,28 @@ from .common import (
 )
 from .skill_appearance_consistency import (
     DEFINITION_VERSION as APPEARANCE_DEFINITION,
+)
+from .skill_appearance_consistency import (
     score_components as appearance_score,
 )
 from .skill_motion_quality import (
     DEFINITION_VERSION as MOTION_DEFINITION,
+)
+from .skill_motion_quality import (
     score_components as motion_score,
 )
 from .skill_physical_plausibility import (
     DEFINITION_VERSION as PHYSICAL_DEFINITION,
+)
+from .skill_physical_plausibility import (
     score_components as physical_score,
 )
 from .skill_render_quality import (
     DEFINITION_VERSION as RENDER_DEFINITION,
+)
+from .skill_render_quality import (
     score_components as render_score,
 )
-
 
 SKILL_ID = "drift_degradation_analyzer"
 DEFINITION_VERSION = "harnesseval.drift_degradation"
@@ -84,19 +91,19 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
     "REQUIRED_COMPONENTS",
     "SAMPLING",
+    "SKILL_ID",
     "DriftDegradationBackend",
     "cache_path_for_video",
+    "evaluate",
+    "import_evidence",
     "resolve_chunks",
     "result_from_chunks",
-    "import_evidence",
-    "evaluate",
 ]
 
 
@@ -131,10 +138,7 @@ def _action_chunks(case: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def _chunk_ids(case: Mapping[str, Any]) -> list[str]:
-    ids = [
-        str(chunk.get("chunk_id") or f"c{index + 1:02d}")
-        for index, chunk in enumerate(_action_chunks(case))
-    ]
+    ids = [str(chunk.get("chunk_id") or f"c{index + 1:02d}") for index, chunk in enumerate(_action_chunks(case))]
     if len(ids) != len(set(ids)):
         raise ValueError("case action chunk ids must be unique")
     return ids
@@ -148,9 +152,7 @@ def _load_generation_metadata(video_path: Path) -> dict[str, Any]:
     return dict(value) if isinstance(value, Mapping) else {}
 
 
-def _explicit_segments(
-    metadata: Mapping[str, Any], count: int, video_path: Path
-) -> list[Path]:
+def _explicit_segments(metadata: Mapping[str, Any], count: int, video_path: Path) -> list[Path]:
     segments = metadata.get("segments")
     if segments is None or segments == []:
         return []
@@ -192,11 +194,7 @@ def resolve_chunks(
     if len(chunks) < 2:
         raise ValueError("HarnessEval Drift requires at least two case-defined action chunks")
     chunk_ids = _chunk_ids(case)
-    metadata = (
-        dict(metadata)
-        if metadata is not None
-        else _load_generation_metadata(video_path)
-    )
+    metadata = dict(metadata) if metadata is not None else _load_generation_metadata(video_path)
     metadata_case = metadata.get("case_id")
     case_id = case.get("case_id")
     if metadata_case and case_id and str(metadata_case) != str(case_id):
@@ -205,7 +203,7 @@ def resolve_chunks(
     explicit = _explicit_segments(metadata, len(chunks), video_path)
     frame_count = None if explicit else _video_stats(video_path)[0]
     output = []
-    for position, (chunk_id, chunk) in enumerate(zip(chunk_ids, chunks)):
+    for position, (chunk_id, chunk) in enumerate(zip(chunk_ids, chunks, strict=False)):
         if explicit:
             chunk_video = explicit[position]
             chunk_frames, _ = _video_stats(chunk_video)
@@ -250,7 +248,7 @@ def _normalized_embedding(value: Any) -> list[float] | None:
 def _cosine(left: list[float], right: list[float]) -> float:
     if len(left) != len(right) or not left:
         raise ValueError("CLIP embeddings must have the same non-zero dimension")
-    return sum(a * b for a, b in zip(left, right))
+    return sum(a * b for a, b in zip(left, right, strict=False))
 
 
 def _linear_slope(values: list[float]) -> float:
@@ -258,7 +256,7 @@ def _linear_slope(values: list[float]) -> float:
     x_mean = statistics.mean(xs)
     y_mean = statistics.mean(values)
     denominator = sum((value - x_mean) ** 2 for value in xs)
-    return sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, values)) / denominator
+    return sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, values, strict=False)) / denominator
 
 
 def _invalid(message: str, **diagnostics: Any) -> dict[str, Any]:
@@ -453,9 +451,7 @@ def _load_cache(path: Path, input_digest: str) -> dict[str, Any] | None:
     return payload if result["status"] == "ok" else None
 
 
-def _response(
-    path: Path, payload: Mapping[str, Any], cache_hit: bool
-) -> dict[str, Any]:
+def _response(path: Path, payload: Mapping[str, Any], cache_hit: bool) -> dict[str, Any]:
     return {
         "cache_hit": cache_hit,
         "cache_path": str(path),
@@ -492,27 +488,20 @@ def _normalize_backend_evidence(
     if not isinstance(raw_chunks, list) or len(raw_chunks) != len(boundaries):
         raise RuntimeError("Drift backend returned the wrong chunk count")
     output = []
-    for index, (raw, expected) in enumerate(zip(raw_chunks, boundaries)):
+    for index, (raw, expected) in enumerate(zip(raw_chunks, boundaries, strict=False)):
         if not isinstance(raw, Mapping) or not _same_boundary(raw, expected):
-            raise RuntimeError(
-                f"Drift backend chunk boundary mismatch at index {index}"
-            )
+            raise RuntimeError(f"Drift backend chunk boundary mismatch at index {index}")
         metrics = raw.get("metrics")
         if not isinstance(metrics, Mapping):
-            raise RuntimeError(
-                f"Drift backend chunk {expected['chunk_id']} has no metrics"
-            )
+            raise RuntimeError(f"Drift backend chunk {expected['chunk_id']} has no metrics")
         values, missing, invalid = normalized_metrics(metrics, REQUIRED_COMPONENTS)
         if missing or invalid:
             raise RuntimeError(
-                f"Drift backend chunk {expected['chunk_id']} has invalid metrics: "
-                f"missing={missing}, invalid={invalid}"
+                f"Drift backend chunk {expected['chunk_id']} has invalid metrics: missing={missing}, invalid={invalid}"
             )
         embedding = _normalized_embedding(raw.get("clip_embedding"))
         if embedding is None:
-            raise RuntimeError(
-                f"Drift backend chunk {expected['chunk_id']} has no valid CLIP embedding"
-            )
+            raise RuntimeError(f"Drift backend chunk {expected['chunk_id']} has no valid CLIP embedding")
         output.append(
             {
                 "chunk_id": expected["chunk_id"],
@@ -532,9 +521,7 @@ def _normalize_backend_evidence(
         )
     result = result_from_chunks(output)
     if result["status"] != "ok":
-        raise RuntimeError(
-            f"Drift backend produced invalid evidence: {result['diagnostics']}"
-        )
+        raise RuntimeError(f"Drift backend produced invalid evidence: {result['diagnostics']}")
     details = evidence.get("details")
     return output, dict(details) if isinstance(details, Mapping) else {}
 

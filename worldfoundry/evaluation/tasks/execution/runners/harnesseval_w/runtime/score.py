@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import copy
 from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .aggregate import clean_float, mean_valid, numeric, skill_result
 from .io import (
@@ -63,10 +64,7 @@ def load_plan_index(plan_root: Path) -> dict[str, tuple[Path, dict[str, Any]]]:
         if case_id in index:
             raise ValueError(f"duplicate HarnessEval plan for {case_id}")
         validation = plan.get("validation") or {}
-        if (
-            validation.get("status") != "ok"
-            or validation.get("selection_modified") is not False
-        ):
+        if validation.get("status") != "ok" or validation.get("selection_modified") is not False:
             raise ValueError(f"HarnessEval plan is not valid and unmodified: {path}")
         index[case_id] = (path.resolve(), plan)
     return index
@@ -103,28 +101,14 @@ def score_components(skills: list[dict[str, Any]]) -> dict[str, Any]:
     core = [item for item in skills if item.get("plan_role") == "core"]
     observation = [item for item in skills if item.get("plan_role") == "observation"]
     diagnostic = [item for item in skills if item.get("plan_role") == "diagnostic"]
-    missing_core = [
-        str(item["skill_id"]) for item in core if numeric(item.get("score")) is None
-    ]
-    missing_observation = [
-        str(item["skill_id"])
-        for item in observation
-        if numeric(item.get("score")) is None
-    ]
-    core_score = (
-        mean_valid(item.get("score") for item in core)
-        if core and not missing_core
-        else None
-    )
+    missing_core = [str(item["skill_id"]) for item in core if numeric(item.get("score")) is None]
+    missing_observation = [str(item["skill_id"]) for item in observation if numeric(item.get("score")) is None]
+    core_score = mean_valid(item.get("score") for item in core) if core and not missing_core else None
     other_score = (
-        mean_valid(item.get("score") for item in observation)
-        if observation and not missing_observation
-        else None
+        mean_valid(item.get("score") for item in observation) if observation and not missing_observation else None
     )
     final_score = (
-        round(0.5 * core_score + 0.5 * other_score, 6)
-        if core_score is not None and other_score is not None
-        else None
+        round(0.5 * core_score + 0.5 * other_score, 6) if core_score is not None and other_score is not None else None
     )
     return {
         "core": core,
@@ -148,15 +132,7 @@ def _video_and_metadata(
     axis = str(taxonomy["primary_axis"])
     family = str(taxonomy["probe_family"])
     case_id = str(plan["case_id"])
-    metadata_path = (
-        generation_root
-        / "outputs"
-        / axis
-        / family
-        / model_id
-        / case_id
-        / "metadata.json"
-    )
+    metadata_path = generation_root / "outputs" / axis / family / model_id / case_id / "metadata.json"
     return _video_from_metadata(metadata_path, model_id, plan, bundle)
 
 
@@ -202,16 +178,11 @@ def blocking_reasons(
     if not components["core"]:
         reasons.append("plan has no core skill")
     if components["missing_core"]:
-        reasons.append(
-            "missing numeric core cache: " + ", ".join(components["missing_core"])
-        )
+        reasons.append("missing numeric core cache: " + ", ".join(components["missing_core"]))
     if not components["observation"]:
         reasons.append("plan has no observation skills")
     if components["missing_observation"]:
-        reasons.append(
-            "missing numeric observation cache: "
-            + ", ".join(components["missing_observation"])
-        )
+        reasons.append("missing numeric observation cache: " + ", ".join(components["missing_observation"]))
     if components["other_score"] is None:
         reasons.append("observation score is unavailable")
     return reasons
@@ -245,9 +216,7 @@ def plan_score_tasks(
             or str(bundle.get("case_id")) != case_id
         ):
             raise ValueError(f"cache bundle identity mismatch: {bundle_path}")
-        metadata_path, _video, _metadata = _video_and_metadata(
-            generation_root, model_id, plan, bundle
-        )
+        metadata_path, _video, _metadata = _video_and_metadata(generation_root, model_id, plan, bundle)
         input_digest = value_digest(
             {
                 "scorer_id": SCORER_ID,
@@ -256,13 +225,7 @@ def plan_score_tasks(
                 "metadata_sha256": file_digest(metadata_path),
             }
         )
-        destination = (
-            eval_root
-            / "rollout_scores"
-            / model_id
-            / family
-            / f"{case_id}.scores.json"
-        )
+        destination = eval_root / "rollout_scores" / model_id / family / f"{case_id}.scores.json"
         reasons = blocking_reasons(plan, bundle, resolve_selected_skills(plan, bundle))
         if reasons:
             status, reason = "blocked", "; ".join(reasons)
@@ -303,8 +266,7 @@ def task_summary(tasks: list[ScoreTask], details: bool = False) -> dict[str, Any
         "task_count": len(tasks),
         "status_counts": dict(sorted(status_counts.items())),
         "family_status_counts": {
-            f"{family}/{status}": count
-            for (family, status), count in sorted(family_status_counts.items())
+            f"{family}/{status}": count for (family, status), count in sorted(family_status_counts.items())
         },
         "blocked_reasons": dict(sorted(blocked_reasons.items())),
     }
@@ -316,9 +278,7 @@ def task_summary(tasks: list[ScoreTask], details: bool = False) -> dict[str, Any
 def build_score(task: ScoreTask) -> dict[str, Any]:
     plan = read_json(task.plan_path)
     bundle = read_json(task.bundle_path)
-    metadata_path, video, metadata = _video_from_metadata(
-        task.metadata_path, task.model_id, plan, bundle
-    )
+    metadata_path, video, metadata = _video_from_metadata(task.metadata_path, task.model_id, plan, bundle)
     skills = resolve_selected_skills(plan, bundle)
     reasons = blocking_reasons(plan, bundle, skills)
     if reasons:
@@ -352,19 +312,9 @@ def build_score(task: ScoreTask) -> dict[str, Any]:
             "schema_version": plan.get("schema_version"),
             "routing_mode": plan.get("routing_mode"),
             "selected_skill_ids": [str(item["skill_id"]) for item in selected],
-            "observation_skill_ids": [
-                str(item["skill_id"])
-                for item in selected
-                if item["role"] == "observation"
-            ],
-            "core_skill_ids": [
-                str(item["skill_id"]) for item in selected if item["role"] == "core"
-            ],
-            "diagnostic_skill_ids": [
-                str(item["skill_id"])
-                for item in selected
-                if item["role"] == "diagnostic"
-            ],
+            "observation_skill_ids": [str(item["skill_id"]) for item in selected if item["role"] == "observation"],
+            "core_skill_ids": [str(item["skill_id"]) for item in selected if item["role"] == "core"],
+            "diagnostic_skill_ids": [str(item["skill_id"]) for item in selected if item["role"] == "diagnostic"],
             "selected_skills": copy.deepcopy(selected),
         },
         "skills": skills,
@@ -378,9 +328,7 @@ def build_score(task: ScoreTask) -> dict[str, Any]:
         },
         "observation_quality": {
             "status": "ok",
-            "dimensions": {
-                str(item["skill_id"]): item.get("score") for item in observations
-            },
+            "dimensions": {str(item["skill_id"]): item.get("score") for item in observations},
             "evidence_score": components["other_score"],
             "score_type": "selected_observation_mean",
         },
@@ -409,11 +357,7 @@ def execute_score_tasks(
     refresh_stale: bool = False,
 ) -> dict[str, Any]:
     tasks = list(tasks)
-    eligible = [
-        task
-        for task in tasks
-        if task.status == "pending" or (refresh_stale and task.status == "stale")
-    ]
+    eligible = [task for task in tasks if task.status == "pending" or (refresh_stale and task.status == "stale")]
     written = []
     with exclusive_lock(
         eval_root / ".score.lock",
@@ -429,8 +373,6 @@ def execute_score_tasks(
         "written": len(written),
         "blocked": sum(task.status == "blocked" for task in tasks),
         "cached": sum(task.status == "cached" for task in tasks),
-        "stale_not_refreshed": (
-            sum(task.status == "stale" for task in tasks) if not refresh_stale else 0
-        ),
+        "stale_not_refreshed": (sum(task.status == "stale" for task in tasks) if not refresh_stale else 0),
         "written_paths": written,
     }

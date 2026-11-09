@@ -1,18 +1,14 @@
-'''
-Docstring for problem.problem_filter
+"""Ask a VLM which physical phenomena a video involves."""
 
-这个文件提供一个接口，让VLM来判断这个视频和哪些物理现象有关
-'''
-
-from problem.problem_set import MECHANICS_QUESTIONS, THERMOTICS_QUESTIONS, MATERIAL_QUESTIONS
-
-from model.openrouter import video_openrouter_call
 import base64
 import json
-from typing import Dict
+
+from model.openrouter import video_openrouter_call
+
+from problem.problem_set import MATERIAL_QUESTIONS, MECHANICS_QUESTIONS, THERMOTICS_QUESTIONS
 
 
-def parse_llm_response(response_text: str) -> Dict:
+def parse_llm_response(response_text: str) -> dict:
     """
     Parse LLM response with robust error handling
     Based on PhyGenBench's JSON cleaning strategy
@@ -31,32 +27,27 @@ def parse_llm_response(response_text: str) -> Dict:
         return json.loads(cleaned)
     except json.JSONDecodeError as e:
         # If parsing fails, return error structure
-        return {
-            "error": "JSON parse failed",
-            "raw_text": response_text,
-            "exception": str(e)
-        }
+        return {"error": "JSON parse failed", "raw_text": response_text, "exception": str(e)}
 
 
-
-def filter_problems_by_physics(video, model_name, video_prompt)-> Dict:
-    prompt = f"""
+def filter_problems_by_physics(video, model_name, video_prompt) -> dict:
+    prompt = """
     You are a physics-aware problem filter. Given a Video Prompt, Video and the Problem Set, determine if the problem is relevant to the physical phenomena depicted in the video.
 
     output a JSON object with three keys: "mechanics", "thermotics", and "material". Each key maps to a list of question IDs from the Problem Set that are relevant to the video content.
 
     like
-    {{
+    {
         "mechanics": [gravity, buoyancy],
         "thermotics": [],
         "material": []
-    }}
+    }
     
     """
 
     prompt += f"\nVideo Prompt: {video_prompt}"
 
-    prompt += f"\nProblems Set:{str(MECHANICS_QUESTIONS)}, {str(THERMOTICS_QUESTIONS)}, {str(MATERIAL_QUESTIONS)}"
+    prompt += f"\nProblems Set:{MECHANICS_QUESTIONS!s}, {THERMOTICS_QUESTIONS!s}, {MATERIAL_QUESTIONS!s}"
 
     print(prompt)
 
@@ -73,10 +64,7 @@ def filter_problems_by_physics(video, model_name, video_prompt)-> Dict:
 
     parsed_response = parse_llm_response(result["choices"][0]["message"]["content"])
 
-    
-
     return parsed_response
-
 
 
 if __name__ == "__main__":
@@ -86,17 +74,12 @@ if __name__ == "__main__":
 
     def encode_video_to_base64(video_path):
         with open(video_path, "rb") as video_file:
-            return base64.b64encode(video_file.read()).decode('utf-8')
+            return base64.b64encode(video_file.read()).decode("utf-8")
 
     base64_video = encode_video_to_base64(video_path=video_path)
 
     data_url = f"data:video/mp4;base64,{base64_video}"
-    data_url = {
-        "type": "video_url",
-        "video_url": {
-            "url": data_url
-        }
-    }
+    data_url = {"type": "video_url", "video_url": {"url": data_url}}
 
     result = filter_problems_by_physics(video_path, model_name, video_prompt)
 

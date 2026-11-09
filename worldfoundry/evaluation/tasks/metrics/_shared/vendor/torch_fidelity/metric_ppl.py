@@ -5,11 +5,11 @@ from tqdm import tqdm
 from .generative_model_base import GenerativeModelBase
 from .helpers import get_kwarg, vassert, vprint
 from .utils import (
-    sample_random,
     batch_interp,
     create_sample_similarity,
     prepare_input_descriptor_from_input_id,
     prepare_input_from_descriptor,
+    sample_random,
 )
 
 KEY_METRIC_PPL_RAW = "perceptual_path_length_raw"
@@ -85,9 +85,16 @@ def calculate_ppl(input_id, **kwargs):
 
     distances = []
 
-    with tqdm(
-        disable=not verbose, leave=False, unit="samples", total=input_model_num_samples, desc="Perceptual Path Length"
-    ) as t, torch.no_grad():
+    with (
+        tqdm(
+            disable=not verbose,
+            leave=False,
+            unit="samples",
+            total=input_model_num_samples,
+            desc="Perceptual Path Length",
+        ) as t,
+        torch.no_grad(),
+    ):
         for begin_id in range(0, input_model_num_samples, batch_size):
             end_id = min(begin_id + batch_size, input_model_num_samples)
             batch_sz = end_id - begin_id

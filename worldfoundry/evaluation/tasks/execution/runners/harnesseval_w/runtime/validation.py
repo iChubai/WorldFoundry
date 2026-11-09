@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .aggregate import numeric
 from .io import read_json
@@ -31,7 +32,7 @@ def validate_run(
         manifest = read_json(manifest_path)
         for case in manifest.get("cases") or ():
             case_id = str(case.get("case_id") or "")
-            family = str(((case.get("taxonomy") or {}).get("probe_family") or ""))
+            family = str((case.get("taxonomy") or {}).get("probe_family") or "")
             if not case_id or family not in FAMILIES:
                 violations.append(
                     {
@@ -57,11 +58,7 @@ def validate_run(
             family_case_counts[family] += 1
 
     models = list(expected_models or MODEL_REGISTRY)
-    expected_keys = {
-        (model, family, case_id)
-        for model in models
-        for family, case_id in case_families
-    }
+    expected_keys = {(model, family, case_id) for model in models for family, case_id in case_families}
     score_paths = sorted((eval_root / "rollout_scores").glob("*/*/*.scores.json"))
     scores: list[dict[str, Any]] = []
     actual_keys: list[tuple[str, str, str]] = []
@@ -71,11 +68,11 @@ def validate_run(
     for path in score_paths:
         try:
             score = read_json(path)
-        except Exception as exc:  # noqa: BLE001 - the audit must report every invalid JSON file
+        except Exception as exc:  # the audit must report every invalid JSON file
             parse_failures.append({"path": str(path), "error": str(exc)})
             continue
         model = str(score.get("model_id") or "")
-        family = str(((score.get("taxonomy") or {}).get("probe_family") or ""))
+        family = str((score.get("taxonomy") or {}).get("probe_family") or "")
         case_id = str(score.get("case_id") or "")
         key = (model, family, case_id)
         scores.append(score)
@@ -104,9 +101,7 @@ def validate_run(
     missing_keys = sorted(expected_keys - actual_key_set)
     unexpected_keys = sorted(actual_key_set - expected_keys)
     if missing_keys:
-        violations.append(
-            {"kind": "missing_score_keys", "count": len(missing_keys), "keys": missing_keys[:50]}
-        )
+        violations.append({"kind": "missing_score_keys", "count": len(missing_keys), "keys": missing_keys[:50]})
     if unexpected_keys:
         violations.append(
             {
@@ -118,14 +113,8 @@ def validate_run(
     if schema_counts != Counter({"harnesseval.skill_eval": len(expected_keys)}):
         violations.append({"kind": "schema_coverage", "counts": dict(schema_counts)})
 
-    expected_coverage = {
-        model: {family: family_case_counts[family] for family in FAMILIES}
-        for model in models
-    }
-    actual_coverage = {
-        model: {family: coverage[(model, family)] for family in FAMILIES}
-        for model in models
-    }
+    expected_coverage = {model: {family: family_case_counts[family] for family in FAMILIES} for model in models}
+    actual_coverage = {model: {family: coverage[(model, family)] for family in FAMILIES} for model in models}
     if actual_coverage != expected_coverage:
         violations.append(
             {
@@ -162,13 +151,9 @@ def validate_run(
             }
         )
     observation_count_distribution = report.get("observation_count_distribution") or {}
-    expected_score_count = len(models) * sum(
-        family_case_counts[family] for family in FAMILIES
-    )
+    expected_score_count = len(models) * sum(family_case_counts[family] for family in FAMILIES)
     scores_with_observation = sum(
-        int(count)
-        for observation_count, count in observation_count_distribution.items()
-        if int(observation_count) > 0
+        int(count) for observation_count, count in observation_count_distribution.items() if int(observation_count) > 0
     )
     if scores_with_observation != expected_score_count:
         violations.append(
@@ -180,9 +165,7 @@ def validate_run(
             }
         )
     missing_macros = [
-        row.get("model_id")
-        for row in report.get("leaderboard") or ()
-        if numeric(row.get("overall_macro")) is None
+        row.get("model_id") for row in report.get("leaderboard") or () if numeric(row.get("overall_macro")) is None
     ]
     if missing_macros:
         violations.append({"kind": "missing_overall_macro", "models": missing_macros})
@@ -194,9 +177,7 @@ def validate_run(
             "preparation_written": (resume.get("preparation") or {}).get("written"),
             "preparation_blocked": (resume.get("preparation") or {}).get("blocked"),
             "preparation_failed": (resume.get("preparation") or {}).get("failed"),
-            "preparation_stale": (resume.get("preparation") or {}).get(
-                "stale_not_refreshed"
-            ),
+            "preparation_stale": (resume.get("preparation") or {}).get("stale_not_refreshed"),
             "score_written": (resume.get("execution") or {}).get("written"),
             "score_blocked": (resume.get("execution") or {}).get("blocked"),
             "score_stale": (resume.get("execution") or {}).get("stale_not_refreshed"),
@@ -205,9 +186,7 @@ def validate_run(
             violations.append({"kind": "resume_not_noop", "checks": checks})
         cached = ((resume.get("score_plan") or {}).get("status_counts") or {}).get("cached")
         if cached != len(expected_keys):
-            violations.append(
-                {"kind": "resume_score_cache_coverage", "expected": len(expected_keys), "actual": cached}
-            )
+            violations.append({"kind": "resume_score_cache_coverage", "expected": len(expected_keys), "actual": cached})
 
     json_scan = {"file_count": 0, "failure_count": 0, "failures": []}
     seen_json_paths = set()
@@ -220,7 +199,7 @@ def validate_run(
             json_scan["file_count"] += 1
             try:
                 read_json(path)
-            except Exception as exc:  # noqa: BLE001 - malformed evidence must be reported
+            except Exception as exc:  # malformed evidence must be reported
                 json_scan["failure_count"] += 1
                 if len(json_scan["failures"]) < 50:
                     json_scan["failures"].append({"path": str(path), "error": str(exc)})

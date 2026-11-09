@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-import sys
-
 
 EASYANIMATE_RUNTIME_UNAVAILABLE = (
     "EasyAnimate source code is not available from the in-tree runtime package. "

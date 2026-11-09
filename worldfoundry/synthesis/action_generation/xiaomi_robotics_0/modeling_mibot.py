@@ -1,7 +1,5 @@
-# coding=utf-8
 # WorldFoundry modification: vendored from the pinned official checkpoint runtime,
 # then reduced to the action-inference surface described by the central model data.
-# ruff: noqa
 # Copyright (C) 2026 Xiaomi Corporation.
 # Copyright 2025 The Qwen Team and The HuggingFace Inc. team. All rights reserved.
 #
@@ -16,29 +14,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional, Union
-import math
-import hashlib
+from typing import ClassVar
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.integrations import use_kernel_forward_from_hub
 from transformers.masking_utils import create_causal_mask
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
 from transformers.modeling_outputs import BaseModelOutputWithPast, ModelOutput
-from transformers.modeling_rope_utils import dynamic_rope_update, ROPE_INIT_FUNCTIONS
+from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 from transformers.processing_utils import Unpack
-from transformers.utils import is_torchdynamo_compiling, TransformersKwargs
+from transformers.utils import TransformersKwargs, is_torchdynamo_compiling
 
-from .configuration_mibot import MiBoTConfig, DiTConfig, Qwen3VLConfig, Qwen3VLTextConfig, Qwen3VLVisionConfig
+from .configuration_mibot import DiTConfig, MiBoTConfig, Qwen3VLConfig, Qwen3VLTextConfig, Qwen3VLVisionConfig
 
 
 class Qwen3VLVisionMLP(nn.Module):
@@ -142,7 +137,7 @@ def eager_attention_forward(
     query: torch.Tensor,
     key: torch.Tensor,
     value: torch.Tensor,
-    attention_mask: Optional[torch.Tensor],
+    attention_mask: torch.Tensor | None,
     scaling: float,
     dropout: float = 0.0,
     **kwargs: Unpack[TransformersKwargs],
@@ -179,8 +174,8 @@ class Qwen3VLVisionAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         cu_seqlens: torch.Tensor,
-        rotary_pos_emb: Optional[torch.Tensor] = None,
-        position_embeddings: Optional[tuple[torch.Tensor, torch.Tensor]] = None,
+        rotary_pos_emb: torch.Tensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,
         **kwargs,
     ) -> torch.Tensor:
         seq_length = hidden_states.shape[0]
@@ -235,7 +230,7 @@ class Qwen3VLVisionAttention(nn.Module):
                     is_causal=False,
                     **kwargs,
                 )[0]
-                for q, k, v in zip(*splits)
+                for q, k, v in zip(*splits, strict=False)
             ]
             attn_output = torch.cat(attn_outputs, dim=1)
 
@@ -256,8 +251,8 @@ class Qwen3VLVisionBlock(nn.Module):
         self,
         hidden_states: torch.Tensor,
         cu_seqlens: torch.Tensor,
-        rotary_pos_emb: Optional[torch.Tensor] = None,
-        position_embeddings: Optional[tuple[torch.Tensor, torch.Tensor]] = None,
+        rotary_pos_emb: torch.Tensor | None = None,
+        position_embeddings: tuple[torch.Tensor, torch.Tensor] | None = None,
         **kwargs,
     ) -> torch.Tensor:
         hidden_states = hidden_states + self.attn(
@@ -429,11 +424,11 @@ class Qwen3VLTextAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         position_embeddings: tuple[torch.Tensor, torch.Tensor],
-        attention_mask: Optional[torch.Tensor],
-        past_key_values: Optional[Cache] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None,
+        past_key_values: Cache | None = None,
+        cache_position: torch.LongTensor | None = None,
         **kwargs: Unpack[FlashAttentionKwargs],
-    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -500,11 +495,11 @@ class Qwen3VLTextDecoderLayer(nn.Module):
         self,
         hidden_states: torch.Tensor,
         position_embeddings: tuple[torch.Tensor, torch.Tensor],
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        use_cache: Optional[bool] = False,
-        cache_position: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        use_cache: bool | None = False,
+        cache_position: torch.LongTensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
     ) -> torch.Tensor:
         residual = hidden_states
@@ -542,12 +537,12 @@ class Qwen3VLModelOutputWithPast(ModelOutput):
         The rope index difference between sequence length and multimodal rope.
     """
 
-    last_hidden_state: Optional[torch.FloatTensor] = None
-    past_key_values: Optional[Cache] = None
-    hidden_states: Optional[tuple[torch.FloatTensor]] = None
-    attentions: Optional[tuple[torch.FloatTensor]] = None
-    rope_deltas: Optional[torch.LongTensor] = None
-    position_ids: Optional[torch.LongTensor] = None
+    last_hidden_state: torch.FloatTensor | None = None
+    past_key_values: Cache | None = None
+    hidden_states: tuple[torch.FloatTensor] | None = None
+    attentions: tuple[torch.FloatTensor] | None = None
+    rope_deltas: torch.LongTensor | None = None
+    position_ids: torch.LongTensor | None = None
 
 
 class Qwen3VLPreTrainedModel(PreTrainedModel):
@@ -557,14 +552,14 @@ class Qwen3VLPreTrainedModel(PreTrainedModel):
     # this explicit prevents Transformers from installing training checkpoint
     # hooks while preserving the PreTrainedModel loading contract.
     supports_gradient_checkpointing = False
-    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
     _skip_keys_device_placement = "past_key_values"
     _supports_flash_attn = True
     _supports_sdpa = True
 
     _can_compile_fullgraph = True
     _supports_attention_backend = True
-    _can_record_outputs = {
+    _can_record_outputs: ClassVar[dict] = {
         "hidden_states": Qwen3VLTextDecoderLayer,
         "attentions": Qwen3VLTextAttention,
     }
@@ -572,7 +567,7 @@ class Qwen3VLPreTrainedModel(PreTrainedModel):
 
 class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
     config: Qwen3VLVisionConfig
-    _no_split_modules = ["Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLVisionBlock"]
 
     def __init__(self, config, *inputs, **kwargs) -> None:
         super().__init__(config, *inputs, **kwargs)
@@ -652,7 +647,7 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
         idx_list = [[] for _ in range(4)]
         weight_list = [[] for _ in range(4)]
 
-        for t, h, w in zip(grid_ts, grid_hs, grid_ws):
+        for _t, h, w in zip(grid_ts, grid_hs, grid_ws, strict=False):
             h_idxs = torch.linspace(0, self.num_grid_per_side - 1, h)
             w_idxs = torch.linspace(0, self.num_grid_per_side - 1, w)
 
@@ -692,11 +687,11 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
         pos_embeds = self.pos_embed(idx_tensor) * weight_tensor[:, :, None]
         patch_pos_embeds = pos_embeds[0] + pos_embeds[1] + pos_embeds[2] + pos_embeds[3]
 
-        patch_pos_embeds = patch_pos_embeds.split([h * w for h, w in zip(grid_hs, grid_ws)])
+        patch_pos_embeds = patch_pos_embeds.split([h * w for h, w in zip(grid_hs, grid_ws, strict=False)])
 
         patch_pos_embeds_permute = []
         merge_size = self.config.spatial_merge_size
-        for pos_embed, t, h, w in zip(patch_pos_embeds, grid_ts, grid_hs, grid_ws):
+        for pos_embed, t, h, w in zip(patch_pos_embeds, grid_ts, grid_hs, grid_ws, strict=False):
             pos_embed = pos_embed.repeat(t, 1)
             pos_embed = (
                 pos_embed.view(t, h // merge_size, merge_size, w // merge_size, merge_size, -1)
@@ -762,7 +757,7 @@ class Qwen3VLVisionModel(Qwen3VLPreTrainedModel):
 
 class Qwen3VLTextModel(Qwen3VLPreTrainedModel):
     config: Qwen3VLTextConfig
-    _no_split_modules = ["Qwen3VLTextDecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLTextDecoderLayer"]
 
     def __init__(self, config: Qwen3VLTextConfig):
         super().__init__(config)
@@ -780,18 +775,18 @@ class Qwen3VLTextModel(Qwen3VLPreTrainedModel):
 
     def forward(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        use_cache: Optional[bool] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        input_ids: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        use_cache: bool | None = None,
+        cache_position: torch.LongTensor | None = None,
         # args for deepstack
-        visual_pos_masks: Optional[torch.Tensor] = None,
-        deepstack_visual_embeds: Optional[list[torch.Tensor]] = None,
+        visual_pos_masks: torch.Tensor | None = None,
+        deepstack_visual_embeds: list[torch.Tensor] | None = None,
         **kwargs: Unpack[FlashAttentionKwargs],
-    ) -> Union[tuple, BaseModelOutputWithPast]:
+    ) -> tuple | BaseModelOutputWithPast:
         r"""
         visual_pos_masks (`torch.Tensor` of shape `(batch_size, seqlen)`, *optional*):
             The mask of the visual positions.
@@ -882,11 +877,11 @@ class Qwen3VLTextModel(Qwen3VLPreTrainedModel):
 
 class Qwen3VLModel(Qwen3VLPreTrainedModel):
     base_model_prefix = ""
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping: ClassVar[dict] = {}
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: Qwen3VLConfig
-    _no_split_modules = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
+    _no_split_modules: ClassVar[list] = ["Qwen3VLTextDecoderLayer", "Qwen3VLVisionBlock"]
 
     def __init__(self, config):
         super().__init__(config)
@@ -911,10 +906,10 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 
     def get_rope_index(
         self,
-        input_ids: Optional[torch.LongTensor] = None,
-        image_grid_thw: Optional[torch.LongTensor] = None,
-        video_grid_thw: Optional[torch.LongTensor] = None,
-        attention_mask: Optional[torch.Tensor] = None,
+        input_ids: torch.LongTensor | None = None,
+        image_grid_thw: torch.LongTensor | None = None,
+        video_grid_thw: torch.LongTensor | None = None,
+        attention_mask: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Different from the original implementation, Qwen3VL use timestamps rather than absolute time position ids."""
 
@@ -1029,7 +1024,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             return position_ids, mrope_position_deltas
 
     def get_video_features(
-        self, pixel_values_videos: torch.FloatTensor, video_grid_thw: Optional[torch.LongTensor] = None
+        self, pixel_values_videos: torch.FloatTensor, video_grid_thw: torch.LongTensor | None = None
     ):
         """
         Encodes videos into continuous embeddings that can be forwarded to the language model. The deepstack visual features are also returned.
@@ -1043,7 +1038,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         # Same implementation as for images
         return self.get_image_features(pixel_values_videos, video_grid_thw)
 
-    def get_image_features(self, pixel_values: torch.FloatTensor, image_grid_thw: Optional[torch.LongTensor] = None):
+    def get_image_features(self, pixel_values: torch.FloatTensor, image_grid_thw: torch.LongTensor | None = None):
         """
         Encodes images into continuous embeddings that can be forwarded to the language model. The deepstack visual features are also returned.
 
@@ -1063,8 +1058,8 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
         self,
         input_ids: torch.LongTensor,
         inputs_embeds: torch.FloatTensor,
-        image_features: Optional[torch.FloatTensor] = None,
-        video_features: Optional[torch.FloatTensor] = None,
+        image_features: torch.FloatTensor | None = None,
+        video_features: torch.FloatTensor | None = None,
     ):
         """
         Obtains multimodal placeholder mask from `input_ids` or `inputs_embeds`, and checks that the placeholder token count is
@@ -1102,17 +1097,17 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        pixel_values: Optional[torch.Tensor] = None,
-        pixel_values_videos: Optional[torch.FloatTensor] = None,
-        image_grid_thw: Optional[torch.LongTensor] = None,
-        video_grid_thw: Optional[torch.LongTensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        pixel_values: torch.Tensor | None = None,
+        pixel_values_videos: torch.FloatTensor | None = None,
+        image_grid_thw: torch.LongTensor | None = None,
+        video_grid_thw: torch.LongTensor | None = None,
+        cache_position: torch.LongTensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
-    ) -> Union[tuple, Qwen3VLModelOutputWithPast]:
+    ) -> tuple | Qwen3VLModelOutputWithPast:
         r"""
         image_grid_thw (`torch.LongTensor` of shape `(num_images, 3)`, *optional*):
             The temporal, height and width of feature shape of each image in LLM.
@@ -1154,7 +1149,7 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
             deepstack_visual_embeds = []
             image_mask_joint = image_mask[visual_pos_masks]
             video_mask_joint = video_mask[visual_pos_masks]
-            for img_embed, vid_embed in zip(deepstack_image_embeds, deepstack_video_embeds):
+            for img_embed, vid_embed in zip(deepstack_image_embeds, deepstack_video_embeds, strict=False):
                 embed_joint = img_embed.new_zeros(visual_pos_masks.sum(), img_embed.shape[-1]).to(img_embed.device)
                 embed_joint[image_mask_joint, :] = img_embed
                 embed_joint[video_mask_joint, :] = vid_embed
@@ -1236,16 +1231,16 @@ class Qwen3VLModel(Qwen3VLPreTrainedModel):
 class Qwen3VLBackboneOutput(ModelOutput):
     """Inference state consumed by the MiBoT action head."""
 
-    past_key_values: Optional[Cache] = None
-    position_ids: Optional[torch.LongTensor] = None
-    attention_mask: Optional[torch.Tensor] = None
+    past_key_values: Cache | None = None
+    position_ids: torch.LongTensor | None = None
+    attention_mask: torch.Tensor | None = None
 
 
 class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
-    _checkpoint_conversion_mapping = {}
+    _checkpoint_conversion_mapping: ClassVar[dict] = {}
     # A mapping works with both Transformers 4.57 (which iterates the keys)
     # and Transformers 5.x (which requires explicit target/source metadata).
-    _tied_weights_keys = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
+    _tied_weights_keys: ClassVar[dict] = {"lm_head.weight": "model.language_model.embed_tokens.weight"}
     # Reference: fix gemma3 grad acc #37208
     accepts_loss_kwargs = False
     config: Qwen3VLConfig
@@ -1273,11 +1268,11 @@ class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
         return self.model.get_decoder()
 
     def get_video_features(
-        self, pixel_values_videos: torch.FloatTensor, video_grid_thw: Optional[torch.LongTensor] = None
+        self, pixel_values_videos: torch.FloatTensor, video_grid_thw: torch.LongTensor | None = None
     ):
         return self.model.get_video_features(pixel_values_videos, video_grid_thw)
 
-    def get_image_features(self, pixel_values: torch.FloatTensor, image_grid_thw: Optional[torch.LongTensor] = None):
+    def get_image_features(self, pixel_values: torch.FloatTensor, image_grid_thw: torch.LongTensor | None = None):
         return self.model.get_image_features(pixel_values, image_grid_thw)
 
     # Make modules available through conditional class for BC
@@ -1292,15 +1287,15 @@ class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[Cache] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        pixel_values: Optional[torch.Tensor] = None,
-        pixel_values_videos: Optional[torch.FloatTensor] = None,
-        image_grid_thw: Optional[torch.LongTensor] = None,
-        video_grid_thw: Optional[torch.LongTensor] = None,
-        cache_position: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: Cache | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        pixel_values: torch.Tensor | None = None,
+        pixel_values_videos: torch.FloatTensor | None = None,
+        image_grid_thw: torch.LongTensor | None = None,
+        video_grid_thw: torch.LongTensor | None = None,
+        cache_position: torch.LongTensor | None = None,
         **kwargs: Unpack[TransformersKwargs],
     ) -> Qwen3VLBackboneOutput:
         """Run the multimodal backbone and return only action-head inputs."""
@@ -1308,7 +1303,9 @@ class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
         unsupported = {key for key in ("labels", "logits_to_keep") if key in kwargs}
         if unsupported:
             names = ", ".join(sorted(unsupported))
-            raise TypeError(f"training/text-generation arguments are unavailable in the inference-only runtime: {names}")
+            raise TypeError(
+                f"training/text-generation arguments are unavailable in the inference-only runtime: {names}"
+            )
         outputs = self.model(
             input_ids=input_ids,
             pixel_values=pixel_values,
@@ -1329,17 +1326,22 @@ class Qwen3VLForConditionalGeneration(Qwen3VLPreTrainedModel):
             attention_mask=attention_mask,
         )
 
+
 # ================================================================================ #
+
 
 @dataclass
 class ActionGenerationOutput(ModelOutput):
     """
     Output type of MiBoTForActionGeneration.
     """
+
     actions: torch.FloatTensor = None
+
 
 def modulate(x, shift, scale):
     return x * (1 + scale) + shift
+
 
 class TimestepEmbedder(nn.Module):
     def __init__(self, hidden_size, frequency_embedding_size=256, dtype=None):
@@ -1373,9 +1375,10 @@ class TimestepEmbedder(nn.Module):
         t_emb = self.mlp(t_freq)
         return t_emb[:, None]
 
+
 class MLPProjector(nn.Module):
     def __init__(self, input_dim: int, output_dim: int, num_layers: int = 1, bias: bool = False):
-        super(MLPProjector, self).__init__()
+        super().__init__()
 
         if num_layers < 1:
             raise ValueError(f"num_layers must be at least 1, got {num_layers}")
@@ -1462,6 +1465,7 @@ class Attention(nn.Module):
         attn_output = attn_output.transpose(1, 2).contiguous().view(batch_size, q_len, -1)
         return self.o_proj(attn_output)
 
+
 class ActionMLP(nn.Module):
     def __init__(
         self,
@@ -1476,6 +1480,7 @@ class ActionMLP(nn.Module):
 
     def forward(self, hidden_state):
         return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
+
 
 class DecoderLayer(nn.Module):
     def __init__(self, config: DiTConfig):
@@ -1493,7 +1498,9 @@ class DecoderLayer(nn.Module):
         self.adaln_table = nn.Parameter(torch.randn(6, hidden_size) / hidden_size**0.5)
 
     def forward(self, hidden_states, past_key_values, position_embeds, t_embeds, attn_mask=None):
-        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (self.adaln_table[None] + t_embeds).chunk(6, dim=1)
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (self.adaln_table[None] + t_embeds).chunk(
+            6, dim=1
+        )
 
         residual = hidden_states
         hidden_states = self.input_layernorm(hidden_states)
@@ -1511,17 +1518,16 @@ class DecoderLayer(nn.Module):
 
         return hidden_states
 
+
 class DiT(PreTrainedModel):
     config_class = DiTConfig
     _supports_flash_attn = True
     _supports_sdpa = True
-    _no_split_modules = ["DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["DecoderLayer"]
 
     def __init__(self, config: DiTConfig):
         super().__init__(config)
-        self.layers = nn.ModuleList(
-            [DecoderLayer(config) for _ in range(config.num_hidden_layers)]
-        )
+        self.layers = nn.ModuleList([DecoderLayer(config) for _ in range(config.num_hidden_layers)])
         self.post_init()
 
     def forward(self, hidden_states, past_key_values, attn_mask, position_embeds, t_embeds):
@@ -1550,7 +1556,7 @@ class MiBoTForActionGeneration(PreTrainedModel):
     supports_gradient_checkpointing = False
     _supports_flash_attn = True
     _supports_sdpa = True
-    _no_split_modules = ["DecoderLayer"]
+    _no_split_modules: ClassVar[list] = ["DecoderLayer"]
 
     def __init__(self, config: MiBoTConfig):
         super().__init__(config)
@@ -1565,27 +1571,19 @@ class MiBoTForActionGeneration(PreTrainedModel):
 
         # Projectors
         self.state_projector = MLPProjector(
-            input_dim=config.state_dim,
-            output_dim=config.dit_config.hidden_size,
-            num_layers=2
+            input_dim=config.state_dim, output_dim=config.dit_config.hidden_size, num_layers=2
         )
         self.action_projector = MLPProjector(
-            input_dim=config.action_dim,
-            output_dim=config.dit_config.hidden_size,
-            num_layers=2
+            input_dim=config.action_dim, output_dim=config.dit_config.hidden_size, num_layers=2
         )
         self.action_output_layer = MLPProjector(
-            input_dim=config.dit_config.hidden_size,
-            output_dim=config.action_dim,
-            num_layers=2
+            input_dim=config.dit_config.hidden_size, output_dim=config.action_dim, num_layers=2
         )
 
         # Time Embedding
         self.t_embedder = TimestepEmbedder(config.dit_config.hidden_size)
         self.t_projector = MLPProjector(
-            input_dim=config.dit_config.hidden_size,
-            output_dim=6 * config.dit_config.hidden_size,
-            bias=True
+            input_dim=config.dit_config.hidden_size, output_dim=6 * config.dit_config.hidden_size, bias=True
         )
 
         # RoPE
@@ -1619,13 +1617,7 @@ class MiBoTForActionGeneration(PreTrainedModel):
         return output
 
     @torch.no_grad()
-    def forward(
-        self,
-        state,
-        action_mask,
-        num_steps=5,
-        **kwargs
-    ):
+    def forward(self, state, action_mask, num_steps=5, **kwargs):
         vlm_outputs = self.vlm(**kwargs, use_cache=True)
 
         action_bs, action_length, _ = action_mask.shape
@@ -1642,7 +1634,9 @@ class MiBoTForActionGeneration(PreTrainedModel):
         position_embeds = self.rotary_emb(action_mask, position_ids)
 
         ## cache attention mask
-        dit_mask = torch.tril(torch.ones((action_bs, dit_query_length, dit_query_length), device=action_mask.device), diagonal=0)
+        dit_mask = torch.tril(
+            torch.ones((action_bs, dit_query_length, dit_query_length), device=action_mask.device), diagonal=0
+        )
         cache_mask = vlm_outputs.attention_mask[:, None, :].expand(-1, dit_query_length, -1)
         attn_mask = torch.cat([cache_mask, dit_mask], dim=-1)[:, None]
         attn_mask = attn_mask.bool()
@@ -1684,7 +1678,6 @@ class MiBoTForActionGeneration(PreTrainedModel):
             x = x + v * dt
 
         return ActionGenerationOutput(actions=x)
-
 
 
 __all__ = ["MiBoTForActionGeneration"]

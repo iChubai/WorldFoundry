@@ -5,7 +5,6 @@ from pathlib import Path
 
 from worldfoundry.evaluation.utils import REPO_ROOT
 
-
 DEFAULT_ASSET_ROOT = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "assets" / "t2v-compbench"
 
 

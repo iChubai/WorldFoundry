@@ -5,9 +5,10 @@ from __future__ import annotations
 import csv
 import json
 import os
+from collections.abc import Iterator
 from importlib import resources
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 PROMPT_PROFILE_TI2V_ACTIVE = "ti2v_active"
 PROMPT_PROFILE_T2V_LAYOUT_ANCHOR = "t2v_layout_anchor"
@@ -38,8 +39,7 @@ def _package_data_dir() -> Path:
     if standalone.is_dir():
         return standalone
     raise FileNotFoundError(
-        "WRBench assets were not found under WorldFoundry benchmark assets; "
-        "set WORLDFOUNDRY_WRBENCH_ASSETS_ROOT"
+        "WRBench assets were not found under WorldFoundry benchmark assets; set WORLDFOUNDRY_WRBENCH_ASSETS_ROOT"
     )
 
 
@@ -153,10 +153,7 @@ def load_natural25_t2v_event_tails(path: str | Path | None = None) -> dict[str, 
 
 def _join_anchors(anchor_names: list[str]) -> str:
     names = [name.strip() for name in anchor_names if name.strip()]
-    if len(names) == 1:
-        text = names[0]
-    else:
-        text = " and ".join(names[:2])
+    text = names[0] if len(names) == 1 else " and ".join(names[:2])
     return text[:1].upper() + text[1:]
 
 
@@ -183,11 +180,7 @@ def _build_t2v_layout_anchor_prompt(
     tail = event_tails.get(variant_id)
     if tail is None:
         raise ValueError(f"{variant_id!r} missing T2V event tail")
-    return (
-        f"In {scene}, {subject}; {interactor}. "
-        f"The layout includes {open_surface}. {anchor_text}. "
-        f"{tail}"
-    )
+    return f"In {scene}, {subject}; {interactor}. The layout includes {open_surface}. {anchor_text}. {tail}"
 
 
 def resolve_variant_prompt(

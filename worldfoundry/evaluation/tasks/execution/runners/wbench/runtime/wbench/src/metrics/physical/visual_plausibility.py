@@ -10,13 +10,15 @@ Usage:
     evaluator = PhysicalPlausibilityEvaluator(model_path="path/to/qwen3vl_a3b")
     results = evaluator.score_videos(["video1.mp4", "video2.mp4"])
 """
+
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 import torch
+
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.wbench_visual_plausibility import model_dir as pavrm_model_dir
 
 METRIC_NAME = "visual_plausibility"
@@ -37,7 +39,7 @@ ANCHOR_WEIGHTS = torch.tensor([5.0, 4.0, 3.0, 2.0, 1.0])
 class PhysicalPlausibilityEvaluator:
     """Local PAVRM inference using Qwen3-VL reward model (transformers backend)."""
 
-    def __init__(self, model_path: str = None, device: str = "cuda"):
+    def __init__(self, model_path: str | None = None, device: str = "cuda"):
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         if model_path is None:
@@ -52,20 +54,22 @@ class PhysicalPlausibilityEvaluator:
 
         try:
             self.model = AutoModelForImageTextToText.from_pretrained(
-                model_path, dtype=torch.bfloat16,
+                model_path,
+                dtype=torch.bfloat16,
                 attn_implementation="flash_attention_2",
                 device_map="auto",
             )
         except (ImportError, ValueError):
             self.model = AutoModelForImageTextToText.from_pretrained(
-                model_path, dtype=torch.bfloat16,
+                model_path,
+                dtype=torch.bfloat16,
                 device_map="auto",
             )
         self.processor = AutoProcessor.from_pretrained(model_path)
         self.device = device
 
     @torch.no_grad()
-    def score_video(self, video_path: str, fps: float = 2.0) -> Dict[str, Any]:
+    def score_video(self, video_path: str, fps: float = 2.0) -> dict[str, Any]:
         """Score a single video for physical plausibility.
 
         Returns:
@@ -75,23 +79,23 @@ class PhysicalPlausibilityEvaluator:
             return {"raw_score": None, "score": None, "error": f"Video not found: {video_path}"}
 
         try:
-            messages = [{
-                "role": "user",
-                "content": [
-                    {"type": "video", "video": video_path,
-                     "fps": fps, "max_pixels": 602112},
-                    {"type": "text", "text": VIDEO_QUALITY_PROMPT},
-                ],
-            }]
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "video", "video": video_path, "fps": fps, "max_pixels": 602112},
+                        {"type": "text", "text": VIDEO_QUALITY_PROMPT},
+                    ],
+                }
+            ]
 
             inputs = self.processor.apply_chat_template(
-                messages, tokenize=True, add_generation_prompt=True,
-                return_dict=True, return_tensors="pt"
+                messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt"
             ).to(self.model.device)
 
             outputs = self.model.generate(
-                **inputs, max_new_tokens=1, do_sample=False,
-                output_logits=True, return_dict_in_generate=True)
+                **inputs, max_new_tokens=1, do_sample=False, output_logits=True, return_dict_in_generate=True
+            )
 
             logits = outputs.logits[0]
             token_ids = torch.tensor(ANCHOR_TOKEN_IDS, device=logits.device)
@@ -107,7 +111,7 @@ class PhysicalPlausibilityEvaluator:
         except Exception as e:
             return {"raw_score": None, "score": None, "error": str(e)}
 
-    def score_videos(self, video_paths: List[str], fps: float = 2.0) -> List[Dict[str, Any]]:
+    def score_videos(self, video_paths: list[str], fps: float = 2.0) -> list[dict[str, Any]]:
         """Score multiple videos sequentially.
 
         Args:
@@ -123,14 +127,13 @@ class PhysicalPlausibilityEvaluator:
         return results
 
 
-def score_video_api(video_path: str, endpoint: str = None) -> Dict[str, Any]:
+def score_video_api(video_path: str, endpoint: str | None = None) -> dict[str, Any]:
     """Score a video via PAVRM HTTP API endpoint (fallback)."""
     import requests
 
     endpoint = endpoint or os.environ.get("PAVRM_API_URL", "")
     if not endpoint:
-        return {"raw_score": None, "score": None,
-                "error": "PAVRM_API_URL not set. Set env var or pass endpoint."}
+        return {"raw_score": None, "score": None, "error": "PAVRM_API_URL not set. Set env var or pass endpoint."}
 
     abs_path = os.path.abspath(video_path)
     try:
@@ -148,8 +151,9 @@ def score_video_api(video_path: str, endpoint: str = None) -> Dict[str, Any]:
         return {"raw_score": None, "score": None, "error": str(e)}
 
 
-def compute_case(video_path: str, model_path: str = None,
-                 endpoint: str = None, device: str = "cuda") -> Dict[str, Any]:
+def compute_case(
+    video_path: str, model_path: str | None = None, endpoint: str | None = None, device: str = "cuda"
+) -> dict[str, Any]:
     """Evaluate physical plausibility. Tries local model first, falls back to API."""
     model_path = (
         model_path
@@ -180,9 +184,9 @@ def compute_case(video_path: str, model_path: str = None,
 def build_case_record(
     case_id: str,
     video_path: str,
-    raw_score: Optional[float] = None,
-    error: Optional[str] = None,
-) -> Dict[str, Any]:
+    raw_score: float | None = None,
+    error: str | None = None,
+) -> dict[str, Any]:
     score = round(raw_score / 5.0, 4) if raw_score is not None and error is None else None
     return {
         "case_id": str(case_id),
@@ -194,7 +198,7 @@ def build_case_record(
     }
 
 
-def summarize_model_results(case_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarize_model_results(case_records: list[dict[str, Any]]) -> dict[str, Any]:
     valid = [r for r in case_records if r.get("score") is not None]
     if not valid:
         return {"score": 0.0, "n_cases": 0}

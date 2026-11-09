@@ -8,7 +8,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 # Automated metrics (0-100 composite scores from run_eval.py)
 AUTOMATED_METRICS = [
     "VisualQuality",
@@ -41,59 +40,57 @@ VQA_METRICS = [
 LOWER_IS_BETTER = {"GT_ALL_LPIPS"}
 
 # Display order
-DISPLAY_ORDER = (
-    AUTOMATED_METRICS + [ORS_METRIC] + FIDELITY_METRICS + VQA_METRICS
-)
+DISPLAY_ORDER = [*AUTOMATED_METRICS, ORS_METRIC, *FIDELITY_METRICS, *VQA_METRICS]
 
 # Pretty names for display
 PRETTY_NAMES = {
-    "VisualQuality":          "VisQual",
-    "MotionSmoothness":       "MotSmooth",
+    "VisualQuality": "VisQual",
+    "MotionSmoothness": "MotSmooth",
     "ObjIdentityConsistency": "ObjConsist",
-    "Geo3DConsistency":       "3DConsist",
+    "Geo3DConsistency": "3DConsist",
     "CameraControllability": "CamCtrl",
-    "ImageRewardScore":       "ImgReward",
-    "ORS":                    "ORS",
-    "GT_ALL_PSNR":            "PSNR",
-    "GT_ALL_SSIM":            "SSIM",
-    "GT_ALL_LPIPS":           "LPIPS",
-    "InstructionFollowing":   "VQA-IF",
-    "ObjectBackground":       "VQA-OB",
-    "ContinuityOfMemory":     "VQA-CM",
-    "PhysicsAdherence":       "VQA-PA",
+    "ImageRewardScore": "ImgReward",
+    "ORS": "ORS",
+    "GT_ALL_PSNR": "PSNR",
+    "GT_ALL_SSIM": "SSIM",
+    "GT_ALL_LPIPS": "LPIPS",
+    "InstructionFollowing": "VQA-IF",
+    "ObjectBackground": "VQA-OB",
+    "ContinuityOfMemory": "VQA-CM",
+    "PhysicsAdherence": "VQA-PA",
 }
 
 MODEL_DISPLAY_NAMES = {
-    "lingbot-world":          "LingBot-World",
-    "wan2.2":                 "Wan2.2",
-    "fantasy-world":          "FantasyWorld",
-    "matrix-game2":           "Matrix-Game2",
-    "stable-virtual-camera":  "SVC",
-    "open-sora":              "Open-SoRA",
-    "ltx-video":              "LTX-Video",
-    "cogvideo":               "CogVideoX",
+    "lingbot-world": "LingBot-World",
+    "wan2.2": "Wan2.2",
+    "fantasy-world": "FantasyWorld",
+    "matrix-game2": "Matrix-Game2",
+    "stable-virtual-camera": "SVC",
+    "open-sora": "Open-SoRA",
+    "ltx-video": "LTX-Video",
+    "cogvideo": "CogVideoX",
 }
 
 # Map variant directory names to a canonical key (lowercase)
 # so that ORS dirs like "LingBot-World" merge with eval dirs like "lingbot-world"
 _CANONICAL_KEY = {
-    "lingbot-world":         "lingbot-world",
-    "LingBot-World":         "lingbot-world",
-    "Lingbot":               "lingbot-world",
-    "wan2.2":                "wan2.2",
-    "Wan2.2":                "wan2.2",
-    "fantasy-world":         "fantasy-world",
-    "FantasyWorld":          "fantasy-world",
-    "matrix-game2":          "matrix-game2",
-    "Matrix-Game2":          "matrix-game2",
+    "lingbot-world": "lingbot-world",
+    "LingBot-World": "lingbot-world",
+    "Lingbot": "lingbot-world",
+    "wan2.2": "wan2.2",
+    "Wan2.2": "wan2.2",
+    "fantasy-world": "fantasy-world",
+    "FantasyWorld": "fantasy-world",
+    "matrix-game2": "matrix-game2",
+    "Matrix-Game2": "matrix-game2",
     "stable-virtual-camera": "stable-virtual-camera",
-    "StableVirtualCamera":   "stable-virtual-camera",
-    "open-sora":             "open-sora",
-    "Open-SoRA":             "open-sora",
-    "ltx-video":             "ltx-video",
-    "LTX-Video":             "ltx-video",
-    "cogvideo":              "cogvideo",
-    "CogVideoX":             "cogvideo",
+    "StableVirtualCamera": "stable-virtual-camera",
+    "open-sora": "open-sora",
+    "Open-SoRA": "open-sora",
+    "ltx-video": "ltx-video",
+    "LTX-Video": "ltx-video",
+    "cogvideo": "cogvideo",
+    "CogVideoX": "cogvideo",
 }
 
 
@@ -101,11 +98,9 @@ def _canonicalize(name: str) -> str:
     return _CANONICAL_KEY.get(name, name.lower())
 
 
-
 def _latest_csv(directory: str, pattern: str = "eval_*.csv") -> str | None:
     """Return the most recently modified CSV matching pattern."""
-    csvs = sorted(glob.glob(os.path.join(directory, pattern)),
-                  key=os.path.getmtime)
+    csvs = sorted(glob.glob(os.path.join(directory, pattern)), key=os.path.getmtime)
     return csvs[-1] if csvs else None
 
 
@@ -151,10 +146,10 @@ def load_vqa_results(vqa_dir: str) -> dict[str, pd.DataFrame]:
     """
     # Map from VQA JSON keys to our internal metric names
     VQA_KEY_MAP = {
-        "Instruction Following":  "InstructionFollowing",
-        "Object and Background":  "ObjectBackground",
-        "Continuity of Memory":   "ContinuityOfMemory",
-        "Physics Adherence":      "PhysicsAdherence",
+        "Instruction Following": "InstructionFollowing",
+        "Object and Background": "ObjectBackground",
+        "Continuity of Memory": "ContinuityOfMemory",
+        "Physics Adherence": "PhysicsAdherence",
     }
 
     results = {}
@@ -196,7 +191,6 @@ def load_vqa_results(vqa_dir: str) -> dict[str, pd.DataFrame]:
         if rows:
             results[key] = pd.DataFrame(rows)
     return results
-
 
 
 def aggregate_model(
@@ -263,9 +257,7 @@ def build_leaderboard(
     vqa_data = load_vqa_results(vqa_dir) if vqa_dir else {}
 
     # Union of all model keys
-    all_models = sorted(
-        set(eval_data) | set(ors_data) | set(vqa_data)
-    )
+    all_models = sorted(set(eval_data) | set(ors_data) | set(vqa_data))
     if not all_models:
         print("No model results found.", file=sys.stderr)
         sys.exit(1)
@@ -287,7 +279,6 @@ def build_leaderboard(
     return df
 
 
-
 def _bold_best(series: pd.Series, lower_is_better: bool = False) -> list[str]:
     """Return formatted strings with best bolded and second-best underlined (markdown)."""
     valid = series.dropna()
@@ -306,7 +297,7 @@ def _bold_best(series: pd.Series, lower_is_better: bool = False) -> list[str]:
         elif second is not None and np.isclose(v, second):
             out.append(f"<u>{v:.2f}</u>")
         elif worst is not None and np.isclose(v, worst):
-            out.append('<font color="red">' + f'{v:.2f}' + '</font>')
+            out.append('<font color="red">' + f"{v:.2f}" + "</font>")
         else:
             out.append(f"{v:.2f}")
     return out
@@ -326,9 +317,7 @@ def format_markdown(df: pd.DataFrame) -> str:
 
     lines = []
     header = "| " + " | ".join(fmt.columns) + " |"
-    sep = "|" + "|".join(
-        "---:" if c != fmt.columns[0] else ":---" for c in fmt.columns
-    ) + "|"
+    sep = "|" + "|".join("---:" if c != fmt.columns[0] else ":---" for c in fmt.columns) + "|"
     lines.append(header)
     lines.append(sep)
     for _, row in fmt.iterrows():
@@ -355,8 +344,6 @@ def format_latex(df: pd.DataFrame) -> str:
         r"\toprule",
     ]
 
-    # Header with pretty names
-    pretty_cols = [PRETTY_NAMES.get(c, c) for c in df.columns]
     # Add arrows
     arrows = []
     for c in df.columns:
@@ -424,9 +411,7 @@ def format_html(df: pd.DataFrame) -> str:
     pretty = {c: PRETTY_NAMES.get(c, c) for c in df.columns}
     columns = list(df.columns)
     pretty_columns = [pretty[c] for c in columns]
-    lower_is_better_indices = [
-        i for i, c in enumerate(columns) if c in LOWER_IS_BETTER
-    ]
+    lower_is_better_indices = [i for i, c in enumerate(columns) if c in LOWER_IS_BETTER]
 
     # Build rows as list of lists
     rows_data = []
@@ -458,17 +443,20 @@ def format_html(df: pd.DataFrame) -> str:
                 worst_vals[i] = sorted_unique[-1]
 
     import json as _json
-    data_json = _json.dumps({
-        "columns": pretty_columns,
-        "columnKeys": columns,
-        "rows": rows_data,
-        "lowerIsBetter": lower_is_better_indices,
-        "best": {str(k): v for k, v in best_vals.items()},
-        "second": {str(k): v for k, v in second_vals.items()},
-        "worst": {str(k): v for k, v in worst_vals.items()},
-    })
 
-    return f'''<!DOCTYPE html>
+    data_json = _json.dumps(
+        {
+            "columns": pretty_columns,
+            "columnKeys": columns,
+            "rows": rows_data,
+            "lowerIsBetter": lower_is_better_indices,
+            "best": {str(k): v for k, v in best_vals.items()},
+            "second": {str(k): v for k, v in second_vals.items()},
+            "worst": {str(k): v for k, v in worst_vals.items()},
+        }
+    )
+
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -618,7 +606,7 @@ function render(sortCol, sortAsc) {{
 render(-1, false);
 </script>
 </body>
-</html>'''
+</html>"""
 
 
 def print_terminal(df: pd.DataFrame, sort_by: str | None = None):
@@ -654,7 +642,6 @@ def print_terminal(df: pd.DataFrame, sort_by: str | None = None):
     GREEN = "\033[92m"
     RED = "\033[91m"
     CYAN = "\033[96m"
-    DIM = "\033[2m"
     UNDERLINE = "\033[4m"
     RESET = "\033[0m"
 
@@ -705,29 +692,34 @@ def print_terminal(df: pd.DataFrame, sort_by: str | None = None):
         print(line)
 
 
-
 def main():
-    parser = argparse.ArgumentParser(
-        description="MemoBench Leaderboard — aggregate and display model scores."
+    parser = argparse.ArgumentParser(description="MemoBench Leaderboard — aggregate and display model scores.")
+    parser.add_argument(
+        "--eval-dir", type=str, default=None, help="Directory with per-model eval CSVs (from run_eval.py)"
     )
-    parser.add_argument("--eval-dir", type=str, default=None,
-                        help="Directory with per-model eval CSVs (from run_eval.py)")
-    parser.add_argument("--ors-dir", type=str, default=None,
-                        help="Directory with per-model ORS CSVs (from compute_ors.py)")
-    parser.add_argument("--vqa-dir", type=str, default=None,
-                        help="Directory with per-model VQA CSVs")
-    parser.add_argument("--load", type=str, default=None,
-                        help="Load a previously saved leaderboard CSV instead of computing")
-    parser.add_argument("--output", "-o", type=str, default=None,
-                        help="Save leaderboard to CSV file")
-    parser.add_argument("--format", choices=["terminal", "markdown", "latex", "csv", "html"],
-                        default="terminal",
-                        help="Output format (default: terminal)")
-    parser.add_argument("--sort", type=str, default=None,
-                        help="Sort by this metric (use pretty name, e.g. ORS, CamCtrl)")
-    parser.add_argument("--subset", choices=["synthetic", "real", "all"],
-                        default="all",
-                        help="Filter clips by data type before aggregation")
+    parser.add_argument(
+        "--ors-dir", type=str, default=None, help="Directory with per-model ORS CSVs (from compute_ors.py)"
+    )
+    parser.add_argument("--vqa-dir", type=str, default=None, help="Directory with per-model VQA CSVs")
+    parser.add_argument(
+        "--load", type=str, default=None, help="Load a previously saved leaderboard CSV instead of computing"
+    )
+    parser.add_argument("--output", "-o", type=str, default=None, help="Save leaderboard to CSV file")
+    parser.add_argument(
+        "--format",
+        choices=["terminal", "markdown", "latex", "csv", "html"],
+        default="terminal",
+        help="Output format (default: terminal)",
+    )
+    parser.add_argument(
+        "--sort", type=str, default=None, help="Sort by this metric (use pretty name, e.g. ORS, CamCtrl)"
+    )
+    parser.add_argument(
+        "--subset",
+        choices=["synthetic", "real", "all"],
+        default="all",
+        help="Filter clips by data type before aggregation",
+    )
     args = parser.parse_args()
 
     if args.load:

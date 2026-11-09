@@ -1,5 +1,7 @@
 """Temporal flickering metric — VBench-aligned MAE between consecutive frames."""
+
 import numpy as np
+
 from ..base import BaseMetric
 
 

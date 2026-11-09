@@ -1,33 +1,32 @@
-'''
+"""
 Video Physics LLM Judge Pipeline
 
-基于 PhyGenBench 的提示词工程实践，实现单次调用的视频物理评估系统。
+Single-call video physics evaluation following the prompt engineering practice of PhyGenBench.
 
-核心设计原则：
-1. 明确的角色定义和任务描述
-2. 结构化 JSON 输出
-3. Chain-of-Thought 推理
-4. 置信度量化
-5. 多维度物理评估
+Design principles:
+1. Explicit role definition and task description
+2. Structured JSON output
+3. Chain-of-thought reasoning
+4. Quantified confidence
+5. Multi-dimensional physics evaluation
 
 python ./judge_pipeline.py path/to/video.mp4
 
-'''
+"""
 
 from __future__ import annotations
 
+import base64
 import json
 from dataclasses import dataclass
-from typing import Dict, List, Optional
-import base64
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from model.openrouter import video_openrouter_call
 from problem.problem_set import (
     ALL_QUESTIONS,
+    MATERIAL_QUESTIONS,
     MECHANICS_QUESTIONS,
     THERMOTICS_QUESTIONS,
-    MATERIAL_QUESTIONS,
     PhysicsQuestion,
 )
 
@@ -35,7 +34,7 @@ load_dotenv()
 
 
 # ============================================================================
-# 核心提示词设计：参考 PhyGenBench 的层次化评估方法
+# Core prompts, following the hierarchical evaluation of PhyGenBench
 # ============================================================================
 
 SYSTEM_PROMPT = """You are PhysicsJudge, a precise video physics evaluator with deep expertise in physical laws and visual analysis.
@@ -99,9 +98,11 @@ Output your response in the required JSON format (no markdown, just pure JSON)."
 # Judge Pipeline Implementation
 # ============================================================================
 
+
 @dataclass
 class JudgeResult:
     """Single question evaluation result"""
+
     qid: str
     dimension: str
     question: str
@@ -109,7 +110,7 @@ class JudgeResult:
     confidence: float
     explanation: str
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "qid": self.qid,
             "dimension": self.dimension,
@@ -123,12 +124,13 @@ class JudgeResult:
 @dataclass
 class VideoJudgeResult:
     """Complete video evaluation result"""
-    answers: List[JudgeResult]
+
+    answers: list[JudgeResult]
     overall_physics_score: float
     overall_assessment: str
-    raw_response: Dict
+    raw_response: dict
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "answers": [a.to_dict() for a in self.answers],
             "overall_physics_score": self.overall_physics_score,
@@ -136,7 +138,7 @@ class VideoJudgeResult:
             "raw_response": self.raw_response,
         }
 
-    def get_dimension_score(self, dimension: str) -> Optional[float]:
+    def get_dimension_score(self, dimension: str) -> float | None:
         """Calculate average score for a specific dimension"""
         relevant = [a for a in self.answers if a.dimension == dimension]
         if not relevant:
@@ -155,7 +157,7 @@ class VideoJudgeResult:
         return sum(scores) / len(scores) if scores else None
 
 
-def format_single_question(question: PhysicsQuestion) -> Dict[str, str]:
+def format_single_question(question: PhysicsQuestion) -> dict[str, str]:
     """Format a single question for the prompt"""
     return {
         "question": question.question,
@@ -163,7 +165,7 @@ def format_single_question(question: PhysicsQuestion) -> Dict[str, str]:
     }
 
 
-def parse_llm_response(response_text: str) -> Dict:
+def parse_llm_response(response_text: str) -> dict:
     """
     Parse LLM response with robust error handling
     Based on PhyGenBench's JSON cleaning strategy
@@ -182,17 +184,13 @@ def parse_llm_response(response_text: str) -> Dict:
         return json.loads(cleaned)
     except json.JSONDecodeError as e:
         # If parsing fails, return error structure
-        return {
-            "error": "JSON parse failed",
-            "raw_text": response_text,
-            "exception": str(e)
-        }
+        return {"error": "JSON parse failed", "raw_text": response_text, "exception": str(e)}
 
 
 def judge_single_question(
     video_url: str,
     question: PhysicsQuestion,
-    system_prompt: Optional[str] = None,
+    system_prompt: str | None = None,
 ) -> JudgeResult:
     """
     Single API call to judge one physics question about a video
@@ -255,8 +253,8 @@ def judge_single_question(
 
 def judge_video_physics(
     video_url: str,
-    questions: Optional[List[PhysicsQuestion]] = None,
-    system_prompt: Optional[str] = None,
+    questions: list[PhysicsQuestion] | None = None,
+    system_prompt: str | None = None,
 ) -> VideoJudgeResult:
     """
     Judge multiple physics questions about a video (one API call per question)
@@ -313,6 +311,7 @@ def judge_video_physics(
 # Specialized Judge Functions
 # ============================================================================
 
+
 def judge_mechanics(video_url: str) -> VideoJudgeResult:
     """Evaluate only mechanics questions"""
     return judge_video_physics(video_url, questions=MECHANICS_QUESTIONS)
@@ -331,6 +330,7 @@ def judge_materials(video_url: str) -> VideoJudgeResult:
 # ============================================================================
 # Utility Functions
 # ============================================================================
+
 
 def print_judge_report(result: VideoJudgeResult, verbose: bool = True):
     """Pretty print judge results"""
@@ -364,7 +364,7 @@ def print_judge_report(result: VideoJudgeResult, verbose: bool = True):
 
 def save_judge_result(result: VideoJudgeResult, output_path: str):
     """Save result to JSON file"""
-    with open(output_path, 'w', encoding='utf-8') as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result.to_dict(), f, indent=2, ensure_ascii=False)
     print(f"Results saved to: {output_path}")
 
@@ -374,19 +374,20 @@ def save_judge_result(result: VideoJudgeResult, output_path: str):
 # ============================================================================
 
 
-def get_frames_from_video(video_path: str, num_frames: int=8) -> List[str]:
+def get_frames_from_video(video_path: str, num_frames: int = 8) -> list[str]:
     """
     Placeholder function to extract frames from video.
     In a real implementation, this would extract frames and return their URLs or base64 data.
     """
     import cv2
+
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
         raise RuntimeError(f"Unable to open video: {video_path}")
 
     total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT)) or num_frames
     stride = max(total_frames // num_frames, 1)
-    encoded_frames: List[str] = []
+    encoded_frames: list[str] = []
 
     frame_id = 0
     collected = 0
@@ -406,13 +407,18 @@ def get_frames_from_video(video_path: str, num_frames: int=8) -> List[str]:
     capture.release()
     return encoded_frames
 
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Video Physics LLM Judge")
     parser.add_argument("video_url", help="Path or URL to video file")
-    parser.add_argument("--dimension", choices=["all", "mechanics", "thermotics", "material"],
-                        default="all", help="Physics dimension to evaluate")
+    parser.add_argument(
+        "--dimension",
+        choices=["all", "mechanics", "thermotics", "material"],
+        default="all",
+        help="Physics dimension to evaluate",
+    )
     parser.add_argument("--output", "-o", help="Output JSON file path")
     parser.add_argument("--quiet", "-q", action="store_true", help="Suppress detailed output")
 
@@ -421,19 +427,15 @@ if __name__ == "__main__":
     use_video = True
 
     if use_video:
+
         def encode_video_to_base64(video_path):
             with open(video_path, "rb") as video_file:
-                return base64.b64encode(video_file.read()).decode('utf-8')
+                return base64.b64encode(video_file.read()).decode("utf-8")
 
         base64_video = encode_video_to_base64(args.video_url)
 
         data_url = f"data:video/mp4;base64,{base64_video}"
-        data_url = {
-            "type": "video_url",
-            "video_url": {
-                "url": data_url
-            }
-        }
+        data_url = {"type": "video_url", "video_url": {"url": data_url}}
     else:
         # get the frames from the video
         data_url = args.video_url
@@ -441,14 +443,8 @@ if __name__ == "__main__":
         target = []
         for frame in data_url:
             frame = f"data:image/jpg;base64,{frame}"
-            target.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": frame
-                }
-            })
+            target.append({"type": "image_url", "image_url": {"url": frame}})
         data_url = target
-
 
     # Select evaluation function
     if args.dimension == "mechanics":

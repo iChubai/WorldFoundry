@@ -429,22 +429,22 @@ class AlayaV11Rollout:
                     perturbations: BatchedPerturbationConfig | None = None,
                 ) -> torch.Tensor:
                     return self.components.transformer(
-                        x=[x_t.squeeze(0)],
-                        t=(sigma_now * 1000.0).view(1).to(device=self.dist.device, dtype=x_t.dtype),
+                        x=[x_t.squeeze(0)],  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        t=(sigma_now * 1000.0).view(1).to(device=self.dist.device, dtype=x_t.dtype),  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         context=[context_tensor],
                         seq_len=K * H_lat * W_lat,
                         fps=self.cfg.sample.fps,
                         perturbations=perturbations,
-                        history_kv_tokens=mem_tokens,
-                        history_indices_grid=mem_indices,
-                        gen_t_indices_override=current_target_rope_t_indices,
+                        history_kv_tokens=mem_tokens,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        history_indices_grid=mem_indices,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        gen_t_indices_override=current_target_rope_t_indices,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         sink_latent=sink_latent,
                         sink_indices_grid=sink_indices,
-                        spatial_latent=spatial_latent,
-                        spatial_mask_patch=spatial_mask_patch,
-                        spatial_indices_grid=spatial_indices,
-                        nearby_latent=nearby_latent,
-                        nearby_indices_grid=nearby_indices,
+                        spatial_latent=spatial_latent,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        spatial_mask_patch=spatial_mask_patch,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        spatial_indices_grid=spatial_indices,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        nearby_latent=nearby_latent,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
+                        nearby_indices_grid=nearby_indices,  # noqa: B023 - Keeps the upstream late binding of the loop variable.
                         **control,
                     )
 
@@ -619,7 +619,7 @@ class AlayaV11Rollout:
             )
         decoded_chunks: list[torch.Tensor] = []
         stride = int(self.cfg.sample.temporal_stride)
-        for index, (nearby, chunk) in enumerate(zip(nearby_latents, chunks)):
+        for index, (nearby, chunk) in enumerate(zip(nearby_latents, chunks, strict=False)):
             if nearby is None or int(nearby.shape[2]) <= 0:
                 raise ValueError(f"i2v rollout chunk {index} requires a non-empty decoder prefix")
             prefix_latents = int(nearby.shape[2])
@@ -1552,7 +1552,7 @@ class AlayaV11Rollout:
                 target_view_indices = [target_pixel_indices[-1]]
             else:
                 offsets = torch.linspace(0, len(target_pixel_indices) - 1, retrieval_views)
-                target_view_indices = [target_pixel_indices[int(round(float(x.item())))] for x in offsets]
+                target_view_indices = [target_pixel_indices[int(round(float(x.item())))] for x in offsets]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             target_w2c = torch.stack([torch.linalg.inv(cam_c2w[:, idx]) for idx in target_view_indices], dim=1)
             target_K = torch.stack(
                 [
@@ -2089,7 +2089,7 @@ class AlayaV11Rollout:
             target_indices = [int(target_start + K - 1)]
         else:
             offsets = torch.linspace(0, max(0, int(K) - 1), retrieval_views, device=self.dist.device)
-            target_indices = [int(target_start + int(round(float(x.item())))) for x in offsets]
+            target_indices = [int(target_start + int(round(float(x.item())))) for x in offsets]  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         context = build_retrieved_latent_context(
             latent_full=latent_full,
             cam_c2w=cam_c2w,
@@ -2446,7 +2446,7 @@ class AlayaV11Rollout:
     def _active_output_latent_frames(self) -> list[int]:
         pairs = [
             (int(k), float(p))
-            for (k, p) in zip(self.cfg.layout.output.latent_frames, self.cfg.layout.output.probs)
+            for (k, p) in zip(self.cfg.layout.output.latent_frames, self.cfg.layout.output.probs, strict=False)
             if float(p) > 0.0
         ]
         if not pairs:
@@ -2521,10 +2521,7 @@ class AlayaV11Rollout:
     ) -> torch.Tensor:
         history_latents = max(0, int(history_latent_frames))
         condition_latents = max(0, int(condition_latent_frames))
-        if history_latents > 0:
-            start = 1 + history_latents
-        else:
-            start = 1 + condition_latents
+        start = 1 + history_latents if history_latents > 0 else 1 + condition_latents
         return torch.arange(start, start + int(frames), device=self.dist.device, dtype=torch.float32)
 
     def _indices_grid(self, batch: int, frames: int, height: int, width: int, *, t_offset: int) -> torch.Tensor:

@@ -3,26 +3,22 @@
 from __future__ import annotations
 
 import importlib.util
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, project_root
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
-
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 RUNTIME_DIR = PACKAGE_DIR / "giga_world_0_runtime"
 OFFICIAL_ENTRYPOINT = PACKAGE_DIR / "infer.py"
 OFFICIAL_REPO_URL = "https://github.com/open-gigaai/giga-world-0"
 
-DEFAULT_TRANSFORMER_MODEL_DIR = checkpoint_root_path(
-    "open-gigaai--GigaWorld-0-Video-GR1-2b", "transformer"
-)
+DEFAULT_TRANSFORMER_MODEL_DIR = checkpoint_root_path("open-gigaai--GigaWorld-0-Video-GR1-2b", "transformer")
 DEFAULT_TEXT_ENCODER_MODEL_DIR = checkpoint_root_path("google-t5--t5-11b-encoder")
-DEFAULT_VAE_MODEL_DIR = checkpoint_root_path(
-    "Wan-AI--Wan2.1-T2V-1.3B-Diffusers", "vae"
-)
+DEFAULT_VAE_MODEL_DIR = checkpoint_root_path("Wan-AI--Wan2.1-T2V-1.3B-Diffusers", "vae")
 DEFAULT_INPUT_IMAGE = (
     project_root(__file__)
     / "worldfoundry"
@@ -151,9 +147,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
 
     image = _path_option(options, "image_path", "input_image", default=DEFAULT_INPUT_IMAGE)
     if not image.is_file():
-        missing.append(
-            {"kind": "asset", "path": str(image), "reason": "GigaWorld-0 input image is missing"}
-        )
+        missing.append({"kind": "asset", "path": str(image), "reason": "GigaWorld-0 input image is missing"})
 
     modules = [
         "torch",

@@ -17,7 +17,6 @@ from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key
 from wrbench.trajectory import CameraTrajectory
 
-
 _OFFICIAL_CAMERACTRL_INTRINSICS = (0.532139961, 0.946026558, 0.5, 0.5)
 _OFFICIAL_CAMERACTRL_POSE_FPS = 24
 

@@ -11,7 +11,6 @@ from ..skills.skill_motion_quality import (
 )
 from .common import LocalMetricBackend
 
-
 BACKEND_ID = "harnesseval.motion_quality"
 BACKEND_VERSION = "harnesseval.motion_quality.two_metrics"
 CONFIG_DIGEST = value_digest(
@@ -24,9 +23,7 @@ CONFIG_DIGEST = value_digest(
         },
     }
 )
-METRIC_SAMPLING = {
-    BACKEND_METRICS[component]: SAMPLING[component] for component in COMPONENTS
-}
+METRIC_SAMPLING = {BACKEND_METRICS[component]: SAMPLING[component] for component in COMPONENTS}
 
 __all__ = [
     "BACKEND_ID",

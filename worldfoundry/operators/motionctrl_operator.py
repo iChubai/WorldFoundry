@@ -46,7 +46,6 @@ class MotionCtrlOperator(BaseOperator):
 
     @staticmethod
     def _normalize_motion(item: str) -> str:
-        """Normalize motion implementation."""
         key = item.strip().replace("_", "-").casefold()
         if key in MotionCtrlOperator.CAMERA_MOTION_ALIASES:
             return "camera_motion"
@@ -54,7 +53,6 @@ class MotionCtrlOperator(BaseOperator):
 
     @staticmethod
     def _motions(interaction) -> list[str]:
-        """Motions implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, str):

@@ -1,16 +1,19 @@
 import os
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.camera_generator import CameraGen
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import get_model2type, get_scene_num, type2model
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.helpers.camera_generator import (
+    CameraGen,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
+    get_model2type,
+    get_scene_num,
+    type2model,
+)
 
 
 def generate_prompt_list(prompt_list, style):
     new_prompt_list = []
     for prompt in prompt_list:
-        if prompt.endswith("."):
-            new_prompt = prompt + " " + style
-        else:
-            new_prompt = prompt + ". " + style
+        new_prompt = prompt + " " + style if prompt.endswith(".") else prompt + ". " + style
         new_prompt_list.append(new_prompt)
     return new_prompt_list
 
@@ -49,13 +52,9 @@ class DataLoader:
 
         self.scene_num = get_scene_num(self.camera_path)
         for _ in range(self.scene_num):
-            self.anchor_frame_idx.append(
-                self.anchor_frame_idx[-1] + self.evaluation_config["frames"] - 1
-            )
+            self.anchor_frame_idx.append(self.anchor_frame_idx[-1] + self.evaluation_config["frames"] - 1)
         assert len(self.anchor_frame_idx) == self.scene_num + 1
-        self.interpframe_num = (
-            self.scene_num * (self.evaluation_config["frames"] - 1) + 1
-        )
+        self.interpframe_num = self.scene_num * (self.evaluation_config["frames"] - 1) + 1
         return self.interpframe_num
 
     def data_exists(self, root_path):
@@ -66,7 +65,7 @@ class DataLoader:
             return False
 
         dirs = os.listdir(root_path)
-        
+
         if self.visual_movement == "static":
             dirs_should_be = [
                 "frames",
@@ -91,9 +90,7 @@ class DataLoader:
                 continue
             # now check the number of files in each directory
             file_list = os.listdir(os.path.join(root_path, dir_name))
-            file_len = len(
-                [f for f in file_list if f.endswith(".png") or f.endswith(".jpg")]
-            )
+            file_len = len([f for f in file_list if f.endswith((".png", ".jpg"))])
             if dir_name == "frames":
                 if file_len < self.interpframe_num:
                     if self.verbose:
@@ -136,16 +133,10 @@ class DataLoader:
                 ignore = True
                 return (None, None, None, ignore)
 
-            image_path = os.path.join(
-                self.evaluation_config["dataset_root"], image_data["image"]
-            )
-            inpainting_prompt_list = generate_prompt_list(
-                image_data["prompt_list"], image_data["style"]
-            )
+            image_path = os.path.join(self.evaluation_config["dataset_root"], image_data["image"])
+            inpainting_prompt_list = generate_prompt_list(image_data["prompt_list"], image_data["style"])
 
-            cameras, cameras_interp = self.cam_gen.generate_cameras(
-                self.camera_path, root_path, verbose=self.verbose
-            )
+            cameras, cameras_interp = self.cam_gen.generate_cameras(self.camera_path, root_path, verbose=self.verbose)
 
             data_point = {
                 "image_path": image_path,
@@ -193,12 +184,8 @@ class DataLoader:
                     ignore = True
                     return (None, ignore)
             else:
-                image_path = os.path.join(
-                    self.evaluation_config["dataset_root"], image_data["image"]
-                )
-            inpainting_prompt_list = generate_prompt_list(
-                [image_data["prompt"]], image_data["style"]
-            )
+                image_path = os.path.join(self.evaluation_config["dataset_root"], image_data["image"])
+            inpainting_prompt_list = generate_prompt_list([image_data["prompt"]], image_data["style"])
 
             data_point = {
                 "image_path": image_path,

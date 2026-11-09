@@ -20,7 +20,7 @@ PROMPT_NAME_TO_PATH = {
 
 def load_prompt(name: str):
     if name not in PROMPT_NAME_TO_PATH:
-        raise ValueError("invalid prompt: {}".format(name))
+        raise ValueError(f"invalid prompt: {name}")
     path = PROMPT_NAME_TO_PATH[name]
     with path.open("r") as f:
         return f.read().strip()

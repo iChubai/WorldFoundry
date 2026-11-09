@@ -15,7 +15,6 @@
 """Native Cosmos component."""
 
 import warnings
-from typing import List, Optional, Union
 
 import numpy as np
 import PIL
@@ -27,7 +26,7 @@ from .image_processor import VaeImageProcessor, is_valid_image, is_valid_image_i
 class VideoProcessor(VaeImageProcessor):
     r"""Simple video processor."""
 
-    def preprocess_video(self, video, height: Optional[int] = None, width: Optional[int] = None) -> torch.Tensor:
+    def preprocess_video(self, video, height: int | None = None, width: int | None = None) -> torch.Tensor:
         r"""
         Preprocesses input video(s).
 
@@ -57,6 +56,7 @@ class VideoProcessor(VaeImageProcessor):
                 "Passing `video` as a list of 5d np.ndarray is deprecated."
                 "Please concatenate the list along the batch dimension and pass it as a single 5d np.ndarray",
                 FutureWarning,
+                stacklevel=1,
             )
             video = np.concatenate(video, axis=0)
         if isinstance(video, list) and isinstance(video[0], torch.Tensor) and video[0].ndim == 5:
@@ -64,6 +64,7 @@ class VideoProcessor(VaeImageProcessor):
                 "Passing `video` as a list of 5d torch.Tensor is deprecated."
                 "Please concatenate the list along the batch dimension and pass it as a single 5d torch.Tensor",
                 FutureWarning,
+                stacklevel=1,
             )
             video = torch.cat(video, axis=0)
 
@@ -72,7 +73,7 @@ class VideoProcessor(VaeImageProcessor):
         # - if it is a single video, it is converted to a list of one video.
         if isinstance(video, (np.ndarray, torch.Tensor)) and video.ndim == 5:
             video = list(video)
-        elif isinstance(video, list) and is_valid_image(video[0]) or is_valid_image_imagelist(video):
+        elif (isinstance(video, list) and is_valid_image(video[0])) or is_valid_image_imagelist(video):
             video = [video]
         elif isinstance(video, list) and is_valid_image_imagelist(video[0]):
             video = video
@@ -90,7 +91,7 @@ class VideoProcessor(VaeImageProcessor):
 
     def postprocess_video(
         self, video: torch.Tensor, output_type: str = "np"
-    ) -> Union[np.ndarray, torch.Tensor, List[PIL.Image.Image]]:
+    ) -> np.ndarray | torch.Tensor | list[PIL.Image.Image]:
         r"""
         Converts a video tensor to a list of frames for export.
 
@@ -109,7 +110,7 @@ class VideoProcessor(VaeImageProcessor):
             outputs = np.stack(outputs)
         elif output_type == "pt":
             outputs = torch.stack(outputs)
-        elif not output_type == "pil":
+        elif not output_type == "pil":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             raise ValueError(f"{output_type} does not exist. Please choose one of ['np', 'pt', 'pil']")
 
         return outputs

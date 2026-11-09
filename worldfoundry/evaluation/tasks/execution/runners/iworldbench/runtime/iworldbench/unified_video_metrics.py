@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # ruff: noqa: E402, I001
 """
 Unified video evaluation metrics.
@@ -18,6 +17,7 @@ Usage example:
     )
 """
 
+import contextlib
 import csv
 import json
 import logging
@@ -27,7 +27,6 @@ import sys
 import tempfile
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List, Optional
 
 import numpy as np
 
@@ -57,9 +56,10 @@ if not Path(_DEFAULT_SOURCE_REFERENCE_NPZ_DIR).is_dir():
 
 _DEFAULT_VBENCH_ROOT = str(IN_TREE_VBENCH_ROOT.resolve())
 _VBENCH_ROOT = os.environ.get("VBENCH_ROOT") or _DEFAULT_VBENCH_ROOT
-_VBENCH_METADATA_PATH = (
-    os.environ.get("WORLDFOUNDRY_VBENCH_FULL_INFO")
-    or (str(VBENCH_FULL_INFO_ASSET) if VBENCH_FULL_INFO_ASSET.is_file() else os.path.join(_VBENCH_ROOT, "vbench", "VBench_full_info.json"))
+_VBENCH_METADATA_PATH = os.environ.get("WORLDFOUNDRY_VBENCH_FULL_INFO") or (
+    str(VBENCH_FULL_INFO_ASSET)
+    if VBENCH_FULL_INFO_ASSET.is_file()
+    else os.path.join(_VBENCH_ROOT, "vbench", "VBench_full_info.json")
 )
 
 sys.path.insert(0, _THIS_DIR)
@@ -81,7 +81,7 @@ from index_revise_pro_plus_c_h import (
 
 # ─── VIPe configuration ───────────────────────────────────────────────────────
 POSE_DIR_NAME: str = "pose"
-SUPPORTED_FORMATS: tuple = ('.mp4', '.avi', '.mov', '.mkv', '.ts', '.flv', '.webm')
+SUPPORTED_FORMATS: tuple = (".mp4", ".avi", ".mov", ".mkv", ".ts", ".flv", ".webm")
 
 # Path to the standalone worker script, located alongside this file.
 _WORKER_SCRIPT = os.path.join(_THIS_DIR, "_vipe_worker.py")
@@ -92,14 +92,14 @@ _VBENCH_SHORT_NAMES = {
 }
 
 
-def _parse_gpu_devices(value: str, variable: str) -> List[str]:
+def _parse_gpu_devices(value: str, variable: str) -> list[str]:
     devices = [device.strip() for device in value.split(",") if device.strip()]
     if not devices or any(device.lower() in {"-1", "none", "void"} for device in devices):
         raise RuntimeError(f"{variable} does not expose a CUDA device for ViPE: {value!r}")
     return list(dict.fromkeys(devices))
 
 
-def _available_vipe_gpus() -> List[str]:
+def _available_vipe_gpus() -> list[str]:
     """Resolve worker devices from an explicit override or the visible CUDA set."""
     override = os.environ.get("WORLDFOUNDRY_IWORLD_BENCH_VIPE_GPUS")
     if override is not None:
@@ -171,7 +171,7 @@ def _write_vbench_report_csv(
 
     scores = {}
     if os.path.exists(results_file):
-        with open(results_file, "r", encoding="utf-8") as f:
+        with open(results_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -186,8 +186,10 @@ def _write_vbench_report_csv(
         for name, score in sorted(scores.items()):
             writer.writerow([name, round(score, 6)])
 
-    avg_score = summary.mean if summary and summary.mean is not None else (
-        float(np.mean(list(scores.values()))) if scores else 0.0
+    avg_score = (
+        summary.mean
+        if summary and summary.mean is not None
+        else (float(np.mean(list(scores.values()))) if scores else 0.0)
     )
     with open(summary_csv, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
@@ -204,7 +206,7 @@ def _run_vbench_metric(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Internal helper that runs one VBench metric and exports the unified CSV."""
     _ensure_vbench_path()
@@ -260,12 +262,9 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
         )
     os.makedirs(vipe_output_dir, exist_ok=True)
 
-    video_paths: List[str] = []
+    video_paths: list[str] = []
     for ext in SUPPORTED_FORMATS:
-        video_paths.extend(
-            str(p) for p in Path(video_dir).rglob(f"*{ext}")
-            if not p.name.startswith('.')
-        )
+        video_paths.extend(str(p) for p in Path(video_dir).rglob(f"*{ext}") if not p.name.startswith("."))
 
     if not video_paths:
         logger.warning(f"No videos found in {video_dir}")
@@ -281,12 +280,12 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
     if already_done < len(video_paths):
         gpus = _available_vipe_gpus()
         # Distribute videos round-robin across GPUs
-        chunks: List[List[str]] = [[] for _ in gpus]
+        chunks: list[list[str]] = [[] for _ in gpus]
         for i, v in enumerate(video_paths):
             chunks[i % len(gpus)].append(v)
 
-        tmp_files: List[str] = []
-        processes: List[tuple[subprocess.Popen, str]] = []
+        tmp_files: list[str] = []
+        processes: list[tuple[subprocess.Popen, str]] = []
 
         for idx, rank in enumerate(gpus):
             chunk = chunks[idx]
@@ -317,10 +316,8 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
                 failed_workers.append((rank, returncode))
 
         for f in tmp_files:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(f)
-            except OSError:
-                pass
 
         if failed_workers:
             details = ", ".join(f"gpu {rank}: exit {returncode}" for rank, returncode in failed_workers)
@@ -329,9 +326,7 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
         missing_pose = [path for path in video_paths if not _is_labeled(path, vipe_output_dir)]
         if missing_pose:
             preview = ", ".join(Path(path).name for path in missing_pose[:5])
-            raise RuntimeError(
-                f"VIPe did not produce pose NPZ files for {len(missing_pose)} video(s): {preview}"
-            )
+            raise RuntimeError(f"VIPe did not produce pose NPZ files for {len(missing_pose)} video(s): {preview}")
 
         logger.info("VIPe labeling complete")
 
@@ -340,6 +335,7 @@ def _run_vipe(video_dir: str, vipe_output_dir: str) -> str:
 
 
 # ─── Per-metric public APIs ───────────────────────────────────────────────────
+
 
 def calculate_brightness_consistency(video_dir: str, save_dir: str, max_workers: int = 4):
     """Brightness consistency. Input: video files."""
@@ -368,11 +364,12 @@ def calculate_memory_symmetry(video_dir: str, save_dir: str, max_workers: int = 
 
 # ─── Trajectory metrics (VIPe runs automatically) ────────────────────────────
 
+
 def calculate_trajectory_accuracy(
     video_dir: str,
     save_dir: str,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
 ):
     """
     Trajectory accuracy: compares generated camera trajectory against
@@ -400,7 +397,7 @@ def calculate_trajectory_alignment(video_dir: str, save_dir: str, max_workers: i
 def calculate_trajectory_tolerance(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
 ):
     """
@@ -425,7 +422,7 @@ def calculate_imaging_quality(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """VBench imaging quality (MUSIQ). Input: video files. Requires GPU."""
     return _run_vbench_metric(
@@ -445,7 +442,7 @@ def calculate_motion_smoothness(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """VBench motion smoothness (AMT). Input: video files. Requires GPU."""
     return _run_vbench_metric(
@@ -461,6 +458,7 @@ def calculate_motion_smoothness(
 
 # ─── Composite interfaces ─────────────────────────────────────────────────────
 
+
 def calculate_generation_quality(
     video_dir: str,
     save_dir: str,
@@ -468,7 +466,7 @@ def calculate_generation_quality(
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run the paper's Generation Quality metrics: image quality, brightness, color temperature, sharpness."""
     calculate_imaging_quality(
@@ -487,13 +485,13 @@ def calculate_generation_quality(
 def calculate_trajectory_following(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run the paper's Trajectory Following metrics: motion smoothness, trajectory accuracy, trajectory tolerance."""
     calculate_motion_smoothness(
@@ -529,13 +527,13 @@ def calculate_memory_ability(video_dir: str, save_dir: str, max_workers: int = 4
 def calculate_action_control(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run the recommended metrics for action/Diff tasks: Generation Quality + Trajectory Following."""
     calculate_generation_quality(
@@ -563,12 +561,12 @@ def calculate_action_control(
 def calculate_camera_following(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run metrics for camera-trajectory-input models: Generation Quality + Motion Smoothness + Trajectory Tolerance."""
     reference_npz_dir = source_npz_dir or _DEFAULT_SOURCE_REFERENCE_NPZ_DIR
@@ -610,9 +608,9 @@ def calculate_all_video_quality(video_dir: str, save_dir: str, max_workers: int 
 def calculate_all_trajectory(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
-    camera_txt_dir: Optional[str] = None,
+    camera_txt_dir: str | None = None,
 ):
     """
     Run all 3 trajectory metrics with a single VIPe pass.
@@ -641,7 +639,7 @@ def calculate_all_vbench(
     gpu: str = "0",
     overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
+    limit: int | None = None,
 ):
     """Run both VBench metrics (imaging quality and motion smoothness). Requires GPU."""
     summaries = {}
@@ -667,13 +665,13 @@ def calculate_all_vbench(
 def calculate_all(
     video_dir: str,
     save_dir: str,
-    source_npz_dir: Optional[str] = None,
+    source_npz_dir: str | None = None,
     max_workers: int = 4,
     vbench_gpu: str = "0",
     vbench_overwrite: bool = False,
     retry_failed: bool = True,
-    limit: Optional[int] = None,
-    camera_txt_dir: Optional[str] = None,
+    limit: int | None = None,
+    camera_txt_dir: str | None = None,
 ):
     """
     Run the paper's 9 metrics with a single VIPe pass.
@@ -738,34 +736,45 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
 
-    parser = argparse.ArgumentParser(
-        description="Compute all iWorldBench video metrics from raw generated videos."
-    )
+    parser = argparse.ArgumentParser(description="Compute all iWorldBench video metrics from raw generated videos.")
     parser.add_argument("video_dir", help="Directory of generated .mp4 videos")
     parser.add_argument("save_dir", help="Output directory for results")
     parser.add_argument(
         "--source-npz-dir",
         default=None,
         help="NPZ directory for target/GT/reference trajectories (trajectory tolerance metric). "
-             "Defaults to camera_trajectories/source_reference_npz for camera_following, "
-             "and camera_trajectories/reference_npz otherwise.",
+        "Defaults to camera_trajectories/source_reference_npz for camera_following, "
+        "and camera_trajectories/reference_npz otherwise.",
     )
     parser.add_argument(
         "--camera-txt-dir",
         default=_DEFAULT_CAMERA_TXT_DIR,
         help="Directory containing camera_<level>_<translation>_<rotation>.txt files "
-             "for trajectory accuracy. Defaults to the packaged camera_trajectories/inference_txt directory.",
+        "for trajectory accuracy. Defaults to the packaged camera_trajectories/inference_txt directory.",
     )
     parser.add_argument(
         "--metric",
         default="all",
         choices=[
             "all",
-            "brightness", "color_temperature", "noise", "sharpness", "memory",
-            "traj_accuracy", "traj_alignment", "traj_tolerance",
-            "imaging_quality", "motion_smoothness",
-            "generation_quality", "trajectory_following", "memory_ability", "action_control", "camera_following",
-            "video_quality", "trajectory", "vbench",
+            "brightness",
+            "color_temperature",
+            "noise",
+            "sharpness",
+            "memory",
+            "traj_accuracy",
+            "traj_alignment",
+            "traj_tolerance",
+            "imaging_quality",
+            "motion_smoothness",
+            "generation_quality",
+            "trajectory_following",
+            "memory_ability",
+            "action_control",
+            "camera_following",
+            "video_quality",
+            "trajectory",
+            "vbench",
         ],
         help="Which metric(s) to run (default: all)",
     )
@@ -815,24 +824,73 @@ if __name__ == "__main__":
             args.limit,
             args.camera_txt_dir,
         ),
-        "generation_quality": lambda: calculate_generation_quality(args.video_dir, args.save_dir, args.max_workers, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit),
-        "trajectory_following": lambda: calculate_trajectory_following(args.video_dir, args.save_dir, source_npz_dir, args.max_workers, args.camera_txt_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit),
+        "generation_quality": lambda: calculate_generation_quality(
+            args.video_dir,
+            args.save_dir,
+            args.max_workers,
+            args.vbench_gpu,
+            args.vbench_overwrite,
+            args.retry_failed,
+            args.limit,
+        ),
+        "trajectory_following": lambda: calculate_trajectory_following(
+            args.video_dir,
+            args.save_dir,
+            source_npz_dir,
+            args.max_workers,
+            args.camera_txt_dir,
+            args.vbench_gpu,
+            args.vbench_overwrite,
+            args.retry_failed,
+            args.limit,
+        ),
         "memory_ability": lambda: calculate_memory_ability(args.video_dir, args.save_dir, args.max_workers),
-        "action_control": lambda: calculate_action_control(args.video_dir, args.save_dir, source_npz_dir, args.max_workers, args.camera_txt_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit),
-        "camera_following": lambda: calculate_camera_following(args.video_dir, args.save_dir, source_npz_dir, args.max_workers, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit),
+        "action_control": lambda: calculate_action_control(
+            args.video_dir,
+            args.save_dir,
+            source_npz_dir,
+            args.max_workers,
+            args.camera_txt_dir,
+            args.vbench_gpu,
+            args.vbench_overwrite,
+            args.retry_failed,
+            args.limit,
+        ),
+        "camera_following": lambda: calculate_camera_following(
+            args.video_dir,
+            args.save_dir,
+            source_npz_dir,
+            args.max_workers,
+            args.vbench_gpu,
+            args.vbench_overwrite,
+            args.retry_failed,
+            args.limit,
+        ),
         "video_quality": lambda: calculate_all_video_quality(args.video_dir, args.save_dir, args.max_workers),
-        "trajectory": lambda: calculate_all_trajectory(args.video_dir, args.save_dir, source_npz_dir, args.max_workers, args.camera_txt_dir),
-        "vbench": lambda: calculate_all_vbench(args.video_dir, args.save_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit),
+        "trajectory": lambda: calculate_all_trajectory(
+            args.video_dir, args.save_dir, source_npz_dir, args.max_workers, args.camera_txt_dir
+        ),
+        "vbench": lambda: calculate_all_vbench(
+            args.video_dir, args.save_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit
+        ),
         "brightness": lambda: calculate_brightness_consistency(args.video_dir, args.save_dir, args.max_workers),
         "color_temperature": lambda: calculate_color_temperature(args.video_dir, args.save_dir, args.max_workers),
         "noise": lambda: calculate_video_noise(args.video_dir, args.save_dir, args.max_workers),
         "sharpness": lambda: calculate_sharpness_retention(args.video_dir, args.save_dir, args.max_workers),
         "memory": lambda: calculate_memory_symmetry(args.video_dir, args.save_dir, args.max_workers),
-        "traj_accuracy": lambda: calculate_trajectory_accuracy(args.video_dir, args.save_dir, args.max_workers, args.camera_txt_dir),
+        "traj_accuracy": lambda: calculate_trajectory_accuracy(
+            args.video_dir, args.save_dir, args.max_workers, args.camera_txt_dir
+        ),
         "traj_alignment": lambda: calculate_trajectory_alignment(args.video_dir, args.save_dir, args.max_workers),
-        "traj_tolerance": lambda: calculate_trajectory_tolerance(args.video_dir, args.save_dir, source_npz_dir, args.max_workers),
-        "imaging_quality": lambda: calculate_imaging_quality(args.video_dir, args.save_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit),
-        "motion_smoothness": lambda: calculate_motion_smoothness(args.video_dir, args.save_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit),
+        "traj_tolerance": lambda: calculate_trajectory_tolerance(
+            args.video_dir, args.save_dir, source_npz_dir, args.max_workers
+        ),
+        "imaging_quality": lambda: calculate_imaging_quality(
+            args.video_dir, args.save_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit
+        ),
+        "motion_smoothness": lambda: calculate_motion_smoothness(
+            args.video_dir, args.save_dir, args.vbench_gpu, args.vbench_overwrite, args.retry_failed, args.limit
+        ),
     }
 
     _DISPATCH[args.metric]()

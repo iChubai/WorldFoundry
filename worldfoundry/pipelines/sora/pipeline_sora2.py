@@ -62,12 +62,13 @@ class Sora2Pipeline(PipelineABC):
         api_key: str = "your_api_key",
     ):
         """
-        初始化 Sora2Pipeline
+        Initialize the Sora 2 pipeline.
+
         Args:
-            operator: Sora2 operator 实例（如果为None则自动创建）
-            synthesis_model: Sora2 synthesis 模型实例（如果为None则自动创建）
-            endpoint: API基础URL
-            api_key: API密钥
+            operator: Optional Sora 2 operator; ``api_init`` creates one.
+            synthesis_model: Optional Sora 2 synthesis model; ``api_init`` creates one.
+            endpoint: API base URL.
+            api_key: API key.
         """
         self.operator = operator
         self.synthesis_model = synthesis_model
@@ -111,20 +112,22 @@ class Sora2Pipeline(PipelineABC):
         cls, endpoint: str | None = None, api_key: str | None = None, logger=None, **kwargs
     ) -> "Sora2Pipeline":
         """
-        从配置加载完整的 pipeline
+        Build the pipeline with its synthesis model and operator from API settings.
 
         Args:
-            endpoint: API基础URL
-            api_key: API密钥
-            logger: 日志记录器
-            **kwargs: 额外参数
+            endpoint: API base URL; resolved from the environment or the default when omitted.
+            api_key: API key; resolved from the environment when omitted.
+            logger: Optional logger for progress messages.
+            **kwargs: Forwarded to ``Sora2Synthesis.api_init``.
+
+        Raises:
+            ValueError: No API key is passed or set in the environment.
         """
         endpoint = _resolve_endpoint(endpoint)
         api_key = _resolve_api_key(api_key)
         if logger:
             logger.info(f"Loading Sora2 pipeline with endpoint: {endpoint}")
 
-        # 加载 synthesis 模型
         if logger:
             logger.info("Loading Sora2 synthesis model...")
         synthesis_model = Sora2Synthesis.api_init(endpoint=endpoint, api_key=api_key, logger=logger, **kwargs)
@@ -141,19 +144,17 @@ class Sora2Pipeline(PipelineABC):
         return pipeline
 
     def process(self, prompt: str, images: Image.Image | None = None, **kwargs) -> dict[str, Any]:
-        """
-        处理输入，通过 operator 预处理后传给 synthesis 模型
-        """
+        """Preprocess the prompt and optional reference image with the operator for the synthesis model."""
         if self.operator is None:
             raise ValueError("Operator is not initialized")
         processed_data: dict[str, Any] = {}
 
-        # 视文本为交互输入通过process_interaction处理
+        # The prompt is the interaction input.
         self.operator.get_interaction(prompt)
         processed_interaction = self.operator.process_interaction()
         processed_data["prompt"] = processed_interaction["processed_prompt"]
 
-        # 视图片为感知输入通过process_perception处理
+        # The reference image is the perception input.
         processed_perception = self.operator.process_perception(images=images, **kwargs)
         processed_data["encoded_image"] = processed_perception["encoded_image"]
         processed_data["images"] = processed_perception["images"]
@@ -172,8 +173,10 @@ class Sora2Pipeline(PipelineABC):
         max_retries: int = 600,
         **kwargs,
     ) -> dict[str, Any]:
-        """
-        自动根据是否提供 images 选择 T2V 或 I2V
+        """Generate a video, choosing text-to-video or image-to-video from whether ``images`` is given.
+
+        With ``wait`` the call polls until the video completes and stores the final video object in
+        ``result["response"]``.
         """
 
         if self.synthesis_model is None:
@@ -184,10 +187,8 @@ class Sora2Pipeline(PipelineABC):
         _resolve_api_key(self.api_key)
         _resolve_endpoint(self.endpoint)
 
-        # 使用 operator 预处理输入
         processed_data = self.process(prompt=prompt, images=images, **kwargs)
 
-        # 使用 synthesis 模型的 predict 方法进行推理
         result = self.synthesis_model.predict(
             processed_data=processed_data, task_type=task_type, size=size, duration=duration, **kwargs
         )
@@ -201,22 +202,18 @@ class Sora2Pipeline(PipelineABC):
         return result
 
     def _poll_video_status(self, video: Any, poll_interval: int = 2, max_retries: int = 600) -> Any:
-        """
-        轮询视频生成状态，直到完成或失败，返回最终视频对象
-        """
+        """Poll the video job until it completes or fails and return the final video object."""
         if self.synthesis_model is None or not hasattr(self.synthesis_model, "client"):
             raise ValueError("Synthesis model client is not initialized")
 
         openai_client = self.synthesis_model.client
 
         completed_statuses = ("completed", "succeeded", "success", "done")
+        failed_statuses = ("failed", "error")
         retry_count = 0
         last_status = None
 
-        while video.status.lower() not in [s.lower() for s in completed_statuses] and video.status.lower() not in [
-            "failed",
-            "error",
-        ]:
+        while video.status.lower() not in completed_statuses and video.status.lower() not in failed_statuses:
             if retry_count >= max_retries:
                 raise TimeoutError(f"Sora2 video polling reached the maximum number of retries ({max_retries}).")
 
@@ -224,28 +221,26 @@ class Sora2Pipeline(PipelineABC):
 
             progress_raw = getattr(video, "progress", 0)
             progress = progress_raw if progress_raw is not None else 0
-            status_lower = video.status.lower()
-
             if video.status != last_status:
                 logger.info("Sora2 video %s: %s (progress %.1f%%)", video.id, video.status, progress)
                 last_status = video.status
 
-            if status_lower in [s.lower() for s in completed_statuses]:
+            if video.status.lower() in completed_statuses:
                 break
 
             time.sleep(poll_interval)
             retry_count += 1
 
-        if video.status.lower() in ["failed", "error"]:
+        if video.status.lower() in failed_statuses:
             error_msg = getattr(getattr(video, "error", None), "message", "Unknown error")
             raise RuntimeError(f"Failed to generate Sora2 video: {error_msg}")
 
         return video
 
     def get_operator(self) -> Sora2Operator | None:
-        """获取 operator 实例"""
+        """Return the operator."""
         return self.operator
 
     def get_synthesis_model(self) -> Sora2Synthesis | None:
-        """获取 synthesis 模型实例"""
+        """Return the synthesis model."""
         return self.synthesis_model

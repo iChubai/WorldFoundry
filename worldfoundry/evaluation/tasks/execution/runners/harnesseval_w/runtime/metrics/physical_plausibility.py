@@ -10,10 +10,11 @@ Usage:
     evaluator = PhysicalPlausibilityEvaluator(model_path="path/to/qwen3vl_a3b")
     results = evaluator.score_videos(["video1.mp4", "video2.mp4"])
 """
+
 from __future__ import annotations
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 import torch
 
@@ -37,15 +38,13 @@ ANCHOR_WEIGHTS = torch.tensor([5.0, 4.0, 3.0, 2.0, 1.0])
 class PhysicalPlausibilityEvaluator:
     """Local PAVRM inference using Qwen3-VL reward model (transformers backend)."""
 
-    def __init__(self, model_path: str = None, device: str = "cuda"):
+    def __init__(self, model_path: str | None = None, device: str = "cuda"):
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         if model_path is None:
             model_path = os.environ.get("PAVRM_MODEL_PATH", "")
         if not model_path or not os.path.isdir(model_path):
-            _default = os.path.join(
-                get_weights_dir(), "qwen3vl-a3b-visual-plausibility"
-            )
+            _default = os.path.join(get_weights_dir(), "qwen3vl-a3b-visual-plausibility")
             if os.path.isdir(_default):
                 model_path = _default
             else:
@@ -56,13 +55,15 @@ class PhysicalPlausibilityEvaluator:
 
         try:
             self.model = AutoModelForImageTextToText.from_pretrained(
-                model_path, dtype=torch.bfloat16,
+                model_path,
+                dtype=torch.bfloat16,
                 attn_implementation="flash_attention_2",
                 device_map="auto",
             )
         except (ImportError, ValueError):
             self.model = AutoModelForImageTextToText.from_pretrained(
-                model_path, dtype=torch.bfloat16,
+                model_path,
+                dtype=torch.bfloat16,
                 device_map="auto",
             )
         self.processor = AutoProcessor.from_pretrained(model_path)
@@ -73,26 +74,26 @@ class PhysicalPlausibilityEvaluator:
         """Decode and tokenize a video on CPU before entering the GPU lane."""
         if not os.path.exists(video_path):
             raise FileNotFoundError(video_path)
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "video", "video": video_path,
-                 "fps": fps, "max_pixels": 602112},
-                {"type": "text", "text": VIDEO_QUALITY_PROMPT},
-            ],
-        }]
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "video", "video": video_path, "fps": fps, "max_pixels": 602112},
+                    {"type": "text", "text": VIDEO_QUALITY_PROMPT},
+                ],
+            }
+        ]
         return self.processor.apply_chat_template(
-            messages, tokenize=True, add_generation_prompt=True,
-            return_dict=True, return_tensors="pt"
+            messages, tokenize=True, add_generation_prompt=True, return_dict=True, return_tensors="pt"
         )
 
     @torch.no_grad()
-    def score_prepared(self, inputs) -> Dict[str, Any]:
+    def score_prepared(self, inputs) -> dict[str, Any]:
         """Run one already-prepared request through the resident GPU model."""
         inputs = inputs.to(self.model.device)
         outputs = self.model.generate(
-            **inputs, max_new_tokens=1, do_sample=False,
-            output_logits=True, return_dict_in_generate=True)
+            **inputs, max_new_tokens=1, do_sample=False, output_logits=True, return_dict_in_generate=True
+        )
 
         logits = outputs.logits[0]
         token_ids = torch.tensor(ANCHOR_TOKEN_IDS, device=logits.device)
@@ -107,7 +108,7 @@ class PhysicalPlausibilityEvaluator:
         }
 
     @torch.no_grad()
-    def score_video(self, video_path: str, fps: float = 2.0) -> Dict[str, Any]:
+    def score_video(self, video_path: str, fps: float = 2.0) -> dict[str, Any]:
         """Score a single video for physical plausibility."""
         try:
             return self.score_prepared(self.prepare_video(video_path, fps=fps))

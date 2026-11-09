@@ -124,7 +124,6 @@ class LyraOperator(BaseOperator):
         }
 
     def _normalize_interaction(self, interaction: str | dict[str, Any]) -> dict[str, Any]:
-        """Normalize interaction implementation."""
         if isinstance(interaction, str):
             self.check_interaction(interaction)
             return {"action": interaction, "caption": ""}
@@ -140,7 +139,6 @@ class LyraOperator(BaseOperator):
         raise TypeError(f"Unsupported interaction type: {type(interaction)}")
 
     def _build_chunk_captions(self, prompts: Sequence[str]) -> dict[str, str]:
-        """Build chunk captions implementation."""
         captions: dict[str, str] = {}
         for index, prompt in enumerate(prompts):
             frame_index = 0 if index == 0 else 1 + index * self.chunk_stride
@@ -148,7 +146,6 @@ class LyraOperator(BaseOperator):
         return captions
 
     def _actions_to_camera_trajectory(self, actions: Sequence[str]):
-        """Actions to camera trajectory implementation."""
         current_position = np.zeros(3, dtype=np.float32)
         current_yaw = 0.0
         current_pitch = 0.0
@@ -211,7 +208,6 @@ class LyraOperator(BaseOperator):
         return pose_tensor, zoom_tensor
 
     def _compose_w2c(self, position: np.ndarray, yaw: float, pitch: float) -> np.ndarray:
-        """Compose w2c implementation."""
         forward, right, up = self._camera_axes(yaw, pitch)
         rotation = np.stack([right, up, forward], axis=0)
         translation = -rotation @ position.astype(np.float32)
@@ -222,7 +218,6 @@ class LyraOperator(BaseOperator):
 
     @staticmethod
     def _camera_axes(yaw: float, pitch: float):
-        """Camera axes implementation."""
         forward = np.array(
             [
                 np.sin(yaw) * np.cos(pitch),

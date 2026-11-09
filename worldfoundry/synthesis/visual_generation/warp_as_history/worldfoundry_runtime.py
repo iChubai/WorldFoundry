@@ -5,11 +5,14 @@ import json
 import os
 import shutil
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
     SOURCE_ROOT as PI3_SOURCE_ROOT,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
     ensure_import_paths as ensure_pi3_import_paths,
 )
 
@@ -65,18 +68,14 @@ class WarpAsHistoryRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "WarpAsHistoryRuntime":
+    ) -> WarpAsHistoryRuntime:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["model_path"] = str(pretrained_model_path)
         options.update(kwargs)
         resolved_model_id = str(
-            options.get("model_id")
-            or options.get("variant")
-            or options.get("profile_id")
-            or model_id
-            or cls.MODEL_ID
+            options.get("model_id") or options.get("variant") or options.get("profile_id") or model_id or cls.MODEL_ID
         )
         return cls(
             model_id=resolved_model_id,
@@ -147,12 +146,8 @@ class WarpAsHistoryRuntime:
             target = self.default_work_dir / f"{self.model_id}.json"
         else:
             target = Path(output_path).expanduser()
-            if target.suffix:
-                target = target.with_suffix(".json")
-            else:
-                target = target / f"{self.model_id}.json"
+            target = target.with_suffix(".json") if target.suffix else target / f"{self.model_id}.json"
         return target.resolve()
-
 
     @staticmethod
     def _copy_artifact(source: Path, target: Path) -> Path:
@@ -258,7 +253,7 @@ class WarpAsHistoryRuntime:
             rows = list(csv.DictReader(handle))
         if len(rows) != 1:
             raise ValueError(f"{path} must contain exactly one demo row, got {len(rows)}")
-        row = {key: value for key, value in rows[0].items()}
+        row = dict(rows[0].items())
         for key in ("first_frame_path", "camera_poses_path", "warp_video_path", "warp_visibility_mask_path"):
             value = (row.get(key) or "").strip()
             if value:
@@ -314,7 +309,9 @@ class WarpAsHistoryRuntime:
             if image_path is None:
                 raise ValueError("Warp-as-History requires an input image when not using a vendored demo CSV.")
             if not (camera_path or warp_path):
-                raise ValueError("Warp-as-History requires camera_poses/camera_poses_path or warp_video/warp_video_path.")
+                raise ValueError(
+                    "Warp-as-History requires camera_poses/camera_poses_path or warp_video/warp_video_path."
+                )
             row = {
                 "first_frame_path": str(image_path),
                 "prompt": prompt or "",
@@ -405,9 +402,7 @@ class WarpAsHistoryRuntime:
             result = run_infer_from_csv(**payload)
         except Exception as exc:
             log_path.write_text(f"{type(exc).__name__}: {exc}\n", encoding="utf-8")
-            raise RuntimeError(
-                f"Warp-as-History runner for {self.model_id} failed; see {log_path}"
-            ) from exc
+            raise RuntimeError(f"Warp-as-History runner for {self.model_id} failed; see {log_path}") from exc
         log_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         return result
 
@@ -435,7 +430,9 @@ class WarpAsHistoryRuntime:
         if output_path is not None:
             target = self._plan_path(output_path)
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            target.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            )
             payload["artifact_path"] = str(target)
         return payload
 

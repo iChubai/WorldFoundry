@@ -1,12 +1,12 @@
 import cv2
+import lpips as lpips_lib
 import numpy as np
 import torch
-import lpips as lpips_lib
-from typing import Tuple, List
 
 _lpips_model = None
 
-def _get_lpips(device: str = None):
+
+def _get_lpips(device: str | None = None):
     global _lpips_model
     if _lpips_model is None:
         if device is None:
@@ -27,7 +27,7 @@ def _psnr(a: np.ndarray, b: np.ndarray) -> float:
     mse = float(np.mean((a.astype(np.float32) - b.astype(np.float32)) ** 2))
     if mse < 1e-10:
         return 99.0
-    return float(10.0 * np.log10(255.0 ** 2 / mse))
+    return float(10.0 * np.log10(255.0**2 / mse))
 
 
 def _ssim_gray(a: np.ndarray, b: np.ndarray) -> float:
@@ -38,16 +38,16 @@ def _ssim_gray(a: np.ndarray, b: np.ndarray) -> float:
     C2 = (0.03 * 255) ** 2
     mu_a = cv2.GaussianBlur(a, (11, 11), 1.5)
     mu_b = cv2.GaussianBlur(b, (11, 11), 1.5)
-    mu_a2, mu_b2, mu_ab = mu_a ** 2, mu_b ** 2, mu_a * mu_b
-    sig_a2 = cv2.GaussianBlur(a ** 2, (11, 11), 1.5) - mu_a2
-    sig_b2 = cv2.GaussianBlur(b ** 2, (11, 11), 1.5) - mu_b2
+    mu_a2, mu_b2, mu_ab = mu_a**2, mu_b**2, mu_a * mu_b
+    sig_a2 = cv2.GaussianBlur(a**2, (11, 11), 1.5) - mu_a2
+    sig_b2 = cv2.GaussianBlur(b**2, (11, 11), 1.5) - mu_b2
     sig_ab = cv2.GaussianBlur(a * b, (11, 11), 1.5) - mu_ab
     num = (2 * mu_ab + C1) * (2 * sig_ab + C2)
     den = (mu_a2 + mu_b2 + C1) * (sig_a2 + sig_b2 + C2)
     return float(np.mean(num / (den + 1e-8)))
 
 
-def reference_frame_fidelity(gt_image: np.ndarray, gen_frame0: np.ndarray) -> Tuple[float, float]:
+def reference_frame_fidelity(gt_image: np.ndarray, gen_frame0: np.ndarray) -> tuple[float, float]:
     """
     Compare generated frame 0 against the GT reference image.
     GT image is resized to match the generated frame resolution.
@@ -67,11 +67,11 @@ def reference_frame_fidelity(gt_image: np.ndarray, gen_frame0: np.ndarray) -> Tu
 
 
 def gt_phase_pixel_fidelity(
-    gt_frames: List[np.ndarray],
-    gen_frames: List[np.ndarray],
-    device: str = None,
+    gt_frames: list[np.ndarray],
+    gen_frames: list[np.ndarray],
+    device: str | None = None,
     lpips_batch_size: int = 16,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     """
     Compute average PSNR / SSIM / LPIPS between paired GT and generated frames.
     GT frames are resized to match each generated frame's resolution.
@@ -92,13 +92,13 @@ def gt_phase_pixel_fidelity(
     psnrs, ssims = [], []
     gt_tensors, gen_tensors = [], []
 
-    for gt_f, gen_f in zip(gt_frames, gen_frames):
+    for gt_f, gen_f in zip(gt_frames, gen_frames, strict=False):
         h, w = gen_f.shape[:2]
         gt_r = cv2.resize(gt_f, (w, h), interpolation=cv2.INTER_AREA)
 
         psnrs.append(_psnr(gt_r, gen_f))
 
-        gt_g  = cv2.cvtColor(gt_r,  cv2.COLOR_BGR2GRAY)
+        gt_g = cv2.cvtColor(gt_r, cv2.COLOR_BGR2GRAY)
         gen_g = cv2.cvtColor(gen_f, cv2.COLOR_BGR2GRAY)
         ssims.append(_ssim_gray(gt_g, gen_g))
 
@@ -108,8 +108,8 @@ def gt_phase_pixel_fidelity(
     # Batched LPIPS
     lpipss = []
     for i in range(0, len(gt_tensors), lpips_batch_size):
-        gt_batch  = torch.cat(gt_tensors[i:i + lpips_batch_size],  dim=0)
-        gen_batch = torch.cat(gen_tensors[i:i + lpips_batch_size], dim=0)
+        gt_batch = torch.cat(gt_tensors[i : i + lpips_batch_size], dim=0)
+        gen_batch = torch.cat(gen_tensors[i : i + lpips_batch_size], dim=0)
         with torch.no_grad():
             d = loss_fn(gt_batch, gen_batch)
         lpipss.extend(d.squeeze(-1).squeeze(-1).squeeze(-1).cpu().numpy().tolist())

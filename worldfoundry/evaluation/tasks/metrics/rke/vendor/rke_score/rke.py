@@ -15,7 +15,7 @@ def gaussian_kernel(x, y, sigma):
     Returns: Gaussian distance of x and y
 
     """
-    kernel = np.exp(-0.5 * np.sum(np.square(x - y)) / sigma ** 2)
+    kernel = np.exp(-0.5 * np.sum(np.square(x - y)) / sigma**2)
     return kernel
 
 
@@ -23,6 +23,7 @@ def bandwidth_decorator(function):
     """
     This decorator is only for RKE class is used when the `kernel_bandwidth` is a list.
     """
+
     def wrap_bandwidth_list(self, *args, **kwargs):
         output = {}
         if self.kernel_bandwidth is not None:  # Gaussian kernel
@@ -33,6 +34,7 @@ def bandwidth_decorator(function):
             return function(self, *args, **kwargs)
 
         return output
+
     return wrap_bandwidth_list
 
 
@@ -48,9 +50,9 @@ class RKE:
                 default is gaussian_kernel as used in the paper.
         """
         if kernel_function is None and kernel_bandwidth is None:
-            raise ValueError('Expected either kernel_function or kernel_bandwidth args')
+            raise ValueError("Expected either kernel_function or kernel_bandwidth args")
         if kernel_function is not None and kernel_bandwidth is not None:
-            raise ValueError('`kernel_function` is mutually exclusive with `kernel_bandwidth`')
+            raise ValueError("`kernel_function` is mutually exclusive with `kernel_bandwidth`")
 
         if kernel_function is None:  # Gaussian kernel
             # Make `kernel_bandwidth` into a list if the input is float or int
@@ -69,8 +71,8 @@ class RKE:
         f_norm = 0
         for i in range(X.shape[0]):
             for j in range(X.shape[0]):
-                f_norm += self.kernel_function(X[i], X[j])**2
-        return f_norm / X.shape[0]**2
+                f_norm += self.kernel_function(X[i], X[j]) ** 2
+        return f_norm / X.shape[0] ** 2
 
     @bandwidth_decorator
     def compute_rke_mc(self, X, n_samples=1_000_000):
@@ -86,8 +88,8 @@ class RKE:
         for i in range(n_samples):
             i, j = np.random.randint(X.shape[0], size=2)
 
-            similarity_holder.append(self.kernel_function(X[i], X[j])**2)
-        return 1/np.mean(similarity_holder)
+            similarity_holder.append(self.kernel_function(X[i], X[j]) ** 2)
+        return 1 / np.mean(similarity_holder)
 
     def __compute_relative_kernel(self, X, Y):
         output = np.ndarray((X.shape[0], Y.shape[0]))

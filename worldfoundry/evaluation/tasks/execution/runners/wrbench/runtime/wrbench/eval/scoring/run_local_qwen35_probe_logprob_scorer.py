@@ -16,19 +16,19 @@ import os
 import sys
 import time
 from collections import Counter
+from collections.abc import Iterable, Sequence
 from copy import deepcopy
 from pathlib import Path
 from statistics import median
-from typing import Any, Iterable, Sequence
-
+from typing import Any
 
 try:
     from .prompts_v2_probe import (
         CAMERA_MOTION_CONTEXT_KEY,
         DEFAULT_PROMPT_MODE,
-        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
-        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
         PROBE_CATALOG_VERSION,
+        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
+        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
         RUNTIME_V2_PROBE_CATALOG,
         SUPPORTED_PROMPT_MODES,
         RuntimeV2Probe,
@@ -42,16 +42,20 @@ except ImportError:
     from wrbench.eval.scoring.prompts_v2_probe import (
         CAMERA_MOTION_CONTEXT_KEY,
         DEFAULT_PROMPT_MODE,
-        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
-        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
         PROBE_CATALOG_VERSION,
-        RUNTIME_V2_PROBE_CATALOG,
+        PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED,
         SUPPORTED_PROMPT_MODES,
         RuntimeV2Probe,
         active_probe_catalog,
         build_runtime_v2_probe_prompt,
         question_for_probe,
         validate_prompt_mode,
+    )
+    from wrbench.eval.scoring.prompts_v2_probe import (
+        PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY as PROMPT_MODE_P10_SHARED_OOV_JUDGEABILITY,
+    )
+    from wrbench.eval.scoring.prompts_v2_probe import (
+        RUNTIME_V2_PROBE_CATALOG as RUNTIME_V2_PROBE_CATALOG,
     )
     from wrbench.eval.scoring.runtime_common import META_KEYS
 
@@ -94,9 +98,7 @@ REBUILT_POOL_20260519_NAME = "runtime_v2_validation_pool_recount_20260519"
 REBUILT_OUTPUT_SUFFIX_20260519 = "_rebuilt_pool_20260519"
 REBUILT_POOL_20260519_MANIFEST_RECORDS = 261
 REBUILT_POOL_20260519_PAIR_ALLOWLIST_RECORDS = 230
-REBUILT_POOL_20260519_PAIR_ALLOWLIST_SHA256 = (
-    "9701319ac53e7b4476dac053ed845f8e866c10396f4a379978fec616692e0d15"
-)
+REBUILT_POOL_20260519_PAIR_ALLOWLIST_SHA256 = "9701319ac53e7b4476dac053ed845f8e866c10396f4a379978fec616692e0d15"
 YES_VARIANTS = ("Yes", " yes", " Yes", "yes", "YES")
 NO_VARIANTS = ("No", " no", " No", "no", "NO")
 ORDINAL_VARIANTS = ("1", "2", "3", "4", "5")
@@ -212,14 +214,9 @@ def validate_rebuilt_pool_20260519_preflight(
     output_dir_suffix_ok = output_dir.name.endswith(REBUILT_OUTPUT_SUFFIX_20260519)
 
     if not manifest_parent_ok:
-        errors.append(
-            f"manifest_path must be under {REBUILT_POOL_20260519_NAME}: {manifest_path}"
-        )
+        errors.append(f"manifest_path must be under {REBUILT_POOL_20260519_NAME}: {manifest_path}")
     if manifest_records != REBUILT_POOL_20260519_MANIFEST_RECORDS:
-        errors.append(
-            "manifest must contain "
-            f"{REBUILT_POOL_20260519_MANIFEST_RECORDS} records, got {manifest_records}"
-        )
+        errors.append(f"manifest must contain {REBUILT_POOL_20260519_MANIFEST_RECORDS} records, got {manifest_records}")
     if allowlist_records != REBUILT_POOL_20260519_PAIR_ALLOWLIST_RECORDS:
         errors.append(
             "pair allowlist must contain "
@@ -231,9 +228,7 @@ def validate_rebuilt_pool_20260519_preflight(
             f"expected {_normalize_sha256(expected_allowlist_sha256)}, got {allowlist_sha256}"
         )
     if not output_dir_suffix_ok:
-        errors.append(
-            f"output_dir must end with {REBUILT_OUTPUT_SUFFIX_20260519}: {output_dir}"
-        )
+        errors.append(f"output_dir must end with {REBUILT_OUTPUT_SUFFIX_20260519}: {output_dir}")
 
     report = {
         "schema_version": "runtime_v2_rebuilt_pool_preflight_20260519_v1",
@@ -284,10 +279,7 @@ def validate_manifest_video_files(manifest: list[dict[str, Any]]) -> dict[str, A
         "missing_videos": missing[:20],
     }
     if missing:
-        examples = ", ".join(
-            f"{row['video_id']} -> {row['path'] or '<missing path field>'}"
-            for row in missing[:5]
-        )
+        examples = ", ".join(f"{row['video_id']} -> {row['path'] or '<missing path field>'}" for row in missing[:5])
         raise FileNotFoundError(
             "manifest video file preflight failed: "
             f"{len(missing)}/{len(manifest)} videos are missing; examples: {examples}"
@@ -328,9 +320,7 @@ def load_evidence_by_video_id(path: Path | None) -> dict[str, dict[str, Any]]:
             continue
         evidence_by_id[key] = row
     if duplicate_ids:
-        raise ValueError(
-            f"--evidence-jsonl contains duplicate video_id values: {sorted(set(duplicate_ids))[:5]}"
-        )
+        raise ValueError(f"--evidence-jsonl contains duplicate video_id values: {sorted(set(duplicate_ids))[:5]}")
     return evidence_by_id
 
 
@@ -363,10 +353,7 @@ def build_task_context(
     task_context_mode: str = TASK_CONTEXT_MODE_ALL_MANIFEST_METADATA,
 ) -> dict[str, Any]:
     if task_context_mode not in SUPPORTED_TASK_CONTEXT_MODES:
-        raise ValueError(
-            "task_context_mode must be one of: "
-            + ", ".join(sorted(SUPPORTED_TASK_CONTEXT_MODES))
-        )
+        raise ValueError("task_context_mode must be one of: " + ", ".join(sorted(SUPPORTED_TASK_CONTEXT_MODES)))
     if task_context_mode == TASK_CONTEXT_MODE_NONE:
         return {}
     if task_context_mode == TASK_CONTEXT_MODE_CAMERA_MOTION:
@@ -375,11 +362,7 @@ def build_task_context(
         if text and text.lower() not in {"none", "null"}:
             return {CAMERA_MOTION_CONTEXT_KEY: text}
         return {}
-    keys = (
-        META_KEYS
-        if task_context_mode == TASK_CONTEXT_MODE_ALL_MANIFEST_METADATA
-        else VLM_HUMAN_P9_CONTEXT_KEYS
-    )
+    keys = META_KEYS if task_context_mode == TASK_CONTEXT_MODE_ALL_MANIFEST_METADATA else VLM_HUMAN_P9_CONTEXT_KEYS
     context: dict[str, Any] = {}
     for key in keys:
         if key in {"video_id", "world_state_prompt"}:
@@ -506,9 +489,7 @@ def build_video_processor_kwargs(
             continue
         if key not in valid_kwargs:
             video_processor = getattr(processor, "video_processor", None)
-            raise ValueError(
-                f"video processor {type(video_processor).__name__} does not support {key}"
-            )
+            raise ValueError(f"video processor {type(video_processor).__name__} does not support {key}")
         videos_kwargs[key] = int(value)
     return videos_kwargs
 
@@ -597,7 +578,7 @@ def dry_run_probe_results(
 ) -> dict[str, dict[str, Any]]:
     results: dict[str, dict[str, Any]] = {}
     for probe in active_probe_catalog(prompt_mode):
-        digest = hashlib.sha256(f"{video_id}|{probe.probe_id}".encode("utf-8")).digest()
+        digest = hashlib.sha256(f"{video_id}|{probe.probe_id}".encode()).digest()
         p_yes = round(0.05 + (digest[0] / 255.0) * 0.9, 6)
         results[probe.probe_id] = _probe_meta(probe, p_yes, "dry_run", prompt_mode=prompt_mode)
     return results
@@ -724,9 +705,7 @@ def aggregate_probe_results(
         "video_id": video_id,
         "probe_status": "ok" if not missing else "partial",
         "missing_probe_ids": missing,
-        "score_missing_probe_ids_by_dimension": {
-            dim: ids for dim, ids in missing_score_by_dimension.items() if ids
-        },
+        "score_missing_probe_ids_by_dimension": {dim: ids for dim, ids in missing_score_by_dimension.items() if ids},
         "video_status": "valid",
         "sampling_fps": sampling_fps,
         "frames_used": int(frames_used),
@@ -848,8 +827,7 @@ def merge_sharded_outputs(
     extra_video_ids = sorted(video_id for video_id in raw_by_id if video_id not in set(manifest_ids))
     if require_complete and missing_video_ids:
         raise RuntimeError(
-            "cannot merge incomplete probe shard output: "
-            f"{len(missing_video_ids)} manifest videos are missing"
+            f"cannot merge incomplete probe shard output: {len(missing_video_ids)} manifest videos are missing"
         )
     ordered_rows = [raw_by_id[video_id] for video_id in manifest_ids if video_id in raw_by_id]
     candidate_rows = [export_v7_style_probe_record(row) for row in ordered_rows if row.get("probe_status") == "ok"]
@@ -911,10 +889,7 @@ class LocalQwen35ProbeLogprobScorer:
         self.dry_run = dry_run
         self.prompt_mode = validate_prompt_mode(prompt_mode)
         if task_context_mode not in SUPPORTED_TASK_CONTEXT_MODES:
-            raise ValueError(
-                "task_context_mode must be one of: "
-                + ", ".join(sorted(SUPPORTED_TASK_CONTEXT_MODES))
-            )
+            raise ValueError("task_context_mode must be one of: " + ", ".join(sorted(SUPPORTED_TASK_CONTEXT_MODES)))
         self.task_context_mode = task_context_mode
         self.video_min_pixels = video_min_pixels
         self.video_max_pixels = video_max_pixels
@@ -930,9 +905,7 @@ class LocalQwen35ProbeLogprobScorer:
         from transformers import AutoModelForImageTextToText, AutoProcessor  # type: ignore
 
         dtype_obj = {"bfloat16": torch.bfloat16}[dtype]
-        self.processor = AutoProcessor.from_pretrained(
-            str(model_path), trust_remote_code=True, local_files_only=True
-        )
+        self.processor = AutoProcessor.from_pretrained(str(model_path), trust_remote_code=True, local_files_only=True)
         video_backend = os.environ["WORLD_STATE_VIDEO_BACKEND"].strip()
         if not video_backend:
             raise RuntimeError("WORLD_STATE_VIDEO_BACKEND is required")
@@ -947,7 +920,8 @@ class LocalQwen35ProbeLogprobScorer:
                             *[
                                 fetch_videos_with_backend(x, sample_indices_fn=sample_indices_fn)
                                 for x in video_url_or_urls
-                            ]
+                            ],
+                            strict=False,
                         )
                     )
                 return load_video(
@@ -1018,9 +992,7 @@ class LocalQwen35ProbeLogprobScorer:
             "processor_class": type(processor).__name__ if processor is not None else None,
             "video_processor_class": type(video_processor).__name__ if video_processor is not None else None,
             "processor_chat_template_supports_enable_thinking": (
-                chat_template_supports_variable(processor, "enable_thinking")
-                if processor is not None
-                else None
+                chat_template_supports_variable(processor, "enable_thinking") if processor is not None else None
             ),
             "enable_thinking_argument_sent": "enable_thinking" in self.apply_chat_template_kwargs,
             "processor_kwargs_policy": (
@@ -1143,10 +1115,7 @@ def median_sample_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
     probe_results: dict[str, dict[str, Any]] = {}
     prompt_mode = str(rows[0].get("runtime_v2_prompt_mode") or DEFAULT_PROMPT_MODE)
     for probe in active_probe_catalog(prompt_mode):
-        metas = [
-            (row.get("vlm_probe_results") or {}).get(probe.probe_id)
-            for row in rows
-        ]
+        metas = [(row.get("vlm_probe_results") or {}).get(probe.probe_id) for row in rows]
         metas = [meta for meta in metas if isinstance(meta, dict) and meta.get("p_yes") is not None]
         if not metas:
             continue
@@ -1250,9 +1219,7 @@ def build_run_config(
         "torch_dtype": args.dtype,
         "attn_implementation": args.attn_implementation,
         "video_sampling_policy": (
-            "processor_default_not_all_source_frames"
-            if str(args.fps) == "full"
-            else "processor_kwargs_fps"
+            "processor_default_not_all_source_frames" if str(args.fps) == "full" else "processor_kwargs_fps"
         ),
         **scorer_metadata,
         "device_map": {"": int(local_rank)},
@@ -1306,7 +1273,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--pair-allowlist-jsonl", type=Path)
     parser.add_argument("--require-rebuilt-pool-20260519", action="store_true")
     parser.add_argument("--expected-pair-allowlist-sha256")
-    parser.add_argument("--model-path", type=Path, required=True, help="Local Qwen3.5 model directory (set via wrbench.runtime.json eval.scorers.qwen35_model).")
+    parser.add_argument(
+        "--model-path",
+        type=Path,
+        required=True,
+        help="Local Qwen3.5 model directory (set via wrbench.runtime.json eval.scorers.qwen35_model).",
+    )
     parser.add_argument("--vlm-name", required=True)
     parser.add_argument("--loader-family", choices=("auto", "qwen3vl", "qwen25vl"), required=True)
     parser.add_argument("--fps", required=True)
@@ -1330,20 +1302,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     args = parser.parse_args(argv)
     if args.prompt_mode not in SUPPORTED_PROMPT_MODES:
-        parser.error(
-            "--prompt-mode must be one of: "
-            + ", ".join(sorted(SUPPORTED_PROMPT_MODES))
-        )
+        parser.error("--prompt-mode must be one of: " + ", ".join(sorted(SUPPORTED_PROMPT_MODES)))
     if args.strict_manifest_contract:
         if args.prompt_mode != PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED:
-            parser.error(
-                "--strict-manifest-contract requires --prompt-mode "
-                f"{PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED}"
-            )
+            parser.error(f"--strict-manifest-contract requires --prompt-mode {PROMPT_MODE_P9_D4_P8_D5_P6_COMBINED}")
         if args.task_context_mode != TASK_CONTEXT_MODE_ALL_MANIFEST_METADATA:
             parser.error(
-                "--strict-manifest-contract requires --task-context-mode "
-                f"{TASK_CONTEXT_MODE_ALL_MANIFEST_METADATA}"
+                f"--strict-manifest-contract requires --task-context-mode {TASK_CONTEXT_MODE_ALL_MANIFEST_METADATA}"
             )
         if args.skip_existing:
             parser.error("--strict-manifest-contract does not allow --skip-existing")
@@ -1447,10 +1412,7 @@ def main(argv: list[str] | None = None) -> int:
             if item.get("video_id") is not None and str(item.get("video_id")) not in evidence_by_id
         ]
         if missing_evidence_ids:
-            raise ValueError(
-                "--evidence-jsonl is missing evidence for shard videos: "
-                f"{missing_evidence_ids[:5]}"
-            )
+            raise ValueError(f"--evidence-jsonl is missing evidence for shard videos: {missing_evidence_ids[:5]}")
     raw_path = (
         args.output_dir / "raw_v2_probe_scores.jsonl"
         if args.num_shards == 1
@@ -1474,9 +1436,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     rows_by_id = dict(existing_by_id)
     shard_total = len(shard_items)
-    completed_at_start = sum(
-        1 for item in shard_items if str(item.get("video_id")) in existing_by_id
-    )
+    completed_at_start = sum(1 for item in shard_items if str(item.get("video_id")) in existing_by_id)
     if args.skip_existing and completed_at_start:
         print(
             f"[resume] shard={args.shard_id}/{args.num_shards} "
@@ -1527,7 +1487,9 @@ def main(argv: list[str] | None = None) -> int:
                 f"forward={float(timing.get('model_forward') or 0):.2f}s",
                 flush=True,
             )
-    ordered_rows = [rows_by_id[str(item["video_id"])] for item in shard_items if str(item.get("video_id")) in rows_by_id]
+    ordered_rows = [
+        rows_by_id[str(item["video_id"])] for item in shard_items if str(item.get("video_id")) in rows_by_id
+    ]
     candidate_rows = [export_v7_style_probe_record(row) for row in ordered_rows if row.get("probe_status") == "ok"]
     score_available_rows = [
         export_v7_style_probe_record(row, export_policy="score_available")
@@ -1567,7 +1529,9 @@ def main(argv: list[str] | None = None) -> int:
             video_file_preflight=video_file_preflight,
         ),
     )
-    (args.output_dir / ("stage_result.md" if args.num_shards == 1 else f"stage_result_shard_{args.shard_id}.md")).write_text(
+    (
+        args.output_dir / ("stage_result.md" if args.num_shards == 1 else f"stage_result_shard_{args.shard_id}.md")
+    ).write_text(
         _stage_result(
             args=args,
             records_written=len(ordered_rows),

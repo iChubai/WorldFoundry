@@ -13,11 +13,11 @@ def torch_maybe_compile(module, dummy_input, verbose):
         try:
             compiled(dummy_input)
             vprint(verbose, "Feature extractor compiled")
-            setattr(out, "forward_pure", out.forward)
-            setattr(out, "forward", compiled)
+            out.forward_pure = out.forward
+            out.forward = compiled
         except Exception:
             vprint(verbose, "Feature extractor compiled, but failed to run. Falling back to pure torch")
-    except Exception as e:
+    except Exception:
         vprint(verbose, "Feature extractor compilation failed. Falling back to pure torch")
     return out
 
@@ -25,7 +25,7 @@ def torch_maybe_compile(module, dummy_input, verbose):
 def torch_atomic_save(what, path):
     path = os.path.expanduser(path)
     path_dir = os.path.dirname(path)
-    fp = tempfile.NamedTemporaryFile(delete=False, dir=path_dir)
+    fp = tempfile.NamedTemporaryFile(delete=False, dir=path_dir)  # noqa: SIM115 - The temporary file outlives the handle: it is renamed or removed in the finally block.
     try:
         torch.save(what, fp)
         fp.close()

@@ -68,7 +68,9 @@ def main() -> None:
     parser.add_argument("--gpus", required=True, help="Comma-separated physical GPU ids, e.g. 2,3")
     parser.add_argument("--ports", required=True, help="Comma-separated service ports, e.g. 8090,8091")
     parser.add_argument("--host", default="127.0.0.1", help="Bind host")
-    parser.add_argument("--model", default="worldeval/weights/sam3/sam3.pt", help="SAM3 weights path passed to the service")
+    parser.add_argument(
+        "--model", default="worldeval/weights/sam3/sam3.pt", help="SAM3 weights path passed to the service"
+    )
     parser.add_argument("--device", default="cuda:0", help="Visible CUDA device inside each service process")
     parser.add_argument("--vlm-backend", default="qwenvl_server", help="VLM backend used for object extraction")
     parser.add_argument("--vlm-model", default=None, help="VLM model used for object extraction")
@@ -114,7 +116,7 @@ def main() -> None:
             ) from exc
 
     processes: list[subprocess.Popen] = []
-    for index, (gpu, port) in enumerate(zip(gpus, ports)):
+    for index, (gpu, port) in enumerate(zip(gpus, ports, strict=False)):
         visible_gpu = resolve_visible_gpu(gpu, use_uuid=use_gpu_uuid, uuid_by_index=uuid_by_index)
         env = os.environ.copy()
         env["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -142,10 +144,7 @@ def main() -> None:
         if args.quiet:
             command.append("--quiet")
 
-        print(
-            f"Starting SAM3 server on requested GPU {gpu}, "
-            f"CUDA_VISIBLE_DEVICES={visible_gpu}, port {port}"
-        )
+        print(f"Starting SAM3 server on requested GPU {gpu}, CUDA_VISIBLE_DEVICES={visible_gpu}, port {port}")
         process = subprocess.Popen(command, cwd=str(project_root), env=env)
         processes.append(process)
 

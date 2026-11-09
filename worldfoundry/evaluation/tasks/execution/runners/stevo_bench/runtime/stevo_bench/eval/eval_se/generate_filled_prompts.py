@@ -61,7 +61,7 @@ def main():
     results_path = Path("eval_se/results/evaluation_results_20260226_170228_unanimous.json")
 
     print(f"Loading evaluation results from {results_path}...")
-    with open(results_path, 'r') as f:
+    with open(results_path) as f:
         eval_data = json.load(f)
 
     # Get prompt1 template
@@ -70,29 +70,28 @@ def main():
     # Process each result
     filled_prompts = []
 
-    for result in eval_data['results']:
-        task_id = result['task_id']
-        model_type = result['model_type']
-        expected_process_concise = result['expected_process_concise']
+    for result in eval_data["results"]:
+        task_id = result["task_id"]
+        model_type = result["model_type"]
+        expected_process_concise = result["expected_process_concise"]
 
         # Get occlusion context and focus for this model type
         occlusion_context, occlusion_focus = get_occlusion_context_and_focus(model_type)
 
         # Fill in the prompt
         filled_prompt = prompt1_template.format(
-            expected_process=expected_process_concise,
-            occlusion_context=occlusion_context
+            expected_process=expected_process_concise, occlusion_context=occlusion_context
         )
 
         # Create entry with all relevant information
         entry = {
             "task_id": task_id,
-            "run_name": result['run_name'],
+            "run_name": result["run_name"],
             "model_type": model_type,
             "expected_process_concise": expected_process_concise,
             "occlusion_focus": occlusion_focus,
             "occlusion_context": occlusion_context,
-            "filled_prompt1": filled_prompt
+            "filled_prompt1": filled_prompt,
         }
 
         filled_prompts.append(entry)
@@ -101,23 +100,23 @@ def main():
     output_path = Path("eval_se/results/filled_prompts1.json")
 
     output_data = {
-        "timestamp": eval_data['timestamp'],
+        "timestamp": eval_data["timestamp"],
         "num_tasks": len(filled_prompts),
         "source_file": str(results_path),
-        "prompts": filled_prompts
+        "prompts": filled_prompts,
     }
 
     print(f"Writing {len(filled_prompts)} filled prompts to {output_path}...")
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(output_data, f, indent=2)
 
     print(f"Done! Generated {len(filled_prompts)} filled prompts.")
-    print(f"\nExample (first task):")
+    print("\nExample (first task):")
     print(f"Task ID: {filled_prompts[0]['task_id']}")
     print(f"Model Type: {filled_prompts[0]['model_type']}")
     print(f"Occlusion Focus: {filled_prompts[0]['occlusion_focus']}")
-    print(f"\nFilled Prompt (truncated):")
-    print(filled_prompts[0]['filled_prompt1'][:300] + "...")
+    print("\nFilled Prompt (truncated):")
+    print(filled_prompts[0]["filled_prompt1"][:300] + "...")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,8 @@
-import cv2
 import base64
+import io
+
+import cv2
+from PIL import Image
 
 
 def ext_frame(video_path, num_frames=5, scale_percent=20):
@@ -16,23 +19,25 @@ def ext_frame(video_path, num_frames=5, scale_percent=20):
             height = int(frame.shape[0] * scale_percent / 100)
             new_size = (width, height)
             frame = cv2.resize(frame, new_size, interpolation=cv2.INTER_AREA)
-            _, buffer = cv2.imencode('.jpg', frame)
-            frame_bytes = base64.b64encode(buffer).decode('utf-8')
+            _, buffer = cv2.imencode(".jpg", frame)
+            frame_bytes = base64.b64encode(buffer).decode("utf-8")
             frames.append(frame_bytes)
 
     video.release()
     return frames
 
+
 def ext_img(file_path):
     frames = []
     image = cv2.imread(file_path)
-    _, buffer = cv2.imencode('.jpg', image)
-    frame_bytes = base64.b64encode(buffer).decode('utf-8')
+    _, buffer = cv2.imencode(".jpg", image)
+    frame_bytes = base64.b64encode(buffer).decode("utf-8")
     frames.append(frame_bytes)
     return frames
 
+
 def load_prompts(prompt_path):
-    with open(prompt_path, "r", encoding='utf-8', errors='replace') as f:
+    with open(prompt_path, encoding="utf-8", errors="replace") as f:
         prompts = [line.strip() for line in f.readlines()]
     return prompts
 
@@ -101,12 +106,6 @@ def merge_args(cfg, args, training=False):
     return cfg
 
 
-import cv2
-import base64
-import io
-from PIL import Image
-
-
 class ImageProcessor:
     @staticmethod
     def encode_image_from_pil(img):
@@ -115,16 +114,16 @@ class ImageProcessor:
             if img.width > img.height:
                 new_width = 400
                 concat = float(new_width / float(img.width))
-                size = int((float(img.height) * float(concat)))
+                size = int(float(img.height) * float(concat))
                 img = img.resize((new_width, size), Image.LANCZOS)
             else:
                 new_height = 400
                 concat = float(new_height / float(img.height))
-                size = int((float(img.width) * float(concat)))
+                size = int(float(img.width) * float(concat))
                 img = img.resize((size, new_height), Image.LANCZOS)
         img.save(buffer, format="JPEG")
         img_data = base64.b64encode(buffer.getvalue())
-        return img_data.decode('utf-8')
+        return img_data.decode("utf-8")
 
 
 def ext_frame_with_encoding(video_path, num_frames=10, scale_percent=50):

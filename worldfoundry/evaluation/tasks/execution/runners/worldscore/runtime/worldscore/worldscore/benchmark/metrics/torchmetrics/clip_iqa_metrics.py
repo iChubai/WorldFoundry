@@ -1,11 +1,14 @@
-from typing import List, Union
-
 import os
+
 import torch
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import BaseMetric
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import handle_module_not_found_error
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    BaseMetric,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import (
+    handle_module_not_found_error,
+)
 
 try:
     from torchmetrics.multimodal import CLIPImageQualityAssessment
@@ -30,11 +33,9 @@ class CLIPImageQualityAssessmentMetric(BaseMetric):
             "WORLDSCORE_CLIP_VIT_BASE_PATCH16_PATH",
             "openai/clip-vit-base-patch16",
         )
-        self._metric = CLIPImageQualityAssessment(
-            model_name_or_path=model_name_or_path
-        ).to(self._device)
+        self._metric = CLIPImageQualityAssessment(model_name_or_path=model_name_or_path).to(self._device)
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         imgs = self._process_image(rendered_images)
 
         imgs = (imgs * 255).to(torch.uint8)

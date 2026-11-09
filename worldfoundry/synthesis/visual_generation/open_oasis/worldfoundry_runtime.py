@@ -8,7 +8,6 @@ from worldfoundry.synthesis.visual_generation.runtime_manifest import (
     plan_payload,
 )
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "generate.py"
 # The model-specific requirement hook below is the source of truth. Keeping a
@@ -46,7 +45,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         elif not Path(value).expanduser().exists():
             missing.append({"kind": "asset", "path": value, "reason": f"Open-Oasis `{key}` path does not exist"})
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Open-Oasis generate.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "Open-Oasis generate.py is missing"}
+        )
     return missing
 
 

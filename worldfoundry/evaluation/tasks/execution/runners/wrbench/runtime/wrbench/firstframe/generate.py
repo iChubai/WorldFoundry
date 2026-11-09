@@ -84,9 +84,7 @@ def _resolve_manifest_value(
         return meta_value.strip()
     if provider_value is not None and provider_value.strip():
         return provider_value.strip()
-    raise RuntimeError(
-        f"{label} required: pass it explicitly or use a provider/test double that reports it"
-    )
+    raise RuntimeError(f"{label} required: pass it explicitly or use a provider/test double that reports it")
 
 
 class DashScopeT2IProvider:
@@ -139,7 +137,6 @@ class DashScopeT2IProvider:
                 return {"source": "base64", "provider": self.provider_name, "model": self.model}
             raise RuntimeError(f"No image in DashScope response: {data}")
         # Download first URL
-        import httpx
 
         img_resp = self._client.get(urls[0])
         img_resp.raise_for_status()
@@ -150,6 +147,7 @@ class DashScopeT2IProvider:
 
 class MockT2IProvider:
     """Write a minimal PNG placeholder for tests (1x1 transparent)."""
+
     provider_name = "mock"
 
     def __init__(self, *, model: str = "mock") -> None:

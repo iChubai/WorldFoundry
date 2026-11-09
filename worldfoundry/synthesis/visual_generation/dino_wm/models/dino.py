@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 
-torch.hub._validate_not_a_forked_repo=lambda a,b,c: True
+torch.hub._validate_not_a_forked_repo = lambda a, b, c: True
+
 
 class DinoV2Encoder(nn.Module):
     def __init__(self, name, feature_key):
@@ -22,5 +23,5 @@ class DinoV2Encoder(nn.Module):
     def forward(self, x):
         emb = self.base_model.forward_features(x)[self.feature_key]
         if self.latent_ndim == 1:
-            emb = emb.unsqueeze(1) # dummy patch dim
+            emb = emb.unsqueeze(1)  # dummy patch dim
         return emb

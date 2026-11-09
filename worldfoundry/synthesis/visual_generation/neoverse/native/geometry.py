@@ -1,7 +1,7 @@
 """NeoVerse 3D geometry transformations."""
 
-import torch
 import numpy as np
+import torch
 
 
 def depth_to_camera_coords(depthmap, camera_intrinsics):
@@ -31,9 +31,7 @@ def depth_to_camera_coords(depthmap, camera_intrinsics):
 
     # Generate pixel grid
     v_grid, u_grid = torch.meshgrid(
-        torch.arange(H, dtype=dtype, device=device),
-        torch.arange(W, dtype=dtype, device=device),
-        indexing='ij'
+        torch.arange(H, dtype=dtype, device=device), torch.arange(W, dtype=dtype, device=device), indexing="ij"
     )
 
     # Reshape for broadcasting: (1, H, W)
@@ -55,6 +53,7 @@ def depth_to_camera_coords(depthmap, camera_intrinsics):
     valid_mask = depthmap > 0.0
 
     return X_cam, valid_mask
+
 
 def depth_to_world_coords_points(
     depth_map: torch.Tensor, extrinsic: torch.Tensor, intrinsic: torch.Tensor, eps=1e-8
@@ -82,11 +81,13 @@ def depth_to_world_coords_points(
     camera_points, _ = depth_to_camera_coords(depth_map, intrinsic)
 
     # Apply extrinsic matrix (camera -> world)
-    R_cam_to_world = extrinsic[:, :3, :3]   # (B, 3, 3)
-    t_cam_to_world = extrinsic[:, :3, 3]    # (B, 3)
+    R_cam_to_world = extrinsic[:, :3, :3]  # (B, 3, 3)
+    t_cam_to_world = extrinsic[:, :3, 3]  # (B, 3)
 
     # Transform (B, H, W, 3) x (B, 3, 3)^T + (B, 3) -> (B, H, W, 3)
-    world_coords_points = torch.einsum('bhwi,bji->bhwj', camera_points, R_cam_to_world) + t_cam_to_world[:, None, None, :]
+    world_coords_points = (
+        torch.einsum("bhwi,bji->bhwj", camera_points, R_cam_to_world) + t_cam_to_world[:, None, None, :]
+    )
 
     return world_coords_points, camera_points, point_mask
 
@@ -102,9 +103,9 @@ def closed_form_inverse_se3(se3: torch.Tensor) -> torch.Tensor:
         out (torch.Tensor): (B, 4, 4) Inverse transformation matrices
     """
     assert se3.ndim == 3 and se3.shape[1:] == (4, 4), f"se3 must be (B, 4, 4), got {se3.shape}"
-    R = se3[:, :3, :3]        # (B, 3, 3)
-    t = se3[:, :3, 3]         # (B, 3)
-    Rt = R.transpose(1, 2)    # (B, 3, 3)
+    R = se3[:, :3, :3]  # (B, 3, 3)
+    t = se3[:, :3, 3]  # (B, 3)
+    Rt = R.transpose(1, 2)  # (B, 3, 3)
     t_inv = -torch.bmm(Rt, t.unsqueeze(-1)).squeeze(-1)  # (B, 3)
     out = se3.new_zeros(se3.shape)
     out[:, :3, :3] = Rt
@@ -139,6 +140,7 @@ def create_pixel_coordinate_grid(num_frames, height, width):
 
     return points_xyf
 
+
 def project_world_points_to_image(world_points, extrinsics_cam, intrinsics_cam, return_camera_points=False):
     """
     Project 3D world points to 2D image coordinates using camera extrinsics and intrinsics.
@@ -155,19 +157,14 @@ def project_world_points_to_image(world_points, extrinsics_cam, intrinsics_cam, 
     """
     # Project world points to camera coordinates
     world_to_cam_R = extrinsics_cam[:, :3, :3]  # (S, 3, 3)
-    world_to_cam_T = extrinsics_cam[:, :3, 3]   # (S, 3)
+    world_to_cam_T = extrinsics_cam[:, :3, 3]  # (S, 3)
 
-    camera_points = (
-        torch.einsum("bij, bnj -> bni", world_to_cam_R, world_points)
-        + world_to_cam_T[:, None]
-    )
+    camera_points = torch.einsum("bij, bnj -> bni", world_to_cam_R, world_points) + world_to_cam_T[:, None]
 
     # Normalize camera points
     camera_points_normalized = camera_points / (camera_points[..., 2:3] + 1e-8)  # Avoid division by zero
 
-    pixel_coords = (
-        torch.einsum("bij, bnj -> bni", intrinsics_cam, camera_points_normalized)
-    )
+    pixel_coords = torch.einsum("bij, bnj -> bni", intrinsics_cam, camera_points_normalized)
     # Extract depth values
     depth_values = camera_points[..., 2:3]  # Keep the depth channel
 

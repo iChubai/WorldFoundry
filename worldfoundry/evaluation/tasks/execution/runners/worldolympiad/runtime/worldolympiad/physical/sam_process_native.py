@@ -31,13 +31,15 @@ from __future__ import annotations
 
 import argparse
 import base64
+import contextlib
 import json
 import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -47,7 +49,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from model.vlm import (
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
@@ -68,7 +70,7 @@ PALETTE = [
 LOCAL_SAM3_PACKAGE_ROOT = REPO_ROOT / "sam3"
 
 
-def encode_video_to_data_url(video_path: str) -> Dict[str, Any]:
+def encode_video_to_data_url(video_path: str) -> dict[str, Any]:
     with open(video_path, "rb") as video_file:
         base64_video = base64.b64encode(video_file.read()).decode("utf-8")
     return {
@@ -83,7 +85,7 @@ def extract_dynamic_objects(
     model_name: str | None = None,
     backend: str | None = None,
     max_objects: int = 4,
-) -> List[str]:
+) -> list[str]:
     """
     Use a VLM to list a few moving/deforming objects in the video.
     """
@@ -146,7 +148,7 @@ def _bbox_path(video_path: str) -> Path:
     return path.with_name(f"{path.stem}_bbox.mp4")
 
 
-def _probe_video(video_path: str) -> Dict[str, Any]:
+def _probe_video(video_path: str) -> dict[str, Any]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {video_path}")
@@ -169,7 +171,7 @@ def _probe_video(video_path: str) -> Dict[str, Any]:
     }
 
 
-def _compute_sample_indices(total_frames: int, max_frames: int) -> List[int]:
+def _compute_sample_indices(total_frames: int, max_frames: int) -> list[int]:
     if total_frames <= 0:
         return []
     if max_frames <= 0 or total_frames <= max_frames:
@@ -198,7 +200,7 @@ def _build_sampled_video(
     video_path: str,
     work_dir: Path,
     max_frames: int,
-) -> tuple[str, Dict[str, Any]]:
+) -> tuple[str, dict[str, Any]]:
     """
     Create a temporally subsampled proxy video for VLM and SAM3 processing.
 
@@ -271,9 +273,7 @@ def _build_sampled_video(
 def _normalize_native_device(device: str) -> int:
     raw = str(device).strip().lower()
     if raw == "cpu":
-        raise ValueError(
-            "The native SAM3 video predictor in this repository is CUDA-only; cpu is not supported."
-        )
+        raise ValueError("The native SAM3 video predictor in this repository is CUDA-only; cpu is not supported.")
     if raw.startswith("cuda:"):
         raw = raw.split(":", 1)[1]
     if raw.isdigit():
@@ -298,7 +298,7 @@ def _load_build_sam3_predictor():
     try:
         from sam3 import build_sam3_predictor  # type: ignore
     except ImportError:
-        raise ImportError(
+        raise ImportError(  # noqa: B904 - Preserve the implicit context.
             "Failed to import SAM3. Ensure the local `sam3/` package is importable and install "
             "its runtime dependencies (for example `setuptools` and `iopath`). "
             "A reliable setup is: `python -m pip install -e ./sam3`."
@@ -324,7 +324,7 @@ def _extract_base_overlay_frames(
     video_path: str,
     mask_frame_dir: Path,
     bbox_frame_dir: Path,
-) -> Tuple[int, int, int, List[Tuple[Path, Path]]]:
+) -> tuple[int, int, int, list[tuple[Path, Path]]]:
     """
     Decode the video once and materialize per-frame PNGs for mask/bbox overlays.
     """
@@ -336,7 +336,7 @@ def _extract_base_overlay_frames(
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    frame_paths: List[Tuple[Path, Path]] = []
+    frame_paths: list[tuple[Path, Path]] = []
     frame_idx = 0
     while True:
         ok, frame = cap.read()
@@ -399,7 +399,7 @@ def _normalize_boxes(raw_boxes: Any) -> np.ndarray:
     return boxes.astype(np.float32, copy=False)
 
 
-def _mask_to_xyxy(mask_bool: np.ndarray) -> Tuple[int, int, int, int] | None:
+def _mask_to_xyxy(mask_bool: np.ndarray) -> tuple[int, int, int, int] | None:
     if not mask_bool.any():
         return None
     coords = np.argwhere(mask_bool)
@@ -408,12 +408,12 @@ def _mask_to_xyxy(mask_bool: np.ndarray) -> Tuple[int, int, int, int] | None:
     return int(x1), int(y1), int(x2), int(y2)
 
 
-def _normalized_xywh_to_xyxy(box_xywh: Sequence[float], width: int, height: int) -> Tuple[int, int, int, int]:
+def _normalized_xywh_to_xyxy(box_xywh: Sequence[float], width: int, height: int) -> tuple[int, int, int, int]:
     x, y, w, h = [float(value) for value in box_xywh]
-    x1 = int(round(x * width))
-    y1 = int(round(y * height))
-    x2 = int(round((x + w) * width))
-    y2 = int(round((y + h) * height))
+    x1 = round(x * width)
+    y1 = round(y * height)
+    x2 = round((x + w) * width)
+    y2 = round((y + h) * height)
     x1 = max(0, min(width - 1, x1))
     y1 = max(0, min(height - 1, y1))
     x2 = max(0, min(width - 1, x2))
@@ -425,8 +425,8 @@ def _apply_outputs_to_overlay_frames(
     *,
     mask_frame_path: Path,
     bbox_frame_path: Path,
-    outputs: Dict[str, Any],
-    color: Tuple[int, int, int],
+    outputs: dict[str, Any],
+    color: tuple[int, int, int],
     width: int,
     height: int,
 ) -> None:
@@ -439,15 +439,11 @@ def _apply_outputs_to_overlay_frames(
     mask_frame = cv2.imread(str(mask_frame_path), cv2.IMREAD_COLOR)
     bbox_frame = cv2.imread(str(bbox_frame_path), cv2.IMREAD_COLOR)
     if mask_frame is None or bbox_frame is None:
-        raise RuntimeError(
-            f"Failed to load temporary overlay frames: {mask_frame_path} / {bbox_frame_path}"
-        )
+        raise RuntimeError(f"Failed to load temporary overlay frames: {mask_frame_path} / {bbox_frame_path}")
 
     for mask_index, mask_bool in enumerate(masks):
         if mask_bool.shape != (height, width):
-            raise ValueError(
-                f"Unexpected mask resolution {mask_bool.shape}; expected {(height, width)}"
-            )
+            raise ValueError(f"Unexpected mask resolution {mask_bool.shape}; expected {(height, width)}")
 
         if mask_bool.any():
             overlay = np.zeros_like(mask_frame, dtype=mask_frame.dtype)
@@ -518,7 +514,7 @@ def _remux_h264(src: str, dst: str) -> None:
     )
 
 
-def _remove_non_h264_intermediates(video_paths: List[str]) -> None:
+def _remove_non_h264_intermediates(video_paths: list[str]) -> None:
     for video_path in video_paths:
         path = Path(video_path)
         try:
@@ -533,7 +529,7 @@ def _remove_non_h264_intermediates(video_paths: List[str]) -> None:
 
 def segment_with_sam3(
     video_path: str,
-    text_prompts: List[str],
+    text_prompts: list[str],
     sam3_model_path: str = "./weights/sam3/sam3.pt",
     device: str = "cuda:1",
     version: str = "sam3",
@@ -542,14 +538,14 @@ def segment_with_sam3(
     max_num_objects: int = 16,
     output_prob_thresh: float = 0.5,
     output_video_path: str | None = None,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Run native SAM3 video prompting/tracking and render mask/bbox videos.
     """
     gpu_index = _require_cuda_device(device)
     build_sam3_predictor = _load_build_sam3_predictor()
 
-    predictor_kwargs: Dict[str, Any] = {
+    predictor_kwargs: dict[str, Any] = {
         "checkpoint_path": sam3_model_path,
         "version": version,
         "compile": compile,
@@ -636,8 +632,7 @@ def segment_with_sam3(
                     processed += 1
                     if processed % 20 == 0:
                         print(
-                            f"  Prompt '{prompt}' processed {processed} propagated frames "
-                            f"(current frame {frame_index})"
+                            f"  Prompt '{prompt}' processed {processed} propagated frames (current frame {frame_index})"
                         )
 
                 predictor.handle_request(
@@ -660,20 +655,16 @@ def segment_with_sam3(
         return mask_final, bbox_final
     finally:
         if session_id is not None:
-            try:
+            with contextlib.suppress(Exception):
                 predictor.handle_request(
                     {
                         "type": "close_session",
                         "session_id": session_id,
                     }
                 )
-            except Exception:
-                pass
         if hasattr(predictor, "shutdown"):
-            try:
+            with contextlib.suppress(Exception):
                 predictor.shutdown()
-            except Exception:
-                pass
 
 
 def run_sam_process(
@@ -689,7 +680,7 @@ def run_sam_process(
     max_num_objects: int = 16,
     output_prob_thresh: float = 0.5,
     max_frames: int = 128,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     print("=" * 80)
     print("PHYSICAL SAM PROCESS (NATIVE SAM3)")
     print("=" * 80)
@@ -709,10 +700,7 @@ def run_sam_process(
             work_dir=Path(temp_dir),
             max_frames=max_frames,
         )
-        print(
-            f"Processing video source: {sampling_info['source']} "
-            f"({sampling_info['processing_frame_count']} frames)"
-        )
+        print(f"Processing video source: {sampling_info['source']} ({sampling_info['processing_frame_count']} frames)")
 
         print("\nStep 1: Extract moving/deforming objects via VLM...")
         vlm_start = time.perf_counter()
@@ -775,9 +763,7 @@ def run_sam_process(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="VLM-guided native SAM3 segmentation for moving/deforming objects"
-    )
+    parser = argparse.ArgumentParser(description="VLM-guided native SAM3 segmentation for moving/deforming objects")
     parser.add_argument("--video", required=True, help="Path to video file")
     parser.add_argument(
         "--prompt",

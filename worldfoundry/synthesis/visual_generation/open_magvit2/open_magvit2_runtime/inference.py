@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 
 def load_model(config_path: str | Path, checkpoint_path: str | Path, device: str = "cuda"):
@@ -18,7 +19,10 @@ def load_model(config_path: str | Path, checkpoint_path: str | Path, device: str
     import torch
     from omegaconf import OmegaConf
 
+    # isort: split
     from . import src as _src  # noqa: F401
+
+    # isort: split
     from worldfoundry.core.model_loading.factory import instantiate_from_config
 
     config = OmegaConf.load(str(config_path))
@@ -63,7 +67,6 @@ def save_class_image(
     import torch
     from einops import repeat
     from PIL import Image
-
     from src.Open_MAGVIT2.modules.transformer.gpt import sample_Open_MAGVIT2
 
     steps = int(steps or config.model.init_args.transformer_config.params.block_size)

@@ -33,9 +33,7 @@ DEFAULT_COMPONENTS = {
     "text_encoder_path": "text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
     "video_vae_path": "vae/ltx-2.5-video-vae-bf16.safetensors",
     "audio_vae_path": "vae/ltx-2.5-audio-vae-bf16.safetensors",
-    "spatial_upsampler_path": (
-        "latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
-    ),
+    "spatial_upsampler_path": ("latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"),
     "duration_head_path": "model_patches/ltx-2.5-duration-head-bf16.safetensors",
 }
 
@@ -214,13 +212,18 @@ class LTX25DistilledRuntime:
     def preflight(self) -> dict[str, Any]:
         missing_checkpoint = [str(path) for path in self._required_checkpoint_files if not path.is_file()]
         incomplete_checkpoint = [
-            str(path) for path in self._required_checkpoint_files
-            if path.is_file() and not local_file_is_ready(path)
+            str(path) for path in self._required_checkpoint_files if path.is_file() and not local_file_is_ready(path)
         ]
         missing_runtime = [str(path) for path in self._runtime_files if not path.is_file()]
         ffmpeg = shutil.which("ffmpeg")
         device_ready = self.device.lower().startswith(("cuda", "mps"))
-        ready = not missing_checkpoint and not incomplete_checkpoint and not missing_runtime and ffmpeg is not None and device_ready
+        ready = (
+            not missing_checkpoint
+            and not incomplete_checkpoint
+            and not missing_runtime
+            and ffmpeg is not None
+            and device_ready
+        )
         blocked_reasons = [] if device_ready else ["LTX-2.5 inference requires a CUDA or MPS accelerator."]
         blocked_reasons.extend(f"Checkpoint download is incomplete or empty: {path}" for path in incomplete_checkpoint)
         return {
@@ -230,9 +233,7 @@ class LTX25DistilledRuntime:
             "source_root": str(self.source_root),
             "checkpoint_dir": str(self.checkpoint_dir),
             "python_executable": str(self.python_executable),
-            "component_paths": {
-                name: str(getattr(self, name)) for name in DEFAULT_COMPONENTS
-            },
+            "component_paths": {name: str(getattr(self, name)) for name in DEFAULT_COMPONENTS},
             "prompt_enhancer_gemma_root": (
                 str(self.prompt_enhancer_gemma_root) if self.prompt_enhancer_gemma_root else None
             ),
@@ -312,9 +313,7 @@ class LTX25DistilledRuntime:
             _append_value(command, "--num-frames", num_frames)
         else:
             if not self.duration_head_path.is_file():
-                raise FileNotFoundError(
-                    "LTX-2.5 auto_duration requires duration_head_path: " f"{self.duration_head_path}"
-                )
+                raise FileNotFoundError(f"LTX-2.5 auto_duration requires duration_head_path: {self.duration_head_path}")
             if not isinstance(auto_duration, Sequence) or len(auto_duration) != 2:
                 raise ValueError("LTX-2.5 auto_duration must contain [min_seconds, max_seconds].")
             command.extend(("--auto-duration", str(float(auto_duration[0])), str(float(auto_duration[1]))))
@@ -335,9 +334,7 @@ class LTX25DistilledRuntime:
         _append_value(command, "--quantization", quantization)
         if bool(request.get("enhance_prompt", False)):
             if self.prompt_enhancer_gemma_root is None or not self.prompt_enhancer_gemma_root.is_dir():
-                raise FileNotFoundError(
-                    "LTX-2.5 enhance_prompt requires a local prompt_enhancer_gemma_root."
-                )
+                raise FileNotFoundError("LTX-2.5 enhance_prompt requires a local prompt_enhancer_gemma_root.")
             command.extend(("--enhance-prompt", "--prompt-enhancer-gemma-root", str(self.prompt_enhancer_gemma_root)))
         generated_keyframes = int(request.get("num_generated_keyframes", 0))
         if generated_keyframes:
@@ -388,11 +385,7 @@ class LTX25DistilledRuntime:
         except Exception as exc:  # pragma: no cover - deployment/runtime dependent
             error = str(exc)
 
-        fresh_artifact = (
-            output.is_file()
-            and output.stat().st_size > 0
-            and output.stat().st_mtime >= started_at - 2.0
-        )
+        fresh_artifact = output.is_file() and output.stat().st_size > 0 and output.stat().st_mtime >= started_at - 2.0
         ok = returncode == 0 and fresh_artifact
         if returncode != 0 and error is None:
             error = f"LTX-2.5 official runner exited with code {returncode}."
@@ -416,7 +409,7 @@ __all__ = [
     "DEFAULT_CHECKPOINT_ROOT",
     "DEFAULT_COMPONENTS",
     "DEFAULT_SOURCE_ROOT",
+    "UPSTREAM_REVISION",
     "LTX25DistilledRuntime",
     "LTX25RuntimePlan",
-    "UPSTREAM_REVISION",
 ]

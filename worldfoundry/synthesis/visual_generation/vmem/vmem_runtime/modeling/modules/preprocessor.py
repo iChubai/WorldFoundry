@@ -13,7 +13,7 @@ from worldfoundry.synthesis.visual_generation.vmem.runtime_env import (
 )
 
 
-class Dust3rPipeline(object):
+class Dust3rPipeline:
     def __init__(
         self,
         device: str | torch.device = "cuda",
@@ -33,19 +33,14 @@ class Dust3rPipeline(object):
                 from dust3r.model import AsymmetricCroCo3DStereo  # type: ignore[import]
                 from dust3r.utils.image import load_images  # type: ignore[import]
         except ImportError:
-            raise ImportError(
-                "Missing in-tree DUSt3R package required by VMem. Expected it under "
-                f"{dust3r_parent}."
-            )
+            raise ImportError(f"Missing in-tree DUSt3R package required by VMem. Expected it under {dust3r_parent}.")  # noqa: B904 - Keeps the implicit exception context.
 
         self.device = torch.device(device)
         local_model = resolve_local_hf_model_path(
             model_path,
             required_files=("config.json", "model.safetensors"),
         )
-        self.model = AsymmetricCroCo3DStereo.from_pretrained(
-            str(local_model)
-        ).to(self.device)
+        self.model = AsymmetricCroCo3DStereo.from_pretrained(str(local_model)).to(self.device)
 
         self._GlobalAlignerMode = GlobalAlignerMode
         self._global_aligner = global_aligner
@@ -56,16 +51,14 @@ class Dust3rPipeline(object):
     def infer_cameras_and_points(
         self,
         img_paths: list[str],
-        Ks: list[list] = None,
-        c2ws: list[list] = None,
+        Ks: list[list] | None = None,
+        c2ws: list[list] | None = None,
         batch_size: int = 16,
         schedule: str = "cosine",
         lr: float = 0.01,
         niter: int = 500,
         min_conf_thr: int = 3,
-    ) -> tuple[
-        list[np.ndarray], np.ndarray, np.ndarray, list[np.ndarray], list[np.ndarray]
-    ]:
+    ) -> tuple[list[np.ndarray], np.ndarray, np.ndarray, list[np.ndarray], list[np.ndarray]]:
         num_img = len(img_paths)
         if num_img == 1:
             print("Only one image found, duplicating it to create a stereo pair.")
@@ -101,9 +94,7 @@ class Dust3rPipeline(object):
         if c2ws is not None:
             scene.preset_pose(c2ws)
 
-        _ = scene.compute_global_alignment(
-            init="msp", niter=niter, schedule=schedule, lr=lr
-        )
+        _ = scene.compute_global_alignment(init="msp", niter=niter, schedule=schedule, lr=lr)
 
         imgs = cast(list, scene.imgs)
         Ks = scene.get_intrinsics().detach().cpu().numpy().copy()
@@ -111,8 +102,8 @@ class Dust3rPipeline(object):
         pts3d = [x.detach().cpu().numpy() for x in scene.get_pts3d()]  # type: ignore
         if num_img > 1:
             masks = [x.detach().cpu().numpy() for x in scene.get_masks()]
-            points = [p[m] for p, m in zip(pts3d, masks)]
-            point_colors = [img[m] for img, m in zip(imgs, masks)]
+            points = [p[m] for p, m in zip(pts3d, masks, strict=False)]
+            point_colors = [img[m] for img, m in zip(imgs, masks, strict=False)]
         else:
             points = [p.reshape(-1, 3) for p in pts3d]
             point_colors = [img.reshape(-1, 3) for img in imgs]

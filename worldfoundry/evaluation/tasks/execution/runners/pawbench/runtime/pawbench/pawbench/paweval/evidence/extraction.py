@@ -52,9 +52,7 @@ def frame_indices_for_sampling(*, frame_count: int, native_fps: float, sampling:
     indices.extend([0, frame_count // 2, frame_count - 1])
     unique = sorted(_unique_indices(indices, frame_count))
     if sampling.max_frames is not None and len(unique) > sampling.max_frames:
-        positions = [
-            round(i * (len(unique) - 1) / max(sampling.max_frames - 1, 1)) for i in range(sampling.max_frames)
-        ]
+        positions = [round(i * (len(unique) - 1) / max(sampling.max_frames - 1, 1)) for i in range(sampling.max_frames)]
         unique = _unique_indices([unique[pos] for pos in positions], frame_count)
     return tuple(unique)
 

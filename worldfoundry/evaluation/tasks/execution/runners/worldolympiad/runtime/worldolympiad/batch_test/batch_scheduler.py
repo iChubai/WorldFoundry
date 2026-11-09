@@ -218,7 +218,7 @@ def run_item(
 def worker_loop(
     *,
     worker: WorkerSpec,
-    task_queue: "queue.Queue[dict[str, Any]]",
+    task_queue: queue.Queue[dict[str, Any]],
     result_lock: threading.Lock,
     results: list[dict[str, Any]],
     worldeval_root: Path,
@@ -350,7 +350,7 @@ def main() -> None:
         for index in range(worker_count)
     ]
 
-    task_queue: "queue.Queue[dict[str, Any]]" = queue.Queue()
+    task_queue: queue.Queue[dict[str, Any]] = queue.Queue()
     for item in items:
         task_queue.put(item)
 

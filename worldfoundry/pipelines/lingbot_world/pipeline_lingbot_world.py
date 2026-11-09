@@ -52,7 +52,6 @@ def _wmfactory_trajectory_from_interactions(
     interactions: list[str] | None,
     num_frames: int,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Wmfactory trajectory from interactions helper function."""
     keys: list[str] = []
     unknown: list[str] = []
     for raw_token in interactions or []:

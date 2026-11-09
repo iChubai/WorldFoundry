@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -138,7 +139,7 @@ def _hungarian_pairs(scores: np.ndarray) -> list[tuple[int, int]]:
     from scipy.optimize import linear_sum_assignment
 
     rows, columns = linear_sum_assignment(scores, maximize=True)
-    return [(int(row), int(column)) for row, column in zip(rows, columns)]
+    return [(int(row), int(column)) for row, column in zip(rows, columns, strict=False)]
 
 
 def source_anchors(
@@ -156,7 +157,7 @@ def source_anchors(
         dtype=np.float64,
     )
     pairs = _hungarian_pairs(scores)
-    by_target = {target_id: detection_id for target_id, detection_id in pairs}
+    by_target = dict(pairs)
     if len(by_target) != len(canonical_boxes):
         raise ManifestBuildError("source first-frame target assignment is incomplete")
     anchors: list[np.ndarray] = []
@@ -199,7 +200,7 @@ def generated_target_boxes(
         dtype=np.float64,
     )
     pairs = _hungarian_pairs(scores)
-    by_target = {target_id: detection_id for target_id, detection_id in pairs}
+    by_target = dict(pairs)
     if len(by_target) != len(anchors):
         raise ManifestBuildError("generated first-frame identity assignment is incomplete")
     boxes: list[list[float]] = []
@@ -328,7 +329,9 @@ def prepare_samples(
                     width=width,
                     height=height,
                 )
-                target_audit = [{**source, **generated} for source, generated in zip(source_audit, generated_audit)]
+                target_audit = [
+                    {**source, **generated} for source, generated in zip(source_audit, generated_audit, strict=False)
+                ]
             except ManifestBuildError as error:
                 # The reference gives the whole model/case/trajectory zero,
                 # retaining the canonical target count and explicit reason.

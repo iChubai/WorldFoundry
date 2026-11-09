@@ -6,8 +6,9 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -41,9 +42,7 @@ class VerseCrafterRuntime:
         self.repo_root = ensure_in_tree_runtime(self.bundled_repo_root(), package_file=__file__)
         hfd = hfd_root_path()
         checkpoints = checkpoint_root_path()
-        self.checkpoint_path = Path(
-            checkpoint_path or hfd / "TencentARC--VerseCrafter"
-        ).expanduser()
+        self.checkpoint_path = Path(checkpoint_path or hfd / "TencentARC--VerseCrafter").expanduser()
         self.base_model_path = Path(base_model_path or checkpoints / "Wan2.1-T2V-14B").expanduser()
         self.moge_model_path = Path(moge_model_path or hfd / "Ruicheng--moge-2-vitl-normal").expanduser()
         self.python_executable = str(python_executable or sys.executable)
@@ -62,7 +61,7 @@ class VerseCrafterRuntime:
         return Path(__file__).resolve().parent / "versecrafter_runtime"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "VerseCrafterRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> VerseCrafterRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     @staticmethod
@@ -123,8 +122,7 @@ class VerseCrafterRuntime:
             cwd=self.repo_root,
             env=process_env,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
         )
         log_path = log_dir / f"{name}.log"
@@ -190,10 +188,7 @@ class VerseCrafterRuntime:
             json.dumps(
                 {
                     "metadata": {"num_frames": int(num_frames), "num_objects": 0, "obj_id_to_color_idx": {}},
-                    "frames": [
-                        {"frame_index": index, "objects": []}
-                        for index in range(int(num_frames))
-                    ],
+                    "frames": [{"frame_index": index, "objects": []} for index in range(int(num_frames))],
                 },
                 indent=2,
             ),
@@ -264,9 +259,7 @@ class VerseCrafterRuntime:
             "--base_model_path",
             base,
             "--config_path",
-            resolve_data_path(
-                "models", "runtime", "configs", "versecrafter", "wan2.1", "wan_civitai.yaml"
-            ),
+            resolve_data_path("models", "runtime", "configs", "versecrafter", "wan2.1", "wan_civitai.yaml"),
             "--rendering_maps_path",
             render_dir,
             "--input_image_path",
@@ -327,9 +320,7 @@ class VerseCrafterRuntime:
         valid_background = np.mean(frames[0][..., 0] < 128)
         has_depth = np.any(frames[1][..., 0] > 2)
         if valid_background < 0.01 or not has_depth:
-            raise RuntimeError(
-                "VerseCrafter default trajectory rendered an empty background control map"
-            )
+            raise RuntimeError("VerseCrafter default trajectory rendered an empty background control map")
 
     @staticmethod
     def _write_default_trajectory(path: Path, num_frames: int) -> Path:

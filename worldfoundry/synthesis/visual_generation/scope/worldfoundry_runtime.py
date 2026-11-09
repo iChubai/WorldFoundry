@@ -4,8 +4,9 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core import jsonable
 from worldfoundry.core.io.paths import package_module_root as package_root
@@ -84,9 +85,7 @@ class SCOPERuntime:
         self.device = str(device)
         self.python_executable = str(python_executable or _registered_python_executable() or sys.executable)
         self.default_work_dir = (
-            Path(default_work_dir).expanduser()
-            if default_work_dir is not None
-            else _project_root() / "tmp" / "scope"
+            Path(default_work_dir).expanduser() if default_work_dir is not None else _project_root() / "tmp" / "scope"
         )
 
     @classmethod
@@ -97,7 +96,7 @@ class SCOPERuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "SCOPERuntime":
+    ) -> SCOPERuntime:
         """Create a lazy SCOPE runtime without importing torch or pandas."""
 
         del args, model_id
@@ -199,10 +198,7 @@ class SCOPERuntime:
                     devices = [value.strip() for value in visible.split(",") if value.strip()]
                     index = int(cuda_index)
                     if index >= len(devices):
-                        raise ValueError(
-                            f"SCOPE device {self.device!r} is outside "
-                            f"CUDA_VISIBLE_DEVICES={visible!r}"
-                        )
+                        raise ValueError(f"SCOPE device {self.device!r} is outside CUDA_VISIBLE_DEVICES={visible!r}")
                     selected = devices[index]
                 env["CUDA_VISIBLE_DEVICES"] = selected
                 env["SCOPE_DEVICE"] = "cuda"
@@ -250,7 +246,6 @@ class SCOPERuntime:
             str(int(seed)),
         ]
 
-
     def predict(
         self,
         prompt: str,
@@ -281,8 +276,7 @@ class SCOPERuntime:
             raise RuntimeError("SCOPE requires execute=True; request-plan artifacts are no longer emitted.")
         if not self.device.startswith("cuda"):
             raise RuntimeError(
-                "SCOPE execute=True requires a CUDA device because upstream inference uses CUDA; "
-                f"got {self.device!r}."
+                f"SCOPE execute=True requires a CUDA device because upstream inference uses CUDA; got {self.device!r}."
             )
 
         target = self._target_path(output_path)

@@ -21,7 +21,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -56,7 +56,7 @@ def load_json(path: str | Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def parse_interval_seconds(interval: str) -> Tuple[Optional[float], Optional[float]]:
+def parse_interval_seconds(interval: str) -> tuple[float | None, float | None]:
     cleaned = interval.strip().strip("[]()")
     if "," in cleaned:
         left, right = cleaned.split(",", 1)
@@ -67,7 +67,7 @@ def parse_interval_seconds(interval: str) -> Tuple[Optional[float], Optional[flo
     return parse_timestamp(left), parse_timestamp(right)
 
 
-def parse_timestamp(value: str) -> Optional[float]:
+def parse_timestamp(value: str) -> float | None:
     text = value.strip()
     if not text:
         return None
@@ -84,7 +84,7 @@ def parse_timestamp(value: str) -> Optional[float]:
     return None
 
 
-def normalize_prompts(prompt_data: Any) -> List[Dict[str, Any]]:
+def normalize_prompts(prompt_data: Any) -> list[dict[str, Any]]:
     if isinstance(prompt_data, dict):
         if "chunks" in prompt_data:
             raw_items = prompt_data["chunks"]
@@ -97,7 +97,7 @@ def normalize_prompts(prompt_data: Any) -> List[Dict[str, Any]]:
     else:
         raise ValueError("prompt-json must be a JSON list or object.")
 
-    prompts: List[Dict[str, Any]] = []
+    prompts: list[dict[str, Any]] = []
     for index, item in enumerate(raw_items):
         if isinstance(item, str):
             prompts.append({"chunk_index": index, "caption": item, "action": None, "interval": None})
@@ -117,13 +117,13 @@ def normalize_prompts(prompt_data: Any) -> List[Dict[str, Any]]:
     return prompts
 
 
-def normalize_chunks(chunk_data: Any, prompts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def normalize_chunks(chunk_data: Any, prompts: list[dict[str, Any]]) -> list[dict[str, Any]]:
     raw_chunks = chunk_data.get("chunks", chunk_data) if isinstance(chunk_data, dict) else chunk_data
     if not isinstance(raw_chunks, list):
         raise ValueError("chunk-json must contain a list or a top-level 'chunks' list.")
 
     prompt_by_index = {int(item["chunk_index"]): item for item in prompts}
-    normalized: List[Dict[str, Any]] = []
+    normalized: list[dict[str, Any]] = []
     for fallback_index, chunk in enumerate(raw_chunks):
         if not isinstance(chunk, dict):
             raise ValueError("Each chunk entry must be a JSON object.")
@@ -157,7 +157,7 @@ def normalize_chunks(chunk_data: Any, prompts: List[Dict[str, Any]]) -> List[Dic
     return sorted(normalized, key=lambda item: item["chunk_index"])
 
 
-def get_video_metadata(video_path: str | Path) -> Tuple[float, int, float]:
+def get_video_metadata(video_path: str | Path) -> tuple[float, int, float]:
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
         raise RuntimeError(f"Unable to open video: {video_path}")
@@ -175,7 +175,7 @@ def sample_chunk_frames(
     start_sec: float,
     end_sec: float,
     frames_per_chunk: int,
-) -> List[Image.Image]:
+) -> list[Image.Image]:
     if frames_per_chunk <= 0:
         return []
 
@@ -187,14 +187,13 @@ def sample_chunk_frames(
         sample_times = [(start_sec + end_sec) / 2.0]
     else:
         sample_times = [
-            start_sec + (end_sec - start_sec) * idx / float(frames_per_chunk - 1)
-            for idx in range(frames_per_chunk)
+            start_sec + (end_sec - start_sec) * idx / float(frames_per_chunk - 1) for idx in range(frames_per_chunk)
         ]
 
-    images: List[Image.Image] = []
+    images: list[Image.Image] = []
     for sample_time in sample_times:
         if fps > 0:
-            frame_index = max(0, int(round(sample_time * fps)))
+            frame_index = max(0, round(sample_time * fps))
             if total_frames > 0:
                 frame_index = min(frame_index, max(0, total_frames - 1))
             capture.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
@@ -214,9 +213,9 @@ def score_chunk(
     preprocess,
     clip_module,
     device: torch.device,
-    images: List[Image.Image],
+    images: list[Image.Image],
     prompt: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     if not images:
         return {"score": None, "frame_scores": [], "num_frames": 0}
     if not prompt.strip():
@@ -248,7 +247,7 @@ def evaluate_clip_semantic_adherence(
     device: str | None = None,
     frames_per_chunk: int = 8,
     download_root: str | None = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     clip_module = load_clip_package()
     resolved_device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
     resolved_download_root = download_root or os.getenv("CLIP_DOWNLOAD_ROOT") or "/tmp/clip_cache"
@@ -267,7 +266,7 @@ def evaluate_clip_semantic_adherence(
     if not capture.isOpened():
         raise RuntimeError(f"Unable to open video: {gen_video}")
 
-    chunk_results: List[Dict[str, Any]] = []
+    chunk_results: list[dict[str, Any]] = []
     weighted_sum = 0.0
     weighted_count = 0
 

@@ -7,8 +7,6 @@ Standalone thermotics prompts that are not called by `physical/` are excluded.
 from __future__ import annotations
 
 import json
-from typing import Dict, Tuple
-
 
 ACTIVE_ENTRYPOINTS = [
     "physical/vlm_judge.py",
@@ -24,7 +22,7 @@ EXCLUDED_LOCAL_PROMPT_SOURCES = [
     "thermotics/vlm_analysis.py:create_vlm_prompt",
 ]
 
-PHASE_TRANSITION_CONTEXTS: Dict[str, Dict[str, str]] = {
+PHASE_TRANSITION_CONTEXTS: dict[str, dict[str, str]] = {
     "melting": {
         "name": "Melting (Solid -> Liquid)",
         "description": "A solid substance should gradually transition to liquid when heated above its melting point. Liquid should form and increase in volume as the solid decreases.",
@@ -68,8 +66,8 @@ RELEVANCE_SYSTEM_PROMPT_TEMPLATE = (
     "Decide if the described video contains enough evidence to evaluate this phase transition, even if the transition is subtle, partial, implied by context, or only visible through secondary cues. "
     "Relevant thermal cues include heat sources, flames, glowing objects, steam, vapor, smoke-like gas, fog, condensation droplets, frost/ice/crystals, bubbling, boiling, evaporation, wet/dry surface changes, melting/softening, shrinking solids, growing liquid pools, disappearing liquid, or temperature-driven state changes. "
     "Use related=true when the phase transition can be judged from visible material state over time or from clear prompt/video evidence; use related=false for purely mechanical motion with no heat, cold, gas, liquid, ice, vapor, flame, or state-change cue. "
-    "Respond with strict JSON: {\"related\": true|false, \"confidence\": 0-1, "
-    "\"reason\": \"short\"}."
+    'Respond with strict JSON: {"related": true|false, "confidence": 0-1, '
+    '"reason": "short"}.'
 )
 
 RELEVANCE_USER_PROMPT_TEMPLATE = """Video description: {video_prompt}
@@ -87,8 +85,8 @@ COMPLIANCE_SYSTEM_PROMPT_TEMPLATE = (
     "Common violations: {violations}\n"
     "Judge both direct transitions and secondary visual evidence such as steam, fog, droplets, bubbles, wet/dry changes, frost, crystals, softening, shrinking, liquid pooling, or disappearance. "
     "Compare temporal order and continuity against the reference: state changes should be gradual unless the reference shows a sudden event, and material identity should remain consistent instead of morphing into unrelated objects. "
-    "Return strict JSON: {{\"compliant\": true|false, \"confidence\": 0-1, "
-    "\"explanation\": \"3-5 sentences\", \"observations\": \"specific thermal/state-change evidence\"}}."
+    'Return strict JSON: {{"compliant": true|false, "confidence": 0-1, '
+    '"explanation": "3-5 sentences", "observations": "specific thermal/state-change evidence"}}.'
 )
 
 COMPLIANCE_USER_PROMPT_TEMPLATE = """You will see two videos:
@@ -99,7 +97,7 @@ Assess whether the generated video follows the phase transition correctly and is
 Mention concrete evidence about material state, heat/cold cues, visible vapor/liquid/solid, timing, and any artifacts."""
 
 
-def get_prompt_engineering_record() -> Dict[str, object]:
+def get_prompt_engineering_record() -> dict[str, object]:
     return {
         "active_entrypoint": ACTIVE_ENTRYPOINT,
         "active_entrypoints": ACTIVE_ENTRYPOINTS,
@@ -117,13 +115,13 @@ def get_prompt_engineering_record() -> Dict[str, object]:
     }
 
 
-def get_phase_transition_context(question_id: str) -> Dict[str, str]:
+def get_phase_transition_context(question_id: str) -> dict[str, str]:
     if question_id not in PHASE_TRANSITION_CONTEXTS:
         raise ValueError(f"Unknown thermotics question id: {question_id}")
     return PHASE_TRANSITION_CONTEXTS[question_id]
 
 
-def build_relevance_prompt(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def build_relevance_prompt(question_id: str, video_prompt: str) -> tuple[str, str]:
     context = get_phase_transition_context(question_id)
     user_prompt = RELEVANCE_USER_PROMPT_TEMPLATE.format(
         video_prompt=video_prompt,
@@ -133,7 +131,7 @@ def build_relevance_prompt(question_id: str, video_prompt: str) -> Tuple[str, st
     return RELEVANCE_SYSTEM_PROMPT_TEMPLATE, user_prompt
 
 
-def build_compliance_prompt(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def build_compliance_prompt(question_id: str, video_prompt: str) -> tuple[str, str]:
     context = get_phase_transition_context(question_id)
     system_prompt = COMPLIANCE_SYSTEM_PROMPT_TEMPLATE.format(
         name=context["name"],

@@ -19,7 +19,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEPTH_ANYTHING_3_SRC = REPO_ROOT / "Depth-Anything-3" / "src"
 
@@ -41,10 +40,7 @@ def sample_indices(total_frames: int, max_frames: int | None) -> list[int]:
         return list(range(total_frames))
     if max_frames == 1:
         return [0]
-    return [
-        int(round(i * (total_frames - 1) / (max_frames - 1)))
-        for i in range(max_frames)
-    ]
+    return [round(i * (total_frames - 1) / (max_frames - 1)) for i in range(max_frames)]
 
 
 def load_video_frames(video_path: str | os.PathLike[str], max_frames: int | None) -> tuple[list[np.ndarray], list[int]]:
@@ -79,19 +75,11 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
     model_name = os.fspath(model_name)
     candidate = Path(model_name).expanduser()
 
-    looks_like_path = (
-        candidate.is_absolute()
-        or model_name.startswith(".")
-        or model_name.startswith("~")
-        or candidate.exists()
-    )
+    looks_like_path = candidate.is_absolute() or model_name.startswith((".", "~")) or candidate.exists()
     if not looks_like_path:
         return model_name
 
-    if not candidate.is_absolute():
-        candidate = (Path.cwd() / candidate).resolve()
-    else:
-        candidate = candidate.resolve()
+    candidate = (Path.cwd() / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
 
     if not candidate.exists():
         raise FileNotFoundError(f"Local DA3 model path does not exist: {candidate}")
@@ -101,9 +89,7 @@ def resolve_model_source(model_name: str | os.PathLike[str]) -> str:
     required_files = ("config.json", "model.safetensors")
     missing_files = [name for name in required_files if not (candidate / name).exists()]
     if missing_files:
-        raise FileNotFoundError(
-            f"Local DA3 model directory is missing required files {missing_files}: {candidate}"
-        )
+        raise FileNotFoundError(f"Local DA3 model directory is missing required files {missing_files}: {candidate}")
 
     return str(candidate)
 
@@ -161,10 +147,7 @@ def extract_camera_trajectory(
     extrinsics = as_homogeneous(np.asarray(prediction.extrinsics, dtype=np.float32))
     poses_c2w = affine_inverse_np(extrinsics)
 
-    trajectory = {
-        f"frame{frame_idx}": pose.tolist()
-        for frame_idx, pose in zip(frame_indices, poses_c2w)
-    }
+    trajectory = {f"frame{frame_idx}": pose.tolist() for frame_idx, pose in zip(frame_indices, poses_c2w, strict=False)}
 
     resolved_output_path.write_text(
         json.dumps(trajectory, ensure_ascii=False, indent=2) + "\n",

@@ -1,23 +1,19 @@
 import os
-import json
-import logging
-import numpy as np
-from PIL import Image
+
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from vbench.utils import load_video, load_dimension_info, clip_transform
-from tqdm import tqdm
+from PIL import Image
+from vbench.utils import clip_transform, load_video
 
 
 def background_consistency(clip_model, preprocess, video_path, device, read_frame=False):
-    sim = 0.0
+    _sim = 0.0
     cnt = 0
-    video_results = dict()
+    video_results = {}
     image_transform = clip_transform(224)
     video_sim = 0.0
     if read_frame:
-        video_path = video_path[:-4].replace('videos', 'frames').replace(' ', '_')
+        video_path = video_path[:-4].replace("videos", "frames").replace(" ", "_")
         tmp_paths = [os.path.join(video_path, f) for f in sorted(os.listdir(video_path))]
         images = []
         for tmp_path in tmp_paths:
@@ -29,6 +25,7 @@ def background_consistency(clip_model, preprocess, video_path, device, read_fram
     images = images.to(device)
     image_features = clip_model.encode_image(images)
     image_features = F.normalize(image_features, dim=-1, p=2)
+    former_image_feature: torch.Tensor | None = None
     for i in range(len(image_features)):
         image_feature = image_features[i].unsqueeze(0)
         if i == 0:

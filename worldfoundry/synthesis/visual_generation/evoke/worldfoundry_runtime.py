@@ -5,9 +5,10 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
@@ -152,7 +153,7 @@ class EvokeRuntime:
         return Path(__file__).resolve().parent / "evoke_runtime"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "EvokeRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> EvokeRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     def _cuda_visible_devices(self) -> str:
@@ -220,7 +221,10 @@ class EvokeRuntime:
         values = [value for value in (trajectory_npz, pose_path, camera_trajectory) if value is not None]
         if not values:
             return None
-        resolved = [require_path(_as_single_path(value, "camera trajectory"), "Evoke camera trajectory", kind="file") for value in values]
+        resolved = [
+            require_path(_as_single_path(value, "camera trajectory"), "Evoke camera trajectory", kind="file")
+            for value in values
+        ]
         if any(path != resolved[0] for path in resolved[1:]):
             raise ValueError("Evoke camera trajectory aliases refer to different files")
         return resolved[0]
@@ -546,8 +550,8 @@ class EvokeRuntime:
 __all__ = [
     "CHECKPOINT_REPO",
     "CHECKPOINT_REVISION",
-    "EvokeRuntime",
     "SOURCE_REVISION",
     "VIGEO_REPO",
     "VIGEO_REVISION",
+    "EvokeRuntime",
 ]

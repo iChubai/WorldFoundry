@@ -52,9 +52,7 @@ class FlowmatchingActionHead(nn.Module):
         super().__init__()
         self.hidden_size = hidden_size
         if int(config.hidden_size) != hidden_size:
-            raise ValueError(
-                f"Mem-0 action hidden_size {config.hidden_size} does not match backbone {hidden_size}"
-            )
+            raise ValueError(f"Mem-0 action hidden_size {config.hidden_size} does not match backbone {hidden_size}")
         action_model_config = {
             "input_embedding_dim": int(config.input_embedding_dim),
             "attention_head_dim": int(config.attention_head_dim),
@@ -124,9 +122,7 @@ class FlowmatchingActionHead(nn.Module):
                 position_ids = torch.arange(action_features.shape[1], device=device)
                 action_features = action_features + self.position_embedding(position_ids).unsqueeze(0)
             state_action_features = (
-                torch.cat((state_features, action_features), dim=1)
-                if state_features is not None
-                else action_features
+                torch.cat((state_features, action_features), dim=1) if state_features is not None else action_features
             )
             model_output = self.model(
                 hidden_states=state_action_features,

@@ -15,21 +15,11 @@ def _parse_args():
         default=128,
         help="Batch size for wavelet packet transform.",
     )
-    parser.add_argument(
-        "--num-processes", type=int, default=None, help="Number of multiprocess."
-    )
-    parser.add_argument(
-        "--save-packets", action="store_true", help="Save the packets as npz file."
-    )
-    parser.add_argument(
-        "--wavelet", type=str, default="Haar", help="Choice of wavelet."
-    )
-    parser.add_argument(
-        "--max_level", type=int, default=4, help="wavelet decomposition level"
-    )
-    parser.add_argument(
-        "--log_scale", action="store_true", help="Use log scaling for wavelets."
-    )
+    parser.add_argument("--num-processes", type=int, default=None, help="Number of multiprocess.")
+    parser.add_argument("--save-packets", action="store_true", help="Save the packets as npz file.")
+    parser.add_argument("--wavelet", type=str, default="Haar", help="Choice of wavelet.")
+    parser.add_argument("--max_level", type=int, default=4, help="wavelet decomposition level")
+    parser.add_argument("--log_scale", action="store_true", help="Use log scaling for wavelets.")
     parser.add_argument(
         "--resize",
         type=int,

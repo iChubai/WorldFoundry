@@ -12,7 +12,6 @@ from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key
 from wrbench.trajectory import CameraTrajectory
 
-
 _GAMECRAFT_INPUT_POSE_HEADER = "# gamecraft_camera_ctrl_v1"
 _WORLDPLAY_OFFICIAL_FX_NORM = 969.6969696969696 / (960.0 * 2.0)
 _WORLDPLAY_OFFICIAL_FY_NORM = 969.6969696969696 / (540.0 * 2.0)
@@ -56,7 +55,7 @@ def _write_gamecraft_input_pose_txt(path: str | Path, trajectory: CameraTrajecto
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
     rows = [_GAMECRAFT_INPUT_POSE_HEADER]
-    for i, (w2c, intr) in enumerate(zip(trajectory.to_w2c(), trajectory.intrinsics)):
+    for i, (w2c, intr) in enumerate(zip(trajectory.to_w2c(), trajectory.intrinsics, strict=False)):
         row = [
             float(i),
             float(intr[0, 0]),
@@ -101,7 +100,17 @@ def _gamecraft_model_input_trajectory(target: CameraTrajectory) -> tuple[CameraT
 class HunyuanAdapter:
     name = "hunyuan"
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         key = canonical_model_key(model_name)
         if key == "hunyuan-game-craft":
             target, amp = model_target_trajectory(trajectory, key, num_frames)
@@ -111,7 +120,9 @@ class HunyuanAdapter:
                 fy_norm=_GAMECRAFT_OFFICIAL_FY_NORM,
             )
             model_input, yaw_sign_flipped = _gamecraft_model_input_trajectory(target)
-            pose_txt = _write_gamecraft_input_pose_txt(Path(work_dir or ".") / "hunyuan_game_craft_input_pose.txt", model_input)
+            pose_txt = _write_gamecraft_input_pose_txt(
+                Path(work_dir or ".") / "hunyuan_game_craft_input_pose.txt", model_input
+            )
             target_yaw_peak = _relative_yaw_peak_deg(target.to_c2w())
             input_yaw_peak = _relative_yaw_peak_deg(model_input.to_c2w())
             payload_type = "hunyuan_gamecraft_input_pose_txt"
@@ -161,14 +172,13 @@ class HunyuanAdapter:
             payload={
                 "poses": {
                     str(i): {"extrinsic": c.tolist(), "K": k.tolist()}
-                    for i, (c, k) in enumerate(zip(target.to_c2w(), target.intrinsics))
+                    for i, (c, k) in enumerate(zip(target.to_c2w(), target.intrinsics, strict=False))
                 }
             },
             target_trajectory=target,
             official_camera_entrypoint="pose dict/json",
             coordinate_notes=(
-                "OpenCV C2W extrinsics plus official normalized K in WorldPlay "
-                "frame-indexed pose dict format"
+                "OpenCV C2W extrinsics plus official normalized K in WorldPlay frame-indexed pose dict format"
             ),
             calibration_status=amp.calibration_status,
             metadata=adapter_taxonomy_metadata(

@@ -1,10 +1,10 @@
 import json
+
 import cv2
 import numpy as np
-from typing import Dict
 
 
-def load_intrinsics(path: str) -> Dict[str, float]:
+def load_intrinsics(path: str) -> dict[str, float]:
     """
     Loads intrinsics.npy with shape (N, 4) where each row is [fx, fy, cx, cy].
     Returns a dict with keys fx, fy, cx, cy from the first row.
@@ -47,9 +47,7 @@ def extract_gt_frame_at(gt_video_path: str, frame_idx: int) -> np.ndarray:
     ret, frame = cap.read()
     cap.release()
     if not ret:
-        raise RuntimeError(
-            f"Cannot read frame {frame_idx} from {gt_video_path}"
-        )
+        raise RuntimeError(f"Cannot read frame {frame_idx} from {gt_video_path}")
     return frame
 
 
@@ -77,7 +75,7 @@ def extract_gt_frames_batch(gt_video_path: str, indices: list) -> list:
     return frames
 
 
-def load_intrinsics_json(path: str) -> Dict[str, float]:
+def load_intrinsics_json(path: str) -> dict[str, float]:
     """
     Loads intrinsics from a Real GT JSON file.
     Expected format: {"camera": {"fx": ..., "fy": ..., "cx": ..., "cy": ..., ...}}
@@ -85,7 +83,7 @@ def load_intrinsics_json(path: str) -> Dict[str, float]:
     """
     with open(path) as f:
         data = json.load(f)
-    cam = data.get("camera", data)   # handle both nested and flat formats
+    cam = data.get("camera", data)  # handle both nested and flat formats
     return {
         "fx": float(cam["fx"]),
         "fy": float(cam["fy"]),

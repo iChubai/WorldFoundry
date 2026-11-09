@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright 2023 Optuna, Hugging Face
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,26 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Logging utilities."""
+"""Logging utilities."""
 
 import logging
 import os
 import sys
 import threading
-from logging import CRITICAL  # NOQA
-from logging import DEBUG  # NOQA
-from logging import ERROR  # NOQA
-from logging import FATAL  # NOQA
-from logging import INFO  # NOQA
-from logging import NOTSET  # NOQA
-from logging import WARN  # NOQA
-from logging import WARNING  # NOQA
-from typing import Optional
+from logging import (
+    CRITICAL,  # NOQA
+    DEBUG,
+    ERROR,
+    FATAL,  # NOQA
+    INFO,
+    NOTSET,  # NOQA
+    WARN,  # NOQA
+    WARNING,
+)
 
 from tqdm import auto as tqdm_lib
 
 _lock = threading.Lock()
-_default_handler: Optional[logging.Handler] = None
+_default_handler: logging.Handler | None = None
 
 log_levels = {
     "debug": logging.DEBUG,
@@ -51,13 +51,13 @@ def _get_default_logging_level():
     If muse_VERBOSITY env var is set to one of the valid choices return that as the new default level. If it is
     not - fall back to `_default_log_level`
     """
-    env_level_str = os.getenv("muse_VERBOSITY", None)
+    env_level_str = os.getenv("muse_VERBOSITY", None)  # noqa: SIM112 - Environment variable name used by the upstream code.
     if env_level_str:
         if env_level_str in log_levels:
             return log_levels[env_level_str]
         else:
             logging.getLogger().warning(
-                f"Unknown option muse_VERBOSITY={env_level_str}, has to be one of: { ', '.join(log_levels.keys()) }"
+                f"Unknown option muse_VERBOSITY={env_level_str}, has to be one of: {', '.join(log_levels.keys())}"
             )
     return _default_log_level
 
@@ -104,7 +104,7 @@ def get_log_levels_dict():
     return log_levels
 
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
+def get_logger(name: str | None = None) -> logging.Logger:
     """
     Return a logger with the specified name.
 
@@ -267,7 +267,7 @@ def warning_advice(self, *args, **kwargs):
     This method is identical to `logger.warning()`, but if env var muse_NO_ADVISORY_WARNINGS=1 is set, this
     warning will not be printed
     """
-    no_advisory_warnings = os.getenv("muse_NO_ADVISORY_WARNINGS", False)
+    no_advisory_warnings = os.getenv("muse_NO_ADVISORY_WARNINGS", False)  # noqa: SIM112 - Environment variable name used by the upstream code.
     if no_advisory_warnings:
         return
     self.warning(*args, **kwargs)

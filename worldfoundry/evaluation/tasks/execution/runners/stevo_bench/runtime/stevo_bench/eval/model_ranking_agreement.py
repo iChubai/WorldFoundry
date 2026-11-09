@@ -24,21 +24,19 @@ import argparse
 import json
 from itertools import combinations
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-
-METRICS = ["state_evol", "physical_inaccuracy", "task_success",
-           "occlusion_done", "trigger_applied", "control_success"]
+METRICS = ["state_evol", "physical_inaccuracy", "task_success", "occlusion_done", "trigger_applied", "control_success"]
 
 
 # ---------------------------------------------------------------------------
 # Value extraction
 # ---------------------------------------------------------------------------
 
-def _load_tasks(run_dir: Path) -> Dict[str, dict]:
+
+def _load_tasks(run_dir: Path) -> dict[str, dict]:
     summary_path = run_dir / "summary.json"
     if not summary_path.exists():
         raise FileNotFoundError(f"summary.json not found: {summary_path}")
@@ -46,18 +44,14 @@ def _load_tasks(run_dir: Path) -> Dict[str, dict]:
     return {t["task_id"]: t for t in tasks if "task_id" in t}
 
 
-def _llm_value(task: dict, metric: str) -> Optional[int]:
+def _llm_value(task: dict, metric: str) -> int | None:
     val = task.get(metric)
     return int(bool(val)) if val is not None else None
 
 
-def _human_aggregate(task: dict, metric: str) -> Optional[int]:
+def _human_aggregate(task: dict, metric: str) -> int | None:
     """Strict majority vote. Returns None on tie or no data."""
-    votes = [
-        int(bool(ann[metric]))
-        for ann in task.get("annotations", {}).values()
-        if metric in ann
-    ]
+    votes = [int(bool(ann[metric])) for ann in task.get("annotations", {}).values() if metric in ann]
     if not votes:
         return None
     s, n = sum(votes), len(votes)
@@ -66,20 +60,17 @@ def _human_aggregate(task: dict, metric: str) -> Optional[int]:
     return int(s * 2 > n)
 
 
-def _human_individual(task: dict, metric: str) -> Dict[str, int]:
+def _human_individual(task: dict, metric: str) -> dict[str, int]:
     """Return {annotator_name: 0/1} for each annotator that has this metric."""
-    return {
-        name: int(bool(ann[metric]))
-        for name, ann in task.get("annotations", {}).items()
-        if metric in ann
-    }
+    return {name: int(bool(ann[metric])) for name, ann in task.get("annotations", {}).items() if metric in ann}
 
 
 # ---------------------------------------------------------------------------
 # Ranking comparison helpers
 # ---------------------------------------------------------------------------
 
-def _compare(val_a: Optional[int], val_b: Optional[int]) -> str:
+
+def _compare(val_a: int | None, val_b: int | None) -> str:
     """Which model did better? Returns 'A_wins', 'B_wins', 'tie', or 'unknown'."""
     if val_a is None or val_b is None:
         return "unknown"
@@ -88,7 +79,7 @@ def _compare(val_a: Optional[int], val_b: Optional[int]) -> str:
     return "A_wins" if val_a > val_b else "B_wins"
 
 
-def _ranking_score(gt: str, pred: str) -> Optional[float]:
+def _ranking_score(gt: str, pred: str) -> float | None:
     """Agreement score between two ranking judgements.
     Returns None if either is unknown (task excluded from average).
     """
@@ -105,29 +96,27 @@ def _ranking_score(gt: str, pred: str) -> Optional[float]:
 # Main computation
 # ---------------------------------------------------------------------------
 
+
 def compute_model_ranking_agreement(
-    run_dirs: List[Path],
-) -> Tuple[Dict[str, float], Dict[str, float]]:
+    run_dirs: list[Path],
+) -> tuple[dict[str, float], dict[str, float]]:
     """
     Returns:
         llm_vs_human[metric]   — weighted ranking agreement, LLM vs human aggregate
         human_vs_human[metric] — weighted ranking agreement, pairs of human annotators
     """
-    run_tasks: List[Tuple[str, Dict[str, dict]]] = [
-        (rd.name, _load_tasks(rd)) for rd in run_dirs
-    ]
+    run_tasks: list[tuple[str, dict[str, dict]]] = [(rd.name, _load_tasks(rd)) for rd in run_dirs]
 
-    llm_scores:   Dict[str, List[float]] = {m: [] for m in METRICS}
-    human_scores: Dict[str, List[float]] = {m: [] for m in METRICS}
+    llm_scores: dict[str, list[float]] = {m: [] for m in METRICS}
+    human_scores: dict[str, list[float]] = {m: [] for m in METRICS}
 
-    for (name_a, tasks_a), (name_b, tasks_b) in combinations(run_tasks, 2):
+    for (_name_a, tasks_a), (_name_b, tasks_b) in combinations(run_tasks, 2):
         shared_ids = sorted(set(tasks_a) & set(tasks_b))
         for task_id in shared_ids:
             ta, tb = tasks_a[task_id], tasks_b[task_id]
             for metric in METRICS:
-
                 # ── LLM vs human_aggregate ────────────────────────────────────
-                llm_cmp  = _compare(_llm_value(ta, metric),       _llm_value(tb, metric))
+                llm_cmp = _compare(_llm_value(ta, metric), _llm_value(tb, metric))
                 hagg_cmp = _compare(_human_aggregate(ta, metric), _human_aggregate(tb, metric))
                 score = _ranking_score(hagg_cmp, llm_cmp)
                 if score is not None:
@@ -147,11 +136,11 @@ def compute_model_ranking_agreement(
                     if s is not None:
                         human_scores[metric].append(s)
 
-    def _mean(vals: List[float]) -> float:
+    def _mean(vals: list[float]) -> float:
         return round(float(np.nanmean(vals)), 3) if vals else float("nan")
 
     return (
-        {m: _mean(llm_scores[m])   for m in METRICS},
+        {m: _mean(llm_scores[m]) for m in METRICS},
         {m: _mean(human_scores[m]) for m in METRICS},
     )
 
@@ -160,6 +149,7 @@ def compute_model_ranking_agreement(
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Pairwise model-ranking agreement across run directories.",
@@ -167,7 +157,9 @@ def main() -> None:
         epilog=__doc__,
     )
     parser.add_argument(
-        "run_dirs", nargs="+", type=Path,
+        "run_dirs",
+        nargs="+",
+        type=Path,
         help="Two or more eval run directories each containing summary.json.",
     )
     args = parser.parse_args()
@@ -182,16 +174,14 @@ def main() -> None:
 
     llm_vs_human, human_vs_human = compute_model_ranking_agreement(run_dirs)
 
-    df = pd.DataFrame(
-        {"llm_vs_human": llm_vs_human, "human_vs_human": human_vs_human}
-    ).T[METRICS]
+    df = pd.DataFrame({"llm_vs_human": llm_vs_human, "human_vs_human": human_vs_human}).T[METRICS]
 
     def _fmt(val):
         return f"{val:.3f}" if isinstance(val, float) and not np.isnan(val) else "  nan"
 
     print(f"Runs ({len(run_dirs)}): " + ", ".join(d.name for d in run_dirs))
     print()
-    print(df.to_string(formatters={m: _fmt for m in df.columns}))
+    print(df.to_string(formatters=dict.fromkeys(df.columns, _fmt)))
     print()
     print("Score: full agreement=1.0 | one-side tie=0.5 | reversal=0.0")
 

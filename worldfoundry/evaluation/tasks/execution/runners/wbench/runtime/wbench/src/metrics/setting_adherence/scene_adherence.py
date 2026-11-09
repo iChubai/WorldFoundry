@@ -12,11 +12,12 @@ Requires:
 - Split environment prompt data (visible_part + offscreen_part per case)
 - VLM API endpoint (OpenAI-compatible)
 """
+
 from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -55,14 +56,14 @@ Answer in JSON format ONLY. Each reason must be within 20 words.
 
 
 def evaluate_case(
-    frames: List[Image.Image] = None,
+    frames: list[Image.Image] | None = None,
     visible_part: str = "",
     offscreen_part: str = "",
     style: str = "realistic",
-    vlm_client: Optional[VLMClient] = None,
-    video_url: str = None,
+    vlm_client: VLMClient | None = None,
+    video_url: str | None = None,
     **vlm_kwargs,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Evaluate scene adherence for a single case.
 
     Args:
@@ -88,7 +89,7 @@ def evaluate_case(
     )
 
     last_error = None
-    for attempt in range(3):
+    for _attempt in range(3):
         try:
             raw_response = client.ask(prompt, frames, video_url=video_url)
             parsed = _parse_json_response(raw_response)
@@ -115,13 +116,14 @@ def evaluate_case(
     return {"score": None, "details": None, "params": {"method": "vlm"}, "error": str(last_error)}
 
 
-def _parse_json_response(raw: str) -> Dict:
+def _parse_json_response(raw: str) -> dict:
     """Parse JSON from VLM response, handling markdown code blocks, extra text, and trailing commas."""
     import re
+
     raw = raw.strip()
     if raw.startswith("```"):
         lines = raw.split("\n")
-        lines = [l for l in lines if not l.strip().startswith("```")]
+        lines = [line for line in lines if not line.strip().startswith("```")]
         raw = "\n".join(lines)
     # Try direct parse first
     raw = re.sub(r",\s*}", "}", raw)
@@ -151,10 +153,10 @@ def _parse_json_response(raw: str) -> Dict:
 def build_case_record(
     case_id: str,
     video_path: str,
-    maintenance_score: Optional[float] = None,
-    offscreen_score: Optional[float] = None,
-    error: Optional[str] = None,
-) -> Dict[str, Any]:
+    maintenance_score: float | None = None,
+    offscreen_score: float | None = None,
+    error: str | None = None,
+) -> dict[str, Any]:
     if error is None and maintenance_score is not None and offscreen_score is not None:
         score = round((maintenance_score / 5.0 + offscreen_score) / 2.0, 4)
     else:
@@ -172,15 +174,21 @@ def build_case_record(
     }
 
 
-def summarize_model_results(case_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarize_model_results(case_records: list[dict[str, Any]]) -> dict[str, Any]:
     valid = [r for r in case_records if r.get("score") is not None]
     if not valid:
         return {"score": 0.0, "n_cases": 0}
     scores = [r["score"] for r in valid]
-    maintenances = [r["details"]["maintenance_score"] for r in valid
-                    if r.get("details") and r["details"].get("maintenance_score") is not None]
-    offscreens = [r["details"]["offscreen_score"] for r in valid
-                  if r.get("details") and r["details"].get("offscreen_score") is not None]
+    maintenances = [
+        r["details"]["maintenance_score"]
+        for r in valid
+        if r.get("details") and r["details"].get("maintenance_score") is not None
+    ]
+    offscreens = [
+        r["details"]["offscreen_score"]
+        for r in valid
+        if r.get("details") and r["details"].get("offscreen_score") is not None
+    ]
     return {
         "score": round(float(np.mean(scores)), 4),
         "maintenance_mean": round(float(np.mean(maintenances)), 2) if maintenances else None,

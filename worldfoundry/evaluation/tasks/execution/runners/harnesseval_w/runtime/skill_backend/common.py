@@ -7,7 +7,7 @@ import os
 import threading
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import ExitStack
+from contextlib import ExitStack, suppress
 from numbers import Real
 from pathlib import Path
 from typing import Any
@@ -25,12 +25,10 @@ def _configure_outer_cpu_parallelism() -> None:
 
     cv2.setNumThreads(1)
     torch.set_num_threads(1)
-    try:
+    # PyTorch only permits changing this before the first inter-op task.
+    # A second backend in the same process can safely reuse the first value.
+    with suppress(RuntimeError):
         torch.set_num_interop_threads(1)
-    except RuntimeError:
-        # PyTorch only permits changing this before the first inter-op task.
-        # A second backend in the same process can safely reuse the first value.
-        pass
 
 
 def _decode_frames(video: Path) -> tuple[list[Any], float]:
@@ -53,9 +51,7 @@ def _decode_frames(video: Path) -> tuple[list[Any], float]:
     return frames, source_fps
 
 
-def _sample_frames(
-    frames: Sequence[Any], source_fps: float, sampling: Mapping[str, float | int]
-) -> list[Any]:
+def _sample_frames(frames: Sequence[Any], source_fps: float, sampling: Mapping[str, float | int]) -> list[Any]:
     if "fps" in sampling:
         target_fps = float(sampling["fps"])
         if target_fps <= 0:
@@ -69,10 +65,7 @@ def _sample_frames(
         return list(frames)
     if count == 1:
         return [frames[0]]
-    indices = [
-        int(index * (len(frames) - 1) / (count - 1))
-        for index in range(count)
-    ]
+    indices = [int(index * (len(frames) - 1) / (count - 1)) for index in range(count)]
     return [frames[index] for index in indices]
 
 
@@ -135,8 +128,7 @@ class LocalMetricBackend:
         from ..metrics import video_quality
 
         return {
-            name: getattr(video_quality, f"get_{name}_metric")()(device=self.device)
-            for name in self.metric_sampling
+            name: getattr(video_quality, f"get_{name}_metric")()(device=self.device) for name in self.metric_sampling
         }
 
     def ensure_ready(self) -> None:
@@ -147,9 +139,7 @@ class LocalMetricBackend:
                 self._evaluator = self._create_evaluator()
                 self.load_count += 1
 
-    def evaluate(
-        self, video_path: Path, video_fingerprint: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    def evaluate(self, video_path: Path, video_fingerprint: Mapping[str, Any]) -> dict[str, Any]:
         _validate_video(video_path, video_fingerprint)
         self.ensure_ready()
         # Decode and prepare future requests concurrently. Only model forward passes
@@ -166,27 +156,19 @@ class LocalMetricBackend:
                 else:
                     prepare_cpu = getattr(metric, "prepare_cpu", None)
                     prepared = (
-                        resources.enter_context(
-                            prepare_cpu(sampled, executor=self._cpu_executor)
-                        )
+                        resources.enter_context(prepare_cpu(sampled, executor=self._cpu_executor))
                         if prepare_cpu is not None
                         else sampled
                     )
                     result = None
-                prepared_metrics.append(
-                    (metric_name, metric, prepared, result, len(sampled))
-                )
+                prepared_metrics.append((metric_name, metric, prepared, result, len(sampled)))
 
             with self._inference_lock:
-                for index, (metric_name, metric, prepared, result, count) in enumerate(
-                    prepared_metrics
-                ):
+                for index, (metric_name, metric, prepared, result, count) in enumerate(prepared_metrics):
                     if result is None:
                         compute_prepared = getattr(metric, "compute_prepared", None)
                         result = (
-                            compute_prepared(prepared)
-                            if compute_prepared is not None
-                            else metric.compute(prepared)
+                            compute_prepared(prepared) if compute_prepared is not None else metric.compute(prepared)
                         )
                     prepared_metrics[index] = (
                         metric_name,

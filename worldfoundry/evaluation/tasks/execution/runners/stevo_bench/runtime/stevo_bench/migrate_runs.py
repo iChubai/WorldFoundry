@@ -40,23 +40,22 @@ import argparse
 import json
 import shutil
 from pathlib import Path
-from typing import Dict, Optional
 
 # Key fields that distinguish a real LLM result from an init stub (null = stub)
-_KEY_FIELDS: Dict[str, tuple] = {
-    "control_report":   ("occlusion_done", "trigger_applied"),
-    "artifact_report":  ("artifact",),
+_KEY_FIELDS: dict[str, tuple] = {
+    "control_report": ("occlusion_done", "trigger_applied"),
+    "artifact_report": ("artifact",),
     "coherence_report": ("coherence",),
-    "se_report":        ("state_evol",),
+    "se_report": ("state_evol",),
 }
 
 # Maps flat summary.json field -> report type it came from
 _METRIC_SOURCE = {
-    "occlusion_done":  "control_report",
+    "occlusion_done": "control_report",
     "trigger_applied": "control_report",
-    "artifact":        "artifact_report",
-    "coherence":       "coherence_report",
-    "state_evol":      "se_report",
+    "artifact": "artifact_report",
+    "coherence": "coherence_report",
+    "state_evol": "se_report",
 }
 
 _DERIVED_FIELDS = {"control_success", "task_success"}
@@ -66,11 +65,12 @@ _DERIVED_FIELDS = {"control_success", "task_success"}
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_slug(provider: str, model: str) -> str:
     return f"{provider}__{model.replace('.', '-')}"
 
 
-def _slug_from_file(report_path: Path) -> Optional[str]:
+def _slug_from_file(report_path: Path) -> str | None:
     """Read provider/model from a report file and return the judge slug."""
     try:
         data = json.loads(report_path.read_text(encoding="utf-8"))
@@ -96,7 +96,8 @@ def _is_real_result(report_path: Path, report_type: str) -> bool:
 # Per-file migration
 # ---------------------------------------------------------------------------
 
-def migrate_report_file(task_dir: Path, report_type: str, dry_run: bool) -> Optional[str]:
+
+def migrate_report_file(task_dir: Path, report_type: str, dry_run: bool) -> str | None:
     """
     Copy <report_type>.json -> <report_type>__<slug>.json if it has real results.
     Returns slug on success, None if skipped.
@@ -129,6 +130,7 @@ def migrate_report_file(task_dir: Path, report_type: str, dry_run: bool) -> Opti
 # Summary migration
 # ---------------------------------------------------------------------------
 
+
 def migrate_summary(run_dir: Path, dry_run: bool) -> None:
     summary_path = run_dir / "summary.json"
     if not summary_path.exists():
@@ -150,7 +152,7 @@ def migrate_summary(run_dir: Path, dry_run: bool) -> None:
         task_dir = per_task_root / task_id
 
         # Determine which slug each flat metric belongs to by reading its source report.
-        slug_for: Dict[str, str] = {}
+        slug_for: dict[str, str] = {}
         for field, report_type in _METRIC_SOURCE.items():
             if task.get(field) is None:
                 continue
@@ -162,17 +164,17 @@ def migrate_summary(run_dir: Path, dry_run: bool) -> None:
             continue
 
         # Group metric values by slug.
-        llm_evals: Dict[str, dict] = {}
+        llm_evals: dict[str, dict] = {}
         for field, slug in slug_for.items():
             llm_evals.setdefault(slug, {})[field] = task[field]
 
         # Recompute derived fields per slug.
-        for slug, ev in llm_evals.items():
-            occ  = ev.get("occlusion_done")
+        for _slug, ev in llm_evals.items():
+            occ = ev.get("occlusion_done")
             trig = ev.get("trigger_applied")
-            art  = ev.get("artifact")
-            coh  = ev.get("coherence")
-            se   = ev.get("state_evol")
+            art = ev.get("artifact")
+            coh = ev.get("coherence")
+            se = ev.get("state_evol")
             if occ is not None and trig is not None:
                 ev["control_success"] = bool(occ) and bool(trig)
             if se is not None and art is not None and coh is not None:
@@ -190,15 +192,16 @@ def migrate_summary(run_dir: Path, dry_run: bool) -> None:
         return
 
     if not dry_run:
-        summary_path.write_text(
-            json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-    print(f"  {'[dry] ' if dry_run else ''}updated summary.json  ({sum(1 for t in tasks if 'llm_evals' in t)} tasks now nested)")
+        summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(
+        f"  {'[dry] ' if dry_run else ''}updated summary.json  ({sum(1 for t in tasks if 'llm_evals' in t)} tasks now nested)"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Per-run migration
 # ---------------------------------------------------------------------------
+
 
 def migrate_run(run_dir: Path, dry_run: bool) -> None:
     per_task = run_dir / "per_task"
@@ -206,7 +209,7 @@ def migrate_run(run_dir: Path, dry_run: bool) -> None:
         return
 
     task_dirs = sorted(d for d in per_task.iterdir() if d.is_dir())
-    file_counts: Dict[str, int] = {rt: 0 for rt in _KEY_FIELDS}
+    file_counts: dict[str, int] = dict.fromkeys(_KEY_FIELDS, 0)
 
     for task_dir in task_dirs:
         for report_type in _KEY_FIELDS:
@@ -224,6 +227,7 @@ def migrate_run(run_dir: Path, dry_run: bool) -> None:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Migrate eval runs to nested llm_evals format.")
@@ -248,7 +252,9 @@ def main() -> None:
 
     print("\nDone.")
     if not args.dry_run:
-        print("Run  python -m eval.summarize_results --run_dir <run> --judge <slug>  to refresh overall/by_level stats.")
+        print(
+            "Run  python -m eval.summarize_results --run_dir <run> --judge <slug>  to refresh overall/by_level stats."
+        )
 
 
 if __name__ == "__main__":

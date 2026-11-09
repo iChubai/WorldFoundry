@@ -5,8 +5,14 @@ from pathlib import Path
 import numpy as np
 
 from wrbench.adapters._utils import adapter_taxonomy_metadata, ensure_work_dir, model_target_trajectory, write_json
+
+# isort: split
 from wrbench.adapters.minwm_camera_patch import apply_launcher_to_command, write_rotation_step_patch
+
+# isort: split
 from wrbench.adapters.base import register
+
+# isort: split
 from wrbench.contracts import (
     build_command_template,
     require_execution_contract,
@@ -17,7 +23,6 @@ from wrbench.contracts import (
 from wrbench.payload import CameraPayload
 from wrbench.registry import canonical_model_key
 from wrbench.trajectory import CameraTrajectory
-
 
 _MINWM_YAW_DEG_PER_TOKEN = 3.0
 
@@ -89,11 +94,7 @@ def _yaw_tokens_for_peak(
     else:
         trajectory = _segment(first_key, first)
 
-    runtime_step = (
-        abs(float(yaw_peak_deg)) / float(first)
-        if first > 0
-        else _MINWM_YAW_DEG_PER_TOKEN
-    )
+    runtime_step = abs(float(yaw_peak_deg)) / float(first) if first > 0 else _MINWM_YAW_DEG_PER_TOKEN
     effective_peak = float(first) * runtime_step
     sign = -1.0 if first_key == "j" else 1.0
     requires_step_patch = abs(runtime_step - _MINWM_YAW_DEG_PER_TOKEN) > 1e-6
@@ -126,16 +127,24 @@ def _trajectory_string(
     camera_type = str(target.camera_type or "")
     if camera_type.startswith("static"):
         if static_noop_token:
-            return _segment(static_noop_token, action_count), "static_identity_pose_noop_tokens", {
-                "token_budget_status": "static_noop_token_budget",
+            return (
+                _segment(static_noop_token, action_count),
+                "static_identity_pose_noop_tokens",
+                {
+                    "token_budget_status": "static_noop_token_budget",
+                    "available_action_tokens": action_count,
+                    "requires_runtime_camera_patch": True,
+                    "runtime_camera_patch_reason": "minwm_wan_identity_noop_token",
+                },
+            )
+        return (
+            _segment("w", 0),
+            "static_anchor_pose_padded_by_minwm",
+            {
+                "token_budget_status": "static",
                 "available_action_tokens": action_count,
-                "requires_runtime_camera_patch": True,
-                "runtime_camera_patch_reason": "minwm_wan_identity_noop_token",
-            }
-        return _segment("w", 0), "static_anchor_pose_padded_by_minwm", {
-            "token_budget_status": "static",
-            "available_action_tokens": action_count,
-        }
+            },
+        )
     if camera_type == "yaw_LR":
         yaw_peak = _target_yaw_peak_deg(target)
         trajectory, details = _yaw_tokens_for_peak("j", "l", yaw_peak_deg=yaw_peak, action_count=action_count)
@@ -145,15 +154,23 @@ def _trajectory_string(
         trajectory, details = _yaw_tokens_for_peak("l", "j", yaw_peak_deg=yaw_peak, action_count=action_count)
         return trajectory, "yaw_right_then_left_minwm_tokens", details
     if camera_type == "pan_LR":
-        return _go_return("a", "d", action_count), "translate_left_then_right_minwm_tokens", {
-            "token_budget_status": "full_native_token_budget",
-            "available_action_tokens": action_count,
-        }
+        return (
+            _go_return("a", "d", action_count),
+            "translate_left_then_right_minwm_tokens",
+            {
+                "token_budget_status": "full_native_token_budget",
+                "available_action_tokens": action_count,
+            },
+        )
     if camera_type == "pan_RL":
-        return _go_return("d", "a", action_count), "translate_right_then_left_minwm_tokens", {
-            "token_budget_status": "full_native_token_budget",
-            "available_action_tokens": action_count,
-        }
+        return (
+            _go_return("d", "a", action_count),
+            "translate_right_then_left_minwm_tokens",
+            {
+                "token_budget_status": "full_native_token_budget",
+                "available_action_tokens": action_count,
+            },
+        )
 
     c2w = target.to_c2w()
     rel = np.linalg.inv(c2w[0]) @ c2w
@@ -163,16 +180,24 @@ def _trajectory_string(
     peak = trans[int(np.argmax(np.linalg.norm(trans, axis=1)))] if trans.size else np.zeros(3)
     if abs(yaw_peak) < 1e-6 and float(np.max(np.abs(trans))) < 1e-6:
         if static_noop_token:
-            return _segment(static_noop_token, action_count), "static_identity_pose_noop_tokens", {
-                "token_budget_status": "static_noop_token_budget",
+            return (
+                _segment(static_noop_token, action_count),
+                "static_identity_pose_noop_tokens",
+                {
+                    "token_budget_status": "static_noop_token_budget",
+                    "available_action_tokens": action_count,
+                    "requires_runtime_camera_patch": True,
+                    "runtime_camera_patch_reason": "minwm_wan_identity_noop_token",
+                },
+            )
+        return (
+            _segment("w", 0),
+            "static_zero_motion_padded_by_minwm",
+            {
+                "token_budget_status": "static",
                 "available_action_tokens": action_count,
-                "requires_runtime_camera_patch": True,
-                "runtime_camera_patch_reason": "minwm_wan_identity_noop_token",
-            }
-        return _segment("w", 0), "static_zero_motion_padded_by_minwm", {
-            "token_budget_status": "static",
-            "available_action_tokens": action_count,
-        }
+            },
+        )
     if abs(yaw_peak) >= max(abs(float(peak[0])), abs(float(peak[2])), 1e-6):
         if yaw_peak < 0:
             trajectory, details = _yaw_tokens_for_peak("j", "l", yaw_peak_deg=yaw_peak, action_count=action_count)
@@ -181,15 +206,23 @@ def _trajectory_string(
         return trajectory, "inferred_yaw_minwm_tokens", details
     if abs(float(peak[0])) >= abs(float(peak[2])):
         trajectory = _go_return("a", "d", action_count) if float(peak[0]) < 0 else _go_return("d", "a", action_count)
-        return trajectory, "inferred_lateral_minwm_tokens", {
+        return (
+            trajectory,
+            "inferred_lateral_minwm_tokens",
+            {
+                "token_budget_status": "full_native_token_budget",
+                "available_action_tokens": action_count,
+            },
+        )
+    trajectory = _go_return("w", "s", action_count) if float(peak[2]) > 0 else _go_return("s", "w", action_count)
+    return (
+        trajectory,
+        "inferred_forward_minwm_tokens",
+        {
             "token_budget_status": "full_native_token_budget",
             "available_action_tokens": action_count,
-        }
-    trajectory = _go_return("w", "s", action_count) if float(peak[2]) > 0 else _go_return("s", "w", action_count)
-    return trajectory, "inferred_forward_minwm_tokens", {
-        "token_budget_status": "full_native_token_budget",
-        "available_action_tokens": action_count,
-    }
+        },
+    )
 
 
 @register("minwm-hy-action2v")
@@ -371,9 +404,7 @@ class MinWMWanAction2VAdapter:
         trajectory_txt = out_dir / "minwm_wan_action2v_trajectories.txt"
         trajectory_txt.write_text(trajectory_string + "\n", encoding="utf-8")
 
-        runtime_yaw_deg_per_token = float(
-            token_details.get("runtime_yaw_deg_per_token", _MINWM_YAW_DEG_PER_TOKEN)
-        )
+        runtime_yaw_deg_per_token = float(token_details.get("runtime_yaw_deg_per_token", _MINWM_YAW_DEG_PER_TOKEN))
         rotation_patch: dict[str, str] = {}
         command_template = build_command_template(
             execution,

@@ -82,14 +82,11 @@ def _patched_script(
         raise FileNotFoundError(f"FramePack inference entrypoint not found: {source}")
     text = source.read_text(encoding="utf-8")
     text = re.sub(
-        r"os\.environ\['HF_HOME'\]\s*=.*",
+        r"os\.environ\[\"HF_HOME\"\]\s*=.*",
         f"os.environ['HF_HOME'] = {str(hf_home)!r}",
         text,
     )
-    text = text.replace(
-        "HunyuanVideoTransformer3DModelPacked.from_pretrained('lllyasviel/FramePackI2V_HY'",
-        f"HunyuanVideoTransformer3DModelPacked.from_pretrained({str(checkpoint_path)!r}",
-    )
+    text = text.replace('"lllyasviel/FramePackI2V_HY"', repr(str(checkpoint_path)))
     if hunyuan_root:
         # Transformers >= 4.57 probes ``config.json`` beside local fast
         # tokenizers to detect old Mistral regexes.  The upstream HunyuanVideo
@@ -99,13 +96,13 @@ def _patched_script(
         # subdirectory; remote/offical-repository loading remains unchanged.
         local_tokenizer = str(Path(hunyuan_root) / "tokenizer")
         text = text.replace(
-            'LlamaTokenizerFast.from_pretrained("hunyuanvideo-community/HunyuanVideo", subfolder=\'tokenizer\')',
+            'LlamaTokenizerFast.from_pretrained("hunyuanvideo-community/HunyuanVideo", subfolder="tokenizer")',
             f"LlamaTokenizerFast.from_pretrained({local_tokenizer!r})",
         )
         text = text.replace('"hunyuanvideo-community/HunyuanVideo"', repr(hunyuan_root))
     if flux_redux_root:
         text = text.replace('"lllyasviel/flux_redux_bfl"', repr(flux_redux_root))
-    text = text.replace("outputs_folder = './outputs/'", f"outputs_folder = {str(output_dir / '.framepack_outputs')!r}")
+    text = text.replace('outputs_folder = "./outputs/"', f"outputs_folder = {str(output_dir / '.framepack_outputs')!r}")
     target = output_dir / "framepack_official_inference_worldfoundry.py"
     target.write_text(text, encoding="utf-8")
     return target

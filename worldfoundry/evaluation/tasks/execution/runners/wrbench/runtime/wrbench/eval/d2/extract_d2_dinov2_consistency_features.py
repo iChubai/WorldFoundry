@@ -12,14 +12,14 @@ from __future__ import annotations
 import argparse
 import json
 import math
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
-
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -144,7 +144,7 @@ def _sample_frames(
             "source_fps": source_fps if source_fps > 0 else None,
             "source_frame_count": int(total),
             "sampled_frame_indices": idx,
-            "sampled_frame_count": int(len(idx)),
+            "sampled_frame_count": len(idx),
             "sample_policy": sample_policy,
         }
     except Exception as exc:
@@ -175,23 +175,25 @@ def _sample_frames(
             "decode_error": "",
             "source_fps": source_fps if source_fps > 0 else None,
             "source_frame_count": int(reported_total or len(frames)),
-            "decoded_frame_count": int(len(frames)),
+            "decoded_frame_count": len(frames),
             "sampled_frame_indices": idx,
-            "sampled_frame_count": int(len(idx)),
+            "sampled_frame_count": len(idx),
             "sample_policy": sample_policy,
         }
 
 
 def _center_crop(frame: np.ndarray, crop_fraction: float) -> np.ndarray:
     h, w = frame.shape[:2]
-    side_h = max(1, int(round(h * crop_fraction)))
-    side_w = max(1, int(round(w * crop_fraction)))
+    side_h = max(1, round(h * crop_fraction))
+    side_w = max(1, round(w * crop_fraction))
     y0 = max(0, (h - side_h) // 2)
     x0 = max(0, (w - side_w) // 2)
     return frame[y0 : y0 + side_h, x0 : x0 + side_w]
 
 
-def _motion_bbox(frames: np.ndarray, *, min_area_fraction: float = 0.04, pad_fraction: float = 0.18) -> tuple[int, int, int, int] | None:
+def _motion_bbox(
+    frames: np.ndarray, *, min_area_fraction: float = 0.04, pad_fraction: float = 0.18
+) -> tuple[int, int, int, int] | None:
     if len(frames) < 2:
         return None
     import cv2
@@ -209,8 +211,8 @@ def _motion_bbox(frames: np.ndarray, *, min_area_fraction: float = 0.04, pad_fra
     y0, y1 = int(ys.min()), int(ys.max())
     if (x1 - x0 + 1) * (y1 - y0 + 1) < h * w * min_area_fraction:
         return None
-    pad_x = int(round((x1 - x0 + 1) * pad_fraction))
-    pad_y = int(round((y1 - y0 + 1) * pad_fraction))
+    pad_x = round((x1 - x0 + 1) * pad_fraction)
+    pad_y = round((y1 - y0 + 1) * pad_fraction)
     x0 = max(0, x0 - pad_x)
     x1 = min(w - 1, x1 + pad_x)
     y0 = max(0, y0 - pad_y)
@@ -319,12 +321,14 @@ def _extract_one(
     }
     if frames is None:
         return out
-    out["dinov2_frame_count"] = int(len(frames))
+    out["dinov2_frame_count"] = len(frames)
     if "global" in crop_modes:
-        global_feats = _feature_tensor([frame for frame in frames], processor, model, device, batch_size)
+        global_feats = _feature_tensor(list(frames), processor, model, device, batch_size)
         out.update(_stats("dinov2_global", global_feats))
     if "center" in crop_modes:
-        crop_feats = _feature_tensor([_center_crop(frame, crop_fraction) for frame in frames], processor, model, device, batch_size)
+        crop_feats = _feature_tensor(
+            [_center_crop(frame, crop_fraction) for frame in frames], processor, model, device, batch_size
+        )
         out.update(_stats("dinov2_center", crop_feats))
     if "motion" in crop_modes:
         bbox = _motion_bbox(frames)
@@ -335,7 +339,9 @@ def _extract_one(
             else None
         )
         if bbox is not None:
-            motion_feats = _feature_tensor([_crop_bbox(frame, bbox) for frame in frames], processor, model, device, batch_size)
+            motion_feats = _feature_tensor(
+                [_crop_bbox(frame, bbox) for frame in frames], processor, model, device, batch_size
+            )
             out.update(_stats("dinov2_motion", motion_feats))
     # Collapse proxy: low center consistency is treated as riskier than low
     # global consistency because the subject often lives near the action center.
@@ -429,18 +435,18 @@ def main(argv: Iterable[str] | None = None) -> int:
     with args.out_jsonl.open(mode, encoding="utf-8") as f:
         for idx, row in enumerate(rows_to_run, start=1):
             out = _extract_one(
-                    row,
-                    processor,
-                    model,
-                    args.device,
-                    args.sample_policy,
-                    args.sample_fps,
-                    args.min_frames,
-                    args.max_frames,
-                    args.batch_size,
-                    args.center_crop_fraction,
-                    crop_modes,
-                )
+                row,
+                processor,
+                model,
+                args.device,
+                args.sample_policy,
+                args.sample_fps,
+                args.min_frames,
+                args.max_frames,
+                args.batch_size,
+                args.center_crop_fraction,
+                crop_modes,
+            )
             if out.get("feature_status") == "ok":
                 scored += 1
             else:
@@ -448,7 +454,10 @@ def main(argv: Iterable[str] | None = None) -> int:
             f.write(json.dumps(out, ensure_ascii=False, sort_keys=True) + "\n")
             f.flush()
             if idx % 25 == 0:
-                print(f"processed {idx}/{len(rows_to_run)} this_run, total_done={scored + errored}/{len(rows)}", flush=True)
+                print(
+                    f"processed {idx}/{len(rows_to_run)} this_run, total_done={scored + errored}/{len(rows)}",
+                    flush=True,
+                )
     summary = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "videos": str(args.videos),

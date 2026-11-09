@@ -245,4 +245,4 @@ class Emu35Runtime:
         }
 
 
-__all__ = ["Emu35Runtime", "SOURCE_REVISION", "SOURCE_URL"]
+__all__ = ["SOURCE_REVISION", "SOURCE_URL", "Emu35Runtime"]

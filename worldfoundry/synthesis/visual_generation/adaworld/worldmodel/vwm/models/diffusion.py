@@ -1,9 +1,8 @@
-from typing import Dict, List, Optional, Tuple, Union
-
 import torch
 from einops import rearrange
 from omegaconf import ListConfig, OmegaConf
 from pytorch_lightning import LightningModule
+
 from vwm.modules import UNCONDITIONAL_CONFIG
 from vwm.modules.autoencoding.temporal_ae import VideoDecoder
 from vwm.modules.diffusionmodules.wrappers import OPENAIUNETWRAPPER
@@ -12,26 +11,24 @@ from vwm.util import default, disabled_train, get_obj_from_str, instantiate_from
 
 class DiffusionEngine(LightningModule):
     def __init__(
-            self,
-            network_config,
-            denoiser_config,
-            first_stage_config,
-            conditioner_config: Union[None, Dict, ListConfig, OmegaConf] = None,
-            sampler_config: Union[None, Dict, ListConfig, OmegaConf] = None,
-            network_wrapper: Union[None, str] = None,
-            scale_factor: float = 1.0,
-            disable_first_stage_autocast=False,
-            input_key: str = "img",
-            compile_model: bool = False,
-            en_and_decode_n_samples_a_time: Optional[int] = None,
-            n_context_frames: int = 5
+        self,
+        network_config,
+        denoiser_config,
+        first_stage_config,
+        conditioner_config: None | dict | ListConfig | OmegaConf = None,
+        sampler_config: None | dict | ListConfig | OmegaConf = None,
+        network_wrapper: None | str = None,
+        scale_factor: float = 1.0,
+        disable_first_stage_autocast=False,
+        input_key: str = "img",
+        compile_model: bool = False,
+        en_and_decode_n_samples_a_time: int | None = None,
+        n_context_frames: int = 5,
     ):
-        super(DiffusionEngine, self).__init__()
+        super().__init__()
         self.input_key = input_key
         model = instantiate_from_config(network_config)
-        self.model = get_obj_from_str(default(network_wrapper, OPENAIUNETWRAPPER))(
-            model, compile_model=compile_model
-        )
+        self.model = get_obj_from_str(default(network_wrapper, OPENAIUNETWRAPPER))(model, compile_model=compile_model)
 
         self.denoiser = instantiate_from_config(denoiser_config)
         self.sampler = instantiate_from_config(sampler_config) if sampler_config is not None else None
@@ -90,17 +87,18 @@ class DiffusionEngine(LightningModule):
 
     @torch.no_grad()
     def sample(
-            self,
-            cond: Dict,
-            x_ori: torch.Tensor,
-            uc: Union[Dict, None] = None,
-            N: int = 10,
-            shape: Union[None, Tuple, List] = None,
-            **kwargs
+        self,
+        cond: dict,
+        x_ori: torch.Tensor,
+        uc: dict | None = None,
+        N: int = 10,
+        shape: None | tuple | list = None,
+        **kwargs,
     ):
         randn = torch.randn(N, *shape).to(self.device)
 
-        denoiser = lambda input, sigma, c: self.denoiser(self.model, input, sigma, c, **kwargs)
+        def denoiser(input, sigma, c):
+            return self.denoiser(self.model, input, sigma, c, **kwargs)
 
         samples = self.sampler(denoiser, randn, cond, x_ori=x_ori, uc=uc)
         return samples

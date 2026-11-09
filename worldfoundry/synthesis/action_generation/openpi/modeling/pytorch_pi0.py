@@ -1,13 +1,12 @@
 import math
 
 import torch
-from torch import Tensor
-from torch import nn
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as F
+from torch import Tensor, nn
 
 from . import gemma as _gemma
-from .pytorch_gemma import PaliGemmaWithExpertModel
 from . import pytorch_preprocessing as _preprocessing
+from .pytorch_gemma import PaliGemmaWithExpertModel
 
 
 def get_safe_dtype(target_dtype, device_type):
@@ -39,8 +38,6 @@ def create_sinusoidal_pos_embedding(
     scaling_factor = 1.0 / period * 2 * math.pi
     sin_input = scaling_factor[None, :] * time[:, None]
     return torch.cat([torch.sin(sin_input), torch.cos(sin_input)], dim=1)
-
-
 
 
 def make_att_2d_masks(pad_masks, att_masks):
@@ -134,7 +131,6 @@ class PI0Pytorch(nn.Module):
             device=device,
         )
 
-
     def embed_prefix(
         self, images, img_masks, lang_tokens, lang_masks
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -213,9 +209,7 @@ class PI0Pytorch(nn.Module):
             time_emb = time_emb[:, None, :].expand_as(action_emb)
             action_time_emb = torch.cat([action_emb, time_emb], dim=2)
 
-            action_time_emb = self.action_time_mlp_out(
-                F.silu(self.action_time_mlp_in(action_time_emb))
-            )
+            action_time_emb = self.action_time_mlp_out(F.silu(self.action_time_mlp_in(action_time_emb)))
             adarms_cond = None
         else:
             time_emb = F.silu(self.time_mlp_out(F.silu(self.time_mlp_in(time_emb))))
@@ -239,7 +233,6 @@ class PI0Pytorch(nn.Module):
 
         return embs, pad_masks, att_masks, adarms_cond
 
-
     @torch.no_grad()
     def sample_actions(self, device, observation, noise=None, num_steps=10) -> Tensor:
         """Do a full inference forward and compute the action (batch_size x num_steps x num_motors)"""
@@ -256,7 +249,7 @@ class PI0Pytorch(nn.Module):
 
         # Compute image and language key value cache
         prefix_att_2d_masks_4d = self._prepare_attention_masks_4d(prefix_att_2d_masks)
-        self.paligemma_with_expert.paligemma.language_model.config._attn_implementation = "eager"  # noqa: SLF001
+        self.paligemma_with_expert.paligemma.language_model.config._attn_implementation = "eager"
 
         _, past_key_values = self.paligemma_with_expert.forward(
             attention_mask=prefix_att_2d_masks_4d,
@@ -312,7 +305,7 @@ class PI0Pytorch(nn.Module):
 
         # Prepare attention masks
         full_att_2d_masks_4d = self._prepare_attention_masks_4d(full_att_2d_masks)
-        self.paligemma_with_expert.gemma_expert.model.config._attn_implementation = "eager"  # noqa: SLF001
+        self.paligemma_with_expert.gemma_expert.model.config._attn_implementation = "eager"
 
         outputs_embeds, _ = self.paligemma_with_expert.forward(
             attention_mask=full_att_2d_masks_4d,

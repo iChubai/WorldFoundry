@@ -1,23 +1,27 @@
 import argparse
 import json
-import yaml
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Optional, Tuple
 
-from eval.task_resolver import resolve_tasks_from_outputs_json, ResolvedTask
-from eval.utils import _path_to_rel
 from eval.control_judge import (
-    evaluate_control_one_task, append_control_results_to_summary,
-    _load_task_fields, _compute_requested_fields,
+    ControlJudgeResult,
+    _compute_requested_fields,
+    _load_task_fields,
+    append_control_results_to_summary,
+    evaluate_control_one_task,
 )
 from eval.physics_judge import (
-    evaluate_physics_one_task, append_physics_results_to_summary, PhysicsJudgeResult,
+    PhysicsJudgeResult,
+    append_physics_results_to_summary,
+    evaluate_physics_one_task,
 )
-from eval.control_judge import ControlJudgeResult
 from eval.se_judge import (
-    evaluate_se_one_task, append_se_results_to_summary, SEJudgeResult,
+    SEJudgeResult,
+    append_se_results_to_summary,
+    evaluate_se_one_task,
 )
+from eval.task_resolver import ResolvedTask, resolve_tasks_from_outputs_json
+from eval.utils import _path_to_rel
 
 
 def _make_judge_slug(provider: str, model: str) -> str:
@@ -30,7 +34,7 @@ def _report_filename(report_type: str, judge_slug: str) -> str:
     return f"{report_type}_report__{judge_slug}.json"
 
 
-def _init_summary_json(resolved_tasks: List[ResolvedTask], run_root: Path) -> None:
+def _init_summary_json(resolved_tasks: list[ResolvedTask], run_root: Path) -> None:
     """
     Ensure summary.json exists with a skeleton entry for every resolved task.
 
@@ -45,32 +49,23 @@ def _init_summary_json(resolved_tasks: List[ResolvedTask], run_root: Path) -> No
         summary = json.loads(summary_path.read_text(encoding="utf-8"))
         existing_ids = {t["task_id"] for t in summary.get("tasks", []) if "task_id" in t}
         new_entries = [
-            {"task_id": t.task_id, "task_level": t.task_level}
-            for t in resolved_tasks
-            if t.task_id not in existing_ids
+            {"task_id": t.task_id, "task_level": t.task_level} for t in resolved_tasks if t.task_id not in existing_ids
         ]
         if new_entries:
             summary.setdefault("tasks", []).extend(new_entries)
-            summary_path.write_text(
-                json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
+            summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
     else:
         summary = {
             "num_tasks": len(resolved_tasks),
-            "overall":   {},
-            "by_level":  {},
-            "tasks": [
-                {"task_id": t.task_id, "task_level": t.task_level}
-                for t in resolved_tasks
-            ],
+            "overall": {},
+            "by_level": {},
+            "tasks": [{"task_id": t.task_id, "task_level": t.task_level} for t in resolved_tasks],
         }
-        summary_path.write_text(
-            json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
+        summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def _write_init_stubs(
-    resolved_tasks: List[ResolvedTask],
+    resolved_tasks: list[ResolvedTask],
     per_task_root: Path,
     camera_controlled: bool = False,
 ) -> None:
@@ -106,14 +101,14 @@ def _write_init_stubs(
         cr_path = task_dir / "control_report.json"
         if not cr_path.exists():
             cr = {
-                "task_id":             task.task_id,
-                "video_WM_prompt":     video_wm,
-                "wm_video":            _path_to_rel(task.wm_video),
+                "task_id": task.task_id,
+                "video_WM_prompt": video_wm,
+                "wm_video": _path_to_rel(task.wm_video),
                 "requested_occlusion": requested_occlusion,
-                "requested_trigger":   requested_trigger,
-                "occlusion_done":      None,
-                "trigger_applied":     None,
-                "notes":               "",
+                "requested_trigger": requested_trigger,
+                "occlusion_done": None,
+                "trigger_applied": None,
+                "notes": "",
             }
             cr_path.write_text(json.dumps(cr, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -121,11 +116,11 @@ def _write_init_stubs(
         phys_path = task_dir / "physics_report.json"
         if not phys_path.exists():
             phys = {
-                "task_id":             task.task_id,
-                "wm_video":            _path_to_rel(task.wm_video),
+                "task_id": task.task_id,
+                "wm_video": _path_to_rel(task.wm_video),
                 "requested_occlusion": requested_occlusion,
                 "physical_inaccuracy": None,
-                "notes":               "",
+                "notes": "",
             }
             phys_path.write_text(json.dumps(phys, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -133,10 +128,10 @@ def _write_init_stubs(
         se_path = task_dir / "se_report.json"
         if not se_path.exists():
             se = {
-                "task_id":   task.task_id,
-                "wm_video":  _path_to_rel(task.wm_video),
+                "task_id": task.task_id,
+                "wm_video": _path_to_rel(task.wm_video),
                 "state_evol": None,
-                "notes":     "",
+                "notes": "",
             }
             se_path.write_text(json.dumps(se, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -157,43 +152,73 @@ def _eval_one_task(
     camera_controlled: bool = False,
     ensemble_size: int = 1,
     ensemble_mode: str = "majority",
-) -> Tuple[None, Optional[ControlJudgeResult], Optional[PhysicsJudgeResult], Optional[SEJudgeResult]]:
+) -> tuple[None, ControlJudgeResult | None, PhysicsJudgeResult | None, SEJudgeResult | None]:
     judge_result = None  # binary judge questions (judge_report.json) are obsolete
-    control_result = evaluate_control_one_task(task, provider=provider, model=control_model, report_filename=control_report_fn, camera_controlled=camera_controlled, ensemble_size=ensemble_size, ensemble_mode=ensemble_mode) if run_control else None
-    physics_result = evaluate_physics_one_task(task, provider=provider, model=physics_model, report_filename=physics_report_fn, camera_controlled=camera_controlled, ensemble_size=ensemble_size, ensemble_mode=ensemble_mode) if run_physics else None
-    se_result = evaluate_se_one_task(task, provider=provider, model=se_model, report_filename=se_report_fn, camera_controlled=camera_controlled, ensemble_size=ensemble_size, ensemble_mode=ensemble_mode) if run_state else None
+    control_result = (
+        evaluate_control_one_task(
+            task,
+            provider=provider,
+            model=control_model,
+            report_filename=control_report_fn,
+            camera_controlled=camera_controlled,
+            ensemble_size=ensemble_size,
+            ensemble_mode=ensemble_mode,
+        )
+        if run_control
+        else None
+    )
+    physics_result = (
+        evaluate_physics_one_task(
+            task,
+            provider=provider,
+            model=physics_model,
+            report_filename=physics_report_fn,
+            camera_controlled=camera_controlled,
+            ensemble_size=ensemble_size,
+            ensemble_mode=ensemble_mode,
+        )
+        if run_physics
+        else None
+    )
+    se_result = (
+        evaluate_se_one_task(
+            task,
+            provider=provider,
+            model=se_model,
+            report_filename=se_report_fn,
+            camera_controlled=camera_controlled,
+            ensemble_size=ensemble_size,
+            ensemble_mode=ensemble_mode,
+        )
+        if run_state
+        else None
+    )
     return judge_result, control_result, physics_result, se_result
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--outputs", required=True, type=str, help="Outputs folder containing the JSON map (task_id -> video path or URL).")
+    parser.add_argument(
+        "--outputs",
+        required=True,
+        type=str,
+        help="Outputs folder containing the JSON map (task_id -> video path or URL).",
+    )
 
     parser.add_argument(
-        "--task_root",
-        default="benchmark/tasks/",
-        type=str,
-        help="Root directory containing task folders."
+        "--task_root", default="benchmark/tasks/", type=str, help="Root directory containing task folders."
     )
-    parser.add_argument(
-        "--run_dir",
-        default="runs/",
-        type=str,
-        help="Directory to write normalized run artifacts."
-    )
+    parser.add_argument("--run_dir", default="runs/", type=str, help="Directory to write normalized run artifacts.")
 
     # Judge LLM provider info
     parser.add_argument(
         "--vlm_provider",
         default="gemini",
         type=str,
-        help="Provider of the judge VLM, currently support OpenAI, Anthropic and Gemini. API key must be configured."
+        help="Provider of the judge VLM, currently support OpenAI, Anthropic and Gemini. API key must be configured.",
     )
     parser.add_argument(
-        "--control_judge_model",
-        default="gemini-3.1-pro-preview",
-        type=str,
-        help="Name of the control judge model."
+        "--control_judge_model", default="gemini-3.1-pro-preview", type=str, help="Name of the control judge model."
     )
     parser.add_argument(
         "--physics_judge_model",
@@ -325,7 +350,9 @@ def main() -> None:
     _CAMERA_CONTROLLED_NAMES = {"worldplay", "genie", "lingbot", "gen3c"}
     camera_controlled = any(n in outputs_dir.name.lower() for n in _CAMERA_CONTROLLED_NAMES)
     if camera_controlled:
-        print(f"[INFO] Camera-controlled model detected from folder name '{outputs_dir.name}' — requested_occlusion will be set to 'camera pan'.")
+        print(
+            f"[INFO] Camera-controlled model detected from folder name '{outputs_dir.name}' — requested_occlusion will be set to 'camera pan'."
+        )
 
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -339,7 +366,7 @@ def main() -> None:
     # ---------------------------------------------------------------------------
     # Task resolution — sequential (final frame extraction happens here)
     # ---------------------------------------------------------------------------
-    resolved_tasks: List[ResolvedTask] = resolve_tasks_from_outputs_json(
+    resolved_tasks: list[ResolvedTask] = resolve_tasks_from_outputs_json(
         tasks_root=task_root,
         outputs_json=output_json,
         run_dir=run_root,
@@ -361,8 +388,10 @@ def main() -> None:
     if args.init:
         _write_init_stubs(resolved_tasks, per_task_root, camera_controlled=camera_controlled)
         print(f"[DONE] Initialized {len(resolved_tasks)} task(s) in: {run_root}")
-        print(f"summary.json, judge_report.json, control_report.json, physics_report.json and se_report.json stubs written.")
-        print(f"Start human_eval_server.py to begin human evaluation.")
+        print(
+            "summary.json, judge_report.json, control_report.json, physics_report.json and se_report.json stubs written."
+        )
+        print("Start human_eval_server.py to begin human evaluation.")
         return
 
     # Keep the full list for the summary-append step at the end.
@@ -372,6 +401,7 @@ def main() -> None:
     # Skip tasks that are already fully evaluated (unless --overwrite)
     # ---------------------------------------------------------------------------
     if not args.overwrite:
+
         def _report_evaluated(path: Path, *fields: str, ensemble_size: int = 1, response_keys: tuple = ()) -> bool:
             """True if the file exists, every listed field is non-None, and (when ensemble_size > 1) each response_key array has >= ensemble_size entries."""
             if not path.exists():
@@ -394,7 +424,8 @@ def main() -> None:
             task_dir = per_task_root / task.task_id
             control_done = _report_evaluated(
                 task_dir / control_report_fn,
-                "occlusion_done", "trigger_applied",
+                "occlusion_done",
+                "trigger_applied",
                 ensemble_size=ens,
                 response_keys=("occlusion_responses", "trigger_responses"),
             )
@@ -411,9 +442,9 @@ def main() -> None:
                 response_keys=("responses",),
             )
             already_done = (
-                (run_control and control_done or not run_control) and
-                (run_physics and physics_done or not run_physics) and
-                (run_state and se_done or not run_state)
+                ((run_control and control_done) or not run_control)
+                and ((run_physics and physics_done) or not run_physics)
+                and ((run_state and se_done) or not run_state)
             )
             if already_done:
                 skipped += 1
@@ -427,9 +458,9 @@ def main() -> None:
     # Per-task eval — parallel (judge + control judge run together per task)
     # ---------------------------------------------------------------------------
     # judge_results: List[JudgeResult] = []  # OBSOLETE: binary judge questions
-    control_results: List[ControlJudgeResult] = []
-    physics_results: List[PhysicsJudgeResult] = []
-    se_results: List[SEJudgeResult] = []
+    control_results: list[ControlJudgeResult] = []
+    physics_results: list[PhysicsJudgeResult] = []
+    se_results: list[SEJudgeResult] = []
     failed = 0
 
     with ThreadPoolExecutor(max_workers=args.workers) as executor:
@@ -457,9 +488,12 @@ def main() -> None:
             task = futures[future]
             try:
                 jr, cr, phys, ser = future.result()
-                if cr is not None: control_results.append(cr)
-                if phys is not None: physics_results.append(phys)
-                if ser is not None: se_results.append(ser)
+                if cr is not None:
+                    control_results.append(cr)
+                if phys is not None:
+                    physics_results.append(phys)
+                if ser is not None:
+                    se_results.append(ser)
             except Exception as e:
                 print(f"[ERROR] {task.task_id}: {e}")
                 failed += 1
@@ -472,16 +506,20 @@ def main() -> None:
     # control_report.json are also merged into summary.json.
     # ---------------------------------------------------------------------------
     if run_control:
-        append_control_results_to_summary(tasks=all_resolved_tasks, judge_slug=control_slug, report_filename=control_report_fn)
-        print(f"[DONE] Controllability evaluation done")
+        append_control_results_to_summary(
+            tasks=all_resolved_tasks, judge_slug=control_slug, report_filename=control_report_fn
+        )
+        print("[DONE] Controllability evaluation done")
 
     if run_physics:
-        append_physics_results_to_summary(tasks=all_resolved_tasks, judge_slug=physics_slug, report_filename=physics_report_fn)
-        print(f"[DONE] Physics evaluation done")
+        append_physics_results_to_summary(
+            tasks=all_resolved_tasks, judge_slug=physics_slug, report_filename=physics_report_fn
+        )
+        print("[DONE] Physics evaluation done")
 
     if run_state:
         append_se_results_to_summary(tasks=all_resolved_tasks, judge_slug=se_slug, report_filename=se_report_fn)
-        print(f"[DONE] State evolution evaluation done")
+        print("[DONE] State evolution evaluation done")
 
     return
 

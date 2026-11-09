@@ -167,9 +167,7 @@ class _VideoActionIterable(IterableDataset):
             assert clip.video_bytes is not None, "iter_clips must carry video for the training loader"
             p_data = len(clip.perspectives)
             if p_data % self.n_players != 0:
-                raise ValueError(
-                    f"clip has {p_data} perspectives, not divisible by n_players={self.n_players}"
-                )
+                raise ValueError(f"clip has {p_data} perspectives, not divisible by n_players={self.n_players}")
             for g in range(0, p_data, self.n_players):
                 yield [self._plan_perspective(clip, p) for p in range(g, g + self.n_players)]
 

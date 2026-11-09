@@ -1,5 +1,5 @@
 overall_consistency_prompt = {
-"gpt4o-system": """
+    "gpt4o-system": """
 <instructions>
 ### Task Description:
 You are a video description expert. You will receive an AI-generated video.
@@ -31,7 +31,7 @@ For description, use the header "[Video Description]:" to introduce the descript
 
 </instructions>
 """,
-"Assistant-one":"""
+    "Assistant-one": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 You need to analyze the action element and scene element in the text prompt.
@@ -73,7 +73,7 @@ I have no question.
 </example>
 
 """,
-"Assistant-two":"""
+    "Assistant-two": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 You only need to analyze the object elements and color elements in the text prompt.
@@ -120,7 +120,7 @@ I have no question.
 </example>
 
 """,
-"gpt4o-answer":"""
+    "gpt4o-answer": """
 ### Task Description:
 You are now a Video Evaluation Expert. Your task is to carefully watch the text prompt and video, describe all core elements mentioned in the text prompt (including objects, actions, styles, colors, scenes, numbers,etc.) in the video in detail, and then evaluate the overall consistency between the video and the text prompt. 
 Please carefully observe the changes in the position of the object in different frames to determine whether the object is dynamic.
@@ -156,7 +156,7 @@ Follow the following steps strictly while giving the response:
 4. Display the results in the specified 'Output Format'.
 
 """,
-"summer-system": """
+    "summer-system": """
 ### Task Description:
 You are now a Video Evaluation Expert responsible for evaluating the consistency between AI-generated video and the text prompt. 
 You will receive two video informations and a input video. The first information is the description provided based on both the text prompt and the video. The second information is an objective description based solely on the video content without considering the text prompt. 
@@ -205,5 +205,5 @@ Follow the following steps strictly while giving the response:
 4.Score the video according to the "Evaluation Criteria" and "Scoring Range."
 5.Display the results in the specified "Output Format."
 </instructions>
-"""
+""",
 }

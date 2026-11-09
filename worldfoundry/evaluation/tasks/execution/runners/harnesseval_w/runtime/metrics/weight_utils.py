@@ -1,4 +1,5 @@
 """Resolve metric weights outside the source tree."""
+
 import os
 from pathlib import Path
 
@@ -7,9 +8,7 @@ from worldfoundry.core.io.paths import checkpoint_root_path, package_root
 
 def get_weights_dir(subdir: str = "") -> str:
     """Get weight subdirectory path (auto-creates)."""
-    root = Path(
-        os.environ.get("HARNESSEVAL_WEIGHTS_ROOT", checkpoint_root_path("harnesseval-w"))
-    )
+    root = Path(os.environ.get("HARNESSEVAL_WEIGHTS_ROOT", checkpoint_root_path("harnesseval-w")))
     path = (root / subdir if subdir else root).expanduser().resolve()
     if path.is_relative_to(package_root()):
         raise ValueError("HarnessEval weights/cache must live outside the package source tree")
@@ -20,6 +19,7 @@ def get_weights_dir(subdir: str = "") -> str:
 def setup_torch_hub_dir():
     """Set torch.hub cache to project-local weights/torch_hub/."""
     import torch
+
     hub_dir = get_weights_dir("torch_hub")
     torch.hub.set_dir(hub_dir)
     return hub_dir

@@ -2,10 +2,10 @@ import json
 import logging
 import os
 import random
+from pathlib import Path
 
 import numpy as np
 import torch
-from pathlib import Path
 from PIL import Image
 from torchvision import transforms
 from torchvision.transforms import Compose, Normalize, Resize
@@ -84,7 +84,9 @@ def get_frame_indices(num_frames, vlen, sample="rand", fix_start=None, input_fps
     return frame_indices
 
 
-def load_video(video_path, square_resize=None, data_transform=None, num_frames=None, return_tensor=True, width=None, height=None):
+def load_video(
+    video_path, square_resize=None, data_transform=None, num_frames=None, return_tensor=True, width=None, height=None
+):
     file_list = sorted(os.listdir(video_path))
     img_files = [f for f in file_list if f.endswith((".jpg", ".jpeg", ".png"))]
 
@@ -171,5 +173,5 @@ def save_json(data, path, indent=4):
 
 
 def load_json(path):
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)

@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-
 SCHEMA_VERSION = "qwen3vl_rescue_evidence_overlay_v1"
 
 

@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List, Optional, Tuple, Union
+from typing import Union
 
 import torch
 
@@ -32,7 +32,7 @@ class AttentionMaskConverter:
             Optionally, the sliding window masks can be created if `sliding_window` is defined to a positive integer.
     """
 
-    def __init__(self, is_causal: bool, sliding_window: Optional[int] = None):
+    def __init__(self, is_causal: bool, sliding_window: int | None = None):
         self.is_causal = is_causal
         self.sliding_window = sliding_window
 
@@ -78,7 +78,7 @@ class AttentionMaskConverter:
         self,
         attention_mask_2d: torch.Tensor,
         query_length: int,
-        key_value_length: Optional[int] = None,
+        key_value_length: int | None = None,
         dtype: torch.dtype = torch.float32,
     ) -> torch.Tensor:
         """
@@ -122,7 +122,7 @@ class AttentionMaskConverter:
         dtype: torch.dtype,
         device: torch.device,
         past_key_values_length: int = 0,
-        sliding_window: Optional[int] = None,
+        sliding_window: int | None = None,
     ):
         """
         Make causal mask used for bi-directional self-attention.
@@ -147,7 +147,7 @@ class AttentionMaskConverter:
         return mask[None, None, :, :].expand(bsz, 1, tgt_len, tgt_len + past_key_values_length)
 
     @staticmethod
-    def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] = None):
+    def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: int | None = None):
         """
         Expands attention_mask from `[bsz, seq_len]` to `[bsz, 1, tgt_seq_len, src_seq_len]`.
         """
@@ -162,11 +162,11 @@ class AttentionMaskConverter:
 
 
 def _prepare_4d_causal_attention_mask(
-    attention_mask: Optional[torch.Tensor],
-    input_shape: Union[torch.Size, Tuple, List],
+    attention_mask: torch.Tensor | None,
+    input_shape: torch.Size | tuple | list,
     inputs_embeds: torch.Tensor,
     past_key_values_length: int,
-    sliding_window: Optional[int] = None,
+    sliding_window: int | None = None,
 ):
     """
     Creates a causal 4D mask of shape `(batch_size, 1, query_length, key_value_length)` from a 2D mask of shape
@@ -201,7 +201,7 @@ def _prepare_4d_causal_attention_mask(
     return attention_mask
 
 
-def _prepare_4d_attention_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] = None):
+def _prepare_4d_attention_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: int | None = None):
     """
     Creates a non-causal 4D mask of shape `(batch_size, 1, query_length, key_value_length)` from a 2D mask of shape
     `(batch_size, key_value_length)`
@@ -218,11 +218,11 @@ def _prepare_4d_attention_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: 
 
 
 def _create_4d_causal_attention_mask(
-    input_shape: Union[torch.Size, Tuple, List],
+    input_shape: torch.Size | tuple | list,
     dtype: torch.dtype,
     device: torch.device,
     past_key_values_length: int = 0,
-    sliding_window: Optional[int] = None,
+    sliding_window: int | None = None,
 ):
     """
     Creates a causal 4D mask of shape `(batch_size, 1, query_length, key_value_length)`

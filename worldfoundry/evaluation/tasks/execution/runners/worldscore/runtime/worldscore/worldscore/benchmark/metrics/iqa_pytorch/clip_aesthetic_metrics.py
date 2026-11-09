@@ -1,8 +1,8 @@
-from typing import List, Union
-
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import IQAPytorchMetric
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    IQAPytorchMetric,
+)
 
 
 class CLIPAestheticScoreMetric(IQAPytorchMetric):
@@ -16,7 +16,7 @@ class CLIPAestheticScoreMetric(IQAPytorchMetric):
     def __init__(self) -> None:
         super().__init__(metric_name="laion_aes")
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         imgs = self._process_image(rendered_images)
 
         scores = []

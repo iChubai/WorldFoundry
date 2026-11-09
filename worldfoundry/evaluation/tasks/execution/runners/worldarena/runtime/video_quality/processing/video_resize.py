@@ -1,15 +1,11 @@
 import os
+
 import cv2
-import decord
-import numpy as np
 import yaml
 
 
 def resize_and_save_images(image_folder, target_size=(640, 480)):
-    image_files = sorted([
-        f for f in os.listdir(image_folder)
-        if f.lower().endswith(('.jpg', '.jpeg', '.png'))
-    ])
+    image_files = sorted([f for f in os.listdir(image_folder) if f.lower().endswith((".jpg", ".jpeg", ".png"))])
 
     for fname in image_files:
         img_path = os.path.join(image_folder, fname)
@@ -28,7 +24,7 @@ def process_video_or_images(input_base):
     for task in sorted(os.listdir(input_base)):
         task_path = os.path.join(input_base, task)
         for episode in os.listdir(task_path):
-            if episode.endswith(('.png', '.json')):
+            if episode.endswith((".png", ".json")):
                 continue
             episode_path = os.path.join(task_path, episode)
             for gid in sorted(os.listdir(episode_path)):
@@ -38,7 +34,7 @@ def process_video_or_images(input_base):
 
 
 def load_config(config_path):
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
     return config
 
@@ -47,12 +43,11 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_path', type=str, required=True, help='Path to config.yaml')
+    parser.add_argument("--config_path", type=str, required=True, help="Path to config.yaml")
 
     args = parser.parse_args()
     config = load_config(args.config_path)
 
-    data_base = config['data']['val_base']
+    data_base = config["data"]["val_base"]
 
     process_video_or_images(data_base)
-

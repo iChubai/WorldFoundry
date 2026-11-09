@@ -119,7 +119,6 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PHYSICAL_DIR = REPO_ROOT / "physical"
 THREE_D_DIR = REPO_ROOT / "3d_metrics"
@@ -130,8 +129,12 @@ for path in (REPO_ROOT, PHYSICAL_DIR, THREE_D_DIR, INTERACTION_DIR):
     if path_str not in sys.path:
         sys.path.insert(0, path_str)
 
-from model.vlm import parse_json_content, resolve_model_name, resolve_vlm_backend, text_vlm_call
-
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
+    parse_json_content,
+    resolve_model_name,
+    resolve_vlm_backend,
+    text_vlm_call,
+)
 
 DEFAULT_VLM_MODEL: str | None = None
 DEFAULT_3D_MODEL_NAME = "worldeval/weights/da3"
@@ -833,9 +836,7 @@ def print_score_summary(summary: dict[str, Any]) -> None:
         print("Physical interaction 3D: N/A")
     else:
         print(
-            "Physical interaction 3D: "
-            f"{interaction['overall_raw']:.4f}/5.0000 "
-            f"(normalized={interaction['score']:.4f})"
+            f"Physical interaction 3D: {interaction['overall_raw']:.4f}/5.0000 (normalized={interaction['score']:.4f})"
         )
 
     clip_interaction = summary.get("clip_interaction")
@@ -1068,9 +1069,7 @@ def main() -> None:
     args.vlm_backend = resolve_vlm_backend(args.vlm_backend)
     args.vlm_model = resolve_model_name(args.vlm_model, args.vlm_backend)
     args.interaction_vlm_backend = resolve_vlm_backend(args.interaction_vlm_backend or args.vlm_backend)
-    default_interaction_model = (
-        args.vlm_model if args.interaction_vlm_backend == args.vlm_backend else None
-    )
+    default_interaction_model = args.vlm_model if args.interaction_vlm_backend == args.vlm_backend else None
     args.interaction_vlm_model = resolve_model_name(
         args.interaction_vlm_model or default_interaction_model,
         args.interaction_vlm_backend,
@@ -1084,11 +1083,7 @@ def main() -> None:
         args.gt_video,
         required=(
             not args.skip_physical
-            or (
-                not args.skip_3d
-                and args.three_d_mask_dynamic_objects
-                and not args.three_d_dynamic_masked_video
-            )
+            or (not args.skip_3d and args.three_d_mask_dynamic_objects and not args.three_d_dynamic_masked_video)
         ),
     )
 
@@ -1096,7 +1091,6 @@ def main() -> None:
     video_bbox = None
     gt_bbox = None
     video_sam_info = None
-
 
     if not args.skip_physical:
         if gt_video_path is None and args.gt_sam_video is None:

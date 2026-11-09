@@ -400,7 +400,7 @@ class STDiT3(PreTrainedModel):
         x = rearrange(x, "B T S C -> B (T S) C", T=T, S=S)
 
         # === blocks ===
-        for spatial_block, temporal_block in zip(self.spatial_blocks, self.temporal_blocks):
+        for spatial_block, temporal_block in zip(self.spatial_blocks, self.temporal_blocks, strict=False):
             x = auto_grad_checkpoint(spatial_block, x, y, t_mlp, y_lens, x_mask, t0_mlp, T, S)
             x = auto_grad_checkpoint(temporal_block, x, y, t_mlp, y_lens, x_mask, t0_mlp, T, S)
 

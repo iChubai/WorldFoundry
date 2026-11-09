@@ -11,6 +11,7 @@ Credits:
     https://github.com/tsc2017/Inception-Score
     https://github.com/openai/improved-gan/issues/29
 """
+
 import torch
 import torch.nn.functional as F
 
@@ -37,8 +38,7 @@ def inception_score(features: torch.Tensor, num_splits: int = 10):
         https://arxiv.org/pdf/1801.01973.pdf
 
     """
-    assert len(features.shape) == 2, \
-        f"Features must have shape (N_samples, encoder_dim), got {features.shape}"
+    assert len(features.shape) == 2, f"Features must have shape (N_samples, encoder_dim), got {features.shape}"
     N = features.size(0)
 
     # Convert logits to probabilities
@@ -47,14 +47,14 @@ def inception_score(features: torch.Tensor, num_splits: int = 10):
     # In the paper the score is computed for 10 splits of the dataset and then averaged.
     partial_scores = []
     for i in range(num_splits):
-        subset = probas[i * (N // num_splits): (i + 1) * (N // num_splits), :]
+        subset = probas[i * (N // num_splits) : (i + 1) * (N // num_splits), :]
 
         # Compute KL divergence
         p_y = torch.mean(subset, dim=0)
         scores = []
         for k in range(subset.shape[0]):
             p_yx = subset[k, :]
-            scores.append(F.kl_div(p_y.log(), p_yx, reduction='sum'))
+            scores.append(F.kl_div(p_y.log(), p_yx, reduction="sum"))
 
         # Compute exponential of the mean of the KL-divergence for each split
         partial_scores.append(torch.tensor(scores).mean().exp())
@@ -83,11 +83,10 @@ class IS(BaseFeatureMetric):
     References:
         "A Note on the Inception Score" https://arxiv.org/pdf/1801.01973.pdf
     """
-    def __init__(self, num_splits: int = 10, distance: str = 'l1') -> None:
-        r"""
 
-        """
-        super(IS, self).__init__()
+    def __init__(self, num_splits: int = 10, distance: str = "l1") -> None:
+        r""" """
+        super().__init__()
         self.num_splits = num_splits
         self.distance = distance
 
@@ -106,9 +105,9 @@ class IS(BaseFeatureMetric):
         _validate_input([x_features, y_features], dim_range=(2, 2), size_range=(0, 2))
         x_is, _ = inception_score(x_features, num_splits=self.num_splits)
         y_is, _ = inception_score(y_features, num_splits=self.num_splits)
-        if self.distance == 'l1':
+        if self.distance == "l1":
             return torch.dist(x_is, y_is, 1)
-        elif self.distance == 'l2':
+        elif self.distance == "l2":
             return torch.dist(x_is, y_is, 2)
         else:
             raise ValueError("Distance should be one of {`l1`, `l2`}")

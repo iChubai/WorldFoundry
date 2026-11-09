@@ -10,8 +10,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from wrbench.eval.aggregate.build_wrbench_vnext_main_table import main
-
+# Standalone entrypoint sets sys.path before importing the runner.
+from wrbench.eval.aggregate.build_wrbench_vnext_main_table import (  # noqa: E402
+    main,
+)
 
 if __name__ == "__main__":
     raise SystemExit(main())

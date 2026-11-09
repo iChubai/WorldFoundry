@@ -9,10 +9,7 @@ from typing import Any
 
 def sam3_server_url() -> str | None:
     raw = (
-        os.getenv("SAM3_SERVER_URL")
-        or os.getenv("SAM_SERVER_URL")
-        or os.getenv("PHYSICAL_SAM_SERVER_URL")
-        or ""
+        os.getenv("SAM3_SERVER_URL") or os.getenv("SAM_SERVER_URL") or os.getenv("PHYSICAL_SAM_SERVER_URL") or ""
     ).strip()
     return raw.rstrip("/") if raw else None
 

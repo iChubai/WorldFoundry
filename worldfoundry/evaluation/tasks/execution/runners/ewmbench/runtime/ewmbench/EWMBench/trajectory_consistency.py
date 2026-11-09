@@ -100,7 +100,7 @@ def HAUSDORFF(traj_pred, traj_gt, invaild_pred_trajs, invalid_gt_trajs):
     gt_max_distance_list = []
     for i in range(n_traj):
         if invalid_gt_trajs[i]:
-            print("Invalid gt trajectory encountered at index {}".format(i))
+            print(f"Invalid gt trajectory encountered at index {i}")
             continue
         gt_max_distance = farthest_distance(traj_gt[:, i])
         gt_max_distance_list.append(gt_max_distance)
@@ -158,14 +158,8 @@ def DYNAMICS(traj_pred, traj_gt, invaild_pred_trajs, invalid_gt_trajs, max_dista
             v_weights=acc_weight_gt,
         )
 
-        if vel_score:
-            vel_score = vr * (1 / vel_score)
-        else:
-            vel_score = 0.0
-        if acc_score:
-            acc_score = ar * (1 / acc_score)
-        else:
-            acc_score = 0.0
+        vel_score = vr * (1 / vel_score) if vel_score else 0.0
+        acc_score = ar * (1 / acc_score) if acc_score else 0.0
 
     score = 0.007 * vel_score + 0.003 * acc_score
 
@@ -191,9 +185,9 @@ def farthest_distance(points):
             while True:
                 next_k = (k + 1) % n
 
-                cross = (pts[j, 0] - pts[i, 0]) * (pts[next_k, 1] - pts[k, 1]) - (
-                    pts[j, 1] - pts[i, 1]
-                ) * (pts[next_k, 0] - pts[k, 0])
+                cross = (pts[j, 0] - pts[i, 0]) * (pts[next_k, 1] - pts[k, 1]) - (pts[j, 1] - pts[i, 1]) * (
+                    pts[next_k, 0] - pts[k, 0]
+                )
                 if cross < 0:
                     k = next_k
                 else:
@@ -266,25 +260,16 @@ def eval_traj(traj_pred_file, traj_gt_file):
     ndtw_max = 50.202
     min_val = 0.0
 
-    if hsd > hsd_max:
-        hsd = 1.0
-    else:
-        hsd = (hsd - min_val) / (hsd_max - min_val)
+    hsd = 1.0 if hsd > hsd_max else (hsd - min_val) / (hsd_max - min_val)
 
-    if dyn > dyn_max:
-        dyn = 1.0
-    else:
-        dyn = (dyn - min_val) / (dyn_max - min_val)
+    dyn = 1.0 if dyn > dyn_max else (dyn - min_val) / (dyn_max - min_val)
 
-    if ndtw > ndtw_max:
-        ndtw = 1.0
-    else:
-        ndtw = (ndtw - min_val) / (ndtw_max - min_val)
+    ndtw = 1.0 if ndtw > ndtw_max else (ndtw - min_val) / (ndtw_max - min_val)
 
     return {
-        "hsd": "%.3f" % hsd,
-        "dyn": "%.3f" % dyn,
-        "ndtw": "%.3f" % ndtw,
+        "hsd": f"{hsd:.3f}",
+        "dyn": f"{dyn:.3f}",
+        "ndtw": f"{ndtw:.3f}",
     }
 
 

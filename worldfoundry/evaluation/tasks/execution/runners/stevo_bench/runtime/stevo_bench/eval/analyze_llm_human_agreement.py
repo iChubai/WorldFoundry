@@ -31,13 +31,12 @@ import argparse
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-
 
 # ---------------------------------------------------------------------------
 # Supported metrics
@@ -46,7 +45,7 @@ import numpy as np
 SUPPORTED_METRICS = ["occlusion_done", "trigger_applied", "physical_inaccuracy", "state_evol"]
 
 
-def _get_llm_value(task: dict, metric: str) -> Optional[bool]:
+def _get_llm_value(task: dict, metric: str) -> bool | None:
     """Return the LLM judge boolean for a task entry, or None if absent."""
     if metric == "state_evol":
         acc = task.get("accuracy")
@@ -55,7 +54,7 @@ def _get_llm_value(task: dict, metric: str) -> Optional[bool]:
     return bool(val) if val is not None else None
 
 
-def _get_human_value(task: dict, metric: str) -> Optional[bool]:
+def _get_human_value(task: dict, metric: str) -> bool | None:
     """Return the human judge boolean for a task entry, or None if absent."""
     key = "human_state_evol" if metric == "state_evol" else f"human_{metric}"
     val = task.get(key)
@@ -70,11 +69,12 @@ def _get_human_value(task: dict, metric: str) -> Optional[bool]:
 #  Human=F  |   FP   |   TN  |
 # ---------------------------------------------------------------------------
 
+
 def compute_confusion(
-    tasks: List[dict],
+    tasks: list[dict],
     metric: str,
-    level: Optional[str] = None,
-) -> Tuple[np.ndarray, int]:
+    level: str | None = None,
+) -> tuple[np.ndarray, int]:
     """
     Returns:
         cm : 2×2 int ndarray  —  cm[human_idx, llm_idx]
@@ -86,12 +86,12 @@ def compute_confusion(
     for t in tasks:
         if level is not None and str(t.get("task_level", "")) != level:
             continue
-        llm   = _get_llm_value(t, metric)
+        llm = _get_llm_value(t, metric)
         human = _get_human_value(t, metric)
         if llm is None or human is None:
             continue
         row = 0 if human else 1
-        col = 0 if llm   else 1
+        col = 0 if llm else 1
         cm[row, col] += 1
         included += 1
     return cm, included
@@ -102,10 +102,7 @@ def _cohen_kappa(cm: np.ndarray) -> float:
     if n == 0:
         return float("nan")
     po = (cm[0, 0] + cm[1, 1]) / n
-    pe = (
-        (cm[0, :].sum() * cm[:, 0].sum() + cm[1, :].sum() * cm[:, 1].sum())
-        / (n * n)
-    )
+    pe = (cm[0, :].sum() * cm[:, 0].sum() + cm[1, :].sum() * cm[:, 1].sum()) / (n * n)
     return (po - pe) / (1.0 - pe) if pe < 1.0 else 1.0
 
 
@@ -119,12 +116,12 @@ def _roc_auc(cm: np.ndarray) -> float:
     cm layout:  cm[0,0]=TP  cm[0,1]=FN
                 cm[1,0]=FP  cm[1,1]=TN
     """
-    pos = cm[0, :].sum()   # all human-positive cases  (TP + FN)
-    neg = cm[1, :].sum()   # all human-negative cases  (FP + TN)
+    pos = cm[0, :].sum()  # all human-positive cases  (TP + FN)
+    neg = cm[1, :].sum()  # all human-negative cases  (FP + TN)
     if pos == 0 or neg == 0:
         return float("nan")
-    tpr = cm[0, 0] / pos   # sensitivity / recall
-    tnr = cm[1, 1] / neg   # specificity
+    tpr = cm[0, 0] / pos  # sensitivity / recall
+    tnr = cm[1, 1] / neg  # specificity
     return (tpr + tnr) / 2.0
 
 
@@ -132,13 +129,14 @@ def _roc_auc(cm: np.ndarray) -> float:
 # Plot
 # ---------------------------------------------------------------------------
 
+
 def plot_confusion_matrix(
     cm: np.ndarray,
     metric: str,
     n: int,
     output_path: Path,
-    level: Optional[str] = None,
-    title: Optional[str] = None,
+    level: str | None = None,
+    title: str | None = None,
 ) -> None:
     agreement = (cm[0, 0] + cm[1, 1]) / n if n > 0 else float("nan")
     kappa = _cohen_kappa(cm)
@@ -155,17 +153,27 @@ def plot_confusion_matrix(
 
     for i in range(2):
         for j in range(2):
-            ax.add_patch(plt.Rectangle(
-                (j - 0.5, i - 0.5), 1, 1,
-                facecolor=cell_colors[i][j], zorder=0,
-            ))
+            ax.add_patch(
+                plt.Rectangle(
+                    (j - 0.5, i - 0.5),
+                    1,
+                    1,
+                    facecolor=cell_colors[i][j],
+                    zorder=0,
+                )
+            )
             count = cm[i, j]
-            pct   = 100.0 * count / n if n > 0 else 0.0
+            pct = 100.0 * count / n if n > 0 else 0.0
             ax.text(
-                j, i, f"{count}\n({pct:.1f}%)",
-                ha="center", va="center",
-                fontsize=14, fontweight="bold",
-                color="#c9d1d9", zorder=1,
+                j,
+                i,
+                f"{count}\n({pct:.1f}%)",
+                ha="center",
+                va="center",
+                fontsize=14,
+                fontweight="bold",
+                color="#c9d1d9",
+                zorder=1,
             )
 
     for v in [-0.5, 0.5, 1.5]:
@@ -194,8 +202,7 @@ def plot_confusion_matrix(
     ax.set_title(subtitle, color="#8b949e", fontsize=10, pad=8)
 
     plt.tight_layout()
-    fig.savefig(output_path, dpi=150, bbox_inches="tight",
-                facecolor=fig.get_facecolor())
+    fig.savefig(output_path, dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.close(fig)
     print(f"Saved: {output_path}")
 
@@ -204,7 +211,8 @@ def plot_confusion_matrix(
 # Pairwise model-ranking agreement
 # ---------------------------------------------------------------------------
 
-def _compare_pairwise(val_a: Optional[bool], val_b: Optional[bool]) -> str:
+
+def _compare_pairwise(val_a: bool | None, val_b: bool | None) -> str:
     """Return 'A_wins', 'B_wins', 'tie', or 'unknown'."""
     if val_a is None or val_b is None:
         return "unknown"
@@ -213,7 +221,7 @@ def _compare_pairwise(val_a: Optional[bool], val_b: Optional[bool]) -> str:
     return "A_wins" if val_a > val_b else "B_wins"  # True > False
 
 
-def _pairwise_agreement_score(gt_cmp: str, llm_cmp: str) -> Optional[float]:
+def _pairwise_agreement_score(gt_cmp: str, llm_cmp: str) -> float | None:
     """
     1.0 = full agreement, 0.5 = one is tie and the other is not, 0.0 = reversal.
     None if either comparison is unknown (missing human or LLM label).
@@ -228,10 +236,10 @@ def _pairwise_agreement_score(gt_cmp: str, llm_cmp: str) -> Optional[float]:
 
 
 def compute_pairwise_agreement(
-    tasks_per_dir: List[Tuple[Path, List[dict]]],
+    tasks_per_dir: list[tuple[Path, list[dict]]],
     metric: str,
-    level: Optional[str] = None,
-) -> Dict:
+    level: str | None = None,
+) -> dict:
     """
     For every pair of run dirs, compare LLM and human judge rankings across all
     shared tasks and compute weighted agreement scores.
@@ -241,7 +249,7 @@ def compute_pairwise_agreement(
         'by_pair'  : per-pair stats keyed by "<run_a> vs <run_b>"
     """
     # Build task_id -> run_name -> {llm, human}
-    task_map: Dict[str, Dict[str, Dict]] = defaultdict(dict)
+    task_map: dict[str, dict[str, dict]] = defaultdict(dict)
     for run_dir, tasks in tasks_per_dir:
         for t in tasks:
             if level is not None and str(t.get("task_level", "")) != level:
@@ -250,24 +258,24 @@ def compute_pairwise_agreement(
             if not task_id:
                 continue
             task_map[task_id][run_dir.name] = {
-                "llm":   _get_llm_value(t, metric),
+                "llm": _get_llm_value(t, metric),
                 "human": _get_human_value(t, metric),
             }
 
     run_names = [d.name for d, _ in tasks_per_dir]
-    pairs = [
-        (run_names[i], run_names[j])
-        for i in range(len(run_names))
-        for j in range(i + 1, len(run_names))
-    ]
+    pairs = [(run_names[i], run_names[j]) for i in range(len(run_names)) for j in range(i + 1, len(run_names))]
 
-    overall: Dict = {"total_score": 0.0, "count": 0, "full": 0, "partial": 0, "reversal": 0, "unknown": 0}
-    by_pair: Dict[str, Dict] = {}
+    overall: dict = {"total_score": 0.0, "count": 0, "full": 0, "partial": 0, "reversal": 0, "unknown": 0}
+    by_pair: dict[str, dict] = {}
 
     for name_a, name_b in pairs:
-        stats: Dict = {
-            "total_score": 0.0, "count": 0,
-            "full": 0, "partial": 0, "reversal": 0, "unknown": 0,
+        stats: dict = {
+            "total_score": 0.0,
+            "count": 0,
+            "full": 0,
+            "partial": 0,
+            "reversal": 0,
+            "unknown": 0,
             "reversals": [],
         }
 
@@ -277,42 +285,41 @@ def compute_pairwise_agreement(
             data_a = run_data[name_a]
             data_b = run_data[name_b]
 
-            gt_cmp  = _compare_pairwise(data_a["human"], data_b["human"])
-            llm_cmp = _compare_pairwise(data_a["llm"],   data_b["llm"])
-            score   = _pairwise_agreement_score(gt_cmp, llm_cmp)
+            gt_cmp = _compare_pairwise(data_a["human"], data_b["human"])
+            llm_cmp = _compare_pairwise(data_a["llm"], data_b["llm"])
+            score = _pairwise_agreement_score(gt_cmp, llm_cmp)
 
             if score is None:
-                stats["unknown"]  += 1
+                stats["unknown"] += 1
                 overall["unknown"] += 1
             else:
-                stats["total_score"]  += score
-                stats["count"]        += 1
+                stats["total_score"] += score
+                stats["count"] += 1
                 overall["total_score"] += score
-                overall["count"]       += 1
+                overall["count"] += 1
                 if score == 1.0:
-                    stats["full"]   += 1;  overall["full"]   += 1
+                    stats["full"] += 1
+                    overall["full"] += 1
                 elif score == 0.5:
-                    stats["partial"] += 1; overall["partial"] += 1
+                    stats["partial"] += 1
+                    overall["partial"] += 1
                 else:
-                    stats["reversal"] += 1; overall["reversal"] += 1
+                    stats["reversal"] += 1
+                    overall["reversal"] += 1
                     stats["reversals"].append({"task_id": task_id, "gt": gt_cmp, "llm": llm_cmp})
 
-        stats["weighted_agreement"] = (
-            stats["total_score"] / stats["count"] if stats["count"] > 0 else float("nan")
-        )
+        stats["weighted_agreement"] = stats["total_score"] / stats["count"] if stats["count"] > 0 else float("nan")
         by_pair[f"{name_a} vs {name_b}"] = stats
 
-    overall["weighted_agreement"] = (
-        overall["total_score"] / overall["count"] if overall["count"] > 0 else float("nan")
-    )
+    overall["weighted_agreement"] = overall["total_score"] / overall["count"] if overall["count"] > 0 else float("nan")
     return {"overall": overall, "by_pair": by_pair}
 
 
-def print_pairwise_agreement(analysis: Dict, metric: str, level: Optional[str] = None) -> None:
+def print_pairwise_agreement(analysis: dict, metric: str, level: str | None = None) -> None:
     level_str = f"  (level {level})" if level else ""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"PAIRWISE MODEL-RANKING AGREEMENT: {metric}{level_str}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print("Scoring: full agreement = 1.0  |  tie vs non-tie = 0.5  |  reversal = 0.0")
     print("(For each task: does the LLM judge agree with the human judge on which")
     print(" model performs better?)\n")
@@ -333,7 +340,7 @@ def print_pairwise_agreement(analysis: Dict, metric: str, level: Optional[str] =
 
     col_w = max((len(p) for p, _ in sorted_pairs), default=20)
     print(f"\n  {'Pair':{col_w}s}   {'N':>5}   {'Agr':>6}   {'Full':>5}   {'Part':>5}   {'Rev':>5}")
-    print(f"  {'-'*col_w}   {'-----'}   {'------'}   {'-----'}   {'-----'}   {'-----'}")
+    print(f"  {'-' * col_w}   {'-----'}   {'------'}   {'-----'}   {'-----'}   {'-----'}")
     for pair, stats in sorted_pairs:
         agr = stats["weighted_agreement"]
         agr_str = f"{agr:.3f}" if not np.isnan(agr) else "  N/A"
@@ -355,6 +362,7 @@ def print_pairwise_agreement(analysis: Dict, metric: str, level: Optional[str] =
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Analyze LLM-vs-human judge agreement for a given metric.",
@@ -362,34 +370,41 @@ def main() -> None:
         epilog=__doc__,
     )
     parser.add_argument(
-        "--run_dir", required=True, nargs="+",
+        "--run_dir",
+        required=True,
+        nargs="+",
         help="One or more eval run directories each containing summary.json. "
-             "If multiple are given, tasks are pooled for the confusion matrix "
-             "and pairwise ranking agreement is computed across all pairs of runs.",
+        "If multiple are given, tasks are pooled for the confusion matrix "
+        "and pairwise ranking agreement is computed across all pairs of runs.",
     )
     parser.add_argument(
-        "--metric", required=True, choices=SUPPORTED_METRICS,
+        "--metric",
+        required=True,
+        choices=SUPPORTED_METRICS,
         help="Metric name. One of: " + ", ".join(SUPPORTED_METRICS),
     )
     parser.add_argument(
-        "--level", default=None,
+        "--level",
+        default=None,
         help="Restrict to a specific task level (e.g. 1, 2, …). Default: all levels.",
     )
     parser.add_argument(
-        "--output", default=None,
+        "--output",
+        default=None,
         help="Output PNG path. Defaults to <run_dir>/confusion_<metric>[_level<N>].png "
-             "for a single run, or ./confusion_<metric>[_level<N>].png for multiple runs.",
+        "for a single run, or ./confusion_<metric>[_level<N>].png for multiple runs.",
     )
     parser.add_argument(
-        "--title", default=None,
+        "--title",
+        default=None,
         help="Custom plot title (overrides the auto-generated title).",
     )
     args = parser.parse_args()
 
     # Load tasks from all run directories.
     run_dirs = [Path(d).expanduser().resolve() for d in args.run_dir]
-    all_tasks: List[dict] = []
-    tasks_per_dir: List[Tuple[Path, List[dict]]] = []
+    all_tasks: list[dict] = []
+    tasks_per_dir: list[tuple[Path, list[dict]]] = []
     for run_dir in run_dirs:
         summary_path = run_dir / "summary.json"
         if not summary_path.exists():
@@ -405,10 +420,7 @@ def main() -> None:
 
     if n == 0:
         level_str = f" at level {args.level}" if args.level else ""
-        print(
-            f"No tasks{level_str} have both LLM and human values for "
-            f"'{args.metric}'. Nothing to plot."
-        )
+        print(f"No tasks{level_str} have both LLM and human values for '{args.metric}'. Nothing to plot.")
         return
 
     # -----------------------------------------------------------------------
@@ -441,7 +453,7 @@ def main() -> None:
     # -----------------------------------------------------------------------
     # Pairwise model-ranking agreement (only meaningful with >= 2 runs)
     # -----------------------------------------------------------------------
-    pw_overall_agreement: Optional[float] = None
+    pw_overall_agreement: float | None = None
     if len(tasks_per_dir) >= 2:
         pw = compute_pairwise_agreement(tasks_per_dir, args.metric, level=args.level)
         print_pairwise_agreement(pw, args.metric, level=args.level)
@@ -452,15 +464,19 @@ def main() -> None:
     # -----------------------------------------------------------------------
     auc = _roc_auc(cm)
     auc_str = f"{auc:.3f}" if not np.isnan(auc) else "N/A"
-    pw_str  = f"{pw_overall_agreement:.3f}" if pw_overall_agreement is not None and not np.isnan(pw_overall_agreement) else "N/A (single run)"
+    pw_str = (
+        f"{pw_overall_agreement:.3f}"
+        if pw_overall_agreement is not None and not np.isnan(pw_overall_agreement)
+        else "N/A (single run)"
+    )
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"SUMMARY  —  {args.metric}{level_str}  —  {n_runs} run(s)")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     print(f"  Agreement with human  : {agree:.3f}  ({agree:.1%})")
     print(f"  Pairwise agreement    : {pw_str}")
     print(f"  ROC-AUC               : {auc_str}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     # -----------------------------------------------------------------------
     # Confusion matrix — plot
@@ -475,8 +491,12 @@ def main() -> None:
         output_path = Path(filename)
 
     plot_confusion_matrix(
-        cm, args.metric, n, output_path,
-        level=args.level, title=args.title,
+        cm,
+        args.metric,
+        n,
+        output_path,
+        level=args.level,
+        title=args.title,
     )
 
 

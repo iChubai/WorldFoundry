@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 from wrbench.datasets import prompt_templates_dir
 from wrbench.prompts.camera_text import CAMERA_CLAUSES, assemble_ti2v_prompt

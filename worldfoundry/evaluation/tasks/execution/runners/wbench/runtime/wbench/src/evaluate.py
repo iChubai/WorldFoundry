@@ -15,6 +15,7 @@ Usage:
     python evaluate.py --video path/to/video.mp4 --case path/to/case.json \
         --poses poses.npz --mask_dir masks/case_1 --depth depth.npy
 """
+
 import argparse
 import json
 import os
@@ -25,10 +26,11 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 os.environ["PYTHONWARNINGS"] = "ignore"
 
-import src.compat  # noqa: F401 — stub optional deps before any third-party imports
-import time
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+import time  # noqa: E402 - Follows the warnings filters set above.
+from pathlib import Path  # noqa: E402 - Follows the warnings filters set above.
+from typing import Any  # noqa: E402 - Follows the warnings filters set above.
+
+import src.compat  # noqa: E402, F401 — stub optional deps before any third-party imports
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -43,19 +45,21 @@ def _header(title: str):
 # Individual metric evaluators
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def evaluate_video_quality(video_path: str, device: str = "cuda",
-                           metrics: Optional[List[str]] = None,
-                           evaluator=None) -> Dict[str, Any]:
+
+def evaluate_video_quality(
+    video_path: str, device: str = "cuda", metrics: list[str] | None = None, evaluator=None
+) -> dict[str, Any]:
     from src.metrics.video_quality.evaluator import VideoQualityEvaluator
+
     if evaluator is None:
         evaluator = VideoQualityEvaluator(device=device, metrics=metrics)
     return evaluator.evaluate(video_path)
 
 
-def evaluate_background_consistency(video_path: str, device: str = "cuda",
-                                    metric=None) -> Dict[str, Any]:
+def evaluate_background_consistency(video_path: str, device: str = "cuda", metric=None) -> dict[str, Any]:
     import cv2
     from PIL import Image
+
     from src.metrics.consistency.background_consistency import BackgroundConsistencyMetric
 
     cap = cv2.VideoCapture(video_path)
@@ -80,24 +84,39 @@ def evaluate_background_consistency(video_path: str, device: str = "cuda",
     return {"score": result.get("background_consistency_score"), "num_frames": len(frames)}
 
 
-def evaluate_segment_continuity(video_path: str, case_id: str) -> Dict[str, Any]:
+def evaluate_segment_continuity(video_path: str, case_id: str) -> dict[str, Any]:
     from src.metrics.consistency.segment_continuity import compute_case
+
     return compute_case(video_path, case_id)
 
 
-def evaluate_perspective_consistency(mask_dir: str, depth_path: str) -> Optional[Dict[str, Any]]:
+def evaluate_perspective_consistency(mask_dir: str, depth_path: str) -> dict[str, Any] | None:
     from src.metrics.consistency.perspective_consistency import compute_case
+
     return compute_case(mask_dir, depth_path)
 
 
-def evaluate_navigation(poses_path: str, case_data: dict) -> Dict[str, Any]:
+def evaluate_navigation(poses_path: str, case_data: dict) -> dict[str, Any]:
     import numpy as np
+
     from src.metrics.interaction.navigation_trajectory import evaluate_navigation as _eval_nav
 
     NAVI_ACTIONS = {
-        "W", "A", "S", "D", "left", "right", "up", "down",
-        "W+A", "W+D", "S+D",
-        "W+left", "W+right", "W+up", "W+down",
+        "W",
+        "A",
+        "S",
+        "D",
+        "left",
+        "right",
+        "up",
+        "down",
+        "W+A",
+        "W+D",
+        "S+D",
+        "W+left",
+        "W+right",
+        "W+up",
+        "W+down",
     }
 
     npz = np.load(poses_path)
@@ -111,8 +130,8 @@ def evaluate_navigation(poses_path: str, case_data: dict) -> Dict[str, Any]:
     # Split all turns equally, then filter to nav-only turns
     all_bounds = [(i * per_turn, min((i + 1) * per_turn, n_poses)) for i in range(n_turns)]
     nav_mask = [a in NAVI_ACTIONS for a in all_actions]
-    nav_actions = [a for a, m in zip(all_actions, nav_mask) if m]
-    nav_bounds = [b for b, m in zip(all_bounds, nav_mask) if m]
+    nav_actions = [a for a, m in zip(all_actions, nav_mask, strict=False) if m]
+    nav_bounds = [b for b, m in zip(all_bounds, nav_mask, strict=False) if m]
 
     if not nav_actions:
         return {"NavScore": None, "error": "no navigation actions"}
@@ -121,24 +140,26 @@ def evaluate_navigation(poses_path: str, case_data: dict) -> Dict[str, Any]:
     return _eval_nav(poses, nav_bounds, nav_actions, perspective)
 
 
-def evaluate_spatial_consistency(video_path: str, npz_path: str, n_turns: int,
-                                 device: str = "cuda",
-                                 ds_model=None, ds_preprocess=None) -> Optional[Dict[str, Any]]:
+def evaluate_spatial_consistency(
+    video_path: str, npz_path: str, n_turns: int, device: str = "cuda", ds_model=None, ds_preprocess=None
+) -> dict[str, Any] | None:
     from src.metrics.consistency.spatial_consistency import evaluate_case
 
     if ds_model is None:
         from worldfoundry.base_models.perception_core.video_quality.dreamsim import load_model
+
         ds_model, ds_preprocess = load_model(device=device)
         ds_model = ds_model.to(device).eval()
     return evaluate_case(video_path, npz_path, n_turns, ds_model, ds_preprocess, device)
 
 
-def evaluate_subject_consistency_cross(video_path: str, mask_dir: str,
-                                       device: str = "cuda",
-                                       metric=None) -> Optional[Dict[str, Any]]:
+def evaluate_subject_consistency_cross(
+    video_path: str, mask_dir: str, device: str = "cuda", metric=None
+) -> dict[str, Any] | None:
     import cv2
     import numpy as np
     from PIL import Image
+
     from src.metrics.consistency.subject_consistency import SubjectConsistencyMetric
 
     if metric is None:
@@ -179,8 +200,9 @@ def evaluate_subject_consistency_cross(video_path: str, mask_dir: str,
 
 def _get_turn1_video_url(video_path: str, case_data: dict, max_short_side: int = 0) -> str:
     """Encode Turn-1 video clip as base64 URL."""
-    from src.metrics.vlm.vlm_evaluator import clip_video_to_b64url, encode_video_to_b64url
     import cv2
+
+    from src.metrics.vlm.vlm_evaluator import clip_video_to_b64url, encode_video_to_b64url
 
     n_turns = len(case_data.get("interactions", []))
     if n_turns > 1:
@@ -194,8 +216,7 @@ def _get_turn1_video_url(video_path: str, case_data: dict, max_short_side: int =
         return encode_video_to_b64url(video_path, max_short_side=max_short_side)
 
 
-def evaluate_scene_adherence(video_path: str, case_data: dict,
-                             device: str = "cuda") -> Dict[str, Any]:
+def evaluate_scene_adherence(video_path: str, case_data: dict, device: str = "cuda") -> dict[str, Any]:
     from src.metrics.setting_adherence.scene_adherence import evaluate_case
 
     sa = case_data.get("scene_adherence", {})
@@ -222,8 +243,7 @@ def evaluate_scene_adherence(video_path: str, case_data: dict,
     return result
 
 
-def evaluate_subject_adherence(video_path: str, case_data: dict,
-                               device: str = "cuda") -> Dict[str, Any]:
+def evaluate_subject_adherence(video_path: str, case_data: dict, device: str = "cuda") -> dict[str, Any]:
     from src.metrics.setting_adherence.subject_adherence import evaluate_case
 
     sa = case_data.get("subject_adherence", {})
@@ -246,10 +266,10 @@ def evaluate_subject_adherence(video_path: str, case_data: dict,
     return result
 
 
-def evaluate_causal_fidelity(video_path: str, case_data: dict,
-                              device: str = "cuda") -> Dict[str, Any]:
+def evaluate_causal_fidelity(video_path: str, case_data: dict, device: str = "cuda") -> dict[str, Any]:
     import cv2
     from PIL import Image
+
     from src.metrics.physical.causal_fidelity import evaluate_case
     from src.metrics.vlm.vlm_evaluator import VLMClient
 
@@ -277,12 +297,11 @@ def evaluate_causal_fidelity(video_path: str, case_data: dict,
     return evaluate_case(client, frames, case_data)
 
 
-def evaluate_vlm_interaction(video_path: str, case_data: dict,
-                             device: str = "cuda") -> Dict[str, Any]:
+def evaluate_vlm_interaction(video_path: str, case_data: dict, device: str = "cuda") -> dict[str, Any]:
     from src.metrics.interaction.vlm_interaction import (
         evaluate_event_edit,
-        evaluate_subject_action,
         evaluate_perspective_switch,
+        evaluate_subject_action,
     )
     from src.metrics.vlm.vlm_evaluator import VLMClient
 
@@ -310,9 +329,15 @@ def evaluate_vlm_interaction(video_path: str, case_data: dict,
 # Full case evaluation
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
-                  poses_path: str = None, mask_dir: str = None,
-                  depth_path: str = None) -> Dict[str, Any]:
+
+def evaluate_full(
+    video_path: str,
+    case_data: dict,
+    device: str = "cuda",
+    poses_path: str | None = None,
+    mask_dir: str | None = None,
+    depth_path: str | None = None,
+) -> dict[str, Any]:
     """Run all applicable metrics on a single video + case."""
     results = {"case_id": case_data.get("id"), "video_path": video_path}
     timings = {}
@@ -337,11 +362,24 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
     timings["segment_continuity"] = round(time.time() - t0, 1)
 
     # --- 4. Navigation Trajectory (requires MegaSAM poses) ---
-    navi_actions = {"W", "S", "A", "D", "left", "right", "up", "down",
-                    "forward", "backward", "cam_left", "cam_right", "cam_up", "cam_down"}
+    navi_actions = {
+        "W",
+        "S",
+        "A",
+        "D",
+        "left",
+        "right",
+        "up",
+        "down",
+        "forward",
+        "backward",
+        "cam_left",
+        "cam_right",
+        "cam_up",
+        "cam_down",
+    }
     interactions = case_data.get("interactions", [])
-    is_navi = any(t.get("action", "") in navi_actions or t.get("type") == "navigation"
-                  for t in interactions)
+    is_navi = any(t.get("action", "") in navi_actions or t.get("type") == "navigation" for t in interactions)
 
     if is_navi and poses_path and os.path.exists(poses_path):
         _header("Navigation Trajectory")
@@ -351,22 +389,22 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
     else:
         results["navigation_trajectory"] = {
             "skipped": True,
-            "reason": "not navi case" if not is_navi else "poses not provided"
+            "reason": "not navi case" if not is_navi else "poses not provided",
         }
 
     # --- 5. Spatial Consistency (requires MegaSAM poses, loop case) ---
     if is_navi and poses_path and os.path.exists(poses_path):
         from src.metrics.consistency.spatial_consistency import SYMMETRIC_PAIRS
+
         actions = [t.get("action", "") for t in interactions]
         n = len(actions)
-        is_loop = n >= 2 and all(
-            (actions[i], actions[n - 1 - i]) in SYMMETRIC_PAIRS for i in range(n // 2)
-        )
+        is_loop = n >= 2 and all((actions[i], actions[n - 1 - i]) in SYMMETRIC_PAIRS for i in range(n // 2))
         if is_loop:
             _header("Spatial Consistency")
             t0 = time.time()
             results["spatial_consistency"] = evaluate_spatial_consistency(
-                video_path, poses_path, len(interactions), device)
+                video_path, poses_path, len(interactions), device
+            )
             timings["spatial_consistency"] = round(time.time() - t0, 1)
         else:
             results["spatial_consistency"] = {"skipped": True, "reason": "not a loop case"}
@@ -386,8 +424,7 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
     if mask_dir and os.path.isdir(mask_dir):
         _header("Subject Consistency")
         t0 = time.time()
-        results["subject_consistency"] = evaluate_subject_consistency_cross(
-            video_path, mask_dir, device)
+        results["subject_consistency"] = evaluate_subject_consistency_cross(video_path, mask_dir, device)
         timings["subject_consistency"] = round(time.time() - t0, 1)
     else:
         results["subject_consistency"] = {"skipped": True, "reason": "masks not provided"}
@@ -398,8 +435,8 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
         _header("Reconstruction Consistency (geometric + photometric)")
         t0 = time.time()
         from src.metrics.consistency.reconstruction_consistency import compute_case as _rc_compute
-        results["reconstruction_consistency"] = _rc_compute(
-            video_path, da3_dir, fps=3.0, device=device)
+
+        results["reconstruction_consistency"] = _rc_compute(video_path, da3_dir, fps=3.0, device=device)
         timings["reconstruction_consistency"] = round(time.time() - t0, 1)
     else:
         results["reconstruction_consistency"] = {"skipped": True, "reason": "DA3 depth not provided"}
@@ -442,6 +479,7 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
 
     # --- 12. Physical Plausibility (PAVRM: local model or API) ---
     from worldfoundry.base_models.llm_mllm_core.mllm.qwen.wbench_visual_plausibility import model_dir as pavrm_model_dir
+
     pavrm_path = (
         os.environ.get("PAVRM_MODEL_PATH")
         or os.environ.get("WORLDFOUNDRY_WBENCH_PAVRM_MODEL_DIR")
@@ -453,6 +491,7 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
         t0 = time.time()
         try:
             from src.metrics.physical.visual_plausibility import compute_case as _pp_compute
+
             results["visual_plausibility"] = _pp_compute(video_path, model_path=pavrm_path, device=device)
         except Exception as e:
             results["visual_plausibility"] = {"score": None, "error": str(e)}
@@ -460,7 +499,7 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
     else:
         results["visual_plausibility"] = {
             "skipped": True,
-            "reason": "WBench PAVRM model directory or PAVRM_API_URL not available"
+            "reason": "WBench PAVRM model directory or PAVRM_API_URL not available",
         }
 
     results["timings"] = timings
@@ -471,9 +510,11 @@ def evaluate_full(video_path: str, case_data: dict, device: str = "cuda",
 # Batch evaluation
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _worker_fn(args_tuple):
     gpu_id, video_paths, metrics, output_dir = args_tuple
     import torch
+
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     torch.set_num_threads(4)
 
@@ -494,19 +535,23 @@ def _worker_fn(args_tuple):
         out_path = os.path.join(output_dir, f"case_{case_id}.json")
         with open(out_path, "w") as f:
             json.dump(case_result, f, indent=2, default=str)
-        print(f"  [GPU {gpu_id}] ({i+1}/{len(video_paths)}) case_{case_id} done")
+        print(f"  [GPU {gpu_id}] ({i + 1}/{len(video_paths)}) case_{case_id} done")
     return results
 
 
-def batch_evaluate(video_dir: str, metrics: List[str], device: str = "cuda",
-                   output_dir: str = "results", gpus: str = None) -> Dict[str, Any]:
+def batch_evaluate(
+    video_dir: str, metrics: list[str], device: str = "cuda", output_dir: str = "results", gpus: str | None = None
+) -> dict[str, Any]:
     import numpy as np
 
     os.makedirs(output_dir, exist_ok=True)
-    videos = sorted([
-        os.path.join(video_dir, f) for f in os.listdir(video_dir)
-        if f.startswith("case_") and f.endswith("_combined.mp4")
-    ])
+    videos = sorted(
+        [
+            os.path.join(video_dir, f)
+            for f in os.listdir(video_dir)
+            if f.startswith("case_") and f.endswith("_combined.mp4")
+        ]
+    )
     print(f"Found {len(videos)} videos in {video_dir}")
 
     if gpus:
@@ -516,6 +561,7 @@ def batch_evaluate(video_dir: str, metrics: List[str], device: str = "cuda",
 
     if len(gpu_ids) > 1:
         from multiprocessing import Pool
+
         chunks = [[] for _ in gpu_ids]
         for i, v in enumerate(videos):
             chunks[i % len(gpu_ids)].append(v)
@@ -531,7 +577,7 @@ def batch_evaluate(video_dir: str, metrics: List[str], device: str = "cuda",
         all_results = {}
         for i, video_path in enumerate(videos):
             case_id = Path(video_path).name.replace("case_", "").replace("_combined.mp4", "")
-            print(f"\n[{i+1}/{len(videos)}] case_{case_id}")
+            print(f"\n[{i + 1}/{len(videos)}] case_{case_id}")
             case_result = {"case_id": case_id, "video_path": video_path}
             if "video_quality" in metrics or "all" in metrics:
                 case_result["video_quality"] = evaluate_video_quality(video_path, device)
@@ -545,7 +591,7 @@ def batch_evaluate(video_dir: str, metrics: List[str], device: str = "cuda",
                 json.dump(case_result, f, indent=2, default=str)
 
     summary = {}
-    for case_id, res in all_results.items():
+    for _case_id, res in all_results.items():
         vq = res.get("video_quality", {}).get("summary", {})
         for metric_name, score in vq.items():
             if score is not None:
@@ -569,6 +615,7 @@ def batch_evaluate(video_dir: str, metrics: List[str], device: str = "cuda",
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="WBench: Unified Evaluation for Video World Models",
@@ -591,13 +638,16 @@ def main():
     parser.add_argument("--poses", type=str, help="MegaSAM poses .npz")
     parser.add_argument("--mask_dir", type=str, help="SAM2 mask directory")
     parser.add_argument("--depth", type=str, help="DA3 depth .npy file")
-    parser.add_argument("--metrics", type=str, nargs="+", default=None,
-                        help="Specific metrics (default: all if --case provided, video_quality otherwise)")
+    parser.add_argument(
+        "--metrics",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Specific metrics (default: all if --case provided, video_quality otherwise)",
+    )
     parser.add_argument("--device", type=str, default="cuda")
-    parser.add_argument("--gpus", type=str, default=None,
-                        help="Comma-separated GPU IDs for multi-GPU batch")
-    parser.add_argument("--output", type=str, default="results.json",
-                        help="Output file (single) or directory (batch)")
+    parser.add_argument("--gpus", type=str, default=None, help="Comma-separated GPU IDs for multi-GPU batch")
+    parser.add_argument("--output", type=str, default="results.json", help="Output file (single) or directory (batch)")
     args = parser.parse_args()
 
     # Batch mode
@@ -615,7 +665,7 @@ def main():
         with open(args.case) as f:
             case_data = json.load(f)
 
-        print(f"\n  WBench Full Evaluation")
+        print("\n  WBench Full Evaluation")
         print(f"  Video: {args.video}")
         print(f"  Case:  {args.case} (id={case_data.get('id')})")
         print(f"  Poses: {args.poses or 'N/A'}")
@@ -649,8 +699,7 @@ def main():
                 elif error:
                     print(f"  {key:35s} | ERROR: {error}")
                 elif summary:
-                    scores_str = ", ".join(f"{k}={v:.4f}" for k, v in summary.items()
-                                           if isinstance(v, (int, float)))
+                    scores_str = ", ".join(f"{k}={v:.4f}" for k, v in summary.items() if isinstance(v, (int, float)))
                     print(f"  {key:35s} | {scores_str}")
                 elif score is not None:
                     print(f"  {key:35s} | score={score:.4f}")
@@ -680,32 +729,25 @@ def main():
         case_id = Path(args.video).stem.replace("case_", "").replace("_combined", "")
         results["segment_continuity"] = evaluate_segment_continuity(args.video, case_id)
 
-    if "subject_consistency" in metrics:
-        if args.mask_dir:
-            _header("Subject Consistency")
-            results["subject_consistency"] = evaluate_subject_consistency_cross(
-                args.video, args.mask_dir, args.device)
+    if "subject_consistency" in metrics and args.mask_dir:
+        _header("Subject Consistency")
+        results["subject_consistency"] = evaluate_subject_consistency_cross(args.video, args.mask_dir, args.device)
 
-    if "navigation" in metrics or "all" in metrics:
-        if args.poses and args.case:
-            _header("Navigation Trajectory")
-            with open(args.case) as f:
-                case_data = json.load(f)
-            results["navigation"] = evaluate_navigation(args.poses, case_data)
+    if ("navigation" in metrics or "all" in metrics) and args.poses and args.case:
+        _header("Navigation Trajectory")
+        with open(args.case) as f:
+            case_data = json.load(f)
+        results["navigation"] = evaluate_navigation(args.poses, case_data)
 
-    if "perspective_consistency" in metrics:
-        if args.mask_dir and args.depth:
-            _header("Perspective Consistency")
-            results["perspective_consistency"] = evaluate_perspective_consistency(
-                args.mask_dir, args.depth)
+    if "perspective_consistency" in metrics and args.mask_dir and args.depth:
+        _header("Perspective Consistency")
+        results["perspective_consistency"] = evaluate_perspective_consistency(args.mask_dir, args.depth)
 
-    if "spatial_consistency" in metrics:
-        if args.video and args.poses and args.case:
-            _header("Spatial Consistency")
-            with open(args.case) as f:
-                n_turns = len(json.load(f).get("interactions", []))
-            results["spatial_consistency"] = evaluate_spatial_consistency(
-                args.video, args.poses, n_turns, args.device)
+    if "spatial_consistency" in metrics and args.video and args.poses and args.case:
+        _header("Spatial Consistency")
+        with open(args.case) as f:
+            n_turns = len(json.load(f).get("interactions", []))
+        results["spatial_consistency"] = evaluate_spatial_consistency(args.video, args.poses, n_turns, args.device)
 
     with open(args.output, "w") as f:
         json.dump(results, f, indent=2, default=str)

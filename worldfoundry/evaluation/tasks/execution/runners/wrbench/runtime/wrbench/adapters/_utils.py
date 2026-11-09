@@ -62,7 +62,9 @@ def ensure_work_dir(work_dir: str | Path | None) -> Path:
     return out
 
 
-def model_target_trajectory(trajectory: CameraTrajectory, model_name: str, num_frames: int) -> tuple[CameraTrajectory, object]:
+def model_target_trajectory(
+    trajectory: CameraTrajectory, model_name: str, num_frames: int
+) -> tuple[CameraTrajectory, object]:
     amp = resolve_model_amplitude(model_name)
     target = trajectory.resample(int(num_frames))
     c2w = target.to_c2w()
@@ -160,7 +162,7 @@ def linspace_frame_indices(requested_frame_count: int, sample_count: int) -> lis
     if int(sample_count) == 1:
         return [0]
     values = np.linspace(0, int(requested_frame_count) - 1, int(sample_count))
-    return [int(round(float(v))) for v in values]
+    return [round(float(v)) for v in values]
 
 
 def build_model_control_timeline_metadata(

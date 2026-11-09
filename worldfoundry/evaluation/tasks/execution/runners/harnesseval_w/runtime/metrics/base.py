@@ -9,7 +9,6 @@ class BaseMetric(ABC):
     @abstractmethod
     def name(self):
         """Return the unique name of this metric."""
-        pass
 
     @abstractmethod
     def compute(self, frames, first_frame=None, prompt=None, **kwargs):
@@ -22,4 +21,3 @@ class BaseMetric(ABC):
             prompt: str (text prompt, optional)
             **kwargs: Extra parameters (e.g., actions, perspective)
         """
-        pass

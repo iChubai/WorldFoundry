@@ -1,10 +1,10 @@
-import torch
-import re
 import os
+import re
 import warnings
-
-from typing import Tuple, List, Optional, Union, Dict, Any
+from typing import Any
 from urllib.request import urlopen
+
+import torch
 
 SEMVER_VERSION_PATTERN = re.compile(
     r"""
@@ -61,11 +61,11 @@ PEP_440_VERSION_PATTERN = r"""
 
 
 def _validate_input(
-        tensors: List[torch.Tensor],
-        dim_range: Tuple[int, int] = (0, -1),
-        data_range: Tuple[float, float] = (0., -1.),
-        size_range: Optional[Tuple[int, int]] = None,
-        check_for_channels_first: bool = False
+    tensors: list[torch.Tensor],
+    dim_range: tuple[int, int] = (0, -1),
+    data_range: tuple[float, float] = (0.0, -1.0),
+    size_range: tuple[int, int] | None = None,
+    check_for_channels_first: bool = False,
 ) -> None:
     r"""Check that input(-s)  satisfies the requirements
     Args:
@@ -81,34 +81,36 @@ def _validate_input(
     x = tensors[0]
 
     for t in tensors:
-        assert torch.is_tensor(t), f'Expected torch.Tensor, got {type(t)}'
-        assert t.device == x.device, f'Expected tensors to be on {x.device}, got {t.device}'
+        assert torch.is_tensor(t), f"Expected torch.Tensor, got {type(t)}"
+        assert t.device == x.device, f"Expected tensors to be on {x.device}, got {t.device}"
 
         if size_range is None:
-            assert t.size() == x.size(), f'Expected tensors with same size, got {t.size()} and {x.size()}'
+            assert t.size() == x.size(), f"Expected tensors with same size, got {t.size()} and {x.size()}"
         else:
-            assert t.size()[size_range[0]: size_range[1]] == x.size()[size_range[0]: size_range[1]], \
-                f'Expected tensors with same size at given dimensions, got {t.size()} and {x.size()}'
+            assert t.size()[size_range[0] : size_range[1]] == x.size()[size_range[0] : size_range[1]], (
+                f"Expected tensors with same size at given dimensions, got {t.size()} and {x.size()}"
+            )
 
         if dim_range[0] == dim_range[1]:
-            assert t.dim() == dim_range[0], f'Expected number of dimensions to be {dim_range[0]}, got {t.dim()}'
+            assert t.dim() == dim_range[0], f"Expected number of dimensions to be {dim_range[0]}, got {t.dim()}"
         elif dim_range[0] < dim_range[1]:
-            assert dim_range[0] <= t.dim() <= dim_range[1], \
-                f'Expected number of dimensions to be between {dim_range[0]} and {dim_range[1]}, got {t.dim()}'
+            assert dim_range[0] <= t.dim() <= dim_range[1], (
+                f"Expected number of dimensions to be between {dim_range[0]} and {dim_range[1]}, got {t.dim()}"
+            )
 
         if data_range[0] < data_range[1]:
-            assert data_range[0] <= t.min(), \
-                f'Expected values to be greater or equal to {data_range[0]}, got {t.min()}'
-            assert t.max() <= data_range[1], \
-                f'Expected values to be lower or equal to {data_range[1]}, got {t.max()}'
-            
+            assert data_range[0] <= t.min(), f"Expected values to be greater or equal to {data_range[0]}, got {t.min()}"
+            assert t.max() <= data_range[1], f"Expected values to be lower or equal to {data_range[1]}, got {t.max()}"
+
         if check_for_channels_first:
             channels_last = t.shape[-1] in {1, 2, 3}
-            assert not channels_last, "Expected tensor to have channels first format, but got channels last. \
+            assert not channels_last, (
+                "Expected tensor to have channels first format, but got channels last. \
                 Please permute channels (e.g. t.permute(0, 3, 1, 2) for 4D tensors) and rerun."
+            )
 
 
-def _reduce(x: torch.Tensor, reduction: str = 'mean') -> torch.Tensor:
+def _reduce(x: torch.Tensor, reduction: str = "mean") -> torch.Tensor:
     r"""Reduce input in batch dimension if needed.
 
     Args:
@@ -116,18 +118,18 @@ def _reduce(x: torch.Tensor, reduction: str = 'mean') -> torch.Tensor:
         reduction: Specifies the reduction type:
             ``'none'`` | ``'mean'`` | ``'sum'``. Default: ``'mean'``
     """
-    if reduction == 'none':
+    if reduction == "none":
         return x
-    elif reduction == 'mean':
+    elif reduction == "mean":
         return x.mean(dim=0)
-    elif reduction == 'sum':
+    elif reduction == "sum":
         return x.sum(dim=0)
     else:
         raise ValueError("Unknown reduction. Expected one of {'none', 'mean', 'sum'}")
 
 
-def _parse_version(version: Union[str, bytes]) -> Tuple[int, ...]:
-    """ Parses valid Python versions according to Semver and PEP 440 specifications.
+def _parse_version(version: str | bytes) -> tuple[int, ...]:
+    """Parses valid Python versions according to Semver and PEP 440 specifications.
     For more on Semver check: https://semver.org/
     For more on PEP 440 check: https://www.python.org/dev/peps/pep-0440/.
 
@@ -149,8 +151,8 @@ def _parse_version(version: Union[str, bytes]) -> Tuple[int, ...]:
     # Semver processing
     match = SEMVER_VERSION_PATTERN.match(version)
     if match:
-        matched_version_parts: Dict[str, Any] = match.groupdict()
-        release = tuple([int(matched_version_parts[k]) for k in ['major', 'minor', 'patch']])
+        matched_version_parts: dict[str, Any] = match.groupdict()
+        release = tuple([int(matched_version_parts[k]) for k in ["major", "minor", "patch"]])
         return release
 
     # PEP 440 processing
@@ -158,14 +160,14 @@ def _parse_version(version: Union[str, bytes]) -> Tuple[int, ...]:
     match = regex.search(version)
 
     if match is None:
-        warnings.warn(f"{version} is not a valid SemVer or PEP 440 string")
-        return tuple()
+        warnings.warn(f"{version} is not a valid SemVer or PEP 440 string", stacklevel=1)
+        return ()
 
     release = tuple(int(i) for i in match.group("release").split("."))
     return release
 
 
-def download_tensor(url: str, root: str, map_location: str = 'cpu') -> torch.Tensor:
+def download_tensor(url: str, root: str, map_location: str = "cpu") -> torch.Tensor:
     r"""Downloads torch tensor and caches it. If already downloaded - loads from cache.
 
     Args:
@@ -180,7 +182,7 @@ def download_tensor(url: str, root: str, map_location: str = 'cpu') -> torch.Ten
     download_target = os.path.join(root, filename)
     if os.path.isfile(download_target):
         return torch.load(download_target, map_location=map_location)
-    
+
     with urlopen(url) as source, open(download_target, "wb") as output:
         while True:
             buff = source.read(8192)
@@ -192,7 +194,7 @@ def download_tensor(url: str, root: str, map_location: str = 'cpu') -> torch.Ten
     return torch.load(download_target, map_location=map_location)
 
 
-def is_sha256_hash(string: str) -> Optional[re.Match]:
-    """ Checks whether the provided sting is a valid SHA256 hash. """
+def is_sha256_hash(string: str) -> re.Match | None:
+    """Checks whether the provided sting is a valid SHA256 hash."""
     pattern = re.compile("^[a-fA-F0-9]{64}$")
     return pattern.match(string)

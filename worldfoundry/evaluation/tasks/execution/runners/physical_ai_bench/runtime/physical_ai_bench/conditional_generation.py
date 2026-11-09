@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import pickle
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import numpy as np
 
@@ -154,7 +155,7 @@ class _DepthPredictor:
             )
         return np.asarray(
             self._model.model.infer_video_depth(
-                [frame for frame in frames],
+                list(frames),
                 input_size=518,
                 fp32=True,
             )
@@ -191,7 +192,7 @@ def _load_segmentation(path: Path, *, allow_pickle: bool) -> list[dict[str, Any]
                 f"refusing to load pickle {path}; pass --allow-trusted-pickle only for the trusted official dataset"
             )
         with path.open("rb") as handle:
-            return _normalize_segmentation_records(pickle.load(handle))  # noqa: S301 - explicit trusted opt-in
+            return _normalize_segmentation_records(pickle.load(handle))  # explicit trusted opt-in
     raise ValueError(f"unsupported segmentation sidecar: {path}")
 
 
@@ -315,8 +316,9 @@ def evaluate_conditional_generation(request: ConditionalGenerationRequest) -> di
             def aligned_video_frames() -> tuple[np.ndarray, np.ndarray]:
                 nonlocal aligned_frames, gt_frames
                 if aligned_frames is None or gt_frames is None:
-                    gt_frames = _ground_truth_video(request, row, name)
-                    aligned_frames, gt_frames = align_video(frames, gt_frames, nearest=False)
+                    # Each closure is called only during its own loop iteration.
+                    gt_frames = _ground_truth_video(request, row, name)  # noqa: B023
+                    aligned_frames, gt_frames = align_video(frames, gt_frames, nearest=False)  # noqa: B023
                 return aligned_frames, gt_frames
 
             result: dict[str, Any] = {

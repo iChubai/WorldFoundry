@@ -7,9 +7,10 @@ It simplifies the initialization and interaction with the VMem runtime,
 allowing users to seamlessly integrate VMem's visual generation capabilities
 into a broader synthesis framework. It also exposes default repository paths.
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from ...base_synthesis import BaseSynthesis
 
@@ -67,7 +68,7 @@ class VMemSynthesis(BaseSynthesis):
         weight_dtype: Any = None,
         step_size: float = 0.1,
         num_interpolation_frames: int = 4,
-        runtime: "VMemRuntime | None" = None,
+        runtime: VMemRuntime | None = None,
     ):
         """
         Initializes the VMemSynthesis facade.
@@ -148,18 +149,18 @@ class VMemSynthesis(BaseSynthesis):
     @classmethod
     def from_pretrained(
         cls,
-        pretrained_model_path: Optional[str] = None,
+        pretrained_model_path: str | None = None,
         args: Any = None,
-        device: Optional[str] = None,
+        device: str | None = None,
         weight_dtype: Any = None,
-        config_path: Optional[str] = None,
-        surfel_model_path: Optional[str] = None,
+        config_path: str | None = None,
+        surfel_model_path: str | None = None,
         step_size: float = 0.1,
         num_interpolation_frames: int = 4,
-        runtime_root: Optional[str] = None,
-        visualization_dir: Optional[str] = None,
+        runtime_root: str | None = None,
+        visualization_dir: str | None = None,
         **kwargs: Any,
-    ) -> "VMemSynthesis":
+    ) -> VMemSynthesis:
         """
         Creates a VMemSynthesis instance by loading a pretrained VMemRuntime model.
 

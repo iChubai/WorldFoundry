@@ -3,28 +3,41 @@ Main evaluation script for Gemini-based state evolution evaluation.
 Orchestrates the two-step evaluation process and saves results.
 """
 
+import argparse
 import json
 import os
-from pathlib import Path
-from datetime import datetime
-from typing import List, Dict
-import argparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+from pathlib import Path
 
 from data_collector import TaskDataCollector
 from gemini_evaluator import GeminiEvaluator
 from gemini_evaluator_ensemble import GeminiEnsembleEvaluator
 from gemini_evaluator_evidence import GeminiEvidenceEvaluator
+
+# isort: split
 from gemini_gpt_evaluator import GeminiGPTEvaluator
+
+# isort: split
 from gpt_evaluator import GPTEvaluator
+
+# isort: split
 from gemini_gpt_double_ensemble import GeminiGPTDoubleEnsemble
 
 
 class EvaluationRunner:
-    def __init__(self, project_root: str, output_dir: str = "eval_se/results",
-                 use_ensemble: bool = False, use_evidence: bool = False, use_cross_model: bool = False,
-                 use_gpt: bool = False, use_double_ensemble: bool = False, task_dir: str = "benchmark/tasks_v4"):
+    def __init__(
+        self,
+        project_root: str,
+        output_dir: str = "eval_se/results",
+        use_ensemble: bool = False,
+        use_evidence: bool = False,
+        use_cross_model: bool = False,
+        use_gpt: bool = False,
+        use_double_ensemble: bool = False,
+        task_dir: str = "benchmark/tasks_v4",
+    ):
         self.project_root = Path(project_root)
         self.output_dir = self.project_root / output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -60,11 +73,11 @@ class EvaluationRunner:
             self.evaluator = GeminiEvaluator()
             print("Using standard Gemini evaluator")
 
-    def _evaluate_single_task(self, task_data: Dict, task_num: int, total_tasks: int) -> Dict:
+    def _evaluate_single_task(self, task_data: dict, task_num: int, total_tasks: int) -> dict:
         """Evaluate a single task (used for parallel execution)."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Task {task_num}/{total_tasks}: {task_data['task_id']}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         try:
             result = self.evaluator.evaluate_task(task_data)
@@ -79,7 +92,9 @@ class EvaluationRunner:
                 "pass": False,
             }
 
-    def run_evaluation(self, limit: int = None, output_filename: str = None, max_workers: int = 1) -> Dict:
+    def run_evaluation(
+        self, limit: int | None = None, output_filename: str | None = None, max_workers: int = 1
+    ) -> dict:
         """
         Run evaluation on all collected tasks.
         Saves results incrementally after each task.
@@ -127,7 +142,7 @@ class EvaluationRunner:
                     "results": results,
                 }
 
-                with open(output_path, 'w') as f:
+                with open(output_path, "w") as f:
                     json.dump(evaluation_results, f, indent=2)
 
                 print(f"\n  [{completed_count[0]}/{len(tasks)}] Progress saved to: {output_path}")
@@ -173,7 +188,7 @@ class EvaluationRunner:
 
         return evaluation_results
 
-    def _calculate_summary(self, results: List[Dict]) -> Dict:
+    def _calculate_summary(self, results: list[dict]) -> dict:
         """Calculate summary statistics from results."""
         total = len(results)
         passed = sum(1 for r in results if r.get("pass", False))
@@ -206,7 +221,7 @@ class EvaluationRunner:
             "by_run": by_run,
         }
 
-    def save_results(self, evaluation_results: Dict, filename: str = None):
+    def save_results(self, evaluation_results: dict, filename: str | None = None):
         """Save final evaluation results to JSON file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -217,24 +232,24 @@ class EvaluationRunner:
         with open(output_path, "w") as f:
             json.dump(evaluation_results, f, indent=2)
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Final results saved to: {output_path}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         return output_path
 
-    def print_summary(self, evaluation_results: Dict):
+    def print_summary(self, evaluation_results: dict):
         """Print summary of evaluation results."""
         summary = evaluation_results["summary"]
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("EVALUATION SUMMARY")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Total tasks: {summary['total']}")
         print(f"Passed: {summary['passed']} ({summary['pass_rate']:.1%})")
         print(f"Failed: {summary['failed']}")
 
-        print(f"\nBy Run:")
+        print("\nBy Run:")
         for run_name, stats in summary["by_run"].items():
             print(f"  {run_name}:")
             print(f"    Total: {stats['total']}")
@@ -243,9 +258,7 @@ class EvaluationRunner:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Run Gemini-based state evolution evaluation"
-    )
+    parser = argparse.ArgumentParser(description="Run Gemini-based state evolution evaluation")
     parser.add_argument(
         "--project-root",
         type=str,
@@ -328,13 +341,9 @@ def main():
         use_cross_model=args.cross_model,
         use_gpt=args.gpt,
         use_double_ensemble=args.double_ensemble,
-        task_dir=args.task_dir
+        task_dir=args.task_dir,
     )
-    results = runner.run_evaluation(
-        limit=args.limit,
-        output_filename=args.output,
-        max_workers=args.workers
-    )
+    results = runner.run_evaluation(limit=args.limit, output_filename=args.output, max_workers=args.workers)
 
     # Final save (already done incrementally, but update one more time)
     output_path = runner.save_results(results, filename=args.output)

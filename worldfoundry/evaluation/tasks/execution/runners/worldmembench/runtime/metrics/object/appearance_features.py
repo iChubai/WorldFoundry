@@ -26,7 +26,7 @@ def analyze_object_appearance(
     feature_extractor: ObjectAppearanceFeatureExtractor,
 ) -> ObjectAppearanceResult:
     phase = track.phase
-    frame_scores: dict[int, float] = {frame_index: 0.0 for frame_index in phase.return_indices}
+    frame_scores: dict[int, float] = dict.fromkeys(phase.return_indices, 0.0)
     if not phase.is_scorable:
         empty_slots = tuple(0.0 for _ in phase.revisit_indices)
         empty_counts = tuple(0 for _ in phase.revisit_indices)
@@ -91,11 +91,9 @@ def analyze_object_appearance(
         n_revisit_features.append(n_features)
         revisit_coverages.append(n_features / len(revisit_indices) if revisit_indices else 0.0)
         revisit_scores.append(
-            (
-                sum(frame_scores[index] for index in feature_indices) / n_features
-                if n_features and references and phase.is_scorable
-                else 0.0
-            )
+            sum(frame_scores[index] for index in feature_indices) / n_features
+            if n_features and references and phase.is_scorable
+            else 0.0
         )
     return ObjectAppearanceResult(
         phase=phase,

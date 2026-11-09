@@ -18,7 +18,17 @@ from wrbench.trajectory import CameraTrajectory
 class SpatiaAdapter:
     name = "spatia"
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         target, amp = model_target_trajectory(trajectory, model_name, num_frames)
         out = ensure_work_dir(work_dir) / "spatia_w2c.jsonl"
         write_json_w2c_file(out, target.to_w2c())
@@ -45,7 +55,17 @@ class SpatiaAdapter:
 class InSpatioAdapter:
     name = "inspatio"
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         target, amp = model_target_trajectory(trajectory, model_name, num_frames)
         c2w = target.to_c2w()
         pitch = np.degrees(np.arctan2(c2w[:, 2, 1], c2w[:, 1, 1])).astype(np.float32)
@@ -61,9 +81,12 @@ class InSpatioAdapter:
                 raise ValueError(f"InSpatio official payload does not support actions: {unsupported}")
         out = ensure_work_dir(work_dir) / "inspatio_per_frame_trajectory.txt"
         out.write_text(
-            " ".join(f"{v:.8f}" for v in pitch) + "\n"
-            + " ".join(f"{v:.8f}" for v in yaw) + "\n"
-            + " ".join(f"{v:.8f}" for v in displacement) + "\n",
+            " ".join(f"{v:.8f}" for v in pitch)
+            + "\n"
+            + " ".join(f"{v:.8f}" for v in yaw)
+            + "\n"
+            + " ".join(f"{v:.8f}" for v in displacement)
+            + "\n",
             encoding="utf-8",
         )
         metadata = adapter_taxonomy_metadata(
@@ -80,7 +103,11 @@ class InSpatioAdapter:
         metadata["trajectory_txt_rows"] = ["pitch_x_up", "yaw_y_left", "displacement"]
         return CameraPayload(
             payload_type="inspatio_per_frame_action_txt",
-            payload={"trajectory_txt": str(out), "rotation_only": bool(np.max(np.abs(yaw)) > 0 and np.max(np.abs(displacement)) == 0), "translation_only": bool(np.max(np.abs(displacement)) > 0 and np.max(np.abs(yaw)) == 0)},
+            payload={
+                "trajectory_txt": str(out),
+                "rotation_only": bool(np.max(np.abs(yaw)) > 0 and np.max(np.abs(displacement)) == 0),
+                "translation_only": bool(np.max(np.abs(displacement)) > 0 and np.max(np.abs(yaw)) == 0),
+            },
             target_trajectory=target,
             official_camera_entrypoint="3-line pitch/yaw/displacement trajectory txt",
             coordinate_notes="Official InSpatio keyframe txt written with one value per generated target frame",

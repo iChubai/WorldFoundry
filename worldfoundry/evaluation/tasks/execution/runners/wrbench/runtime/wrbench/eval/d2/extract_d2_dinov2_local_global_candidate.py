@@ -12,19 +12,18 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import sys
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any
 
 import numpy as np
 import torch
 from PIL import Image
 
+from wrbench.eval.d2 import extract_d2_dinov2_consistency_features as d2_base
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-
-from wrbench.eval.d2 import extract_d2_dinov2_consistency_features as d2_base
 
 METHOD_NAME = "dinov2_local_global_patch_bestmatch_v1"
 FORMULA_FAMILY = "fixed_nonlearned_scalar_variants_v1"
@@ -102,7 +101,7 @@ def compute_local_global_candidate(global_features: np.ndarray, patch_features: 
         raise ValueError(f"expected patch feature shape [frames, patches, dim], got {patches.shape}")
     if len(globals_) != len(patches):
         raise ValueError("global and patch feature frame counts differ")
-    frame_count = int(len(globals_))
+    frame_count = len(globals_)
     if frame_count < 2:
         empty = {
             CANDIDATE_FIELD: None,
@@ -225,7 +224,9 @@ def merge_candidate_fields(
             out["d2_lg_min_global_first_local_low_relief05_candidate"] = _clip01(
                 min_global_local_low + 0.05 * max(0.0, local_mean - local_low)
             )
-        out["d2_lg_geom_global_first_local_low_candidate"] = math.sqrt(max(0.0, global_first_last) * max(0.0, local_low))
+        out["d2_lg_geom_global_first_local_low_candidate"] = math.sqrt(
+            max(0.0, global_first_last) * max(0.0, local_low)
+        )
         out["d2_lg_blend_global_first_local_low_50_50_candidate"] = _clip01(0.50 * global_first_last + 0.50 * local_low)
     if current is not None and local_low is not None:
         out["d2_lg_blend_mainline_local_low_75_25_candidate"] = _clip01(0.75 * current + 0.25 * local_low)
@@ -343,11 +344,15 @@ def _extract_one(
         **sample_meta,
     }
     if frames is None:
-        return merge_candidate_fields(out, compute_local_global_candidate(np.empty((0, 1)), np.empty((0, 1, 1))), current_mainline=current_mainline)
+        return merge_candidate_fields(
+            out,
+            compute_local_global_candidate(np.empty((0, 1)), np.empty((0, 1, 1))),
+            current_mainline=current_mainline,
+        )
 
     out["d2_lg_original_frame_shape"] = [int(value) for value in frames.shape[1:]]
     global_features, patch_features, feature_meta = _extract_feature_tensors(
-        [frame for frame in frames],
+        list(frames),
         processor,
         model,
         device,
@@ -402,9 +407,8 @@ def qa_rows(rows: list[Mapping[str, Any]], requested: int) -> dict[str, Any]:
             "d2_lg_hard_cut_min",
         ):
             value = row.get(key)
-            if isinstance(value, (int, float)) and math.isfinite(float(value)):
-                if not (0.0 <= float(value) <= 1.0):
-                    out_of_bounds.append({"video_id": row.get("video_id"), "field": key, "value": value})
+            if isinstance(value, (int, float)) and math.isfinite(float(value)) and not (0.0 <= float(value) <= 1.0):
+                out_of_bounds.append({"video_id": row.get("video_id"), "field": key, "value": value})
     rows_written = len(rows)
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -538,7 +542,9 @@ def main(argv: Iterable[str] | None = None) -> int:
             f.write(json.dumps(out, ensure_ascii=False, sort_keys=True) + "\n")
             f.flush()
             if idx % 10 == 0:
-                print(f"processed {idx}/{len(rows_to_run)} this_run, total_done={len(done) + idx}/{len(rows)}", flush=True)
+                print(
+                    f"processed {idx}/{len(rows_to_run)} this_run, total_done={len(done) + idx}/{len(rows)}", flush=True
+                )
 
     all_rows = _read_jsonl(args.out_jsonl)
     summary = qa_rows(all_rows, requested=len(rows))

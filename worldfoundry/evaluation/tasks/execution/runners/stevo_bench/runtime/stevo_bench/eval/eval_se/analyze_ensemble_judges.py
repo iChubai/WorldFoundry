@@ -6,8 +6,6 @@ Calculate confusion matrix for each of the 3 judges separately.
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List
-from collections import defaultdict
 
 
 class EnsembleJudgeAnalyzer:
@@ -15,16 +13,16 @@ class EnsembleJudgeAnalyzer:
         self.project_root = Path(project_root)
         self.runs_dir = self.project_root / "runs"
 
-    def load_evaluation_results(self, results_file: str) -> Dict:
+    def load_evaluation_results(self, results_file: str) -> dict:
         """Load the evaluation results JSON file."""
         results_path = Path(results_file)
         if not results_path.is_absolute():
             results_path = self.project_root / "eval_se" / "results" / results_file
 
-        with open(results_path, 'r') as f:
+        with open(results_path) as f:
             return json.load(f)
 
-    def load_summary_json(self, run_name: str) -> Dict:
+    def load_summary_json(self, run_name: str) -> dict:
         """Load summary.json for a specific run."""
         run_mapping = {
             "sora_pro_sora_pro_subset_run_3": "sora_pro_output_map_sora_pro_subset_run_3",
@@ -32,7 +30,7 @@ class EnsembleJudgeAnalyzer:
             "LingBot_lingbot_run_1": "LingBot_output_map_lingbot_run_1",
             "HY-WorldPlay_hunyuan_run_2": "HY-WorldPlay_output_map_hunyuan_run_2",
             "genie_genie_run_1": "genie",
-            "wan22_wan_run_1": "wan22_wan_run_1"
+            "wan22_wan_run_1": "wan22_wan_run_1",
         }
 
         summary_path_key = run_mapping.get(run_name, run_name)
@@ -42,10 +40,10 @@ class EnsembleJudgeAnalyzer:
             print(f"Warning: Could not find summary.json at {summary_path}")
             return {}
 
-        with open(summary_path, 'r') as f:
+        with open(summary_path) as f:
             return json.load(f)
 
-    def get_ground_truth_label(self, summary: Dict, task_id: str) -> bool:
+    def get_ground_truth_label(self, summary: dict, task_id: str) -> bool:
         """Get ground truth label for a task from summary.json."""
         for task in summary.get("tasks", []):
             if task.get("task_id") == task_id:
@@ -57,7 +55,7 @@ class EnsembleJudgeAnalyzer:
                     return None
         return None
 
-    def analyze_judges(self, results_file: str) -> Dict:
+    def analyze_judges(self, results_file: str) -> dict:
         """
         Analyze performance of each judge separately.
 
@@ -133,13 +131,15 @@ class EnsembleJudgeAnalyzer:
                         judges_stats[judge_key]["FN"] += 1
                         outcome = "FN"
 
-                    judges_stats[judge_key]["details"].append({
-                        "task_id": task_id,
-                        "run_name": run_name,
-                        "verdict": judge_verdict,
-                        "ground_truth": ground_truth,
-                        "outcome": outcome
-                    })
+                    judges_stats[judge_key]["details"].append(
+                        {
+                            "task_id": task_id,
+                            "run_name": run_name,
+                            "verdict": judge_verdict,
+                            "ground_truth": ground_truth,
+                            "outcome": outcome,
+                        }
+                    )
 
                 # Update stats for ensemble
                 if ensemble_verdict is not None:
@@ -156,13 +156,15 @@ class EnsembleJudgeAnalyzer:
                         judges_stats["ensemble"]["FN"] += 1
                         outcome = "FN"
 
-                    judges_stats["ensemble"]["details"].append({
-                        "task_id": task_id,
-                        "run_name": run_name,
-                        "verdict": ensemble_verdict,
-                        "ground_truth": ground_truth,
-                        "outcome": outcome
-                    })
+                    judges_stats["ensemble"]["details"].append(
+                        {
+                            "task_id": task_id,
+                            "run_name": run_name,
+                            "verdict": ensemble_verdict,
+                            "ground_truth": ground_truth,
+                            "outcome": outcome,
+                        }
+                    )
 
         # Calculate metrics for each judge
         results = {}
@@ -179,29 +181,19 @@ class EnsembleJudgeAnalyzer:
             f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
             results[judge_name] = {
-                "confusion_matrix": {
-                    "TP": tp,
-                    "FP": fp,
-                    "TN": tn,
-                    "FN": fn
-                },
-                "metrics": {
-                    "accuracy": accuracy,
-                    "precision": precision,
-                    "recall": recall,
-                    "f1_score": f1
-                },
+                "confusion_matrix": {"TP": tp, "FP": fp, "TN": tn, "FN": fn},
+                "metrics": {"accuracy": accuracy, "precision": precision, "recall": recall, "f1_score": f1},
                 "total": total,
-                "details": stats["details"]
+                "details": stats["details"],
             }
 
         return results
 
-    def print_judge_comparison(self, analysis: Dict):
+    def print_judge_comparison(self, analysis: dict):
         """Pretty print comparison of judges."""
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("ENSEMBLE JUDGE COMPARISON")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         # Print table header
         print(f"\n{'Judge':<15} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1':<12}")
@@ -212,7 +204,7 @@ class EnsembleJudgeAnalyzer:
             "judge_1": "Judge 1 (Conservative)",
             "judge_2": "Judge 2 (Evidence)",
             "judge_3": "Judge 3 (Analytical)",
-            "ensemble": "Ensemble (Majority)"
+            "ensemble": "Ensemble (Majority)",
         }
 
         for judge_key in ["judge_1", "judge_2", "judge_3", "ensemble"]:
@@ -223,16 +215,18 @@ class EnsembleJudgeAnalyzer:
             metrics = judge_data["metrics"]
 
             display_name = judge_names.get(judge_key, judge_key)
-            print(f"{display_name:<15} "
-                  f"{metrics['accuracy']:<12.3f} "
-                  f"{metrics['precision']:<12.3f} "
-                  f"{metrics['recall']:<12.3f} "
-                  f"{metrics['f1_score']:<12.3f}")
+            print(
+                f"{display_name:<15} "
+                f"{metrics['accuracy']:<12.3f} "
+                f"{metrics['precision']:<12.3f} "
+                f"{metrics['recall']:<12.3f} "
+                f"{metrics['f1_score']:<12.3f}"
+            )
 
         # Detailed confusion matrices
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("DETAILED CONFUSION MATRICES")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         for judge_key in ["judge_1", "judge_2", "judge_3", "ensemble"]:
             if judge_key not in analysis:
@@ -244,21 +238,21 @@ class EnsembleJudgeAnalyzer:
 
             print(f"\n{judge_names.get(judge_key, judge_key)}:")
             print(f"  Total evaluated: {judge_data['total']}")
-            print(f"  Confusion Matrix:")
-            print(f"                     Predicted")
-            print(f"                  Negative  Positive")
+            print("  Confusion Matrix:")
+            print("                     Predicted")
+            print("                  Negative  Positive")
             print(f"  Actual Negative  {cm['TN']:^8}  {cm['FP']:^8}")
             print(f"  Actual Positive  {cm['FN']:^8}  {cm['TP']:^8}")
-            print(f"  Metrics:")
-            print(f"    Accuracy:  {metrics['accuracy']:.3f} ({metrics['accuracy']*100:.1f}%)")
+            print("  Metrics:")
+            print(f"    Accuracy:  {metrics['accuracy']:.3f} ({metrics['accuracy'] * 100:.1f}%)")
             print(f"    Precision: {metrics['precision']:.3f}")
             print(f"    Recall:    {metrics['recall']:.3f}")
             print(f"    F1 Score:  {metrics['f1_score']:.3f}")
 
         # Find disagreements between judges
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("JUDGE DISAGREEMENTS")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         # Compare each judge with ensemble
         for judge_key in ["judge_1", "judge_2", "judge_3"]:
@@ -266,10 +260,7 @@ class EnsembleJudgeAnalyzer:
             ensemble_details = analysis["ensemble"]["details"]
 
             # Create lookup for ensemble verdicts
-            ensemble_lookup = {
-                (d["task_id"], d["run_name"]): d["verdict"]
-                for d in ensemble_details
-            }
+            ensemble_lookup = {(d["task_id"], d["run_name"]): d["verdict"] for d in ensemble_details}
 
             disagreements = []
             for detail in judge_details:
@@ -277,21 +268,25 @@ class EnsembleJudgeAnalyzer:
                 ensemble_verdict = ensemble_lookup.get(task_key)
 
                 if ensemble_verdict is not None and detail["verdict"] != ensemble_verdict:
-                    disagreements.append({
-                        "task_id": detail["task_id"],
-                        "run_name": detail["run_name"],
-                        "judge_verdict": detail["verdict"],
-                        "ensemble_verdict": ensemble_verdict,
-                        "ground_truth": detail["ground_truth"]
-                    })
+                    disagreements.append(
+                        {
+                            "task_id": detail["task_id"],
+                            "run_name": detail["run_name"],
+                            "judge_verdict": detail["verdict"],
+                            "ensemble_verdict": ensemble_verdict,
+                            "ground_truth": detail["ground_truth"],
+                        }
+                    )
 
             print(f"\n{judge_names[judge_key]} vs Ensemble: {len(disagreements)} disagreements")
             if disagreements:
                 for d in disagreements[:5]:  # Show first 5
-                    print(f"  {d['task_id']} ({d['run_name']}): "
-                          f"Judge={'PASS' if d['judge_verdict'] else 'FAIL'}, "
-                          f"Ensemble={'PASS' if d['ensemble_verdict'] else 'FAIL'}, "
-                          f"GT={'PASS' if d['ground_truth'] else 'FAIL'}")
+                    print(
+                        f"  {d['task_id']} ({d['run_name']}): "
+                        f"Judge={'PASS' if d['judge_verdict'] else 'FAIL'}, "
+                        f"Ensemble={'PASS' if d['ensemble_verdict'] else 'FAIL'}, "
+                        f"GT={'PASS' if d['ground_truth'] else 'FAIL'}"
+                    )
                 if len(disagreements) > 5:
                     print(f"  ... and {len(disagreements) - 5} more")
 
@@ -317,10 +312,10 @@ def main():
     output_file = Path(results_file).stem + "_judges_analysis.json"
     output_path = Path(project_root) / "eval_se" / "results" / output_file
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(analysis, f, indent=2)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Analysis saved to: {output_path}")
 
 

@@ -37,7 +37,7 @@ def _camera_tracks(trajectory: CameraTrajectory, width: int, height: int) -> np.
     )
     world_points = (trajectory.to_c2w()[0].astype(np.float64) @ camera_points.T).T
     tracks = np.zeros((len(pixels), trajectory.frame_count, 1, 3), dtype=np.float32)
-    for frame_index, (c2w, intrinsics) in enumerate(zip(trajectory.to_c2w(), trajectory.intrinsics)):
+    for frame_index, (c2w, intrinsics) in enumerate(zip(trajectory.to_c2w(), trajectory.intrinsics, strict=False)):
         camera = (np.linalg.inv(c2w.astype(np.float64)) @ world_points.T).T[:, :3]
         z = camera[:, 2]
         safe_z = np.where(np.abs(z) > 1e-8, z, 1.0)

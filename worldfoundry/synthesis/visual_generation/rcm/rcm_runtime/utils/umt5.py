@@ -17,14 +17,11 @@ import gc
 import html
 import math
 import string
-from typing import List, Optional, Union
 
 import ftfy
 import regex as re
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from transformers import AutoTokenizer
 
 from worldfoundry.core.distributed.runtime import torch_process_group as distributed
 from worldfoundry.core.distributed.runtime.logging import log
@@ -47,7 +44,8 @@ def canonicalize(text, keep_punctuation_exact_string=None):
     text = text.replace("_", " ")
     if keep_punctuation_exact_string:
         text = keep_punctuation_exact_string.join(
-            part.translate(str.maketrans("", "", string.punctuation)) for part in text.split(keep_punctuation_exact_string)
+            part.translate(str.maketrans("", "", string.punctuation))
+            for part in text.split(keep_punctuation_exact_string)
         )
     else:
         text = text.translate(str.maketrans("", "", string.punctuation))
@@ -56,7 +54,9 @@ def canonicalize(text, keep_punctuation_exact_string=None):
     return text.strip()
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    HuggingfaceTokenizer,
+)
 
 
 def fp16_clamp(x):
@@ -91,7 +91,7 @@ class GELU(nn.Module):
 
 class T5LayerNorm(nn.Module):
     def __init__(self, dim, eps=1e-6):
-        super(T5LayerNorm, self).__init__()
+        super().__init__()
         self.dim = dim
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
@@ -103,12 +103,14 @@ class T5LayerNorm(nn.Module):
         return self.weight * x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5Attention
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5Attention,
+)
 
 
 class T5FeedForward(nn.Module):
     def __init__(self, dim, dim_ffn, dropout=0.1):
-        super(T5FeedForward, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_ffn = dim_ffn
 
@@ -128,7 +130,7 @@ class T5FeedForward(nn.Module):
 
 class T5SelfAttention(nn.Module):
     def __init__(self, dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5SelfAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -152,7 +154,7 @@ class T5SelfAttention(nn.Module):
 
 class T5CrossAttention(nn.Module):
     def __init__(self, dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5CrossAttention, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -177,12 +179,14 @@ class T5CrossAttention(nn.Module):
         return x
 
 
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import T5RelativeEmbedding
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    T5RelativeEmbedding,
+)
 
 
 class T5Encoder(nn.Module):
     def __init__(self, vocab, dim, dim_attn, dim_ffn, num_heads, num_layers, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5Encoder, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -195,7 +199,12 @@ class T5Encoder(nn.Module):
         self.token_embedding = vocab if isinstance(vocab, nn.Embedding) else nn.Embedding(vocab, dim)
         self.pos_embedding = T5RelativeEmbedding(num_buckets, num_heads, bidirectional=True) if shared_pos else None
         self.dropout = nn.Dropout(dropout)
-        self.blocks = nn.ModuleList([T5SelfAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout) for _ in range(num_layers)])
+        self.blocks = nn.ModuleList(
+            [
+                T5SelfAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout)
+                for _ in range(num_layers)
+            ]
+        )
         self.norm = T5LayerNorm(dim)
 
         # initialize weights
@@ -214,7 +223,7 @@ class T5Encoder(nn.Module):
 
 class T5Decoder(nn.Module):
     def __init__(self, vocab, dim, dim_attn, dim_ffn, num_heads, num_layers, num_buckets, shared_pos=True, dropout=0.1):
-        super(T5Decoder, self).__init__()
+        super().__init__()
         self.dim = dim
         self.dim_attn = dim_attn
         self.dim_ffn = dim_ffn
@@ -228,7 +237,10 @@ class T5Decoder(nn.Module):
         self.pos_embedding = T5RelativeEmbedding(num_buckets, num_heads, bidirectional=False) if shared_pos else None
         self.dropout = nn.Dropout(dropout)
         self.blocks = nn.ModuleList(
-            [T5CrossAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout) for _ in range(num_layers)]
+            [
+                T5CrossAttention(dim, dim_attn, dim_ffn, num_heads, num_buckets, shared_pos, dropout)
+                for _ in range(num_layers)
+            ]
         )
         self.norm = T5LayerNorm(dim)
 
@@ -269,7 +281,7 @@ class T5Model(nn.Module):
         shared_pos=True,
         dropout=0.1,
     ):
-        super(T5Model, self).__init__()
+        super().__init__()
         self.vocab_size = vocab_size
         self.dim = dim
         self.dim_attn = dim_attn
@@ -281,8 +293,12 @@ class T5Model(nn.Module):
 
         # layers
         self.token_embedding = nn.Embedding(vocab_size, dim)
-        self.encoder = T5Encoder(self.token_embedding, dim, dim_attn, dim_ffn, num_heads, encoder_layers, num_buckets, shared_pos, dropout)
-        self.decoder = T5Decoder(self.token_embedding, dim, dim_attn, dim_ffn, num_heads, decoder_layers, num_buckets, shared_pos, dropout)
+        self.encoder = T5Encoder(
+            self.token_embedding, dim, dim_attn, dim_ffn, num_heads, encoder_layers, num_buckets, shared_pos, dropout
+        )
+        self.decoder = T5Decoder(
+            self.token_embedding, dim, dim_attn, dim_ffn, num_heads, decoder_layers, num_buckets, shared_pos, dropout
+        )
         self.head = nn.Linear(dim, vocab_size, bias=False)
 
         # initialize weights
@@ -324,18 +340,18 @@ def _t5(name, encoder_only=False, decoder_only=False, dtype=torch.float32, devic
 
 
 def umt5_xxl(**kwargs):
-    cfg = dict(
-        vocab_size=256384,
-        dim=4096,
-        dim_attn=4096,
-        dim_ffn=10240,
-        num_heads=64,
-        encoder_layers=24,
-        decoder_layers=24,
-        num_buckets=32,
-        shared_pos=False,
-        dropout=0.1,
-    )
+    cfg = {
+        "vocab_size": 256384,
+        "dim": 4096,
+        "dim_attn": 4096,
+        "dim_ffn": 10240,
+        "num_heads": 64,
+        "encoder_layers": 24,
+        "decoder_layers": 24,
+        "num_buckets": 32,
+        "shared_pos": False,
+        "dropout": 0.1,
+    }
     cfg.update(**kwargs)
     return _t5("umt5-xxl", **cfg)
 
@@ -357,7 +373,7 @@ class UMT5EncoderModel:
         self,
         text_len=512,
         dtype=torch.bfloat16,
-        device=torch.cuda.current_device(),
+        device=torch.cuda.current_device(),  # noqa: B008 - Default evaluated once at definition, as upstream.
         checkpoint_path="models_t5_umt5-xxl-enc-bf16.pth",
         tokenizer_path="google/umt5-xxl",
     ):
@@ -375,7 +391,7 @@ class UMT5EncoderModel:
         # init tokenizer
         self.tokenizer = HuggingfaceTokenizer(name=tokenizer_path, seq_len=text_len, clean="whitespace")
 
-    def __call__(self, texts, device: Optional[torch.device] = None):
+    def __call__(self, texts, device: torch.device | None = None):
         if device is None:
             device = self.device
         ids, mask = self.tokenizer(texts, return_mask=True, add_special_tokens=True)
@@ -385,7 +401,7 @@ class UMT5EncoderModel:
         context = self.model(ids, mask)
         # return [u[:v] for u, v in zip(context, seq_lens)]
         stack_emb = []
-        for u, length in zip(context, seq_lens):
+        for u, length in zip(context, seq_lens, strict=False):
             if length > self.text_len:
                 stack_emb.append(u[: self.text_len])
             else:
@@ -395,12 +411,12 @@ class UMT5EncoderModel:
         return torch.stack(stack_emb)
 
 
-t5_encoder: Optional[UMT5EncoderModel] = None
+t5_encoder: UMT5EncoderModel | None = None
 
 
 def get_umt5_embedding(
     checkpoint_path: str,
-    prompts: Union[str, List[str]],
+    prompts: str | list[str],
     device: str = "cuda",
     max_length: int = 512,
 ) -> torch.Tensor:

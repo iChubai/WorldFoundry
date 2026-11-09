@@ -1,5 +1,5 @@
 """Minimal vendored piq package surface for FSIM only."""
 
-from .fsim import fsim, FSIMLoss
+from .fsim import FSIMLoss, fsim
 
-__all__ = ["fsim", "FSIMLoss"]
+__all__ = ["FSIMLoss", "fsim"]

@@ -134,7 +134,7 @@ def is_flash3_available():
     try:
         from flash_attn_interface import (
             flash_attn_varlen_func as flash_attn_varlen_func_v3,  # noqa: F401
-        )  # noqa: F401
+        )
 
         return True
     except Exception:
@@ -196,19 +196,17 @@ def maybe_fallback_attn_mode(attn_mode, infer_state=None, block_idx=None):
         elif is_flash2_available():
             attn_mode = "flash2"
         else:
-            warnings.warn("flash is not available. Falling back to torch attention.")
+            warnings.warn("flash is not available. Falling back to torch attention.", stacklevel=1)
             attn_mode = "torch"
     elif attn_mode == "flash3":
         if not is_flash3_available():
-            warnings.warn("flash3 is not available. Falling back to torch attention.")
+            warnings.warn("flash3 is not available. Falling back to torch attention.", stacklevel=1)
             attn_mode = "torch"
-    elif attn_mode == "flash2":
-        if not is_flash2_available():
-            warnings.warn("flash2 is not available. Falling back to torch attention.")
-            attn_mode = "torch"
-    if attn_mode in ("flex-block-attn"):
-        if not is_sparse_attn_available():
-            raise ValueError(f"{attn_mode} is not available for your GPU or flex-block-attn is not properly installed.")
+    elif attn_mode == "flash2" and not is_flash2_available():
+        warnings.warn("flash2 is not available. Falling back to torch attention.", stacklevel=1)
+        attn_mode = "torch"
+    if attn_mode in ("flex-block-attn") and not is_sparse_attn_available():
+        raise ValueError(f"{attn_mode} is not available for your GPU or flex-block-attn is not properly installed.")
     return attn_mode
 
 

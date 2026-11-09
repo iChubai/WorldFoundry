@@ -8,18 +8,19 @@ from pathlib import Path
 from typing import Any
 
 from ..protocols import SKILLS
-from ..skill_backend import appearance_consistency
-from ..skill_backend import drift_degradation
-from ..skill_backend import intentional_change_vlm
-from ..skill_backend import motion_quality
-from ..skill_backend import offscreen_evolution_vlm
-from ..skill_backend import physical_law
-from ..skill_backend import physical_plausibility
-from ..skill_backend import physical_response_vlm
-from ..skill_backend import render_quality
-from ..skill_backend import return_consistency
-from ..skill_backend import viewpoint_trajectory
-
+from ..skill_backend import (
+    appearance_consistency,
+    drift_degradation,
+    intentional_change_vlm,
+    motion_quality,
+    offscreen_evolution_vlm,
+    physical_law,
+    physical_plausibility,
+    physical_response_vlm,
+    render_quality,
+    return_consistency,
+    viewpoint_trajectory,
+)
 
 OBSERVATION_MODULES = {
     "render_quality_inspector": render_quality,
@@ -58,16 +59,12 @@ def _required(value: Mapping[str, Any], key: str, label: str) -> Any:
     return result
 
 
-def _path(
-    value: Mapping[str, Any], key: str, label: str, config_root: Path
-) -> Path:
+def _path(value: Mapping[str, Any], key: str, label: str, config_root: Path) -> Path:
     path = Path(str(_required(value, key, label))).expanduser()
     return (path if path.is_absolute() else config_root / path).resolve()
 
 
-def _optional_path(
-    value: Mapping[str, Any], key: str, config_root: Path
-) -> Path | None:
+def _optional_path(value: Mapping[str, Any], key: str, config_root: Path) -> Path | None:
     raw = value.get(key)
     if raw is None:
         return None
@@ -75,9 +72,7 @@ def _optional_path(
     return (path if path.is_absolute() else config_root / path).resolve()
 
 
-def _build_observation(
-    skill_id: str, values: Mapping[str, Any], config_root: Path
-) -> Any:
+def _build_observation(skill_id: str, values: Mapping[str, Any], config_root: Path) -> Any:
     module = OBSERVATION_MODULES[skill_id]
     label = f"skills.{skill_id}"
     mode = str(_required(values, "mode", label))
@@ -157,9 +152,7 @@ def build_backends(
 
     def observation(skill_id: str) -> Any:
         if skill_id not in built:
-            built[skill_id] = _build_observation(
-                skill_id, _skill_config(config, skill_id), config_root
-            )
+            built[skill_id] = _build_observation(skill_id, _skill_config(config, skill_id), config_root)
         return built[skill_id]
 
     def clip_backend() -> Any:
@@ -187,9 +180,7 @@ def build_backends(
                 "staged_local": drift_degradation.LocalStagedBackend,
             }.get(mode)
             if backend_type is None:
-                raise ValueError(
-                    "drift_degradation_analyzer mode must be local or staged_local"
-                )
+                raise ValueError("drift_degradation_analyzer mode must be local or staged_local")
             embedder = clip_backend()
             children = (
                 observation("render_quality_inspector"),

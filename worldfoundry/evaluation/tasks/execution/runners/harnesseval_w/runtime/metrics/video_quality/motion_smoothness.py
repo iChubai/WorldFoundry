@@ -1,11 +1,11 @@
 """Motion smoothness — AMT-S frame interpolation error (VBench-aligned)."""
+
 import cv2
 import numpy as np
 import torch
 
 from ..base import BaseMetric
 from ..weight_utils import get_weight_file
-
 
 
 class MotionSmoothnessMetric(BaseMetric):
@@ -26,13 +26,19 @@ class MotionSmoothnessMetric(BaseMetric):
         ckpt_path = get_weight_file("amt", "amt-s.pth")
         model = model_type()
         ckpt = torch.load(ckpt_path, map_location="cpu")
-        state_dict = ckpt.get('state_dict', ckpt)
-        model.load_state_dict({k.replace('module.', ''): v for k, v in state_dict.items()})
+        state_dict = ckpt.get("state_dict", ckpt)
+        model.load_state_dict({k.replace("module.", ""): v for k, v in state_dict.items()})
         return model.to(self.device).eval()
 
     def compute(self, frames, first_frame=None, prompt=None, batch_size=8, **kwargs):
         """VBench-aligned: predict odd frames from even frame pairs, compute MAE."""
-        from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import InputPadder, img2tensor, tensor2img
+        from worldfoundry.base_models.perception_core.frame_interpolation.amt.utils.utils import (
+            InputPadder,
+            img2tensor,
+            tensor2img,
+        )
+
+        # isort: split
         from PIL import Image as _Image
 
         if self.model is None:
@@ -60,7 +66,7 @@ class MotionSmoothnessMetric(BaseMetric):
         vfi_diffs = []
         with torch.no_grad():
             for batch_start in range(0, len(pairs), batch_size):
-                batch_pairs = pairs[batch_start:batch_start + batch_size]
+                batch_pairs = pairs[batch_start : batch_start + batch_size]
                 bs = len(batch_pairs)
                 img0_batch = torch.cat([inputs[p[0]] for p in batch_pairs], dim=0)
                 img1_batch = torch.cat([inputs[p[1]] for p in batch_pairs], dim=0)
@@ -68,9 +74,9 @@ class MotionSmoothnessMetric(BaseMetric):
                 img0_pad, img1_pad = padder.pad(img0_batch, img1_batch)
                 embt_batch = embt.expand(bs, -1, -1, -1)
                 out = self.model(img0_pad, img1_pad, embt_batch, scale_factor=1.0, eval=True)
-                pred_batch = padder.unpad(out['imgt_pred'])
+                pred_batch = padder.unpad(out["imgt_pred"])
                 for j in range(bs):
-                    pred_img = tensor2img(pred_batch[j:j + 1])
+                    pred_img = tensor2img(pred_batch[j : j + 1])
                     diff = np.mean(cv2.absdiff(pred_img, gt_list[j]))
                     vfi_diffs.append(diff)
 

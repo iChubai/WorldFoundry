@@ -1,4 +1,4 @@
-r""" This module implements Multi-Scale Structural Similarity (MS-SSIM) index in PyTorch.
+r"""This module implements Multi-Scale Structural Similarity (MS-SSIM) index in PyTorch.
 
 Implementation of classes and functions from this module are inspired by Gongfan Fang's (@VainF) implementation:
 https://github.com/VainF/pytorch-msssim
@@ -6,22 +6,30 @@ https://github.com/VainF/pytorch-msssim
 and implementation of one of pull requests to the PyTorch by Kangfu Mei (@MKFMIKU):
 https://github.com/pytorch/pytorch/pull/22289/files
 """
-from typing import Optional, Union
+
+from typing import ClassVar
 
 import torch
 import torch.nn.functional as F
 from torch.nn.modules.loss import _Loss
 
-from piq.utils import _validate_input, _reduce
 from piq.functional import gaussian_filter
 from piq.ssim import _ssim_per_channel, _ssim_per_channel_complex
+from piq.utils import _reduce, _validate_input
 
 
-def multi_scale_ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, kernel_sigma: float = 1.5,
-                     data_range: Union[int, float] = 1., reduction: str = 'mean',
-                     scale_weights: Optional[torch.Tensor] = None,
-                     k1: float = 0.01, k2: float = 0.03) -> torch.Tensor:
-    r""" Interface of Multi-scale Structural Similarity (MS-SSIM) index.
+def multi_scale_ssim(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    kernel_size: int = 11,
+    kernel_sigma: float = 1.5,
+    data_range: int | float = 1.0,
+    reduction: str = "mean",
+    scale_weights: torch.Tensor | None = None,
+    k1: float = 0.01,
+    k2: float = 0.03,
+) -> torch.Tensor:
+    r"""Interface of Multi-scale Structural Similarity (MS-SSIM) index.
     Inputs supposed to be in range ``[0, data_range]`` with RGB channels order for colour images.
 
     Args:
@@ -57,7 +65,7 @@ def multi_scale_ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, ke
     Note:
         The size of the image should be at least ``(kernel_size - 1) * 2 ** (levels - 1) + 1``.
     """
-    assert kernel_size % 2 == 1, f'Kernel size must be odd, got [{kernel_size}]'
+    assert kernel_size % 2 == 1, f"Kernel size must be odd, got [{kernel_size}]"
     _validate_input([x, y], dim_range=(4, 5), data_range=(0, data_range))
 
     x = x / float(data_range)
@@ -70,19 +78,13 @@ def multi_scale_ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, ke
         # Normalize scale weights
         scale_weights = scale_weights / scale_weights.sum()
     if scale_weights.size(0) != scale_weights.numel():
-        raise ValueError(f'Expected a vector of weights, got {scale_weights.dim()}D tensor')
+        raise ValueError(f"Expected a vector of weights, got {scale_weights.dim()}D tensor")
 
     kernel = gaussian_filter(kernel_size, kernel_sigma, device=x.device, dtype=x.dtype).repeat(x.size(1), 1, 1, 1)
 
     _compute_msssim = _multi_scale_ssim_complex if x.dim() == 5 else _multi_scale_ssim
     msssim_val = _compute_msssim(
-        x=x,
-        y=y,
-        data_range=data_range,
-        kernel=kernel,
-        scale_weights=scale_weights,
-        k1=k1,
-        k2=k2
+        x=x, y=y, data_range=data_range, kernel=kernel, scale_weights=scale_weights, k1=k1, k2=k2
     )
     return _reduce(msssim_val, reduction)
 
@@ -147,11 +149,19 @@ class MultiScaleSSIMLoss(_Loss):
     Note:
         The size of the image should be at least ``(kernel_size - 1) * 2 ** (levels - 1) + 1``.
     """
-    __constants__ = ['kernel_size', 'k1', 'k2', 'sigma', 'kernel', 'reduction']
 
-    def __init__(self, kernel_size: int = 11, kernel_sigma: float = 1.5, k1: float = 0.01, k2: float = 0.03,
-                 scale_weights: Optional[torch.Tensor] = None,
-                 reduction: str = 'mean', data_range: Union[int, float] = 1.) -> None:
+    __constants__: ClassVar[list[str]] = ["kernel_size", "k1", "k2", "sigma", "kernel", "reduction"]
+
+    def __init__(
+        self,
+        kernel_size: int = 11,
+        kernel_sigma: float = 1.5,
+        k1: float = 0.01,
+        k2: float = 0.03,
+        scale_weights: torch.Tensor | None = None,
+        reduction: str = "mean",
+        data_range: int | float = 1.0,
+    ) -> None:
         super().__init__()
 
         # Generic loss parameters.
@@ -169,7 +179,7 @@ class MultiScaleSSIMLoss(_Loss):
 
         # This check might look redundant because kernel size is checked within the ms-ssim function anyway.
         # However, this check allows to fail fast when the loss is being initialised and training has not been started.
-        assert kernel_size % 2 == 1, f'Kernel size must be odd, got [{kernel_size}]'
+        assert kernel_size % 2 == 1, f"Kernel size must be odd, got [{kernel_size}]"
 
         self.k1 = k1
         self.k2 = k2
@@ -187,14 +197,29 @@ class MultiScaleSSIMLoss(_Loss):
             Value of MS-SSIM loss to be minimized, i.e. ``1 - ms_ssim`` in [0, 1] range. In case of 5D tensor,
             complex value is returned as a tensor of size 2.
         """
-        score = multi_scale_ssim(x=x, y=y, kernel_size=self.kernel_size, kernel_sigma=self.kernel_sigma,
-                                 data_range=self.data_range, reduction=self.reduction, scale_weights=self.scale_weights,
-                                 k1=self.k1, k2=self.k2)
+        score = multi_scale_ssim(
+            x=x,
+            y=y,
+            kernel_size=self.kernel_size,
+            kernel_sigma=self.kernel_sigma,
+            data_range=self.data_range,
+            reduction=self.reduction,
+            scale_weights=self.scale_weights,
+            k1=self.k1,
+            k2=self.k2,
+        )
         return torch.ones_like(score) - score
 
 
-def _multi_scale_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float], kernel: torch.Tensor,
-                      scale_weights: torch.Tensor, k1: float, k2: float) -> torch.Tensor:
+def _multi_scale_ssim(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    data_range: int | float,
+    kernel: torch.Tensor,
+    scale_weights: torch.Tensor,
+    k1: float,
+    k2: float,
+) -> torch.Tensor:
     r"""Calculates Multi scale Structural Similarity (MS-SSIM) index for X and Y.
     Args:
         x: An input tensor. Shape :math:`(N, C, H, W)`.
@@ -211,15 +236,15 @@ def _multi_scale_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, f
     levels = scale_weights.size(0)
     min_size = (kernel.size(-1) - 1) * 2 ** (levels - 1) + 1
     if x.size(-1) < min_size or x.size(-2) < min_size:
-        raise ValueError(f'Invalid size of the input images, expected at least {min_size}x{min_size}.')
+        raise ValueError(f"Invalid size of the input images, expected at least {min_size}x{min_size}.")
 
     mcs = []
     ssim_val = None
     for iteration in range(levels):
         if iteration > 0:
             padding = max(x.shape[2] % 2, x.shape[3] % 2)
-            x = F.pad(x, pad=[padding, 0, padding, 0], mode='replicate')
-            y = F.pad(y, pad=[padding, 0, padding, 0], mode='replicate')
+            x = F.pad(x, pad=[padding, 0, padding, 0], mode="replicate")
+            y = F.pad(y, pad=[padding, 0, padding, 0], mode="replicate")
             x = F.avg_pool2d(x, kernel_size=2, padding=0)
             y = F.avg_pool2d(y, kernel_size=2, padding=0)
 
@@ -227,7 +252,7 @@ def _multi_scale_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, f
         mcs.append(cs)
 
     # mcs, (level, batch)
-    mcs_ssim = torch.relu(torch.stack(mcs[:-1] + [ssim_val], dim=0))
+    mcs_ssim = torch.relu(torch.stack([*mcs[:-1], ssim_val], dim=0))
 
     # weights, (level)
     msssim_val = torch.prod((mcs_ssim ** scale_weights.view(-1, 1, 1)), dim=0).mean(1)
@@ -235,9 +260,15 @@ def _multi_scale_ssim(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, f
     return msssim_val
 
 
-def _multi_scale_ssim_complex(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float],
-                              kernel: torch.Tensor, scale_weights: torch.Tensor, k1: float,
-                              k2: float) -> torch.Tensor:
+def _multi_scale_ssim_complex(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    data_range: int | float,
+    kernel: torch.Tensor,
+    scale_weights: torch.Tensor,
+    k1: float,
+    k2: float,
+) -> torch.Tensor:
     r"""Calculate Multi scale Structural Similarity (MS-SSIM) index for Complex X and Y.
     Args:
         x: An input tensor. Shape :math:`(N, C, H, W, 2)`.
@@ -253,7 +284,7 @@ def _multi_scale_ssim_complex(x: torch.Tensor, y: torch.Tensor, data_range: Unio
     levels = scale_weights.size(0)
     min_size = (kernel.size(-1) - 1) * 2 ** (levels - 1) + 1
     if x.size(-2) < min_size or x.size(-3) < min_size:
-        raise ValueError(f'Invalid size of the input images, expected at least {min_size}x{min_size}.')
+        raise ValueError(f"Invalid size of the input images, expected at least {min_size}x{min_size}.")
     mcs = []
     ssim_val = None
     for iteration in range(levels):
@@ -263,10 +294,10 @@ def _multi_scale_ssim_complex(x: torch.Tensor, y: torch.Tensor, data_range: Unio
         y_imag = y[..., 1]
         if iteration > 0:
             padding = max(x.size(2) % 2, x.size(3) % 2)
-            x_real = F.pad(x_real, pad=[padding, 0, padding, 0], mode='replicate')
-            x_imag = F.pad(x_imag, pad=[padding, 0, padding, 0], mode='replicate')
-            y_real = F.pad(y_real, pad=[padding, 0, padding, 0], mode='replicate')
-            y_imag = F.pad(y_imag, pad=[padding, 0, padding, 0], mode='replicate')
+            x_real = F.pad(x_real, pad=[padding, 0, padding, 0], mode="replicate")
+            x_imag = F.pad(x_imag, pad=[padding, 0, padding, 0], mode="replicate")
+            y_real = F.pad(y_real, pad=[padding, 0, padding, 0], mode="replicate")
+            y_imag = F.pad(y_imag, pad=[padding, 0, padding, 0], mode="replicate")
 
             x_real = F.avg_pool2d(x_real, kernel_size=2, padding=0)
             x_imag = F.avg_pool2d(x_imag, kernel_size=2, padding=0)
@@ -279,7 +310,7 @@ def _multi_scale_ssim_complex(x: torch.Tensor, y: torch.Tensor, data_range: Unio
         mcs.append(cs)
 
     # mcs, (level, batch)
-    mcs_ssim = torch.relu(torch.stack(mcs[:-1] + [ssim_val], dim=0))
+    mcs_ssim = torch.relu(torch.stack([*mcs[:-1], ssim_val], dim=0))
 
     mcs_ssim_real = mcs_ssim[..., 0]
     mcs_ssim_imag = mcs_ssim[..., 1]

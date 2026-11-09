@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Optional
 
 from worldfoundry.core import cuda_visible_devices_from_device
 
@@ -74,7 +74,7 @@ def project_root() -> Path:
     return current.parents[5]
 
 
-def _candidate_runtime(path_value: Path) -> Optional[Path]:
+def _candidate_runtime(path_value: Path) -> Path | None:
     """Checks if a given path is a valid Solaris runtime root.
 
     A path is considered a valid runtime root if it contains specific sentinel
@@ -114,7 +114,7 @@ def local_runtime_candidates() -> list[Path]:
     ]
 
 
-def _resolve_env_path(env_keys: Iterable[str]) -> Optional[Path]:
+def _resolve_env_path(env_keys: Iterable[str]) -> Path | None:
     """Resolves a file system path from a list of environment variable keys.
 
     It iterates through the provided environment keys in order, returning the
@@ -134,7 +134,7 @@ def _resolve_env_path(env_keys: Iterable[str]) -> Optional[Path]:
     return None
 
 
-def resolve_runtime_root(runtime_root: Optional[str] = None) -> str:
+def resolve_runtime_root(runtime_root: str | None = None) -> str:
     """Resolves the root directory of the Solaris inference runtime.
 
     It checks for a provided `runtime_root` argument, then environment variables,
@@ -186,10 +186,10 @@ def resolve_runtime_root(runtime_root: Optional[str] = None) -> str:
 
 
 def _resolve_path_under_runtime(
-    raw_value: Optional[str],
+    raw_value: str | None,
     runtime_root: str,
     *,
-    default_relative: Optional[str],
+    default_relative: str | None,
     env_keys: Iterable[str],
     label: str,
     must_exist: bool,
@@ -231,10 +231,7 @@ def _resolve_path_under_runtime(
         raise ValueError(f"Unable to resolve Solaris {label}.")
 
     # Resolve absolute path: if relative, combine with runtime_root.
-    if not candidate.is_absolute():
-        candidate = (Path(runtime_root) / candidate).resolve()
-    else:
-        candidate = candidate.resolve()
+    candidate = (Path(runtime_root) / candidate).resolve() if not candidate.is_absolute() else candidate.resolve()
 
     # Check existence if required.
     if must_exist and not candidate.exists():
@@ -246,7 +243,7 @@ def _resolve_path_under_runtime(
 
 
 def resolve_pretrained_model_dir(
-    pretrained_model_dir: Optional[str],
+    pretrained_model_dir: str | None,
     runtime_root: str,
 ) -> str:
     """Resolves the directory containing pretrained models.
@@ -276,7 +273,7 @@ def resolve_pretrained_model_dir(
 
 
 def resolve_eval_data_dir(
-    eval_data_dir: Optional[str],
+    eval_data_dir: str | None,
     runtime_root: str,
 ) -> str:
     """Resolves the directory containing evaluation datasets.
@@ -308,7 +305,7 @@ def resolve_eval_data_dir(
 
 
 def resolve_output_dir(
-    output_dir: Optional[str],
+    output_dir: str | None,
     runtime_root: str,
 ) -> str:
     """Resolves the directory for storing output files.
@@ -337,7 +334,7 @@ def resolve_output_dir(
 
 
 def resolve_checkpoint_dir(
-    checkpoint_dir: Optional[str],
+    checkpoint_dir: str | None,
     runtime_root: str,
 ) -> str:
     """Resolves the directory for storing model checkpoints.
@@ -366,7 +363,7 @@ def resolve_checkpoint_dir(
 
 
 def resolve_jax_cache_dir(
-    jax_cache_dir: Optional[str],
+    jax_cache_dir: str | None,
     runtime_root: str,
 ) -> str:
     """Resolves the directory for JAX cache files.
@@ -395,7 +392,7 @@ def resolve_jax_cache_dir(
 
 
 def resolve_model_weights_path(
-    model_weights_path: Optional[str],
+    model_weights_path: str | None,
     runtime_root: str,
     pretrained_model_dir: str,
 ) -> str:
@@ -460,7 +457,7 @@ def _normalize_token(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
 
 
-def normalize_eval_types(eval_types: Optional[object]) -> list[str]:
+def normalize_eval_types(eval_types: object | None) -> list[str]:
     """Normalizes and validates a specification of evaluation types.
 
     It accepts `None`, a single string, or an iterable of strings. It splits
@@ -575,7 +572,7 @@ def hydra_key_for_eval_type(eval_type: str) -> str:
     return str(EVAL_TYPE_SPECS[eval_type]["hydra_key"])
 
 
-def _cuda_library_dirs_from_python(python_executable: Optional[str]) -> list[str]:
+def _cuda_library_dirs_from_python(python_executable: str | None) -> list[str]:
     """Attempts to find CUDA library directories within a Python virtual environment.
 
     It inspects the `site-packages` directories under a virtual environment
@@ -628,8 +625,8 @@ def _cuda_library_dirs_from_python(python_executable: Optional[str]) -> list[str
 
 
 def build_inference_env(
-    device: Optional[str],
-    python_executable: Optional[str] = None,
+    device: str | None,
+    python_executable: str | None = None,
 ) -> dict[str, str]:
     """Builds a modified environment dictionary suitable for Solaris inference.
 

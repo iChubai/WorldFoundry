@@ -1,12 +1,11 @@
+from typing import ClassVar
+
 # Inference-only Being-H0.5 runtime retained in-tree.
 # --------------------------------------------------------
 # InternVL
 # Copyright (c) 2024 OpenGVLab
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
-
-from typing import Optional, Tuple, Union
-
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
@@ -14,8 +13,7 @@ from einops import rearrange
 from timm.layers import DropPath
 from torch import nn
 from transformers.activations import ACT2FN
-from transformers.modeling_outputs import (BaseModelOutput,
-                                           BaseModelOutputWithPooling)
+from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
@@ -23,11 +21,11 @@ from .internvit_configuration import InternVisionConfig
 
 try:
     from flash_attn.bert_padding import pad_input, unpad_input
-    from flash_attn.flash_attn_interface import \
-        flash_attn_varlen_qkvpacked_func
+    from flash_attn.flash_attn_interface import flash_attn_varlen_qkvpacked_func
+
     has_flash_attn = True
-except:
-    print('FlashAttention2 is not installed.')
+except BaseException:
+    print("FlashAttention2 is not installed.")
     has_flash_attn = False
 
 logger = logging.get_logger(__name__)
@@ -49,8 +47,7 @@ class FlashAttention(nn.Module):
         self.softmax_scale = softmax_scale
         self.dropout_p = attention_dropout
 
-    def forward(self, qkv, key_padding_mask=None, causal=False, cu_seqlens=None,
-                max_s=None, need_weights=False):
+    def forward(self, qkv, key_padding_mask=None, causal=False, cu_seqlens=None, max_s=None, need_weights=False):
         """Implements the multihead softmax attention.
         Arguments
         ---------
@@ -66,32 +63,47 @@ class FlashAttention(nn.Module):
             batch_size = qkv.shape[0]
             seqlen = qkv.shape[1]
             if key_padding_mask is None:
-                qkv = rearrange(qkv, 'b s ... -> (b s) ...')
+                qkv = rearrange(qkv, "b s ... -> (b s) ...")
                 max_s = seqlen
-                cu_seqlens = torch.arange(0, (batch_size + 1) * seqlen, step=seqlen, dtype=torch.int32,
-                                          device=qkv.device)
-                output = flash_attn_varlen_qkvpacked_func(
-                    qkv, cu_seqlens, max_s, self.dropout_p if self.training else 0.0,
-                    softmax_scale=self.softmax_scale, causal=causal
+                cu_seqlens = torch.arange(
+                    0, (batch_size + 1) * seqlen, step=seqlen, dtype=torch.int32, device=qkv.device
                 )
-                output = rearrange(output, '(b s) ... -> b s ...', b=batch_size)
+                output = flash_attn_varlen_qkvpacked_func(
+                    qkv,
+                    cu_seqlens,
+                    max_s,
+                    self.dropout_p if self.training else 0.0,
+                    softmax_scale=self.softmax_scale,
+                    causal=causal,
+                )
+                output = rearrange(output, "(b s) ... -> b s ...", b=batch_size)
             else:
                 nheads = qkv.shape[-2]
-                x = rearrange(qkv, 'b s three h d -> b s (three h d)')
+                x = rearrange(qkv, "b s three h d -> b s (three h d)")
                 x_unpad, indices, cu_seqlens, max_s = unpad_input(x, key_padding_mask)
-                x_unpad = rearrange(x_unpad, 'nnz (three h d) -> nnz three h d', three=3, h=nheads)
+                x_unpad = rearrange(x_unpad, "nnz (three h d) -> nnz three h d", three=3, h=nheads)
                 output_unpad = flash_attn_varlen_qkvpacked_func(
-                    x_unpad, cu_seqlens, max_s, self.dropout_p if self.training else 0.0,
-                    softmax_scale=self.softmax_scale, causal=causal
+                    x_unpad,
+                    cu_seqlens,
+                    max_s,
+                    self.dropout_p if self.training else 0.0,
+                    softmax_scale=self.softmax_scale,
+                    causal=causal,
                 )
-                output = rearrange(pad_input(rearrange(output_unpad, 'nnz h d -> nnz (h d)'),
-                                             indices, batch_size, seqlen),
-                                   'b s (h d) -> b s h d', h=nheads)
+                output = rearrange(
+                    pad_input(rearrange(output_unpad, "nnz h d -> nnz (h d)"), indices, batch_size, seqlen),
+                    "b s (h d) -> b s h d",
+                    h=nheads,
+                )
         else:
             assert max_s is not None
             output = flash_attn_varlen_qkvpacked_func(
-                qkv, cu_seqlens, max_s, self.dropout_p if self.training else 0.0,
-                softmax_scale=self.softmax_scale, causal=causal
+                qkv,
+                cu_seqlens,
+                max_s,
+                self.dropout_p if self.training else 0.0,
+                softmax_scale=self.softmax_scale,
+                causal=causal,
             )
 
         return output, None
@@ -114,20 +126,19 @@ class InternRMSNorm(nn.Module):
 try:
     from apex.normalization import FusedRMSNorm
 
-    InternRMSNorm = FusedRMSNorm  # noqa
+    InternRMSNorm = FusedRMSNorm
 
-    logger.info('Discovered apex.normalization.FusedRMSNorm - will use it instead of InternRMSNorm')
+    logger.info("Discovered apex.normalization.FusedRMSNorm - will use it instead of InternRMSNorm")
 except ImportError:
     # using the normal InternRMSNorm
     pass
 except Exception:
-    logger.warning('discovered apex but it failed to load, falling back to InternRMSNorm')
-    pass
+    logger.warning("discovered apex but it failed to load, falling back to InternRMSNorm")
 
 
 NORM2FN = {
-    'rms_norm': InternRMSNorm,
-    'layer_norm': nn.LayerNorm,
+    "rms_norm": InternRMSNorm,
+    "layer_norm": nn.LayerNorm,
 }
 
 
@@ -154,10 +165,17 @@ class InternVisionEmbeddings(nn.Module):
 
     def _get_pos_embed(self, pos_embed, H, W):
         target_dtype = pos_embed.dtype
-        pos_embed = pos_embed.float().reshape(
-            1, self.image_size // self.patch_size, self.image_size // self.patch_size, -1).permute(0, 3, 1, 2)
-        pos_embed = F.interpolate(pos_embed, size=(H, W), mode='bicubic', align_corners=False). \
-            reshape(1, -1, H * W).permute(0, 2, 1).to(target_dtype)
+        pos_embed = (
+            pos_embed.float()
+            .reshape(1, self.image_size // self.patch_size, self.image_size // self.patch_size, -1)
+            .permute(0, 3, 1, 2)
+        )
+        pos_embed = (
+            F.interpolate(pos_embed, size=(H, W), mode="bicubic", align_corners=False)
+            .reshape(1, -1, H * W)
+            .permute(0, 2, 1)
+            .to(target_dtype)
+        )
         return pos_embed
 
     def forward(self, pixel_values: torch.FloatTensor) -> torch.Tensor:
@@ -167,10 +185,10 @@ class InternVisionEmbeddings(nn.Module):
         patch_embeds = patch_embeds.flatten(2).transpose(1, 2)
         class_embeds = self.class_embedding.expand(batch_size, 1, -1).to(target_dtype)
         embeddings = torch.cat([class_embeds, patch_embeds], dim=1)
-        position_embedding = torch.cat([
-            self.position_embedding[:, :1, :],
-            self._get_pos_embed(self.position_embedding[:, 1:, :], height, width)
-        ], dim=1)
+        position_embedding = torch.cat(
+            [self.position_embedding[:, :1, :], self._get_pos_embed(self.position_embedding[:, 1:, :], height, width)],
+            dim=1,
+        )
         embeddings = embeddings + position_embedding.to(target_dtype)
         return embeddings
 
@@ -185,15 +203,15 @@ class InternAttention(nn.Module):
         self.num_heads = config.num_attention_heads
         self.use_flash_attn = config.use_flash_attn and has_flash_attn
         if config.use_flash_attn and not has_flash_attn:
-            print('Warning: Flash Attention is not available, use_flash_attn is set to False.')
+            print("Warning: Flash Attention is not available, use_flash_attn is set to False.")
         self.head_dim = self.embed_dim // self.num_heads
         if self.head_dim * self.num_heads != self.embed_dim:
             raise ValueError(
-                f'embed_dim must be divisible by num_heads (got `embed_dim`: {self.embed_dim} and `num_heads`:'
-                f' {self.num_heads}).'
+                f"embed_dim must be divisible by num_heads (got `embed_dim`: {self.embed_dim} and `num_heads`:"
+                f" {self.num_heads})."
             )
 
-        self.scale = self.head_dim ** -0.5
+        self.scale = self.head_dim**-0.5
         self.qkv = nn.Linear(self.embed_dim, 3 * self.embed_dim, bias=config.qkv_bias)
         self.attn_drop = nn.Dropout(config.attention_dropout)
         self.proj_drop = nn.Dropout(config.dropout)
@@ -218,7 +236,7 @@ class InternAttention(nn.Module):
             q = self.q_norm(q.transpose(1, 2).flatten(-2, -1)).view(B_, N_, H_, D_).transpose(1, 2)
             k = self.k_norm(k.transpose(1, 2).flatten(-2, -1)).view(B_, N_, H_, D_).transpose(1, 2)
 
-        attn = ((q * self.scale) @ k.transpose(-2, -1))
+        attn = (q * self.scale) @ k.transpose(-2, -1)
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
@@ -229,7 +247,7 @@ class InternAttention(nn.Module):
 
     def _flash_attn(self, x, key_padding_mask=None, need_weights=False):
         qkv = self.qkv(x)
-        qkv = rearrange(qkv, 'b s (three h d) -> b s three h d', three=3, h=self.num_heads)
+        qkv = rearrange(qkv, "b s (three h d) -> b s three h d", three=3, h=self.num_heads)
 
         if self.qk_normalization:
             q, k, v = qkv.unbind(2)
@@ -237,10 +255,8 @@ class InternAttention(nn.Module):
             k = self.k_norm(k.flatten(-2, -1)).view(k.shape)
             qkv = torch.stack([q, k, v], dim=2)
 
-        context, _ = self.inner_attn(
-            qkv, key_padding_mask=key_padding_mask, need_weights=need_weights, causal=False
-        )
-        outs = self.proj(rearrange(context, 'b s h d -> b s (h d)'))
+        context, _ = self.inner_attn(qkv, key_padding_mask=key_padding_mask, need_weights=need_weights, causal=False)
+        outs = self.proj(rearrange(context, "b s h d -> b s (h d)"))
         outs = self.proj_drop(outs)
         return outs
 
@@ -278,20 +294,24 @@ class InternVisionEncoderLayer(nn.Module):
 
         self.ls1 = nn.Parameter(config.initializer_factor * torch.ones(self.embed_dim))
         self.ls2 = nn.Parameter(config.initializer_factor * torch.ones(self.embed_dim))
-        self.drop_path1 = DropPath(drop_path_rate) if drop_path_rate > 0. else nn.Identity()
-        self.drop_path2 = DropPath(drop_path_rate) if drop_path_rate > 0. else nn.Identity()
+        self.drop_path1 = DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
+        self.drop_path2 = DropPath(drop_path_rate) if drop_path_rate > 0.0 else nn.Identity()
 
     def forward(
-            self,
-            hidden_states: torch.Tensor,
-    ) -> Tuple[torch.FloatTensor, Optional[torch.FloatTensor], Optional[Tuple[torch.FloatTensor]]]:
+        self,
+        hidden_states: torch.Tensor,
+    ) -> tuple[torch.FloatTensor, torch.FloatTensor | None, tuple[torch.FloatTensor] | None]:
         """
         Args:
             hidden_states (`Tuple[torch.FloatTensor, Optional[torch.FloatTensor]]`): input to the layer of shape `(batch, seq_len, embed_dim)`
         """
-        hidden_states = hidden_states + self.drop_path1(self.attn(self.norm1(hidden_states).to(hidden_states.dtype)) * self.ls1)
+        hidden_states = hidden_states + self.drop_path1(
+            self.attn(self.norm1(hidden_states).to(hidden_states.dtype)) * self.ls1
+        )
 
-        hidden_states = hidden_states + self.drop_path2(self.mlp(self.norm2(hidden_states).to(hidden_states.dtype)) * self.ls2)
+        hidden_states = hidden_states + self.drop_path2(
+            self.mlp(self.norm2(hidden_states).to(hidden_states.dtype)) * self.ls2
+        )
 
         return hidden_states
 
@@ -311,16 +331,17 @@ class InternVisionEncoder(nn.Module):
         self.config = config
         # stochastic depth decay rule
         dpr = [x.item() for x in torch.linspace(0, config.drop_path_rate, config.num_hidden_layers)]
-        self.layers = nn.ModuleList([
-            InternVisionEncoderLayer(config, dpr[idx]) for idx in range(config.num_hidden_layers)])
+        self.layers = nn.ModuleList(
+            [InternVisionEncoderLayer(config, dpr[idx]) for idx in range(config.num_hidden_layers)]
+        )
         self.gradient_checkpointing = True
 
     def forward(
-            self,
-            inputs_embeds,
-            output_hidden_states: Optional[bool] = None,
-            return_dict: Optional[bool] = None,
-    ) -> Union[Tuple, BaseModelOutput]:
+        self,
+        inputs_embeds,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+    ) -> tuple | BaseModelOutput:
         r"""
         Args:
             inputs_embeds (`torch.FloatTensor` of shape `(batch_size, sequence_length, hidden_size)`):
@@ -339,13 +360,11 @@ class InternVisionEncoder(nn.Module):
         encoder_states = () if output_hidden_states else None
         hidden_states = inputs_embeds
 
-        for idx, encoder_layer in enumerate(self.layers):
+        for _idx, encoder_layer in enumerate(self.layers):
             if output_hidden_states:
-                encoder_states = encoder_states + (hidden_states,)
+                encoder_states = encoder_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             if self.gradient_checkpointing and self.training:
-                layer_outputs = torch.utils.checkpoint.checkpoint(
-                    encoder_layer,
-                    hidden_states)
+                layer_outputs = torch.utils.checkpoint.checkpoint(encoder_layer, hidden_states)
             else:
                 layer_outputs = encoder_layer(
                     hidden_states,
@@ -353,21 +372,19 @@ class InternVisionEncoder(nn.Module):
             hidden_states = layer_outputs
 
         if output_hidden_states:
-            encoder_states = encoder_states + (hidden_states,)
+            encoder_states = encoder_states + (hidden_states,)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         if not return_dict:
             return tuple(v for v in [hidden_states, encoder_states] if v is not None)
-        return BaseModelOutput(
-            last_hidden_state=hidden_states, hidden_states=encoder_states
-        )
+        return BaseModelOutput(last_hidden_state=hidden_states, hidden_states=encoder_states)
 
 
 class InternVisionModel(PreTrainedModel):
-    main_input_name = 'pixel_values'
+    main_input_name = "pixel_values"
     _supports_flash_attn_2 = True
     supports_gradient_checkpointing = True
     config_class = InternVisionConfig
-    _no_split_modules = ['InternVisionEncoderLayer']
+    _no_split_modules: ClassVar[list] = ["InternVisionEncoderLayer"]
 
     def __init__(self, config: InternVisionConfig):
         super().__init__(config)
@@ -380,10 +397,10 @@ class InternVisionModel(PreTrainedModel):
         """initialize the llm"""
         logger.info("Initializing vision model from MLLM weights")
         for name, param in self.named_parameters():
-            original_name = "vision_model."+name
+            original_name = "vision_model." + name
             try:
                 param.data.copy_(mllm_state_dict.pop(original_name).data)
-            except:
+            except BaseException:
                 logger.info(f"'{name}' not initialized")
         return mllm_state_dict
 
@@ -392,30 +409,30 @@ class InternVisionModel(PreTrainedModel):
         _, num_positions, embed_dim = pos_emb.shape
         cls_emb = pos_emb[:, :1, :]
         pos_emb = pos_emb[:, 1:, :].reshape(1, old_size // patch_size, old_size // patch_size, -1).permute(0, 3, 1, 2)
-        pos_emb = F.interpolate(pos_emb.float(), size=new_size // patch_size, mode='bicubic', align_corners=False)
+        pos_emb = F.interpolate(pos_emb.float(), size=new_size // patch_size, mode="bicubic", align_corners=False)
         pos_emb = pos_emb.to(cls_emb.dtype).reshape(1, embed_dim, -1).permute(0, 2, 1)
         pos_emb = torch.cat([cls_emb, pos_emb], dim=1)
         self.embeddings.position_embedding = nn.Parameter(pos_emb)
         self.embeddings.image_size = new_size
-        logger.info('Resized position embeddings from {} to {}'.format(old_size, new_size))
+        logger.info(f"Resized position embeddings from {old_size} to {new_size}")
 
     def get_input_embeddings(self):
         return self.embeddings
 
     def forward(
-            self,
-            pixel_values: Optional[torch.FloatTensor] = None,
-            output_hidden_states: Optional[bool] = None,
-            return_dict: Optional[bool] = None,
-            pixel_embeds: Optional[torch.FloatTensor] = None,
-    ) -> Union[Tuple, BaseModelOutputWithPooling]:
+        self,
+        pixel_values: torch.FloatTensor | None = None,
+        output_hidden_states: bool | None = None,
+        return_dict: bool | None = None,
+        pixel_embeds: torch.FloatTensor | None = None,
+    ) -> tuple | BaseModelOutputWithPooling:
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if pixel_values is None and pixel_embeds is None:
-            raise ValueError('You have to specify pixel_values or pixel_embeds')
+            raise ValueError("You have to specify pixel_values or pixel_embeds")
 
         if pixel_embeds is not None:
             hidden_states = pixel_embeds
@@ -423,7 +440,7 @@ class InternVisionModel(PreTrainedModel):
             if len(pixel_values.shape) == 4:
                 hidden_states = self.embeddings(pixel_values)
             else:
-                raise ValueError(f'wrong pixel_values size: {pixel_values.shape}')
+                raise ValueError(f"wrong pixel_values size: {pixel_values.shape}")
         encoder_outputs = self.encoder(
             inputs_embeds=hidden_states,
             output_hidden_states=output_hidden_states,
@@ -433,7 +450,7 @@ class InternVisionModel(PreTrainedModel):
         pooled_output = last_hidden_state[:, 0, :]
 
         if not return_dict:
-            return (last_hidden_state, pooled_output) + encoder_outputs[1:]
+            return (last_hidden_state, pooled_output) + encoder_outputs[1:]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
         return BaseModelOutputWithPooling(
             last_hidden_state=last_hidden_state,

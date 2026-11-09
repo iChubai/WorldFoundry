@@ -58,7 +58,10 @@ def _parse_eval_node(payload: dict[str, Any], *, context: str) -> EvalScorerRunt
         qwen35_model=node.get("qwen35_model"),
         qwen3vl_model=node.get("qwen3vl_model"),
         gpu_id=_require_int(node, "gpu_id", context=f"{context}: eval.scorers"),
-        extra_paths={str(k): str(v) for k, v in _optional_mapping(node, "extra_paths", context=f"{context}: eval.scorers").items()},
+        extra_paths={
+            str(k): str(v)
+            for k, v in _optional_mapping(node, "extra_paths", context=f"{context}: eval.scorers").items()
+        },
         env={str(k): str(v) for k, v in _optional_mapping(node, "env", context=f"{context}: eval.scorers").items()},
     )
 
@@ -373,9 +376,7 @@ def d3d6_env(
     )
     missing_env = [name for name in required_env if not str(scorers.env.get(name, "")).strip()]
     if missing_env:
-        raise RuntimeConfigError(
-            "eval.scorers.env missing required D3-D6 field(s): " + ", ".join(missing_env)
-        )
+        raise RuntimeConfigError("eval.scorers.env missing required D3-D6 field(s): " + ", ".join(missing_env))
     repo_root = wrbench_repo_root()
     shell = repo_root / "scripts" / "eval" / "score_runtime_v2_d3d6.sh"
     env = {

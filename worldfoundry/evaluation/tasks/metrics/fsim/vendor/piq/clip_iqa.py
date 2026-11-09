@@ -9,15 +9,14 @@ https://arxiv.org/abs/2207.12396
 This implementation is inspired by the offisial implementation but avoids using MMCV and MMEDIT libraries.
 Ref url: https://github.com/IceClear/CLIP-IQA
 """
-import os
-import torch
 
+import os
+
+import torch
 from torch.nn.modules.loss import _Loss
-from typing import Union
 
 from piq.feature_extractors import clip
-from piq.utils.common import download_tensor, _validate_input
-
+from piq.utils.common import _validate_input, download_tensor
 
 OPENAI_CLIP_MEAN = (0.48145466, 0.4578275, 0.40821073)
 OPENAI_CLIP_STD = (0.26862954, 0.26130258, 0.27577711)
@@ -73,7 +72,8 @@ class CLIPIQA(_Loss):
         Zhou, Kaiyang, et al. "Learning to prompt for vision-language models." International
         Journal of Computer Vision 130.9 (2022): 2337-2348.
     """
-    def __init__(self, data_range: Union[float, int] = 1.) -> None:
+
+    def __init__(self, data_range: float | int = 1.0) -> None:
         super().__init__()
 
         self.feature_extractor = clip.load().eval()
@@ -109,7 +109,7 @@ class CLIPIQA(_Loss):
         Returns:
             The value of CLI-IQA score in [0, 1] range.
         """
-        _validate_input([x_input], dim_range=(4, 4), data_range=(0., 255.), check_for_channels_first=True)
+        _validate_input([x_input], dim_range=(4, 4), data_range=(0.0, 255.0), check_for_channels_first=True)
 
         x = x_input.clone()
         x = x.float() / self.data_range

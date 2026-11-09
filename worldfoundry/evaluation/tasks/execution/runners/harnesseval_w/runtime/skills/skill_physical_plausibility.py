@@ -16,7 +16,6 @@ from .common import (
     skill_cache_path,
 )
 
-
 SKILL_ID = "physical_plausibility_inspector"
 DEFINITION_VERSION = "harnesseval.physical_plausibility.pavrm"
 CACHE_SCHEMA = "harnesseval.physical_plausibility.cache"
@@ -38,15 +37,15 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
+    "SKILL_ID",
     "PhysicalPlausibilityBackend",
     "cache_path_for_video",
-    "import_raw_score",
     "evaluate",
+    "import_raw_score",
 ]
 
 
@@ -83,9 +82,7 @@ def _normalize_backend_evidence(evidence: Mapping[str, Any]) -> dict[str, Any]:
     reported = result.get("reported_score")
     if reported is not None:
         reported_score = None if isinstance(reported, bool) else numeric(reported)
-        if reported_score is None or not math.isclose(
-            reported_score, score, rel_tol=0.0, abs_tol=1e-4
-        ):
+        if reported_score is None or not math.isclose(reported_score, score, rel_tol=0.0, abs_tol=1e-4):
             raise RuntimeError("PAVRM reported_score does not match raw_score / 5")
     return {
         "metrics": {"visual_plausibility": score},

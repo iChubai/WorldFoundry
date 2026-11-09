@@ -7,8 +7,9 @@ for generating images from text prompts.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import hfd_root_path
 from worldfoundry.core.io.paths import package_module_root as package_root
@@ -85,7 +86,7 @@ class ShowORuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "ShowORuntime":
+    ) -> ShowORuntime:
         """Creates a ShowORuntime instance from pretrained model settings.
 
         This factory method allows initializing the runtime with various configurations,
@@ -240,7 +241,17 @@ class ShowORuntime:
         uni_prompting = UniversalPrompting(
             tokenizer,
             max_text_len=config.dataset.preprocessing.max_seq_length,
-            special_tokens=("<|soi|>", "<|eoi|>", "<|sov|>", "<|eov|>", "<|t2i|>", "<|mmu|>", "<|t2v|>", "<|v2v|>", "<|lvg|>"),
+            special_tokens=(
+                "<|soi|>",
+                "<|eoi|>",
+                "<|sov|>",
+                "<|eov|>",
+                "<|t2i|>",
+                "<|mmu|>",
+                "<|t2v|>",
+                "<|v2v|>",
+                "<|lvg|>",
+            ),
             ignore_id=-100,
             cond_dropout_prob=config.training.cond_dropout_prob,
         )
@@ -320,11 +331,14 @@ class ShowORuntime:
         # Prepare prompts for batch processing.
         prompts = [prompt] * int(kwargs.get("batch_size", config.training.batch_size))
         # Initialize image tokens with a mask token ID.
-        image_tokens = torch.ones(
-            (len(prompts), config.model.showo.num_vq_tokens),
-            dtype=torch.long,
-            device=self.device,
-        ) * model.config.mask_token_id
+        image_tokens = (
+            torch.ones(
+                (len(prompts), config.model.showo.num_vq_tokens),
+                dtype=torch.long,
+                device=self.device,
+            )
+            * model.config.mask_token_id
+        )
         # Process prompts to get input IDs for conditional generation.
         input_ids, _ = uni_prompting((prompts, image_tokens), "t2i_gen")
 

@@ -15,7 +15,6 @@ from .common import (
     skill_cache_path,
 )
 
-
 SKILL_ID = "appearance_consistency_inspector"
 DEFINITION_VERSION = "harnesseval.appearance_consistency"
 CACHE_SCHEMA = "harnesseval.appearance_consistency.cache"
@@ -38,15 +37,15 @@ CACHE_CONTRACT = MetricCacheContract(
 )
 
 __all__ = [
-    "SKILL_ID",
-    "DEFINITION_VERSION",
-    "CACHE_SCHEMA",
-    "CACHE_CONTRACT",
     "BACKEND_OUTPUT_SCHEMA",
+    "CACHE_CONTRACT",
+    "CACHE_SCHEMA",
+    "DEFINITION_VERSION",
+    "SKILL_ID",
     "AppearanceConsistencyBackend",
     "cache_path_for_video",
-    "import_metrics",
     "evaluate",
+    "import_metrics",
 ]
 
 
@@ -124,13 +123,9 @@ def _backend_identity(backend: SkillBackendIdentity) -> dict[str, str]:
     }
     missing = [name for name, value in identity.items() if not value]
     if missing:
-        raise ValueError(
-            f"appearance consistency backend identity missing: {', '.join(missing)}"
-        )
+        raise ValueError(f"appearance consistency backend identity missing: {', '.join(missing)}")
     if str(backend.execution_mode).strip() != "local":
-        raise ValueError(
-            "appearance consistency backend execution_mode must be local"
-        )
+        raise ValueError("appearance consistency backend execution_mode must be local")
     return identity
 
 

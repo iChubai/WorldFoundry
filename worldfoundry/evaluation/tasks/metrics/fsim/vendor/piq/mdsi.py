@@ -5,21 +5,34 @@ https://www.mathworks.com/matlabcentral/fileexchange/59809
 References:
     https://arxiv.org/pdf/1608.07433.pdf
 """
-import warnings
+
 import functools
-from typing import Union
+import warnings
 
 import torch
+from torch.nn.functional import avg_pool2d, pad
 from torch.nn.modules.loss import _Loss
-from torch.nn.functional import pad, avg_pool2d
 
-from piq.functional import rgb2lhm, gradient_map, similarity_map, prewitt_filter, pow_for_complex
-from piq.utils import _validate_input, _reduce
+from piq.functional import gradient_map, pow_for_complex, prewitt_filter, rgb2lhm, similarity_map
+from piq.utils import _reduce, _validate_input
 
 
-def mdsi(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float] = 1., reduction: str = 'mean',
-         c1: float = 140., c2: float = 55., c3: float = 550., combination: str = 'sum', alpha: float = 0.6,
-         beta: float = 0.1, gamma: float = 0.2, rho: float = 1., q: float = 0.25, o: float = 0.25):
+def mdsi(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    data_range: int | float = 1.0,
+    reduction: str = "mean",
+    c1: float = 140.0,
+    c2: float = 55.0,
+    c3: float = 550.0,
+    combination: str = "sum",
+    alpha: float = 0.6,
+    beta: float = 0.1,
+    gamma: float = 0.2,
+    rho: float = 1.0,
+    q: float = 0.25,
+    o: float = 0.25,
+):
     r"""Compute Mean Deviation Similarity Index (MDSI) for a batch of images.
     Supports greyscale and colour images with RGB channel order.
 
@@ -63,8 +76,11 @@ def mdsi(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float] = 1., r
     if x.size(1) == 1:
         x = x.repeat(1, 3, 1, 1)
         y = y.repeat(1, 3, 1, 1)
-        warnings.warn('The original MDSI supports only RGB images. The input images were converted to RGB by copying '
-                      'the grey channel 3 times.')
+        warnings.warn(
+            "The original MDSI supports only RGB images. The input images were converted to RGB by copying "
+            "the grey channel 3 times.",
+            stacklevel=1,
+        )
 
     x = x / float(data_range) * 255
     y = y / float(data_range) * 255
@@ -90,7 +106,7 @@ def mdsi(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float] = 1., r
     kernels = torch.stack([p_filter, p_filter.transpose(1, 2)])
     gm_x = gradient_map(x_lhm[:, :1], kernels)
     gm_y = gradient_map(y_lhm[:, :1], kernels)
-    gm_avg = gradient_map((x_lhm[:, :1] + y_lhm[:, :1]) / 2., kernels)
+    gm_avg = gradient_map((x_lhm[:, :1] + y_lhm[:, :1]) / 2.0, kernels)
 
     gs_x_y = similarity_map(gm_x, gm_y, c1)
     gs_x_average = similarity_map(gm_x, gm_avg, c2)
@@ -98,26 +114,25 @@ def mdsi(x: torch.Tensor, y: torch.Tensor, data_range: Union[int, float] = 1., r
 
     gs_total = gs_x_y + gs_x_average - gs_y_average
 
-    cs_total = (2 * (x_lhm[:, 1:2] * y_lhm[:, 1:2] +
-                     x_lhm[:, 2:] * y_lhm[:, 2:]) + c3) / (x_lhm[:, 1:2] ** 2 +
-                                                           y_lhm[:, 1:2] ** 2 +
-                                                           x_lhm[:, 2:] ** 2 +
-                                                           y_lhm[:, 2:] ** 2 + c3)
+    cs_total = (2 * (x_lhm[:, 1:2] * y_lhm[:, 1:2] + x_lhm[:, 2:] * y_lhm[:, 2:]) + c3) / (
+        x_lhm[:, 1:2] ** 2 + y_lhm[:, 1:2] ** 2 + x_lhm[:, 2:] ** 2 + y_lhm[:, 2:] ** 2 + c3
+    )
 
-    if combination == 'sum':
-        gcs = (alpha * gs_total + (1 - alpha) * cs_total)
-    elif combination == 'mult':
+    if combination == "sum":
+        gcs = alpha * gs_total + (1 - alpha) * cs_total
+    elif combination == "mult":
         gs_total_pow = pow_for_complex(base=gs_total, exp=gamma)
         cs_total_pow = pow_for_complex(base=cs_total, exp=beta)
-        gcs = torch.stack((gs_total_pow[..., 0] * cs_total_pow[..., 0],
-                           gs_total_pow[..., 1] + cs_total_pow[..., 1]), dim=-1)
+        gcs = torch.stack(
+            (gs_total_pow[..., 0] * cs_total_pow[..., 0], gs_total_pow[..., 1] + cs_total_pow[..., 1]), dim=-1
+        )
     else:
         raise ValueError(f'Expected combination method "sum" or "mult", got {combination}')
 
     mct_complex = pow_for_complex(base=gcs, exp=q)
     mct_complex = mct_complex.mean(dim=2, keepdim=True).mean(dim=3, keepdim=True)  # split to increase precision
     score = (pow_for_complex(base=gcs, exp=q) - mct_complex).pow(2).sum(dim=-1).sqrt()
-    score = ((score ** rho).mean(dim=(-1, -2)) ** (o / rho)).squeeze(1)
+    score = ((score**rho).mean(dim=(-1, -2)) ** (o / rho)).squeeze(1)
     return _reduce(score, reduction)
 
 
@@ -159,16 +174,39 @@ class MDSILoss(_Loss):
         The ratio between constants is usually equal :math:`c_3 = 4c_1 = 10c_2`
     """
 
-    def __init__(self, data_range: Union[int, float] = 1., reduction: str = 'mean',
-                 c1: float = 140., c2: float = 55., c3: float = 550., alpha: float = 0.6,
-                 rho: float = 1., q: float = 0.25, o: float = 0.25, combination: str = 'sum',
-                 beta: float = 0.1, gamma: float = 0.2):
+    def __init__(
+        self,
+        data_range: int | float = 1.0,
+        reduction: str = "mean",
+        c1: float = 140.0,
+        c2: float = 55.0,
+        c3: float = 550.0,
+        alpha: float = 0.6,
+        rho: float = 1.0,
+        q: float = 0.25,
+        o: float = 0.25,
+        combination: str = "sum",
+        beta: float = 0.1,
+        gamma: float = 0.2,
+    ):
         super().__init__()
         self.reduction = reduction
         self.data_range = data_range
-        self.mdsi = functools.partial(mdsi, c1=c1, c2=c2, c3=c3, alpha=alpha, rho=rho, q=q, o=o,
-                                      combination=combination, beta=beta, gamma=gamma, data_range=self.data_range,
-                                      reduction=self.reduction)
+        self.mdsi = functools.partial(
+            mdsi,
+            c1=c1,
+            c2=c2,
+            c3=c3,
+            alpha=alpha,
+            rho=rho,
+            q=q,
+            o=o,
+            combination=combination,
+            beta=beta,
+            gamma=gamma,
+            data_range=self.data_range,
+            reduction=self.reduction,
+        )
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         r"""Computation of Mean Deviation Similarity Index (MDSI) as a loss function.

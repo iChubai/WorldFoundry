@@ -1,19 +1,18 @@
-r""" This module implements Geometry Score (GS) in PyTorch.
+r"""This module implements Geometry Score (GS) in PyTorch.
 Implementation is inspired by Valentin Khrulkov's (@KhrulkovV) implementation:
 https://github.com/KhrulkovV/geometry-score
 See paper for details:
 https://arxiv.org/pdf/1802.02664.pdf
 """
-import torch
 
-import numpy as np
-
-from typing import Optional, Tuple, Union
 from multiprocessing import Pool
 from warnings import warn
 
+import numpy as np
+import torch
+
 from piq.base import BaseFeatureMetric
-from piq.utils import _validate_input, _parse_version
+from piq.utils import _parse_version, _validate_input
 
 
 def relative(intervals: np.ndarray, alpha_max: float, i_max: int = 100) -> np.ndarray:
@@ -44,7 +43,7 @@ def relative(intervals: np.ndarray, alpha_max: float, i_max: int = 100) -> np.nd
         rlt[0] = 1.0
         return rlt
 
-    persistence_intervals_ext = np.array(persistence_intervals + [[0, alpha_max]])
+    persistence_intervals_ext = np.array([*persistence_intervals, [0, alpha_max]])
     persistence_intervals = np.array(persistence_intervals)
 
     # Change in the value of beta_1 may happen only at the boundary points
@@ -58,13 +57,13 @@ def relative(intervals: np.ndarray, alpha_max: float, i_max: int = 100) -> np.nd
             # Count how many intervals contain midpoint
             if midpoint >= interval[0] and midpoint < interval[1]:
                 s = s + 1
-        if (s < i_max):
-            rlt[s] += (switch_points[i + 1] - switch_points[i])
+        if s < i_max:
+            rlt[s] += switch_points[i + 1] - switch_points[i]
 
     return rlt / alpha_max
 
 
-def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     r"""Construct an input for the gudhi.WitnessComplex function.
     Args:
         witnesses: Array with shape (w, d), containing witnesses.
@@ -79,14 +78,19 @@ def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> Tuple[np.ndarray
     try:
         import scipy
     except ImportError:
-        raise ImportError("Scipy is required for computation of the Geometry Score but not installed. "
-                          "Please install scipy using the following command: pip install --user scipy")
+        raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
+            "Scipy is required for computation of the Geometry Score but not installed. "
+            "Please install scipy using the following command: pip install --user scipy"
+        )
 
     recommended_scipy_version = _parse_version("1.3.3")
     scipy_version = _parse_version(scipy.__version__)
     if len(scipy_version) != 0 and scipy_version < recommended_scipy_version:
-        warn(f'Scipy of version {scipy.__version__} is used while version >= {recommended_scipy_version} is '
-             f'recommended. Consider updating scipy to avoid potential long compute time with older versions.')
+        warn(
+            f"Scipy of version {scipy.__version__} is used while version >= {recommended_scipy_version} is "
+            f"recommended. Consider updating scipy to avoid potential long compute time with older versions.",
+            stacklevel=1,
+        )
 
     from scipy.spatial.distance import cdist
 
@@ -98,8 +102,7 @@ def lmrk_table(witnesses: np.ndarray, landmarks: np.ndarray) -> Tuple[np.ndarray
     return distances, max_dist
 
 
-def witness(features: np.ndarray, sample_size: int = 64, gamma: Optional[float] = None) \
-        -> Tuple[np.ndarray, np.ndarray]:
+def witness(features: np.ndarray, sample_size: int = 64, gamma: float | None = None) -> tuple[np.ndarray, np.ndarray]:
     """Compute the persistence intervals for the dataset of features using the witness complex.
 
     Args:
@@ -113,14 +116,19 @@ def witness(features: np.ndarray, sample_size: int = 64, gamma: Optional[float] 
     try:
         import gudhi
     except ImportError:
-        raise ImportError("GUDHI is required for computation of the Geometry Score but not installed. "
-                          "Please install scipy using the following command: pip install --user gudhi")
+        raise ImportError(  # noqa: B904 - Keeps the implicit exception context.
+            "GUDHI is required for computation of the Geometry Score but not installed. "
+            "Please install scipy using the following command: pip install --user gudhi"
+        )
 
     recommended_gudhi_version = _parse_version("3.2.0")
     gudhi_version = _parse_version(gudhi.__version__)
     if len(gudhi_version) != 0 and gudhi_version < recommended_gudhi_version:
-        warn(f'GUDHI of version {gudhi.__version__} is used while version >= {recommended_gudhi_version} is '
-             f'recommended. Consider updating GUDHI to avoid potential problems.')
+        warn(
+            f"GUDHI of version {gudhi.__version__} is used while version >= {recommended_gudhi_version} is "
+            f"recommended. Consider updating GUDHI to avoid potential problems.",
+            stacklevel=1,
+        )
 
     N = features.shape[0]
     if gamma is None:
@@ -176,8 +184,14 @@ class GS(BaseFeatureMetric):
         otherwise follow installation guide: http://gudhi.gforge.inria.fr/python/latest/installation.html
     """
 
-    def __init__(self, sample_size: int = 64, num_iters: int = 1000, gamma: Optional[float] = None,
-                 i_max: int = 100, num_workers: int = 4) -> None:
+    def __init__(
+        self,
+        sample_size: int = 64,
+        num_iters: int = 1000,
+        gamma: float | None = None,
+        i_max: int = 100,
+        num_workers: int = 4,
+    ) -> None:
         super().__init__()
         self.sample_size = sample_size
         self.num_iters = num_iters
@@ -209,7 +223,7 @@ class GS(BaseFeatureMetric):
 
         return torch.tensor(score, device=x_features.device) * 1000
 
-    def _relative_living_times(self, idx: int) -> Union[np.ndarray, np.ndarray, np.ndarray]:
+    def _relative_living_times(self, idx: int) -> np.ndarray | np.ndarray | np.ndarray:
         r"""Implements Algorithm 1 for two samples of landmarks.
 
         Args:

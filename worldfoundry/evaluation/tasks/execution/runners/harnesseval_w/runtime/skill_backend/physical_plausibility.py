@@ -13,7 +13,6 @@ from ..io import value_digest
 from ..skills.skill_physical_plausibility import BACKEND_OUTPUT_SCHEMA, SAMPLING
 from .common import _validate_video
 
-
 BACKEND_ID = "harnesseval.physical_plausibility.pavrm"
 BACKEND_VERSION = "harnesseval.pavrm_qwen3vl_a3b"
 CONFIG_DIGEST = value_digest(
@@ -90,9 +89,7 @@ class LocalBackend:
                     result = score_prepared(prepared)
             else:
                 with self._inference_lock:
-                    result = self._evaluator.score_video(
-                        str(video_path), fps=SAMPLING["fps"]
-                    )
+                    result = self._evaluator.score_video(str(video_path), fps=SAMPLING["fps"])
         except Exception as exc:  # Match the official evaluator's failure payload.
             result = {"raw_score": None, "score": None, "error": str(exc)}
         raw = None if isinstance(result.get("raw_score"), bool) else numeric(result.get("raw_score"))

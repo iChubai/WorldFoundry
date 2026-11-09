@@ -23,7 +23,17 @@ def _opencv_c2w_to_blender_c2w(c2w: np.ndarray) -> np.ndarray:
 class VerseCrafterAdapter:
     name = "versecrafter"
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         target, amp = model_target_trajectory(trajectory, model_name, num_frames)
         out = ensure_work_dir(work_dir) / "custom_camera_trajectory.npz"
         np.savez(out, extrinsics=_opencv_c2w_to_blender_c2w(target.to_c2w()), intrinsics=target.intrinsics)

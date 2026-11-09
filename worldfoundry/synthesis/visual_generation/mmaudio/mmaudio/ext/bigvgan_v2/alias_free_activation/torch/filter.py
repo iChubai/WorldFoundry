@@ -1,10 +1,11 @@
 # Adapted from https://github.com/junjun3518/alias-free-torch under the Apache License 2.0
 #   LICENSE is in incl_licenses directory.
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import math
+
+import torch
+import torch.nn as nn  # noqa: F401 - Re-exported under this name.
+import torch.nn.functional as F  # noqa: F401 - Re-exported under this name.
 
 if "sinc" in dir(torch):
     sinc = torch.sinc
@@ -27,7 +28,9 @@ else:
 # This code is adopted from adefossez's julius.lowpass.LowPassFilters under the MIT License
 # https://adefossez.github.io/julius/julius/lowpass.html
 #   LICENSE is in incl_licenses directory.
-from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import kaiser_sinc_filter1d
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import LowPassFilter1d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import (
+    LowPassFilter1d as LowPassFilter1d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.minimax_h3_audio.alias_free import (
+    kaiser_sinc_filter1d as kaiser_sinc_filter1d,
+)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Dict, List, Literal
+from typing import Any, Literal
 
 import requests
 
@@ -20,7 +20,6 @@ from model.qwenvl import (
     text_qwenvl_call,
     video_qwenvl_call,
 )
-
 
 VLMBackend = Literal["openrouter", "qwenvl", "qwenvl_server"]
 
@@ -111,11 +110,11 @@ def qwenvl_server_url() -> str:
 
 
 def chat_qwenvl_server_call(
-    messages: List[Dict],
+    messages: list[dict],
     model_name: str = DEFAULT_QWEN_MODEL_NAME,
     timeout: int = 240,
     max_retries: int = 3,
-) -> Dict:
+) -> dict:
     payload = {
         "model": model_name,
         "messages": messages,
@@ -130,8 +129,7 @@ def chat_qwenvl_server_call(
                 response_json = response.json()
             except Exception as exc:
                 raise RuntimeError(
-                    f"QwenVL server response is not JSON. status={response.status_code}, "
-                    f"body={response.text[:500]}"
+                    f"QwenVL server response is not JSON. status={response.status_code}, body={response.text[:500]}"
                 ) from exc
             if response.status_code >= 400:
                 raise RuntimeError(f"QwenVL server HTTP {response.status_code}: {response_json}")
@@ -150,7 +148,7 @@ def text_qwenvl_server_call(
     system_prompt: str,
     user_content: str,
     model_name: str = DEFAULT_QWEN_MODEL_NAME,
-) -> Dict:
+) -> dict:
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_content},
@@ -163,9 +161,9 @@ def video_qwenvl_server_call(
     system_prompt: str,
     user_content: str,
     model_name: str = DEFAULT_QWEN_MODEL_NAME,
-) -> Dict:
+) -> dict:
     if not isinstance(data_url, list):
-        content: List[Any] = [{"type": "text", "text": user_content}, data_url]
+        content: list[Any] = [{"type": "text", "text": user_content}, data_url]
     else:
         content = [{"type": "text", "text": user_content}]
         if data_url:
@@ -184,7 +182,7 @@ def text_vlm_call(
     user_content: str,
     model_name: str | None = None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     """
     Unified text-only VLM/LLM entrypoint.
 
@@ -208,7 +206,7 @@ def video_vlm_call(
     user_content: str,
     model_name: str | None = None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     """
     Unified multimodal entrypoint for single-video or frame-list inputs.
     """
@@ -224,12 +222,12 @@ def video_vlm_call(
 
 
 def chat_vlm_call(
-    messages: List[Dict],
+    messages: list[dict],
     model_name: str | None = None,
     backend: str | None = None,
     timeout: int = 240,
     max_retries: int = 3,
-) -> Dict:
+) -> dict:
     """
     Unified generic chat entrypoint.
     """
@@ -245,27 +243,27 @@ def chat_vlm_call(
 
 
 __all__ = [
-    "VLMBackend",
     "DEFAULT_OPENROUTER_MODEL_NAME",
     "DEFAULT_QWEN_MODEL_NAME",
     "DEFAULT_VLM_BACKEND",
-    "clean_json_content",
-    "parse_json_content",
-    "get_openrouter_api_key",
-    "resolve_vlm_backend",
-    "default_model_name_for_backend",
-    "resolve_model_name",
-    "text_openrouter_call",
-    "video_openrouter_call",
+    "VLMBackend",
     "chat_openrouter_call",
-    "text_qwenvl_call",
-    "video_qwenvl_call",
     "chat_qwenvl_call",
-    "qwenvl_server_url",
-    "text_qwenvl_server_call",
-    "video_qwenvl_server_call",
     "chat_qwenvl_server_call",
-    "text_vlm_call",
-    "video_vlm_call",
     "chat_vlm_call",
+    "clean_json_content",
+    "default_model_name_for_backend",
+    "get_openrouter_api_key",
+    "parse_json_content",
+    "qwenvl_server_url",
+    "resolve_model_name",
+    "resolve_vlm_backend",
+    "text_openrouter_call",
+    "text_qwenvl_call",
+    "text_qwenvl_server_call",
+    "text_vlm_call",
+    "video_openrouter_call",
+    "video_qwenvl_call",
+    "video_qwenvl_server_call",
+    "video_vlm_call",
 ]

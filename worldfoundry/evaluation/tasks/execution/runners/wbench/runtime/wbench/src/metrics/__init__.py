@@ -13,15 +13,16 @@ Organized by 5 core dimensions:
 
 def get_vlm_evaluator():
     from .vlm import VLMEvaluator
+
     return VLMEvaluator
 
 
 __all__ = [
-    "get_vlm_evaluator",
-    "video_quality",
-    "setting_adherence",
-    "interaction",
     "consistency",
+    "get_vlm_evaluator",
+    "interaction",
     "physical",
+    "setting_adherence",
+    "video_quality",
     "vlm",
 ]

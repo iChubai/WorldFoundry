@@ -11,8 +11,5 @@ appends unknown ids in sorted order after the known ones.
 
 from __future__ import annotations
 
-
 # Publication order of the models evaluated in the HarnessEval leaderboard.
-MODEL_REGISTRY: tuple[str, ...] = (
-    "seedance-2.0-standard",
-)
+MODEL_REGISTRY: tuple[str, ...] = ("seedance-2.0-standard",)

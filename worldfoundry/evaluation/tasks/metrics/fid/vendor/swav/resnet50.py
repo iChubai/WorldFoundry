@@ -5,6 +5,8 @@
 # LICENSE file in the root directory of this source tree.
 #
 
+from typing import ClassVar
+
 import torch
 import torch.nn as nn
 
@@ -14,7 +16,7 @@ except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
 
-SWAV_WEIGHTS_URL = 'https://www.dropbox.com/s/ghjrgktg0lyjorn/swav_800ep_pretrain.pth.tar?dl=1'
+SWAV_WEIGHTS_URL = "https://www.dropbox.com/s/ghjrgktg0lyjorn/swav_800ep_pretrain.pth.tar?dl=1"
 
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
@@ -38,7 +40,7 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 class BasicBlock(nn.Module):
     expansion = 1
-    __constants__ = ["downsample"]
+    __constants__: ClassVar[list[str]] = ["downsample"]
 
     def __init__(
         self,
@@ -51,7 +53,7 @@ class BasicBlock(nn.Module):
         dilation=1,
         norm_layer=None,
     ):
-        super(BasicBlock, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if groups != 1 or base_width != 64:
@@ -88,7 +90,7 @@ class BasicBlock(nn.Module):
 
 class Bottleneck(nn.Module):
     expansion = 4
-    __constants__ = ["downsample"]
+    __constants__: ClassVar[list[str]] = ["downsample"]
 
     def __init__(
         self,
@@ -101,7 +103,7 @@ class Bottleneck(nn.Module):
         dilation=1,
         norm_layer=None,
     ):
-        super(Bottleneck, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         width = int(planes * (base_width / 64.0)) * groups
@@ -141,22 +143,22 @@ class Bottleneck(nn.Module):
 
 class ResNet(nn.Module):
     def __init__(
-            self,
-            block,
-            layers,
-            zero_init_residual=False,
-            groups=1,
-            widen=1,
-            width_per_group=64,
-            replace_stride_with_dilation=None,
-            norm_layer=None,
-            normalize=False,
-            output_dim=0,
-            hidden_mlp=0,
-            nmb_prototypes=0,
-            eval_mode=False,
+        self,
+        block,
+        layers,
+        zero_init_residual=False,
+        groups=1,
+        widen=1,
+        width_per_group=64,
+        replace_stride_with_dilation=None,
+        norm_layer=None,
+        normalize=False,
+        output_dim=0,
+        hidden_mlp=0,
+        nmb_prototypes=0,
+        eval_mode=False,
     ):
-        super(ResNet, self).__init__()
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
@@ -172,17 +174,14 @@ class ResNet(nn.Module):
             replace_stride_with_dilation = [False, False, False]
         if len(replace_stride_with_dilation) != 3:
             raise ValueError(
-                "replace_stride_with_dilation should be None "
-                "or a 3-element tuple, got {}".format(replace_stride_with_dilation)
+                f"replace_stride_with_dilation should be None or a 3-element tuple, got {replace_stride_with_dilation}"
             )
         self.groups = groups
         self.base_width = width_per_group
 
         # change padding 3 -> 2 compared to original torchvision code because added a padding layer
         num_out_filters = width_per_group * widen
-        self.conv1 = nn.Conv2d(
-            3, num_out_filters, kernel_size=7, stride=2, padding=2, bias=False
-        )
+        self.conv1 = nn.Conv2d(3, num_out_filters, kernel_size=7, stride=2, padding=2, bias=False)
         self.bn1 = norm_layer(num_out_filters)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -316,14 +315,17 @@ class ResNet(nn.Module):
     def forward(self, inputs):
         if not isinstance(inputs, list):
             inputs = [inputs]
-        idx_crops = torch.cumsum(torch.unique_consecutive(
-            torch.tensor([inp.shape[-1] for inp in inputs]),
-            return_counts=True,
-        )[1], 0)
+        idx_crops = torch.cumsum(
+            torch.unique_consecutive(
+                torch.tensor([inp.shape[-1] for inp in inputs]),
+                return_counts=True,
+            )[1],
+            0,
+        )
         start_idx = 0
         for end_idx in idx_crops:
-            _out = self.forward_backbone(torch.cat(inputs[start_idx: end_idx]).cuda(non_blocking=True))
-            if start_idx == 0:
+            _out = self.forward_backbone(torch.cat(inputs[start_idx:end_idx]).cuda(non_blocking=True))
+            if start_idx == 0:  # noqa: SIM108 - The first crop group binds `output`.
                 output = _out
             else:
                 output = torch.cat((output, _out))
@@ -333,7 +335,7 @@ class ResNet(nn.Module):
 
 class MultiPrototypes(nn.Module):
     def __init__(self, output_dim, nmb_prototypes):
-        super(MultiPrototypes, self).__init__()
+        super().__init__()
         self.nmb_heads = len(nmb_prototypes)
         for i, k in enumerate(nmb_prototypes):
             self.add_module("prototypes" + str(i), nn.Linear(output_dim, k, bias=False))

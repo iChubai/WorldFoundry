@@ -2,24 +2,36 @@
 Unified video quality evaluator.
 Automatically selects appropriate frame sampling strategy per metric (VBench-aligned).
 """
+
 import time
+from typing import Any
+
 import torch
 import torchvision.transforms as T
-from typing import Dict, List, Any, Optional
 from PIL import Image
 
-from src.utils.video_utils import load_video_frames
+from . import (
+    get_aesthetic_quality_metric,
+    get_dynamic_degree_metric,
+    get_hpsv3_quality_metric,
+    get_imaging_quality_metric,
+    get_motion_smoothness_metric,
+    get_temporal_flickering_metric,
+)
 
-_SHARED_RESIZE_CROP_CPU = T.Compose([
-    T.Resize(224, interpolation=T.InterpolationMode.BICUBIC),
-    T.CenterCrop(224),
-    T.ToTensor(),
-])
+_SHARED_RESIZE_CROP_CPU = T.Compose(
+    [
+        T.Resize(224, interpolation=T.InterpolationMode.BICUBIC),
+        T.CenterCrop(224),
+        T.ToTensor(),
+    ]
+)
 
 
 def _shared_preprocess_gpu(frames, device="cuda"):
     """GPU-accelerated batch preprocessing: PIL → tensor (N, 3, 224, 224)."""
     import numpy as np
+
     arrays = np.stack([np.array(f) for f in frames])
     batch = torch.from_numpy(arrays).permute(0, 3, 1, 2).float().div_(255.0)
     batch = batch.to(device)
@@ -27,15 +39,6 @@ def _shared_preprocess_gpu(frames, device="cuda"):
     batch = T.functional.center_crop(batch, 224)
     return batch.cpu()
 
-
-from . import (
-    get_aesthetic_quality_metric,
-    get_imaging_quality_metric,
-    get_temporal_flickering_metric,
-    get_dynamic_degree_metric,
-    get_motion_smoothness_metric,
-    get_hpsv3_quality_metric,
-)
 
 FRAME_SAMPLING_CONFIG = {
     "aesthetic_quality": {"fps": 2.0},
@@ -61,7 +64,7 @@ DEFAULT_METRICS = list(METRIC_GETTERS)
 class VideoQualityEvaluator:
     """Unified video quality evaluator."""
 
-    def __init__(self, device: str = "cuda", metrics: Optional[List[str]] = None):
+    def __init__(self, device: str = "cuda", metrics: list[str] | None = None):
         self.device = device
         self.metrics = metrics or list(DEFAULT_METRICS)
         self._metric_instances = {}
@@ -80,6 +83,7 @@ class VideoQualityEvaluator:
         if self._all_frames is not None:
             return
         import cv2
+
         cap = cv2.VideoCapture(video_path)
         self._video_fps = cap.get(cv2.CAP_PROP_FPS) or 24.0
         frames = []
@@ -92,7 +96,7 @@ class VideoQualityEvaluator:
         cap.release()
         self._all_frames = frames
 
-    def _load_frames(self, video_path: str, sampling_cfg) -> List[Image.Image]:
+    def _load_frames(self, video_path: str, sampling_cfg) -> list[Image.Image]:
         self._decode_all_frames(video_path)
         all_frames = self._all_frames
         vlen = len(all_frames)
@@ -110,14 +114,14 @@ class VideoQualityEvaluator:
             return all_frames
         else:
             import numpy as np
+
             indices = np.linspace(0, vlen - 1, sampling_cfg, dtype=int).tolist()
 
         sampled = [all_frames[i] for i in indices]
         self._sampled_cache[cache_key] = sampled
         return sampled
 
-    def evaluate(self, video_path: str, metrics: Optional[List[str]] = None,
-                 verbose: bool = True) -> Dict[str, Any]:
+    def evaluate(self, video_path: str, metrics: list[str] | None = None, verbose: bool = True) -> dict[str, Any]:
         """Evaluate video quality across all configured metrics."""
         metrics_to_eval = metrics or self.metrics
         results = {"video_path": video_path, "metrics": {}, "summary": {}}
@@ -142,8 +146,10 @@ class VideoQualityEvaluator:
 
                 score = result.get(f"{name}_score", None)
                 results["metrics"][name] = {
-                    "score": score, "time": round(elapsed, 2),
-                    "num_frames": len(frames), "details": result,
+                    "score": score,
+                    "time": round(elapsed, 2),
+                    "num_frames": len(frames),
+                    "details": result,
                 }
                 results["summary"][name] = score
 

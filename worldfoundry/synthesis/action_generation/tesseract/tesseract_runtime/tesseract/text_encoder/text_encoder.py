@@ -1,5 +1,3 @@
-from typing import List, Optional, Union
-
 import torch
 from transformers import T5EncoderModel, T5Tokenizer
 
@@ -7,11 +5,11 @@ from transformers import T5EncoderModel, T5Tokenizer
 def _get_t5_prompt_embeds(
     tokenizer: T5Tokenizer,
     text_encoder: T5EncoderModel,
-    prompt: Union[str, List[str]],
+    prompt: str | list[str],
     num_videos_per_prompt: int = 1,
     max_sequence_length: int = 226,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
     text_input_ids=None,
 ):
     prompt = [prompt] if isinstance(prompt, str) else prompt
@@ -45,11 +43,11 @@ def _get_t5_prompt_embeds(
 def encode_prompt(
     tokenizer: T5Tokenizer,
     text_encoder: T5EncoderModel,
-    prompt: Union[str, List[str]],
+    prompt: str | list[str],
     num_videos_per_prompt: int = 1,
     max_sequence_length: int = 226,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None,
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
     text_input_ids=None,
 ):
     prompt = [prompt] if isinstance(prompt, str) else prompt

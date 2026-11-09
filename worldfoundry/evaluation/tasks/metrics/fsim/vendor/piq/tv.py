@@ -1,13 +1,14 @@
 r"""Implementation of Total Variation metric, based on article
- remi.flamary.com/demos/proxtv.html and www.wikiwand.com/en/Total_variation_denoising
+remi.flamary.com/demos/proxtv.html and www.wikiwand.com/en/Total_variation_denoising
 """
 
 import torch
 from torch.nn.modules.loss import _Loss
-from piq.utils import _validate_input, _reduce
+
+from piq.utils import _reduce, _validate_input
 
 
-def total_variation(x: torch.Tensor, reduction: str = 'mean', norm_type: str = 'l2') -> torch.Tensor:
+def total_variation(x: torch.Tensor, reduction: str = "mean", norm_type: str = "l2") -> torch.Tensor:
     r"""Compute Total Variation metric
 
     Args:
@@ -25,20 +26,26 @@ def total_variation(x: torch.Tensor, reduction: str = 'mean', norm_type: str = '
 
         https://remi.flamary.com/demos/proxtv.html
     """
-    _validate_input([x, ], dim_range=(4, 4), data_range=(0, -1))
+    _validate_input(
+        [
+            x,
+        ],
+        dim_range=(4, 4),
+        data_range=(0, -1),
+    )
 
-    if norm_type == 'l1':
+    if norm_type == "l1":
         w_variance = torch.sum(torch.abs(x[:, :, :, 1:] - x[:, :, :, :-1]), dim=[1, 2, 3])
         h_variance = torch.sum(torch.abs(x[:, :, 1:, :] - x[:, :, :-1, :]), dim=[1, 2, 3])
-        score = (h_variance + w_variance)
-    elif norm_type == 'l2':
+        score = h_variance + w_variance
+    elif norm_type == "l2":
         w_variance = torch.sum(torch.pow(x[:, :, :, 1:] - x[:, :, :, :-1], 2), dim=[1, 2, 3])
         h_variance = torch.sum(torch.pow(x[:, :, 1:, :] - x[:, :, :-1, :], 2), dim=[1, 2, 3])
         score = torch.sqrt(h_variance + w_variance)
-    elif norm_type == 'l2_squared':
+    elif norm_type == "l2_squared":
         w_variance = torch.sum(torch.pow(x[:, :, :, 1:] - x[:, :, :, :-1], 2), dim=[1, 2, 3])
         h_variance = torch.sum(torch.pow(x[:, :, 1:, :] - x[:, :, :-1, :], 2), dim=[1, 2, 3])
-        score = (h_variance + w_variance)
+        score = h_variance + w_variance
     else:
         raise ValueError("Incorrect norm type, should be one of {'l1', 'l2', 'l2_squared'}")
 
@@ -81,7 +88,8 @@ class TVLoss(_Loss):
 
         https://remi.flamary.com/demos/proxtv.html
     """
-    def __init__(self, norm_type: str = 'l2', reduction: str = 'mean'):
+
+    def __init__(self, norm_type: str = "l2", reduction: str = "mean"):
         super().__init__()
 
         self.norm_type = norm_type

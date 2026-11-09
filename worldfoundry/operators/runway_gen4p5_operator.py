@@ -9,9 +9,7 @@ from .base_operator import BaseOperator
 
 
 class RunwayGen4p5Operator(BaseOperator):
-    """
-    Runway Gen-4.5 数据处理 Operator
-    """
+    """Prepare prompts and first/last-frame images for Runway Gen-4.5 requests."""
 
     def __init__(
         self,

@@ -1,8 +1,8 @@
-from typing import List, Union
-
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import IQAPytorchMetric
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    IQAPytorchMetric,
+)
 
 
 class QAlignMetric(IQAPytorchMetric):
@@ -17,7 +17,7 @@ class QAlignMetric(IQAPytorchMetric):
         super().__init__(metric_name=metric_name)
         self.task = task
 
-    def _compute_scores(self, rendered_images: List[Union[str, Image.Image]]) -> float:
+    def _compute_scores(self, rendered_images: list[str | Image.Image]) -> float:
         imgs = self._process_image(rendered_images)
 
         scores = []

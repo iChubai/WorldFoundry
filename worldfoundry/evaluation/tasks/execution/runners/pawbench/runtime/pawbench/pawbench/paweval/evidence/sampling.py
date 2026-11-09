@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
-
+from typing import Any
 
 DEFAULT_EVIDENCE_FPS = 2.0
 
@@ -30,6 +30,7 @@ class FrameSamplingSpec:
             if self.max_frames < 3:
                 raise ValueError("sampling max_frames must be >= 3 when provided for PAWEval")
             object.__setattr__(self, "max_frames", int(self.max_frames))
+
 
 def sampling_spec_from_value(value: float | int | Mapping[str, Any] | FrameSamplingSpec | None) -> FrameSamplingSpec:
     if value is None:

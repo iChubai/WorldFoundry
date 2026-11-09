@@ -110,7 +110,6 @@ class Lyra1Operator(BaseOperator):
         raise ValueError(f"Unsupported Lyra-1 mode: {mode}")
 
     def _normalize_interaction_candidate(self, interaction: str | dict[str, Any]) -> dict[str, Any]:
-        """Normalize interaction candidate implementation."""
         if isinstance(interaction, str):
             action = interaction
             caption = ""
@@ -139,13 +138,11 @@ class Lyra1Operator(BaseOperator):
         }
 
     def _normalize_interaction(self, interaction: str | dict[str, Any]) -> dict[str, Any]:
-        """Normalize interaction implementation."""
         candidate = self._normalize_interaction_candidate(interaction)
         self.check_interaction(interaction)
         return candidate
 
     def _select_trajectory(self, items: Sequence[dict[str, Any]]) -> str:
-        """Select trajectory implementation."""
         explicit = [item["trajectory"] for item in items if item["explicit"]]
         if explicit:
             return explicit[0]

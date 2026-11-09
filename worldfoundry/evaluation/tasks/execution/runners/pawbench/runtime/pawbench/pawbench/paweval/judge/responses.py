@@ -35,7 +35,13 @@ class JudgeResponse:
 
     @property
     def retryable(self) -> bool:
-        return self.transport_status in {"timeout", "url_error", "response_format_rejected", "rate_limited", "server_error"}
+        return self.transport_status in {
+            "timeout",
+            "url_error",
+            "response_format_rejected",
+            "rate_limited",
+            "server_error",
+        }
 
     def to_record(self) -> dict[str, Any]:
         return {
@@ -90,7 +96,9 @@ def _json_candidates(raw_text: str) -> list[str]:
     return deduped
 
 
-def _validate_payload(axis: AxisName | None, payload: dict[str, Any], scene_id: str | None) -> tuple[str, tuple[str, ...]]:
+def _validate_payload(
+    axis: AxisName | None, payload: dict[str, Any], scene_id: str | None
+) -> tuple[str, tuple[str, ...]]:
     if axis == "outcome_readout":
         result = validate_outcome_response(payload, scene_id=scene_id or str(payload.get("scene_id") or ""))
     elif axis == "trustworthiness_audit":

@@ -23,11 +23,19 @@ def parse_args():
     default_question_path = question_asset if question_asset.is_file() else root / "PhyGenBench" / "video_question.json"
     parser = argparse.ArgumentParser(description="PhyGenBench InternVideo2 physical video scoring")
     parser.add_argument("--seed", type=int, default=1421538, help="Random seed")
-    parser.add_argument("--model_names", nargs="+", default=[os.environ.get("WORLDFOUNDRY_PHYGENBENCH_MODEL_NAME", "worldfoundry")])
-    parser.add_argument("--input_folder", type=str, default=str(root / "PhyVideos"), help="Folder containing one subdirectory per model")
-    parser.add_argument("--output_folder", type=str, default=str(root / "PhyGenEval" / "video"), help="Folder for result JSON")
+    parser.add_argument(
+        "--model_names", nargs="+", default=[os.environ.get("WORLDFOUNDRY_PHYGENBENCH_MODEL_NAME", "worldfoundry")]
+    )
+    parser.add_argument(
+        "--input_folder", type=str, default=str(root / "PhyVideos"), help="Folder containing one subdirectory per model"
+    )
+    parser.add_argument(
+        "--output_folder", type=str, default=str(root / "PhyGenEval" / "video"), help="Folder for result JSON"
+    )
     parser.add_argument("--question_path", type=str, default=str(default_question_path))
-    parser.add_argument("--model_pth", type=str, default=os.environ.get("WORLDFOUNDRY_INTERNVIDEO2_CKPT", "internvideo2_1b_stage2"))
+    parser.add_argument(
+        "--model_pth", type=str, default=os.environ.get("WORLDFOUNDRY_INTERNVIDEO2_CKPT", "internvideo2_1b_stage2")
+    )
     parser.add_argument("--cache_dir", type=str, default=os.environ.get("WORLDFOUNDRY_CKPT_DIR", "./hf_cache"))
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     parser.add_argument("--num_frames", type=int, default=4)
@@ -72,7 +80,7 @@ def main():
 
     output_folder = Path(args.output_folder)
     output_folder.mkdir(parents=True, exist_ok=True)
-    with open(args.question_path, "r", encoding="utf-8") as f:
+    with open(args.question_path, encoding="utf-8") as f:
         questions = json.load(f)
 
     _, model, tokenizer, _, transforms = download_internvideo2(

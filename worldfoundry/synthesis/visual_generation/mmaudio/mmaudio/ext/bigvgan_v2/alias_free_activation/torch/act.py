@@ -1,13 +1,12 @@
 # Adapted from https://github.com/junjun3518/alias-free-torch under the Apache License 2.0
 #   LICENSE is in incl_licenses directory.
 
-import torch.nn as nn
+from mmaudio.ext.bigvgan_v2.alias_free_activation.torch.resample import DownSample1d, UpSample1d
 
-from mmaudio.ext.bigvgan_v2.alias_free_activation.torch.resample import (DownSample1d, UpSample1d)
+import torch.nn as nn
 
 
 class Activation1d(nn.Module):
-
     def __init__(
         self,
         activation,

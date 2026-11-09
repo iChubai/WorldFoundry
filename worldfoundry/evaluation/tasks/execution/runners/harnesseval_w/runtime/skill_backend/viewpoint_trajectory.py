@@ -14,7 +14,6 @@ from ..io import value_digest
 from ..skills.skill_viewpoint_trajectory import BACKEND_OUTPUT_SCHEMA, SAMPLING
 from .common import _validate_video
 
-
 BACKEND_ID = "harnesseval.viewpoint_trajectory.megasam"
 BACKEND_VERSION = "harnesseval.megasam_cam_c2w"
 CONFIG_DIGEST = value_digest(
@@ -78,9 +77,7 @@ class LocalBackend:
     ) -> dict[str, Any]:
         _validate_video(video_path, video_fingerprint)
         self.ensure_ready()
-        with self._inference_lock, tempfile.TemporaryDirectory(
-            prefix="harnesseval-resident-megasam-"
-        ) as directory:
+        with self._inference_lock, tempfile.TemporaryDirectory(prefix="harnesseval-resident-megasam-") as directory:
             output = Path(directory) / "poses.npz"
             assert self._pipeline is not None
             self._pipeline.evaluate(video_path, output)

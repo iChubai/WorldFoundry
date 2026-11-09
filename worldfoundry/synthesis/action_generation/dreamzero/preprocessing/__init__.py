@@ -2,9 +2,12 @@
 
 from pydantic import BaseModel
 
+from .dream_transform import DreamTransform
 from .embodiment import EmbodimentTag
 from .schema import DatasetMetadata
-from .transform_base import ComposedModalityTransform, InvertibleModalityTransform, ModalityTransform
+from .transform_base import ComposedModalityTransform
+from .transform_base import InvertibleModalityTransform as InvertibleModalityTransform
+from .transform_base import ModalityTransform as ModalityTransform
 from .transform_concat import ConcatTransform
 from .transform_state_action import PerHorizonActionTransform, StateActionToTensor, StateActionTransform
 from .transform_video import (
@@ -22,7 +25,6 @@ from .transform_video import (
     VideoToNumpy,
     VideoToTensor,
 )
-from .dream_transform import DreamTransform
 
 
 class ModalityConfig(BaseModel):

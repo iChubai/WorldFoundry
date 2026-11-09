@@ -8,15 +8,15 @@ import socket
 import subprocess
 import sys
 import time
-from contextlib import nullcontext
+from collections.abc import Mapping
+from contextlib import nullcontext, suppress
 from dataclasses import dataclass
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io import load_serialized, resolve_data_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
-
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -295,7 +295,7 @@ class OfficialVideoRuntime:
         return dict(payload)
 
     @classmethod
-    def from_model_id(cls, model_id: str, *, device: str = "cuda", **overrides: Any) -> "OfficialVideoRuntime":
+    def from_model_id(cls, model_id: str, *, device: str = "cuda", **overrides: Any) -> OfficialVideoRuntime:
         return cls(
             model_id=model_id,
             runtime_config_path=f"models/runtime/configs/video_official/{model_id}.yaml",
@@ -316,20 +316,14 @@ class OfficialVideoRuntime:
 
         kind = str(self.runtime.get("kind") or "")
         if kind == "official_cli" and repo_root is None:
-            missing.append(
-                "official repo checkout not found; checked "
-                f"{repo_sources}"
-            )
+            missing.append(f"official repo checkout not found; checked {repo_sources}")
         checkpoint_optional = bool(self.runtime.get("checkpoint_optional", False))
         if (
             kind in {"official_cli", "diffusers_pipeline", "transformers_generation"}
             and checkpoint_path is None
             and not checkpoint_optional
         ):
-            missing.append(
-                "checkpoint/assets not found; checked "
-                f"{checkpoint_sources}"
-            )
+            missing.append(f"checkpoint/assets not found; checked {checkpoint_sources}")
         for path in _missing_required_paths(
             self.runtime.get("required_paths"),
             repo_root=repo_root,
@@ -380,9 +374,9 @@ class OfficialVideoRuntime:
         import torch
 
         dtype_name = str(torch_dtype_name or self.runtime.get("torch_dtype") or "float16")
-        module_name, _, attr_name = str(
-            self.runtime.get("pipeline_target") or "diffusers:DiffusionPipeline"
-        ).partition(":")
+        module_name, _, attr_name = str(self.runtime.get("pipeline_target") or "diffusers:DiffusionPipeline").partition(
+            ":"
+        )
         key = (
             str(checkpoint_path),
             module_name,
@@ -403,9 +397,7 @@ class OfficialVideoRuntime:
         if enable_model_cpu_offload:
             offload = getattr(pipe, "enable_model_cpu_offload", None)
             if not callable(offload):
-                raise TypeError(
-                    f"{pipeline_cls.__name__} does not support requested model CPU offload"
-                )
+                raise TypeError(f"{pipeline_cls.__name__} does not support requested model CPU offload")
             offload(device=self.device)
         elif hasattr(pipe, "to"):
             pipe = pipe.to(self.device)
@@ -413,9 +405,7 @@ class OfficialVideoRuntime:
             vae = getattr(pipe, "vae", None)
             enable_tiling = getattr(vae, "enable_tiling", None)
             if not callable(enable_tiling):
-                raise TypeError(
-                    f"{pipeline_cls.__name__} does not support requested VAE tiling"
-                )
+                raise TypeError(f"{pipeline_cls.__name__} does not support requested VAE tiling")
             enable_tiling()
         self._diffusers_pipeline = pipe
         self._diffusers_pipeline_key = key
@@ -474,7 +464,9 @@ class OfficialVideoRuntime:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         plan_path = output_path.with_suffix(output_path.suffix + ".runtime_plan.json")
         plan_path.write_text(
-            json.dumps(self.runtime_plan(output_path=output_path, prompt=prompt, extra=extra), indent=2, sort_keys=True),
+            json.dumps(
+                self.runtime_plan(output_path=output_path, prompt=prompt, extra=extra), indent=2, sort_keys=True
+            ),
             encoding="utf-8",
         )
         return {
@@ -721,8 +713,7 @@ class OfficialVideoRuntime:
             cwd=cwd,
             env=env,
             text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
         )
         if completed.returncode != 0:
@@ -780,10 +771,8 @@ class OfficialVideoRuntime:
             if raw_root in {None, ""}:
                 continue
             root = Path(raw_root).expanduser()
-            try:
+            with suppress(OSError):
                 root = root.resolve()
-            except OSError:
-                pass
             if root.is_file():
                 root = root.parent
             if root.exists() and root not in roots:
@@ -792,9 +781,7 @@ class OfficialVideoRuntime:
         candidates: list[Path] = []
         for root in roots:
             candidates.extend(
-                path
-                for path in root.rglob("*")
-                if path.is_file() and path.suffix.lower() in suffixes and _fresh(path)
+                path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in suffixes and _fresh(path)
             )
         candidates = sorted(
             set(candidates),
@@ -859,12 +846,7 @@ class OfficialVideoRuntime:
         # not accept an FPS argument at all. Preserve the requested playback
         # rate before signature filtering so the encoded artifact still honors
         # the Workspace request.
-        output_fps = int(
-            call_kwargs.get("fps")
-            or call_kwargs.get("target_fps")
-            or self.runtime.get("fps")
-            or 16
-        )
+        output_fps = int(call_kwargs.get("fps") or call_kwargs.get("target_fps") or self.runtime.get("fps") or 16)
         seed = call_kwargs.pop("seed", None)
         signature = inspect.signature(pipe.__call__)
         parameters = signature.parameters
@@ -875,7 +857,9 @@ class OfficialVideoRuntime:
         if extra.get("fps") is not None and "target_fps" in parameters and "target_fps" not in extra:
             call_kwargs["target_fps"] = int(extra["fps"])
         if seed is not None and (accepts_kwargs or "generator" in parameters):
-            generator_device = self.device if str(self.device).startswith("cuda") and torch.cuda.is_available() else "cpu"
+            generator_device = (
+                self.device if str(self.device).startswith("cuda") and torch.cuda.is_available() else "cpu"
+            )
             call_kwargs["generator"] = torch.Generator(device=generator_device).manual_seed(int(seed))
         if image_path:
             from PIL import Image
@@ -883,11 +867,7 @@ class OfficialVideoRuntime:
             if accepts_kwargs or "image" in parameters:
                 call_kwargs["image"] = Image.open(image_path).convert("RGB")
         if not accepts_kwargs:
-            call_kwargs = {
-                key: value
-                for key, value in call_kwargs.items()
-                if key in parameters
-            }
+            call_kwargs = {key: value for key, value in call_kwargs.items() if key in parameters}
         autocast_dtype_name = self.runtime.get("autocast_dtype")
         if autocast_dtype_name and str(self.device).startswith("cuda"):
             autocast_context = torch.autocast(
@@ -904,9 +884,7 @@ class OfficialVideoRuntime:
             frames = frames[0]
         if requested_frames is not None:
             if len(frames) < requested_frames:
-                raise RuntimeError(
-                    f"Video decoder returned {len(frames)} frames; expected at least {requested_frames}"
-                )
+                raise RuntimeError(f"Video decoder returned {len(frames)} frames; expected at least {requested_frames}")
             frames = frames[:requested_frames]
         output_path.parent.mkdir(parents=True, exist_ok=True)
         imageio.mimsave(str(output_path), frames, fps=output_fps)
@@ -942,6 +920,7 @@ class OfficialVideoRuntime:
         finally:
             torch.load = original_torch_load  # type: ignore[assignment]
         from modelscope.pipelines.multi_modal.text_to_video_synthesis_pipeline import tensor2vid
+
         from worldfoundry.core.media.codecs.video import save_video_h264
 
         def _postprocess_video(inputs: dict[str, Any], **post_params: Any) -> dict[str, str]:
@@ -1015,9 +994,7 @@ class OfficialVideoRuntime:
         import torch
         from transformers import AutoModel, AutoProcessor
 
-        processor = AutoProcessor.from_pretrained(
-            str(checkpoint_path), trust_remote_code=True, local_files_only=True
-        )
+        processor = AutoProcessor.from_pretrained(str(checkpoint_path), trust_remote_code=True, local_files_only=True)
         model = AutoModel.from_pretrained(
             str(checkpoint_path),
             trust_remote_code=True,
@@ -1043,13 +1020,9 @@ class OfficialVideoRuntime:
             content.append({"type": "video", "video": str(video)})
         content.append({"type": "text", "text": prompt})
         conversation = [{"role": "user", "content": content}]
-        templated = processor.apply_chat_template(
-            conversation, tokenize=False, add_generation_prompt=True
-        )
+        templated = processor.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
         inputs = processor([templated])
-        video_frames_processed = (
-            len(inputs.media["video"][0]) if video is not None else 0
-        )
+        video_frames_processed = len(inputs.media["video"][0]) if video is not None else 0
         input_ids = inputs.input_ids.to(model.llm_model_embed_tokens.weight.device)
         generation_config = model.default_generation_config
         generation_config.update(max_new_tokens=int(extra.get("max_new_tokens") or 128))
@@ -1100,7 +1073,11 @@ class OfficialVideoRuntime:
                 "input_kind": (
                     "image_video_text"
                     if video is not None and image_path
-                    else "video_text" if video is not None else "image_text" if image_path else "text"
+                    else "video_text"
+                    if video is not None
+                    else "image_text"
+                    if image_path
+                    else "text"
                 ),
                 "max_video_frames": requested_frames if video is not None else None,
                 "video_frames_processed": video_frames_processed if video is not None else None,
@@ -1138,9 +1115,7 @@ class OfficialVideoRuntime:
         # The Omni override always reads spk_dict.pt, even for text-only output.
         # Load the safetensors weights through the Transformers base loader; the
         # speaker pickle and audio-output modules are unnecessary for image QA.
-        model = super(
-            Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniForConditionalGeneration
-        ).from_pretrained(
+        model = super(Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniForConditionalGeneration).from_pretrained(
             str(checkpoint_path),
             config=config,
             torch_dtype=getattr(torch, str(self.runtime.get("torch_dtype") or "bfloat16")),
@@ -1157,9 +1132,7 @@ class OfficialVideoRuntime:
             content.append({"type": "image", "image": str(image_path)})
         video = video_metadata = None
         if video_path:
-            video, video_metadata = self._sample_qwen_video(
-                video_path, int(extra.get("max_video_frames") or 8)
-            )
+            video, video_metadata = self._sample_qwen_video(video_path, int(extra.get("max_video_frames") or 8))
             content.append({"type": "video", "video": str(video_path)})
         content.append({"type": "text", "text": prompt})
         conversation = [{"role": "user", "content": content}]
@@ -1180,22 +1153,23 @@ class OfficialVideoRuntime:
             video_metadata["pixel_values_videos_shape"] = list(inputs["pixel_values_videos"].shape)
             video_metadata["video_grid_thw"] = inputs["video_grid_thw"].tolist()
             video_token_id = processor.tokenizer.convert_tokens_to_ids(processor.video_token)
-            video_metadata["video_token_count"] = int(
-                (inputs["input_ids"] == video_token_id).sum().item()
-            )
+            video_metadata["video_token_count"] = int((inputs["input_ids"] == video_token_id).sum().item())
             if video_metadata["video_token_count"] == 0:
                 raise RuntimeError("Qwen2.5-Omni processor produced no video tokens")
         inputs = inputs.to(model.device).to(model.dtype)
         visual_forward_calls: list[dict[str, Any]] = []
         visual_hook = None
         if video_metadata is not None:
+
             def _capture_visual_forward(_module: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
                 pixels = args[0] if args else kwargs.get("hidden_states")
                 grid = kwargs.get("grid_thw")
-                visual_forward_calls.append({
-                    "pixel_shape": list(pixels.shape) if isinstance(pixels, torch.Tensor) else None,
-                    "grid_thw": grid.tolist() if isinstance(grid, torch.Tensor) else None,
-                })
+                visual_forward_calls.append(
+                    {
+                        "pixel_shape": list(pixels.shape) if isinstance(pixels, torch.Tensor) else None,
+                        "grid_thw": grid.tolist() if isinstance(grid, torch.Tensor) else None,
+                    }
+                )
 
             visual_hook = model.thinker.visual.register_forward_pre_hook(_capture_visual_forward, with_kwargs=True)
         try:
@@ -1216,13 +1190,9 @@ class OfficialVideoRuntime:
             ):
                 raise RuntimeError("Qwen2.5-Omni video tensor did not reach the visual encoder")
         prompt_ids = inputs["input_ids"]
-        if output_ids.shape[1] >= prompt_ids.shape[1] and torch.equal(
-            output_ids[:, : prompt_ids.shape[1]], prompt_ids
-        ):
+        if output_ids.shape[1] >= prompt_ids.shape[1] and torch.equal(output_ids[:, : prompt_ids.shape[1]], prompt_ids):
             output_ids = output_ids[:, prompt_ids.shape[1] :]
-        answer = processor.batch_decode(
-            output_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )[0]
+        answer = processor.batch_decode(output_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
         output = output_path.with_suffix(".json")
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(
@@ -1316,19 +1286,17 @@ class OfficialVideoRuntime:
         from transformers import (
             AutoProcessor,
             AutoTokenizer,
-            Qwen2VLImageProcessor,
-            Qwen2VLVideoProcessor,
             Qwen2_5_VLForConditionalGeneration,
             Qwen2_5_VLProcessor,
+            Qwen2VLImageProcessor,
+            Qwen2VLVideoProcessor,
         )
 
         preprocessor_config = json.loads((checkpoint_path / "preprocessor_config.json").read_text(encoding="utf-8"))
         if preprocessor_config.get("image_processor_type") == "Qwen2_5_VLImageProcessor":
             # The released SpatialReasoner names a processor class absent from
             # current Transformers. Qwen2.5-VL uses Qwen2VL image preprocessing.
-            image_processor = Qwen2VLImageProcessor.from_pretrained(
-                str(checkpoint_path), local_files_only=True
-            )
+            image_processor = Qwen2VLImageProcessor.from_pretrained(str(checkpoint_path), local_files_only=True)
             tokenizer = AutoTokenizer.from_pretrained(str(checkpoint_path), local_files_only=True)
             chat_config = json.loads((checkpoint_path / "chat_template.json").read_text(encoding="utf-8"))
             processor = Qwen2_5_VLProcessor(
@@ -1350,9 +1318,7 @@ class OfficialVideoRuntime:
         image = Image.open(image_path).convert("RGB") if image_path else None
         video = video_metadata = None
         if video_path:
-            video, video_metadata = self._sample_qwen_video(
-                video_path, int(extra.get("max_video_frames") or 8)
-            )
+            video, video_metadata = self._sample_qwen_video(video_path, int(extra.get("max_video_frames") or 8))
         content: list[dict[str, str]] = []
         if image is not None:
             content.append({"type": "image", "image": str(image_path)})
@@ -1376,22 +1342,23 @@ class OfficialVideoRuntime:
                 raise RuntimeError("Qwen2.5-VL processor omitted required video tensors")
             video_metadata["video_grid_thw"] = inputs["video_grid_thw"].tolist()
             video_metadata["pixel_values_videos_shape"] = list(inputs["pixel_values_videos"].shape)
-            video_metadata["video_token_count"] = int(
-                (inputs["input_ids"] == processor.video_token_id).sum().item()
-            )
+            video_metadata["video_token_count"] = int((inputs["input_ids"] == processor.video_token_id).sum().item())
             if video_metadata["video_token_count"] == 0:
                 raise RuntimeError("Qwen2.5-VL processor produced no video tokens")
         inputs = inputs.to(model.device)
         visual_forward_calls: list[dict[str, Any]] = []
         visual_hook = None
         if video is not None:
+
             def _capture_visual_forward(_module: Any, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
                 pixels = args[0] if args else kwargs.get("hidden_states")
                 grid = kwargs.get("grid_thw")
-                visual_forward_calls.append({
-                    "pixel_shape": list(pixels.shape) if isinstance(pixels, torch.Tensor) else None,
-                    "grid_thw": grid.tolist() if isinstance(grid, torch.Tensor) else None,
-                })
+                visual_forward_calls.append(
+                    {
+                        "pixel_shape": list(pixels.shape) if isinstance(pixels, torch.Tensor) else None,
+                        "grid_thw": grid.tolist() if isinstance(grid, torch.Tensor) else None,
+                    }
+                )
 
             visual_hook = model.visual.register_forward_pre_hook(_capture_visual_forward, with_kwargs=True)
         try:
@@ -1411,9 +1378,7 @@ class OfficialVideoRuntime:
             ):
                 raise RuntimeError("Qwen2.5-VL video tensor did not reach the visual encoder")
         answer_ids = output_ids[:, inputs["input_ids"].shape[1] :]
-        answer = processor.batch_decode(
-            answer_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )[0]
+        answer = processor.batch_decode(answer_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
         output = output_path.with_suffix(".json")
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(
@@ -1468,7 +1433,9 @@ class OfficialVideoRuntime:
         text = processor.batch_decode(output_ids, skip_special_tokens=True)[0]
         output_path = output_path.with_suffix(".json")
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps({"prompt": prompt, "text": text}, ensure_ascii=False, indent=2), encoding="utf-8")
+        output_path.write_text(
+            json.dumps({"prompt": prompt, "text": text}, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         return self._success_result(output_path, metadata={"checkpoint_path": str(checkpoint_path)})
 
 

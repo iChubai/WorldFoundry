@@ -7,7 +7,6 @@ import time
 import warnings
 from collections import OrderedDict
 from contextlib import redirect_stdout
-from typing import Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -16,7 +15,7 @@ from torch import nn
 from torch.hub import load_state_dict_from_url
 
 from .feature_extractor_base import FeatureExtractorBase
-from .helpers import vassert, vprint, text_to_dtype, get_kwarg
+from .helpers import get_kwarg, text_to_dtype, vassert, vprint
 from .interpolate_compat_tensorflow import interpolate_bilinear_2d_like_tensorflow1x
 
 MODEL_BASE_URL = "https://openaipublic.azureedge.net/clip/models"
@@ -58,7 +57,7 @@ MODEL_METADATA = {
         "filename": "ViT-L-14-336px",
     },
 }
-MODEL_URLS = {k: f'{MODEL_BASE_URL}/{v["hash"]}/{v["filename"]}.pt' for k, v in MODEL_METADATA.items()}
+MODEL_URLS = {k: f"{MODEL_BASE_URL}/{v['hash']}/{v['filename']}.pt" for k, v in MODEL_METADATA.items()}
 
 
 class Bottleneck(nn.Module):
@@ -114,7 +113,7 @@ class Bottleneck(nn.Module):
 
 
 class AttentionPool2d(nn.Module):
-    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int = None):
+    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int | None = None):
         super().__init__()
         self.positional_embedding = nn.Parameter(torch.randn(spacial_dim**2 + 1, embed_dim) / embed_dim**0.5)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
@@ -325,7 +324,7 @@ class CLIPVisual(nn.Module):
         self,
         embed_dim: int,
         image_resolution: int,
-        vision_layers: Union[Tuple[int, int, int, int], int],
+        vision_layers: tuple[int, int, int, int] | int,
         vision_width: int,
         vision_patch_size: int,
     ):
@@ -354,15 +353,15 @@ class CLIPVisual(nn.Module):
 def convert_weights(model: nn.Module):
     """Convert applicable model parameters to fp16"""
 
-    def _convert_weights_to_fp16(l):
-        if isinstance(l, (nn.Conv1d, nn.Conv2d, nn.Linear)):
-            l.weight.data = l.weight.data.half()
-            if l.bias is not None:
-                l.bias.data = l.bias.data.half()
+    def _convert_weights_to_fp16(layer):
+        if isinstance(layer, (nn.Conv1d, nn.Conv2d, nn.Linear)):
+            layer.weight.data = layer.weight.data.half()
+            if layer.bias is not None:
+                layer.bias.data = layer.bias.data.half()
 
-        if isinstance(l, nn.MultiheadAttention):
+        if isinstance(layer, nn.MultiheadAttention):
             for attr in [*[f"{s}_proj_weight" for s in ["in", "q", "k", "v"]], "in_proj_bias", "bias_k", "bias_v"]:
-                tensor = getattr(l, attr)
+                tensor = getattr(layer, attr)
                 if tensor is not None:
                     tensor.data = tensor.data.half()
 
@@ -374,15 +373,13 @@ def build_model(state_dict, feature_extractor_internal_dtype):
 
     if vit:
         vision_width = state_dict["visual.conv1.weight"].shape[0]
-        vision_layers = len(
-            [k for k in state_dict.keys() if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")]
-        )
+        vision_layers = len([k for k in state_dict if k.startswith("visual.") and k.endswith(".attn.in_proj_weight")])
         vision_patch_size = state_dict["visual.conv1.weight"].shape[-1]
         grid_size = round((state_dict["visual.positional_embedding"].shape[0] - 1) ** 0.5)
         image_resolution = vision_patch_size * grid_size
     else:
         counts: list = [
-            len(set(k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}"))) for b in [1, 2, 3, 4]
+            len({k.split(".")[2] for k in state_dict if k.startswith(f"visual.layer{b}")}) for b in [1, 2, 3, 4]
         ]
         vision_layers = tuple(counts)
         vision_width = state_dict["visual.layer1.0.conv1.weight"].shape[0]
@@ -412,9 +409,7 @@ def build_model(state_dict, feature_extractor_internal_dtype):
     }:
         if key in state_dict:
             del state_dict[key]
-    state_dict = {
-        k: v for k, v in state_dict.items() if not (k.startswith("transformer.") or k.startswith("ln_final."))
-    }
+    state_dict = {k: v for k, v in state_dict.items() if not (k.startswith(("transformer.", "ln_final.")))}
 
     convert_weights(model)
     model.load_state_dict(state_dict)
@@ -452,7 +447,7 @@ class FeatureExtractorCLIP(FeatureExtractorBase):
             feature_extractor_internal_dtype (str): dtype to use inside the feature extractor. Specifying it may improve
                 numerical precision in some cases. Supported values are 'float32' (default), and 'float64'.
         """
-        super(FeatureExtractorCLIP, self).__init__(name, features_list)
+        super().__init__(name, features_list)
         vassert(name in MODEL_URLS, f"Model {name} not found; available models = {list(MODEL_URLS.keys())}")
         vassert(
             feature_extractor_internal_dtype in ("float32", "float64", None),
@@ -476,7 +471,7 @@ class FeatureExtractorCLIP(FeatureExtractorBase):
                             map_location="cpu",
                             progress=verbose,
                             check_hash=True,
-                            file_name=f'{name}-{MODEL_METADATA[name]["hash"]}.pt',
+                            file_name=f"{name}-{MODEL_METADATA[name]['hash']}.pt",
                         )
                         break
                     except RuntimeError as e:

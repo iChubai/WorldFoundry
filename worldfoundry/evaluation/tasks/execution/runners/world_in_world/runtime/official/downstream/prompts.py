@@ -1,22 +1,20 @@
 import os
 import os.path as osp
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, ClassVar
 
-# from openeqa.utils.prompt_utils import load_prompt
-from PIL import Image
-from typing import Any, Dict, List, Sequence, Union
 from downstream.downstream_datasets import ARDataset
+from downstream.utils.query_utils import VIDEO_EXTS, encode_img_to_base64
 from downstream.vlm import (
-    CHOICE_FORMATS,
     CHOICES,
     COMMERCIAL_MODELS,
     LOCAL_MODELS,
-    LMClassifier,
     VIEW_ORDER,
+    LMClassifier,
 )
-from utils.util import is_empty
-from downstream.utils.query_utils import encode_img_to_base64, VIDEO_EXTS
 
+# from openeqa.utils.prompt_utils import load_prompt
 
 UNIT_DISTANCE = 0.20
 # unit_distance = 2.6
@@ -39,6 +37,7 @@ def choice_text(choice_format, choice_texts):
         for choice_mark, choice_text in zip(
             CHOICES[choice_format],
             choice_texts,
+            strict=False,
         )
     )
 
@@ -62,10 +61,10 @@ AR_ACTION_SPACE_NO_STOP = construct_action_space_text(choice_format=None, includ
 AR_ANSWER_SPACE = ARDataset.OBJECT_SET
 
 
-CHOICE_EXAMPLES = dict(
-    digit="['001','002','003','001']",
-    letter="['A','B','C','A']",
-)
+CHOICE_EXAMPLES = {
+    "digit": "['001','002','003','001']",
+    "letter": "['A','B','C','A']",
+}
 
 
 def output_format_text(choice_format, output_type):
@@ -83,6 +82,7 @@ Answer: {CHOICE_EXAMPLES[choice_format]}
     else:
         raise ValueError(f"Invalid output type: {output_type}")
 
+
 surround_keys = [f"rgb_surround_{view}" for view in VIEW_ORDER]
 
 
@@ -92,30 +92,31 @@ def load_prompt_from(relative_path):
 
 
 # fmt: off
-TASK_PROMPTS = dict(
-    ar_answerer=load_prompt_from("task/ar_answerer.txt"),
-    ar_planner=load_prompt_from("task/ar_planner.txt"),
-    ignav_answerer=load_prompt_from("task/ignav_answerer.txt"),
-    ignav_planner=load_prompt_from("task/ignav_planner.txt"),
-    ignav_evaluator=load_prompt_from("task/ignav_evaluator.txt"),
-    aeqa_planner=load_prompt_from("task/aeqa_planner.txt"),
-)
+TASK_PROMPTS = {
+    "ar_answerer": load_prompt_from("task/ar_answerer.txt"),
+    "ar_planner": load_prompt_from("task/ar_planner.txt"),
+    "ignav_answerer": load_prompt_from("task/ignav_answerer.txt"),
+    "ignav_planner": load_prompt_from("task/ignav_planner.txt"),
+    "ignav_evaluator": load_prompt_from("task/ignav_evaluator.txt"),
+    "aeqa_planner": load_prompt_from("task/aeqa_planner.txt"),
+}
 
-AUXILIARY_PROMPTS = dict(
-    ar_answerer=load_prompt_from("aux/ar_answerer.txt"),
-    ar_planner=load_prompt_from("aux/ar_planner.txt"),
-    ignav_evaluator_N_action=load_prompt_from("aux/ignav_evaluator_N_action.txt"),
-    aeqa_highlevel_planner=load_prompt_from("aux/aeqa_highlevel_planner.txt"),
-    vln_highlevel_planner=load_prompt_from("aux/aeqa_highlevel_planner.txt"),
-    objnav_highlevel_planner=load_prompt_from("aux/aeqa_highlevel_planner.txt"),
-)
+AUXILIARY_PROMPTS = {
+    "ar_answerer": load_prompt_from("aux/ar_answerer.txt"),
+    "ar_planner": load_prompt_from("aux/ar_planner.txt"),
+    "ignav_evaluator_N_action": load_prompt_from("aux/ignav_evaluator_N_action.txt"),
+    "aeqa_highlevel_planner": load_prompt_from("aux/aeqa_highlevel_planner.txt"),
+    "vln_highlevel_planner": load_prompt_from("aux/aeqa_highlevel_planner.txt"),
+    "objnav_highlevel_planner": load_prompt_from("aux/aeqa_highlevel_planner.txt"),
+}
 
-HIGH_LEVEL_PLANNER_PROMPT = dict(
-    aeqa_highlevel_planner=load_prompt_from("high_level/aeqa_highlevel_planner.txt"),
-    vln_highlevel_planner=load_prompt_from("high_level/vln_highlevel_planner.txt"),
-    objnav_highlevel_planner=load_prompt_from("high_level/objnav_highlevel_planner.txt"),
-)
+HIGH_LEVEL_PLANNER_PROMPT = {
+    "aeqa_highlevel_planner": load_prompt_from("high_level/aeqa_highlevel_planner.txt"),
+    "vln_highlevel_planner": load_prompt_from("high_level/vln_highlevel_planner.txt"),
+    "objnav_highlevel_planner": load_prompt_from("high_level/objnav_highlevel_planner.txt"),
+}
 # fmt: on
+
 
 def get_task_prompt(
     task_type,
@@ -132,6 +133,7 @@ def get_task_prompt(
         ]
     )
 
+
 def get_answerer_type_prompt(choice_format, task, choice_texts):
     assert choice_texts is not None
     task_name = task.split("_")[0]
@@ -146,6 +148,7 @@ def get_answerer_type_prompt(choice_format, task, choice_texts):
         output_space=output_space,
         output_format=output_format,
     )
+
 
 def get_planner_N_type_prompt(choice_format, task, add_stop):
     task_name = task.split("_")[0]
@@ -164,11 +167,10 @@ def get_planner_N_type_prompt(choice_format, task, add_stop):
 
 
 class PromptMixin:
-
     # ------------------------------------------------------------------ #
     # Message-building helpers (public because users may call them)
     # ------------------------------------------------------------------ #
-    def _build_user_message(self, prompt: str, image_paths: Union[str, Sequence[str]]) -> Dict[str, Any]:
+    def _build_user_message(self, prompt: str, image_paths: str | Sequence[str]) -> dict[str, Any]:
         """
         Create a single 'user'-role OpenAI message with one prompt followed by N media items.
         Emits `image_url` for images and `video_url` for videos as expected by vLLM.
@@ -180,7 +182,6 @@ class PromptMixin:
         if prompt:
             content.append({"type": "text", "text": str(prompt)})
 
-
         for p in image_paths:
             ext = os.path.splitext(p)[1].lower()
             media_content = {
@@ -190,20 +191,24 @@ class PromptMixin:
             }
             if ext in VIDEO_EXTS:
                 # vLLM video input: {"type": "video_url", "video_url": {"url": ...}}
-                content.append({
-                    "type": "video_url",
-                    "video_url": media_content,
-                })
+                content.append(
+                    {
+                        "type": "video_url",
+                        "video_url": media_content,
+                    }
+                )
             else:
                 # Image path (existing behavior)
-                content.append({
-                    "type": "image_url",
-                    "image_url": media_content,
-                })
+                content.append(
+                    {
+                        "type": "image_url",
+                        "image_url": media_content,
+                    }
+                )
 
         return {"role": "user", "content": content}
 
-    def _build_assistant_message(self, action: str) -> Dict[str, str]:
+    def _build_assistant_message(self, action: str) -> dict[str, str]:
         """Single-token assistant response (e.g. ‘A.’ or ‘stop.’)."""
         if len(action) != 1:
             raise ValueError(f"Expected single-character action, got: {action}")
@@ -234,9 +239,9 @@ class PromptMixin:
         state_traj: list[list[str]],
         action_traj: list[str],
         enable_history: bool,
-        imagine_traj: list[str] = [],
-        imagine_action_traj: list[str] = [],
-        tobe_filled: dict = {},
+        imagine_traj: list[str] = [],  # noqa: B006 - Read-only default; retain the public signature.
+        imagine_action_traj: list[str] = [],  # noqa: B006 - Read-only default; retain the public signature.
+        tobe_filled: dict = {},  # noqa: B006 - Read-only default; retain the public signature.
         enable_system_prompt: bool = False,
     ):
         """Build the *complete* message list in a readable, linear flow."""
@@ -252,7 +257,7 @@ class PromptMixin:
 
         # ---------- 2. (optional) history ---------- #
         if enable_history:
-            for state, action in zip(state_traj[:-1], action_traj):
+            for state, action in zip(state_traj[:-1], action_traj, strict=False):
                 if not enable_system_prompt:
                     task_prompt = self._get_task_prompt(query_task, tobe_filled)
                     messages.append(self._build_user_message(task_prompt, state))
@@ -262,10 +267,7 @@ class PromptMixin:
                 messages.append(self._build_assistant_message(action))
 
         # ---------- 3. current observation ---------- #
-        if enable_system_prompt:
-            current_prompt = ""
-        else:
-            current_prompt = self._get_task_prompt(query_task, tobe_filled)
+        current_prompt = "" if enable_system_prompt else self._get_task_prompt(query_task, tobe_filled)
         messages.append(self._build_user_message(current_prompt, state_traj[-1]))
 
         # ---------- 4. imagined roll-outs (if any) ---------- #
@@ -274,7 +276,7 @@ class PromptMixin:
             messages.append(self._build_user_message(aux_prompt, []))
 
             if imagine_action_traj:
-                for plan, obs in zip(imagine_action_traj[-1], imagine_traj[-1]):
+                for plan, obs in zip(imagine_action_traj[-1], imagine_traj[-1], strict=False):
                     messages.append(self._build_user_message(plan, obs))
             else:
                 for obs in imagine_traj[-1]:
@@ -285,7 +287,7 @@ class PromptMixin:
 
 class VLM(LMClassifier, PromptMixin):
     # ---- division of different tasks ---- #
-    _LOWLEVEL_PLANNER_TASKS: set[str] = {
+    _LOWLEVEL_PLANNER_TASKS: ClassVar[set[str]] = {
         "ar_planner_N_action",
         "aeqa_planner_N_action",
         "vln_planner_N_action",
@@ -293,25 +295,23 @@ class VLM(LMClassifier, PromptMixin):
         "ignav_planner_N_action",
         "ignav_evaluator_N_action",
     }
-    _LOWLEVEL_PLANNER_TASKS_WITH_STOP: set[str] = {
+    _LOWLEVEL_PLANNER_TASKS_WITH_STOP: ClassVar[set[str]] = {
         "aeqa_planner_N_action",
         "vln_planner_N_action",
         "objnav_planner_N_action",
     }
-    _LOWLEVEL_PLANNER_TASKS_NO_STOP: set[str] = (
-        _LOWLEVEL_PLANNER_TASKS - _LOWLEVEL_PLANNER_TASKS_WITH_STOP
-    )
-    _HIGHLEVEL_PLANNER_TASKS: set[str] = {
+    _LOWLEVEL_PLANNER_TASKS_NO_STOP: set[str] = _LOWLEVEL_PLANNER_TASKS - _LOWLEVEL_PLANNER_TASKS_WITH_STOP
+    _HIGHLEVEL_PLANNER_TASKS: ClassVar[set[str]] = {
         "aeqa_highlevel_planner",
         "vln_highlevel_planner",
         "objnav_highlevel_planner",
     }
-    _ANSWERER_TASKS: set[str] = {
+    _ANSWERER_TASKS: ClassVar[set[str]] = {
         "ar_answerer",
         "ar_planner",
         "ignav_answerer",
     }
-    _OBSERVATION_KEY_PROMPT = {
+    _OBSERVATION_KEY_PROMPT: ClassVar[dict[str, str]] = {
         # for AEQA:
         "['rgb_front']": "perspective view (Field of View (FOV) is 90 degrees)",
         # f"{surround_keys}": f"four perspective views (Field of View (FOV) is 90 degrees) in order of {VIEW_ORDER}",
@@ -334,7 +334,7 @@ class VLM(LMClassifier, PromptMixin):
         image_use_abs,
         classify_method,
         obs_key,
-        categories=[],
+        categories=[],  # noqa: B006 - Read-only default; retain the public signature.
         top_logprobs=1,
         look_ahead_action_num=1,
         base_url=None,
@@ -377,7 +377,7 @@ class VLM(LMClassifier, PromptMixin):
         assert self.query_task in self._LOWLEVEL_PLANNER_TASKS, f"Invalid task: {self.query_task}"
         if "ignav" in self.query_task:
             # if act_seq_len == self.look_ahead_action_num: # for internvl3
-            if act_seq_len <= self.look_ahead_action_num: # for qwen2.5vl
+            if act_seq_len <= self.look_ahead_action_num:  # for qwen2.5vl
                 is_valid = True
         elif "aeqa" in self.query_task or "ar" in self.query_task:
             if act_seq_len <= self.look_ahead_action_num:
@@ -387,7 +387,7 @@ class VLM(LMClassifier, PromptMixin):
         return is_valid
 
     # ------------ Query Dispatch (Main method 1) ------------ #
-    def query_VLM(self, messages, tobe_filled={}, query_num=1):
+    def query_VLM(self, messages, tobe_filled={}, query_num=1):  # noqa: B006 - Read-only default; retain the public signature.
         if self.classify_method == "classify_plain":
             assert self.query_task in self._ANSWERER_TASKS
             response = self._classify_plain(messages, return_prob=True)
@@ -398,28 +398,26 @@ class VLM(LMClassifier, PromptMixin):
 
             elif self.query_task in self._HIGHLEVEL_PLANNER_TASKS:
                 response = self._query_next_instruction(
-                    messages, N=query_num, input=tobe_filled,
+                    messages,
+                    N=query_num,
+                    input=tobe_filled,
                 )
 
         return response
 
     # ------- Task-specific prompt generation (Main method 2) ------ #
-    def _get_task_prompt(self, task: str, tobe_filled: Dict[str, Any]) -> str:
+    def _get_task_prompt(self, task: str, tobe_filled: dict[str, Any]) -> str:
         """
         A thin wrapper around the template functions / dictionaries that live
         elsewhere, plus variable substitution.
         """
         if self.classify_method == "classify_plain":
             assert task in self._ANSWERER_TASKS
-            template = get_answerer_type_prompt(
-                self.choice_format, task, self.categories
-            )
+            template = get_answerer_type_prompt(self.choice_format, task, self.categories)
         elif self.classify_method is None:
             if task in self._LOWLEVEL_PLANNER_TASKS:
                 add_stop = task in self._LOWLEVEL_PLANNER_TASKS_WITH_STOP
-                template = get_planner_N_type_prompt(
-                    self.choice_format, task, add_stop
-                )
+                template = get_planner_N_type_prompt(self.choice_format, task, add_stop)
             elif task in self._HIGHLEVEL_PLANNER_TASKS:
                 template = HIGH_LEVEL_PLANNER_PROMPT[task]
             else:
@@ -443,5 +441,3 @@ class VLM(LMClassifier, PromptMixin):
         else:
             raise KeyError(f"Unknown auxiliary task: {task}")
         return prompt
-
-

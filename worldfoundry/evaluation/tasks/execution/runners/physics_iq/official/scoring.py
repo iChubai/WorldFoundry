@@ -81,13 +81,9 @@ class IQTable:
     views = VIEWS
     ratio_eps = 1e-8  # small constant to prevent divide-by-zero in ratio computations
 
-    def __init__(
-        self, df: pd.DataFrame, metadata: dict = None, lazy_integrity: bool = False
-    ):
+    def __init__(self, df: pd.DataFrame, metadata: dict | None = None, lazy_integrity: bool = False):
         if len(df) == 0:
-            raise ValueError(
-                "IQTable requires at least one scenario row; the DataFrame is empty."
-            )
+            raise ValueError("IQTable requires at least one scenario row; the DataFrame is empty.")
         self.df = df.copy()  # own our data so callers can't mutate it under us
         self.metadata = metadata or {}
 
@@ -117,9 +113,7 @@ class IQTable:
             return None
         current = joblib.hash(self.df)
         if current != self._df_hash:
-            raise RuntimeError(
-                "IQTable.df was mutated after construction; cached scores are invalid."
-            )
+            raise RuntimeError("IQTable.df was mutated after construction; cached scores are invalid.")
 
     @cached_property
     def spatial_iou_cols(self):
@@ -195,14 +189,15 @@ class IQTable:
         }
         if metric_key not in _score_map:
             raise ValueError(f"Invalid metric key: {metric_key}")
-        return self.df[_score_map[metric_key][0]] / (
-            self.df[_score_map[metric_key][1]] + self.ratio_eps
-        )
+        return self.df[_score_map[metric_key][0]] / (self.df[_score_map[metric_key][1]] + self.ratio_eps)
 
     def compute_metric_ratio_by_view(self, metric_key) -> np.ndarray:
         """Compute the metric ratio for each view separately, returning an array of shape (n_scenarios, n_views)."""
         get_mean_dict = self.list_column_mean_by_view_dict
-        mapping_fct = lambda x: [get_mean_dict[view_col] for view_col in x]
+
+        def mapping_fct(x):
+            return [get_mean_dict[view_col] for view_col in x]
+
         _score_map = {
             self.spatial_iou_key: (self.spatial_iou_cols, self.variance_spatial_cols),
             self.weighted_spatial_iou_key: (
@@ -222,9 +217,7 @@ class IQTable:
             raise ValueError(f"Invalid metric key: {metric_key}")
 
         metric_cols, variance_cols = _score_map[metric_key]
-        return self.df[metric_cols].to_numpy() / (
-            self.df[variance_cols].to_numpy() + self.ratio_eps
-        )
+        return self.df[metric_cols].to_numpy() / (self.df[variance_cols].to_numpy() + self.ratio_eps)
 
     def compute_metric_scores_scenario(self, metric_key) -> pd.Series:
         """Compute the metric score for a single metric key, returning a Series of shape (n_scenarios,)."""
@@ -238,22 +231,16 @@ class IQTable:
         out = pd.DataFrame()
         metric_score_keys = [metric_key + "_score" for metric_key in self.metric_keys]
 
-        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys):
+        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys, strict=False):
             out[metric_score_key] = self.compute_metric_scores_scenario(metric_key)
         self.compute_means_by_row_inplace(out, metric_score_keys)
         return out
 
     @classmethod
-    def compute_means_by_row_inplace(
-        cls, df: pd.DataFrame, cols: list[str]
-    ) -> pd.DataFrame:
+    def compute_means_by_row_inplace(cls, df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
         df["final_arithmetic"] = clip(df[cols].to_numpy()).mean(axis=1)
-        df["final_geometric"] = clip(df[cols].to_numpy()).prod(axis=1) ** (
-            1 / len(cols)
-        )
-        df["final_harmonic"] = len(cols) / (
-            1 / (clip(df[cols].to_numpy() + cls.ratio_eps))
-        ).sum(axis=1)
+        df["final_geometric"] = clip(df[cols].to_numpy()).prod(axis=1) ** (1 / len(cols))
+        df["final_harmonic"] = len(cols) / (1 / (clip(df[cols].to_numpy() + cls.ratio_eps))).sum(axis=1)
 
     def compute_metric_scores_scenario_by_view(self, metric_key) -> np.ndarray:
         """Compute the metric score for a single metric key by view, returning an array of shape (n_scenarios, n_views)."""
@@ -267,10 +254,8 @@ class IQTable:
         """Compute the metric scores for all metric keys by view, returning a DataFrame of shape (n_scenarios * n_views, n_metrics)."""
         out = pd.DataFrame()
         metric_score_keys = [metric_key + "_score" for metric_key in self.metric_keys]
-        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys):
-            out[metric_score_key] = self.compute_metric_scores_scenario_by_view(
-                metric_key
-            ).flatten()
+        for metric_key, metric_score_key in zip(self.metric_keys, metric_score_keys, strict=False):
+            out[metric_score_key] = self.compute_metric_scores_scenario_by_view(metric_key).flatten()
         self.compute_means_by_row_inplace(out, metric_score_keys)
         return out
 
@@ -317,9 +302,7 @@ class IQTable:
 
     def _get_scalar_column_mean(self, metric_key):
         """Scalar columns already have one value per scenario; just average across views."""
-        assert (
-            metric_key not in self.get_list_keys()
-        ), f"Invalid metric key: {metric_key}"
+        assert metric_key not in self.get_list_keys(), f"Invalid metric key: {metric_key}"
         return self.df[[f"{metric_key}_{view}" for view in VIEWS]].mean(axis=1)
 
     def get_metric_mean(self, metric_key):
@@ -372,9 +355,7 @@ class IQTable:
         score_spatial = self.get_score(self.spatial_iou_key)
         score_weighted_spatial = self.get_score(self.weighted_spatial_iou_key)
         score_mse = self.get_score(self.mse_key)
-        final_score_raw = (
-            score_spatiotemporal + score_spatial + score_weighted_spatial
-        ) / 3 - score_mse
+        final_score_raw = (score_spatiotemporal + score_spatial + score_weighted_spatial) / 3 - score_mse
         return final_score_raw
 
     def compute_final_score_orig(self) -> float:
@@ -387,10 +368,7 @@ class IQTable:
         score_spatial = clip(self.get_score(self.spatial_iou_key))
         score_weighted_spatial = clip(self.get_score(self.weighted_spatial_iou_key))
         score_mse = clip(self.get_score(self.mse_key))
-        final_score_stable = clip(
-            (score_spatiotemporal + score_spatial + score_weighted_spatial) / 3
-            - score_mse
-        )
+        final_score_stable = clip((score_spatiotemporal + score_spatial + score_weighted_spatial) / 3 - score_mse)
         return final_score_stable
 
     def get_output_dict(self) -> dict[str, float]:
@@ -410,23 +388,13 @@ class IQTable:
             "final_score_stable": self.compute_final_score_stable(),
             "final_score_orig": clip(final_score_raw),
             "variance_mse": self.get_metric_mean(self.variance_mse_key),
-            "variance_spatiotemporal_iou": self.get_metric_mean(
-                self.variance_spatiotemporal_iou_key
-            ),
+            "variance_spatiotemporal_iou": self.get_metric_mean(self.variance_spatiotemporal_iou_key),
             "variance_spatial": self.get_metric_mean(self.variance_spatial_key),
-            "variance_weighted_spatial": self.get_metric_mean(
-                self.variance_weighted_spatial_key
-            ),
+            "variance_weighted_spatial": self.get_metric_mean(self.variance_weighted_spatial_key),
             "final_score_view": view_scenario_scores["final_arithmetic"].mean(),
-            "score_spatiotemporal_view": view_scenario_scores[
-                self.spatiotemporal_iou_key + "_score"
-            ].mean(),
-            "score_spatial_view": view_scenario_scores[
-                self.spatial_iou_key + "_score"
-            ].mean(),
-            "score_weighted_spatial_view": view_scenario_scores[
-                self.weighted_spatial_iou_key + "_score"
-            ].mean(),
+            "score_spatiotemporal_view": view_scenario_scores[self.spatiotemporal_iou_key + "_score"].mean(),
+            "score_spatial_view": view_scenario_scores[self.spatial_iou_key + "_score"].mean(),
+            "score_weighted_spatial_view": view_scenario_scores[self.weighted_spatial_iou_key + "_score"].mean(),
             "score_mse_view": view_scenario_scores[self.mse_key + "_score"].mean(),
         }
         out_dict.update(self.metadata)
@@ -455,9 +423,7 @@ class IQTable:
 
     @classmethod
     def get_list_columns(cls) -> list[str]:
-        return [
-            f"{metric}_{view}" for metric in cls.get_list_keys() for view in cls.views
-        ]
+        return [f"{metric}_{view}" for metric in cls.get_list_keys() for view in cls.views]
 
     @classmethod
     def from_csv(cls, file_path: str, *args, **kwargs):

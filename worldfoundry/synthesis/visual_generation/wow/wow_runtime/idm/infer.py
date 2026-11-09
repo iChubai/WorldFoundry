@@ -35,20 +35,14 @@ def load_model_with_text_map(model_path, device="cuda", args=None):
     checkpoint = torch.load(model_path, map_location=device, weights_only=True)
 
     # Extract text mapping if present
-    if "text_map" in checkpoint:
-        text_map = checkpoint["text_map"]
-    else:
-        text_map = {"default": 0}
+    text_map = checkpoint["text_map"] if "text_map" in checkpoint else {"default": 0}  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
     # Create model instance
     ModelClass = get_model_class(args.model)
     model = ModelClass(output_dim=args.output_dim)
 
     # Load weights (handle both bare state_dict and checkpoint format)
-    if "model_state_dict" in checkpoint:
-        state_dict = checkpoint["model_state_dict"]
-    else:
-        state_dict = checkpoint
+    state_dict = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
     # Handle DataParallel 'module.' prefix
     new_state_dict = {}
@@ -127,10 +121,7 @@ def infer_from_h5_files_simple(h5_files, model_path, output_path=None, device="c
                     continue
 
                 # Limit number of processed actions per file if requested
-                if max_actions is not None:
-                    num_actions = min(max_actions, len(actions) - 1)
-                else:
-                    num_actions = len(actions) - 1
+                num_actions = min(max_actions, len(actions) - 1) if max_actions is not None else len(actions) - 1
 
                 print(f"  Will process {num_actions} actions")
 
@@ -164,7 +155,7 @@ def infer_from_h5_files_simple(h5_files, model_path, output_path=None, device="c
                 print(f"  Done, cumulative actions processed: {total_actions}")
 
         except Exception as e:
-            print(f"  Error processing file {h5_file}: {str(e)}")
+            print(f"  Error processing file {h5_file}: {e!s}")
             continue
 
     print(f"\nTotal predicted actions: {len(all_results)}")
@@ -221,7 +212,7 @@ def main():
         )
 
     except Exception as e:
-        print(f"Inference failed: {str(e)}")
+        print(f"Inference failed: {e!s}")
         raise
 
 

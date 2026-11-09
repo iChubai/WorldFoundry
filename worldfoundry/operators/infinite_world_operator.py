@@ -108,12 +108,10 @@ _VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
 
 def _sanitize_token(text: str) -> str:
-    """Sanitize token implementation."""
     return text.strip().lower().replace("-", "_").replace(" ", "_")
 
 
 def _resize_and_center_crop(frame: np.ndarray, target_size) -> np.ndarray:
-    """Resize and center crop implementation."""
     target_h, target_w = target_size
     orig_h, orig_w = frame.shape[:2]
     scale = max(target_h / orig_h, target_w / orig_w)
@@ -126,7 +124,6 @@ def _resize_and_center_crop(frame: np.ndarray, target_size) -> np.ndarray:
 
 
 def _normalize_video_tensor(video_tensor: torch.Tensor) -> torch.Tensor:
-    """Normalize video tensor implementation."""
     video_tensor = video_tensor.float()
     if video_tensor.max() <= 1.0 and video_tensor.min() >= -1.0:
         if video_tensor.min() >= 0.0:
@@ -138,7 +135,6 @@ def _normalize_video_tensor(video_tensor: torch.Tensor) -> torch.Tensor:
 
 
 def _frames_to_video_tensor(frames: Sequence[np.ndarray], target_size) -> torch.Tensor:
-    """Frames to video tensor implementation."""
     processed_frames = []
     for frame in frames:
         frame = _resize_and_center_crop(frame, target_size)
@@ -150,7 +146,6 @@ def _frames_to_video_tensor(frames: Sequence[np.ndarray], target_size) -> torch.
 
 
 def _tensor_to_video_tensor(tensor: torch.Tensor) -> torch.Tensor:
-    """Tensor to video tensor implementation."""
     tensor = tensor.detach().cpu()
     if tensor.ndim == 5:
         if tensor.shape[0] != 1:
@@ -178,7 +173,6 @@ def _tensor_to_video_tensor(tensor: torch.Tensor) -> torch.Tensor:
 
 
 def _select_target_size(bucket_config: dict[str, Any], frame: np.ndarray):
-    """Select target size implementation."""
     aspect_ratio = frame.shape[0] / frame.shape[1]
     closest_bucket = min(bucket_config, key=lambda key: abs(float(key) - aspect_ratio))
     target_h, target_w = bucket_config[closest_bucket][0]
@@ -186,7 +180,6 @@ def _select_target_size(bucket_config: dict[str, Any], frame: np.ndarray):
 
 
 def _load_frames_from_path(path: str) -> list[np.ndarray]:
-    """Load frames from path implementation."""
     path = os.path.abspath(path)
     if not os.path.exists(path):
         raise FileNotFoundError(f"Condition path not found: {path}")
@@ -248,7 +241,6 @@ class InfiniteWorldOperator(BaseOperator):
         self.interaction_template_init()
 
     def _normalize_interaction(self, interaction: str | dict[str, str]) -> dict[str, str]:
-        """Normalize interaction implementation."""
         if isinstance(interaction, dict):
             move = interaction.get("move", "no-op")
             view = interaction.get("view", "no-op")

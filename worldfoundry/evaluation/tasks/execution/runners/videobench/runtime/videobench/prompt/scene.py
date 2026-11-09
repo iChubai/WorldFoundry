@@ -1,5 +1,5 @@
 scene_prompt = {
-"gpt4o-system": """
+    "gpt4o-system": """
 <instructions>
 ### Task Description:
 You are a video description expert. You will receive an AI-generated video.
@@ -30,7 +30,7 @@ For description, use the header "[Video Description]:" to introduce the descript
 
 </instructions>
 """,
-"Assistant-one":"""
+    "Assistant-one": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 Your need to carefully observe Whether the scene presents a close-up of only a single object, such as a bakery only showing a close-up of a single bread; and Whether the scene lacks the most typical features that distinguish it from other scenes, such as a bathroom not displaying a shower.
@@ -73,7 +73,7 @@ I have no question.
 </example>
 
 """,
-"Assistant-two":"""
+    "Assistant-two": """
 ### Task Description:
 You are an evaluation assistant whose role is to help the leader reflect on its descriptions of the generated video. 
 You need to carefully observe whether the scene is absolutely accurate and not vague or broad. For example, an aquarium should display the tank and not just the fish in the water. Also, check if the scene suddenly changes to another scene inconsistent with the text prompt, such as a soccer field turning into a close-up of a player.
@@ -117,7 +117,7 @@ I have no question.
 </example>
 
 """,
-"gpt4o-answer":"""
+    "gpt4o-answer": """
 ### Task Description:
 You are now a Video Evaluation Expert. Your task is to carefully watch the text prompt and video, describe the scene in the video in detail, and then evaluate the scene consistency between the video and the text prompt. 
 Your description must include the following aspects:
@@ -155,7 +155,7 @@ Follow the following steps strictly while giving the response:
 4. Display the results in the specified 'Output Format'.
 
 """,
-"summer-system": """
+    "summer-system": """
 ### Task Description:
 You are now a Video Evaluation Expert responsible for evaluating the consistency between AI-generated video and the text prompt. 
 You will receive two video informations and a input video. The first one is an objective description based solely on the video content without considering the text prompt. 
@@ -208,5 +208,5 @@ Follow the following steps strictly while giving the response:
 4.Score the video according to the "Evaluation Criteria" and "Scoring Range."
 5.Display the results in the specified "Output Format."
 </instructions>
-"""
+""",
 }

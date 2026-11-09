@@ -7,23 +7,22 @@ import argparse
 import csv
 import json
 import math
-import sys
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 import numpy as np
 
 from wrbench.eval.d1.d1_sidecar_contract import validate_camera_control_target
 from wrbench.eval.d1.geometry import safe_video_id
 from wrbench.eval.d1.pose import (
-    PRIMARY_TARGET_POSE_PATH_FIELDS,
     POSE_INLINE_FIELDS,
+    PRIMARY_TARGET_POSE_PATH_FIELDS,
     _expand_poses,
     _normalize_predicted_poses,
     score_trajectory_pose,
 )
-
 
 ELIGIBLE_CAMERAS = frozenset({"static", "yaw_LR", "yaw_RL", "pan_LR", "pan_RL"})
 CERTIFIED_TARGET_STATUS = "certified"
@@ -73,10 +72,7 @@ def _is_opencv_c2w(value: Any) -> bool:
         return True
     normalized = _norm_convention(value)
     normalized = normalized.replace("-", " ")
-    return all(
-        token in normalized
-        for token in ("opencv", "camera to world", "x right", "y down", "z forward")
-    )
+    return all(token in normalized for token in ("opencv", "camera to world", "x right", "y down", "z forward"))
 
 
 def _target_convention(payload: dict[str, Any]) -> Any:
@@ -503,10 +499,7 @@ def score_d1_trajectory(
         return {"d1_status": "invalid_pose", "d1_flags": ["invalid_pose"]}
     predicted = alignment @ predicted
     rot_errors = np.asarray(
-        [
-            _rotation_angle_deg(target[idx, :3, :3].T @ predicted[idx, :3, :3])
-            for idx in range(len(target))
-        ],
+        [_rotation_angle_deg(target[idx, :3, :3].T @ predicted[idx, :3, :3]) for idx in range(len(target))],
         dtype=np.float64,
     )
 
@@ -559,10 +552,7 @@ def score_d1_trajectory(
             flags.append("pan_direction_mismatch")
             accuracy = 0.0
     elif camera == "static":
-        static_ok = (
-            rot_strength <= float(static_rot_threshold_deg)
-            and trans_strength <= float(static_trans_threshold)
-        )
+        static_ok = rot_strength <= float(static_rot_threshold_deg) and trans_strength <= float(static_trans_threshold)
         accuracy = 1.0 if static_ok else 0.0
         if not static_ok:
             flags.append("static_motion_detected")
@@ -613,7 +603,9 @@ def _pose_file_for(row: dict[str, Any], cache_root: str | Path, poses_file: str 
     return Path(cache_root) / "pose" / safe_video_id(row.get("video_id")) / poses_file
 
 
-def _with_d1_status(row: dict[str, Any], status: str, *, target: dict[str, Any] | None = None, flags: list[str] | None = None) -> dict[str, Any]:
+def _with_d1_status(
+    row: dict[str, Any], status: str, *, target: dict[str, Any] | None = None, flags: list[str] | None = None
+) -> dict[str, Any]:
     enriched = dict(row)
     enriched["d1_status"] = status
     enriched["d1_camera_accuracy"] = None
@@ -725,7 +717,9 @@ def score_d1_row(row: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
         require_main_profile=require_main_profile,
     )
     if target.get("status") != "ok":
-        return _with_d1_status(row, str(target.get("status", "error")), target=target, flags=list(target.get("notes") or []))
+        return _with_d1_status(
+            row, str(target.get("status", "error")), target=target, flags=list(target.get("notes") or [])
+        )
 
     pose_file = _pose_file_for(
         row,
@@ -836,11 +830,7 @@ def write_summary_csv(rows: list[dict[str, Any]], path: str | Path) -> None:
                     if row.get("d1_control_family") == family and row.get("d1_camera_accuracy") is not None
                 ]
                 family_scores[family] = sum(family_acc) / len(family_acc) if family_acc else ""
-            available_family_scores = [
-                float(value)
-                for value in family_scores.values()
-                if value != ""
-            ]
+            available_family_scores = [float(value) for value in family_scores.values() if value != ""]
             overall = sum(available_family_scores) / len(available_family_scores) if available_family_scores else ""
             gt_valid = [row for row in items if row.get("d1_gt_valid")]
             writer.writerow(
@@ -868,11 +858,15 @@ def score_d1_rows(rows: list[dict[str, Any]], config: dict[str, Any]) -> list[di
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Score D1 camera movement accuracy from target and cached MegaSAM poses.")
+    parser = argparse.ArgumentParser(
+        description="Score D1 camera movement accuracy from target and cached MegaSAM poses."
+    )
     parser.add_argument("--input_jsonl", "--input-jsonl", "--input", dest="input_jsonl", required=True)
     parser.add_argument("--output_jsonl", "--output-jsonl", "--output", dest="output_jsonl", required=True)
     parser.add_argument("--summary_csv", "--summary-csv", dest="summary_csv", required=True)
-    parser.add_argument("--megasam_cache_root", "--megasam-cache-root", "--pose-cache-root", dest="pose_cache_root", required=True)
+    parser.add_argument(
+        "--megasam_cache_root", "--megasam-cache-root", "--pose-cache-root", dest="pose_cache_root", required=True
+    )
     parser.add_argument("--pose-backend", required=True)
     parser.add_argument("--poses_file", "--poses-file", dest="poses_file", required=True)
     parser.add_argument("--default_frames", "--default-frames", dest="default_frames", type=int, required=True)

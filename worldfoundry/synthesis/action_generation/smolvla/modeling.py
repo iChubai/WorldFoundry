@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# ruff: noqa
 
 # Copyright 2025 HuggingFace Inc. team. All rights reserved.
 #
@@ -18,8 +17,9 @@
 """SmolVLA inference model, adapted from the official Apache-2.0 release."""
 
 import math
+
 import torch
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as F
 from torch import Tensor, nn
 
 from .configuration import SmolVLAConfig
@@ -101,9 +101,7 @@ def resize_with_pad(img, width, height, pad_value=-1):
     ratio = max(cur_width / width, cur_height / height)
     resized_height = int(cur_height / ratio)
     resized_width = int(cur_width / ratio)
-    resized_img = F.interpolate(
-        img, size=(resized_height, resized_width), mode="bilinear", align_corners=False
-    )
+    resized_img = F.interpolate(img, size=(resized_height, resized_width), mode="bilinear", align_corners=False)
 
     pad_height = max(0, int(height - resized_height))
     pad_width = max(0, int(width - resized_width))
@@ -200,9 +198,7 @@ class SmolVLAPolicy(nn.Module):
         lang_tokens = batch[f"{OBS_LANGUAGE_TOKENS}"]
         lang_masks = batch[f"{OBS_LANGUAGE_ATTENTION_MASK}"]
 
-        actions = self.model.sample_actions(
-            images, img_masks, lang_tokens, lang_masks, state, noise=noise
-        )
+        actions = self.model.sample_actions(images, img_masks, lang_tokens, lang_masks, state, noise=noise)
 
         # Unpad actions
         original_action_dim = self.config.action_feature.shape[0]
@@ -246,11 +242,7 @@ class SmolVLAPolicy(nn.Module):
             )
 
         template_key = present_img_keys[0]
-        template = (
-            batch[template_key][:, -1, :, :, :]
-            if batch[template_key].ndim == 5
-            else batch[template_key]
-        )
+        template = batch[template_key][:, -1, :, :, :] if batch[template_key].ndim == 5 else batch[template_key]
         if self.config.resize_imgs_with_padding is not None:
             template = resize_with_pad(
                 template,
@@ -313,6 +305,7 @@ class SmolVLAPolicy(nn.Module):
         state = pad_vector(state, self.config.max_state_dim)
         return state
 
+
 def pad_tensor(tensor, max_len, pad_value=0):
     """
     Efficiently pads a tensor along sequence dimension to match max_len.
@@ -328,9 +321,7 @@ def pad_tensor(tensor, max_len, pad_value=0):
     b, d = tensor.shape[:2]
 
     # Create a padded tensor of max_len and copy the existing values
-    padded_tensor = torch.full(
-        (b, max_len, *tensor.shape[2:]), pad_value, dtype=tensor.dtype, device=tensor.device
-    )
+    padded_tensor = torch.full((b, max_len, *tensor.shape[2:]), pad_value, dtype=tensor.dtype, device=tensor.device)
     padded_tensor[:, :d] = tensor  # Efficient in-place copy
 
     return padded_tensor
@@ -376,9 +367,7 @@ class VLAFlowMatching(nn.Module):
             expert_width_multiplier=self.config.expert_width_multiplier,
             torch_dtype=getattr(self.config, "runtime_torch_dtype", torch.bfloat16),
         )
-        self.state_proj = nn.Linear(
-            self.config.max_state_dim, self.vlm_with_expert.config.text_config.hidden_size
-        )
+        self.state_proj = nn.Linear(self.config.max_state_dim, self.vlm_with_expert.config.text_config.hidden_size)
         self.action_in_proj = nn.Linear(self.config.max_action_dim, self.vlm_with_expert.expert_hidden_size)
         self.action_out_proj = nn.Linear(self.vlm_with_expert.expert_hidden_size, self.config.max_action_dim)
 
@@ -391,9 +380,7 @@ class VLAFlowMatching(nn.Module):
 
         self.fake_image_token = self.vlm_with_expert.processor.tokenizer.fake_image_token_id
         self.global_image_token = self.vlm_with_expert.processor.tokenizer.global_image_token_id
-        self.global_image_start_token = torch.tensor(
-            [self.fake_image_token, self.global_image_token], dtype=torch.long
-        )
+        self.global_image_start_token = torch.tensor([self.fake_image_token, self.global_image_token], dtype=torch.long)
 
         self.add_image_special_tokens = self.config.add_image_special_tokens
         self.image_end_token = torch.tensor([self.fake_image_token], dtype=torch.long)
@@ -514,9 +501,7 @@ class VLAFlowMatching(nn.Module):
         att_masks = []
 
         # Fuse timestep + action information using an MLP
-        action_emb = self.action_in_proj(
-            noisy_actions.to(dtype=self.action_in_proj.weight.dtype)
-        )
+        action_emb = self.action_in_proj(noisy_actions.to(dtype=self.action_in_proj.weight.dtype))
         device = action_emb.device
         bsize = action_emb.shape[0]
         dtype = action_emb.dtype

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from wrbench.actions import CameraScript, parse_camera_script
-from wrbench.adapters import compile_camera_payload  # noqa: F401 ensures adapters register
+from wrbench.adapters import compile_camera_payload  # ensures adapters register
 from wrbench.adapters._utils import unified_sidecar_extra
 from wrbench.builder import build_camera_trajectory
 from wrbench.registry import canonical_model_key, input_kind, model_record
@@ -75,7 +75,9 @@ def _sidecar_metadata(key: str, payload: Any, camera: str, output_path: Path) ->
             "generated_frame_count": payload.target_trajectory.frame_count,
             "target_c2w_path": str(output_path.with_suffix(output_path.suffix + ".target_c2w.npy")),
             "camera_trajectory_json_path": str(output_path.with_suffix(output_path.suffix + ".camera_trajectory.json")),
-            "model_control_samples_path": str(output_path.with_suffix(output_path.suffix + ".model_control_samples.json")),
+            "model_control_samples_path": str(
+                output_path.with_suffix(output_path.suffix + ".model_control_samples.json")
+            ),
             "calibration_status": payload.calibration_status,
         }
     )

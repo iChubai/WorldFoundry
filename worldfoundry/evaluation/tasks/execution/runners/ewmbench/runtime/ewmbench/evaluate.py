@@ -3,8 +3,8 @@ import os
 
 import torch
 import yaml
-
 from EWMBench import EmbodiedWorldModelBenchmark
+
 from worldfoundry.core.distributed.collectives.evaluation import dist_init, print0
 
 
@@ -34,7 +34,7 @@ def parse_args():
 
 
 def load_config(config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 

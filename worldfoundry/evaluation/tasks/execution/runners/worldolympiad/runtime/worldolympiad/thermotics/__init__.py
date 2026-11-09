@@ -10,4 +10,3 @@ Main components:
 - vlm_analysis.py: VLM-based physics compliance analysis from processed videos
 - integrated_pipeline.py: End-to-end pipeline with problem filtering
 """
-

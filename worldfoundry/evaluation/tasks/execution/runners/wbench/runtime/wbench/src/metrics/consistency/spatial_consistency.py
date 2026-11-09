@@ -10,12 +10,13 @@ Method:
 3. Gate by minimum similarity during trajectory (penalizes static videos)
 4. Final score = ret_sim * gate, where gate = min(1, (1-min_sim)/tau)
 """
+
 from __future__ import annotations
 
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import cv2
 import numpy as np
@@ -27,33 +28,47 @@ N_SAMPLE_FRAMES = 10
 METRIC_NAME = "spatial_consistency"
 
 NAVI_ACTIONS = {
-    "W", "A", "S", "D", "left", "right", "up", "down",
-    "W+up", "W+down", "W+A", "W+D", "W+left", "W+right",
+    "W",
+    "A",
+    "S",
+    "D",
+    "left",
+    "right",
+    "up",
+    "down",
+    "W+up",
+    "W+down",
+    "W+A",
+    "W+D",
+    "W+left",
+    "W+right",
 }
 SYMMETRIC_PAIRS = {
-    ("left", "right"), ("right", "left"),
-    ("A", "D"), ("D", "A"),
-    ("W", "S"), ("S", "W"),
-    ("up", "down"), ("down", "up"),
+    ("left", "right"),
+    ("right", "left"),
+    ("A", "D"),
+    ("D", "A"),
+    ("W", "S"),
+    ("S", "W"),
+    ("up", "down"),
+    ("down", "up"),
 }
 
 
-def find_loop_cases(cases_dir: str) -> List[Tuple[str, dict]]:
+def find_loop_cases(cases_dir: str) -> list[tuple[str, dict]]:
     """Return loop-style navigation cases (symmetric action sequences)."""
     files = sorted(Path(cases_dir).glob("*.json"))
     loop_cases = []
     for file_path in files:
-        case_data = json.load(open(file_path))
+        with open(file_path) as handle:
+            case_data = json.load(handle)
         actions = [t["action"] for t in case_data.get("interactions", [])]
         if not actions or actions[0] not in NAVI_ACTIONS:
             continue
         n = len(actions)
         if n < 2:
             continue
-        is_loop = all(
-            (actions[i], actions[n - 1 - i]) in SYMMETRIC_PAIRS
-            for i in range(n // 2)
-        )
+        is_loop = all((actions[i], actions[n - 1 - i]) in SYMMETRIC_PAIRS for i in range(n // 2))
         if is_loop:
             loop_cases.append((str(case_data["id"]), case_data))
     return loop_cases
@@ -64,7 +79,7 @@ def rot_angle_deg(rotation: np.ndarray) -> float:
     return float(np.degrees(np.arccos(cos_val)))
 
 
-def compute_score(ret_sim: float, min_sim: float, tau: float = TAU) -> Tuple[float, float]:
+def compute_score(ret_sim: float, min_sim: float, tau: float = TAU) -> tuple[float, float]:
     """Compute gated spatial consistency score.
 
     gate = min(1, (1 - min_sim) / tau)  -- penalizes nearly-static videos
@@ -81,7 +96,7 @@ def evaluate_case(
     dreamsim_model,
     dreamsim_preprocess,
     device: str = "cuda",
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Evaluate spatial consistency for a single loop case.
 
     Args:
@@ -112,7 +127,7 @@ def evaluate_case(
         return None
 
     per_turn = n_poses / n_turns
-    last_turn_start = int(round((n_turns - 1) * per_turn))
+    last_turn_start = round((n_turns - 1) * per_turn)
     best_index, best_rot = last_turn_start, 999.0
     for pose_idx in range(last_turn_start, n_poses):
         rotation = rot_angle_deg(poses[0, :3, :3].T @ poses[pose_idx, :3, :3])
@@ -171,7 +186,7 @@ def evaluate_case(
     }
 
 
-def summarize_model_results(case_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+def summarize_model_results(case_records: list[dict[str, Any]]) -> dict[str, Any]:
     valid = [r for r in case_records if r.get("score") is not None]
     if not valid:
         return {"score": 0.0, "ret_sim": 0.0, "min_sim": 0.0, "n_cases": 0}

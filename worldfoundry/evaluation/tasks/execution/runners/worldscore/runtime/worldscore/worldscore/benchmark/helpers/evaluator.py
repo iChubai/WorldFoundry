@@ -3,37 +3,41 @@ from __future__ import annotations
 import json
 import os
 from collections import defaultdict
-from pathlib import Path
-from typing import Any, Mapping, Sequence
-import numpy as np
-from functools import partial
+from collections.abc import Mapping, Sequence
 from datetime import datetime
+from functools import partial
+from pathlib import Path
+from typing import Any
 
-import torch
-from tqdm import tqdm
+import numpy as np
 import structlog
 import submitit
+import torch
+from tqdm import tqdm
 
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics import (
+    CameraErrorMetric,
+    CLIPImageQualityAssessmentPlusMetric,
     CLIPScoreMetric,
     GramMatrixMetric,
     IQACLIPAestheticScoreMetric,
-    CameraErrorMetric,
-    OpticalFlowAverageEndPointErrorMetric,
-    ObjectDetectionMetric,
-    ReprojectionErrorMetric, 
-    CLIPImageQualityAssessmentPlusMetric,
-    OpticalFlowMetric,
     MotionAccuracyMetric,
     MotionSmoothnessMetric,
+    ObjectDetectionMetric,
+    OpticalFlowAverageEndPointErrorMetric,
+    OpticalFlowMetric,
+    ReprojectionErrorMetric,
 )
 from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
     aspect_info,
+    empty_cache,
     get_model2type,
+    layout_info,
     type2model,
 )
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.utils import print_banner
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import empty_cache, layout_info
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.utils import (
+    print_banner,
+)
 
 logger = structlog.getLogger()
 
@@ -63,8 +67,7 @@ def process_batch(
             "num_scenes": image_data["num_scenes"],
             "total_frames": image_data["total_frames"],
             "image_list": sorted(
-                str(path.absolute()) for path in (instance_dir / "frames").iterdir()
-                if path.suffix in (".jpg", ".png")
+                str(path.absolute()) for path in (instance_dir / "frames").iterdir() if path.suffix in (".jpg", ".png")
             ),
             "reference_image": instance_dir / "input_image.png",
         }
@@ -74,14 +77,20 @@ def process_batch(
                 camera_data = json.load(stream)
             intra = layout_info[image_data["camera_path"][0]]["layout_type"] == "intra"
             inputs.update(
-                camera_data=camera_data, anchor_frame_idx=image_data["anchor_frame_idx"],
-                text_prompt_list=image_data["prompt_list"], content_list=image_data["content_list"],
-                masked_images_all=None, objects_list=None,
+                camera_data=camera_data,
+                anchor_frame_idx=image_data["anchor_frame_idx"],
+                text_prompt_list=image_data["prompt_list"],
+                content_list=image_data["content_list"],
+                masked_images_all=None,
+                objects_list=None,
             )
         elif visual_movement == "dynamic":
             inputs.update(
-                camera_data=None, anchor_frame_idx=None, text_prompt_list=[image_data["prompt"]],
-                content_list=None, objects_list=image_data["objects"],
+                camera_data=None,
+                anchor_frame_idx=None,
+                text_prompt_list=[image_data["prompt"]],
+                content_list=None,
+                objects_list=image_data["objects"],
                 masked_images_all=[os.path.join(evaluator.dataset_root_path, mask) for mask in image_data["masks"]],
             )
         else:
@@ -98,11 +107,16 @@ def process_batch(
                         continue
                     if evaluator.aspect_evaluator is None:
                         evaluator.aspect_evaluator = get_aspect_evaluator(
-                            metric, spec["type"], attributes, aspect, evaluator.generate_type,
+                            metric,
+                            spec["type"],
+                            attributes,
+                            aspect,
+                            evaluator.generate_type,
                         )
                     score, normalized = evaluator.calculate_metrics(**inputs)
                     result.setdefault(aspect, {})[evaluator.aspect_evaluator.name] = {
-                        "score": score, "score_normalized": normalized,
+                        "score": score,
+                        "score_normalized": normalized,
                     }
                     with result_path.open("w", encoding="utf-8") as stream:
                         json.dump(result, stream, indent=4)
@@ -110,7 +124,7 @@ def process_batch(
                 evaluator.aspect_evaluator = None
                 empty_cache()
     return evaluator.metrics_results
-    
+
 
 def create_slurm_executor(
     log_dir: str,
@@ -149,6 +163,7 @@ def create_slurm_executor(
     )
     return submitit_executor
 
+
 class Metric:
     def __init__(self, metric, name, metric_type, metric_attribute, aspect):
         self.metric = metric
@@ -160,21 +175,22 @@ class Metric:
     def compute_scores(self, *args):
         return self.metric._compute_scores(*args)  # pylint: disable=protected-access
 
+
 def renormalize_score(score_dict):
     for aspect, aspect_score in score_dict.items():
-        if aspect not in aspect_info.keys():
+        if aspect not in aspect_info:
             continue
         for metric, score_ in aspect_score.items():
             score = score_["score"]
             higher_is_better = aspect_info[aspect]["metrics"][metric]["higher_is_better"]
-            
+
             if metric in ["clip_score", "clip_iqa+", "clip_aesthetic", "motion_accuracy", "optical_flow"]:
                 avg = aspect_info[aspect]["metrics"][metric]["avg"]
                 std = aspect_info[aspect]["metrics"][metric]["std"]
                 z_max = aspect_info[aspect]["metrics"][metric]["z_max"]
                 z_min = aspect_info[aspect]["metrics"][metric]["z_min"]
                 range = aspect_info[aspect]["metrics"][metric]["range"]
-                
+
                 x_prime = ((score - avg) / std - z_min) / (z_max - z_min)
                 if not higher_is_better:
                     x_prime = 1 - x_prime
@@ -183,10 +199,12 @@ def renormalize_score(score_dict):
             else:
                 empirical_max = aspect_info[aspect]["metrics"][metric]["empirical_max"]
                 empirical_min = aspect_info[aspect]["metrics"][metric]["empirical_min"]
-                    
+
                 if metric in ["camera_error", "motion_smoothness"]:
                     normalized_scores = []
-                    for score_i, empirical_max_i, empirical_min_i, higher_is_better_i in zip(score, empirical_max, empirical_min, higher_is_better):
+                    for score_i, empirical_max_i, empirical_min_i, higher_is_better_i in zip(
+                        score, empirical_max, empirical_min, higher_is_better, strict=False
+                    ):
                         score_i = max(empirical_min_i, min(empirical_max_i, score_i))
                         normalized_score = (score_i - empirical_min_i) / (empirical_max_i - empirical_min_i)
                         if not higher_is_better_i:
@@ -196,15 +214,15 @@ def renormalize_score(score_dict):
                         normalized_score = sum(normalized_scores) / len(normalized_scores)
                     else:
                         normalized_score = np.prod(normalized_scores) ** (1 / len(normalized_scores))
-                    
-                else:                
+
+                else:
                     score = max(empirical_min, min(empirical_max, score))
                     normalized_score = (score - empirical_min) / (empirical_max - empirical_min)
                     if not higher_is_better:
                         normalized_score = 1 - normalized_score
-            
+
             score_dict[aspect][metric]["score_normalized"] = normalized_score
-            
+
     return score_dict
 
 
@@ -216,7 +234,7 @@ def normalize_score(score, aspect_evaluator):
         z_max = aspect_evaluator.metric_attribute["z_max"]
         z_min = aspect_evaluator.metric_attribute["z_min"]
         range = aspect_evaluator.metric_attribute["range"]
-        
+
         x_prime = ((score - avg) / std - z_min) / (z_max - z_min)
         if not aspect_evaluator.metric_attribute["higher_is_better"]:
             x_prime = 1 - x_prime
@@ -225,7 +243,13 @@ def normalize_score(score, aspect_evaluator):
     else:
         if name in ["camera_error", "motion_smoothness"]:
             normalized_scores = []
-            for score_i, empirical_max, empirical_min, higher_is_better in zip(score, aspect_evaluator.metric_attribute["empirical_max"], aspect_evaluator.metric_attribute["empirical_min"], aspect_evaluator.metric_attribute["higher_is_better"]):
+            for score_i, empirical_max, empirical_min, higher_is_better in zip(
+                score,
+                aspect_evaluator.metric_attribute["empirical_max"],
+                aspect_evaluator.metric_attribute["empirical_min"],
+                aspect_evaluator.metric_attribute["higher_is_better"],
+                strict=False,
+            ):
                 score_i = max(empirical_min, min(empirical_max, score_i))
                 normalized_score = (score_i - empirical_min) / (empirical_max - empirical_min)
                 if not higher_is_better:
@@ -238,13 +262,14 @@ def normalize_score(score, aspect_evaluator):
         else:
             empirical_max = aspect_evaluator.metric_attribute["empirical_max"]
             empirical_min = aspect_evaluator.metric_attribute["empirical_min"]
-            
+
             score = max(empirical_min, min(empirical_max, score))
             normalized_score = (score - empirical_min) / (empirical_max - empirical_min)
             if not aspect_evaluator.metric_attribute["higher_is_better"]:
                 normalized_score = 1 - normalized_score
-    
+
     return normalized_score
+
 
 def get_aspect_evaluator(metric_name, metric_type, metric_attribute, aspect, generate_type):
     if metric_name == "clip_score":
@@ -258,7 +283,9 @@ def get_aspect_evaluator(metric_name, metric_type, metric_attribute, aspect, gen
     elif metric_name == "camera_error":
         metric = Metric(CameraErrorMetric(), "camera_error", metric_type, metric_attribute, aspect)
     elif metric_name == "optical_flow_aepe":
-        metric = Metric(OpticalFlowAverageEndPointErrorMetric(), "optical_flow_aepe", metric_type, metric_attribute, aspect)
+        metric = Metric(
+            OpticalFlowAverageEndPointErrorMetric(), "optical_flow_aepe", metric_type, metric_attribute, aspect
+        )
     elif metric_name == "object_detection":
         metric = Metric(ObjectDetectionMetric(), "object_detection", metric_type, metric_attribute, aspect)
     elif metric_name == "reprojection_error":
@@ -296,10 +323,8 @@ def get_rendered_images(rendered_images_all, i, anchor_frame_idx):
 
 def check_evaluation_completeness(aspect_list, instance_result_dict):
     instance_aspect_list = list(instance_result_dict.keys())
-    for aspect in aspect_list:
-        if aspect not in instance_aspect_list:
-            return False
-    return True
+    return all(aspect in instance_aspect_list for aspect in aspect_list)
+
 
 class BaseEvaluator:
     """Base Evaluator Class."""
@@ -307,49 +332,36 @@ class BaseEvaluator:
     def __init__(self, config):
         self.config = config
         self.aspect_evaluator = None
-        
-        self.generate_type = config['generate_type']
-        
+
+        self.generate_type = config["generate_type"]
+
+
 class Evaluator(BaseEvaluator):
     """Evaluator Class."""
 
     def __init__(self, config):
         super().__init__(config)
-        self.root_path = Path(
-            f"{config['runs_root']}/{config['output_dir']}/{config['visual_movement']}"
-        )
-        self.dataset_root_path = config['dataset_root']
+        self.root_path = Path(f"{config['runs_root']}/{config['output_dir']}/{config['visual_movement']}")
+        self.dataset_root_path = config["dataset_root"]
         self.visual_movement = config["visual_movement"]
         self.num_frames = config["frames"]
         self.model_type = get_model2type(type2model)[config["model"]]
-        
+
         if self.visual_movement == "static":
             self.metrics_results = defaultdict(
                 lambda: defaultdict(
                     lambda: defaultdict(
-                        lambda: defaultdict(
-                            lambda: defaultdict(
-                                lambda: defaultdict(
-                                    lambda: defaultdict()
-                                )
-                            )
-                        )
+                        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict())))
                     )
                 )
             )
         elif self.visual_movement == "dynamic":
             self.metrics_results = defaultdict(
                 lambda: defaultdict(
-                    lambda: defaultdict(
-                        lambda: defaultdict(
-                            lambda: defaultdict(
-                                lambda: defaultdict()
-                            )
-                        )
-                    )
+                    lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict())))
                 )
             )
-        
+
     def build_full_aspect_list(self):
         aspect_list = {
             "static": [
@@ -382,32 +394,26 @@ class Evaluator(BaseEvaluator):
                 domain_scores: aggregates scores for each style/scene-type/metric.
                 scores: aggregates score for each metric (over all instances).
         """
-        
+
         def calculate_mean_scores(metric_scores):
             scores = []
             scores_normalized = []
             for metric_score in metric_scores:
                 scores.append(metric_score["score"])
                 scores_normalized.append(metric_score["score_normalized"])
-            
+
             try:
                 score = np.mean(np.array(scores), axis=0).item()
-            except:
+            except BaseException:
                 score = np.mean(np.array(scores), axis=0).tolist()
             try:
                 score_normalized = np.mean(np.array(scores_normalized), axis=0).item()
-            except:
+            except BaseException:
                 score_normalized = np.mean(np.array(scores_normalized), axis=0).tolist()
-            
+
             return {"score": score, "score_normalized": score_normalized}
-        
-        domain_scores = defaultdict(lambda: 
-            defaultdict(lambda: 
-                defaultdict(lambda: 
-                    defaultdict(list)
-                    )
-                )
-            )
+
+        domain_scores = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
 
         # Iterate through all layers of metrics_results
         if self.visual_movement == "static":
@@ -422,10 +428,8 @@ class Evaluator(BaseEvaluator):
                                         continue
 
                                     # Domain scores are aggregated over categories & instances.
-                                    domain_scores[visual_style][scene_type][aspect][metric_name].append(
-                                        metric_score
-                                    )
-                                    
+                                    domain_scores[visual_style][scene_type][aspect][metric_name].append(metric_score)
+
         elif self.visual_movement == "dynamic":
             for visual_style in self.metrics_results:
                 for motion_type, motion_scores in self.metrics_results[visual_style].items():
@@ -437,16 +441,16 @@ class Evaluator(BaseEvaluator):
                                     continue
 
                                 # Domain scores are aggregated over categories & instances.
-                                domain_scores[visual_style][motion_type][aspect][metric_name].append(
-                                    metric_score
-                                )
+                                domain_scores[visual_style][motion_type][aspect][metric_name].append(metric_score)
 
         # calculate mean scores for each domain
         for visual_style in domain_scores:
             for scene_type, scene_scores in domain_scores[visual_style].items():
                 for aspect, aspect_scores in scene_scores.items():
                     for metric_name, metric_scores in aspect_scores.items():
-                        domain_scores[visual_style][scene_type][aspect][metric_name] = calculate_mean_scores(metric_scores)
+                        domain_scores[visual_style][scene_type][aspect][metric_name] = calculate_mean_scores(
+                            metric_scores
+                        )
 
         scores = defaultdict(lambda: defaultdict(list))
         for visual_style in domain_scores:
@@ -474,22 +478,15 @@ class Evaluator(BaseEvaluator):
         content_list=None,
         objects_list=None,
     ):
-        
         def get_scores():
             if aspect_evaluator.type == "prompt":
                 scores = []
-                for i in tqdm(range(0, num_scenes + 1)):
-                    rendered_images = get_rendered_images(
-                        rendered_images_all, i, anchor_frame_idx
-                    )
+                for i in tqdm(range(num_scenes + 1)):
+                    rendered_images = get_rendered_images(rendered_images_all, i, anchor_frame_idx)
                     if aspect_evaluator.name == "object_detection":
-                        score = aspect_evaluator.compute_scores(
-                            rendered_images, content_list[i]
-                        )
+                        score = aspect_evaluator.compute_scores(rendered_images, content_list[i])
                     else:
-                        score = aspect_evaluator.compute_scores(
-                            rendered_images, text_prompt_list[i]
-                        )
+                        score = aspect_evaluator.compute_scores(rendered_images, text_prompt_list[i])
                     scores.append(score)
                 score = sum(scores) / len(scores)
             elif aspect_evaluator.type == "base":
@@ -506,12 +503,9 @@ class Evaluator(BaseEvaluator):
             elif aspect_evaluator.type == "camera":
                 score = aspect_evaluator.compute_scores(rendered_images_all, cameras_gt, camera_scale)
             else:
-                raise NotImplementedError(
-                    f"Aspect type {aspect_evaluator.type} is not implemented!"
-                )
+                raise NotImplementedError(f"Aspect type {aspect_evaluator.type} is not implemented!")
             return score
-            
-        
+
         rendered_images_all = image_list
         if camera_data is not None:
             cameras_gt = camera_data["cameras_interp"]
@@ -522,7 +516,7 @@ class Evaluator(BaseEvaluator):
                 raise ValueError("Number of frames and cameras do not match.")
 
         aspect_evaluator = self.aspect_evaluator
-        
+
         try:
             score = get_scores()
         except Exception as e:
@@ -547,7 +541,7 @@ class Evaluator(BaseEvaluator):
             return False
 
         total_frames = image_data["total_frames"]
-        
+
         if self.visual_movement == "static":
             dirs_should_be = ["frames", "image_data.json", "camera_data.json", "input_image.png"]
         elif self.visual_movement == "dynamic":
@@ -561,9 +555,7 @@ class Evaluator(BaseEvaluator):
                 continue
             # now check the number of files in each directory
             file_list = os.listdir(os.path.join(root_path, dir_name))
-            file_len = len(
-                [f for f in file_list if f.endswith(".png") or f.endswith(".jpg")]
-            )
+            file_len = len([f for f in file_list if f.endswith((".png", ".jpg"))])
             if dir_name == "frames":
                 if file_len < total_frames:
                     print(f"-- Directory {dir_name} is incomplete in {root_path}")
@@ -574,65 +566,55 @@ class Evaluator(BaseEvaluator):
 
     def save_results(self, domain_scores, scores):
         """Save the results for each instance across all metrics in a json file."""
-                            
+
         # calculate mean scores for each domain
         for visual_style in domain_scores:
             for scene_type, scene_scores in domain_scores[visual_style].items():
                 result_file_name = f"evaluation_{visual_style}_{scene_type}.json"
-                result_path = (
-                    self.root_path
-                    / visual_style
-                    / scene_type
-                    / result_file_name
-                )
+                result_path = self.root_path / visual_style / scene_type / result_file_name
                 with open(result_path, mode="w", encoding="utf-8") as f:
                     json.dump(scene_scores, f, indent=4)
 
-        result_file_name = f"evaluation_mean.json"
-        result_path = (
-            self.root_path
-            / result_file_name
-        )
+        result_file_name = "evaluation_mean.json"
+        result_path = self.root_path / result_file_name
 
         with open(result_path, mode="w", encoding="utf-8") as f:
             json.dump(scores, f, indent=4)
-                         
 
-    def _evaluate(self, reevaluate=False, num_jobs: int = 1000, use_slurm: bool = False, only_calculate_mean: bool = False, delete_calculated_results: bool = False, **slurm_parameters: dict):
-        
+    def _evaluate(
+        self,
+        reevaluate=False,
+        num_jobs: int = 1000,
+        use_slurm: bool = False,
+        only_calculate_mean: bool = False,
+        delete_calculated_results: bool = False,
+        **slurm_parameters: dict,
+    ):
         print(f"Evaluating {self.visual_movement} data...")
         aspect_list = self.build_full_aspect_list()
         instance_attributes = []
-        
-        if self.visual_movement == 'static':
-            visual_styles = sorted([
-                x.name for x in self.root_path.iterdir() if x.is_dir()
-            ])
+
+        if self.visual_movement == "static":
+            visual_styles = sorted([x.name for x in self.root_path.iterdir() if x.is_dir()])
 
             for visual_style in visual_styles:
                 visual_style_dir = self.root_path / visual_style
-                scene_types = sorted([
-                    x.name for x in visual_style_dir.iterdir() if x.is_dir()
-                ])
+                scene_types = sorted([x.name for x in visual_style_dir.iterdir() if x.is_dir()])
                 for scene_type in scene_types:
                     scene_type_dir = visual_style_dir / scene_type
 
-                    category_list = sorted([
-                        f.name for f in scene_type_dir.iterdir() if f.is_dir()
-                    ])
+                    category_list = sorted([f.name for f in scene_type_dir.iterdir() if f.is_dir()])
                     for category in category_list:
                         category_dir = scene_type_dir / category
-                        instance_list = sorted([
-                            f.name for f in category_dir.iterdir() if f.is_dir()
-                        ])
-                        
+                        instance_list = sorted([f.name for f in category_dir.iterdir() if f.is_dir()])
+
                         for instance in instance_list:
                             instance_dir = category_dir / instance
-                            
+
                             # check if the data is complete
                             if not self.data_exists(instance_dir):
                                 continue
-                            
+
                             if os.path.exists(instance_dir / "evaluation.json") and not reevaluate:
                                 print(f"-- Evaluation already exists for {instance_dir}")
                                 if delete_calculated_results:
@@ -644,39 +626,37 @@ class Evaluator(BaseEvaluator):
                                             instance_result_dict = json.load(f)
                                         if only_calculate_mean:
                                             instance_result_dict = renormalize_score(instance_result_dict)
-                                            with open(instance_dir / "evaluation.json", mode="w", encoding="utf-8") as f:
+                                            with open(
+                                                instance_dir / "evaluation.json", mode="w", encoding="utf-8"
+                                            ) as f:
                                                 json.dump(instance_result_dict, f, indent=4)
                                             print(f"-- Renormalized score for {instance_dir}")
-                                        self.metrics_results[visual_style][scene_type][category][instance] = instance_result_dict
+                                        self.metrics_results[visual_style][scene_type][category][instance] = (
+                                            instance_result_dict
+                                        )
                                         continue
-                                    except Exception as e:
+                                    except Exception:
                                         pass
-                            
+
                             instance_attributes.append([visual_style, scene_type, category, instance, instance_dir])
 
-        elif self.visual_movement == 'dynamic':
-            visual_styles = sorted([
-                x.name for x in self.root_path.iterdir() if x.is_dir()
-            ])
+        elif self.visual_movement == "dynamic":
+            visual_styles = sorted([x.name for x in self.root_path.iterdir() if x.is_dir()])
 
             for visual_style in visual_styles:
                 visual_style_dir = self.root_path / visual_style
-                motion_types = sorted([
-                    x.name for x in visual_style_dir.iterdir() if x.is_dir()
-                ])
+                motion_types = sorted([x.name for x in visual_style_dir.iterdir() if x.is_dir()])
                 for motion_type in motion_types:
                     motion_type_dir = visual_style_dir / motion_type
-                    instance_list = sorted([
-                        f.name for f in motion_type_dir.iterdir() if f.is_dir()
-                    ])
-            
+                    instance_list = sorted([f.name for f in motion_type_dir.iterdir() if f.is_dir()])
+
                     for instance in instance_list:
                         instance_dir = motion_type_dir / instance
 
                         # check if the data is complete
                         if not self.data_exists(instance_dir):
                             continue
-                        
+
                         if os.path.exists(instance_dir / "evaluation.json") and not reevaluate:
                             print(f"-- Evaluation already exists for {instance_dir}")
                             if delete_calculated_results:
@@ -693,16 +673,15 @@ class Evaluator(BaseEvaluator):
                                         print(f"-- Renormalized score for {instance_dir}")
                                     self.metrics_results[visual_style][motion_type][instance] = instance_result_dict
                                     continue
-                                except Exception as e:
+                                except Exception:
                                     pass
-                        
+
                         instance_attributes.append([visual_style, motion_type, instance, instance_dir])
-                    
+
         num_instances = len(instance_attributes)
         batch_size = max(len(instance_attributes) // num_jobs + 1, 10)
         instance_batches = [
-            instance_attributes[start_idx : start_idx + batch_size]
-            for start_idx in range(0, num_instances, batch_size)
+            instance_attributes[start_idx : start_idx + batch_size] for start_idx in range(0, num_instances, batch_size)
         ]
         logger.info(
             "Created data batches",
@@ -710,7 +689,7 @@ class Evaluator(BaseEvaluator):
             num_jobs=len(instance_batches),
             batch_size=batch_size,
         )
-        
+
         if instance_batches and not only_calculate_mean and not delete_calculated_results:
             # Start evaluation
             if use_slurm:
@@ -736,7 +715,7 @@ class Evaluator(BaseEvaluator):
                         for instance_batch in instance_batches
                     ]
                 submitit.helpers.monitor_jobs(jobs)
-                
+
                 batch_results = []
                 for job in jobs:
                     try:
@@ -747,8 +726,8 @@ class Evaluator(BaseEvaluator):
             else:
                 batch_results = [
                     process_batch(
-                        config=self.config, 
-                        instance_batch=instance_batch, 
+                        config=self.config,
+                        instance_batch=instance_batch,
                         aspect_list=aspect_list,
                         visual_movement=self.visual_movement,
                     )
@@ -756,8 +735,7 @@ class Evaluator(BaseEvaluator):
                 ]
             for result in batch_results:
                 self.metrics_results.update(result)
-                    
-            
+
     def print_results(self, domain_scores, scores):
         print_banner("EVALUATION RESULTS")
         print(f"\nEvaluation Results -- {self.visual_movement}:")
@@ -780,8 +758,17 @@ class Evaluator(BaseEvaluator):
                 print(f"  Metric: {metric_name}")
                 print(f"    Score: {metric_score['score']}")
                 print(f"    Normalized Score: {metric_score['score_normalized']}")
-    
-    def evaluate(self, verbose=True, reevaluate=False, num_jobs: int = 1000, use_slurm: bool = False, only_calculate_mean: bool = False, delete_calculated_results: bool = False, **slurm_parameters: dict):
+
+    def evaluate(
+        self,
+        verbose=True,
+        reevaluate=False,
+        num_jobs: int = 1000,
+        use_slurm: bool = False,
+        only_calculate_mean: bool = False,
+        delete_calculated_results: bool = False,
+        **slurm_parameters: dict,
+    ):
         """
         Evaluates all the generations across all aspects as defined in the
         `build_full_aspect_list` function.
@@ -794,16 +781,18 @@ class Evaluator(BaseEvaluator):
                 domain_scores (dict): scores for each style/scene-type/metric.
                 scores (dict): scores aggreagted for each metric.
         """
-        
-        self._evaluate(reevaluate, num_jobs, use_slurm, only_calculate_mean, delete_calculated_results, **slurm_parameters)
-        
+
+        self._evaluate(
+            reevaluate, num_jobs, use_slurm, only_calculate_mean, delete_calculated_results, **slurm_parameters
+        )
+
         # domain_scores, scores = self._calculate_mean_scores()
-        
+
         # self.save_results(domain_scores, scores)
-            
+
         # if verbose and not delete_calculated_results:
         #     self.print_results(domain_scores, scores)
-        
+
         return
 
 
@@ -814,10 +803,10 @@ class Analysis(BaseEvaluator):
         super().__init__(config)
         self.dataloader = dataloader
         self.score_dict = None
-        
+
         self.noise = config["noise"]
         self.noise_type = config["noise_type"]
-        
+
     def _get_score_dict(self, aspect_list):
         score_dict = {}
         for aspect in aspect_list:
@@ -827,7 +816,7 @@ class Analysis(BaseEvaluator):
                 score_dict[aspect][metric] = []
         self.score_dict = score_dict
         return score_dict
-    
+
     def build_full_aspect_list(self):
         aspect_list = {
             "simple": [
@@ -843,7 +832,7 @@ class Analysis(BaseEvaluator):
                 "semantic_consistency",
                 "style_consistency",
                 # "photometric_consistency",
-            ]
+            ],
         }
         return aspect_list[self.noise_type]
 
@@ -875,22 +864,17 @@ class Analysis(BaseEvaluator):
 
         aspect_evaluator = self.aspect_evaluator
         if aspect_evaluator.type == "prompt":
-            score = aspect_evaluator.compute_scores(
-                rendered_images_all, text_prompt_list[0]
-            )
+            score = aspect_evaluator.compute_scores(rendered_images_all, text_prompt_list[0])
         elif aspect_evaluator.type == "base":
             if aspect_evaluator.name == "gram_matrix":
                 score = aspect_evaluator.compute_scores(rendered_images_all[0], [rendered_images_all[1]])
             else:
                 score = aspect_evaluator.compute_scores(rendered_images_all)
         else:
-            raise NotImplementedError(
-                f"Aspect type {aspect_evaluator.type} is not implemented for analysis!"
-            )
+            raise NotImplementedError(f"Aspect type {aspect_evaluator.type} is not implemented for analysis!")
 
         self.score_dict[aspect_evaluator.aspect][aspect_evaluator.name].append(score)
         return self.score_dict
-        
 
     def analyze_static(self):
         self._get_score_dict(self.build_full_aspect_list())
@@ -898,8 +882,10 @@ class Analysis(BaseEvaluator):
             metric_list = aspect_info[aspect]["metrics"]
             metric_type = aspect_info[aspect]["type"]
             for metric, metric_attribute in metric_list.items():
-                self.aspect_evaluator = get_aspect_evaluator(metric, metric_type, metric_attribute, aspect, self.generate_type)
-                
+                self.aspect_evaluator = get_aspect_evaluator(
+                    metric, metric_type, metric_attribute, aspect, self.generate_type
+                )
+
                 for data_point in self.dataloader:
                     print("-- Aspect (metric):", f"{aspect} ({metric})")
 
@@ -907,17 +893,18 @@ class Analysis(BaseEvaluator):
                     image_list = data_point["image_path"]
                     if isinstance(image_list, str):
                         image_list = [image_list]
-                    
+
                     self.calculate_metrics(
                         text_prompt_list,
                         image_list,
                     )
                     empty_cache()
+
     def print_results(self, scores):
         print_banner("ANALYSIS RESULTS")
-        print(f"\nAnalysis Results:")
+        print("\nAnalysis Results:")
         print("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=")
-        print(f"Overall Scores:")
+        print("Overall Scores:")
         for aspect, aspect_scores in scores.items():
             print(f"Aspect: {aspect}")
             for metric_name, metric_score in aspect_scores.items():
@@ -925,7 +912,7 @@ class Analysis(BaseEvaluator):
                 print(f"    Mean Score: {metric_score['mean']}")
                 print(f"    Max Score: {metric_score['max']}")
                 print(f"    Min Score: {metric_score['min']}")
-    
+
     def analyze(self, verbose=True):
         """
         Analyzes all the raw dataset across some aspects as defined in the
@@ -940,10 +927,10 @@ class Analysis(BaseEvaluator):
                 scores (dict): scores aggreagted for each metric.
         """
         self.analyze_static()
-        
+
         scores = self._calculate_mean_scores()
-        
+
         if verbose:
             self.print_results(scores)
-        
+
         return scores

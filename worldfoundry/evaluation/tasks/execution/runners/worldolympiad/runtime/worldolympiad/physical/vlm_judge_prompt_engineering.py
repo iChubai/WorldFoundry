@@ -16,7 +16,6 @@ import base64
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
 
@@ -24,24 +23,30 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from material.prompt import (
+from material.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_compliance_prompt as build_material_compliance_prompt,
+)
+from material.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_relevance_prompt as build_material_relevance_prompt,
 )
-from mechanics.prompt import (
+from mechanics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_compliance_prompt as build_mechanics_compliance_prompt,
+)
+from mechanics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_relevance_prompt as build_mechanics_relevance_prompt,
 )
-from model.vlm import (
+from model.vlm import (  # noqa: E402 - Follows the sys.path setup.
     chat_vlm_call,
     parse_json_content,
     resolve_model_name,
     resolve_vlm_backend,
     video_vlm_call,
 )
-from problem.problem_set import ALL_QUESTIONS, get_question_by_id
-from thermotics.prompt import (
+from problem.problem_set import ALL_QUESTIONS, get_question_by_id  # noqa: E402 - Follows the sys.path setup.
+from thermotics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_compliance_prompt as build_thermotics_compliance_prompt,
+)
+from thermotics.prompt import (  # noqa: E402 - Follows the sys.path setup.
     build_relevance_prompt as build_thermotics_relevance_prompt,
 )
 
@@ -51,7 +56,7 @@ load_dotenv()
 BatchMode = str
 
 
-def encode_video_to_data_url(video_path: str) -> Dict:
+def encode_video_to_data_url(video_path: str) -> dict:
     with open(video_path, "rb") as video_file:
         base64_video = base64.b64encode(video_file.read()).decode("utf-8")
     return {
@@ -60,7 +65,7 @@ def encode_video_to_data_url(video_path: str) -> Dict:
     }
 
 
-def select_questions(question_ids: Optional[List[str]] = None):
+def select_questions(question_ids: list[str] | None = None):
     if question_ids:
         selected_questions = []
         for question_id in question_ids:
@@ -72,7 +77,7 @@ def select_questions(question_ids: Optional[List[str]] = None):
     return list(ALL_QUESTIONS)
 
 
-def question_payload(question) -> Dict:
+def question_payload(question) -> dict:
     return {
         "question_id": question.qid,
         "dimension": question.dimension,
@@ -81,7 +86,7 @@ def question_payload(question) -> Dict:
     }
 
 
-def question_batches(questions: List, batch_mode: BatchMode) -> List[List]:
+def question_batches(questions: list, batch_mode: BatchMode) -> list[list]:
     normalized = (batch_mode or "none").strip().lower()
     if normalized == "all":
         return [questions] if questions else []
@@ -97,7 +102,7 @@ def question_batches(questions: List, batch_mode: BatchMode) -> List[List]:
     raise ValueError("Unsupported batch_mode. Use one of: none, dimension, all.")
 
 
-def build_batch_relevance_prompts(questions: List, video_prompt: str) -> Tuple[str, str]:
+def build_batch_relevance_prompts(questions: list, video_prompt: str) -> tuple[str, str]:
     question_list = [question_payload(question) for question in questions]
     system_prompt = """You are PhysicsFilterBatch, an expert video physics relevance evaluator.
 You will receive one reference/ground-truth video, its prompt, and a list of physics questions.
@@ -123,7 +128,7 @@ Evaluate relevance for every question_id. Return only the JSON object."""
     return system_prompt, user_prompt
 
 
-def build_batch_compliance_prompts(questions: List, video_prompt: str) -> Tuple[str, str]:
+def build_batch_compliance_prompts(questions: list, video_prompt: str) -> tuple[str, str]:
     question_list = [question_payload(question) for question in questions]
     system_prompt = """You are PhysicsJudgeBatch, an expert video physics evaluator.
 You will receive two videos:
@@ -155,11 +160,11 @@ Compare the generated candidate against the reference for every question_id. Ret
     return system_prompt, user_prompt
 
 
-def normalize_batch_results(parsed: Dict, expected_ids: List[str], stage: str) -> Dict[str, Dict]:
+def normalize_batch_results(parsed: dict, expected_ids: list[str], stage: str) -> dict[str, dict]:
     if not isinstance(parsed, dict) or not isinstance(parsed.get("results"), list):
         raise ValueError(f"Batch {stage} response must be a JSON object with a 'results' list.")
 
-    results_by_id: Dict[str, Dict] = {}
+    results_by_id: dict[str, dict] = {}
     for item in parsed["results"]:
         if not isinstance(item, dict):
             continue
@@ -174,7 +179,7 @@ def normalize_batch_results(parsed: Dict, expected_ids: List[str], stage: str) -
     return results_by_id
 
 
-def relevance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def relevance_prompts(question_id: str, video_prompt: str) -> tuple[str, str]:
     question = get_question_by_id(question_id)
     if question is None:
         raise ValueError(f"Unknown question id: {question_id}")
@@ -186,7 +191,7 @@ def relevance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
     return build_mechanics_relevance_prompt(question_id, video_prompt)
 
 
-def compliance_prompts(question_id: str, video_prompt: str) -> Tuple[str, str]:
+def compliance_prompts(question_id: str, video_prompt: str) -> tuple[str, str]:
     question = get_question_by_id(question_id)
     if question is None:
         raise ValueError(f"Unknown question id: {question_id}")
@@ -204,7 +209,7 @@ def call_relevance_vlm(
     user_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     data_url = encode_video_to_data_url(video_path)
     response = video_vlm_call(
         data_url=data_url,
@@ -225,7 +230,7 @@ def call_compliance_vlm(
     user_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict:
+) -> dict:
     generated_data = encode_video_to_data_url(gen_video)
     reference_data = encode_video_to_data_url(gt_video)
     messages = [
@@ -253,11 +258,11 @@ def call_compliance_vlm(
 
 def call_batch_relevance_vlm(
     gt_video: str,
-    questions: List,
+    questions: list,
     video_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict[str, Dict]:
+) -> dict[str, dict]:
     system_prompt, user_prompt = build_batch_relevance_prompts(questions, video_prompt)
     reference_data = encode_video_to_data_url(gt_video)
     response = chat_vlm_call(
@@ -284,11 +289,11 @@ def call_batch_relevance_vlm(
 def call_batch_compliance_vlm(
     gen_video: str,
     gt_video: str,
-    questions: List,
+    questions: list,
     video_prompt: str,
     model_name: str | None,
     backend: str | None = None,
-) -> Dict[str, Dict]:
+) -> dict[str, dict]:
     system_prompt, user_prompt = build_batch_compliance_prompts(questions, video_prompt)
     generated_data = encode_video_to_data_url(gen_video)
     reference_data = encode_video_to_data_url(gt_video)
@@ -321,11 +326,11 @@ def evaluate_video_batch(
     video_prompt: str,
     model_name: str | None = None,
     backend: str | None = None,
-    question_ids: Optional[List[str]] = None,
+    question_ids: list[str] | None = None,
     batch_mode: BatchMode = "dimension",
-) -> List[Dict]:
+) -> list[dict]:
     selected_questions = select_questions(question_ids)
-    results_by_qid: Dict[str, Dict] = {}
+    results_by_qid: dict[str, dict] = {}
 
     for batch in question_batches(selected_questions, batch_mode):
         label = "all" if batch_mode == "all" else batch[0].dimension
@@ -429,9 +434,9 @@ def evaluate_video(
     video_prompt: str,
     model_name: str | None = None,
     backend: str | None = None,
-    question_ids: Optional[List[str]] = None,
+    question_ids: list[str] | None = None,
     batch_mode: BatchMode = "none",
-) -> List[Dict]:
+) -> list[dict]:
     if (batch_mode or "none").strip().lower() != "none":
         return evaluate_video_batch(
             gen_video=gen_video,
@@ -443,7 +448,7 @@ def evaluate_video(
             batch_mode=batch_mode,
         )
 
-    results: List[Dict] = []
+    results: list[dict] = []
     selected_questions = select_questions(question_ids)
 
     for question in selected_questions:

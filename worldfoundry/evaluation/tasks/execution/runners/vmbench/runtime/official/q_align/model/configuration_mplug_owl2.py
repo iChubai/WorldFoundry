@@ -2,14 +2,13 @@
 #
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
-import copy
 import os
-from typing import Union
+from typing import ClassVar
 
 from transformers.configuration_utils import PretrainedConfig
-from transformers.models.auto.modeling_auto import MODEL_FOR_CAUSAL_LM_MAPPING_NAMES
 from transformers.utils import logging
-from transformers.models.auto import CONFIG_MAPPING
+
+logger = logging.get_logger(__name__)
 
 
 class LlamaConfig(PretrainedConfig):
@@ -93,8 +92,9 @@ class LlamaConfig(PretrainedConfig):
     >>> # Accessing the model configuration
     >>> configuration = model.config
     ```"""
+
     model_type = "llama"
-    keys_to_ignore_at_inference = ["past_key_values"]
+    keys_to_ignore_at_inference: ClassVar[list[str]] = ["past_key_values"]
 
     def __init__(
         self,
@@ -172,7 +172,7 @@ class LlamaConfig(PretrainedConfig):
         if rope_scaling_factor is None or not isinstance(rope_scaling_factor, float) or rope_scaling_factor <= 1.0:
             raise ValueError(f"`rope_scaling`'s factor field must be a float > 1, got {rope_scaling_factor}")
 
-            
+
 class MplugOwlVisionConfig(PretrainedConfig):
     r"""
     This is the configuration class to store the configuration of a [`MplugOwlVisionModel`]. It is used to instantiate
@@ -250,7 +250,7 @@ class MplugOwlVisionConfig(PretrainedConfig):
         self.use_flash_attn = use_flash_attn
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Union[str, os.PathLike], **kwargs) -> "PretrainedConfig":
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike, **kwargs) -> "PretrainedConfig":
         config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
 
         # get the vision config dict if we are loading from MplugOwlConfig
@@ -276,7 +276,7 @@ class MplugOwlVisualAbstractorConfig(PretrainedConfig):
         num_hidden_layers=6,
         num_attention_heads=16,
         intermediate_size=2816,
-        attention_probs_dropout_prob=0.,
+        attention_probs_dropout_prob=0.0,
         initializer_range=0.02,
         layer_norm_eps=1e-6,
         encoder_hidden_size=1024,
@@ -296,7 +296,7 @@ class MplugOwlVisualAbstractorConfig(PretrainedConfig):
         self.grid_size = grid_size if grid_size else 32
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_name_or_path: Union[str, os.PathLike], **kwargs) -> "PretrainedConfig":
+    def from_pretrained(cls, pretrained_model_name_or_path: str | os.PathLike, **kwargs) -> "PretrainedConfig":
         config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
 
         # get the visual_abstractor config dict if we are loading from MplugOwlConfig
@@ -312,23 +312,25 @@ class MplugOwlVisualAbstractorConfig(PretrainedConfig):
         return cls.from_dict(config_dict, **kwargs)
 
 
-
 DEFAULT_VISUAL_CONFIG = {
     "visual_model": MplugOwlVisionConfig().to_dict(),
-    "visual_abstractor": MplugOwlVisualAbstractorConfig().to_dict()
+    "visual_abstractor": MplugOwlVisualAbstractorConfig().to_dict(),
 }
+
 
 class MPLUGOwl2Config(LlamaConfig):
     model_type = "mplug_owl2"
+
     def __init__(self, visual_config=None, **kwargs):
         if visual_config is None:
             self.visual_config = DEFAULT_VISUAL_CONFIG
         else:
             self.visual_config = visual_config
-        
+
         super().__init__(
             **kwargs,
         )
-        
+
+
 if __name__ == "__main__":
     print(MplugOwlVisionConfig().to_dict())

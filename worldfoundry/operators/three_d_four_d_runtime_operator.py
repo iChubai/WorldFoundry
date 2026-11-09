@@ -29,7 +29,6 @@ class ThreeDFourDRuntimeOperator(BaseOperator):
 
     @staticmethod
     def _actions(interaction: Any) -> list[Any]:
-        """Actions implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, str):

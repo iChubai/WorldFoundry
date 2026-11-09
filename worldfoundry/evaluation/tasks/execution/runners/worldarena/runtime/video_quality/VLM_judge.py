@@ -1,23 +1,25 @@
 import argparse
+import contextlib
 import json
 import os
 import shutil
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 import cv2
 import torch
 import yaml
-
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 from PIL import Image
 from tqdm import tqdm
 from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
+
+from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
 DEFAULT_MODEL_PATH = "your absolute path"
 
 
 def load_instruction_json(json_path):
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, encoding="utf-8") as f:
         data = json.load(f)
 
     instruction_map = {}
@@ -157,10 +159,12 @@ Now evaluate the provided video frames based on the above criteria.
 
 
 def run_qwen_vl(model, processor, prompt, images):
-    messages = [{
-        "role": "user",
-        "content": [*[{"type": "image", "image": img} for img in images], {"type": "text", "text": prompt}],
-    }]
+    messages = [
+        {
+            "role": "user",
+            "content": [*[{"type": "image", "image": img} for img in images], {"type": "text", "text": prompt}],
+        }
+    ]
 
     inputs = processor.apply_chat_template(
         messages,
@@ -217,15 +221,15 @@ def normalize_metrics(parsed):
     return metrics
 
 
-def vlm_judge(model_name, video_dir, summary_json, output_root, tmp_root, metrics_filter, num_frames=16, model_path=None):
+def vlm_judge(
+    model_name, video_dir, summary_json, output_root, tmp_root, metrics_filter, num_frames=16, model_path=None
+):
     os.makedirs(output_root, exist_ok=True)
     tmp_dir = os.path.join(tmp_root, model_name)
     os.makedirs(tmp_dir, exist_ok=True)
 
     model_path = model_path or DEFAULT_MODEL_PATH
-    model = Qwen3VLForConditionalGeneration.from_pretrained(
-        model_path, torch_dtype="auto", device_map="auto"
-    ).eval()
+    model = Qwen3VLForConditionalGeneration.from_pretrained(model_path, torch_dtype="auto", device_map="auto").eval()
     processor = AutoProcessor.from_pretrained(model_path)
 
     instruction_map, valid_names = load_instruction_json(summary_json)
@@ -276,10 +280,8 @@ def vlm_judge(model_name, video_dir, summary_json, output_root, tmp_root, metric
         json.dump(results, f, ensure_ascii=False, indent=2)
 
     # Clean up temporary directory
-    try:
+    with contextlib.suppress(Exception):
         shutil.rmtree(tmp_dir)
-    except Exception:
-        pass
 
     return out_file
 
@@ -300,7 +302,7 @@ def main():
     model_path = None
     if args.config_path and os.path.exists(args.config_path):
         try:
-            with open(args.config_path, "r", encoding="utf-8") as f:
+            with open(args.config_path, encoding="utf-8") as f:
                 cfg = yaml.safe_load(f) or {}
             model_path = cfg.get("ckpt", {}).get("vlm_model", None)
         except Exception:

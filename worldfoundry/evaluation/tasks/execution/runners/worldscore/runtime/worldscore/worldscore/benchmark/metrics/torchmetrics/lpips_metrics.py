@@ -1,7 +1,11 @@
 import numpy as np
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import BaseMetric
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import handle_module_not_found_error
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.metrics.base_metrics import (
+    BaseMetric,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.optional_dependencies import (
+    handle_module_not_found_error,
+)
 
 try:
     from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
@@ -23,9 +27,7 @@ class LearnedPerceptualImagePatchSimilarityMetric(BaseMetric):
 
     def __init__(self) -> None:
         super().__init__()
-        self._metric = LearnedPerceptualImagePatchSimilarity(net_type="alex").to(
-            self._device
-        )
+        self._metric = LearnedPerceptualImagePatchSimilarity(net_type="alex").to(self._device)
 
     def _compute_scores(
         self,

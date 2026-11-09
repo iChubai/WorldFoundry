@@ -7,7 +7,6 @@ import json
 import sys
 from pathlib import Path
 
-
 SVD_SCALE = 0.18215
 ACTION_VECTORS = {
     "right": (0.0, 1.0),
@@ -177,36 +176,38 @@ def run(args: argparse.Namespace) -> Path:
             from external.magvit2.models.lfqgan import VQModel
             from hma.model.st_mask_git import STMaskGIT
 
-            image_encoder = VQModel(VQConfig(), ckpt_path=str(args.magvit_checkpoint)).to(
-                device=device, dtype=torch.bfloat16
-            ).eval()
+            image_encoder = (
+                VQModel(VQConfig(), ckpt_path=str(args.magvit_checkpoint))
+                .to(device=device, dtype=torch.bfloat16)
+                .eval()
+            )
             backbone = STMaskGIT.from_pretrained(str(checkpoint_dir)).to(device=device).eval()
         else:
             from diffusers import AutoencoderKLTemporalDecoder
             from hma.model.st_mar import STMAR
 
-            image_encoder = AutoencoderKLTemporalDecoder.from_pretrained(
-                str(base_model_dir),
-                subfolder="vae",
-                variant="fp16",
-                torch_dtype=torch.bfloat16,
-            ).to(device=device).eval()
+            image_encoder = (
+                AutoencoderKLTemporalDecoder.from_pretrained(
+                    str(base_model_dir),
+                    subfolder="vae",
+                    variant="fp16",
+                    torch_dtype=torch.bfloat16,
+                )
+                .to(device=device)
+                .eval()
+            )
             backbone = STMAR.from_pretrained(str(checkpoint_dir)).to(device=device).eval()
 
         latent_frames = []
         for frame in prompt_frames:
             normalized = frame.astype(np.float32) / 127.5 - 1.0
             image_tensor = (
-                torch.from_numpy(normalized.transpose(2, 0, 1))
-                .to(device=device, dtype=torch.bfloat16)
-                .unsqueeze(0)
+                torch.from_numpy(normalized.transpose(2, 0, 1)).to(device=device, dtype=torch.bfloat16).unsqueeze(0)
             )
             if discrete:
                 with image_encoder.ema_scope():
                     _, _, indices, _ = image_encoder.encode(image_tensor, flip=True)
-                _validate_discrete_tokens(
-                    indices, vocab_size=int(backbone.config.image_vocab_size), label="prompt"
-                )
+                _validate_discrete_tokens(indices, vocab_size=int(backbone.config.image_vocab_size), label="prompt")
                 latent = einops.rearrange(indices, "(h w) -> h w", h=16, w=16).long()
             else:
                 latent = image_encoder.encode(image_tensor).latent_dist.mean * SVD_SCALE
@@ -224,9 +225,9 @@ def run(args: argparse.Namespace) -> Path:
 
         for step_index in range(args.generated_frames):
             if trajectory_actions is not None:
-                action = torch.from_numpy(
-                    trajectory_actions[args.prompt_horizon - 1 + step_index].copy()
-                ).to(device=device)
+                action = torch.from_numpy(trajectory_actions[args.prompt_horizon - 1 + step_index].copy()).to(
+                    device=device
+                )
             else:
                 action = base_action * float(args.action_scale)
             input_latents = torch.cat([cached_latents, torch.zeros_like(cached_latents[[0]])]).unsqueeze(0)
@@ -261,12 +262,7 @@ def run(args: argparse.Namespace) -> Path:
                 decoded_latent = einops.rearrange(next_latent.unsqueeze(0), "b h w c -> b c h w") / SVD_SCALE
                 decoded_latent = torch.clamp(decoded_latent.to(dtype=torch.bfloat16), -25, 25)
                 decoded = (
-                    image_encoder.decode(decoded_latent, num_frames=1)
-                    .sample.squeeze(0)
-                    .float()
-                    .detach()
-                    .cpu()
-                    .numpy()
+                    image_encoder.decode(decoded_latent, num_frames=1).sample.squeeze(0).float().detach().cpu().numpy()
                 )
             frame = np.clip((decoded.transpose(1, 2, 0) + 1.0) * 127.5, 0, 255).astype(np.uint8)
             frames.append(frame)

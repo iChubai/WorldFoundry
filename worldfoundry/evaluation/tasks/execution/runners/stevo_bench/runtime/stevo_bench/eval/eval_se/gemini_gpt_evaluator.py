@@ -7,39 +7,38 @@ Sends requests to both APIs in parallel for speed.
 Only marks as PASS if BOTH models agree.
 """
 
-import os
-import time
 import base64
+import os
 import tempfile
 import threading
-from pathlib import Path
-from typing import Dict, Optional, Tuple, List
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
+from concurrent.futures import ThreadPoolExecutor
+
 import cv2
 
 # Suppress gRPC fork warnings when using parallel execution
-os.environ['GRPC_VERBOSITY'] = 'ERROR'
-os.environ['GLOG_minloglevel'] = '2'
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"  # noqa: SIM112 - glog reads its flags as GLOG_<lowercase flag name>.
+
+import contextlib
 
 import google.generativeai as genai
-from PIL import Image
 from openai import OpenAI
+from PIL import Image
 
 
 class GeminiGPTEvaluator:
     # Class-level semaphores to limit concurrent API calls
     _gemini_semaphore = threading.Semaphore(20)  # Max 20 concurrent Gemini calls
-    _gpt_semaphore = threading.Semaphore(3)      # Max 3 concurrent GPT calls
+    _gpt_semaphore = threading.Semaphore(3)  # Max 3 concurrent GPT calls
 
-    def __init__(self, gemini_api_key: Optional[str] = None, openai_api_key: Optional[str] = None):
+    def __init__(self, gemini_api_key: str | None = None, openai_api_key: str | None = None):
         """Initialize evaluator with both Gemini and OpenAI API keys."""
         # Initialize Gemini
         if gemini_api_key is None:
             gemini_api_key = os.environ.get("GOOGLE_API_KEY")
             if not gemini_api_key:
-                raise ValueError(
-                    "GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("GOOGLE_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         genai.configure(api_key=gemini_api_key)
         self.gemini_model = genai.GenerativeModel("gemini-3-pro-preview")
@@ -48,22 +47,20 @@ class GeminiGPTEvaluator:
         if openai_api_key is None:
             openai_api_key = os.environ.get("OPENAI_API_KEY")
             if not openai_api_key:
-                raise ValueError(
-                    "OPENAI_API_KEY not found. Set it as environment variable or pass to constructor."
-                )
+                raise ValueError("OPENAI_API_KEY not found. Set it as environment variable or pass to constructor.")
 
         self.openai_client = OpenAI(api_key=openai_api_key)
         self.gpt_model = "gpt-5.2"  # GPT-5.2 with frame extraction
 
         print(f"Using models: gemini-3-pro-preview (full video) + {self.gpt_model} (frame extraction)")
-        print(f"Rate limits: Gemini max 20 concurrent, GPT max 3 concurrent")
+        print("Rate limits: Gemini max 20 concurrent, GPT max 3 concurrent")
 
     def _encode_image(self, image_path: str) -> str:
         """Encode image to base64 for OpenAI API."""
         with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+            return base64.b64encode(image_file.read()).decode("utf-8")
 
-    def _extract_frames(self, video_path: str, frame_interval: int = 5) -> List[str]:
+    def _extract_frames(self, video_path: str, frame_interval: int = 5) -> list[str]:
         """
         Extract frames from video at regular intervals.
 
@@ -102,9 +99,7 @@ class GeminiGPTEvaluator:
 
         return frame_paths
 
-    def predict_expected_process(
-        self, image_path: str, action_prompt: Optional[str] = None
-    ) -> Tuple[str, str]:
+    def predict_expected_process(self, image_path: str, action_prompt: str | None = None) -> tuple[str, str]:
         """
         First call: Gemini predicts expected process.
 
@@ -143,7 +138,7 @@ Be specific and concrete in your description.
 After your full explanation, provide a one-sentence summary on the last line in this format:
 Process: [concise one-sentence description of the expected evolution]"""
 
-        print(f"    Calling Gemini API for process prediction...")
+        print("    Calling Gemini API for process prediction...")
 
         with self._gemini_semaphore:  # Limit concurrent Gemini calls
             try:
@@ -245,7 +240,7 @@ EXPLANATION: [Your detailed explanation]"""
 
     def verify_process_in_video(
         self, video_path: str, expected_process: str, model_type: str = "unknown"
-    ) -> Tuple[Dict, bool]:
+    ) -> tuple[dict, bool]:
         """
         Second call: Both Gemini and GPT verify process in video.
 
@@ -257,11 +252,11 @@ EXPLANATION: [Your detailed explanation]"""
         gpt_prompt = self._get_gpt_verification_prompt(expected_process, model_type)
 
         # Extract frames first (before parallel calls)
-        print(f"    Extracting frames for GPT...")
+        print("    Extracting frames for GPT...")
         frame_paths = self._extract_frames(video_path, frame_interval=5)
 
         # Call both APIs in parallel
-        print(f"    Calling both APIs for video verification (in parallel)...")
+        print("    Calling both APIs for video verification (in parallel)...")
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             gemini_future = executor.submit(self._verify_with_gemini, video_path, gemini_prompt)
@@ -273,15 +268,13 @@ EXPLANATION: [Your detailed explanation]"""
 
         # Clean up frames after both calls complete
         for frame_path in frame_paths:
-            try:
+            with contextlib.suppress(BaseException):
                 os.remove(frame_path)
-            except:
-                pass
         try:
             temp_dir = os.path.dirname(frame_paths[0]) if frame_paths else None
             if temp_dir:
                 os.rmdir(temp_dir)
-        except:
+        except BaseException:
             pass
 
         # Consensus: both must agree
@@ -298,10 +291,10 @@ EXPLANATION: [Your detailed explanation]"""
             "gpt_response": gpt_response,
             "gpt_verdict": gpt_verdict,
             "gpt_time": gpt_time,
-            "consensus_verdict": consensus_verdict
+            "consensus_verdict": consensus_verdict,
         }, consensus_verdict
 
-    def _verify_with_gemini(self, video_path: str, prompt: str) -> Tuple[bool, str, float]:
+    def _verify_with_gemini(self, video_path: str, prompt: str) -> tuple[bool, str, float]:
         """Verify video with Gemini."""
         with self._gemini_semaphore:  # Limit concurrent Gemini calls
             start_time = time.time()
@@ -320,7 +313,7 @@ EXPLANATION: [Your detailed explanation]"""
                     video_file = genai.get_file(video_file.name)
 
                 if video_file.state.name == "FAILED":
-                    raise ValueError(f"Gemini video processing failed")
+                    raise ValueError("Gemini video processing failed")
 
                 # Make API call
                 response = self.gemini_model.generate_content([video_file, prompt])
@@ -335,9 +328,9 @@ EXPLANATION: [Your detailed explanation]"""
             except Exception as e:
                 elapsed = time.time() - start_time
                 print(f"    Gemini ERROR after {elapsed:.1f}s: {e}")
-                return False, f"ERROR: {str(e)}", elapsed
+                return False, f"ERROR: {e!s}", elapsed
 
-    def _verify_with_gpt_frames(self, frame_paths: List[str], prompt: str) -> Tuple[bool, str, float]:
+    def _verify_with_gpt_frames(self, frame_paths: list[str], prompt: str) -> tuple[bool, str, float]:
         """Verify video with GPT using pre-extracted frames."""
         with self._gpt_semaphore:  # Limit concurrent GPT calls
             start_time = time.time()
@@ -349,22 +342,24 @@ EXPLANATION: [Your detailed explanation]"""
                     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
                     # Build message content with all frames
-                    content = [{"type": "text", "text": f"{prompt}\n\nYou are given a sequence of frames from the video (every 5th frame). Watch the progression carefully."}]
+                    content = [
+                        {
+                            "type": "text",
+                            "text": f"{prompt}\n\nYou are given a sequence of frames from the video (every 5th frame). Watch the progression carefully.",
+                        }
+                    ]
 
                     for frame_path in frame_paths:
                         base64_frame = self._encode_image(frame_path)
-                        content.append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_frame}"
-                            }
-                        })
+                        content.append(
+                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_frame}"}}
+                        )
 
                     # Call GPT with all frames
                     response = client.chat.completions.create(
                         model=self.gpt_model,
                         messages=[{"role": "user", "content": content}],
-                        max_completion_tokens=1000
+                        max_completion_tokens=1000,
                     )
 
                     response_text = response.choices[0].message.content
@@ -404,10 +399,7 @@ EXPLANATION: [Your detailed explanation]"""
 
         # Fallback
         first_100_chars = response_text[:100].lower()
-        if "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars:
-            return True
-
-        return False
+        return "verdict: yes" in first_100_chars or "verdict:yes" in first_100_chars
 
     def _get_model_type(self, run_name: str) -> str:
         """Determine model type from run name."""
@@ -427,7 +419,7 @@ EXPLANATION: [Your detailed explanation]"""
         else:
             return "unknown"
 
-    def evaluate_task(self, task_data: Dict) -> Dict:
+    def evaluate_task(self, task_data: dict) -> dict:
         """
         Evaluate a single task with cross-model ensemble.
 
@@ -438,7 +430,7 @@ EXPLANATION: [Your detailed explanation]"""
         print(f"  Run: {task_data['run_name']}")
 
         # Determine model type
-        model_type = self._get_model_type(task_data['run_name'])
+        model_type = self._get_model_type(task_data["run_name"])
         print(f"  Model type: {model_type}")
 
         # Step 1: Predict expected process (Gemini only)

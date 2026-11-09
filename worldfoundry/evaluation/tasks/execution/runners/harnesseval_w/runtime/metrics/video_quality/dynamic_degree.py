@@ -1,4 +1,5 @@
 """Dynamic degree — VBench-aligned RAFT optical flow."""
+
 import numpy as np
 import torch
 
@@ -6,11 +7,11 @@ from ..base import BaseMetric
 from ..weight_utils import get_weight_file
 
 
-
 def _load_raft(device):
+    from easydict import EasyDict
+
     from worldfoundry.base_models.perception_core.optical_flow.raft.raft import RAFT
     from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import InputPadder
-    from easydict import EasyDict
 
     weight_path = get_weight_file("raft", "raft-things.pth")
     model = RAFT(EasyDict(small=False, mixed_precision=False, alternate_corr=False))

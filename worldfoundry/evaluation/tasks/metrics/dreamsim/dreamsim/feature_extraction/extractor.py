@@ -208,8 +208,10 @@ class ViTExtractor(nn.Module):
         return dt_pre_hook
 
     def fix_random_seeds(suffix):
-        """
-        Fix random seeds.
+        """Seed the torch CPU and CUDA generators with ``hash(suffix) % (2**31 - 1)``.
+
+        The function takes no ``self``, so call it on the class. String hashes differ between Python processes
+        unless ``PYTHONHASHSEED`` is fixed.
         """
         seed = hash(suffix) % (2**31 - 1)
         torch.manual_seed(seed)

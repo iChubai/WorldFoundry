@@ -7,6 +7,7 @@ heavy optional deps (moviepy, trimesh, plyfile, pycolmap, gsplat, evo, etc.).
 Usage:
     import src.compat  # noqa: F401 — must be imported before DA3
 """
+
 import sys
 import types
 
@@ -31,7 +32,9 @@ if "evo" not in sys.modules:
     _evo_metrics = types.ModuleType("evo.core.metrics")
 
     class _PosePath3D:
-        def __init__(self, *a, **k): pass
+        def __init__(self, *a, **k):
+            pass
+
     class _PoseTrajectory3D(_PosePath3D):
         pass
 

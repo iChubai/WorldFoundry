@@ -46,7 +46,17 @@ def hydra_model_target_trajectory(target: CameraTrajectory) -> CameraTrajectory:
 class HyDRAAdapter:
     name = "hydra"
 
-    def compile(self, trajectory: CameraTrajectory, *, model_name: str, width: int, height: int, num_frames: int, work_dir: str | Path | None = None, device: str | None = None) -> CameraPayload:
+    def compile(
+        self,
+        trajectory: CameraTrajectory,
+        *,
+        model_name: str,
+        width: int,
+        height: int,
+        num_frames: int,
+        work_dir: str | Path | None = None,
+        device: str | None = None,
+    ) -> CameraPayload:
         target, amp = model_target_trajectory(trajectory, model_name, num_frames)
         target = hydra_model_target_trajectory(target)
         target_c2w = target.to_c2w()
@@ -70,16 +80,18 @@ class HyDRAAdapter:
                 "relative_embedding_shape": [20, 12],
             },
         )
-        meta.update({
-            "cond_cam_source": "repeated_anchor_pose",
-            "cond_cam_frame_count": target.frame_count,
-            "tgt_cam_frame_count": target.frame_count,
-            "embedding_sample_stride": 4,
-            "relative_embedding_shape": [20, 12],
-            "translation_divisor": 100,
-            "payload_coordinate_convention": "hydra_pretransform_c2w",
-            "yaw_schedule": "smoothstep_go_return" if _is_hydra_yaw_only(target.camera_type) else "direct_resample",
-        })
+        meta.update(
+            {
+                "cond_cam_source": "repeated_anchor_pose",
+                "cond_cam_frame_count": target.frame_count,
+                "tgt_cam_frame_count": target.frame_count,
+                "embedding_sample_stride": 4,
+                "relative_embedding_shape": [20, 12],
+                "translation_divisor": 100,
+                "payload_coordinate_convention": "hydra_pretransform_c2w",
+                "yaw_schedule": "smoothstep_go_return" if _is_hydra_yaw_only(target.camera_type) else "direct_resample",
+            }
+        )
         return CameraPayload(
             payload_type=payload_type,
             payload={"camera_json": str(out)},

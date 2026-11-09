@@ -45,8 +45,8 @@ def canonicalize_object_mask(
     crop_height, crop_width = crop.shape
     usable_size = canvas_size - 2 * padding
     scale = usable_size / float(max(crop_height, crop_width))
-    target_height = max(1, min(usable_size, int(round(crop_height * scale))))
-    target_width = max(1, min(usable_size, int(round(crop_width * scale))))
+    target_height = max(1, min(usable_size, round(crop_height * scale)))
+    target_width = max(1, min(usable_size, round(crop_width * scale)))
 
     source_y = np.minimum(
         (np.arange(target_height) * crop_height // target_height),
@@ -81,7 +81,7 @@ def analyze_object_geometry(
     canonical_padding: int = DEFAULT_CANONICAL_PADDING,
 ) -> ObjectGeometryResult:
     phase = track.phase
-    frame_scores = {index: 0.0 for index in phase.return_indices}
+    frame_scores = dict.fromkeys(phase.return_indices, 0.0)
     reference_indices: list[int] = []
     reference_masks: list[np.ndarray] = []
     reference_areas: list[float] = []
@@ -147,11 +147,9 @@ def analyze_object_geometry(
         n_revisit_masks.append(n_masks)
         revisit_coverages.append(n_masks / len(revisit_indices) if revisit_indices else 0.0)
         revisit_scores.append(
-            (
-                sum(frame_scores[index] for index in valid_indices) / n_masks
-                if n_masks and reference_masks and phase.is_scorable
-                else 0.0
-            )
+            sum(frame_scores[index] for index in valid_indices) / n_masks
+            if n_masks and reference_masks and phase.is_scorable
+            else 0.0
         )
         revisit_drifts = [area_drifts_by_frame[index] for index in valid_indices if index in area_drifts_by_frame]
         revisit_area_ratio_drifts.append(float(np.median(revisit_drifts)) if revisit_drifts else 0.0)

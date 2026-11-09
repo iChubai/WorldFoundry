@@ -7,16 +7,19 @@ import torch
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import get_model2type, layout_info, type2model
-from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.gpu_utils import get_torch_device
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.benchmark.utils.utils import (
+    get_model2type,
+    type2model,
+)
+from worldfoundry.evaluation.tasks.execution.runners.worldscore.runtime.worldscore.worldscore.common.gpu_utils import (
+    get_torch_device,
+)
 
 
 def convert_extrinsics_blender(camera):
     transform_matrix_w2c_pt3d = camera.RT.to(torch.float32)
 
-    pt3d_to_blender = torch.diag(
-        torch.tensor([-1.0, 1.0, -1.0, 1.0], device=camera.device)
-    )
+    pt3d_to_blender = torch.diag(torch.tensor([-1.0, 1.0, -1.0, 1.0], device=camera.device))
     transform_matrix_w2c_blender = pt3d_to_blender @ transform_matrix_w2c_pt3d
 
     extrinsics = transform_matrix_w2c_blender
@@ -25,7 +28,7 @@ def convert_extrinsics_blender(camera):
     return c2w_extrinsics
 
 
-class CameraExtrinsics(object):
+class CameraExtrinsics:
     def __init__(self, R=None, T=None):
         """
         - R (torch.Tensor): Rotation matrix of shape (3, 3)
@@ -44,9 +47,7 @@ class CameraExtrinsics(object):
 
     def update_RT(self):
         RT = torch.cat((self.R, self.T), dim=1)
-        last_row = torch.tensor(
-            [[0, 0, 0, 1]], device=self.R.device, dtype=self.R.dtype
-        )
+        last_row = torch.tensor([[0, 0, 0, 1]], device=self.R.device, dtype=self.R.dtype)
 
         self.RT = torch.cat((RT, last_row), dim=0)
         return self.RT
@@ -76,9 +77,9 @@ class CameraExtrinsics(object):
         return self
 
 
-class CameraGen(object):
+class CameraGen:
     def __init__(self, config):
-        super(CameraGen, self).__init__()
+        super().__init__()
         self.device = get_torch_device()
 
         self.root_path = config["benchmark_root"]
@@ -321,8 +322,8 @@ class CameraGen(object):
         }
         try:
             next_camera = layout_methods[self.layout]()
-        except:
-            raise ValueError("Invalid layout:", self.layout)
+        except BaseException:
+            raise ValueError("Invalid layout:", self.layout)  # noqa: B904 - Preserve the implicit context.
 
         current_camera = copy.deepcopy(next_camera)
         self.cameras.append(current_camera)
@@ -331,7 +332,7 @@ class CameraGen(object):
 
     def generate_interp_cameras(self):
         self.cameras_interp.append(copy.deepcopy(self.cameras[0]))
-        for kf1_camera, kf2_camera in zip(self.cameras[:-1], self.cameras[1:]):
+        for kf1_camera, kf2_camera in zip(self.cameras[:-1], self.cameras[1:], strict=False):
             cameras = self.interp_cameras(kf1_camera, kf2_camera)
             self.cameras_interp.extend(cameras)
             self.cameras_interp.append(copy.deepcopy(kf2_camera))
@@ -345,9 +346,7 @@ class CameraGen(object):
         # transform all cameras so that the first camera is at the origin
         self.transform_all_cam_to_current_cam(index=0)
         self.generate_interp_cameras()
-        cameras_list, cameras_interp_list = self.save_cameras(
-            save_path, verbose=verbose
-        )
+        cameras_list, cameras_interp_list = self.save_cameras(save_path, verbose=verbose)
         self.clear()
 
         return np.array(cameras_list), np.array(cameras_interp_list)

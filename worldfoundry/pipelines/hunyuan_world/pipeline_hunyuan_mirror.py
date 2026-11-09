@@ -8,7 +8,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import cv2
 import numpy as np
@@ -63,7 +63,6 @@ class HunyuanMirrorPipeline(PipelineABC):
             model_path: HuggingFace model path
             local_model_path: Local model path (priority if provided)
             output_path: Output directory path
-            device: Device
             **kwargs: Additional arguments for model
 
         Returns:
@@ -171,8 +170,11 @@ class HunyuanMirrorPipeline(PipelineABC):
             final_mask_list.append(final_mask)
 
         # Stack all frame masks; the enabled filters are the same for every frame.
-        frame_masks = [mask for mask in final_mask_list if mask is not None]
-        final_mask = np.stack(frame_masks, axis=0) if frame_masks else np.ones(pts3d_conf.shape[:3], dtype=bool)
+        final_mask = (
+            np.stack(cast(list[np.ndarray], final_mask_list), axis=0)
+            if final_mask_list[0] is not None
+            else np.ones(pts3d_conf.shape[:3], dtype=bool)
+        )
 
         return final_mask
 
@@ -583,22 +585,26 @@ class HunyuanMirrorPipeline(PipelineABC):
         **kwargs,
     ):
         """
-        调用接口，支持额外参数
+        Reconstruct the input images and optionally save the results.
 
         Args:
-            image_path: 输入图片路径列表
-            output_path: 输出路径（如果提供则覆盖默认路径）
-            confidence_percentile: 置信度过滤百分位
-            edge_normal_threshold: 法线边缘阈值
-            edge_depth_threshold: 深度边缘阈值
-            apply_confidence_mask: 是否应用置信度掩码
-            apply_edge_mask: 是否应用边缘掩码
-            apply_sky_mask: 是否应用天空掩码
-            cond_flags: 条件标志 [pose, intrinsics, depth]
-            **kwargs: 其他参数
+            image_path: Input image paths; ``images`` or ``input`` is used when omitted.
+            output_path: Output directory for this call; overrides the pipeline default.
+            confidence_percentile: Percentile of the confidence filter.
+            edge_normal_threshold: Normal-edge threshold.
+            edge_depth_threshold: Depth-edge threshold.
+            apply_confidence_mask: Whether to apply the confidence mask.
+            apply_edge_mask: Whether to apply the edge mask.
+            apply_sky_mask: Whether to apply the sky mask.
+            cond_flags: Condition flags [pose, intrinsics, depth].
+            **kwargs: ``output_dir`` and the ``save_*`` flags of ``save_results``.
 
         Returns:
-            包含所有处理结果的字典（用于外部调用save_results）
+            Without an output path, the dict of processing results that can be passed to
+            ``save_results``; otherwise a summary dict of the saved artifacts.
+
+        Raises:
+            ValueError: No input image is given.
         """
         if image_path is None:
             image_path = self._normalize_image_paths(images if images is not None else input)
@@ -609,8 +615,7 @@ class HunyuanMirrorPipeline(PipelineABC):
 
         output_dir = kwargs.pop("output_dir", None)
         requested_output = output_path or output_dir
-        # Apply a per-call output override without leaking it into later calls
-        # (the previous behavior permanently rebound ``self.output_path``).
+        # A per-call output override is restored afterwards so it does not leak into later calls.
         previous_output_path = self.output_path
         if requested_output:
             requested = Path(str(requested_output)).expanduser()
@@ -676,15 +681,13 @@ class HunyuanMirrorPipeline(PipelineABC):
             self.output_path = previous_output_path
 
     def save_pretrained(self, save_directory: str):
-        """保存模型到指定目录"""
+        """Save the representation model and the pipeline config to ``save_directory``."""
         os.makedirs(save_directory, exist_ok=True)
 
-        # 保存表示模型
         if self.represent_model:
             represent_dir = os.path.join(save_directory, "representation_model")
             self.represent_model.save_pretrained(represent_dir)
 
-        # 保存pipeline配置
         config = {"output_path": str(self.output_path), "device": self.device}
 
         torch.save(config, os.path.join(save_directory, "pipeline_config.pt"))

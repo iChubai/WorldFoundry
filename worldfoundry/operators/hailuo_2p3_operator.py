@@ -9,9 +9,7 @@ from .base_operator import BaseOperator
 
 
 class Hailuo2p3Operator(BaseOperator):
-    """
-    MiniMax Hailuo 2.3 数据处理 Operator
-    """
+    """Prepare prompts and first-frame images for MiniMax Hailuo 2.3 requests."""
 
     def __init__(
         self,

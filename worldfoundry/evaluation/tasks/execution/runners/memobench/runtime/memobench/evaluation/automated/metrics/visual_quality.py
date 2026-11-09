@@ -1,8 +1,9 @@
-import numpy as np
-import torch
-import requests
 import os
+
 import cv2
+import numpy as np
+import requests
+import torch
 from PIL import Image
 
 from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (
@@ -11,8 +12,7 @@ from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (
 from worldfoundry.evaluation.tasks.metrics._shared.clip_embed import open_clip_bundle
 
 _AESTHETIC_URL = (
-    "https://github.com/christophschuhmann/improved-aesthetic-predictor"
-    "/raw/main/sac+logos+ava1-l14-linearMSE.pth"
+    "https://github.com/christophschuhmann/improved-aesthetic-predictor/raw/main/sac+logos+ava1-l14-linearMSE.pth"
 )
 _AESTHETIC_CACHE = os.path.expanduser("~/.cache/aesthetic_predictor.pth")
 
@@ -20,7 +20,7 @@ _aes_model = None
 _aes_device = None
 
 
-def _load_aesthetic(device: str = None):
+def _load_aesthetic(device: str | None = None):
     """Load the MemoBench aesthetic scorer.
 
     Provenance: the CLIP ViT-L/14 backbone and improved-aesthetic-predictor MLP
@@ -65,7 +65,7 @@ def _aesthetic_score_single(aes_model, clip_model, preprocess, device, img: np.n
     return float(score)
 
 
-def aesthetic_score(frames, sample_step: int = 5, device: str = None) -> float:
+def aesthetic_score(frames, sample_step: int = 5, device: str | None = None) -> float:
     """
     Mean LAION aesthetic score over sampled frames. Higher is better (~0–10).
     """
@@ -80,21 +80,23 @@ def aesthetic_score(frames, sample_step: int = 5, device: str = None) -> float:
 # CLIP-IQA+ via pyiqa; falls back to MUSIQ then Laplacian.
 _iqa_metric = None
 _iqa_device = None
-_iqa_backend = None   # "clipiqa+" | "musiq" | "laplacian"
+_iqa_backend = None  # "clipiqa+" | "musiq" | "laplacian"
 
 
-def _load_iqa(device: str = None):
+def _load_iqa(device: str | None = None):
     global _iqa_metric, _iqa_device, _iqa_backend
     if _iqa_metric is not None:
         return _iqa_metric, _iqa_device, _iqa_backend
 
     if device is None:
         import torch
+
         device = "cuda" if torch.cuda.is_available() else "cpu"
     _iqa_device = device
 
     try:
         import pyiqa
+
         # CLIP-IQA+: CLIP-based perceptual IQA, no-reference, [0, 1]
         _iqa_metric = pyiqa.create_metric("clipiqa+", device=device)
         _iqa_backend = "clipiqa+"
@@ -104,6 +106,7 @@ def _load_iqa(device: str = None):
 
     try:
         import pyiqa
+
         # MUSIQ fallback: multi-scale IQA trained on diverse distortions
         _iqa_metric = pyiqa.create_metric("musiq", device=device)
         _iqa_backend = "musiq"
@@ -124,6 +127,7 @@ def _iqa_single(metric, backend: str, device: str, img: np.ndarray) -> float:
 
     import torch
     from torchvision import transforms
+
     pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     t = transforms.ToTensor()(pil).unsqueeze(0).to(device)
     with torch.no_grad():
@@ -136,7 +140,7 @@ def _iqa_single(metric, backend: str, device: str, img: np.ndarray) -> float:
         return float(np.clip(raw / 100.0, 0.0, 1.0))
 
 
-def image_quality_score(frames, sample_step: int = 5, device: str = None) -> float:
+def image_quality_score(frames, sample_step: int = 5, device: str | None = None) -> float:
     """
     Perceptual image quality score in [0, 1]. Higher = better.
 
@@ -155,10 +159,10 @@ def image_quality_score(frames, sample_step: int = 5, device: str = None) -> flo
 
 _ir_model = None
 _ir_device = None
-_ir_load_error = None   # stores error message on first load failure
+_ir_load_error = None  # stores error message on first load failure
 
 
-def _load_image_reward(device: str = None):
+def _load_image_reward(device: str | None = None):
     global _ir_model, _ir_device, _ir_load_error
     if _ir_load_error is not None:
         raise RuntimeError(_ir_load_error)
@@ -169,7 +173,7 @@ def _load_image_reward(device: str = None):
         import ImageReward as IR
     except ImportError:
         _ir_load_error = "ImageReward not installed. Run: pip install image-reward"
-        raise RuntimeError(_ir_load_error)
+        raise RuntimeError(_ir_load_error)  # noqa: B904 - Keeps the implicit ImportError context.
 
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -182,8 +186,7 @@ def _load_image_reward(device: str = None):
     return _ir_model, _ir_device
 
 
-def image_reward_score(frames, prompt: str, n_sample: int = 5,
-                       device: str = None) -> float:
+def image_reward_score(frames, prompt: str, n_sample: int = 5, device: str | None = None) -> float:
     """
     ImageReward (2023) human-preference score averaged over sampled frames.
 
@@ -205,16 +208,14 @@ def image_reward_score(frames, prompt: str, n_sample: int = 5,
         model, device = _load_image_reward(device)
     except Exception as e:
         import warnings
-        warnings.warn(f"[ImageReward] {e}")
+
+        warnings.warn(f"[ImageReward] {e}", stacklevel=1)
         return None
 
     N = frames.num_frames
     indices = [int(i * (N - 1) / (n_sample - 1)) for i in range(n_sample)]
 
-    pil_frames = [
-        Image.fromarray(cv2.cvtColor(frames.get(idx), cv2.COLOR_BGR2RGB))
-        for idx in indices
-    ]
+    pil_frames = [Image.fromarray(cv2.cvtColor(frames.get(idx), cv2.COLOR_BGR2RGB)) for idx in indices]
 
     scores = []
     for pil in pil_frames:

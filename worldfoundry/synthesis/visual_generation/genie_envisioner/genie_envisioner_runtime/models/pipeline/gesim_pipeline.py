@@ -11,36 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 ### This file is modified from https://github.com/huggingface/diffusers/blob/f064b3bf73e479051ed4255d98afad4259a6f012/src/diffusers/pipelines/cosmos/pipeline_cosmos2_video2world.py
-
-
 import inspect
-from typing import Callable, Dict, List, Optional, Union
+from collections.abc import Callable
+from typing import ClassVar
 
-import numpy as np
-import os.path as osp
 import torch
-from einops import rearrange
-
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
-from diffusers.utils import is_torch_xla_available, logging, replace_example_docstring
-from diffusers.utils.torch_utils import randn_tensor
 from diffusers.pipelines.pipeline_utils import DiffusionPipeline
+from diffusers.utils import is_torch_xla_available, logging
+from diffusers.utils.torch_utils import randn_tensor
+from einops import rearrange
+from models.pipeline.custom_pipeline import retrieve_latents, retrieve_timesteps
+from utils.geometry_utils import resize_traj_and_ray
 
 from worldfoundry.synthesis.visual_generation.genie_envisioner.genie_envisioner_runtime.models.pipeline.cosmos2_utils.pipeline_output import (
     CosmosPipelineOutput,
 )
-    
-from models.pipeline.custom_pipeline import retrieve_timesteps, retrieve_latents
-
 from worldfoundry.synthesis.visual_generation.genie_envisioner.genie_envisioner_runtime.models.pipeline.cosmos2_utils.video_processor import (
     VideoProcessor,
 )
-
-from utils.geometry_utils import resize_traj_and_ray
-
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm
@@ -53,12 +44,12 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.retrieve_timesteps
-def retrieve_timesteps(
+def retrieve_timesteps(  # noqa: F811 - Later definition replaces the earlier one, as upstream.
     scheduler,
-    num_inference_steps: Optional[int] = None,
-    device: Optional[Union[str, torch.device]] = None,
-    timesteps: Optional[List[int]] = None,
-    sigmas: Optional[List[float]] = None,
+    num_inference_steps: int | None = None,
+    device: str | torch.device | None = None,
+    timesteps: list[int] | None = None,
+    sigmas: list[float] | None = None,
     **kwargs,
 ):
     r"""
@@ -113,8 +104,8 @@ def retrieve_timesteps(
 
 
 # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion_img2img.retrieve_latents
-def retrieve_latents(
-    encoder_output: torch.Tensor, generator: Optional[torch.Generator] = None, sample_mode: str = "sample"
+def retrieve_latents(  # noqa: F811 - Later definition replaces the earlier one, as upstream.
+    encoder_output: torch.Tensor, generator: torch.Generator | None = None, sample_mode: str = "sample"
 ):
     if hasattr(encoder_output, "latent_dist") and sample_mode == "sample":
         return encoder_output.latent_dist.sample(generator)
@@ -150,9 +141,9 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     """
 
     model_cpu_offload_seq = "text_encoder->transformer->vae"
-    _callback_tensor_inputs = ["latents", "prompt_embeds", "negative_prompt_embeds"]
+    _callback_tensor_inputs: ClassVar[list] = ["latents", "prompt_embeds", "negative_prompt_embeds"]
     # We mark safety_checker as optional here to get around some test failures, but it is not really optional
-    _optional_components = ["safety_checker"]
+    _optional_components: ClassVar[list] = ["safety_checker"]
 
     def __init__(
         self,
@@ -196,10 +187,10 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     # Copied from diffusers.pipelines.cosmos.pipeline_cosmos_text2world.CosmosTextToWorldPipeline._get_t5_prompt_embeds
     def _get_t5_prompt_embeds(
         self,
-        prompt: Union[str, List[str]] = None,
+        prompt: str | list[str] | None = None,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         device = device or self._execution_device
         dtype = dtype or self.text_encoder.dtype
@@ -239,15 +230,15 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     # Copied from diffusers.pipelines.cosmos.pipeline_cosmos_text2world.CosmosTextToWorldPipeline.encode_prompt
     def encode_prompt(
         self,
-        prompt: Union[str, List[str]],
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        prompt: str | list[str],
+        negative_prompt: str | list[str] | None = None,
         do_classifier_free_guidance: bool = True,
         num_videos_per_prompt: int = 1,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
         max_sequence_length: int = 512,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ):
         r"""
         Encodes the prompt into text encoder hidden states.
@@ -278,10 +269,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
         device = device or self._execution_device
 
         prompt = [prompt] if isinstance(prompt, str) else prompt
-        if prompt is not None:
-            batch_size = len(prompt)
-        else:
-            batch_size = prompt_embeds.shape[0]
+        batch_size = len(prompt) if prompt is not None else prompt_embeds.shape[0]
 
         if prompt_embeds is None:
             prompt_embeds = self._get_t5_prompt_embeds(
@@ -319,7 +307,6 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
             negative_prompt_embeds = negative_prompt_embeds.view(batch_size * num_videos_per_prompt, seq_len, -1)
 
         return prompt_embeds, negative_prompt_embeds
-
 
     # Copied from diffusers.pipelines.cosmos.pipeline_cosmos_text2world.CosmosTextToWorldPipeline.check_inputs
     def check_inputs(
@@ -376,27 +363,28 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
     def infer(
         self,
         image: PipelineImageInput = None,
-        video: List[PipelineImageInput] = None,  # input video is (b v) t c h w (t is ahead of c)
-        cond_to_concat: List[PipelineImageInput] = None,  # (b v) c t h w, could have different t than video t
-        prompt: Union[str, List[str]] = None,
-        negative_prompt: Optional[Union[str, List[str]]] = None,
+        video: list[PipelineImageInput] | None = None,  # input video is (b v) t c h w (t is ahead of c)
+        cond_to_concat: list[PipelineImageInput] | None = None,  # (b v) c t h w, could have different t than video t
+        prompt: str | list[str] | None = None,
+        negative_prompt: str | list[str] | None = None,
         height: int = 704,
         width: int = 1280,
-        num_frames: int = 93, # equals chunk size
+        num_frames: int = 93,  # equals chunk size
         num_inference_steps: int = 35,
         guidance_scale: float = 7.0,
         fps: int = 16,
-        num_videos_per_prompt: Optional[int] = 1,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
-        prompt_embeds: Optional[torch.Tensor] = None,
-        negative_prompt_embeds: Optional[torch.Tensor] = None,
-        output_type: Optional[str] = "pil",
+        num_videos_per_prompt: int | None = 1,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
+        prompt_embeds: torch.Tensor | None = None,
+        negative_prompt_embeds: torch.Tensor | None = None,
+        output_type: str | None = "pil",
         return_dict: bool = True,
-        callback_on_step_end: Optional[
-            Union[Callable[[int, int, Dict], None], PipelineCallback, MultiPipelineCallbacks]
-        ] = None,
-        callback_on_step_end_tensor_inputs: List[str] = ["latents"],
+        callback_on_step_end: Callable[[int, int, dict], None]
+        | PipelineCallback
+        | MultiPipelineCallbacks
+        | None = None,
+        callback_on_step_end_tensor_inputs: list[str] = ["latents"],  # noqa: B006 - Keeps the upstream default object and signature.
         max_sequence_length: int = 512,
         sigma_conditioning: float = 0.0001,
         n_view: int = 3,
@@ -568,7 +556,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
             generator,
             latents,
         )  # indicator and mask here are all about memory video, action condition not included
-           # latents here only contains future
+        # latents here only contains future
         unconditioning_latents = None
 
         cond_mask = cond_mask.to(transformer_dtype)
@@ -602,7 +590,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
                 #     latents.size(0), -1, latents.size(2), -1, -1
                 # )  # [B, 1, T, 1, 1]
                 timestep = current_t.view(1, 1, 1, 1, 1).expand(
-                    latents.size(0), -1, latents.size(2)+conditioning_latents.size(2), -1, -1
+                    latents.size(0), -1, latents.size(2) + conditioning_latents.size(2), -1, -1
                 )  # [B, 1, T, 1, 1]
                 # timestep = timestep * 1000  # LTX, timestep ranges from 1 to 1000
 
@@ -614,9 +602,12 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
                 n_fut = (num_frames - 1) // self.vae_scale_factor_temporal + 1
 
                 cond_to_concat = cond_to_concat.to(device=cond_latent.device, dtype=cond_latent.dtype)
-                cond_to_concat_resze = resize_traj_and_ray(cond_to_concat, 
-                    mem_size=n_prev, future_size=n_fut,
-                    height=cond_latent.shape[-2], width=cond_latent.shape[-1]
+                cond_to_concat_resze = resize_traj_and_ray(
+                    cond_to_concat,
+                    mem_size=n_prev,
+                    future_size=n_fut,
+                    height=cond_latent.shape[-2],
+                    width=cond_latent.shape[-1],
                 )
 
                 cond_latent = torch.cat([cond_latent, cond_to_concat_resze], dim=1)  # channel
@@ -635,9 +626,9 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
                     height=cond_latent.shape[-2],
                     width=cond_latent.shape[-1],
                     n_view=n_view,
-                    num_frames=n_fut+n_prev,
+                    num_frames=n_fut + n_prev,
                     return_video=True,
-                )[0]['video']
+                )[0]["video"]
 
                 noise_pred = noise_pred[:, :, n_prev:]  # remove memory
                 noise_pred = (c_skip * latents + c_out * noise_pred.float()).to(transformer_dtype)
@@ -648,11 +639,13 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
                     # replace :n_prev frames with clean video latents
                     # uncond_latent = uncond_indicator * unconditioning_latents + (1 - uncond_indicator) * uncond_latent
                     uncond_latent = torch.cat([conditioning_latents, uncond_latent], dim=2)  # frame
-                    uncond_latent = torch.cat([uncond_latent, cond_to_concat.to(device=cond_latent.device, dtype=cond_latent.dtype)], dim=1)  # channel
+                    uncond_latent = torch.cat(
+                        [uncond_latent, cond_to_concat.to(device=cond_latent.device, dtype=cond_latent.dtype)], dim=1
+                    )  # channel
                     uncond_latent = uncond_latent.to(transformer_dtype)
                     uncond_timestep = uncond_indicator * t_conditioning + (1 - uncond_indicator) * timestep
                     uncond_timestep = uncond_timestep.to(transformer_dtype)
-                    
+
                     noise_pred_uncond = self.transformer(
                         hidden_states=uncond_latent,
                         timestep=uncond_timestep,
@@ -661,7 +654,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
                         condition_mask=uncond_mask,
                         padding_mask=padding_mask,
                         return_dict=False,
-                        n_view=n_view
+                        n_view=n_view,
                     )[0]
                     noise_pred_uncond = noise_pred_uncond[:, :, n_prev:]  # remove memory
                     noise_pred_uncond = (c_skip * latents + c_out * noise_pred_uncond.float()).to(transformer_dtype)
@@ -692,7 +685,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
 
         self._current_timestep = None
 
-        if not output_type == "latent":
+        if not output_type == "latent":  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
             latents_mean = (
                 torch.tensor(self.vae.config.latents_mean)
                 .view(1, self.vae.config.z_dim, 1, 1, 1)
@@ -707,7 +700,7 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
 
             video = self.vae.decode(latents.to(self.vae.dtype), return_dict=False)[0]
             if merge_view_into_width:
-                video = rearrange(video, '(b v) c t h w -> b c t h (v w)', v=n_view)  # should be vw not wv !!!
+                video = rearrange(video, "(b v) c t h w -> b c t h (v w)", v=n_view)  # should be vw not wv !!!
 
             # if self.safety_checker is not None:
             #     self.safety_checker.to(device)
@@ -735,8 +728,6 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
 
         return CosmosPipelineOutput(frames=video)
 
-
-
     def prepare_latents(
         self,
         video: torch.Tensor,  # (b v) c t h w
@@ -746,10 +737,10 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
         width: int = 1280,
         num_frames: int = 93,  # memory not included
         do_classifier_free_guidance: bool = True,
-        dtype: Optional[torch.dtype] = None,
-        device: Optional[torch.device] = None,
-        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
-        latents: Optional[torch.Tensor] = None,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
+        generator: torch.Generator | list[torch.Generator] | None = None,
+        latents: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
@@ -759,7 +750,9 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
 
         num_cond_frames = video.size(2)
         num_cond_latent_frames = num_cond_frames  # encode memory separately
-        init_latents = [retrieve_latents(self.vae.encode(video[:, :, it].unsqueeze(2)), generator) for it in range(video.size(2))]
+        init_latents = [
+            retrieve_latents(self.vae.encode(video[:, :, it].unsqueeze(2)), generator) for it in range(video.size(2))
+        ]
 
         init_latents = torch.cat(init_latents, dim=2).to(dtype)
 
@@ -783,17 +776,17 @@ class GeSimCosmos2Pipeline(DiffusionPipeline):
 
         latents = latents * self.scheduler.config.sigma_max  # sigma_max = 80.0
 
-        padding_shape = (batch_size, 1, num_cond_latent_frames+num_latent_frames, latent_height, latent_width)
+        padding_shape = (batch_size, 1, num_cond_latent_frames + num_latent_frames, latent_height, latent_width)
         ones_padding = latents.new_ones(padding_shape)
         zeros_padding = latents.new_zeros(padding_shape)
 
-        cond_indicator = latents.new_zeros(1, 1, num_cond_latent_frames+num_latent_frames, 1, 1)
+        cond_indicator = latents.new_zeros(1, 1, num_cond_latent_frames + num_latent_frames, 1, 1)
         cond_indicator[:, :, :num_cond_latent_frames] = 1.0
         cond_mask = cond_indicator * ones_padding + (1 - cond_indicator) * zeros_padding
 
         uncond_indicator = uncond_mask = None  # equals cond_indicator and cond_mask
         if do_classifier_free_guidance:
-            uncond_indicator = latents.new_zeros(1, 1, num_cond_latent_frames+num_latent_frames, 1, 1)
+            uncond_indicator = latents.new_zeros(1, 1, num_cond_latent_frames + num_latent_frames, 1, 1)
             uncond_indicator[:, :, :num_cond_latent_frames] = 1.0
             uncond_mask = uncond_indicator * ones_padding + (1 - uncond_indicator) * zeros_padding
 

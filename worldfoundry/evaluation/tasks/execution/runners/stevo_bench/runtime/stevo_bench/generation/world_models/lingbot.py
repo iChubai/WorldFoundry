@@ -1,6 +1,5 @@
 import subprocess
 from pathlib import Path
-from typing import List, Optional
 
 from .local_script import LocalScriptRunner
 
@@ -36,14 +35,14 @@ class LingBotRunner(LocalScriptRunner):
     def build_daemon_cmd(
         self,
         tasks_json_path: str,
-        nproc_per_node: Optional[int] = None,
-        master_port: Optional[int] = None,
-    ) -> List[str]:
+        nproc_per_node: int | None = None,
+        master_port: int | None = None,
+    ) -> list[str]:
         """Extend the base daemon command with the LingBot actions root."""
-        return super().build_daemon_cmd(
-            tasks_json_path, nproc_per_node=nproc_per_node, master_port=master_port
-        ) + [
-            "--lingbot_actions_root", str(self._actions_root),
+        return [
+            *super().build_daemon_cmd(tasks_json_path, nproc_per_node=nproc_per_node, master_port=master_port),
+            "--lingbot_actions_root",
+            str(self._actions_root),
         ]
 
     @staticmethod
@@ -55,9 +54,9 @@ class LingBotRunner(LocalScriptRunner):
         self,
         task_id: str,
         prompt: str,
-        init_frame: Optional[Path],
+        init_frame: Path | None,
         output_path: Path,
-        camera_control: Optional[str] = None,
+        camera_control: str | None = None,
     ) -> bool:
         script_path = self.repo_path / self.script
         if not script_path.exists():
@@ -82,9 +81,12 @@ class LingBotRunner(LocalScriptRunner):
             return False
 
         cmd = [
-            "bash", str(script_path),
-            "--prompt", prompt,
-            "--output", str(output_path),
+            "bash",
+            str(script_path),
+            "--prompt",
+            prompt,
+            "--output",
+            str(output_path),
         ]
         if init_frame and init_frame.exists():
             cmd += ["--init_frame", str(init_frame)]

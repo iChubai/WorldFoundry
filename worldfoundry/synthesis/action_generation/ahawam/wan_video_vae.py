@@ -11,9 +11,7 @@ CACHE_T = 2
 def check_is_instance(model, module_class):
     if isinstance(model, module_class):
         return True
-    if hasattr(model, "module") and isinstance(model.module, module_class):
-        return True
-    return False
+    return bool(hasattr(model, "module") and isinstance(model.module, module_class))
 
 
 def block_causal_mask(x, block_size):
@@ -73,7 +71,9 @@ class Upsample(nn.Upsample):
         return super().forward(x.float()).type_as(x)
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import Resample
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    Resample,
+)
 
 
 def patchify(x, patch_size):
@@ -98,12 +98,12 @@ def unpatchify(x, patch_size):
     return x
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import Resample38
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import ResidualBlock
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
     CausalConv3d as _SharedCausalConv3d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    Resample38,
+    ResidualBlock,
 )
 
 
@@ -147,13 +147,12 @@ class AttentionBlock(nn.Module):
         return x + identity
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D
+import itertools  # noqa: E402 - Follows module-level definitions, as upstream.
 
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import DupUp3D
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import Down_ResidualBlock
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    Down_ResidualBlock,
+    DupUp3D,
+)
 
 
 class Up_ResidualBlock(nn.Module):
@@ -183,7 +182,7 @@ class Up_ResidualBlock(nn.Module):
 
         self.upsamples = nn.Sequential(*upsamples)
 
-    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):
+    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):  # noqa: B006 - Keeps the upstream default object and signature.
         x_main = x.clone()
         for module in self.upsamples:
             x_main, feat_cache, feat_idx = module(x_main, feat_cache, feat_idx)
@@ -198,10 +197,10 @@ class Encoder3d(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[True, True, False],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[True, True, False],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -213,7 +212,7 @@ class Encoder3d(nn.Module):
         self.temperal_downsample = temperal_downsample
 
         # dimensions
-        dims = [dim * u for u in [1] + dim_mult]
+        dims = [dim * u for u in [1] + dim_mult]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0
 
         # init block
@@ -221,7 +220,7 @@ class Encoder3d(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             for _ in range(num_res_blocks):
                 downsamples.append(ResidualBlock(in_dim, out_dim, dropout))
@@ -246,7 +245,7 @@ class Encoder3d(nn.Module):
             RMS_norm(out_dim, images=False), nn.SiLU(), CausalConv3d(out_dim, z_dim, 3, padding=1)
         )
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         if feat_cache is not None:
             idx = feat_idx[0]
             cache_x = x[:, :, -CACHE_T:, :, :].clone()
@@ -296,10 +295,10 @@ class Encoder3d_38(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -311,7 +310,7 @@ class Encoder3d_38(nn.Module):
         self.temperal_downsample = temperal_downsample
 
         # dimensions
-        dims = [dim * u for u in [1] + dim_mult]
+        dims = [dim * u for u in [1] + dim_mult]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0
 
         # init block
@@ -319,7 +318,7 @@ class Encoder3d_38(nn.Module):
 
         # downsample blocks
         downsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_down_flag = temperal_downsample[i] if i < len(temperal_downsample) else False
             downsamples.append(
                 Down_ResidualBlock(
@@ -348,7 +347,7 @@ class Encoder3d_38(nn.Module):
             CausalConv3d(out_dim, z_dim, 3, padding=1),
         )
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         if feat_cache is not None:
             idx = feat_idx[0]
             cache_x = x[:, :, -CACHE_T:, :, :].clone()
@@ -407,10 +406,10 @@ class Decoder3d(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_upsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_upsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -422,7 +421,7 @@ class Decoder3d(nn.Module):
         self.temperal_upsample = temperal_upsample
 
         # dimensions
-        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]
+        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         scale = 1.0 / 2 ** (len(dim_mult) - 2)
 
         # init block
@@ -435,7 +434,7 @@ class Decoder3d(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             # residual (+attention) blocks
             if i == 1 or i == 2 or i == 3:
                 in_dim = in_dim // 2
@@ -455,7 +454,7 @@ class Decoder3d(nn.Module):
         # output blocks
         self.head = nn.Sequential(RMS_norm(out_dim, images=False), nn.SiLU(), CausalConv3d(out_dim, 3, 3, padding=1))
 
-    def forward(self, x, feat_cache=None, feat_idx=[0]):
+    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
         ## conv1
         if feat_cache is not None:
             idx = feat_idx[0]
@@ -506,10 +505,10 @@ class Decoder3d_38(nn.Module):
         self,
         dim=128,
         z_dim=4,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_upsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_upsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -521,7 +520,7 @@ class Decoder3d_38(nn.Module):
         self.temperal_upsample = temperal_upsample
 
         # dimensions
-        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]
+        dims = [dim * u for u in [dim_mult[-1]] + dim_mult[::-1]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
         # init block
         self.conv1 = CausalConv3d(z_dim, dims[0], 3, padding=1)
 
@@ -532,7 +531,7 @@ class Decoder3d_38(nn.Module):
 
         # upsample blocks
         upsamples = []
-        for i, (in_dim, out_dim) in enumerate(zip(dims[:-1], dims[1:])):
+        for i, (in_dim, out_dim) in enumerate(itertools.pairwise(dims)):
             t_up_flag = temperal_upsample[i] if i < len(temperal_upsample) else False
             upsamples.append(
                 Up_ResidualBlock(
@@ -549,7 +548,7 @@ class Decoder3d_38(nn.Module):
         # output blocks
         self.head = nn.Sequential(RMS_norm(out_dim, images=False), nn.SiLU(), CausalConv3d(out_dim, 12, 3, padding=1))
 
-    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):
+    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):  # noqa: B006 - Keeps the upstream default object and signature.
         if feat_cache is not None:
             idx = feat_idx[0]
             cache_x = x[:, :, -CACHE_T:, :, :].clone()
@@ -616,10 +615,10 @@ class VideoVAE_(nn.Module):
         self,
         dim=96,
         z_dim=16,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super().__init__()
@@ -981,10 +980,10 @@ class VideoVAE38_(VideoVAE_):
         dim=160,
         z_dim=48,
         dec_dim=256,
-        dim_mult=[1, 2, 4, 4],
+        dim_mult=[1, 2, 4, 4],  # noqa: B006 - Keeps the upstream default object and signature.
         num_res_blocks=2,
-        attn_scales=[],
-        temperal_downsample=[False, True, True],
+        attn_scales=[],  # noqa: B006 - Keeps the upstream default object and signature.
+        temperal_downsample=[False, True, True],  # noqa: B006 - Keeps the upstream default object and signature.
         dropout=0.0,
     ):
         super(VideoVAE_, self).__init__()

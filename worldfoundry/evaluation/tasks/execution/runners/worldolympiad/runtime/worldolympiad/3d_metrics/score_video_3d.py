@@ -7,12 +7,12 @@ from _bootstrap import setup_paths
 
 setup_paths()
 
-import argparse
-import json
-import os
-from pathlib import Path
+import argparse  # noqa: E402 - Follows setup_paths().
+import json  # noqa: E402 - Follows setup_paths().
+import os  # noqa: E402 - Follows setup_paths().
+from pathlib import Path  # noqa: E402 - Follows setup_paths().
 
-from model.vlm import resolve_model_name, resolve_vlm_backend
+from model.vlm import resolve_model_name, resolve_vlm_backend  # noqa: E402 - Follows setup_paths().
 
 DEFAULT_MODEL_NAME = str(Path(__file__).resolve().parents[1] / "weights" / "da3")
 DEFAULT_SCORING_MODEL: str | None = None

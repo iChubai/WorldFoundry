@@ -98,12 +98,10 @@ _WORLDRECON_PASSTHROUGH_KWARGS = {
 
 
 def _canonical_key(value: Any) -> str:
-    """Canonical key helper function."""
     return str(value).strip().lower().replace("_", "-")
 
 
 def _pop_first(mapping: dict[str, Any], keys, default=None):
-    """Pop first helper function."""
     for key in keys:
         if key in mapping:
             return mapping.pop(key)

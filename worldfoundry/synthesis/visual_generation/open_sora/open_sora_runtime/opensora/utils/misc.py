@@ -6,7 +6,6 @@ import time
 from collections import OrderedDict
 from collections.abc import Sequence
 from itertools import repeat
-from typing import Tuple
 
 import numpy as np
 import torch
@@ -37,7 +36,7 @@ def create_logger(logging_dir=None):
     Create a logger that writes to a log file and stdout.
     """
     if is_main_process():  # real logger
-        additional_args = dict()
+        additional_args = {}
         if logging_dir is not None:
             additional_args["handlers"] = [
                 logging.StreamHandler(),
@@ -167,7 +166,7 @@ def all_reduce_mean(tensor: torch.Tensor) -> torch.Tensor:
     return tensor
 
 
-def get_model_numel(model: torch.nn.Module) -> Tuple[int, int]:
+def get_model_numel(model: torch.nn.Module) -> tuple[int, int]:
     num_params = 0
     num_params_trainable = 0
     for p in model.parameters():
@@ -344,7 +343,7 @@ def transpose(x):
     Args:
         x (list[list]):
     """
-    ret = list(map(list, zip(*x)))
+    ret = list(map(list, zip(*x, strict=False)))
     return ret
 
 

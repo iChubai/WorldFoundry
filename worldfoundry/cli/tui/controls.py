@@ -493,7 +493,7 @@ def _infer_control_text_overrides(variant: str) -> dict[str, dict[str, str]]:
             },
             "task": {
                 "label": "Generation task",
-                "placeholder": "worldrecon / panorama",
+                "placeholder": "worldrecon",
             },
         }
     if variant == "worldcam":

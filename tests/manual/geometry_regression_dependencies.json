@@ -150,8 +150,7 @@
     ],
     "hyworldmirror-2": [
       "worldfoundry/base_models/three_dimensions/point_clouds/hyworldmirror_2p0/**",
-      "worldfoundry/pipelines/hunyuan_world/pipeline_hy_world_2p0.py",
-      "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_worldgen_runtime.py"
+      "worldfoundry/pipelines/hunyuan_world/pipeline_hy_world_2p0.py"
     ],
     "lyra-2": [
       "worldfoundry/base_models/three_dimensions/point_clouds/lyra/**",

@@ -382,8 +382,9 @@ IRASim (`irasim@irasim`) and Pandora (`pandora@pandora`) from active support.
 Their frozen baseline records remain unchanged. The exact identity set in
 `tests/manual/native_coverage_policy.py` permits these planned removals and
 reports them as `retired_native_variants`, not replay coverage or GPU success.
-HunyuanWorld-Voyager (`hunyuanworld-voyager@hunyuanworld-voyager`) is retired
-the same way: its runtime depended on license-gated local checkouts or an
+HunyuanWorld-Voyager (`hunyuanworld-voyager@hunyuanworld-voyager`) and
+HY-World 2.0 world generation (`hyworld-worldgen@hyworld-worldgen`) are retired
+the same way: their runtimes depended on license-gated local checkouts or an
 external source checkout, and every model runtime must run from the repository.
 Other frozen variant removals still fail. Reintroducing a retired identity
 requires its own checkpoint replay recipe, like a new variant; its historical

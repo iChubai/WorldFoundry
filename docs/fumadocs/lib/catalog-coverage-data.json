@@ -1,5 +1,5 @@
 {
-  "modelsListed": 260,
+  "modelsListed": 259,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -524,7 +524,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 106,
+      "count": 105,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -841,14 +841,6 @@
           "status": "component_verified",
           "aliases": [
             "hy-world-2.0"
-          ]
-        },
-        {
-          "id": "hyworld-worldgen",
-          "name": "HY-World 2.0 Trajectory Renderer",
-          "status": "runtime_ported",
-          "aliases": [
-            "hyworld-worldgen"
           ]
         },
         {

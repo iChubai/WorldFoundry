@@ -800,52 +800,6 @@ def test_kling_recammaster_runtime_lives_under_synthesis():
     assert ".recammaster." not in text
 
 
-def test_hy_world_2p0_panogen_runtime_lives_under_synthesis():
-    _require_local_source("worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime")
-    runtime_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime"
-    old_runtime_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0/panogen"
-    synthesis_path = (
-        REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_world_family_synthesis.py"
-    )
-    pipeline_path = REPO_ROOT / "worldfoundry/pipelines/hunyuan_world/pipeline_hy_world_2p0.py"
-
-    assert not old_runtime_root.exists()
-    assert (runtime_root / "pipeline.py").is_file()
-    assert (runtime_root / "pipeline_with_qwen_image.py").is_file()
-    assert (runtime_root / "setup.py").is_file()
-
-    for path in (synthesis_path, pipeline_path):
-        text = path.read_text(encoding="utf-8")
-        assert "synthesis.visual_generation.hunyuan_world.hy_world_2p0_panogen_runtime" in text
-        assert "hy_world_2p0.panogen" not in text
-
-
-def test_hy_world_2p0_worldgen_diagnostics_do_not_probe_external_checkouts(monkeypatch, tmp_path: Path):
-    from worldfoundry.synthesis.visual_generation.hunyuan_world.hy_world_2p0_worldgen_runtime import (
-        get_hy_world_2p0_worldgen_plan,
-        inspect_official_worldgen_checkout,
-    )
-
-    runtime_text = (
-        REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_worldgen_runtime.py"
-    ).read_text(encoding="utf-8")
-    assert "github_repos" not in runtime_text
-
-    monkeypatch.delenv("WORLDFOUNDRY_HY_WORLD_2P0_REPO", raising=False)
-    plan = get_hy_world_2p0_worldgen_plan()
-    assert plan["official_checkout"]["repo_path"] is None
-    assert plan["official_checkout"]["exists"] is False
-
-    official_root = tmp_path / "HY-World-2.0"
-    required_file = official_root / "hyworld2/worldgen/traj_generate.py"
-    required_file.parent.mkdir(parents=True)
-    required_file.write_text("# fixture\n", encoding="utf-8")
-    monkeypatch.setenv("WORLDFOUNDRY_HY_WORLD_2P0_REPO", str(official_root))
-
-    checkout = inspect_official_worldgen_checkout()
-    assert checkout["repo_path"] == str(official_root)
-    assert checkout["exists"] is True
-    assert "hyworld2/worldgen/traj_generate.py" not in checkout["missing_files"]
 
 
 def test_matrix_game_1_runtime_logic_lives_under_base_models():

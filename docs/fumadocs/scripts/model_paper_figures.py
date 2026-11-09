@@ -34,7 +34,6 @@ SHARE_FROM: dict[str, str] = {
     "cosmos-transfer-2.5": "cosmos-predict-2.5",
     "lingbot-world-act": "lingbot-world",
     "longvie-1": "longvie-2",
-    "hyworld-worldgen": "hy-world-2.0",
     "depth-anything-v3": "depth-anything-v3-prior",
     "db-cogact": "dm0",
     "joyai-echo-longvideo": "joyai-echo-wm",

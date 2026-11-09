@@ -1896,19 +1896,6 @@
       "caption": "Method overview: An overview of HunyuanWorld 1.0 architecture for 3D world generation. Given a conditioned scene image or textual description, HunyuanWorld 1.0 generates layer-wise 3D worlds in mesh through a staged generative.",
       "captionZh": "论文方法总览：HunyuanWorld 1.0 的视频生成架构。"
     },
-    "hyworld-worldgen": {
-      "modelId": "hyworld-worldgen",
-      "paperSrc": "/models/hyworld-worldgen/paper.png",
-      "teaserSrc": "/models/hy-world-2.0/teaser.jpg",
-      "teaserAlt": "Official paper teaser: HY-World 2.0 samples from the paper.",
-      "teaserAltZh": "论文官方 Teaser：HY-World 2.0 论文中的样例。",
-      "teaserCaption": "Official paper teaser: HY-World 2.0 samples from the paper.",
-      "teaserCaptionZh": "论文官方 Teaser：HY-World 2.0 论文中的样例。",
-      "alt": "HY-World 2.0 Trajectory Renderer",
-      "altZh": "HY-World 2.0 Trajectory Renderer",
-      "caption": "HY-World 2.0 Trajectory Renderer",
-      "captionZh": "HY-World 2.0 Trajectory Renderer"
-    },
     "infinite-vggt": {
       "modelId": "infinite-vggt",
       "paperSrc": "/models/infinite-vggt/paper.png",

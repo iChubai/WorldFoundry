@@ -3,7 +3,6 @@
 from importlib import import_module
 
 __all__ = [
-    "HYWorld2PanoSynthesis",
     "HYWorld2Synthesis",
     "HunyuanGameCraftSynthesis",
     "HunyuanWorld1Synthesis",
@@ -46,7 +45,6 @@ def __getattr__(name):
         "HunyuanWorld1Synthesis",
         "HunyuanWorldMirrorSynthesis",
         "HYWorld2Synthesis",
-        "HYWorld2PanoSynthesis",
     }:
         module = import_module(".hunyuan_world_family_synthesis", __name__)
         value = getattr(module, name)

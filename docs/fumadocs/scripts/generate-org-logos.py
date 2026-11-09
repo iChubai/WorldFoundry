@@ -1204,7 +1204,6 @@ MODEL_ORGS: dict[str, str] = {
     "hy-world-2.0": "tencent-hunyuan",
     "hy-worldplay": "tencent-hunyuan",
     "hydra": "hust",
-    "hyworld-worldgen": "tencent-hunyuan",
     "i2vgen-xl": "alibaba",
     "infinite-vggt": "berkeley",
     "infinite-world": "meigen",

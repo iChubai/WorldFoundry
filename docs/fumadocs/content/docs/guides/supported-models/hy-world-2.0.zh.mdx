@@ -5,7 +5,7 @@ modelId: "hy-world-2.0"
 pageSource: generated
 ---
 
-HY-World 2.0 是腾讯第二代世界生成栈，此处按组件记录：HY-Pano 2.0 全景生成（树内支持）、 WorldMirror 2.0 重建（已通过 Workspace 推理路径验证），以及完整文/图到 3D 世界生成（上游已开源， WorldFoundry 侧迁移待完成）。已验证的重建路径导出深度、法线、点云、高斯泼溅、相机参数、COLMAP 文件与 RRD 场景元数据。
+HY-World 2.0 是腾讯第二代世界生成栈。WorldFoundry 运行其中的 WorldMirror 2.0 重建组件，已通过 Workspace 推理路径验证，可导出深度、法线、点云、高斯泼溅、相机参数、COLMAP 文件与 RRD 场景元数据。
 
 <ModelPaperFigures modelId="hy-world-2.0" locale="zh" />
 
@@ -19,7 +19,7 @@ HY-World 2.0 是腾讯第二代世界生成栈，此处按组件记录：HY-Pano
 
 需要动作条件世界步进时选 `hy-world-2.0`：记录动作与帧进、滚动生成出。用来做交互世界推理，不是把 prompt 倒进文生视频。
 
-上游的五阶段世界生成串联 WorldNav 轨迹生成、轨迹渲染、视频生成、GS 数据准备与 3DGS 组合（traj_generate.py 到 world_gs_trainer.py），另需 VLM 端点。WorldFoundry 已树内封装 HY-Pano 2.0 与 WorldMirror 2.0；其余阶段尚未迁移。该模型由腾讯（混元）发布。
+WorldMirror 2.0 是前馈式重建网络，从图像或视频预测深度、法线、相机、点云与高斯泼溅。上游的 HY-Pano 2.0 全景生成与五阶段世界生成不在 WorldFoundry 中。该模型由腾讯（混元）发布。
 
 catalog 记录的任务包括 default。别名包括 `hyworld2.0`、`hyworld-2.0`、`hy-world2.0`、`hy-world-2p0` 等。
 
@@ -33,9 +33,9 @@ CLI task profile：`default`。绑定的 pipeline 类是 `HYWorld2Pipeline`。
 
 系列状态：**计划中**。
 
-当下请使用已验证的 WorldMirror 2.0 重建路径；在五阶段运行时迁移并验证之前，完整世界生成请视为仅上游可用。 轨迹渲染阶段单独记录为 hyworld-worldgen 条目。
+使用 worldrecon 任务，从图像目录或视频运行 WorldMirror 2.0 重建。
 
-完整文/图到 3D 世界生成在 WorldFoundry 侧待迁移。
+仅提供 WorldMirror 2.0 重建组件；全景生成与世界生成不可用。
 
 ## 在 WorldFoundry 中运行
 

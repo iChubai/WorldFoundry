@@ -890,13 +890,6 @@ def _joyai_echo_wm_default_load_kwargs() -> dict[str, Any]:
     }
 
 
-def _hyworld_worldgen_scene_ref() -> str:
-    configured = os.getenv("HYWORLD_SCENE_PATH", "").strip()
-    if configured:
-        return configured
-    return str(resolve._data_path("test_cases", "hyworld_worldgen", "materialized_scene"))
-
-
 OVERRIDES: dict[str, dict[str, Any]] = {
     "hy-nomas": {
         "display_name": "Hy-Nomas",
@@ -2795,36 +2788,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "device",
         ),
         "tags": ("action-control", "audio-video", "camera-control", "world-model", "official-runtime"),
-    },
-    "hyworld-worldgen": {
-        "display_name": "HY-World 2.0 Trajectory Renderer",
-        "category": "Video Generation",
-        "default_task_type": "image-to-video",
-        "default_backend": "from_pretrained",
-        "supports_from_pretrained": True,
-        "default_model_ref": _hyworld_worldgen_scene_ref,
-        "default_load_kwargs": lambda: {"scene_path": _hyworld_worldgen_scene_ref()},
-        "default_input_path": str(resolve._data_path("test_cases", "hunyuan_worldplay", "test.png")),
-        "default_prompt": "Render the materialized HY-World scene along the supplied camera trajectory.",
-        "default_call_kwargs": {
-            "camera_json": str(resolve._data_path("test_cases", "hydra", "camera.json")),
-            "width": 832,
-            "height": 480,
-            "seed": 1024,
-            "return_dict": True,
-        },
-        "call_params": (
-            "images",
-            "image_path",
-            "camera_json",
-            "width",
-            "height",
-            "seed",
-            "output_path",
-            "return_dict",
-        ),
-        "load_params": ("model_path", "required_components", "scene_path", "python_executable", "device"),
-        "tags": ("camera-control", "point-cloud-rendering", "world-model", "in-tree-runtime"),
     },
     "hunyuan-game-craft": {
         "display_name": "Hunyuan Game Craft",

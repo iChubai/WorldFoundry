@@ -1,4 +1,3 @@
-# ruff: noqa
 import re
 
 import torch

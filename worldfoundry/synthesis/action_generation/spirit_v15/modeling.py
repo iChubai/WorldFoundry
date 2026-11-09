@@ -1,4 +1,3 @@
-# ruff: noqa
 # ==============================================================================
 # Attribution
 # ------------------------------------------------------------------------------
@@ -14,8 +13,9 @@ See the `LICENSE` for details.
 
 import json
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
-from typing import Any, Mapping, Optional, Dict
+from typing import Any
 
 import numpy as np
 import torch
@@ -44,8 +44,8 @@ from .sampling import sample_noise
 from .tensor_ops import pad_and_cat, pad_vector
 from .vlm_utils import (
     get_rope_index_3,
-    preprocess_qwen_visual,
     get_user_prompt,
+    preprocess_qwen_visual,
 )
 
 try:
@@ -72,9 +72,9 @@ ACTION = "action"
 class Normalize(nn.Module):
     def __init__(
         self,
-        features: Dict[str, PolicyFeature],
-        norm_map: Dict[str, NormalizationMode],
-        stats: Optional[Dict[str, dict[str, torch.Tensor]]] = None,
+        features: dict[str, PolicyFeature],
+        norm_map: dict[str, NormalizationMode],
+        stats: dict[str, dict[str, torch.Tensor]] | None = None,
     ):
         super().__init__()
         self.features = features
@@ -106,9 +106,9 @@ class Normalize(nn.Module):
 class Unnormalize(nn.Module):
     def __init__(
         self,
-        features: Dict[str, PolicyFeature],
-        norm_map: Dict[str, NormalizationMode],
-        stats: Optional[dict[str, dict[str, torch.Tensor]]] = None,
+        features: dict[str, PolicyFeature],
+        norm_map: dict[str, NormalizationMode],
+        stats: dict[str, dict[str, torch.Tensor]] | None = None,
     ):
         super().__init__()
         self.features = features
@@ -150,7 +150,7 @@ class SpiritVLAConfig:
     dit_num_heads: int = 8
     dit_num_layers: int = 18
     dit_interleave_self_attention: bool = False
-    dit_cross_attention_dim: Optional[int] = None
+    dit_cross_attention_dim: int | None = None
     num_noise_per_sample: int = 1
     normalization_mapping: dict[str, NormalizationMode] = field(default_factory=dict)
     input_features: dict[str, PolicyFeature] = field(default_factory=dict)
@@ -228,7 +228,7 @@ class BaseDiTConfig(PretrainedConfig):
         compute_dtype=torch.float32,
         positional_embeddings: str = "sinusoidal",
         interleave_self_attention=False,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         dropout: float = 0.0,
         **kwargs,
     ):
@@ -285,7 +285,7 @@ class AdaLayerNorm(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        temb: Optional[torch.Tensor] = None,
+        temb: torch.Tensor | None = None,
     ) -> torch.Tensor:
         temb = self.linear(self.silu(temb))
         scale, shift = temb.chunk(2, dim=1)
@@ -300,16 +300,16 @@ class BasicTransformerBlock(nn.Module):
         num_attention_heads: int,
         attention_head_dim: int,
         dropout=0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         activation_fn: str = "geglu",
         attention_bias: bool = False,
         upcast_attention: bool = False,
         norm_elementwise_affine: bool = True,
         norm_type: str = "layer_norm",
         norm_eps: float = 1e-5,
-        positional_embeddings: Optional[str] = None,
-        num_positional_embeddings: Optional[int] = None,
-        ff_inner_dim: Optional[int] = None,
+        positional_embeddings: str | None = None,
+        num_positional_embeddings: int | None = None,
+        ff_inner_dim: int | None = None,
         ff_bias: bool = True,
         attention_out_bias: bool = True,
     ):
@@ -361,10 +361,10 @@ class BasicTransformerBlock(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
-        encoder_hidden_states: Optional[torch.Tensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
-        temb: Optional[torch.LongTensor] = None,
+        attention_mask: torch.Tensor | None = None,
+        encoder_hidden_states: torch.Tensor | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
+        temb: torch.LongTensor | None = None,
     ) -> torch.Tensor:
         if self.norm_type == "ada_norm":
             norm_hidden_states = self.norm1(hidden_states, temb)
@@ -407,7 +407,7 @@ class BaseDiT(ModelMixin, ConfigMixin):
         compute_dtype=torch.float32,
         positional_embeddings: str = "sinusoidal",
         interleave_self_attention=False,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         dropout: float = 0.0,
     ):
         super().__init__()
@@ -443,8 +443,8 @@ class BaseDiT(ModelMixin, ConfigMixin):
         self,
         hidden_states: torch.Tensor,
         encoder_hidden_states: torch.Tensor,
-        timestep: Optional[torch.LongTensor] = None,
-        encoder_attention_mask: Optional[torch.Tensor] = None,
+        timestep: torch.LongTensor | None = None,
+        encoder_attention_mask: torch.Tensor | None = None,
         return_all_hidden_states: bool = False,
     ):
         temb = self.timestep_encoder(timestep)
@@ -749,8 +749,8 @@ class SpiritVLAPolicy(nn.Module):
     # ----------------------------- Inference -----------------------------
     def select_action(
         self,
-        batch: Dict[str, torch.Tensor],
-        noise: Optional[torch.Tensor] = None,
+        batch: dict[str, torch.Tensor],
+        noise: torch.Tensor | None = None,
     ) -> torch.Tensor:
         self.eval()
         batch = self.normalize_inputs(batch)
@@ -784,7 +784,7 @@ class SpiritVLAPolicy(nn.Module):
     ):
         config_path = os.path.join(ckpt_path, "config.json")
         if os.path.exists(config_path):
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 cfg_dict = json.load(f)
         else:
             raise FileNotFoundError(f"No config.json found in {ckpt_path}")

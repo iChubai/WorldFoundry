@@ -1,6 +1,4 @@
-# coding=utf-8
 # WorldFoundry modification: vendored in-tree from the pinned official checkpoint runtime.
-# ruff: noqa
 # Copyright (C) 2026 Xiaomi Corporation.
 # Copyright 2025 The Qwen Team and The HuggingFace Inc. team. All rights reserved.
 #
@@ -15,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Optional
 
 from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_rope_utils import rope_config_validation
@@ -361,8 +358,8 @@ class MiBoTConfig(PretrainedConfig):
 
     def __init__(
         self,
-        vlm_config: Optional[dict] = None,
-        dit_config: Optional[dict] = None,
+        vlm_config: dict | None = None,
+        dit_config: dict | None = None,
         state_length: int = 1,
         state_dim: int = 32,
         action_length: int = 30,
@@ -387,4 +384,4 @@ class MiBoTConfig(PretrainedConfig):
         super().__init__(**kwargs)
 
 
-__all__ = ["MiBoTConfig", "DiTConfig"]
+__all__ = ["DiTConfig", "MiBoTConfig"]

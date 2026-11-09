@@ -1,12 +1,11 @@
-# ruff: noqa
 # ==============================================================================
 # Attribution
 # ------------------------------------------------------------------------------
 # Released by Spirit AI Team. Modified by WorldFoundry for inference-only use.
 # ==============================================================================
 
+
 import torch
-from typing import Optional, Dict, Tuple
 
 SYSTEM_MESSAGE = "You are a helpful assistant."
 
@@ -37,8 +36,8 @@ def _chat_template_token_ids(tokenizer, messages) -> list[int]:
 def preprocess_qwen_visual(
     sources,
     tokenizer,
-    grid_thw_image: Optional[list] = None,
-) -> Dict:
+    grid_thw_image: list | None = None,
+) -> dict:
     grid_thw_image = grid_thw_image or []
     roles = {"human": "user", "gpt": "assistant"}
     visual_replicate_index_image = 0
@@ -89,14 +88,14 @@ def preprocess_qwen_visual(
 
 def get_rope_index_3(
     spatial_merge_size: int = 2,
-    input_ids: Optional[torch.LongTensor] = None,
-    image_grid_thw: Optional[torch.LongTensor] = None,
-    video_grid_thw: Optional[torch.LongTensor] = None,
-    attention_mask: Optional[torch.Tensor] = None,
+    input_ids: torch.LongTensor | None = None,
+    image_grid_thw: torch.LongTensor | None = None,
+    video_grid_thw: torch.LongTensor | None = None,
+    attention_mask: torch.Tensor | None = None,
     image_token_id: int = 151655,
     video_token_id: int = 151656,
     vision_start_token_id: int = 151652,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     if video_grid_thw is not None:
         video_grid_thw = torch.repeat_interleave(video_grid_thw, video_grid_thw[:, 0], dim=0)
         video_grid_thw[:, 0] = 1

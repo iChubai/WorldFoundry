@@ -1,6 +1,4 @@
-# coding=utf-8
 # WorldFoundry modification: vendored in-tree from the pinned official checkpoint runtime.
-# ruff: noqa
 # Copyright (C) 2026 Xiaomi Corporation.
 # Copyright 2025 The Qwen Team and The HuggingFace Inc. team. All rights reserved.
 #
@@ -16,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Union, List
+
 import numpy as np
 import torch
-
 from transformers.feature_extraction_utils import BatchFeature
 from transformers.image_utils import ImageInput
 from transformers.processing_utils import (
@@ -42,11 +39,11 @@ class Qwen3VLVideosProcessorKwargs(VideosKwargs, total=False):
 
 
 class Qwen3VLImagesKwargs(ImagesKwargs):
-    min_pixels: Optional[int]
-    max_pixels: Optional[int]
-    patch_size: Optional[int]
-    temporal_patch_size: Optional[int]
-    merge_size: Optional[int]
+    min_pixels: int | None
+    max_pixels: int | None
+    patch_size: int | None
+    temporal_patch_size: int | None
+    merge_size: int | None
 
 
 class Qwen3VLProcessorKwargs(ProcessingKwargs, total=False):
@@ -125,7 +122,7 @@ class MiBotProcessor(ProcessorMixin):
                 "std": torch.tensor(std, dtype=torch.float32)[None],
             }
 
-    def list_robot_types(self) -> List[str]:
+    def list_robot_types(self) -> list[str]:
         """Return list of available robot types in action_config."""
         return list(self.action_config.keys())
 
@@ -166,7 +163,7 @@ class MiBotProcessor(ProcessorMixin):
     def __call__(
         self,
         images: ImageInput = None,
-        text: Union[TextInput, PreTokenizedInput, list[TextInput], list[PreTokenizedInput]] = None,
+        text: TextInput | PreTokenizedInput | list[TextInput] | list[PreTokenizedInput] = None,
         videos: VideoInput = None,
         **kwargs: Unpack[Qwen3VLProcessorKwargs],
     ) -> BatchFeature:
@@ -344,7 +341,7 @@ class MiBotProcessor(ProcessorMixin):
             **kwargs,
         )
 
-    def _calculate_timestamps(self, indices: Union[list[int], np.ndarray], video_fps: float, merge_size: int = 2):
+    def _calculate_timestamps(self, indices: list[int] | np.ndarray, video_fps: float, merge_size: int = 2):
         if not isinstance(indices, list):
             indices = indices.tolist()
         if len(indices) % merge_size != 0:

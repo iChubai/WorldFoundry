@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# ruff: noqa
 
 # Copyright 2025 HuggingFace Inc. team. All rights reserved.
 #
@@ -18,8 +17,9 @@
 """SmolVLA inference model, adapted from the official Apache-2.0 release."""
 
 import math
+
 import torch
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as F
 from torch import Tensor, nn
 
 from .configuration import SmolVLAConfig

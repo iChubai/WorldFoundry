@@ -85,7 +85,9 @@ def _matrix_game_2_default_ref() -> str:
 
 def _matrix_game_2_default_config_path() -> str:
     return resolve._first_existing_path(
-        resolve._data_path("models", "runtime", "configs", "matrix_game_2", "inference_yaml", "inference_universal.yaml"),
+        resolve._data_path(
+            "models", "runtime", "configs", "matrix_game_2", "inference_yaml", "inference_universal.yaml"
+        ),
     )
 
 
@@ -1194,7 +1196,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "category": "Video Generation",
         "summary": "Released GR1 robot-world image-to-video generation with local T5 and Wan components.",
         "default_model_ref": lambda: str(checkpoint_root_path("open-gigaai--GigaWorld-0-Video-GR1-2b", "transformer")),
-        "default_input_path": str(resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")),
+        "default_input_path": str(
+            resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")
+        ),
         "default_prompt": "A robot arm moves toward the objects on the workbench.",
         "default_task_type": "robot-image-to-video",
         "default_load_kwargs": _giga_world_0_default_load_kwargs,
@@ -1449,7 +1453,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "category": "Video Generation",
         "summary": "Official RGB-depth-normal robot world-video generation with local CogVideoX components.",
         "default_model_ref": lambda: str(checkpoint_root_path("anyeZHY--tesseract", "tesseract_v01e_rgbdn_sft")),
-        "default_input_path": str(resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")),
+        "default_input_path": str(
+            resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")
+        ),
         "default_prompt": "The robot moves its gripper toward the object on the table.",
         "default_task_type": "robot-action-video",
         "default_load_kwargs": _tesseract_default_load_kwargs,

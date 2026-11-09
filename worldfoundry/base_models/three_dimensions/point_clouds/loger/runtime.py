@@ -78,7 +78,7 @@ class LoGeRRepresentation:
             ckpt_filename = f"{subfolder}/latest.pt" if subfolder else "latest.pt"
             config_filename = f"{subfolder}/original_config.yaml" if subfolder else "original_config.yaml"
 
-            # 先查本地缓存，没有再联网
+            # Check the local cache before accessing the network.
             try:
                 ckpt_file = hf_hub_download(
                     repo_id=pretrained_model_path,

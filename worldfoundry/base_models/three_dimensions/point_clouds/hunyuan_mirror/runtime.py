@@ -142,7 +142,7 @@ class HunyuanWorldMirrorRepresentation(nn.Module, PyTorchModelHubMixin):
 
     def get_representation(self, data):
         """
-        根据operator处理后的特征，让self.model进行调用，输入对应的结果representation结果
+        Run the forward pass on operator-prepared data and return its representations.
         """
         return self.forward(data)
 

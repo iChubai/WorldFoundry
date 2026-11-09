@@ -44,7 +44,7 @@ def process_image_for_tiktok(frames: list[Image.Image], mask_boxes):
         new_frames.append(Image.fromarray(frame[top: bottom, left: right]))
     return new_frames
 
-# 先将视频分成 n_frames 份。训练时，每份随机抽一帧；测试时，每份抽中间的那一帧。
+# Split into n_frames segments; sample randomly in training and use each midpoint in evaluation.
 def _sample_frame_indices_v2(
         total_frames: int, 
         n_frames: int, 
@@ -62,7 +62,7 @@ def _sample_frame_indices_v2(
         sample_ids = [i[(len(i)+1)//2-1] for i in frame_splits]
     return sample_ids
 
-# 均匀抽帧，必采样首尾帧。
+# Sample uniformly, including both endpoints when requesting more than one frame.
 def _sample_frame_indices_v1(total_frames: int, n_frames: int, is_training=False, video_sampling_strategy = {}):  # noqa: B006 - Keeps the upstream default object and signature.
     if n_frames == 1:
         return [0]  # sample first frame in default
@@ -76,7 +76,7 @@ def conduct_disturb_frame(frame_indices):
     n_frames = len(frame_indices)
     frame_indices_new = []
     if disturb_type == 'exchange':
-        # 均等分成4个segments, 随机交换两个segment
+        # Split into four segments and randomly swap two segments.
         seg_len = math.ceil(n_frames / 4)
         seg_idxs = list(range(0, n_frames, seg_len))
         target_idxs = random.sample(range(4), 2)
@@ -84,19 +84,19 @@ def conduct_disturb_frame(frame_indices):
         for idx in seg_idxs:
             frame_indices_new += frame_indices[idx: idx+seg_len]
     elif disturb_type == 'crop':
-        # 随机截取出3/4时长，再采均匀n_frames帧
+        # Randomly crop to about three quarters of the duration, then sample n_frames uniformly.
         crop_len = math.ceil(n_frames / 4)
         idx_s = random.choice(range(crop_len+1))
         idx_e = n_frames - 1 - (crop_len - idx_s)
         frame_indices_new = np.linspace(frame_indices[idx_s], frame_indices[idx_e], n_frames, dtype=int).tolist()
     elif disturb_type == 'reverse':
-        # 随机选择长度为[1/2, 1]时长的片段进行顺序颠倒
+        # Reverse a random segment covering half to all of the frames.
         reverse_len = math.ceil(random.uniform(0.5,1) * n_frames)
         idx_s = random.choice(range(n_frames-reverse_len+1))
         idx_e = idx_s + reverse_len - 1
         frame_indices_new = frame_indices[:idx_s] + list(reversed(frame_indices[idx_s: idx_e+1])) + frame_indices[idx_e+1:]
     elif disturb_type == 'discard':
-        # 随机丢弃一半帧
+        # Randomly discard half of the frames.
         frame_indices_new = random.sample(frame_indices, n_frames//2)
         frame_indices_new.sort()
     return disturb_type, frame_indices_new
@@ -226,7 +226,7 @@ class GIFReader:
         self.local_path = self.preprocess()
         self.gif = Image.open(self.local_path)
         self._length = self.gif.n_frames
-        duration = self.gif.info.get('duration', 0) / 1000  # 转换为秒
+        duration = self.gif.info.get('duration', 0) / 1000  # Convert to seconds.
         if duration > 0:
             self._fps = 1 / duration
         else:
@@ -314,7 +314,7 @@ def sample_video(
             end_frame -= 1
 
         if video_sampling_strategy['video_sampler_version'] == 'v1':
-            # 均匀抽帧，必采样首尾帧。
+            # Sample uniformly, including both endpoints when requesting more than one frame.
             frame_indices = _sample_frame_indices_v1(end_frame - start_frame + 1, n_frames, is_training, video_sampling_strategy)
         elif video_sampling_strategy['video_sampler_version'] == 'v2':
             frame_indices = _sample_frame_indices_v2(end_frame - start_frame + 1, n_frames, is_training, video_sampling_strategy)
@@ -413,7 +413,7 @@ def bbox_area(vertices, convert_format = True):
 def polygon_area(vertices, convert_format = True):
     if convert_format:
         vertices = list(zip(vertices[::2], vertices[1::2], strict=False))
-    n = len(vertices)  # 多边形顶点的数量
+    n = len(vertices)  # Number of polygon vertices.
     if n == 2:
         return bbox_area(vertices, convert_format=False)
     area = 0

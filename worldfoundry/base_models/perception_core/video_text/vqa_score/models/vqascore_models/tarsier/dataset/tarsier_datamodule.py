@@ -22,7 +22,7 @@ class TarsierDataProcessor:
         max_pixels=1280 * 720 // 2,
         min_pixels=0,
         max_seq_len=None,
-        is_training=True,  # 会影响：1. 训练和测试时采帧不同；2. 测试时忽略 response。
+        is_training=True,  # Controls frame sampling and omits the response during evaluation.
         print_data_error=True,
         do_image_padding=False,
         do_image_crop=False,

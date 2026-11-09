@@ -132,7 +132,7 @@ def point_rendering(
         y = torch.arange(h).float() + 0.5
         points = torch.stack(torch.meshgrid(x, y, indexing="ij"), -1).to(device)
         points = einops.rearrange(points, "w h c -> (h w) c")
-        # GPU求逆有错
+        # Invert on CPU to avoid GPU inversion errors.
         points_3d = (
             c2ws[0] @ points_padding((K[0].cpu().inverse().to(device) @ points_padding(points).T).T * point_depth).T
         ).T[:, :3]

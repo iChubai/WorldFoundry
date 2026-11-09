@@ -239,7 +239,7 @@ class AvgDown3D(nn.Module):
                 H // self.factor_s,
                 W // self.factor_s,
             )
-            # 因为pad的是0，所以按理说除以factor_t后值才是对的
+            # Scale the mean by the temporal padding span to account for zero padding.
             x = x.mean(dim=2) / (pad_t + 1)
             return x
 

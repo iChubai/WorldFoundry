@@ -113,40 +113,40 @@ class CameraHead(nn.Module):
 
         B = m.shape[0]
 
-        # 1. 和原来一样: 归一化 m 的每一行，然后转置
-        # m_transpose 的列向量是单位向量
+        # Normalize the rows of m, then transpose.
+        # Nonzero columns of m_transpose are normalized.
         m_norm_rows = torch.nn.functional.normalize(m, p=2, dim=-1)
         m_transpose = m_norm_rows.transpose(-1, -2)
 
-        # 2. 使用 torch.linalg.svd 替换 torch.svd
-        # A = U S Vh (其中 Vh = V^T)
+        # Compute the singular value decomposition.
+        # A = U S Vh, where Vh = V^T.
         try:
             u, s, vh = torch.linalg.svd(m_transpose)
         except torch.linalg.LinAlgError as e:
-            # SVD 失败的罕见情况 (例如，如果输入是全零或NaN)
+            # Handle SVD non-convergence or non-finite inputs.
             print(f"SVD failed: {e}. Returning identity.")
-            # 返回一个 batch 的单位矩阵
+            # Return a batch of identity matrices.
             return torch.eye(3, device=m.device, dtype=m.dtype).unsqueeze(0).expand(B, 3, 3)
 
-        # 3. 计算 R = U @ Vh (这是正交矩阵，但可能 det(R) = -1)
+        # R = U @ Vh is orthogonal but may have determinant -1.
         R_ortho = u @ vh
 
-        # 4. 计算行列式 det(R)
+        # Compute det(R).
         det = torch.det(R_ortho)
 
-        # 5. 创建修正矩阵 D = diag(1, 1, det(R))
-        # 这会处理反射(reflection)情况 (det = -1)
-        # 我们需要为 batch 中的每个元素单独创建 D
+        # Construct D = diag(1, 1, det(R)).
+        # Correct reflections with determinant -1.
+        # Construct a separate D for each batch element.
         D_vec = torch.stack([torch.ones_like(det), torch.ones_like(det), det], dim=-1)
         D = torch.diag_embed(D_vec)
 
-        # 6. 计算 R_so3 = U @ D @ Vh
-        # 这是最终的 SO(3) 旋转矩阵 R
+        # Compute R_so3 = U @ D @ Vh.
+        # R is the resulting SO(3) rotation.
         R = u @ D @ vh
 
-        # 7. 你的原始实现返回的是 R 的转置 (R^T)
+        # Return the transpose R^T to match the camera convention.
         # R^T = (U @ D @ Vh)^T = Vh.T @ D.T @ U.T = V @ D @ U^T
-        # 为了作为你原始代码的“直接替换”，我们返回 R^T
+        # The output uses the transposed rotation convention.
         R_T = R.transpose(-1, -2)
 
         return R_T

@@ -52,7 +52,7 @@ class EMA_FSDP:
 
     @torch.no_grad()
     def _init_shadow(self, fsdp_module):
-        # 判断是否是FSDP模型
+        # Check whether the model uses FSDP.
         from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
         if isinstance(fsdp_module, FSDP):

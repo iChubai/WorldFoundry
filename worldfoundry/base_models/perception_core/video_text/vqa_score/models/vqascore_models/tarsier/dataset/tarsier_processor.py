@@ -63,7 +63,7 @@ class TarsierProcessor(ProcessorMixin):
             tokenizer_init_kwargs=self.tokenizer.init_kwargs,
         )
 
-        # 【图片处理】
+        # Image processing
         pixel_values, image_grid_thw = [], []
         num_images = 0
         for msg in messages:
@@ -106,7 +106,7 @@ class TarsierProcessor(ProcessorMixin):
                         image_grid_thw.extend(content["video"]["video_grid_thw"])
                     content["num_vision_tokens"] = self.get_num_vision_tokens(content)
 
-        # 【文本处理】
+        # Text processing
         add_generation_prompt = not is_training and messages[-1]["role"] != "assistant"
         strip_final_eos = not is_training and messages[-1]["role"] == "assistant"
         text_inputs = self.tokenizer.apply_chat_template(
@@ -225,7 +225,7 @@ class TarsierProcessor(ProcessorMixin):
                 num_image_tokens = content["video"]["video_grid_thw"].prod() // merge_length
             return num_image_tokens
         else:
-            # 其他模型：image tokens (-> 2x2 compressed) -> add image_newline and image_new
+            # Other models: compress image tokens in 2x2 blocks, then add image_newline and image_new.
             k = "image" if content["type"] == "image" else "video"
             pixel_values = content[k]["pixel_values"][0]
             n_frames = len(content[k]["pixel_values"])

@@ -67,7 +67,12 @@ def _path_tokens(env: Mapping[str, str] | None = None) -> dict[str, str]:
 
 
 def expand_capability_path(value: str | Path, env: Mapping[str, str] | None = None) -> Path:
-    """Expand capability path."""
+    """Expand known WorldFoundry path tokens and tilde, anchoring relative paths at the repository root.
+
+    Use the supplied environment mapping, or os.environ when omitted, to derive
+    known token defaults; unknown tokens remain literal. No paths are created
+    or checked, and the result is not resolved through symlinks.
+    """
     expanded = str(value)
     tokens = _path_tokens(env)
     for name, replacement in tokens.items():
@@ -250,12 +255,23 @@ class BaseModelAsset:
     note: str | None = None
 
     def local_dir(self, env: Mapping[str, str] | None = None) -> Path:
-        """Local dir."""
+        """Return the expanded local directory, or the parent of a file asset path.
+
+        Use env (os.environ by default) for path tokens; asset-specific environment
+        overrides are not consulted and the directory is not created.
+        """
         local_path = expand_capability_path(self.local_path, env)
         return local_path if self.kind == "dir" else local_path.parent
 
     def download_command(self, env: Mapping[str, str] | None = None) -> list[str] | None:
-        """Download command."""
+        """Build download argv for the declared local path without executing it.
+
+        Expand path tokens using env, or os.environ by default. A shell template
+        takes precedence; Git sources and assets without a download source return
+        None. URL downloads use mkdir and curl; Hugging Face downloads honor the
+        repo type, revision and filename. Model directories with required file
+        constraints download those files and the first required-any path only.
+        """
         if self.download_command_template:
             command = str(self.download_command_template)
             for name, replacement in _path_tokens(env).items():
@@ -308,7 +324,14 @@ class BaseModelAsset:
         )
 
     def check(self, env: Mapping[str, str] | None = None) -> dict[str, Any]:
-        """Check."""
+        """Inspect environment overrides, then local and alternate paths, for a ready asset.
+
+        Use os.environ when env is omitted. Check file size or directory contents
+        against the asset constraints and select the first ready path. Return
+        metadata, per-variable status, candidate paths, readiness and suggested
+        download/export commands; export to the matched path or the local default.
+        Read the filesystem without creating files, downloading or modifying env.
+        """
         environ = os.environ if env is None else env
         local_path = expand_capability_path(self.local_path, environ)
         alternate_paths = _unique_paths([expand_capability_path(path, environ) for path in self.alternate_paths])
@@ -411,12 +434,20 @@ class BaseModelCapability:
     gpu_required: bool = True
 
     def owner_path(self) -> Path:
-        """Owner path."""
+        """Return canonical_path unchanged if absolute, otherwise relative to the module-level REPO_ROOT.
+
+        Do not expand tokens or tilde, resolve symlinks, or check existence.
+        """
         path = Path(self.canonical_path)
         return path if path.is_absolute() else REPO_ROOT / path
 
     def pip_package_by_import(self) -> dict[str, str]:
-        """Pip package by import."""
+        """Map pip-installable imports to package names, excluding non-pip imports and empty packages.
+
+        Equal-length import/package lists pair positionally before exclusions.
+        Otherwise pair packages with the filtered imports, falling back to each
+        import name when no corresponding package is supplied. No packages are installed.
+        """
         non_pip = set(self.non_pip_imports)
         if not self.package_imports:
             return {}
@@ -432,7 +463,11 @@ class BaseModelCapability:
         }
 
     def to_dict(self) -> dict[str, Any]:
-        """To dict."""
+        """Serialize capability metadata and asset specifications into a JSON-compatible dictionary.
+
+        Convert tuples to lists and derive install_packages from the import mapping.
+        Keep asset paths unexpanded; do not probe imports, inspect assets or install anything.
+        """
         return {
             "id": self.id,
             "family": self.family,
@@ -485,7 +520,10 @@ class BaseModelStack:
     note: str
 
     def to_dict(self) -> dict[str, Any]:
-        """To dict."""
+        """Return the stack ID, family, note and ordered capability IDs as JSON-compatible metadata.
+
+        Copy capability_ids into a list without resolving or checking its members.
+        """
         return {
             "id": self.id,
             "family": self.family,
@@ -4064,7 +4102,11 @@ def _stacks_by_family() -> dict[str, list[str]]:
 
 
 def base_model_inventory() -> dict[str, Any]:
-    """Base model inventory."""
+    """Return versioned catalog metadata, family groupings and asset counts without readiness probes.
+
+    Include capabilities and stacks sorted by ID, role counts and benchmark
+    data-asset mappings. No imports, downloads or asset checks are performed.
+    """
     asset_count = sum(len(capability.assets) for capability in BASE_MODEL_CAPABILITIES.values())
     return {
         "schema_version": "worldfoundry-base-model-inventory-v1",
@@ -4154,7 +4196,12 @@ def _base_model_plan_summary(
 
 
 def resolve_base_model_capability_ids(capability_or_stack_ids: list[str] | tuple[str, ...]) -> list[str]:
-    """Resolve base model capability ids."""
+    """Expand capability and stack IDs into a deduplicated list in first-seen order.
+
+    Convert each input to str and expand stacks by their declared member order.
+    Raise KeyError with the available IDs for an unknown input; an empty input
+    returns an empty list.
+    """
     resolved: list[str] = []
     for raw_id in capability_or_stack_ids:
         item_id = str(raw_id)
@@ -4172,7 +4219,11 @@ def resolve_base_model_capability_ids(capability_or_stack_ids: list[str] | tuple
 
 
 def get_base_model_capability(capability_id: str) -> BaseModelCapability:
-    """Get base model capability."""
+    """Return the registered capability object for an exact ID, without checking readiness.
+
+    Raise KeyError listing available capability IDs when the ID is unknown;
+    stack IDs are not expanded.
+    """
     try:
         return BASE_MODEL_CAPABILITIES[capability_id]
     except KeyError as exc:
@@ -4232,7 +4283,16 @@ def check_base_model_capability(
     python_executable: str | Path | None = None,
     check_imports: bool = True,
 ) -> dict[str, Any]:
-    """Check base model capability."""
+    """Report owner-path, package-discovery and required-asset readiness with repair suggestions.
+
+    Use env (os.environ by default) for assets, not for import probes. By default,
+    find package specs in the current interpreter; python_executable selects
+    cached subprocess probes instead. Dotted spec lookup may import parents.
+    With check_imports=False, report imports as skipped and do not gate on them.
+    Read asset paths and owner existence, but do not install or download.
+    The returned metadata includes statuses, repair_hints and ok; gpu_required
+    is metadata only, not a GPU probe. Unknown capability IDs raise KeyError.
+    """
     environ = os.environ if env is None else env
     capability = get_base_model_capability(capability_id)
     imports = []
@@ -4331,7 +4391,15 @@ def check_base_model_dependencies(
     python_executable: str | Path | None = None,
     check_imports: bool = True,
 ) -> dict[str, Any]:
-    """Check base model dependencies."""
+    """Expand stacks and aggregate capability readiness checks into one status dictionary.
+
+    Preserve requested IDs and stack IDs, deduplicate resolved capabilities,
+    and forward env, python_executable and check_imports to each check.
+    Defaults use process environment and current-interpreter package discovery.
+    Return per-capability checks and their combined ok (True for empty input).
+    Unknown IDs raise KeyError; checks inspect paths and may probe subprocesses
+    but do not install or download.
+    """
     resolved_ids = resolve_base_model_capability_ids(capability_ids)
     stack_ids = [str(capability_id) for capability_id in capability_ids if str(capability_id) in BASE_MODEL_STACKS]
     checks = [
@@ -4359,7 +4427,15 @@ def base_model_materialization_plan(
     env: Mapping[str, str] | None = None,
     python_executable: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Base model materialization plan."""
+    """Build a versioned readiness and repair plan for selected capabilities or stacks.
+
+    None selects every capability sorted by ID; an empty sequence selects none.
+    Use env (os.environ by default) for asset paths and python_executable for
+    package probes, with current-interpreter discovery by default. Aggregate
+    checks, stack metadata, summary counts, download/export commands, sorted
+    unique pip packages and manual actions. Probes read paths and may start
+    subprocesses; no suggested command is executed. Unknown IDs raise KeyError.
+    """
     requested_ids = sorted(BASE_MODEL_CAPABILITIES) if capability_ids is None else list(capability_ids)
     selected_ids = resolve_base_model_capability_ids(requested_ids)
     stack_ids = [str(capability_id) for capability_id in requested_ids if str(capability_id) in BASE_MODEL_STACKS]

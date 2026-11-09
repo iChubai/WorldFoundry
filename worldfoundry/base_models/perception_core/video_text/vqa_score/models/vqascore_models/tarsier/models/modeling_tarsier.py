@@ -438,7 +438,7 @@ class TarsierForConditionalGeneration(TarsierPreTrainedModel, GenerationMixin):
                 # Enable model parallelism
                 shift_labels = shift_labels.to(shift_logits.device)
                 loss = loss_fct(shift_logits, shift_labels)
-        elif use_rmpad:  # 训练的时候，就不 unpad logits 了，节省显存。
+        elif use_rmpad:  # Keep logits in the packed layout during training to save memory.
             logits = _pad_input(logits.squeeze(0), input_ids_indices, bsz, max_seq_len)
 
         if not return_dict:

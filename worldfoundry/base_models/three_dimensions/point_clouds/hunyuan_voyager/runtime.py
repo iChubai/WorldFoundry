@@ -322,7 +322,7 @@ class HunyuanWorldVoyagerRepresentation:
         depth = np.array(output["depth"].detach().cpu())
         depth[np.isinf(depth)] = depth[~np.isinf(depth)].max() + 1e4
 
-        # 反向投影点云
+        # Unproject the point cloud.
         point_map = depth_to_world_coords_points(depth, extrinsics[0], intrinsics[0])
         points = point_map.reshape(-1, 3)
         colors = input_image.reshape(-1, 3) if hasattr(input_image, "reshape") else input_image.view(-1, 3)

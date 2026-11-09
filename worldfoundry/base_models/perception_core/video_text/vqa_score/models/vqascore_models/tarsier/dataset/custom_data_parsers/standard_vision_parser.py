@@ -25,10 +25,10 @@ class VisionParser:
                     "role": "user",
                     "content": [
                         {"type": "text", "text": "Describe the image and the video."},
-                        # 支持的 image 格式：
+                        # Supported image formats:
                         {"type": "image", "image": {"image_file": "/path/to/image"}},
                         {"type": "image", "image": {"video_file": "/path/to/video", "frame_indices": 0}},
-                        # 支持的 video 格式：
+                        # Supported video formats:
                         {"type": "video", "video": {"video_file": "/path/to/video"}},
                         {"type": "video", "video": {"video_file": "/path/to/video", "frame_indices": [0, 1, 2]}},
                         {"type": "video", "video": {"video_file": "/path/to/video", "start_frame": 0, "end_frame": 100}},
@@ -54,8 +54,8 @@ class VisionParser:
             raise ValueError("do_crop and has_coordinates cannot be True at the same time!")
 
     """
-    1. 将 messages 中的 image/video 替换成相应的 PIL.Image/List[PIL.Image]
-    2. text 的特殊处理：调整 box；过滤面积太小的OCR
+    1. Replace image/video entries in messages with PIL.Image/List[PIL.Image].
+    2. Postprocess text: adjust boxes and filter OCR regions with small areas.
     """
 
     def transform(self, data_dict: dict, image_processing_config: dict | None = None) -> dict:
@@ -63,7 +63,7 @@ class VisionParser:
 
         self.set_n_frames(data_dict)
 
-        first_image = None  # ugly! 需要调整box/过滤面积太小的OCR的数据只有图片任务
+        first_image = None  # Only image tasks need box adjustment and small-area OCR filtering.
 
         for msg in data_dict["messages"]:
             if isinstance(msg["content"], dict):

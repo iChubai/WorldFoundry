@@ -942,7 +942,9 @@ class Qwen2VLDecoderLayer(nn.Module):
         self.hidden_size = config.hidden_size
 
         if config.attn_implementation != "flash_attention_2":
-            logger.error(f"只支持 flash_attention_2！config.attn_implementation={config.attn_implementation}")
+            logger.error(
+                f"Only flash_attention_2 is supported! config.attn_implementation={config.attn_implementation}"
+            )
         self.self_attn = QWEN2_VL_ATTENTION_CLASSES[config.attn_implementation](config, layer_idx)
 
         self.mlp = Qwen2MLP(config)
@@ -1222,7 +1224,7 @@ class Qwen2VLForCausalLM(Qwen2VLPreTrainedModel, GenerationMixin):
         spatial_merge_size = self.config.spatial_merge_size
         vision_token_id = self.config.image_token_id
         vision_start_token_id = self.config.vision_start_token_id
-        assert image_grid_thw is not None  # TODO：测试纯文本会不会卡住
+        assert image_grid_thw is not None  # Text-only input is not handled here.
         total_input_ids = input_ids
         position_ids = torch.ones(
             3, input_ids.shape[0], input_ids.shape[1], dtype=input_ids.dtype, device=input_ids.device

@@ -191,7 +191,9 @@ def test_artifact_timestamps_are_utc_and_elapsed_time_is_monotonic() -> None:
 
 def test_ruff_lints_vendored_trees_with_the_strict_rule_set() -> None:
     ruff = _load_pyproject()["tool"]["ruff"]
-    assert not [pattern for pattern in ruff["extend-exclude"] if pattern.removeprefix("./").startswith("worldfoundry")]
+    ignored = set((REPO_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines())
+    local_runtimes = [pattern for pattern in ruff["extend-exclude"] if pattern.startswith("worldfoundry/")]
+    assert [pattern for pattern in local_runtimes if f"/{pattern}/" not in ignored] == []
     assert set(ruff["lint"]["select"]) == {"E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "C4", "PIE", "RUF"}
     legacy_only = {"UP", "B", "SIM", "C4", "PIE", "RUF"}
     for pattern in ("tests/**", "scripts/**", "benchmarks/**"):

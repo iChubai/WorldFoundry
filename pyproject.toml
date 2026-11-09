@@ -606,6 +606,25 @@ extend-exclude = [
     "docs/fumadocs/node_modules",
     "docs/fumadocs/out",
     "./apps",
+    # License-gated runtimes that setup fetches into these Git-ignored directories. They are
+    # not repository sources; every tracked worldfoundry file is linted.
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime",
+    "worldfoundry/base_models/three_dimensions/depth/unik3d",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r",
+    "worldfoundry/base_models/three_dimensions/general_3d/four_d_gaussians",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r",
+    "worldfoundry/base_models/three_dimensions/general_3d/monst3r",
+    "worldfoundry/base_models/three_dimensions/general_3d/stable_virtual_camera",
+    "worldfoundry/base_models/three_dimensions/point_clouds/gaussian_splatting",
+    "worldfoundry/base_models/three_dimensions/point_clouds/pi3",
+    "worldfoundry/base_models/three_dimensions/slam/mega_sam_runtime/UniDepth",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_game_craft",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_world_voyager",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_worldgen_runtime",
+    "worldfoundry/synthesis/visual_generation/krea_realtime/realtime_video_runtime",
+    "worldfoundry/synthesis/visual_generation/vmem/vmem_runtime/extern/CUT3R",
+    "worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime",
 ]
 
 [tool.ruff.lint]

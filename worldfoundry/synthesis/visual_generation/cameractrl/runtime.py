@@ -22,11 +22,7 @@ from worldfoundry.evaluation.utils import worldfoundry_data_path
 from worldfoundry.runtime.env import resolve_hfd_root
 
 DEFAULT_CAMERACTRL_CONFIG = worldfoundry_data_path(
-    "models",
-    "runtime",
-    "configs",
-    "camera_control",
-    "cameractrl_256_384.yaml",
+    "models", "runtime", "configs", "camera_control", "cameractrl_256_384.yaml"
 )
 DEFAULT_SHARED_HFD_ROOT = resolve_hfd_root()
 DEFAULT_SD15_ROOT = Path(

@@ -37,11 +37,7 @@ OFFICIAL_MOTIONCTRL_CONFIG = (
 )
 # Path to the MotionCtrl configuration file vendored within WorldFoundry data.
 WORLDFOUNDRY_MOTIONCTRL_CONFIG = worldfoundry_data_path(
-    "models",
-    "runtime",
-    "configs",
-    "camera_control",
-    "motionctrl_config_both.yaml",
+    "models", "runtime", "configs", "camera_control", "motionctrl_config_both.yaml"
 )
 # The default configuration path for MotionCtrl, preferring the official config if it exists.
 DEFAULT_MOTIONCTRL_CONFIG = (

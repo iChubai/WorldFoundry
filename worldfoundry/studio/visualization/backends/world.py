@@ -150,6 +150,7 @@ def world_frontend_html(entry: CatalogEntry, launch_config: StudioLaunchConfig) 
           <div id="sensorControls" aria-label="Sensor presentation controls"></div>
           <div class="screen-noise"></div>
           <div class="floating-state" id="livePill">FROZEN</div>
+          <div class="pointer-hint is-hidden" id="pointerHint" aria-live="polite"></div>
           <div class="start-overlay is-hidden" id="startOverlay" aria-hidden="true">
             <div class="overlay-status" id="overlayStatus">LOAD INPUT</div>
           </div>
@@ -198,7 +199,7 @@ def world_frontend_html(entry: CatalogEntry, launch_config: StudioLaunchConfig) 
           </div>
           <div class="rollout-note" title="{rollout_title}">
             <span>RESIDENT RUNTIME</span>
-            <span>{interaction_hint}</span>
+            <span id="interactionHint">{interaction_hint}</span>
           </div>
         </div>
       </section>
@@ -219,6 +220,7 @@ def world_frontend_html(entry: CatalogEntry, launch_config: StudioLaunchConfig) 
           </div>
           <div class="realtime-control-bar">
             <button class="step-button" id="stepButton" type="button" disabled>STEP</button>
+            <button class="step-button is-hidden" id="pauseButton" type="button" aria-pressed="false" disabled>PAUSE</button>
             <label class="resolution-control" for="resolutionSelect">
               <span>OUTPUT</span>
               <select id="resolutionSelect" aria-label="WebRTC output resolution">

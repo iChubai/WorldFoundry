@@ -781,6 +781,9 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.emu35" = [
     "emu35_runtime/**/*",
 ]
+"worldfoundry.synthesis.visual_generation.uniworld_view" = [
+    "uniworld_view_runtime/**/*",
+]
 
 "worldfoundry.synthesis.visual_generation.allegro" = [
     "allegro_runtime/**/*.py",

@@ -150,16 +150,21 @@ class MoGeModel_v2(nn.Module):
             raise ValueError(f"Invalid remap output type: {self.remap_output}")
         return points
 
+    def _token_grid_shape(
+        self, num_tokens: int | torch.Tensor, aspect_ratio: float
+    ) -> tuple[int | torch.Tensor, int | torch.Tensor]:
+        """Resolve the encoder grid using the checkpoint generation's rounding rule."""
+        base_h, base_w = (num_tokens / aspect_ratio) ** 0.5, (num_tokens * aspect_ratio) ** 0.5
+        if isinstance(base_h, torch.Tensor):
+            return base_h.round().long(), base_w.round().long()
+        return round(base_h), round(base_w)
+
     def forward(self, image: torch.Tensor, num_tokens: Union[int, torch.LongTensor]) -> Dict[str, torch.Tensor]:
         batch_size, _, img_h, img_w = image.shape
         device, dtype = image.device, image.dtype
 
         aspect_ratio = img_w / img_h
-        base_h, base_w = (num_tokens / aspect_ratio) ** 0.5, (num_tokens * aspect_ratio) ** 0.5
-        if isinstance(base_h, torch.Tensor):
-            base_h, base_w = base_h.round().long(), base_w.round().long()
-        else:
-            base_h, base_w = round(base_h), round(base_w)
+        base_h, base_w = self._token_grid_shape(num_tokens, aspect_ratio)
 
         # Backbones encoding
         features, cls_token = self.encoder(image, base_h, base_w, return_class_token=True)

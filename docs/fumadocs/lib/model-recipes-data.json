@@ -102689,8 +102689,8 @@
         "pipelineTarget": "worldfoundry.pipelines.uniworld_view.pipeline_uniworld_view:UniWorldViewPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_external_runtime",
-        "runtimeStatus": "source_and_checkpoints_required",
+        "backendStage": "official_in_tree_runtime",
+        "runtimeStatus": "integrated_checkpoint_required",
         "environmentId": "uniworld-view",
         "environmentName": "uniworld-view-cu124",
         "environmentKind": "dedicated",
@@ -102745,18 +102745,16 @@
           "imageio"
         ],
         "notes": [
-          "The adapter invokes the official inference.py from a separate pinned checkout and Python environment.",
+          "The adapter runs the vendored official inference entry point as a package module in a separate Python environment.",
           "WorldFoundry dispatch stays in the unified environment; UNIWORLD_VIEW_PYTHON selects the separate upstream process.",
           "Official inference uses BLIP2 captioning; its --prompt flag is ignored by the current upstream inference path.",
           "The upstream default hybrid renderer requires PyTorch3D and at least 60 GB GPU memory is recommended.",
-          "Dynamic view also requires STream3R source and weights; MoSca is an optional precomputed geometry alternative.",
+          "Dynamic view also requires STream3R weights; MoSca is an optional precomputed geometry alternative.",
           "The official default keeps the source aspect ratio at an approximate height/width token budget; set keep_aspect_ratio=false to request exact output dimensions.",
-          "The pinned upstream setup_stream3r method is empty; the WorldFoundry entry restores its intended load call for dynamic_view.",
-          "The pinned upstream single_view final-video save omits fps; the WorldFoundry entry applies the requested rate to that artifact.",
-          "The pinned upstream diffusion call hard-codes seed 42; the WorldFoundry entry applies the requested seed at the pipeline call.",
+          "The vendored runtime loads STream3R for dynamic_view, saves the final single_view video at the requested fps and seeds the diffusion call with the requested seed; the pinned upstream revision leaves setup_stream3r empty, omits that fps and hard-codes seed 42.",
           "Install the full pinned official requirements.txt in this dedicated environment; these listed packages are the critical ABI pins, not a replacement for upstream requirements.",
-          "Install carvekit with --no-deps and build PyTorch3D from upstream's extern/install_pytorch3d.sh for the default hybrid/mesh renderer.",
-          "Upstream inference requires its STream3R, SAM2, MoGe and renderer source trees under extern; point UNIWORLD_VIEW_REPO and UNIWORLD_VIEW_PYTHON to the local checkout and environment."
+          "Install carvekit with --no-deps and build PyTorch3D 0.7.8 from source for the default hybrid/mesh renderer.",
+          "The inference code, including its SAM2 and MoGe copies, is vendored in WorldFoundry; point UNIWORLD_VIEW_PYTHON to this environment when it is outside the default conda path."
         ]
       },
       "sources": [
@@ -102842,7 +102840,7 @@
               "kind": "path",
               "target": "input",
               "required": true,
-              "default": "/home/ubuntu/.cache/worldfoundry/official_runtime_repos/UniWorld-View/test/images/fruit.jpg",
+              "default": "/workspace/worldfoundry/data/test_cases/uniworld_view/images/fruit.jpg",
               "choices": [],
               "description": "Source Image used as the input for direct UniWorld-View inference."
             },
@@ -103088,7 +103086,7 @@
               "kind": "path",
               "target": "input",
               "required": true,
-              "default": "/home/ubuntu/.cache/worldfoundry/official_runtime_repos/UniWorld-View/test/videos/2.mp4",
+              "default": "/workspace/worldfoundry/data/test_cases/uniworld_view/videos/2.mp4",
               "choices": [],
               "description": "Source Video used as the input for direct UniWorld-View inference."
             },
@@ -103342,20 +103340,19 @@
         }
       ],
       "notes": [
-        "WorldFoundry invokes the pinned official inference entry point in an isolated environment and validates all local assets before generation.",
+        "WorldFoundry runs the vendored official inference entry point of the pinned revision as a package module in an isolated environment and validates all local assets before generation.",
         "The image and video routes preserve the official BLIP2 captioning and camera controls.",
+        "Perception uses canonical SAM2, MoGe-2, DINOv2 and STream3R; the MoGe variant preserves the pinned token-grid truncation and eager attention fallback. UniView retains its Diffusers WanVACEPipeline backend.",
         "Released-checkpoint H100 inference completed for the official single-image and monocular-video samples at 81 frames, 8 steps and 16 fps.",
         "Single-image and dynamic-video warp, hybrid and mesh each completed short checkpoint-backed runs.",
-        "The adapter fixes pinned-upstream dynamic STream3R loading, final single-view fps and the ignored seed argument; a repeated seed produced identical decoded frames.",
-        "The adapter invokes the official inference.py from a separate pinned checkout and Python environment.",
+        "The vendored runtime fixes pinned-upstream dynamic STream3R loading, final single-view fps and the ignored seed argument; a repeated seed produced identical decoded frames.",
+        "The adapter runs the vendored official inference entry point as a package module in a separate Python environment.",
         "WorldFoundry dispatch stays in the unified environment; UNIWORLD_VIEW_PYTHON selects the separate upstream process.",
         "Official inference uses BLIP2 captioning; its --prompt flag is ignored by the current upstream inference path.",
         "The upstream default hybrid renderer requires PyTorch3D and at least 60 GB GPU memory is recommended.",
-        "Dynamic view also requires STream3R source and weights; MoSca is an optional precomputed geometry alternative.",
+        "Dynamic view also requires STream3R weights; MoSca is an optional precomputed geometry alternative.",
         "The official default keeps the source aspect ratio at an approximate height/width token budget; set keep_aspect_ratio=false to request exact output dimensions.",
-        "The pinned upstream setup_stream3r method is empty; the WorldFoundry entry restores its intended load call for dynamic_view.",
-        "The pinned upstream single_view final-video save omits fps; the WorldFoundry entry applies the requested rate to that artifact.",
-        "The pinned upstream diffusion call hard-codes seed 42; the WorldFoundry entry applies the requested seed at the pipeline call."
+        "The vendored runtime loads STream3R for dynamic_view, saves the final single_view video at the requested fps and seeds the diffusion call with the requested seed; the pinned upstream revision leaves setup_stream3r empty, omits that fps and hard-codes seed 42."
       ],
       "docs": {
         "curated": true,
@@ -103371,16 +103368,16 @@
           "UniWorld-View 从单张图像或随手拍摄的单目视频生成相机可控的新视角视频。"
         ],
         "architecture": [
-          "Official UniView transformer on Wan2.1-VACE-14B with geometry estimation and rendered camera controls."
+          "UniView uses a Diffusers WanVACEPipeline backend with geometry estimation and rendered camera controls. Its in-tree inference runtime follows UniWorld-View at 660212c4 and reuses canonical SAM2, MoGe-2, DINOv2 and STream3R components. A MoGe variant preserves the upstream token-grid truncation and eager attention fallback."
         ],
         "architectureZh": [
-          "基于 Wan2.1-VACE-14B 的 UniView Transformer，结合几何估计和渲染后的相机控制。"
+          "UniView 使用 Diffusers WanVACEPipeline 后端，结合几何估计和渲染后的相机控制。包内推理实现基于 UniWorld-View 的 660212c4 版本，复用 canonical SAM2、MoGe-2、DINOv2 和 STream3R；MoGe variant 保留上游 token 网格的截断规则和显式 attention 回退路径。"
         ],
         "usageNotes": [
-          "Use a pinned official checkout with STream3R under extern, a separate upstream environment and the official local weights. The upstream CLI uses BLIP2 captions rather than a user text prompt."
+          "Use the separate upstream environment and the official local weights. The upstream CLI uses BLIP2 captions rather than a user text prompt."
         ],
         "usageNotesZh": [
-          "使用固定版本的官方源码及 extern 下的 STream3R、独立的官方环境和本地权重。上游 CLI 使用 BLIP2 自动描述，不读取用户文本提示。"
+          "使用独立的官方环境和本地权重。上游 CLI 使用 BLIP2 自动描述，不读取用户文本提示。"
         ],
         "highlights": [
           "Novel View Synthesis",

@@ -8,7 +8,6 @@ from typing import Any
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
-    official_runtime_repo_path,
     resolve_local_hf_model_path,
 )
 
@@ -608,22 +607,14 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "display_name": "UniWorld-View",
         "category": "Video Generation",
         "summary": "Official UniView novel-view synthesis from one image or a monocular video.",
-        "default_model_ref": lambda: str(
-            official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")
+        "default_model_ref": lambda: resolve._checkpoint_model_ref(
+            "UniWorld-View", fallback=str(checkpoint_root_path("UniWorld-View"))
         ),
-        "default_input_path": lambda: str(
-            official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")
-            / "test"
-            / "images"
-            / "fruit.jpg"
-        ),
+        "default_input_path": str(resolve._data_path("test_cases", "uniworld_view", "images", "fruit.jpg")),
         "default_prompt": "",
         "default_task_type": "image-to-video",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
-        "default_load_kwargs": lambda: {
-            "repo_root": str(official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")),
-        },
         "default_call_kwargs": {
             "mode": "single_view",
             "geometry_backend": "stream3r",
@@ -673,7 +664,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "return_dict",
         ),
         "load_params": (
-            "repo_root",
             "python_executable",
             "checkpoint_root",
             "transformer_path",

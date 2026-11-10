@@ -2578,13 +2578,22 @@ def test_interactive_call_kwargs_add_realtime_axes_only_when_declared() -> None:
     assert with_axes["realtime_segments"] == without_axes["realtime_segments"]
 
 
-def test_interactive_call_kwargs_do_not_replay_previous_chunk_axes() -> None:
-    base = {"realtime_axes": {"yaw": [0.5] * 4}, "num_inference_steps": 4}
+@pytest.mark.unit
+def test_interactive_call_kwargs_do_not_replay_previous_chunk_controls() -> None:
+    base = {
+        "realtime_segments": [{"duration": 0.75, "keys": ["w"]}],
+        "realtime_axes": {"yaw": [0.5] * 9},
+        "num_inference_steps": 4,
+    }
     step = realtime_backend._interactive_call_kwargs(base, [], seed=4)
     assert step == {"num_inference_steps": 4, "seed": 4}
+    assert base["realtime_segments"] == [{"duration": 0.75, "keys": ["w"]}]
+    assert base["realtime_axes"] == {"yaw": [0.5] * 9}
 
 
-def test_mouse_axis_message_reaches_matrix_game_2_stream_realtime(tmp_path: Path) -> None:
+@pytest.mark.unit
+@pytest.mark.parametrize("transport", ["socket", "webrtc"])
+def test_sampled_controls_and_idle_step_reach_matrix_game_2_stream_realtime(tmp_path: Path, transport: str) -> None:
     from worldfoundry.pipelines.matrix_game.pipeline_matrix_game_2 import MatrixGame2Pipeline
     from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_2_runtime.realtime import (
         MatrixGame2RealtimeSession,
@@ -2606,8 +2615,9 @@ def test_mouse_axis_message_reaches_matrix_game_2_stream_realtime(tmp_path: Path
             return {"status": "configured", "realtime_spec": spec.to_payload()}
 
         def generate(self, **kwargs: Any) -> dict[str, Any]:
+            frames = spec.steady_chunk_frames if generate_calls else spec.first_chunk_frames
             generate_calls.append(kwargs)
-            return {"video": np.zeros((9, 6, 8, 3), dtype=np.uint8), "realtime_spec": spec.to_payload()}
+            return {"video": np.zeros((frames, 6, 8, 3), dtype=np.uint8), "realtime_spec": spec.to_payload()}
 
         def reset(self) -> None:
             pass
@@ -2634,27 +2644,57 @@ def test_mouse_axis_message_reaches_matrix_game_2_stream_realtime(tmp_path: Path
         await runtime.configure(prompt="", image_path=str(seed_path), video_path="")
         assert runtime.realtime_spec.axes == spec.axes
         sink = _AxisSink()
-        active = _ActiveSocket(
-            socket=sink,
-            resampler=RealtimeControlResampler(
-                fps=runtime.realtime_spec.resolved_input_fps,
-                start_time=asyncio.get_running_loop().time(),
-                realtime_keys=runtime.realtime_spec.keys,
-                axes=runtime.realtime_spec.axes,
-            ),
-            frame_packets=asyncio.Queue(maxsize=16),
+        resampler = RealtimeControlResampler(
+            fps=runtime.realtime_spec.resolved_input_fps,
+            start_time=asyncio.get_running_loop().time(),
+            realtime_keys=runtime.realtime_spec.keys,
+            axes=runtime.realtime_spec.axes,
         )
-        peers = RealtimePeerManager(runtime=cast(Any, runtime), fps=12, chunk_frames=9)
-        await peers._handle_socket_message(active, json.dumps({"type": "axis", "source": "mouse", "dx": 8.0}))
-        worker = asyncio.create_task(peers._socket_generation_worker(active))
+        active: _ActivePeer | _ActiveSocket
+        if transport == "socket":
+            active = _ActiveSocket(socket=sink, resampler=resampler, frame_packets=asyncio.Queue(maxsize=64))
+        else:
+            active = _ActivePeer(peer=None, channel=sink, resampler=resampler, frames=LatestFrameBuffer(maxsize=64))
+        peers = RealtimePeerManager(runtime=runtime, fps=12, chunk_frames=9)
+
+        async def tap(key: str) -> None:
+            for event in ("keydown", "keyup"):
+                await _handle_axis_message(peers, active, {"type": "action", "action": {"event": event, "key": key}})
+
+        async def wait_for_chunks(count: int) -> None:
+            await asyncio.wait_for(
+                _wait_for_condition(
+                    lambda: len([message for message in sink.messages if message["type"] == "chunk_done"]) == count
+                    and not active.first_action.is_set()
+                ),
+                timeout=10,
+            )
+
+        await _handle_axis_message(peers, active, {"type": "axis", "source": "mouse", "dx": 8.0})
+        await tap("w")
+        worker = asyncio.create_task(
+            peers._socket_generation_worker(active)
+            if isinstance(active, _ActiveSocket)
+            else peers._generation_worker(active)
+        )
         try:
-            await asyncio.wait_for(_wait_for_condition(lambda: bool(generate_calls)), 10)
+            await wait_for_chunks(1)
+            await _handle_axis_message(
+                peers, active, {"type": "action", "action": {"event": "step"}, "request_id": "idle-step"}
+            )
+            await wait_for_chunks(2)
+            await tap("a")
+            await wait_for_chunks(3)
         finally:
             active.closed = True
             worker.cancel()
             await asyncio.gather(worker, return_exceptions=True)
             await runtime.close()
         assert not any(message["type"] == "error" for message in sink.messages)
+        assert any(
+            message["type"] == "step_ack" and message["ok"] and message["request_id"] == "idle-step"
+            for message in sink.messages
+        )
 
     asyncio.run(exercise())
 
@@ -2663,6 +2703,12 @@ def test_mouse_axis_message_reaches_matrix_game_2_stream_realtime(tmp_path: Path
     assert all(len(values) == 9 for values in realtime_axes.values())
     assert sum(realtime_axes["camera_yaw"]) == pytest.approx(0.02)
     assert not any(realtime_axes["camera_pitch"])
+    assert [call["interactions"] for call in generate_calls] == [["forward"], [], ["left"]]
+    assert any(segment["keys"] == ["w"] for segment in generate_calls[0]["control_segments"])
+    assert generate_calls[1]["control_segments"] is None
+    assert generate_calls[1]["realtime_axes"] is None
+    assert any(segment["keys"] == ["a"] for segment in generate_calls[2]["control_segments"])
+    assert all(len(values) == 12 and not any(values) for values in generate_calls[2]["realtime_axes"].values())
 
 
 class _FakeChannel:

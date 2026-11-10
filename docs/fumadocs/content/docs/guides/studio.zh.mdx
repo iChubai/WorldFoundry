@@ -504,6 +504,31 @@ DataChannel 拥塞时，计时回执让位于控制消息。
 显示不可用，不以服务端耗时代替。NVENC 反馈需要 PyNvVideoCodec 和具有 NVENC
 引擎的 GPU；仅有 CUDA 不够。动态码率改变传输压缩质量，不改变模型生成像素。
 
+### 无权重浏览器界面检查
+
+`tests/manual/realtime_browser_ui.mjs` 使用临时配置打开独立 Chromium 窗口，
+通过回环地址提供生产 HTML、CSS 和 JavaScript。检查覆盖模型声明的按键、
+Pointer Lock 和鼠标位移、手柄回中与失焦处理、连续生成进度、暂停/恢复、
+STEP 拒绝提示、新提示词重启和重置。模型的 HTTP/WebSocket 响应及手柄读数使用
+测试替身。
+
+准备桌面会话、Studio Python 环境、Node.js 和 Playwright 1.65：
+
+```bash
+npm install --prefix /private/replay-browser playwright@1.65.0
+/private/replay-browser/node_modules/.bin/playwright install chromium
+NODE_PATH=/private/replay-browser/node_modules PYTHON=python \
+  node tests/manual/realtime_browser_ui.mjs outputs/realtime-browser-ui
+```
+
+输出目录必须尚不存在。可用 `CHROMIUM_EXECUTABLE` 指定已有 Chromium。
+测试切换标签页时，请保持测试窗口在前台。结果保存在 `browser.json`、
+`chromium.log` 和截图中；脚本退出时删除临时浏览器配置。
+
+**证据范围：** 真实 DOM、键盘、鼠标、标签页焦点及浏览器 Pointer Lock API，
+模型响应由测试替身提供。指针通过 `exitPointerLock()` 释放，不覆盖物理 Escape
+按键或手柄硬件。这不是 checkpoint、WebRTC 传输或推理性能证据。
+
 ### 真实 checkpoint 网络回放
 
 `tests/manual/realtime_replay.py` 使用本地权重启动公开的 Studio CLI，并驱动真实
@@ -842,8 +867,9 @@ MatrixGame2 的 stride-4 action encoder 可能在后续 chunk 才消费最后一
   按钮会在下一个模型 chunk 边界激活一个文本条件；**CLEAR EVENT** 恢复基础
   prompt。没有状态保持式文本更新路径的模型会禁用这个入口，而不是假装接受了
   一次它无法应用的更新。
-- **STEP：** 只排入一个不带键盘方向的生成 chunk，适合静止镜头或检查某个文本
-  事件，不会开启自动生成循环。Queued-segment 模型的 **STEP** 保持禁用，因为
+- **STEP：** 只排入一个不带键盘或轴输入的生成 chunk，不复用上一段的控制数据，
+  适合静止镜头或检查某个文本事件，不会开启自动生成循环。
+  Queued-segment 模型的 **STEP** 保持禁用，因为
   它们的下一个 segment 需要新的控制视频。
 - **OUTPUT：** 选择传输帧尺寸。**NATIVE** 保持模型输出尺寸；更小的选项只会对
   WebRTC/WebSocket 流做缩放和 letterbox，不会改变模型推理分辨率、采样步数、

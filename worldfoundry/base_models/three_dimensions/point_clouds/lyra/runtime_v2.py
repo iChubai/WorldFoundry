@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +12,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.lyra.utils import (
     resolve_repo_root,
     resolve_required_paths,
 )
+from worldfoundry.core.io.paths import scratch_directory
 from worldfoundry.core.media.codecs.video import save_video_frames, video_tensor_to_uint8_frames
 
 DEFAULT_DA3_MODEL_NAME = "depth-anything/DA3NESTED-GIANT-LARGE-1.1"
@@ -100,8 +100,7 @@ class Lyra2Representation:
             output_dir_path.mkdir(parents=True, exist_ok=True)
             video_path = output_dir_path / "generated.mp4"
         else:
-            tmp_dir = Path(tempfile.mkdtemp(prefix="lyra2_repr_"))
-            video_path = tmp_dir / "generated.mp4"
+            video_path = scratch_directory("lyra2_repr_") / "generated.mp4"
         save_video_frames(video, str(video_path), fps=fps)
         return str(video_path)
 

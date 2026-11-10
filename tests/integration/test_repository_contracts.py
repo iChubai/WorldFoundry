@@ -336,7 +336,7 @@ def test_scratch_directory_lives_under_cache_root(tmp_path, monkeypatch) -> None
 def test_xc17_callers_use_scratch_directory() -> None:
     files = [
         "worldfoundry/pipelines/lyra/pipeline_lyra1.py",
-        "worldfoundry/base_models/three_dimensions/point_clouds/lyra/utils.py",
+        "worldfoundry/base_models/three_dimensions/point_clouds/lyra/runtime_v2.py",
         "worldfoundry/pipelines/matrix_game/pipeline_matrix_game_3.py",
         "worldfoundry/core/media/codecs/video.py",
         "worldfoundry/zoo/runtime/profile_synthesis.py",

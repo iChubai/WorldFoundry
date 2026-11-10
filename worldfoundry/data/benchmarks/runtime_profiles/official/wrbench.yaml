@@ -42,10 +42,7 @@ optional_env:
 - WORLDFOUNDRY_WRBENCH_RUNTIME_CONFIG
 requires_cuda_visibility: true
 base_model_dependencies:
-- vggt_omega
-- dinov2
-- qwen3_5_vl
-- qwen3_vl
+- wrbench_scorer_runtime_config
 notes:
 - Contract, Natural-25 request materialization, published-result normalization, and WRBench source are available in-tree.
 - Full D1-D6 execution requires external checkpoint paths in WORLDFOUNDRY_WRBENCH_RUNTIME_CONFIG.

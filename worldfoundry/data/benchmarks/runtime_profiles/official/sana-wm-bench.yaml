@@ -22,7 +22,8 @@ required_paths:
 required_env: []
 optional_env: [WORLDFOUNDRY_SANA_WM_BENCH_DATASET_ROOT, WORLDFOUNDRY_GENERATED_ARTIFACT_DIR, WORLDFOUNDRY_VBENCH_CACHE_DIR]
 requires_cuda_visibility: true
-base_model_dependencies: [vbench, pi3]
+base_model_dependencies: [vbench_source_assets, vbench_metric_checkpoint_assets]
+optional_base_model_dependencies: [pi3]
 notes:
 - The evaluator and benchmark request layout are in tree; dataset media remains an explicit public download.
 - Fresh Pi3 camera estimates are GPU/distributed work. Supply the resulting split eval_poses.json to score it in tree.

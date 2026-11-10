@@ -32,8 +32,6 @@ import numpy as np
 
 ACTION_DIM = 64
 LX, LY, RX, RY = 0, 1, 2, 3
-N_BUTTONS = 17
-BUTTON_BASE = 4
 
 # WBench's navigation vocabulary onto the sticks. Its W/A/S/D are translations
 # and its arrows are rotations, which is exactly the left/right stick split.
@@ -62,21 +60,6 @@ KEYBOARD = {
 }
 
 
-def from_axes(frames: int, lx=0.0, ly=0.0, rx=0.0, ry=0.0, buttons=None) -> np.ndarray:
-    """(frames, 64) holding one constant stick position, frame 0 excepted."""
-    out = np.zeros((frames, ACTION_DIM), dtype=np.float32)
-    if frames > 1:
-        out[1:, LX] = lx
-        out[1:, LY] = ly
-        out[1:, RX] = rx
-        out[1:, RY] = ry
-        for b in buttons or ():
-            if not 0 <= b < N_BUTTONS:
-                raise ValueError(f"button index {b} outside 0..{N_BUTTONS - 1}")
-            out[1:, BUTTON_BASE + b] = 1.0
-    return out
-
-
 def from_tokens(tokens, table=WBENCH_ACTION, magnitude: float = 1.0) -> np.ndarray:
     """(len(tokens)+1, 64) from one action name per latent frame.
 
@@ -100,40 +83,4 @@ def from_tokens(tokens, table=WBENCH_ACTION, magnitude: float = 1.0) -> np.ndarr
                 if out[i + 1, lane] != 0.0:
                     raise ValueError(f"{tok!r} drives lane {lane} twice")
                 out[i + 1, lane] = v * magnitude
-    return out
-
-
-def from_viewmats(viewmats, step: float = 0.08, rot_step_deg: float = 3.0):
-    """(F, 64) stick lanes recovered from a w2c camera trajectory.
-
-    Control2V's poses are not free-form camera paths: decomposed into the
-    previous camera's frame they quantise to exactly +-0.08 translation and
-    +-3.0 degrees rotation, which is `camera_trajectory._MOTIONS` verbatim. The
-    clips *are* WASD command sequences, so this recovers the commands rather
-    than estimating them, and `up` is always zero because that vocabulary's
-    u/dn were never used.
-
-    Lane assignment matches the module's measured convention: LY forward, LX
-    strafe right, RX yaw right, RY look down. Frame 0 is zero, as everywhere
-    else here -- nothing has been commanded before the first frame.
-    """
-    import numpy as _np
-
-    vm = _np.asarray(viewmats, dtype=_np.float64)
-    if vm.ndim != 3 or vm.shape[-2:] != (4, 4):
-        raise ValueError(f"viewmats must be (F,4,4), got {vm.shape}")
-    c2w = _np.linalg.inv(vm)
-    R, t = c2w[:, :3, :3], c2w[:, :3, 3]
-    # Each step read in the frame the camera occupied before it, which is the
-    # frame the command was issued in.
-    local = _np.einsum("fij,fj->fi", _np.transpose(R[:-1], (0, 2, 1)), _np.diff(t, axis=0))
-    rel = _np.einsum("fij,fkj->fik", R[1:], R[:-1])
-    yaw = _np.degrees(_np.arctan2(rel[:, 0, 2], rel[:, 2, 2]))
-    pitch = _np.degrees(_np.arcsin(_np.clip(-rel[:, 1, 2], -1.0, 1.0)))
-
-    out = _np.zeros((len(vm), ACTION_DIM), dtype=_np.float32)
-    out[1:, LX] = _np.clip(local[:, 0] / step, -1.0, 1.0)
-    out[1:, LY] = _np.clip(local[:, 2] / step, -1.0, 1.0)
-    out[1:, RX] = _np.clip(yaw / rot_step_deg, -1.0, 1.0)
-    out[1:, RY] = _np.clip(pitch / rot_step_deg, -1.0, 1.0)
     return out

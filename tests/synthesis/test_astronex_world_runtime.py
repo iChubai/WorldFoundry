@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
-import os
+import inspect
 import sys
-from pathlib import Path
 
+import pytest
+from omegaconf import OmegaConf
 from PIL import Image
 
+from worldfoundry.core.io import resolve_data_path
 from worldfoundry.synthesis.visual_generation.astronex_world import runtime as astronex_runtime
 
 
@@ -34,13 +36,17 @@ def test_plan_launches_the_vendored_generator_as_a_package_module(tmp_path, monk
     assert plan.command[plan.command.index("--weights") + 1] == str(weights.resolve())
 
 
-def test_generator_child_runs_the_sampler_module_without_import_path_edits(tmp_path):
-    from worldfoundry.synthesis.visual_generation.astronex_world.astronex_world_runtime import astronex_env
+@pytest.mark.parametrize("config_name", ["causal", "bidirectional", "causal_consumer"])
+def test_shipped_sampling_configs_build_the_denoiser_against_the_weights(tmp_path, config_name):
+    from worldfoundry.synthesis.visual_generation.astronex_world.astronex_world_runtime.inference.generate import (
+        resolve_config,
+    )
+    from worldfoundry.synthesis.visual_generation.astronex_world.astronex_world_runtime.models.denoiser import (
+        AstronexDenoiser,
+    )
 
-    env = astronex_env.child_env(str(tmp_path))
+    source = resolve_data_path(f"models/runtime/configs/astronex_world/{config_name}.yaml")
+    resolved = OmegaConf.load(resolve_config(str(source), str(tmp_path / "resolved.yaml"), str(tmp_path / "weights")))
 
-    assert env["ASTRONEX_WEIGHTS"] == str(tmp_path)
-    assert env.get("PYTHONPATH") == os.environ.get("PYTHONPATH")
-    assert not hasattr(astronex_env, "setup")
-    vendored = Path(astronex_runtime.__file__).with_name("astronex_world_runtime")
-    assert (vendored / "utils" / "default_config.yaml").is_file()
+    assert resolved.model_kwargs.model_root == str(tmp_path / "weights")
+    inspect.signature(AstronexDenoiser).bind(**dict(resolved.model_kwargs), is_causal=bool(resolved.causal))

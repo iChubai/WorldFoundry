@@ -17,7 +17,6 @@ num_frame_per_block: 4
 model_kwargs:
   model_name: transformer
   model_root: "@weights"
-  timestep_shift: 5.0
   use_camera: true
   use_action: true
   action_dim: 64

@@ -68,7 +68,7 @@ pipe.close()
 
 ## Astronex-World
 
-The sampler is vendored from source revision `27584bf1a89da01ef35a03b48d83bc818d2adf2b`. Use the `Astronex-Lab/Astronex-World` checkpoint layout.
+The causal and bidirectional samplers are adapted from source revision `27584bf1a89da01ef35a03b48d83bc818d2adf2b`; the network is a WorldFoundry Wan variant that loads the released denoiser, UMT5 text encoder and Wan2.2 VAE onto the shared modules. Use the `Astronex-Lab/Astronex-World` checkpoint layout.
 
 ```python
 from worldfoundry.pipelines.astronex_world import AstronexWorldPipeline

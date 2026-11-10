@@ -17,7 +17,7 @@ Astronex-World 支持相机和动作条件下的因果及双向视频推理。
 
 用 `astronex-world` 做相机条件视频推理。配方绑定了已记录的相机控制 profile。
 
-基于 Wan2.2 TI2V-5B，加入 PRoPE 相机条件、64 维动作和 embodiment 条件。官方采样器与模型代码 vendor 自 Astronex-Robotics/Astronex-World（27584bf1）。该模型由Astronex-Robotics发布。
+基于 Wan2.2 TI2V-5B，加入 PRoPE 相机条件、64 维动作和 embodiment 条件。因果与双向采样器改编自 Astronex-Robotics/Astronex-World（27584bf1），网络为基于 WorldFoundry 共享 Wan、UMT5 与 Wan2.2 VAE 模块的 Wan 变体。该模型由Astronex-Robotics发布。
 
 catalog 记录的任务包括 文生视频、图生视频、相机可控视频、交互式世界模型。别名包括 `astronex`。模态上，它接受文本、图像，输出视频。
 

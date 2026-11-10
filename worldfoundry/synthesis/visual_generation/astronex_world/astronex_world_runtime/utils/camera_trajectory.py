@@ -29,7 +29,6 @@ Chain segments: "w*10,d*9", "w*9,j*10"
 import re
 
 import numpy as np
-import torch
 
 _STEP = 0.08
 _ROT_STEP = np.radians(3.0)  # 3.0 degrees per latent frame
@@ -129,34 +128,3 @@ def parse_trajectory(traj_str: str) -> np.ndarray:
     for i, c2w in enumerate(c2w_list):
         viewmats[i] = np.linalg.inv(c2w)
     return viewmats
-
-
-def make_camera_tensors(
-    traj_str: str,
-    fx: float = 0.5050505,
-    fy: float = 0.89786756,
-    cx: float = 0.5,
-    cy: float = 0.5,
-    device="cpu",
-    dtype=torch.float32,
-):
-    """Build (1, T, 4, 4) viewmats and (1, T, 3, 3) Ks tensors.
-
-    Args:
-        traj_str: trajectory string, e.g. "w*19"
-        fx, fy, cx, cy: normalized intrinsics
-            (defaults match WorldPlayGen: 1920x1080, f~969.7)
-
-    Returns:
-        viewmats: (1, T, 4, 4) w2c matrices
-        Ks:       (1, T, 3, 3)
-    """
-    viewmats_np = parse_trajectory(traj_str)
-    T = len(viewmats_np)
-
-    K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]], dtype=np.float32)
-    Ks_np = np.tile(K, (T, 1, 1))
-
-    viewmats = torch.tensor(viewmats_np, dtype=dtype, device=device).unsqueeze(0)
-    Ks = torch.tensor(Ks_np, dtype=dtype, device=device).unsqueeze(0)
-    return viewmats, Ks

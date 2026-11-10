@@ -148,7 +148,7 @@ include worldfoundry/synthesis/visual_generation/vid2world/csgo_utils/csgo_valid
 recursive-include worldfoundry/base_models/diffusion_model/models/networks/hunyuan_video/gamecraft PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/hunyuan_world/gamecraft_inference PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/alayaworld_v11/alayaworld_v11_runtime PROVENANCE.md
-recursive-include worldfoundry/synthesis/visual_generation/astronex_world/astronex_world_runtime PROVENANCE.md *.yaml
+recursive-include worldfoundry/synthesis/visual_generation/astronex_world/astronex_world_runtime PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/solarwm/solarwm_runtime PROVENANCE.md *.json *.txt
 recursive-include worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime PROVENANCE.md
 recursive-include worldfoundry/base_models/diffusion_model/models/encoders/ltx/prompts *.txt

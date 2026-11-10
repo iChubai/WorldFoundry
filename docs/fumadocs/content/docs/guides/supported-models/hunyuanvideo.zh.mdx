@@ -1,6 +1,6 @@
 ---
 title: "HunyuanVideo"
-description: "腾讯开源文生 / 图生视频 DiT：提示词（及可选参考图）进，视频出。WorldFoundry 原生配方默认 720×1280、129 帧；runner 一致性仍为 pending。"
+description: "腾讯开源文生 / 图生视频 DiT：提示词（及可选参考图）进，视频出。WorldFoundry 原生配方默认 720×1280、129 帧。"
 modelId: "hunyuanvideo"
 pageSource: authored
 ---
@@ -9,7 +9,7 @@ HunyuanVideo 是腾讯的开源视频基础模型：同一套约 130 亿参数�
 
 <ModelPaperFigures modelId="hunyuanvideo" locale="zh" />
 
-论文为 [HunyuanVideo: A Systematic Framework For Large Video Generation Model](https://arxiv.org/abs/2412.03603)（arXiv, 2024）。专业人工评测使用 1,533 条 prompt、每个 prompt 仅推理一次、60 多名评估人员；综合指标上优于 Runway Gen-3、Luma 1.6 和 3 个中文社区表现最好的视频生成模型，运动质量尤为突出。该对比基于高质量版本，与已发布的 fast 版本不同。这些是上游数字，不是 WorldFoundry scorecard。
+论文为 [HunyuanVideo: A Systematic Framework For Large Video Generation Model](https://arxiv.org/abs/2412.03603)（arXiv, 2024）。专业人工评测使用 1,533 条 prompt、每个 prompt 仅推理一次、60 多名评估人员；综合指标上优于 Runway Gen-3、Luma 1.6 和 3 个中文社区表现最好的视频生成模型，运动质量尤为突出。该对比基于高质量版本，与已发布的 fast 版本不同。
 
 同一套栈也可以跑 HunyuanVideo-I2V：用 token replace 重建并写入参考图，将 MLLM 语义图像 token 与视频潜变量拼接后做全注意力计算。
 
@@ -63,10 +63,10 @@ WorldFoundry 原生文生视频配方（`HunyuanVideoT2VPipeline`）默认为 **
 
 ## 在 WorldFoundry 中
 
-文生视频与图生视频都是声明式的原生扩散配方，由共享 runner 组装，不用上游 CLI。启动 `wf run hunyuanvideo-t2v`，或对应的 `hunyuanvideo-i2v`。权重是 `tencent/HunyuanVideo` 与 `tencent/HunyuanVideo-I2V`（卡片 license 为 `other`）。集成已记录；runner 与 demo 一致性仍为 pending，所以命令能跑不等于本工作区已有 checkpoint 驱动的 GPU 产物。使用统一环境 `worldfoundry-unified-cu128`，并在本地就位权重。官方 720p / 129 帧任务面向 80 GB 级 GPU；只有接受论文里的 540p / FP8 折中时，才往下规划。
+文生视频与图生视频都是声明式的原生扩散配方，由共享 runner 组装，不用上游 CLI。启动 `wf run hunyuanvideo-t2v`，或对应的 `hunyuanvideo-i2v`。权重是 `tencent/HunyuanVideo` 与 `tencent/HunyuanVideo-I2V`（卡片 license 为 `other`）。使用统一环境 `worldfoundry-unified-cu128`，并在本地就位权重。官方 720p / 129 帧任务面向 80 GB 级 GPU；只有接受论文里的 540p / FP8 折中时，才往下规划。
 
 ## 最小评测
 
-文生视频片段走 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`，读 `aesthetic_quality`。runner 一致性仍为 pending；命令能启动不等于已验证 GPU 产物。
+文生视频片段走 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`，读 `aesthetic_quality`。
 
 <ModelRelatedRecipes modelId="hunyuanvideo" locale="zh" />

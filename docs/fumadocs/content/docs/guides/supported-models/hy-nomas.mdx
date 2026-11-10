@@ -7,10 +7,9 @@ pageSource: authored
 ## Overview
 
 Hy-Nomas generates successive segments of one world from text and camera poses.
-WorldFoundry composes its checkpoint-compatible DiT and PixelUMM decoder through
-native diffusion recipes. Attention, normalization, modulation, MLP layers,
-Qwen2.5-VL text backbone, checkpoint loading, Euler scheduling, quantization and
-KV storage reuse the shared base-model/core implementations.
+A distilled DiT conditioned on a Qwen2.5-VL text backbone generates latent
+segments with Euler scheduling and compressed KV history, and the PixelUMM
+decoder turns them into frames.
 
 Reference source: [Tencent-Hunyuan/Hy-Nomas](https://github.com/Tencent-Hunyuan/Hy-Nomas/tree/911cea6458a89c2663513ff7099561ec190dd491).
 The component conversion follows the Apache-2.0
@@ -76,9 +75,8 @@ wf run hy-nomas --print-config --json
 Pass `low_memory=True` while loading, or select `hy-nomas-low-memory`.
 The native preset applies weight-only INT8 to the DiT, INT8 KV storage, FP8 linear
 layers in PixelUMM, and phase-wise CPU offload. Qwen, denoising and decoding are
-staged separately. It uses the floating-point checkpoints above; its transforms
-and execution receipts belong to the canonical WorldFoundry quantization runtime.
-FP8 execution requires eligible CUDA hardware and BF16/FP16 inputs.
+staged separately. It quantizes the floating-point checkpoints above at load
+time, so no separate quantized checkpoint is needed. FP8 execution requires eligible CUDA hardware and BF16/FP16 inputs.
 
 `max_cache_segments` optionally bounds retained segment KV history. Eviction
 reduces temporal context; positional offsets continue monotonically.
@@ -95,27 +93,22 @@ With the default PixelUMM window/overlap, stable-prefix decoding consumes 40 inp
 frames initially and emits 4 stable frames, then consumes and emits 20 frames per
 chunk. The remaining prefix is buffered until future windows or finalization make
 it stable; already transmitted WebRTC frames never need replacement.
-This is chunked interactive generation, not a measured real-time performance claim.
 A failed segment invalidates its session; restart the rollout rather than reusing
 partially advanced history.
 
 ## Validation and limitations
 
-Small, randomly initialized CPU and H100 CUDA components cover generation, camera
-conditioning, repeated seeds, compressed-cache continuation, phase-wise offload,
-failure/reset, checkpoint loading and Studio API routing. CUDA checks exercise
-shared INT8 DiT/KV storage and FP8 decoder kernels. The 1280-token BF16 Qwen text
-features match Hugging Face loading exactly, with derived rotary frequencies kept
-at FP32. Small FP32/BF16 DiT and PixelUMM CUDA forwards match the pinned reference
-source across cache continuation and tiled decoding.
+Validated with small, randomly initialized models on CPU and H100 CUDA:
+generation, camera conditioning, cache continuation, phase-wise offload, reset,
+the INT8/FP8 low-memory kernels and Studio API routing work, DiT, PixelUMM and
+Qwen text outputs match the pinned reference source, and the official checkpoint
+parameter names and shapes match the native modules.
 
-Official safetensors headers confirm that the DiT's 2268 tensors, PixelUMM decoder's
-476 tensors and Qwen text tower's 338 tensors match native parameter names and shapes.
-
-- Full-checkpoint generation quality, deployed-shape quantization, browser streaming
-  and latency still require real-weight GPU acceptance.
-- The recorded upstream `PE` directory describes Qwen3.5 with 5120 features,
+- Generation with the full released checkpoints has not been validated: output
+  quality, low-memory quantization at deployed sizes, browser streaming and latency
+  are unmeasured.
+- The upstream `PE` directory describes Qwen3.5 with 5120 features,
   inconsistent with its inference configuration. Use the separate Qwen2.5-VL
   checkpoint above; incompatible text architectures are rejected.
-- Upstream packed INT8/FP8 export files and specialized CUDA kernels are not the
-  native preset's checkpoint ABI.
+- The low-memory preset does not load upstream packed INT8/FP8 export files or use
+  their specialized CUDA kernels.

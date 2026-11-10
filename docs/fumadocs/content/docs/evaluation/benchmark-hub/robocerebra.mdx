@@ -1,6 +1,6 @@
 ---
 title: RoboCerebra
-description: "NeurIPS 2025 long-horizon household bench (1,000 trajectories, 100 variants). WorldFoundry imports official rollouts; it does not run LIBERO."
+description: "NeurIPS 2025 long-horizon household bench (1,000 trajectories, 100 variants). WorldFoundry imports official rollout results."
 ---
 
 RoboCerebra (Beihang CoLa Lab, NeurIPS 2025) tests **System-2** planning on long household sequences, not reactive System-1 control. The release is **1,000** human-annotated trajectories over **100** task variants (mean **9.1** atomic steps; horizons on the order of **3,000** simulation steps) on a **LIBERO**-based stack. Published eval is **600** rollouts (**60** tasks × **10** trials) with anchor-aligned planner / VLA handoffs. Six official conditions: **Ideal**, **Memory Exploration**, **Memory Execution**, **Random Disturbance**, **Observation Mismatching**, and **Mix**.

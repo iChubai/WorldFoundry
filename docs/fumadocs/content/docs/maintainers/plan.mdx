@@ -15,9 +15,9 @@ Integration work should follow the existing contract: runtime code in-tree under
 
 ## Runtime scope
 
-WorldFoundry's public framework surface is currently scoped to inference, evaluation, Studio, and runtime integration.
+WorldFoundry's public framework surface covers inference, evaluation, Studio, and runtime integration.
 
-Training launchers, dataset builders, finetuning scripts, and experiment-only callbacks are intentionally out of scope for the current release tree. If training support returns later, it should be redesigned as a separate, documented subsystem with the same evidence standard as inference and evaluation rather than restored from the removed prototype code.
+Training and post-training recipes (SFT, distillation, RL) live in `worldfoundry/training/`, beside the inference and evaluation path: they produce checkpoints that run through the normal inference path, and the package is excluded from the published wheel. Training launchers, dataset builders, and experiment-only callbacks do not belong in `core`, `base_models`, or `synthesis`. Training work follows the same evidence standard as inference and evaluation.
 
 ## Codebase unification
 

@@ -87,18 +87,15 @@ docs:
   usage_notes_zh: 需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或 variant=flash。执行
     execute=True 前必须准备官方源码检出、专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。
   limitations:
-  - The upstream release is marked for academic research and non-commercial use and
-    remains subject to the LTX-2 Community License.
-  - Echo-WM Base expects a six-field prompt; Flash accepts the released free-form
-    example captions.
-  - Flash Preview is a short-horizon release; the upstream long-horizon checkpoint
-    and online streaming demo are not yet released.
-  - GPU artifact and visual parity have not been validated in this CPU-only workspace.
+  - The upstream release is marked for academic research and non-commercial use and remains subject to the LTX-2 Community License.
+  - Echo-WM Base expects a six-field prompt; Flash accepts the released free-form example captions.
+  - Flash Preview is a short-horizon release; the upstream long-horizon checkpoint and online streaming demo are not yet released.
+  - GPU output and visual parity are not yet validated.
   limitations_zh:
   - 上游版本标注为学术研究与非商业用途，并受 LTX-2 Community License 约束。
   - Echo-WM Base 要求六字段提示词；Flash 可接受公开示例中的自由文本描述。
   - Flash Preview 为短时程版本；上游长时程 checkpoint 与在线流式 demo 尚未发布。
-  - 当前纯 CPU workspace 尚未验证 GPU 产物与视觉一致性。
+  - GPU 产物与视觉一致性尚未验证。
   recommended_benchmarks:
   - id: camerabench
     reason: Camera and navigation action adherence.

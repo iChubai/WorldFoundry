@@ -24,7 +24,7 @@ Default user shape is `wf run`. Use `evaluate` when you already have materialize
 
 ## Choose by intent
 
-The CLI, TUI, and Workspace compile these user intents onto the same two execution requests; they do not maintain separate inference or metric implementations.
+The CLI, TUI, and Workspace compile these user intents onto the same two execution requests and share one inference and metric implementation.
 
 - **Official reproduction** — Pinned recipe, official sample coverage, model generation settings, and benchmark runtime settings. Classification: `reproduction`.
 - **Model benchmark** — In-tree model plus the benchmark's official prompt/data protocol. Classification: `protocol_compliant`.
@@ -133,7 +133,7 @@ reference:
 
 Run `wf reproduce --recipe recipe.yaml --output-dir tmp/reproduce --plan-only --json` first. The prepared record includes the recipe and requests SHA-256 values, source fields, model/benchmark revisions, scope, and leaderboard candidacy; execution still verifies the benchmark runner and local assets.
 
-Benchmark-specific layouts and flags belong on each Benchmark Hub page.
+Benchmark-specific layouts and flags are on each Benchmark Hub page.
 
 ## Outputs
 

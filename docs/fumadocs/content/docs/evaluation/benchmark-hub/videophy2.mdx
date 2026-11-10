@@ -1,13 +1,13 @@
 ---
 title: VideoPhy2
-description: "Action-centric successor to VideoPhy: 200 harder prompts plus rule-level AutoEval. WorldFoundry ships the judge path; it does not invent a board."
+description: "Action-centric successor to VideoPhy: 200 harder prompts plus rule-level AutoEval. WorldFoundry ships the AutoEval judge path."
 ---
 
 VideoPhy2 (UCLA and Google DeepMind) is the **action-centric** successor to [VideoPhy](/docs/evaluation/benchmark-hub/videophy). The prompt suite focuses on harder physical activities and object interactions (**200 claimed actions**). AutoEval adds **rule-level** judgements: which physical rules apply, and whether each is followed or violated (`rule_followed_rate`), alongside Semantic Adherence, Physical Commonsense, and primary **Joint Score**.
 
 Paper: [VideoPhy-2](https://arxiv.org/abs/2503.06800). Project: [videophy2.github.io](https://videophy2.github.io/). Code: [Hritikbansal/videophy](https://github.com/Hritikbansal/videophy).
 
-WorldFoundry **bundles the prompt list** and drives the in-tree AutoEval judge (`--autoeval-checkpoint`, optional `--autoeval-lora-checkpoint`). Official scoring path is present; **full 200-prompt reproduction is pending**. Weights are caller-supplied.
+WorldFoundry **bundles the prompt list** and drives the in-tree AutoEval judge (`--autoeval-checkpoint`, optional `--autoeval-lora-checkpoint`). Weights are caller-supplied.
 
 <BenchmarkPageSections id="videophy2" locale="en" />
 

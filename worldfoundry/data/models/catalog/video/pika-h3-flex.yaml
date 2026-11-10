@@ -71,11 +71,9 @@ docs:
     adapter_task=ref2va。
   limitations:
   - Native output is 24 fps with 32 kHz stereo audio and six generator evaluations.
-  - The current in-tree reference path accepts image references; video and standalone-audio
-    reference preprocessing remain pending.
-  - Full 480p/768p bucket parity, multi-GPU execution and checkpoint-backed artifact
-    validation remain pending.
+  - Reference generation accepts image references only; video and standalone-audio references are not supported.
+  - Multi-GPU execution, the full 480p/768p bucket set, and checkpoint-backed outputs are not validated.
   limitations_zh:
   - 原生输出为 24 fps、32 kHz 立体声，并执行六次生成评估。
-  - 当前树内参考路径接受图像参考；视频与独立音频参考的预处理仍待补齐。
-  - 完整 480p/768p bucket 一致性、多卡执行及真实权重产物验证仍待完成。
+  - 参考生成仅接受图像参考；不支持视频与独立音频参考。
+  - 多卡执行、完整 480p/768p bucket 以及真实权重输出尚未验证。

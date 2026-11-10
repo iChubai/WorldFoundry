@@ -1,15 +1,15 @@
 ---
 title: "UniK3D Prior"
-description: "UniK3D Prior from ETH Zurich: panoramic-depth-estimation and metric-3d-estimation; Verified."
+description: "UniK3D Prior from ETH Zurich: panoramic depth estimation, metric 3D estimation, and 2 more tasks; Verified."
 modelId: "unik3d-prior"
 pageSource: generated
 ---
 
-UniK3D generalizes metric 3D estimation to any camera — pinhole, fisheye, even full panoramas — with one model. In this catalog it is a checkpoint-verified universal-camera geometry prior: real checkpoint inference is verified through the shared contract with automatic camera estimation, while pinhole and panorama overrides stay explicit.
+UniK3D generalizes metric 3D estimation to any camera — pinhole, fisheye, even full panoramas — with one model. WorldFoundry uses it as a universal-camera geometry prior. Validated with the released checkpoint through the shared geometry-prior pipeline with automatic camera estimation; pinhole and panorama camera overrides are set explicitly.
 
 <ModelPaperFigures modelId="unik3d-prior" locale="en" />
 
-The recorded paper is [arXiv 2503.16591](https://arxiv.org/abs/2503.16591).
+Paper: [arXiv 2503.16591](https://arxiv.org/abs/2503.16591).
 
 Project page: [lpiccinelli-eth.github.io/pub/unik3d](https://lpiccinelli-eth.github.io/pub/unik3d/). Code: [lpiccinelli-eth/UniK3D](https://github.com/lpiccinelli-eth/UniK3D).
 
@@ -17,32 +17,30 @@ Project page: [lpiccinelli-eth.github.io/pub/unik3d](https://lpiccinelli-eth.git
 
 ## What it is for
 
-Pick `unik3d-prior` for feed-forward geometry: views in, reconstruction / trajectory / point cloud out. Use it when you need the catalog 3D route rather than a depth-only prior.
+`unik3d-prior` estimates depth: images in, depth maps out.
 
-Per the upstream publication, UniK3D represents the camera with a learned spherical-basis model, decoupling ray directions from radial depth so that no distortion-specific tuning is needed. The default checkpoint resolves from lpiccinelli/unik3d-vitl; registered at base_models/three_dimensions/depth/unik3d. It is published by ETH Zurich.
+Per the upstream publication, UniK3D represents the camera with a learned spherical-basis model, decoupling ray directions from radial depth so that no distortion-specific tuning is needed. The default checkpoint resolves from lpiccinelli/unik3d-vitl, or from an explicit local model_path. It is published by ETH Zurich.
 
-Catalog tasks include panoramic-depth-estimation, metric-3d-estimation, monocular-depth-estimation, and geometry-prior. Catalog aliases include `unik3d` and `unik3d-vitl`. Documented modalities: image in, depth out.
+Tasks: panoramic depth estimation, metric 3D estimation, monocular depth estimation, and geometry prior. Aliases: `unik3d` and `unik3d-vitl`. Modalities: image in, depth out.
 
 ## Runtime contract
 
-Optional `input_path`, `type`, `camera_model`, `execute`, and `max_points`; artifacts `unik3d-prior.npz`.
+Inputs `input-path` (bundled samples are used when omitted); options `type`, `camera-model`, `execute`, and `max-points`; artifacts `unik3d-prior.npz`.
 
 CLI task profiles: `default`. WorldFoundry binds `UniK3DPriorPipeline`.
 
 Family status: **Verified**.
 
-It is integrated as an independent geometry prior under worldfoundry/base_models and exposed through the shared geometry-prior pipeline/operator contract. Higher-level pipelines (e.g. ViPE) import it from this canonical owner instead of keeping private copies. Prefer it over pinhole-only priors when inputs include fisheye or panoramic imagery. The upstream release is CC-BY-NC-4.0.
+Use it through the shared geometry-prior pipeline/operator contract; pipelines such as ViPE also use it as their geometry prior. Prefer it over pinhole-only priors when inputs include fisheye or panoramic imagery.
 
-Integrated as a universal-camera geometric prior at worldfoundry/base_models/three_dimensions/depth/unik3d.
+CC-BY-NC-4.0: non-commercial license terms apply downstream.
 
 ## Running in WorldFoundry
 
-The catalog launch is `wf run unik3d-prior --pipeline.task-profile default`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
+Run `wf run unik3d-prior --pipeline.task-profile default` to write the depth maps.
 
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
-Recorded weight repositories include `lpiccinelli/unik3d-vitl`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh unik3d-prior`. Add `--download` to fetch missing public checkpoints.
-
-Status: **Verified**.
+Weights: `lpiccinelli/unik3d-vitl`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh unik3d-prior`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="unik3d-prior" locale="en" />

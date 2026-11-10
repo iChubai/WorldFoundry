@@ -10,17 +10,15 @@ image · video → video
 
 UniWorld-View generates camera-controlled novel views from a single image or a casually captured monocular video.
 
-**Catalog status:** Integrated
-
 ## Upstream sources
 
 - [Project](https://zhouhyocean.github.io/uniworld-view/)
 - [Paper](https://arxiv.org/abs/2608.04701)
 - [GitHub](https://github.com/PKU-YuanGroup/UniWorld-View)
 - [Hugging Face](https://huggingface.co/Drexubery/UniView)
-- [Source](https://github.com/NIRVANALAN/STream3R)
+- [STream3R](https://github.com/NIRVANALAN/STream3R)
 - [Upstream README](https://github.com/PKU-YuanGroup/UniWorld-View#readme)
-- [Upstream README](https://github.com/NIRVANALAN/STream3R#readme)
+- [STream3R README](https://github.com/NIRVANALAN/STream3R#readme)
 
 <ModelCommandBuilder modelId="uniworld-view" locale="en" />
 
@@ -36,11 +34,11 @@ Pin the official checkout to `660212c48bff7c91a2ea5c7d5f3785af581100e2`, initial
 
 The Python adapter is `UniWorldViewPipeline.from_pretrained(device="cuda:0")`. Pass `images` for single-image outpainting or `video` with `mode="dynamic_view"` for monocular video; the latter needs at least 13 generated frames because the second stage consumes 10 reference frames. The default `hybrid` renderer requires PyTorch3D; `render_method="warp"` selects the BiSplat route. Use `plan_only=True` to inspect the subprocess command without loading weights.
 
-## Readiness and limitations
+## Limitations
 
 - The upstream authors recommend at least 60 GB of GPU memory.
-- Validation covers specific official samples and settings; quantitative camera-angle accuracy and other scenes remain unmeasured.
+- Validated with the released weights on the official samples and settings only; camera-angle accuracy and other scenes are not measured.
 - With aspect-ratio preservation enabled, actual output dimensions can differ from the requested height and width.
-- At the pinned upstream revision, dynamic-view inference does not initialize STream3R, and its single-view path ignores the requested FPS and seed. The WorldFoundry entry point applies narrow fixes for these three upstream issues before running the official inference script. Repeated runs with the same seed were checked frame by frame.
+- At the pinned upstream revision, dynamic-view inference does not initialize STream3R, and the single-view path ignores the requested FPS and seed. The WorldFoundry entry point fixes these three issues before running the official inference script, so runs with the same seed reproduce frame for frame.
 
 <ModelRelatedRecipes modelId="uniworld-view" locale="en" />

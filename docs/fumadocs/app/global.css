@@ -9062,6 +9062,8 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
 .wf-command-builder-contracts {
   background: transparent;
   border-top: 1px solid var(--pi-soft-line);
+  font-size: 12px;
+  line-height: 1.45;
   margin: 0 16px;
 }
 
@@ -9098,7 +9100,8 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   }
 }
 
-.wf-command-builder-disclosure::before {
+.wf-command-builder-disclosure::before,
+.wf-command-builder-more-toggle::before {
   border-right: 1.5px solid var(--pi-brand-accent);
   border-bottom: 1.5px solid var(--pi-brand-accent);
   content: '';
@@ -9110,7 +9113,8 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   width: 6px;
 }
 
-.wf-command-builder-contracts.is-open .wf-command-builder-disclosure::before {
+.wf-command-builder-disclosure[aria-expanded='true']::before,
+.wf-command-builder-more-toggle[aria-expanded='true']::before {
   transform: rotate(45deg);
 }
 
@@ -9119,110 +9123,13 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   font-weight: 650;
 }
 
-.wf-command-builder-contracts-meta {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-left: auto;
-  min-width: 0;
-}
-
-.wf-command-builder-contracts-meta > span {
-  color: var(--pi-muted);
-  flex: none;
-  font-size: 11px;
-  font-weight: 550;
-  letter-spacing: 0;
-  white-space: nowrap;
-}
-
-.wf-command-builder-contracts-meta > .wf-command-builder-profile-chip {
-  white-space: normal;
-}
-
-.wf-command-builder-profile-chip {
-  align-items: flex-start;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 5px 8px;
-  max-width: min(100%, 36rem);
-  padding: 0;
-}
-
-.wf-command-builder-profile-chip .wf-command-builder-field-label {
-  flex: none;
-  padding-top: 1px;
-}
-
-.wf-command-builder-profile-text {
-  display: flex;
-  flex: 1 1 10rem;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.wf-command-builder-profile-name {
-  color: var(--pi-ink);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.wf-command-builder-profile-chip code {
-  background: transparent;
-  border: 0;
-  color: var(--pi-ink);
-  font-family: var(--pi-mono-font);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  line-height: 1.4;
-  overflow: visible;
-  overflow-wrap: anywhere;
-  padding: 0;
-  text-overflow: unset;
-  text-transform: none;
-  white-space: normal;
-}
-
 .wf-command-builder-contracts-counts {
   color: var(--pi-muted);
   flex: none;
   font-size: 11px;
   font-weight: 550;
-}
-
-.wf-command-builder-disclosure code {
-  color: var(--pi-ink);
-  font-family: var(--pi-mono-font);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-transform: none;
+  margin-left: auto;
   white-space: nowrap;
-}
-
-.wf-command-builder-contracts .wf-command-builder-disclosure code {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  max-width: 18rem;
-  padding: 0;
-}
-
-.wf-command-builder-contracts .wf-command-builder-profile-chip code {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  max-width: none;
-  padding: 0;
 }
 
 .wf-command-builder-contracts-body {
@@ -9420,6 +9327,7 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   background: transparent;
   border-color: transparent;
   color: var(--pi-ink);
+  font-weight: 650;
 }
 
 .wf-command-builder-field-note {
@@ -9583,6 +9491,51 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   line-height: inherit;
   margin: 0;
   text-indent: 0;
+}
+
+.pi-doc-content .wf-command-builder-contracts :is(.wf-command-builder-contracts-lead, .wf-command-builder-field-note),
+.pi-doc-content .wf-command-builder-contracts .wf-command-builder-contract > p {
+  color: var(--pi-muted);
+}
+
+.pi-doc-content .wf-command-builder-contracts .wf-command-builder-field-note {
+  font-size: 11px;
+}
+
+.pi-doc-content .wf-command-builder-contracts .wf-command-builder-contract-row-name {
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.pi-doc-content .wf-command-builder-contracts .wf-command-builder-contract-row-value {
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.wf-command-builder-more-toggle {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--pi-muted);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  gap: 8px;
+  padding: 2px 0;
+  text-align: left;
+  width: 100%;
+}
+
+.wf-command-builder-more-toggle:hover {
+  color: var(--pi-ink);
+}
+
+.wf-command-builder-more-body {
+  display: grid;
+  gap: 4px;
+  padding-top: 6px;
 }
 
 .pi-doc-content .wf-command-builder-contract h3 {
@@ -10032,19 +9985,6 @@ a.wf-catalog-entry:hover .wf-catalog-entry-arrow {
   .wf-command-builder-contracts .wf-command-builder-disclosure {
     align-items: flex-start;
     flex-wrap: wrap;
-  }
-
-  .wf-command-builder-contracts-meta {
-    flex: 1 1 100%;
-    margin-left: 14px;
-  }
-
-  .wf-command-builder-profile-chip {
-    max-width: 100%;
-  }
-
-  .wf-command-builder-contracts .wf-command-builder-disclosure code {
-    max-width: 100%;
   }
 }
 

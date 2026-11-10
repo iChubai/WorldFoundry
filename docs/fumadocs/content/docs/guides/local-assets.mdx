@@ -98,7 +98,7 @@ bash scripts/workspace/run_workspace.sh \
 - **HF dataset `org/name`** — local directory `org__name`. Example: `lerobot/libero` → `lerobot__libero`.
 - **GitHub `owner/repo`** — often `owner--repo`. Example: `Lifelong-Robot-Learning/LIBERO` → `Lifelong-Robot-Learning--LIBERO`.
 
-**Follow the `path` field in catalog YAML or `local_assets.example.yaml`.** Some embodied benchmarks still use legacy paths such as `cache/vla_va_wam/hf_datasets/org--name`; mirror that layout or override the path in your manifest.
+**Follow the `path` field in catalog YAML or `local_assets.example.yaml`.** Some embodied benchmarks use paths such as `cache/vla_va_wam/hf_datasets/org--name`; mirror that layout or override the path in your manifest.
 
 ## 2. Where to look up required assets
 
@@ -321,13 +321,11 @@ hf download Skywork/Matrix-Game-2.0 \
 ### Worked example: Echo-Memory
 
 Echo recipes share the Wan2.1 T2V 1.3B backbone but require different files
-under `Echo-Team/Echo-Memory`. As of 2026-07-20, only
-`context_k1/epoch-0.safetensors` remains on the official HF `main` branch.
-Other Echo model IDs stay in the catalog with exact expected filenames, but
-their upstream state is `unreleased_by_upstream` or
-`retracted_misaligned_by_upstream`; do not substitute K=1 weights for them.
+under `Echo-Team/Echo-Memory`. Only `context_k1/epoch-0.safetensors` is
+published on the official HF `main` branch. The other Echo model IDs are
+unreleased or retracted upstream; do not substitute K=1 weights for them.
 
-Stage the currently public recipe and its pinned backbone into the runtime
+Stage the public recipe and its pinned backbone into the runtime
 layout, then create the normal HFD aliases without copying tensors:
 
 ```bash
@@ -445,7 +443,7 @@ for GEN3C as declared in its runtime profile. For Predict2 14B, switch to
 
 Cosmos Predict and Transfer share the Predict 2B `tokenizer.pth` Wan codec and
 the Reason1 language model. Download only the selected transformer plus those
-shared assets. Transfer currently uses the exact official `general/edge`
+shared assets. Transfer uses the exact official `general/edge`
 checkpoint revision; directory presence without that file is not readiness.
 Set `HF_ENDPOINT=https://hf-mirror.com` when the mirror is required.
 

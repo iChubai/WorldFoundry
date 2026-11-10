@@ -1,6 +1,6 @@
 ---
 title: VMBench
-description: "Alibaba AMAP ICCV 2025 motion bench: 1,050 prompts, five local metrics. WorldFoundry vendors the scorer; it does not invent a board."
+description: "Alibaba AMAP ICCV 2025 motion bench: 1,050 prompts, five local metrics. WorldFoundry vendors the scorer."
 ---
 
 VMBench (AMAP-ML; ICCV 2025) evaluates **motion generation** with five perception-aligned local metrics — no hosted judge API:
@@ -15,7 +15,7 @@ Official suite: **1,050 motion-centric prompts**. Name videos `0001.mp4` … `10
 
 Paper: [VMBench (ICCV 2025)](https://openaccess.thecvf.com/content/ICCV2025/html/Ling_VMBench_A_Benchmark_for_Perception-Aligned_Video_Motion_Generation_ICCV_2025_paper.html). Project: [amap-ml.github.io/VMBench-Website](https://amap-ml.github.io/VMBench-Website/). Code: [AMAP-ML/VMBench](https://github.com/AMAP-ML/VMBench).
 
-WorldFoundry **vendors the official metric code** and bundles the prompt suite (`worldfoundry/data/benchmarks/assets/vmbench/prompts/prompts.json`). The official HF dataset endpoint was **not public** at integration time. Result / runtime wiring is present; **full CUDA metric recomputation is unverified**. Full recompute needs MMDetection / MMPose / DeepSpeed and detector / tracker checkpoints.
+WorldFoundry **vendors the official metric code** and bundles the prompt suite (`worldfoundry/data/benchmarks/assets/vmbench/prompts/prompts.json`). Full recompute needs MMDetection / MMPose / DeepSpeed and detector / tracker checkpoints; **full CUDA metric recomputation has not been validated**.
 
 <BenchmarkPageSections id="vmbench" locale="en" />
 

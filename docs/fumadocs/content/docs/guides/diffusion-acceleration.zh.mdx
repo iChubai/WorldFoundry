@@ -7,20 +7,20 @@ description: 对照 Sol-Engine 与 FlashDreams，说明原生插件、正确性�
 
 ## 上游对照
 
-对照固定版本：[FlashDreams `91c906b`](https://github.com/NVIDIA/flashdreams/tree/91c906b69992f63fb19907a25cd805fb783d314a) 与 [Sana Sol-Engine `670482d`](https://github.com/NVlabs/Sana/tree/670482d8a857d578ac8a2ea89b052d0fb47badba)。已有能力按真实消费入口区分；可选依赖或同名开关不能证明执行和性能。
+对照固定版本：[FlashDreams `91c906b`](https://github.com/NVIDIA/flashdreams/tree/91c906b69992f63fb19907a25cd805fb783d314a) 与 [Sana Sol-Engine `670482d`](https://github.com/NVlabs/Sana/tree/670482d8a857d578ac8a2ea89b052d0fb47badba)。表中区分可调用的原生集成与可选依赖或转发的开关。
 
-| 技术 | 上游路径 | WorldFoundry 既有集成与本轮变化 |
+| 技术 | 上游路径 | WorldFoundry 支持 |
 | --- | --- | --- |
-| Attention kernel | FlashDreams 的 Triton FA2/TMA、cuDNN、原生 FP8；Sol 的 Flash/cuDNN 与 Sol-Attn | 已有 SDPA、FA2/3/4、Sage/Sage3、xFormers、TMA、原生 cuDNN FP8。新增共享 Sol-Attn dispatcher 和 Wan self/cross 独立选择。 |
-| 块内融合 | AdaLN、residual gate、QK norm/RoPE、投影与 FFN glue | 已有公共 kernel、Wan QKV/RoPE 和部分 FFN 融合。新增 SANA 可撤销适配器，默认仅逐点融合，保持 norm 和 token strides。 |
-| 不变量与历史缓存 | 文本 cross-KV、streaming KV、稳定缓存布局 | 已有 Wan 文本 cross-KV 和多种自回归缓存。新增可撤销 cross-KV 投影融合，使用派生 packed 权重并支持 static-cache miss。各模型的 raw KV、旋转后 KV、递推状态仍有不同语义。 |
-| Feature cache | Sol 使用 EasyCache、TeaCache 和模型专属控制器 | 已有 Tea/Ada/Mag/Taylor/block cache，主要用于 Wan。新增原生 EasyCache，支持 stateless SanaMS/SanaMSVideo、WanModel，并补了 resident Wan2.2 双 expert 的全局到局部 schedule；目前后者是本地测试范围。 |
-| 量化 | FlashDreams 可分别量化投影与 attention；Sol 文档覆盖 FP8、SVDQuant/Nunchaku 等 | 已有 FP8、INT8、INT4、NVFP4 等路径；部分低位模式仍反量化后做 dense GEMM。新增可撤销 selective FP8、校准的原生 packed SVDQuant，以及 Wan self/cross 独立 MHA 调度。SVDQuant 使用独立权重格式，不兼容 Nunchaku 二进制 checkpoint。 |
-| 轻量 codec | FlashDreams 使用匹配的 pruned Wan2.1 LightVAE encoder 和经过校准的原生 FP8 实现 | 新增匹配的 base24/16-latent 原生架构、严格 student checkpoint 校验和校准 FP8 encoder 卷积插件。采用独立 Triton implicit GEMM；norm、cache 和 decoder 保持 FP32。 |
-| Compile、Graph、并行 | regional compile、稳定形状 capture、模型专属并行与流水 | 已有 compile/cache、CUDA Graph、SP/CFG/VAE 并行和 offload。新增插件不解除已有 cache/Graph/SP 禁用条件。 |
-| 组合搜索 | Sol 的模型、硬件与质量预算搜索 | 已有算子 autotune。本轮新增真实原生 SANA/Wan 的固定候选搜索；它只选择当前 prompt、seed、几何和设备上的合格配置。 |
+| Attention kernel | FlashDreams 的 Triton FA2/TMA、cuDNN、原生 FP8；Sol 的 Flash/cuDNN 与 Sol-Attn | SDPA、FA2/3/4、Sage/Sage3、xFormers、TMA、原生 cuDNN FP8，以及共享 Sol-Attn dispatcher 和 Wan self/cross 独立选择。 |
+| 块内融合 | AdaLN、residual gate、QK norm/RoPE、投影与 FFN glue | 公共 kernel、Wan QKV/RoPE 和部分 FFN 融合，以及 SANA 可撤销适配器，默认仅逐点融合，保持 norm 和 token strides。 |
+| 不变量与历史缓存 | 文本 cross-KV、streaming KV、稳定缓存布局 | Wan 文本 cross-KV 和多种自回归缓存，以及可撤销 cross-KV 投影融合，使用派生 packed 权重并支持 static-cache miss。各模型的 raw KV、旋转后 KV、递推状态仍有不同语义。 |
+| Feature cache | Sol 使用 EasyCache、TeaCache 和模型专属控制器 | Tea/Ada/Mag/Taylor/block cache，主要用于 Wan；原生 EasyCache 支持 stateless SanaMS/SanaMSVideo、WanModel，以及 resident Wan2.2 双 expert 的全局到局部 schedule（后者经本地测试）。 |
+| 量化 | FlashDreams 可分别量化投影与 attention；Sol 文档覆盖 FP8、SVDQuant/Nunchaku 等 | FP8、INT8、INT4、NVFP4 等路径（部分低位模式反量化后做 dense GEMM），以及可撤销 selective FP8、校准的原生 packed SVDQuant，以及 Wan self/cross 独立 MHA 调度。SVDQuant 使用独立权重格式，不兼容 Nunchaku 二进制 checkpoint。 |
+| 轻量 codec | FlashDreams 使用匹配的 pruned Wan2.1 LightVAE encoder 和经过校准的原生 FP8 实现 | 匹配的 base24/16-latent 原生架构、严格 student checkpoint 校验和校准 FP8 encoder 卷积插件。采用独立 Triton implicit GEMM；norm、cache 和 decoder 保持 FP32。 |
+| Compile、Graph、并行 | regional compile、稳定形状 capture、模型专属并行与流水 | compile/cache、CUDA Graph、SP/CFG/VAE 并行和 offload。插件不解除 cache/Graph/SP 禁用条件。 |
+| 组合搜索 | Sol 的模型、硬件与质量预算搜索 | 算子 autotune，以及原生 SANA/Wan 的固定候选生成搜索；它只选择当前 prompt、seed、几何和设备上的合格配置。 |
 
-HyperFlow 先前已向上游转发 `--sol-attn`，WorldGen 也已有可选 Flux/Nunchaku 路径；这些不等于共享原生 Wan/SANA 已完成集成。本轮补齐了原生 packed SVDQuant、独立 MHA 精度/kernel 调度与校准 FP8 encoder 的入口和执行验证。它们是受限的原生实现；Nunchaku checkpoint 兼容、FP8 TMA、streaming KV 与 steady-state Graph 组合尚不支持。
+HyperFlow 向上游转发 `--sol-attn`，WorldGen 有可选 Flux/Nunchaku 路径；两者都不提供共享的原生 Wan/SANA 支持。原生 packed SVDQuant、独立 MHA 精度/kernel 调度与校准 FP8 encoder 以受限契约集成；Nunchaku checkpoint 兼容、FP8 TMA、streaming KV 与 steady-state Graph 组合尚不支持。
 
 上游依据：[FlashDreams accelerated](https://github.com/NVIDIA/flashdreams/blob/91c906b69992f63fb19907a25cd805fb783d314a/docs/source/developer_guides/flashdreams_accelerated.md)、[Sol kernel](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/kernel.md)、[cache](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/cache.md)、[quant](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/quant.md)、[Sol-Attn](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/sparse/sol_attn.md)。EasyCache 控制器依据[上游算法](https://github.com/H-EmbodVis/EasyCache/tree/bfc63232cfae8c77e2dccf9d72b8f2f56bd995b8)独立实现。
 
@@ -97,7 +97,7 @@ registry = diffusion_acceleration_registry()
 | `selective_fp8` | 必须显式指定 `include` module-path glob，可选 `exclude`。默认 `min_features=1024`、`scaling=rowwise`、`use_fast_accum=False`；仅符合条件的原生 Wan/SANA block Linear。执行回执区分实际 scaled FP8 GEMM 与 dense fallback。 |
 | `wan_cross_kv_fusion` | 原生 Wan 文本 K/V packing。默认 `min_tokens=256`、`include_image=False`；小 context 使用原始独立投影。保留 canonical 参数，数值契约允许原生 GEMM reduction 的舍入差异。 |
 
-EasyCache 拒绝 streaming、camera/control 子图、offload、compile、CUDA Graph、SP、其他 feature cache、近似 processor 和 inplace residual。Resident 原生 Wan2.2 双 expert 现在有下文的受限 schedule 契约。条件必须由 tensor、mapping、list/tuple 和标量组成。cache 的 block callback 必须不修改输入。Scoped attention 同样拒绝未经验证的 Graph/SP/近似 processor 组合，Wan Sol 路径还拒绝 compile。
+EasyCache 拒绝 streaming、camera/control 子图、offload、compile、CUDA Graph、SP、其他 feature cache、近似 processor 和 inplace residual。Resident 原生 Wan2.2 双 expert 使用下文的受限 schedule 契约。条件必须由 tensor、mapping、list/tuple 和标量组成。cache 的 block callback 必须不修改输入。Scoped attention 同样拒绝未经验证的 Graph/SP/近似 processor 组合，Wan Sol 路径还拒绝 compile。
 
 Wan Sol 配置示例，先在隔离环境安装上游 provider：
 
@@ -155,7 +155,7 @@ Adapter 保留原 K/V Parameter 和 checkpoint key，只新增派生 packed tens
 
 ## 匹配的 Wan2.1 LightVAE
 
-显式 `lightvae-wan21` codec variant 使用 [LightX2V student checkpoint](https://huggingface.co/lightx2v/Autoencoders/resolve/main/lightvaew2_1.pth)：32,208,043 bytes，SHA256 `d5d6b094d4829fb03b6179be2cf4589baab21c9fea1ca70dcaa8c85ba8183ec9`。全部 **194** 个 key/shape 与原生 base24 架构匹配：24/48/96 特征通道、16 latent 通道、encoder 11 个 downsample block。沿用 Wan16 mean/std、BCTHW 布局、空间 8×/时间 4× 压缩。Teacher base96 或 Wan2.2 48-channel 权重会被严格拒绝。
+显式 `lightvae-wan21` codec variant 使用 [LightX2V student checkpoint](https://huggingface.co/lightx2v/Autoencoders/resolve/main/lightvaew2_1.pth)：32,208,043 bytes，SHA256 `d5d6b094d4829fb03b6179be2cf4589baab21c9fea1ca70dcaa8c85ba8183ec9`。它与原生 base24 架构匹配：24/48/96 特征通道、16 latent 通道、encoder 11 个 downsample block。沿用 Wan16 mean/std、BCTHW 布局、空间 8×/时间 4× 压缩。Teacher base96 或 Wan2.2 48-channel 权重会被严格拒绝。
 
 它使用不同的学习权重，是 codec 架构选择。即便实现与独立 student reference 一致，报告仍始终标为 **algorithmically approximate**。恢复 teacher 需要以 teacher 权重重建 codec。首版支持 FP32 resident CPU/CUDA inference；其他 build purpose、低精度/autocast、tiling、额外 temporal chunking、parallel decode、offload、通用量化、compile、Graph 和 SP 都拒绝。
 
@@ -176,7 +176,7 @@ Wan recipe 使用已有的 `vae` checkpoint override，SANA 使用 `codec`。独
 
 ## 校准插件与独立 MHA 调度
 
-新增能力默认关闭，安装与执行回执分别记录。通用数值实现放在 `core/acceleration/quantization/` 和 `core/attention/`；Wan/SANA 图选择、checkpoint 与生命周期校验放在 `base_models/diffusion_model/optimizations/`。共享的 `projection_selection.py` 避免不同精度插件重复维护筛选规则，`guards.py` 统一固定权重生命周期保护。
+这些插件默认关闭，安装与执行回执分别记录。通用数值实现放在 `core/acceleration/quantization/` 和 `core/attention/`；Wan/SANA 图选择、checkpoint 与生命周期校验放在 `base_models/diffusion_model/optimizations/`。共享的 `projection_selection.py` 避免不同精度插件重复维护筛选规则，`guards.py` 统一固定权重生命周期保护。
 
 | 入口 | 执行契约 | 保留的限制 |
 | --- | --- | --- |
@@ -256,11 +256,11 @@ PYTHONPATH=. python benchmarks/inference/lightvae_encoder.py \
 
 ## H100 实测
 
-以下记录使用实现版本 `183147e3`，Wan1.3B、320×576、20 steps、CFG 6、shift 7、seed 42/43。百分比是加速比相对 1 的增幅。原始 JSON 包含质量指标、执行记录和配对时间。
+测量配置：Wan1.3B、320×576、20 steps、CFG 6、shift 7、seed 42/43。百分比是加速比相对 1 的增幅。原始 JSON 包含质量指标、执行记录和配对时间。
 
 | 候选 | 结果 | 证据与限制 |
 | --- | --- | --- |
-| 原生精度 MHA，self QKV + cross KV，17 帧 | 两个 seed 的最终 latent/RGB 逐位一致 | **1.014243×/1.011870×**；CI95 **[1.012128, 1.017954]/[1.010975, 1.015053]**。所有计时输出与 pilot 一致，执行与 GPU 采样门禁通过。[记录](/measurements/wan-mha-quality-timing-2026-10-04.json)。 |
+| 原生精度 MHA，self QKV + cross KV，17 帧 | 两个 seed 的最终 latent/RGB 逐位一致 | **1.014243×/1.011870×**；CI95 **[1.012128, 1.017954]/[1.010975, 1.015053]**。[记录](/measurements/wan-mha-quality-timing-2026-10-04.json)。 |
 | 同一配置，41 帧 | 两个 seed 逐位一致 | **1.005988×/1.006554×**；CI95 **[1.003248, 1.033685]/[1.006424, 1.007259]**。[记录](/measurements/wan-mha-41f-quality-timing-2026-10-04.json)。 |
 | pointer FA2、FP8 SDPA、FP8/INT8 self 投影，17 帧 | 八个测试样本均通过执行检查，质量均淘汰 | Relative L2 **0.0966–0.3870**；最小 frame SSIM **0.6442–0.9295**，不计时。[记录](/measurements/wan-mha-quality-timing-2026-10-04.json)。 |
 | SVDQuant rank32：全部 FFN / 末层 FFN | 四个样本均实际执行 packed kernel，质量均淘汰 | 全部 FFN relative L2 **0.5033/0.4037**；仅 block 29 **0.0925/0.1455**。无 dense/fallback，不计时。[记录](/measurements/wan-svdquant-quality-2026-10-04.json)。 |

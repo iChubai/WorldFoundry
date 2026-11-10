@@ -98,7 +98,7 @@ bash scripts/workspace/run_workspace.sh \
 - **HF 数据集 `org/name`** — 本地目录 `org__name`。示例：`lerobot/libero` → `lerobot__libero`。
 - **GitHub `owner/repo`** — 常见为 `owner--repo`。示例：`Lifelong-Robot-Learning/LIBERO` → `Lifelong-Robot-Learning--LIBERO`。
 
-**以 catalog 或 `local_assets.example.yaml` 里的 `path` 为准。** 部分具身 benchmark 仍引用 legacy 路径如 `cache/vla_va_wam/hf_datasets/org--name`，可按同样结构放置，或在 manifest 里改路径。
+**以 catalog 或 `local_assets.example.yaml` 里的 `path` 为准。** 部分具身 benchmark 使用 `cache/vla_va_wam/hf_datasets/org--name` 这类路径，可按同样结构放置，或在 manifest 里改路径。
 
 ## 2. 去哪里查“要下载什么”
 
@@ -321,12 +321,10 @@ hf download Skywork/Matrix-Game-2.0 \
 ### 走读示例：Echo-Memory
 
 Echo recipes 共用 Wan2.1 T2V 1.3B backbone，但分别要求
-`Echo-Team/Echo-Memory` 下的不同文件。截至 2026-07-20，官方 HF `main`
-只保留 `context_k1/epoch-0.safetensors`。其他 Echo model ID 仍以精确预期
-文件名保留在 catalog 中，但上游状态是 `unreleased_by_upstream` 或
-`retracted_misaligned_by_upstream`；不能用 K=1 权重代替它们。
+`Echo-Team/Echo-Memory` 下的不同文件。官方 HF `main` 只发布了
+`context_k1/epoch-0.safetensors`。其他 Echo model ID 在上游未发布或已撤回，不能用 K=1 权重代替它们。
 
-将当前公开 recipe 与钉定的 backbone 放入 runtime layout，再创建正常 HFD
+将公开 recipe 与钉定的 backbone 放入 runtime layout，再创建正常 HFD
 alias，全程不复制 tensor：
 
 ```bash
@@ -363,11 +361,9 @@ artifact validation 通过前，catalog entry 应继续保持 blocked。
 ### 走读示例：Matrix-Game 3.5
 
 第一、第三人称模型 ID 共用 Wan2.2、UMT5 与 DA3 资产，但分别绑定
-`RiemannDynamics/Matrix-Game-3.5-Base` 中的不同文件。一次下载两个人称权重，
-两个不可变 recipe 就都能通过标准 HFD alias 解析。使用 HF-Mirror 时先设置
+`RiemannDynamics/Matrix-Game-3.5-Base` 中的不同文件。一次下载两个人称权重，两个不可变 recipe 就都能通过标准 HFD alias 解析。使用 HF-Mirror 时先设置
 `HF_ENDPOINT=https://hf-mirror.com`。DA3 checkpoint 有独立的
-CC-BY-NC-4.0 license，而 Matrix-Game 与 Wan checkpoint 是 Apache-2.0；
-使用时需要分别遵守各依赖的上游条款。
+CC-BY-NC-4.0 license，而 Matrix-Game 与 Wan checkpoint 是 Apache-2.0；使用时需要分别遵守各依赖的上游条款。
 
 ```bash
 hf download RiemannDynamics/Matrix-Game-3.5-Base \
@@ -442,8 +438,7 @@ GEN3C 还需按 runtime profile 下载 `nvidia/Cosmos-Tokenize1-CV8x8x8-720p`
 
 Cosmos Predict 与 Transfer 共用 Predict 2B 的 `tokenizer.pth` Wan codec 和
 Reason1 language model，只需要下载所选 transformer 与这两组共享资产。
-Transfer 当前固定官方 `general/edge` 精确 revision；目录存在但缺少该文件
-不能算 ready。需要镜像时先设置 `HF_ENDPOINT=https://hf-mirror.com`。
+Transfer 固定使用官方 `general/edge` 精确 revision；目录存在但缺少该文件不能算 ready。需要镜像时先设置 `HF_ENDPOINT=https://hf-mirror.com`。
 
 ```bash
 hf download nvidia/Cosmos-Predict2.5-2B \

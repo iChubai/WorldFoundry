@@ -7,17 +7,17 @@ LIBERO-PRO（华中科技大学，联合哈佛、MIT、武汉理工与 Lehigh）
 
 论文图 6 的五类：
 
-- **物体属性** — 颜色、纹理、尺度；语义目标不变。
-- **初始构型** — 仍物理可行的摆放。很小的位置偏移就会让许多 VLA 归零。
-- **指令** — 同一目标的改写。
-- **任务重设计** — 新的物体集合或组合目标。这类**不**与另外四类混用。
-- **环境** — 背景、光照、纹理；可行性不变。
+- **物体属性**：颜色、纹理、尺度；语义目标不变。
+- **初始构型**：仍物理可行的摆放。很小的位置偏移就会让许多 VLA 归零。
+- **指令**：同一目标的改写。
+- **任务重设计**：新的物体集合或组合目标。这类**不**与另外四类混用。
+- **环境**：背景、光照、纹理；可行性不变。
 
-另外四类可以组合。官方评测与原版 LIBERO 一致：**每任务 50 个 episode**。论文报告干净 LIBERO 上超过 **90%** 的模型在泛化 PRO 设置下塌到 **0%**——这是上游结论，不是 Hub 行。
+另外四类可以组合。官方评测与原版 LIBERO 一致：**每任务 50 个 episode**。论文报告干净 LIBERO 上超过 **90%** 的模型在泛化 PRO 设置下塌到 **0%**。
 
 论文：[LIBERO-PRO](https://arxiv.org/abs/2510.03827)。项目：[LIBERO-PRO 主页](https://zxy-mllab.github.io/LIBERO-PRO-Webpage/)。代码：[Zxy-MLlab/LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO)（MIT）。数据集：`zhouxueyang/LIBERO-Pro`。
 
-WorldFoundry **只导入官方结果**。你在上游跑该叠加层，再经 `official-validation` 归一化导出。仓内不跑 robosuite。[基础 LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 可以接线闭环；本页不行。
+WorldFoundry **只导入官方结果**：先在上游跑该叠加层，再用 `official-validation` 归一化导出。要在 WorldFoundry 中闭环执行，请用[基础 LIBERO](/zh/docs/evaluation/benchmark-hub/libero)。
 
 <BenchmarkPageSections id="libero-pro" locale="zh" />
 

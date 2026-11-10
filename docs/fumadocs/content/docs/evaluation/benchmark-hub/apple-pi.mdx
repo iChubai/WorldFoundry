@@ -37,6 +37,6 @@ wf zoo benchmark-run \
   --json
 ```
 
-`--no-foundation-models` and `--judge-backend mock` are wiring only. Env: `WORLDFOUNDRY_APPLE_PI_GT_DIR`, `WORLDFOUNDRY_APPLE_PI_PREDICTION_DIR`, `WORLDFOUNDRY_APPLE_PI_RESULTS_PATH`, `WORLDFOUNDRY_APPLE_PI_JUDGE_BACKEND`, `WORLDFOUNDRY_APPLE_PI_SAM3_CHECKPOINT`, `WORLDFOUNDRY_APPLE_PI_MOGE_CHECKPOINT`. Manifest: `worldfoundry/data/benchmarks/tasks/external/apple-pi.yaml`. Outputs: `scorecard.json` (primary `deduction`), `raw_metric_table.jsonl`, `per_sample_scores.jsonl`, `benchmark_contract.json`.
+`--no-foundation-models` and `--judge-backend mock` only exercise the pipeline; they do not produce real scores. Env: `WORLDFOUNDRY_APPLE_PI_GT_DIR`, `WORLDFOUNDRY_APPLE_PI_PREDICTION_DIR`, `WORLDFOUNDRY_APPLE_PI_RESULTS_PATH`, `WORLDFOUNDRY_APPLE_PI_JUDGE_BACKEND`, `WORLDFOUNDRY_APPLE_PI_SAM3_CHECKPOINT`, `WORLDFOUNDRY_APPLE_PI_MOGE_CHECKPOINT`. Manifest: `worldfoundry/data/benchmarks/tasks/external/apple-pi.yaml`. Outputs: `scorecard.json` (primary `deduction`), `raw_metric_table.jsonl`, `per_sample_scores.jsonl`, `benchmark_contract.json`.
 
 [← Benchmark Hub](/docs/evaluation/benchmark-hub)

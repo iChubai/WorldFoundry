@@ -1,11 +1,11 @@
 ---
 title: "LTX-2.5 Distilled"
-description: "LTX-2.5 Distilled（Lightricks）：文生视频、图生视频；Runner 一致性待确认; 独立环境 `ltx-2.5`。"
+description: "LTX-2.5 Distilled（Lightricks）：文生视频、图生视频等 3 项任务；Runner 一致性待确认; 独立环境 `ltx-2.5`。"
 modelId: "ltx-2.5"
 pageSource: authored
 ---
 
-LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成开放官方快速两阶段 DistilledPipeline，支持文生视频、图生视频与同步音频生成。
+LTX-2.5 是一个 22B 联合音视频模型。WorldFoundry 运行官方快速两阶段 DistilledPipeline（仅推理），支持文生视频、图生视频与同步音频生成。
 
 <ModelPaperFigures modelId="ltx-2.5" locale="zh" />
 
@@ -15,34 +15,32 @@ LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成开放官方�
 
 ## 用来做什么
 
-`ltx-2.5` 是记录的文本/图像到视频线。需要同一张卡片上同时有 prompt 与静帧条件时用它。
+用 `ltx-2.5` 同时完成文生视频和图生视频。
 
-官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry 直接调用该官方源码，不复用不兼容的 LTX-2.3 单体权重加载器。该模型由Lightricks发布。
+官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。LTX-2.3 的单体权重加载器与 LTX-2.5 不兼容，因此 WorldFoundry 直接调用官方源码。该模型由Lightricks发布。
 
-catalog 记录的任务包括 文生视频、图生视频、音视频联合生成。别名包括 `ltx2.5`、`ltx25`、`ltx-2.5-distilled`。模态上，它接受文本、图像，输出视频。
+任务：文生视频、图生视频、音视频联合生成。别名：`ltx2.5`、`ltx25`、`ltx-2.5-distilled`。模态上，它接受文本、图像，输出视频。
 
-记录的评测入口包括[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（基础文生/图生视频质量与运动评测）。
+推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（基础文生/图生视频质量与运动评测）。
 
 ## 运行时契约
 
-可选 `prompt`、`frames`、`fps`、`height`、`width`；产物 `generated_video`、`ltx-2.5.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`seed`、`execute` 等 8 项；产物 `generated_video`、`ltx-2.5.mp4`。
 
 CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LTX25Pipeline`。
 
 系列状态：**Runner 一致性待确认**。
 
-请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出记录的源码 revision，并在独立环境中安装 ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。 可选 duration head 可启用基于提示词的自动时长预测。
+请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出固定的源码 revision，并在独立环境中安装 ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。
 
-Command construction and official split-component mapping are validated without importing upstream CUDA code.
+已在无 GPU 条件下验证：WorldFoundry 能正确构建官方命令并映射拆分组件。
 
 必填 `prompt`；可选 `image`、`video`；`actions`：seed, height, width, num_frames, fps, offload_mode, quantization；产物 `generated_video`、`ltx-2.5.mp4`。
 
 ## 在 WorldFoundry 中运行
 
-启动 `wf run ltx-2.5 --pipeline.task-profile interactive-video` 采样视频。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。
+用 `wf run ltx-2.5 --pipeline.task-profile interactive-video` 生成视频。
 
-记录的权重仓库包括 `Lightricks/LTX-2.5`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh ltx-2.5`；下载缺失的公开权重时加 `--download`。
-
-状态：**Runner 一致性待确认**。
+权重仓库：`Lightricks/LTX-2.5`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh ltx-2.5`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="ltx-2.5" locale="zh" />

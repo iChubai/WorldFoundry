@@ -152,19 +152,18 @@ Training entrypoints, training-only datasets and dataloaders, losses, callbacks,
 
 For the directory-level map of every package, see [Codebase map](/docs/maintainers/architecture/file-index). For how a model call flows through these primitives, see [Model runtime](/docs/maintainers/architecture/model-runtime) and [Runtime assembly](/docs/maintainers/architecture/runtime-assembly).
 
-
 ## Ownership decisions
 
 - `checkpoint` is part of `model_loading/checkpoints`; weight loading, assignment and conversion have one owner.
-- Media codecs and the former `video` processing helpers share `media`; downloading and filesystem work stay in `io`.
+- Media codecs and video processing helpers share `media`; downloading and filesystem work stay in `io`.
 - CUDA graphs, prewarm, frame prefetch and overlap belong to `execution`; encoder placement/lifetime belongs to `vram`.
 - `memory` stays separate from `vram`: context/retrieval is a model input concern, while placement/offload manages physical memory.
-- Configuration helpers leave `io`, terminal formatting leaves `io`, and runtime scheduling leaves `utils`.
+- Configuration helpers belong to `configuration`, terminal formatting to `observability`, and runtime scheduling to `execution`.
 - `target`/`class_path` factories belong to `configuration`; rank-aware logging belongs to `observability`.
 - Accelerator detection and the persistent compile cache belong to `platform`; attention projection and precision schedules belong to `acceleration`; eval-only feature helpers live in `worldfoundry/evals`.
 - Wan sequence-parallel adapters and VGGT observation preprocessing live in their model families. Repository inventory audits live in `scripts/model_zoo`.
 
-Each subpackage's lazy export table lists only that package's own modules, so `worldfoundry.core.io` exports I/O names and media helpers come from `worldfoundry.core.media`. The `worldfoundry.core` facade maps every public name to the module that defines it. Internal module imports use the current owners; removed directories do not contain compatibility wrappers.
+Each subpackage's lazy export table lists only that package's own modules, so `worldfoundry.core.io` exports I/O names and media helpers come from `worldfoundry.core.media`. The `worldfoundry.core` facade maps every public name to the module that defines it. Internal module imports use the owning module directly; there are no compatibility wrappers.
 
 ## Regression gates
 

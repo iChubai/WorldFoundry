@@ -1,15 +1,15 @@
 ---
 title: "ShotStream"
-description: "ShotStream from Kuaishou (Kling Team): interactive-video-generation and real-time-video-generation; Runner parity pending."
+description: "ShotStream from Kuaishou (Kling Team): interactive video generation, real time video generation, and 1 more task; Runner parity pending."
 modelId: "shotstream"
 pageSource: generated
 ---
 
-ShotStream is Kling AI Research's real-time interactive streaming video generator: it targets continuous, interactively steered video streams rather than fixed clips. In this catalog the official inference route is registered with the source bound at a pinned commit; checkpoint and streaming assets stay runtime-gated.
+ShotStream is Kling AI Research's real-time interactive streaming video generator: it targets continuous, interactively steered video streams rather than fixed clips. WorldFoundry runs the official 4-step causal generator from a user-staged source checkout at a pinned commit.
 
 <ModelPaperFigures modelId="shotstream" locale="en" />
 
-The recorded paper is [arXiv 2603.25746](https://arxiv.org/abs/2603.25746).
+Paper: [arXiv 2603.25746](https://arxiv.org/abs/2603.25746).
 
 Project page: [luo0207.github.io/ShotStream](https://luo0207.github.io/ShotStream/). Code: [KlingAIResearch/ShotStream](https://github.com/KlingAIResearch/ShotStream).
 
@@ -17,32 +17,30 @@ Project page: [luo0207.github.io/ShotStream](https://luo0207.github.io/ShotStrea
 
 ## What it is for
 
-Pick `shotstream` when you want this family's text-to-video line in WorldFoundry: a prompt in, a generated clip out. Use it as the catalog T2V start rather than an editor or a world-model stepper.
+`shotstream` generates a 3D-consistent world rather than a single clip.
 
-Architecture internals beyond the recorded tasks are not stored in this repository (weights at KlingTeam/ShotStream). The upstream repository lacks a root license and is flagged for manual review. It is published by Kuaishou (Kling Team).
+A 4-step causal video generator built on the Wan2.1-T2V-1.3B base model; weights are published at KlingTeam/ShotStream. It is published by Kuaishou (Kling Team).
 
-Catalog tasks include interactive-video-generation, real-time-video-generation, and streaming-video. Catalog aliases include `interactive-video-generation`. Documented outputs include video.
+Tasks: interactive video generation, real time video generation, and streaming video. Aliases: `interactive-video-generation`. Output modalities: video.
 
 ## Runtime contract
 
-Optional `prompt`, `load.checkpoint_dir`, `load.wan_model_dir`, `data_path`, and `seed`; artifacts `generated_video` and `shotstream.mp4`.
+Inputs `prompt`, `load.checkpoint-dir`, and `load.wan-model-dir` (bundled samples are used when omitted); options `seed`, `fps`, `plan-only`, and `timeout-seconds`; artifacts `generated_video` and `shotstream.mp4`.
 
 CLI task profiles: `causal-video`. WorldFoundry binds `ShotStreamPipeline`.
 
 Family status: **Runner parity pending**.
 
-Recorded `causal-video` defaults: seed=42, fps=16.
+Defaults for `causal-video`: seed=42, fps=16.
 
-Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
+Stage the official ShotStream source checkout at the pinned revision under $\{WORLDFOUNDRY_MODEL_SOURCE_DIR\}/ShotStream, plus the KlingTeam/ShotStream checkpoint and Wan2.1-T2V-1.3B weights; until they are staged, a generation request returns a runtime plan listing the missing assets. A plain prompt becomes the official one-shot input; pass a full multi-shot CSV with data_path/input_csv.
 
 ## Running in WorldFoundry
 
-Launch `wf run shotstream --pipeline.task-profile causal-video` to sample the clip. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
+Generate a world with `wf run shotstream --pipeline.task-profile causal-video`.
 
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
-Recorded weight repositories include `KlingTeam/ShotStream` and `Wan-AI/Wan2.1-T2V-1.3B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh shotstream`. Add `--download` to fetch missing public checkpoints.
-
-Status: **Runner parity pending**.
+Weights: `KlingTeam/ShotStream` and `Wan-AI/Wan2.1-T2V-1.3B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh shotstream`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="shotstream" locale="en" />

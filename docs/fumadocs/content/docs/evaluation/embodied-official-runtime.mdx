@@ -164,15 +164,7 @@ Run the Docker-backed official evaluator or VLA evaluation harness with your pol
 
 Before rollout, record: benchmark ID, upstream commit, simulator versions, dataset split, checkpoint path, action/observation contract, and result file path.
 
-
-For a real policy, replace `model_id` in the eval config with a configured VLA policy, or point `server.url` at an external policy server. The policy can return `{"token": "forward"}` or an equivalent discrete action payload.
-
----
-
-## Local validation inputs
-
-Prepare local simulator inputs separately; fixture datasets are not distributed
-with the public repository. Validation runs do not constitute leaderboard evidence.
+To evaluate a policy, set `model_id` in the eval config to a configured VLA policy, or point `server.url` at an external policy server. The policy can return `{"token": "forward"}` or an equivalent discrete action payload.
 
 ---
 

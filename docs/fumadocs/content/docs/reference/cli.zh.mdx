@@ -68,9 +68,7 @@ python -m worldfoundry zoo models --json
 
 同一 Workspace 进程内，`WORLDFOUNDRY_STUDIO_BATCH_MAX_SIZE`（默认 `1`）和
 `WORLDFOUNDRY_STUDIO_BATCH_DELAY_MS`（默认 `5`）控制兼容原生 Wan T2V 与
-5B TI2V 常驻 worker 合批。准入要求并行作业槽、常驻权重及兼容的 Torch attention；
-编译批次使用 regional scope。配置在 worker 启动前生效，不跨独立 CLI 进程合批。
-精度与输入要求见[批处理准入、预热和取消契约](/zh/docs/guides/inference-optimization)。
+5B TI2V 常驻 worker 合批。准入要求并行作业槽、常驻权重及兼容的 Torch attention；编译批次使用 regional scope。配置在 worker 启动前生效，不跨独立 CLI 进程合批。精度与输入要求见[批处理准入、预热和取消契约](/zh/docs/guides/inference-optimization)。
 
 下面统一写 `wf`，便于 shell history、job script 和问题报告保持一致。
 
@@ -363,15 +361,11 @@ Studio 工具默认访问 `WORLDFOUNDRY_STUDIO_WORKSPACE_URL`（通常是 `http:
 `WORLDFOUNDRY_MCP_RUN_ROOT`；未设置时为 `runs/mcp`。
 
 Python 客户端可通过 `worldfoundry.mcp.client.MCPClient` 和
-`convert_result_to_openai_format()` 将工具结果转换为 OpenAI Chat 内容块。
-音频使用 `input_audio` 块，其中 `data` 为 base64，`format` 为 `wav` 或 `mp3`。
-转换器接受 WAV/MP3 的 MIME 别名，其他音频格式会抛出 `ValueError`。
-文本与图像块保留原内容和 data URI；转换在本地完成，不调用 API provider。
+`convert_result_to_openai_format()` 将工具结果转换为 OpenAI Chat 内容块。音频使用 `input_audio` 块，其中 `data` 为 base64，`format` 为 `wav` 或 `mp3`。转换器接受 WAV/MP3 的 MIME 别名，其他音频格式会抛出 `ValueError`。文本与图像块保留原内容和 data URI；转换在本地完成，不调用 API provider。
 
 ### 作业完成与取消
 
-持久化 command job 在 completion receipt 与恢复状态中保留最初的终止原因。
-超时保持 `failed` 及其 timeout error；用户取消保持 `cancelled`。
+持久化 command job 在 completion receipt 与恢复状态中保留最初的终止原因。超时保持 `failed` 及其 timeout error；用户取消保持 `cancelled`。
 
 POSIX 有界 benchmark command 在返回或向上传播中断前，清理其持有的进程组。
 Timeout payload 记录 `timed_out` 和 `kill_stuck`，后者表示清理尚未完成。
@@ -483,10 +477,7 @@ wf score \
 ```
 
 进程内 `score --results`、`generate-score`、`reproduce`、`evaluate` 和 `run`
-支持 `--resume` 与 `--metric-batch-size`（默认 `32`）。生成结果与 metric 批次分别
-持久化；resume 复用请求、模型配置及已有 artifact 均匹配的生成结果，metric 实现、
-版本和声明参数决定是否复用分数。中断后 `metrics/checkpoint.jsonl` 保留已完成批次。
-修改 metric 时只重算相应分数，不重跑仍匹配的生成。
+支持 `--resume` 与 `--metric-batch-size`（默认 `32`）。生成结果与 metric 批次分别持久化；resume 复用请求、模型配置及已有 artifact 均匹配的生成结果，metric 实现、版本和声明参数决定是否复用分数。中断后 `metrics/checkpoint.jsonl` 保留已完成批次。修改 metric 时只重算相应分数，不重跑仍匹配的生成。
 `score --benchmark --artifacts` 使用官方 evaluator 协议，拒绝这些进程内评分参数。
 
 `evaluate` 会进一步暴露底层 requests、task、runner、cache 与 model-mode 字段：
@@ -538,9 +529,7 @@ python -m benchmarks.inference.wan_execution_preparation \
 选择 `wan2.1-t2v-1.3b`、`wan2.2-t2v-a14b`、`wan2.2-ti2v-5b` 或
 `wan2.2-i2v-a14b`；图像条件回放还需 `--images IMAGE_A IMAGE_B`。
 
-Dense 参照必须执行，已有 latent/RGB 质量阈值保持不变。报告记录预热耗时/显存及
-同两个请求的诊断性吞吐对比。`report.json` 必须同时满足 `complete` 和 `passed`；
-计时仅作诊断，不是独占设备性能结果。Compile、Graph、精度与批处理兼容范围见
+Dense 参照必须执行，并适用 latent/RGB 质量阈值。报告记录预热耗时/显存及同两个请求的诊断性吞吐对比。`report.json` 必须同时满足 `complete` 和 `passed`；计时仅作诊断，不是独占设备性能结果。Compile、Graph、精度与批处理兼容范围见
 [推理优化](/zh/docs/guides/inference-optimization)。
 
 ## Benchmark mode
@@ -608,9 +597,7 @@ wf --log-level DEBUG --log-json \
   </section>
 </div>
 
-拥有输出目录的命令会创建 run id；未显式选择文件 sink 时，生命周期事件写入
-每次 run 的 `events.jsonl`。它通常位于 `<output-dir>/logs/<run-id>/`；需要独占
-认领输出目录的命令则使用隔离的 sibling 日志目录。框架托管的子进程继承结构化的
+拥有输出目录的命令会创建 run id；未显式选择文件 sink 时，生命周期事件写入每次 run 的 `events.jsonl`。它通常位于 `<output-dir>/logs/<run-id>/`；需要独占认领输出目录的命令则使用隔离的 sibling 日志目录。框架托管的子进程继承结构化的
 `WORLDFOUNDRY_LOG_CONTEXT` 值。
 
 Evaluation 命令把持久化文件写入 `--output-dir`。各 benchmark 可能追加自己的文件，但共享 run surface 使用下列 artifact：

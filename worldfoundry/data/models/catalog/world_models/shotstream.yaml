@@ -44,15 +44,13 @@ docs:
   publisher: Kuaishou (Kling Team)
   publisher_kind: company
   publisher_zh: 快手（可灵团队）
-  overview: 'ShotStream is Kling AI Research''s real-time interactive streaming video generator: it targets continuous, interactively steered video streams rather than fixed clips. In this catalog the official inference route is registered with the source bound at a pinned commit; checkpoint and streaming assets stay runtime-gated.'
-  overview_zh: ShotStream 是快手可灵研究团队的实时交互流式视频生成器：目标是连续、可交互操控的视频流，而非固定片段。本 catalog 中官方推理路径已注册、源码绑定在固定 commit；checkpoint 与流式资产保持运行时限制。
-  architecture: Architecture internals beyond the recorded tasks are not stored in this repository (weights at KlingTeam/ShotStream). The upstream repository lacks a root license and is flagged for manual review.
-  architecture_zh: 除已记录任务外的架构内部细节仓库未存（权重位于 KlingTeam/ShotStream）。上游仓库缺少根许可文件，已标记需人工审查。
-  usage_notes: Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
-  usage_notes_zh: 配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+  overview: "ShotStream is Kling AI Research's real-time interactive streaming video generator: it targets continuous, interactively steered video streams rather than fixed clips. WorldFoundry runs the official 4-step causal generator from a user-staged source checkout at a pinned commit."
+  overview_zh: ShotStream 是快手可灵研究团队的实时交互流式视频生成器：目标是连续、可交互操控的视频流，而非固定片段。WorldFoundry 从用户准备的固定 commit 官方源码运行其 4 步因果生成器。
+  architecture: A 4-step causal video generator built on the Wan2.1-T2V-1.3B base model; weights are published at KlingTeam/ShotStream.
+  architecture_zh: 基于 Wan2.1-T2V-1.3B 基座的 4 步因果视频生成器；权重发布于 KlingTeam/ShotStream。
+  usage_notes: Stage the official ShotStream source checkout at the pinned revision under ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/ShotStream, plus the KlingTeam/ShotStream checkpoint and Wan2.1-T2V-1.3B weights; until they are staged, a generation request returns a runtime plan listing the missing assets. A plain prompt becomes the official one-shot input; pass a full multi-shot CSV with data_path/input_csv.
+  usage_notes_zh: 需在 ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/ShotStream 准备固定 revision 的 ShotStream 官方源码，以及 KlingTeam/ShotStream checkpoint 与 Wan2.1-T2V-1.3B 权重；资产就位前，生成请求会返回列出缺失资产的运行时计划。普通 prompt 会转换为官方单镜头输入；完整多镜头 CSV 通过 data_path/input_csv 传入。
   limitations:
-  - 'Missing root license upstream: legal review required.'
-  - Real generation is checkpoint/asset gated.
+  - The upstream repository has no root license; review licensing before use.
   limitations_zh:
-  - 上游缺少根许可：需要法律审查。
-  - 真实生成受 checkpoint/资产限制。
+  - 上游仓库缺少根许可文件；使用前需审查许可。

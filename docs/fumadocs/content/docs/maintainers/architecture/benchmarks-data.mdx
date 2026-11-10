@@ -21,7 +21,7 @@ Model and benchmark catalogs are parallel pipelines. They meet only at run time 
 
 On disk, manifests are grouped by domain so maintainers can scan related entries together. The fields are structurally similar, but readiness signals differ by category:
 
-**Video, audio, and multimodal models** live under `worldfoundry/data/models/catalog/video/`. Readiness hinges on `runner_target` and checkpoint refs—a complete entry exposes a resolvable runner; metadata-only entries describe intent without a runnable path.
+**Video, audio, and multimodal models** live under `worldfoundry/data/models/catalog/video/` and `multimodal/`; hosted API models live under `hosted_api/`. Readiness hinges on `runner_target` and checkpoint refs—a complete entry exposes a resolvable runner; metadata-only entries describe intent without a runnable path.
 
 **Interactive world models** live under `world_models/`. They share the same schema as video entries but emphasize world-model task coverage and demo/runtime notes.
 
@@ -29,7 +29,7 @@ On disk, manifests are grouped by domain so maintainers can scan related entries
 
 **VLA, VA, and embodied-action models** live under `vla_va_wam/`. These entries track action/task compatibility, upstream provenance, and environment notes. A `runner_target` appears only after the in-tree runtime is complete.
 
-**Benchmark catalog entries** in `worldfoundry/data/benchmarks/catalog/` record `benchmark_id`, domains, metrics, runner spec, dataset refs, and `integration_status`. **External task manifests** in `benchmarks/tasks/external/` define per-sample protocol, metric IDs, and runner expectations at finer granularity than the catalog entry.
+**Benchmark catalog entries** in `worldfoundry/data/benchmarks/catalog/` record `benchmark_id`, domains, metrics, runner spec, dataset refs, and `integration_status`. **External task manifests** in `worldfoundry/data/benchmarks/tasks/external/` define per-sample protocol, metric IDs, and runner expectations at finer granularity than the catalog entry.
 
 **Runtime profiles** in `worldfoundry/data/models/runtime/profiles/` sit beside catalog YAML and record blockers YAML alone cannot express: dependency stack, command shape, checkpoint layout, device expectations, and demo parity status.
 
@@ -48,7 +48,7 @@ Everything under `worldfoundry/data/` is declarative metadata; checkpoints, data
 | `base_models/capabilities/*.yaml`, `base_models/stacks.yaml`, `base_models/benchmark_assets.yaml` | Shared base-model capabilities (imports, checkpoints, datasets and their expected layout), named stacks, and the data assets each benchmark stages; loaded by `worldfoundry/base_models/capabilities.py`, whose docstring documents the fields and templates |
 | `benchmarks/catalog/`, `benchmarks/tasks/`, `benchmarks/runtime_profiles/` | One benchmark per file in each tree, keyed by benchmark id |
 | `benchmarks/assets/`, `benchmarks/eval_configs/`, `benchmarks/requirements/` | Prompt sets, reference files, evaluation presets, and pinned evaluator dependencies |
-| `test_cases/` | Not tracked; the fixture corpus was externalized and is staged locally when needed |
+| `test_cases/` | Not tracked; stage the fixture corpus locally when needed |
 
 Catalog entries and variants reference a runtime profile and a binding (`runtime_profile`, `pipeline_binding`), and each profile names the binding it executes (`execution.pipeline_binding`). Every binding's `model_id` equals the id of the entry, variant, or profile that references it, so a preset profile such as `wan2.1-t2v-1.3b-832x480-81f` keeps its own binding even when it imports the same pipeline as its catalog variant; `make lint` enforces this. Studio merges a profile's call defaults under its own overrides, so generation defaults are written once, in the profile.
 

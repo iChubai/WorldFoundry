@@ -75,18 +75,20 @@ docs:
   publisher: NVIDIA
   publisher_kind: company
   publisher_zh: 英伟达（NVIDIA）
-  overview: NVIDIA GR00T is the Isaac GR00T humanoid/manipulation foundation policy line (N1 through N1.7). WorldFoundry uses an isolated pinned official-source worker for original N1 and an in-tree runtime for N1.7; both staged checkpoint families have produced offline actions on GPU.
-  overview_zh: 英伟达 GR00T 是 Isaac GR00T 人形/操作基础策略线（N1 至 N1.7）。WorldFoundry 对初代 N1 使用固定官方源码的隔离进程，对 N1.7 使用树内运行时；两类本地权重均已在 GPU 上生成离线动作。
-  architecture: GR00T couples a reasoner VLM (Cosmos-Reason2-2B in the verified N1.7 path) with an action policy head; recorded checkpoints span GR00T-N1-2B and GR00T-N1.7-LIBERO. Weights are under the NVIDIA Open Model License and several repos require Hugging Face auth.
-  architecture_zh: GR00T 将推理 VLM（已验证 N1.7 路径使用 Cosmos-Reason2-2B）与动作策略头耦合；记录的 checkpoint 覆盖 GR00T-N1-2B 与 GR00T-N1.7-LIBERO。权重采用 NVIDIA Open Model License，多个仓库需 Hugging Face 认证。
-  usage_notes: Stage the pinned NVIDIA checkpoint revisions locally. Original N1 additionally needs the n1-release source checkout and an isolated worker environment; see the GR00T N1 runtime README. Simulator rollout validation remains separate from offline predict.
-  usage_notes_zh: 先就位固定版本的 NVIDIA 权重。初代 N1 还需要 n1-release 官方源码和隔离运行环境，详见 GR00T N1 运行说明。模拟器 rollout 验证与离线 predict 分开跟踪。
+  overview: NVIDIA GR00T is the Isaac GR00T humanoid/manipulation foundation policy line (N1 through N1.7). WorldFoundry runs original N1 in an isolated worker built from the pinned official source and N1.7 with an in-tree runtime; both checkpoint families produce offline actions on GPU.
+  overview_zh: 英伟达 GR00T 是 Isaac GR00T 人形/操作基础策略线（N1 至 N1.7）。WorldFoundry 对初代 N1 使用基于固定官方源码的隔离进程，对 N1.7 使用树内运行时；两类权重均可在 GPU 上生成离线动作。
+  architecture: GR00T couples a reasoner VLM (Cosmos-Reason2-2B in the validated N1.7 path) with an action policy head; checkpoints cover GR00T-N1-2B and GR00T-N1.7-LIBERO. Weights are under the NVIDIA Open Model License and several repos require Hugging Face auth.
+  architecture_zh: GR00T 将推理 VLM（已验证的 N1.7 路径使用 Cosmos-Reason2-2B）与动作策略头耦合；checkpoint 覆盖 GR00T-N1-2B 与 GR00T-N1.7-LIBERO。权重采用 NVIDIA Open Model License，多个仓库需 Hugging Face 认证。
+  usage_notes: Stage the pinned NVIDIA checkpoint revisions locally. Original N1 additionally needs the n1-release source checkout and an isolated worker environment; set n1_source_dir and n1_python before inference.
+  usage_notes_zh: 先就位固定版本的 NVIDIA 权重。初代 N1 还需要 n1-release 官方源码和隔离运行环境；推理前设置 n1_source_dir 与 n1_python。
   limitations:
   - Gated checkpoints require Hugging Face authentication.
   - NVIDIA Open Model License — review terms before commercial use.
+  - Validation covers offline action prediction; closed-loop simulator rollout is not validated.
   limitations_zh:
   - 门控 checkpoint 需要 Hugging Face 认证。
   - NVIDIA Open Model License——商用前请审查条款。
+  - 验证覆盖离线动作预测；闭环模拟器 rollout 尚未验证。
   recommended_benchmarks:
   - id: libero
     reason: Verified predict path uses GR00T-N1.7-LIBERO/libero_10.

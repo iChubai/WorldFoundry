@@ -13,7 +13,7 @@ Validation evidence should be proportional to the changed surface: small enough 
 - **CLI or runner** — Public CLI discovery plus a representative evaluate command. Extra when promoted: Existing-results and model-mode runs if output contracts changed.
 - **Model manifest** — `zoo model-show`, `zoo model-download --check-local`. Extra when promoted: Clone, checkpoint, demo parity, runner parity, benchmark run.
 - **Model runtime integration** — In-tree runtime import, no machine-local source checkout dependency, runtime profile with `backend_stage`, and focused regression. Extra when promoted: Checkpoint-backed run and one normalized benchmark scorecard.
-- **Benchmark manifest** — `zoo benchmark-show`, `preflight runtime --profile <benchmark-id>`. Extra when promoted: Clone, dataset, official runtime, normalized scorecard.
+- **Benchmark manifest** — `zoo benchmark-show`, `preflight runtime --profile <benchmark-id> --output-dir <dir>`. Extra when promoted: Clone, dataset, official runtime, normalized scorecard.
 - **Benchmark runner** — `zoo benchmark-run --mode official-validation` or `--mode official-run`. Extra when promoted: Official result import, official runtime, and full-suite fairness gate.
 - **Suite or matrix** — `run --all-benchmarks --plan-only --json`. Extra when promoted: Plan selected cells, then validate artifacts with runnable benchmark paths.
 
@@ -300,10 +300,10 @@ accepting a seeded reference requires separately recording this behavior fix
 and proving latent and controlled-decoder parity, rather than silently
 replacing a failed reference.
 
-The existing `tests/manual/geometry_regression_cases.json` now includes geometry,
-video and world-model cases. Legacy script names and `GEOMETRY_*` commands remain
+`tests/manual/geometry_regression_cases.json` covers geometry, video and
+world-model cases. The geometry script names and `GEOMETRY_*` commands remain
 available; `plan-inference`, `replay-inference` and `verify-inference` expose the
-broader scope. New short cases declare Wan 2.1 1.3B, Wan 2.2 TI2V 5B, LTX 0.9.8
+broader scope. Short cases declare Wan 2.1 1.3B, Wan 2.2 TI2V 5B, LTX 0.9.8
 I2V, CogVideoX 2B, Cosmos Predict 2.5 2B, Matrix Game 2 and DreamX World 5B AR.
 LTX retains its native two-pass ten-step recipe. These cases compare available
 latents, raw frames, decoded RGB exports and fps; they check changed conditions,
@@ -376,15 +376,15 @@ uncovered identities, loss of an existing recipe and affected native variants
 without a runnable numerical replay. Releases requiring complete coverage
 can invoke the coverage script with `--require-complete`; gaps return exit 2.
 
-The planned retirement policy dated 2026-10-16 removes BiWM Wan2.1
+Under the model retirement policy of 2026-10-16, BiWM Wan2.1
 (`biwm-wan21@biwm-wan21`), BiWM Wan2.2 (`biwm-wan22@biwm-wan22`),
-IRASim (`irasim@irasim`) and Pandora (`pandora@pandora`) from active support.
-Their frozen baseline records remain unchanged. The exact identity set in
-`tests/manual/native_coverage_policy.py` permits these planned removals and
+IRASim (`irasim@irasim`) and Pandora (`pandora@pandora`) are out of active support.
+Their frozen baseline records are kept. The exact identity set in
+`tests/manual/native_coverage_policy.py` permits these removals and
 reports them as `retired_native_variants`, not replay coverage or GPU success.
-Other frozen variant removals still fail. Reintroducing a retired identity
-requires its own checkpoint replay recipe, like a new variant; its historical
-uncovered-gap exception no longer applies.
+Other frozen variant removals fail. Reintroducing a retired identity
+requires its own checkpoint replay recipe, like a new variant; the baseline's
+uncovered-gap exception does not carry over.
 
 The short matrix also declares separate recipes for all six Kandinsky 6
 checkpoints, both DreamDojo student identities, LingBot-World-V2 1.3B,
@@ -428,7 +428,7 @@ and asset files, matching checkout contents, its CPU contracts and a real MG2
 smoke replay. Changed production code remains independently selected; dirty
 definitions, deletions or reclassifications keep the full replay selection.
 
-The legacy InSpatio, LingBot Cam/Act/V2 and ATI cases each use their own released
+The InSpatio, LingBot Cam/Act/V2 and ATI cases each use their own released
 checkpoint. Set `WORLDFOUNDRY_REGRESSION_INSPATIO_SCENE_ROOT` to the accepted
 scene containing `video_example_00/input/{video.mp4,target_tcw.txt}`.
 `WORLDFOUNDRY_REGRESSION_LINGBOT_CONTROLS` contains 21-frame `poses.npy` and
@@ -811,8 +811,9 @@ cd docs/fumadocs
 npm run models:check
 npm run types:check
 npm run build
-curl -I http://localhost:8013/docs
-curl -I http://localhost:8013/zh/docs
+npm start &
+curl -I http://localhost:3000/docs
+curl -I http://localhost:3000/zh/docs
 ```
 
   </Tab>
@@ -878,17 +879,17 @@ Do not use `integrated` as a leaderboard synonym. Normalizer-only benchmark inte
 - **Pass** — Required stages ran and produced expected artifacts. Release treatment: Can support the matching claim.
 - **Partial** — Some stages were skipped because they require network, credentials, data, GPU, or license review. Release treatment: Usable for development, not for stronger public claims.
 - **Blocked** — A required source, dataset, license, dependency, checkpoint, or API condition is unavailable. Release treatment: Keep the manifest blocked or planned.
-- **Stale** — Report hash, manifest hash, git commit, validator script, or timestamp no longer matches. Release treatment: Rerun validation before counting it.
+- **Stale** — The evidence was produced from a different commit, manifest, or validation script than the change under review. Release treatment: Rerun validation before counting it.
 - **Runner-only** — Schema and runner path pass, but official runtime did not run. Release treatment: Not leaderboard evidence.
 
 ## Validation matrix
 
-The matrix is the release gate for model-zoo and benchmark-zoo readiness. It merges manifest entries with staged validation reports and recomputes integration status.
+The plan matrix checks the release inventory without loading models. It resolves every model × benchmark cell of the formal docs inventory into `suite_manifest.json`, and `validate-artifact` checks that manifest against its schema.
 
 ```bash
 conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf run \
   --all-benchmarks \
-    --plan-only \
+  --plan-only \
   --output-dir tmp/worldfoundry_plan_matrix \
   --json
 
@@ -899,15 +900,14 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf validate-artifact \
   --json
 ```
 
-- **`accepted_integrated`** — Fresh report passes every required stage and manifest says integrated. Maintainer action: Keep evidence current.
-- **`accepted_variant_integrated`** — One or more scoped variants pass while the parent family remains planned. Maintainer action: Continue validating remaining variants.
-- **`validated_but_manifest_not_promoted`** — Report passes, manifest still says planned or blocked. Maintainer action: Promote only after artifact review.
-- **`manifest_integrated_without_report`** — Manifest says integrated, but no fresh validation report exists. Maintainer action: Run staged validation or downgrade.
-- **`manifest_overclaims_integration`** — Manifest says integrated but computed stages do not pass. Maintainer action: Downgrade or rerun full validation.
-- **`report_overclaims_integration`** — Report claims integrated but staged evidence is incomplete. Maintainer action: Discard or rerun report.
-- **`stale_report`** — Report hash, script, git commit, schema, or manifest entry changed. Maintainer action: Rerun validation.
-- **`partial_or_blocked`** — Report exists but stages failed or were skipped. Maintainer action: Follow `next_action`.
-- **`not_validated`** — Manifest entry has no report. Maintainer action: Run the matching runtime preflight and official validation run.
+Each cell records a `status`, `exit_code`, and `reason`:
+
+- **`planned`** — The model's outputs satisfy the benchmark's inputs; the cell can execute once its assets are staged.
+- **`skipped`** — The pairing is incompatible or the benchmark is unavailable; the reason says why. `--fail-on-skipped` turns skips into a failing exit code.
+- **`blocked`** — In a plan run with `--no-skip-incompatible`, an incompatible pairing stays in the matrix as a blocked cell with exit code 1.
+- **`failed`** and **`succeeded`** — Outcomes of executed cells when the matrix runs without `--plan-only`.
+
+Readiness labels come from the catalogs, not from the matrix. `wf zoo models` reports `runnable_runner` only for entries with a `runner_target` and `integration.status: integrated`, and `wf zoo benchmarks` derives `--ready-now` and `--official-ready` from benchmark evidence fields. Promote a catalog status only together with the executed evidence it references, and rerun that evidence when a manifest change alters what runs.
 
 ## Checklist
 

@@ -83,7 +83,7 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
           </div>
         </div>
         <p>One thin public wrapper per model family: <code>from_pretrained</code>, <code>process</code>/<code>{"__call__"}</code>, optional <code>stream</code>.</p>
-        <p className="pi-kv-read"><span>First file</span> <code>pipelines/pipeline_utils.py:11</code> <code>PipelineABC</code>; 88 family dirs under <code>pipelines/</code></p>
+        <p className="pi-kv-read"><span>First file</span> <code>pipelines/pipeline_utils.py:11</code> <code>PipelineABC</code>; 107 family dirs under <code>pipelines/</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -92,7 +92,7 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
           </div>
         </div>
         <p>Input-side partners for runnable pipelines: validation, media loading, camera/action parsing, interaction shaping, perception preprocessing.</p>
-        <p className="pi-kv-read"><span>First file</span> <code>operators/base_operator.py:4</code> <code>BaseOperator</code></p>
+        <p className="pi-kv-read"><span>First file</span> <code>operators/base_operator.py:6</code> <code>BaseOperator</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -101,7 +101,7 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
           </div>
         </div>
         <p>In-tree runtime execution: hosted API wrappers, native runtime bridges, per-family <code>synthesis.py</code>, action surfaces, memory modules.</p>
-        <p className="pi-kv-read"><span>First file</span> <code>synthesis/base_synthesis.py:38</code> <code>BaseSynthesis</code>; <a href="/docs/maintainers/architecture/runtime-assembly">Runtime assembly</a></p>
+        <p className="pi-kv-read"><span>First file</span> <code>synthesis/base_synthesis.py:31</code> <code>BaseSynthesis</code>; <a href="/docs/maintainers/architecture/runtime-assembly">Runtime assembly</a></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -119,7 +119,7 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
           </div>
         </div>
         <p>Interactive preview shell over the same catalog and runtime contracts. Presentation glue only.</p>
-        <p className="pi-kv-read"><span>First file</span> <code>studio/cli.py:78</code> <code>main()</code>; <code>studio/inference/execution.py</code>, <code>studio/inference/catalog/discovery.py</code>; <a href="/docs/maintainers/architecture/studio-internals">Studio internals</a></p>
+        <p className="pi-kv-read"><span>First file</span> <code>studio/cli.py:21</code> <code>main()</code>; <code>studio/inference/execution.py</code>, <code>studio/inference/catalog/discovery.py</code>; <a href="/docs/maintainers/architecture/studio-internals">Studio internals</a></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -128,7 +128,7 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
           </div>
         </div>
         <p>Training and post-training recipes (SFT, distillation, RL). Not on the evaluate/scorecard path.</p>
-        <p className="pi-kv-read"><span>First file</span> <code>training/recipes/spec.py</code></p>
+        <p className="pi-kv-read"><span>First file</span> <code>training/README.md</code></p>
       </li>
     </ul>
   </section>
@@ -136,7 +136,7 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
 
 ## How the entries connect
 
-A run flows down this list, not across it at random. User input enters through `cli` or `mcp`; `runtime` and `data` prepare the environment and declare what can run; `core` and `base_models` provide the shared inference primitives; `pipelines` plus `operators` plus `synthesis` turn a normalized request into a `GenerationResult`; `base_models/three_dimensions` runs geometry models and derives geometric artifacts when needed; `evaluation` consumes artifacts and produces scorecards; `studio` previews the same artifacts through a UI shell. `training` sits beside this spine: it produces checkpoints, it does not score them.
+A run flows down this list, not across it at random. User input enters through `cli` or `mcp`; `runtime` and `data` prepare the environment and declare what can run; `core` and `base_models` provide the shared inference primitives; `pipelines` plus `operators` plus `synthesis` turn a normalized request into a `GenerationResult`; `base_models/three_dimensions` runs geometry models and derives geometric artifacts when needed; `evals` consumes artifacts and produces scorecards; `studio` previews the same artifacts through a UI shell. `training` sits beside this spine: it produces checkpoints, it does not score them.
 
 <Callout type="info">
   The package a file lives in should answer "who owns this kind of change?" before you read the code. If you are unsure which layer owns a fix, start at [Architecture](/docs/maintainers/architecture) and pick the subpage that matches the layer you are changing.

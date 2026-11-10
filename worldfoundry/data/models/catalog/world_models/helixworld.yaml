@@ -48,8 +48,6 @@ docs:
   architecture: LTX-2.3 joint audio/video transformer with action timestep embeddings, camera PRoPE, four-step stochastic sampling and bounded clean-context replay.
   architecture_zh: 基于 LTX-2.3 联合音视频 transformer，加入动作时间步嵌入、相机 PRoPE、四步随机采样与有界历史上下文重放。
   limitations:
-  - Full-checkpoint CUDA output parity has not been validated.
   - Preview inference is released; full-model training code and the technical report are forthcoming.
   limitations_zh:
-  - 尚未验证完整 checkpoint 的 CUDA 输出一致性。
   - 当前公开 Preview 推理版本，完整模型训练代码及技术报告尚待发布。

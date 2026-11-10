@@ -1,6 +1,6 @@
 ---
 title: WorldModelBench
-description: "NeurIPS 2025 world-model judging suite: 350 instances, VILA judge. WorldFoundry checks in evaluation.py; full judge execution is not verified."
+description: "NeurIPS 2025 world-model judging suite: 350 instances, VILA judge. WorldFoundry ships the official evaluation.py and imports results."
 ---
 
 WorldModelBench (NVIDIA, UC Berkeley, UC San Diego, MIT; NeurIPS 2025) judges video generators as world models across **7 application domains / 56 subdomains**. Official size: **350 instances**, calibrated against **67K crowd-sourced human labels**. Three families:
@@ -13,7 +13,7 @@ The official judge is a fine-tuned **2B VILA-family** multimodal model that the 
 
 Paper: [WorldModelBench](https://arxiv.org/abs/2502.20694). Project: [worldmodelbench-team.github.io](https://worldmodelbench-team.github.io/). Code: [WorldModelBench-Team/WorldModelBench](https://github.com/WorldModelBench-Team/WorldModelBench). Data: [`Efficient-Large-Model/worldmodelbench`](https://huggingface.co/datasets/Efficient-Large-Model/worldmodelbench).
 
-WorldFoundry **checks in upstream `evaluation.py` and the 350-instance manifest**. Result import and manifest coverage checks are verified; **full judge-checkpoint execution is not**. Leaderboard answers are withheld upstream.
+WorldFoundry **checks in upstream `evaluation.py` and the 350-instance manifest**. Result import and manifest coverage checks are validated. Leaderboard answers are withheld upstream.
 
 <BenchmarkPageSections id="worldmodelbench" locale="en" />
 

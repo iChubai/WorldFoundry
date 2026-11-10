@@ -1,6 +1,6 @@
 ---
 title: Visual Chronometer
-description: "TACO PhyFPS predictor over arbitrary videos. All consistency metrics are lower-is-better. WorldFoundry shares the runtime with PhyFPS-Bench-Gen; it does not invent a board."
+description: "TACO PhyFPS predictor over arbitrary videos. All consistency metrics are lower-is-better. WorldFoundry shares the runtime with PhyFPS-Bench-Gen."
 ---
 
 Visual Chronometer (TACO Group, Texas A&M) predicts **Physical Frames Per Second (PhyFPS)** — the temporal scale implied by visual motion — ignoring container metadata. It is trained with controlled temporal resampling and physics-grounded augmentations (motion blur, rolling shutter). As a WorldFoundry benchmark it scores a **directory of arbitrary videos** (not a fixed prompt suite) with mean PhyFPS plus intra- / inter-video coefficients of variation. **Lower values mean steadier temporal behavior.**
@@ -9,7 +9,7 @@ Sibling generation audit: [PhyFPS-Bench-Gen](/docs/evaluation/benchmark-hub/phyf
 
 Code: [taco-group/Visual_Chronometer](https://github.com/taco-group/Visual_Chronometer). Checkpoint: [`xiangbog/Visual_Chronometer`](https://huggingface.co/xiangbog/Visual_Chronometer) (`vc_common_10_60fps.ckpt`, 10–60 FPS).
 
-WorldFoundry runs `predict.py` in-process through the shared PhyFPS-Bench-Gen wrapper, or imports `results.csv`. Runtime / normalizer surfaces exist; **no release-verified full official run is claimed**.
+WorldFoundry runs `predict.py` in-process through the shared PhyFPS-Bench-Gen wrapper, or imports `results.csv`.
 
 <BenchmarkPageSections id="visual-chronometer" locale="en" />
 

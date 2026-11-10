@@ -3,14 +3,14 @@ title: Interactive world model inference
 description: Run Zing, Astronex-World, SolarWM, AlayaWorld v1.1 and Echo-WM with explicit inference-only routes.
 ---
 
-These routes generate video using local weights. Catalog browsing and configuration checks work on CPU; generation requires CUDA. No weights are downloaded during inference. New integrations have CPU contract checks; GPU output quality and checkpoint-backed parity are still pending.
+These routes generate video using local weights. Catalog browsing and configuration checks work on CPU; generation requires CUDA. No weights are downloaded during inference. These routes pass CPU contract checks; GPU output quality and checkpoint-backed parity are not yet validated.
 
 | Model ID | Inference route | Required source |
 | --- | --- | --- |
 | `zing` (alias `zing-0.5`) | Native Wan2.2 layers, UMT5, VAE38; Zing keyboard and causal cache extensions | None |
 | `astronex-world` | Official causal or bidirectional sampler | Astronex-World checkout |
 | `solarwm` | Official `solarwm infer`, indexed image/caption/camera cases | SolarWM checkout and matching backend environment |
-| `alayaworld` | Existing native LTX-2.3 + DA3 merged checkpoint route | None |
+| `alayaworld` | Native LTX-2.3 + DA3 merged checkpoint route | None |
 | `alayaworld-v1.1` | Extracted inference-only ViGeo rollout, shared loaders/VAE/history/text and external Alaya transformer extension | AlayaWorld and ViGeo1.1 source |
 | `joyai-echo-wm` | Official Base or Flash audio/video inference | JoyAI-Echo checkout |
 
@@ -116,7 +116,7 @@ Other variants are `wan-5b-dmd-237f`, `wan-5b-ar`, `wan-5b-bidirectional`, `wan-
 
 The `wan-5b-dmd-237f` route follows the indexed source length. Supply at least 237 video frames and matching camera poses to exercise its 237-frame rollout; selecting this variant with an 81-frame source still produces an 81-frame clip.
 
-Wan, LTX and H3 require **separate environments**. The packaged `solarwm` environment describes the default Wan route only. Follow the pinned upstream environment guide for LTX/H3, and pass its Python interpreter explicitly. LTX needs `assets` entries `model.codec.video_vae_path` and `inference.negative_caption_cache`. H3 needs `data.silence_latents_path` and `data.encoder_contract_path`; `h3-dmd-long` additionally needs `inference.plan` and `inference.dataset_root`. These are existing inference assets; this integration does not preencode data.
+Wan, LTX and H3 require **separate environments**. The packaged `solarwm` environment describes the default Wan route only. Follow the pinned upstream environment guide for LTX/H3, and pass its Python interpreter explicitly. LTX needs `assets` entries `model.codec.video_vae_path` and `inference.negative_caption_cache`. H3 needs `data.silence_latents_path` and `data.encoder_contract_path`; `h3-dmd-long` additionally needs `inference.plan` and `inference.dataset_root`. Prepare these inference assets in advance; WorldFoundry does not preencode data.
 
 Use `overrides={"data.test_index": "...", "validation.sample_count": 1}` for Wan indexed selection. LTX uses `data.index` and `inference.sample_count`. Unknown overrides and training commands are rejected. Each call gets a fresh output directory. Completed videos and completion markers are required before a run is reported successful.
 
@@ -155,7 +155,7 @@ Omit `camera_path` to synthesize the released forward trajectory; optional `forw
 
 ## Echo-WM
 
-The existing `JoyAIEchoWMPipeline` supports `variant="base"` and `variant="flash"`. Use JoyAI-Echo revision `a08f1274573d7cd6ec66719f204951f4227a5173` and `Echo-Team/Echo-WM` weights.
+`JoyAIEchoWMPipeline` supports `variant="base"` and `variant="flash"`. Use JoyAI-Echo revision `a08f1274573d7cd6ec66719f204951f4227a5173` and `Echo-Team/Echo-WM` weights.
 
 ```python
 from worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo import JoyAIEchoWMPipeline
@@ -178,4 +178,4 @@ result = pipe(
 )
 ```
 
-Base prompts use the six upstream fields: Environment, Character, Style, Perspective, Sounds and Speech. Base lengths are `1 + 8*N`; Flash lengths are `1 + 8*video_chunk_size*N` (default chunk size 3). Audio is on by default; set `no_audio=True` for video only. Width/height must be multiples of 32. No long-horizon checkpoint availability or GPU parity is implied by catalog registration.
+Base prompts use the six upstream fields: Environment, Character, Style, Perspective, Sounds and Speech. Base lengths are `1 + 8*N`; Flash lengths are `1 + 8*video_chunk_size*N` (default chunk size 3). Audio is on by default; set `no_audio=True` for video only. Width/height must be multiples of 32. Long-horizon checkpoint availability and GPU parity are not established.

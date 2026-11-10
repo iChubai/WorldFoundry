@@ -36,7 +36,7 @@ nonempty local modules. Install modules separately from starting Studio;
 
 ## Workspace mode
 
-For multi-model validation and release QA, run the workspace app instead of a single-model Studio process:
+For multi-model work, run the workspace app instead of a single-model Studio process:
 
 ```bash
 source tmp/worldfoundry_unified_env.sh
@@ -59,8 +59,7 @@ bash scripts/workspace/run_workspace.sh \
   --data-dir /path/to/benchmark-data
 ```
 
-The launcher is open-source friendly and does not depend on machine-specific
-paths. It resolves assets in this order: command-line option, already exported
+The launcher resolves assets in this order: command-line option, already exported
 environment variable, repo-sibling `ckpt/` or `data/` directory when present,
 env-file value from `tmp/worldfoundry_unified_env.sh`, then
 `~/.cache/worldfoundry/...`.
@@ -89,8 +88,7 @@ Open:
 http://127.0.0.1:7870/
 ```
 
-The workspace is the preferred UI for release validation.
-Use it to submit inference jobs, inspect model-specific forms, review artifacts,
+Use the workspace to submit inference jobs, inspect model-specific forms, review artifacts,
 and compare runs without switching between multiple one-off scripts.
 Those Workspace jobs are visual smoke (`python -m worldfoundry.studio.workspace_job infer`). Everyday reproducible / model-page commands use `wf run <id> --pipeline.task-profile …`. See [CLI entrypoints](/docs/reference/cli#entrypoints).
 
@@ -273,7 +271,7 @@ Workspace inference defaults to a fast job path. It assumes the selected conda
 environment, checkpoint roots, and viewer dependencies were prepared before the
 server was launched. Keep this default for normal repeated inference.
 
-Turn checks on only for setup debugging or release preflight:
+Turn checks on for setup debugging or preflight:
 
 <div className="pi-kv-catalog is-vars not-prose">
   <section className="pi-kv-group">
@@ -405,8 +403,8 @@ Turn checks on only for setup debugging or release preflight:
 
 For the fastest finish path, model runtimes should return explicit
 `preview_image`, `preview_video`, `artifact_paths`, `rrd_path`, and `output_dir`
-values in their run record. Use `always` scanning only as a compatibility mode
-for older runtimes that write files without reporting them.
+values in their run record. Use `always` scanning only for runtimes that write
+files without reporting them.
 
 Resident workers keep the conda child process alive across jobs so the child
 `StudioManager` can reuse its pipeline cache. Set
@@ -786,7 +784,7 @@ viewer code:
 - **Gaussian splats** — Default Spark. Use the official viewer when the upstream renderer requires a nonstandard shader or splat format.
 
 An inference run is not visually verified merely because a viewer process
-starts. Release evidence for a 3D/4D method should confirm finite geometry,
+starts. To verify a 3D/4D method, confirm finite geometry,
 camera data, and the declared coordinate frame, then open the actual artifact in a browser, check a nonblank and
 readably framed canvas, exercise reset/orbit or timeline controls, and review
 console errors. Preserve an official viewer as a small visualization plugin;
@@ -795,8 +793,7 @@ Viser/Rerun scene layers are sufficient.
 
 ## Studio screenshots
 
-These screenshots are from the `7870` workspace used for model release
-validation.
+These screenshots are from the `7870` workspace.
 
 - **Inference jobs** — Completed runs, inline preview media, status, and logs.
 - **Create Job** — Model-specific inputs and official demo defaults.
@@ -813,9 +810,7 @@ when the run record exposes them.
 ### Create Job
 
 The form should expose the model's actual input contract.
-The screenshot below is only a UI-shape example; release demo claims should be
-checked against the [release gates](/docs/reference/validation) and the matching
-run manifest.
+The screenshot below shows the UI layout only.
 
 ![Studio Create Job dialog](/images/studio/screens/studio-create-job-ltx2-3.png)
 
@@ -1356,13 +1351,6 @@ fullscreen permission.
 
 Only `WORLDFOUNDRY_*` Studio environment variables are supported.
 
-## Release evidence
-
-Only add public demo media after the matching official configuration has run
-through the in-tree Studio or Studio-compatible API path. Keep the run manifest,
-decoded media metadata, and visual QA record with the validation artifacts so
-the embedded video can be traced back to an actual release candidate run.
-
 ## Code layout
 
 Each implementation has one canonical import path. There are no forwarding
@@ -1391,8 +1379,7 @@ packages. `StudioManager` saves raw artifacts by default. Frontends explicitly
 install `visualization.presentation.prepare_run_record` as the `record_processor`
 when they need preview conversion.
 
-`studio/native` and its CUDA/C++/ImGui frontend have been removed. The standalone
-browser backends remain available through `wf-studio`.
+The standalone browser backends run through `wf-studio`.
 
 ### Rendering helpers outside Studio
 
@@ -1409,17 +1396,13 @@ Wan Animate conditioning images are model inputs, owned by
 `base_models/diffusion_model/models/encoders/wan/variants/animate/render.py`
 and called by `AAPoseMeta.draw_aapose` without a Studio dependency.
 
-The unused media and robotics helpers, pixelSplat training visualization,
-duplicate DVLT visualization, HED annotator, sky-segmentation/GLB export chain,
-and compatibility wrappers have been deleted. Geometry providers discover
-actual artifacts; a directory of Python source is not a renderable scene.
+Geometry providers discover actual artifacts; a directory of Python source is not a renderable scene.
 
-`worldfoundry/representations` has been removed. Depth Anything, VGGT, Pi3,
-WorldFM, Lyra and the other geometry pipelines now import their runtime from
-the corresponding family in `worldfoundry/base_models/three_dimensions`.
-Checkpoint loading, preprocessing and geometry postprocessing live beside
-the model code. The empty base class, marker classes and old-path forwarding
-modules are gone. Studio visualization still owns artifact display.
+Depth Anything, VGGT, Pi3, WorldFM, Lyra and the other geometry pipelines
+import their runtime from the corresponding family in
+`worldfoundry/base_models/three_dimensions`. Checkpoint loading, preprocessing
+and geometry postprocessing live beside the model code. Studio visualization
+owns artifact display.
 
 ### Inference lifecycle
 

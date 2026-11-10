@@ -1755,15 +1755,6 @@
     "worldlabs": {
       "modelId": "worldlabs"
     },
-    "worldgen": {
-      "modelId": "worldgen",
-      "paperSrc": "/models/worldgen/paper.png",
-      "src": "/models/worldgen/overview.webp",
-      "alt": "Method overview: WorldGen overview . Our pipeline begins by planning the scene layout, producing a blockout ( B B ), reference image ( 𝐑 {R} ), and navigation mesh (S) (Stage 1). Next, we generate a single 3D mesh that aligns with.",
-      "altZh": "论文方法总览：WorldGen 的方法架构。",
-      "caption": "Method overview: WorldGen overview . Our pipeline begins by planning the scene layout, producing a blockout ( B B ), reference image ( 𝐑 {R} ), and navigation mesh (S) (Stage 1). Next, we generate a single 3D mesh that aligns with.",
-      "captionZh": "论文方法总览：WorldGen 的方法架构。"
-    },
     "xgen-jing": {
       "modelId": "xgen-jing"
     },

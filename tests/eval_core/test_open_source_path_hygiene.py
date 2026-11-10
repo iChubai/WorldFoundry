@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TEXT_SUFFIXES = {
     ".css",
@@ -40,9 +39,7 @@ PRUNED_DIRS = {
     "outputs",
     "tmp",
 }
-PRUNED_DIR_PREFIXES = (
-    "out.nfs-busy-",
-)
+PRUNED_DIR_PREFIXES = ("out.nfs-busy-",)
 
 
 def _iter_open_source_text_files() -> list[Path]:

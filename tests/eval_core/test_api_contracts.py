@@ -16,9 +16,9 @@ from worldfoundry.evals.api import (
     GenerationResult,
     MetricResult,
     MetricSpec,
-    WorldModelRunner,
     WorldModelConfig,
     WorldModelManifest,
+    WorldModelRunner,
     WorldTaskConfig,
     enrich_artifact_ref,
     local_path_for_uri,
@@ -256,9 +256,9 @@ def test_api_contract_imports_are_stdlib_only() -> None:
                 for alias in node.names:
                     name = alias.name.split(".", 1)[0]
                     if name == "worldfoundry":
-                        assert alias.name.startswith(
-                            "worldfoundry.evals.api"
-                        ), f"{path} imports disallowed first-party {alias.name!r}"
+                        assert alias.name.startswith("worldfoundry.evals.api"), (
+                            f"{path} imports disallowed first-party {alias.name!r}"
+                        )
                     else:
                         assert name in allowed_external, f"{path} imports non-stdlib module {name!r}"
             elif isinstance(node, ast.ImportFrom):
@@ -270,9 +270,11 @@ def test_api_contract_imports_are_stdlib_only() -> None:
                     if not node.module:
                         continue
                     if node.module.startswith("worldfoundry."):
-                        assert node.module.startswith(
-                            "worldfoundry.evals.api."
-                        ), f"{path} imports disallowed first-party {node.module!r}"
+                        assert node.module.startswith("worldfoundry.evals.api."), (
+                            f"{path} imports disallowed first-party {node.module!r}"
+                        )
                         continue
                     modules = {node.module.split(".", 1)[0]}
-                    assert modules <= allowed_external, f"{path} imports non-stdlib modules: {modules - allowed_external}"
+                    assert modules <= allowed_external, (
+                        f"{path} imports non-stdlib modules: {modules - allowed_external}"
+                    )

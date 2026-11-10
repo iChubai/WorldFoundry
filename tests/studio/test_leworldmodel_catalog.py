@@ -62,12 +62,15 @@ def test_leworldmodel_runtime_resolves_portable_dataset_path(tmp_path, monkeypat
     }
 
     assert runtime.BLOCKED_REASON == ""
-    assert runtime.missing_requirements(
-        options=options,
-        runtime_root=runtime.RUNTIME_DIR,
-        entrypoint=runtime.OFFICIAL_ENTRYPOINT,
-        profile=None,
-    ) == []
+    assert (
+        runtime.missing_requirements(
+            options=options,
+            runtime_root=runtime.RUNTIME_DIR,
+            entrypoint=runtime.OFFICIAL_ENTRYPOINT,
+            profile=None,
+        )
+        == []
+    )
 
     command = runtime.build_command(
         {
@@ -104,9 +107,7 @@ def test_leworldmodel_eval_config_composes_with_dynamic_cache_dir(tmp_path, monk
 
     assert cfg.policy == "random"
     assert cfg.cache_dir == str(tmp_path / "checkpoints" / "leworldmodel")
-    assert cfg.eval.dataset_name == str(
-        tmp_path / "checkpoints" / "leworldmodel" / "pusht_worldfoundry_smoke.h5"
-    )
+    assert cfg.eval.dataset_name == str(tmp_path / "checkpoints" / "leworldmodel" / "pusht_worldfoundry_smoke.h5")
     assert cfg.eval.num_eval == 1
     assert cfg.eval.eval_budget == 25
     assert cfg.eval.goal_offset_steps == 5

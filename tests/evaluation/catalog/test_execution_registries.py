@@ -13,6 +13,7 @@ from worldfoundry.evals.tasks.execution.framework.benchmark_assets import (
     first_existing_dir,
     first_existing_file,
 )
+from worldfoundry.evals.tasks.execution.framework.io import coerce_unit_score
 from worldfoundry.evals.tasks.execution.framework.scoring_registry import (
     contract_evaluator_kind,
     get_in_tree_benchmark_config,
@@ -21,7 +22,6 @@ from worldfoundry.evals.tasks.execution.framework.scoring_registry import (
     target_benchmark_metrics,
     write_benchmark_contract_evaluation,
 )
-from worldfoundry.evals.tasks.execution.framework.io import coerce_unit_score
 from worldfoundry.evals.tasks.execution.framework.video_quality_specs import (
     supported_video_quality_benchmark_ids,
     video_quality_spec,

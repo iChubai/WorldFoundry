@@ -156,7 +156,9 @@ def test_molmoact2_runtime_config_yaml_can_select_default_variant(tmp_path: Path
 
 
 def test_molmoact2_operator_maps_yam_camera_aliases() -> None:
-    operator = MolmoAct2Operator(input_schema={"camera_keys": ["top_cam", "left_cam", "right_cam"], "norm_tag": "yam_dual_molmoact2"})
+    operator = MolmoAct2Operator(
+        input_schema={"camera_keys": ["top_cam", "left_cam", "right_cam"], "norm_tag": "yam_dual_molmoact2"}
+    )
     perception = operator.process_perception(
         images=None,
         front_camera_rgb="front",

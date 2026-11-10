@@ -95,9 +95,7 @@ def test_benchmark_zoo_exports_catalog_v2_specs(tmp_path) -> None:
     assert external_task.evaluation_protocol_names == ("external_benchmark_contract",)
 
     assert catalog.get_benchmark("external-video-bench").tasks[0].name == "external-video-bench"
-    assert [task.name for task in catalog.tasks_by_protocol("external_benchmark_contract")] == [
-        "external-video-bench"
-    ]
+    assert [task.name for task in catalog.tasks_by_protocol("external_benchmark_contract")] == ["external-video-bench"]
 
 
 def test_load_benchmark_zoo_registry_resolves_manifest_entries(tmp_path: Path) -> None:

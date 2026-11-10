@@ -7,8 +7,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from worldfoundry.synthesis.action_generation.last_r1 import LastR1Synthesis
-from worldfoundry.synthesis.action_generation.last_r1 import last_r1_synthesis
+from worldfoundry.synthesis.action_generation.last_r1 import LastR1Synthesis, last_r1_synthesis
 
 
 def test_numpy_image_is_written_and_action_artifact_is_returned(tmp_path, monkeypatch):

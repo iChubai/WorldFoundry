@@ -14,9 +14,7 @@ from pathlib import Path
 
 import pytest
 
-WORKSPACE_APP_PATH = (
-    Path(__file__).resolve().parents[2] / "worldfoundry" / "studio" / "workspace" / "app.py"
-)
+WORKSPACE_APP_PATH = Path(__file__).resolve().parents[2] / "worldfoundry" / "studio" / "workspace" / "app.py"
 
 
 def test_no_python_binding_shadows_dataclasses_field() -> None:

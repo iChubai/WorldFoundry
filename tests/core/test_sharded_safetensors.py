@@ -65,9 +65,7 @@ def test_canonical_model_index_wins_over_sibling_index(tmp_path) -> None:
         encoding="utf-8",
     )
 
-    assert safetensor_checkpoint_files(tmp_path) == [
-        tmp_path / "model-00001-of-00001.safetensors"
-    ]
+    assert safetensor_checkpoint_files(tmp_path) == [tmp_path / "model-00001-of-00001.safetensors"]
 
 
 def test_multiple_noncanonical_indexes_fail_closed(tmp_path) -> None:

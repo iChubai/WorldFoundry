@@ -51,6 +51,7 @@ def test_vigeo_preflight_checks_shared_source_and_weights(tmp_path):
 
 def test_vigeo_local_checkpoint_loader(tmp_path):
     import torch
+
     from worldfoundry.base_models.three_dimensions.depth.vigeo import ViGeo, ViGeoModel
 
     assert ViGeoModel is ViGeo
@@ -70,6 +71,7 @@ def test_vigeo_local_checkpoint_loader(tmp_path):
 
 def test_vigeo_capability_points_to_shared_package():
     from pathlib import Path
+
     from worldfoundry.base_models.capabilities import get_base_model_capability
     from worldfoundry.base_models.three_dimensions.depth import vigeo
 

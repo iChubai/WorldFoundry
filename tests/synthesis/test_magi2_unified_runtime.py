@@ -71,9 +71,7 @@ def test_audio_vae_factory_accepts_published_stable_audio_config() -> None:
     assert audio_vae.downsampling_ratio == 2
 
 
-def test_qwen35_subprocess_uses_same_python_and_local_overlay(
-    monkeypatch, tmp_path: Path
-) -> None:
+def test_qwen35_subprocess_uses_same_python_and_local_overlay(monkeypatch, tmp_path: Path) -> None:
     overlay = tmp_path / "overlay"
     (overlay / "transformers").mkdir(parents=True)
     (overlay / "huggingface_hub").mkdir()

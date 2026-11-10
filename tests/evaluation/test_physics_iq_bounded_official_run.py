@@ -107,9 +107,7 @@ def test_stage_generated_videos_only_requires_selected_records(tmp_path: Path) -
     assert summary["expected_count"] == 3
     assert summary["source_count"] == 4
     assert summary["staged_count"] == 3
-    assert {path.name for path in staging.iterdir()} == {
-        record["generated_video_name"] for record in records
-    }
+    assert {path.name for path in staging.iterdir()} == {record["generated_video_name"] for record in records}
     assert (source / "9999_unselected.mp4").read_bytes() == b"unselected"
 
 

@@ -29,9 +29,7 @@ def test_manifest_and_command_preserve_recipe_specific_filename(tmp_path: Path) 
         },
     )
 
-    assert manifest.hf_repo_files == {
-        "Example/Memory": ["context_k1/epoch-0.safetensors"]
-    }
+    assert manifest.hf_repo_files == {"Example/Memory": ["context_k1/epoch-0.safetensors"]}
     command = download_checkpoints.build_download_command(
         "Example/Memory",
         tmp_path,
@@ -67,9 +65,7 @@ def test_local_check_requires_the_model_specific_file(tmp_path: Path) -> None:
         required_files=["context_k20/epoch-0.safetensors"],
     )
     assert missing["ready"] is False
-    assert missing["direct_hfd_missing_required_files"] == [
-        "context_k20/epoch-0.safetensors"
-    ]
+    assert missing["direct_hfd_missing_required_files"] == ["context_k20/epoch-0.safetensors"]
 
 
 def test_hf_filename_rejects_path_traversal() -> None:

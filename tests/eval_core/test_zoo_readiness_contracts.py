@@ -68,9 +68,7 @@ def test_model_zoo_readiness_does_not_overclaim_integrated_runners() -> None:
             # A claimed runner needs a declared runtime route: either a conda
             # runtime profile or a pipeline binding/target (hosted-API and
             # shared-pipeline models run without a per-model conda profile).
-            assert (
-                entry.runtime_profile or entry.pipeline_binding or entry.pipeline_target
-            ), entry.model_id
+            assert entry.runtime_profile or entry.pipeline_binding or entry.pipeline_target, entry.model_id
 
 
 def test_model_zoo_claimed_runner_targets_match_registry_contract() -> None:
@@ -84,9 +82,7 @@ def test_model_zoo_claimed_runner_targets_match_registry_contract() -> None:
         entry_pipeline_route = entry.pipeline_binding or entry.pipeline_target
         claimed_targets = []
         if entry.runner_target:
-            claimed_targets.append(
-                (entry.model_id, entry.runner_target, entry.runtime_profile or entry_pipeline_route)
-            )
+            claimed_targets.append((entry.model_id, entry.runner_target, entry.runtime_profile or entry_pipeline_route))
         for variant in entry.variants:
             if variant.runner_target:
                 claimed_targets.append(

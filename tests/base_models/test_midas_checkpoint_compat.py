@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 import torch
 
-from worldfoundry.base_models.three_dimensions.depth.midas.base_model import BaseModel
 from worldfoundry.base_models.three_dimensions.depth.midas.backbones.beit import block_forward
+from worldfoundry.base_models.three_dimensions.depth.midas.base_model import BaseModel
 
 
 class _TinyMidasModel(BaseModel):

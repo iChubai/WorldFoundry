@@ -10,7 +10,6 @@ from worldfoundry.evals.tasks import (
     validate_task_yaml_file,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 

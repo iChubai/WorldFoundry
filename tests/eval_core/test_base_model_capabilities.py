@@ -1,5 +1,5 @@
 from __future__ import annotations
-import json
+
 import shlex
 import subprocess
 from pathlib import Path
@@ -11,23 +11,22 @@ from worldfoundry.base_models import capabilities
 from worldfoundry.base_models.capabilities import (
     BASE_MODEL_CAPABILITIES,
     BASE_MODEL_STACKS,
-    benchmark_base_model_dependency_ids,
-    benchmark_data_asset_capability_ids,
     base_model_inventory,
     base_model_materialization_plan,
+    benchmark_base_model_dependency_ids,
+    benchmark_data_asset_capability_ids,
     check_base_model_dependencies,
     resolve_base_model_capability_ids,
 )
-from worldfoundry.evals.tasks.catalog.benchmark_catalog import formal_benchmark_ids
-
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
+    formal_benchmark_ids,
+    iter_benchmark_catalog_manifest_paths,
+    load_benchmark_runtime_profiles,
+)
+from worldfoundry.evals.utils import load_manifest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TASK_ROOT = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "tasks" / "external"
-from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
-    iter_benchmark_catalog_manifest_paths,
-)
-from worldfoundry.evals.tasks.catalog.benchmark_catalog import load_benchmark_runtime_profiles
-from worldfoundry.evals.utils import load_manifest
 
 
 def _dependency_tuple(payload: dict, key: str) -> tuple[str, ...]:
@@ -200,13 +199,20 @@ def test_base_model_materialization_plan_emits_download_and_export_hints(
     )
 
     assert plan["ok"] is False
-    assert any("download ShilongLiu/GroundingDINO groundingdino_swint_ogc.pth" in item for item in plan["download_commands"])
+    assert any(
+        "download ShilongLiu/GroundingDINO groundingdino_swint_ogc.pth" in item for item in plan["download_commands"]
+    )
     assert any("download bert-base-uncased config.json" in item for item in plan["download_commands"])
     assert any("download bert-base-uncased model.safetensors" in item for item in plan["download_commands"])
     assert any("download bert-base-uncased vocab.txt" in item for item in plan["download_commands"])
-    assert any("download facebook/sam2.1-hiera-base-plus sam2.1_hiera_base_plus.pt" in item for item in plan["download_commands"])
+    assert any(
+        "download facebook/sam2.1-hiera-base-plus sam2.1_hiera_base_plus.pt" in item
+        for item in plan["download_commands"]
+    )
     assert any("sam_vit_h_4b8939.pth" in item for item in plan["download_commands"])
-    assert any(command[:3] == ["hf", "download", "ShilongLiu/GroundingDINO"] for command in plan["download_command_argvs"])
+    assert any(
+        command[:3] == ["hf", "download", "ShilongLiu/GroundingDINO"] for command in plan["download_command_argvs"]
+    )
     assert "hydra-core" in plan["pip_install_packages"]
     assert any(command.startswith("export WORLDFOUNDRY_SAM2_CKPT=") for command in plan["export_commands"])
     assert any(command.startswith("export WORLDFOUNDRY_SAM_VIT_H_CKPT=") for command in plan["export_commands"])
@@ -315,7 +321,10 @@ def test_source_repo_assets_are_in_tree_and_never_cloned() -> None:
     physics_asset = BASE_MODEL_CAPABILITIES["physics_iq_source_assets"].assets[0]
     assert physics_asset.download_command() is None
     assert physics_asset.local_path.startswith("${WORLDFOUNDRY_REPO_ROOT}/")
-    assert "do not stage or clone https://github.com/google-deepmind/physics-IQ-benchmark.git" in physics_asset.manual_action
+    assert (
+        "do not stage or clone https://github.com/google-deepmind/physics-IQ-benchmark.git"
+        in physics_asset.manual_action
+    )
     assert "52e52a14d3a7284ae24d8aff98fe982ac7a60971" in physics_asset.note
 
 
@@ -394,9 +403,7 @@ def test_unreleased_or_pending_public_assets_report_precise_staging_points(tmp_p
     assert {
         asset["id"] for check in plan["checks"] for asset in check["asset_status"] if asset["required"] is False
     } == {"world_in_world_source_assets_dir"}
-    assert any(
-        "worldfoundry/evals/tasks/execution/runners/mirabench" in action for action in plan["manual_actions"]
-    )
+    assert any("worldfoundry/evals/tasks/execution/runners/mirabench" in action for action in plan["manual_actions"])
 
 
 def test_actionable_embodied_datasets_emit_specific_materialization_hints() -> None:
@@ -562,7 +569,9 @@ def test_base_model_stacks_expand_to_canonical_capabilities() -> None:
         "tum_rgbd_slam_sample_assets",
         "kitti_depth_slam_assets",
     ]
-    assert any("images.cocodataset.org/zips/val2017.zip" in command for command in perception_data_plan["download_commands"])
+    assert any(
+        "images.cocodataset.org/zips/val2017.zip" in command for command in perception_data_plan["download_commands"]
+    )
     assert any("DAVIS-2017-trainval-480p.zip" in command for command in perception_data_plan["download_commands"])
     assert any("rgbd_dataset_freiburg1_desk.tgz" in command for command in perception_data_plan["download_commands"])
     assert any("Stage KITTI odometry/depth assets" in action for action in perception_data_plan["manual_actions"])
@@ -630,9 +639,10 @@ def test_base_model_inventory_lists_capabilities_and_stacks() -> None:
         "reference_video_dataset",
         "simulator_in_tree_source",
     }
-    assert sum(inventory["asset_counts_by_role"].get(role, 0) for role in covered_asset_roles) >= inventory[
-        "benchmark_data_asset_count"
-    ]
+    assert (
+        sum(inventory["asset_counts_by_role"].get(role, 0) for role in covered_asset_roles)
+        >= inventory["benchmark_data_asset_count"]
+    )
     assert inventory["benchmark_data_asset_count"] == len(formal_benchmark_ids())
     assert inventory["benchmark_data_assets"]["camerabench"][0] == "camerabench_dataset_assets"
     assert inventory["benchmark_data_assets"]["bridgedata-v2"] == [
@@ -643,7 +653,10 @@ def test_base_model_inventory_lists_capabilities_and_stacks() -> None:
         "iworld_bench_source_assets",
         "iworld_bench_dataset_assets",
     ]
-    assert inventory["benchmark_data_assets"]["vbench-plus-plus"][:2] == ["vbench_source_assets", "vbench_plus_plus_source_assets"]
+    assert inventory["benchmark_data_assets"]["vbench-plus-plus"][:2] == [
+        "vbench_source_assets",
+        "vbench_plus_plus_source_assets",
+    ]
     assert inventory["benchmark_data_assets"]["worldscore"] == [
         "worldscore_official_assets",
         "worldscore_dataset_assets",
@@ -651,23 +664,13 @@ def test_base_model_inventory_lists_capabilities_and_stacks() -> None:
     assert benchmark_data_asset_capability_ids("chronomagic-bench") == ("chronomagic_dataset_assets",)
     assert benchmark_data_asset_capability_ids("video-bench") == ("video_bench_dataset_assets",)
     assert benchmark_data_asset_capability_ids("libero") == ("libero_source_assets", "libero_dataset_assets")
-    assert not [benchmark_id for benchmark_id in formal_benchmark_ids() if not benchmark_data_asset_capability_ids(benchmark_id)]
-    assert any(
-        asset["min_size_bytes"] is not None
-        for item in inventory["capabilities"]
-        for asset in item["assets"]
-    )
-    assert any(
-        asset["role"] == "benchmark_dataset"
-        for item in inventory["capabilities"]
-        for asset in item["assets"]
-    )
-    assert (
-        REPO_ROOT / "worldfoundry/base_models/perception_core/general_perception/open_clip/tokenizer.py"
-    ).is_file()
-    assert (
-        REPO_ROOT / "worldfoundry/data/models/runtime/configs/open_clip/model_configs"
-    ).is_dir()
+    assert not [
+        benchmark_id for benchmark_id in formal_benchmark_ids() if not benchmark_data_asset_capability_ids(benchmark_id)
+    ]
+    assert any(asset["min_size_bytes"] is not None for item in inventory["capabilities"] for asset in item["assets"])
+    assert any(asset["role"] == "benchmark_dataset" for item in inventory["capabilities"] for asset in item["assets"])
+    assert (REPO_ROOT / "worldfoundry/base_models/perception_core/general_perception/open_clip/tokenizer.py").is_file()
+    assert (REPO_ROOT / "worldfoundry/data/models/runtime/configs/open_clip/model_configs").is_dir()
     assert not (
         REPO_ROOT / "worldfoundry/base_models/perception_core/general_perception/open_clip/model_configs"
     ).exists()
@@ -735,10 +738,7 @@ def test_benchmark_base_model_refs_are_registered_and_consistent() -> None:
         payload = load_manifest(path)
         if isinstance(payload, dict) and payload.get("id"):
             catalog_entries[str(payload["id"])] = payload
-    profiles = {
-        str(profile["id"]): profile
-        for profile in load_benchmark_runtime_profiles()["profiles"]
-    }
+    profiles = {str(profile["id"]): profile for profile in load_benchmark_runtime_profiles()["profiles"]}
 
     missing_dependency_refs = []
     for task_path in sorted(TASK_ROOT.glob("*.yaml")):

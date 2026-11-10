@@ -9,6 +9,7 @@ from worldfoundry.evals.tasks.metrics import (
     camera_retrieval_metrics,
     camera_vqa_metrics,
     chronomagic_average_scores,
+    evaluate_external_metric,
     multiple_choice_accuracy,
     pairwise_preference_accuracy,
     parse_worldmodelbench_score,
@@ -18,7 +19,6 @@ from worldfoundry.evals.tasks.metrics import (
     videoverse_subquestion_metrics,
     worldmodelbench_score,
 )
-from worldfoundry.evals.tasks.metrics import evaluate_external_metric
 
 
 def test_benchmark_metric_input_protocol_normalizes_records() -> None:

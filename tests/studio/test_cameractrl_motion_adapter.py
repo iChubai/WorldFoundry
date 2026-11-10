@@ -20,12 +20,8 @@ def test_fuse_motion_adapter_applies_paired_lora_weights(tmp_path) -> None:
     checkpoint = tmp_path / "adapter.ckpt"
     torch.save(
         {
-            "block.attn1.processor.to_q_lora.down.weight": torch.tensor(
-                [[1.0, 2.0], [3.0, 4.0]]
-            ),
-            "block.attn1.processor.to_q_lora.up.weight": torch.tensor(
-                [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
-            ),
+            "block.attn1.processor.to_q_lora.down.weight": torch.tensor([[1.0, 2.0], [3.0, 4.0]]),
+            "block.attn1.processor.to_q_lora.up.weight": torch.tensor([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
         },
         checkpoint,
     )

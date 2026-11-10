@@ -12,7 +12,6 @@ from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import (
     build_benchmark_runner_registry,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_PATH = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "catalog"
 

@@ -14,7 +14,6 @@ from worldfoundry.evals.tasks.execution.runners.mirabench.mirabench_prompts impo
 )
 from worldfoundry.evals.utils import benchmark_task_sample_path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -33,26 +32,29 @@ def test_mirabench_example_prompt_count_from_upstream_repo() -> None:
 
 
 def test_mirabench_metrics_from_summary_csv() -> None:
-    rows = [{"metric_id": metric_id, "score": 0.75} for metric_id in (
-        "dynamic_degree",
-        "tracking_strength",
-        "dino_temporal_consistency",
-        "clip_temporal_consistency",
-        "temporal_motion_smoothness",
-        "mean_absolute_error",
-        "root_mean_square_error",
-        "aesthetic_quality",
-        "imaging_quality",
-        "camera_alignment",
-        "main_object_alignment",
-        "background_alignment",
-        "style_alignment",
-        "overall_alignment",
-        "fvd",
-        "fid",
-        "kid",
-        "mirabench_average",
-    )]
+    rows = [
+        {"metric_id": metric_id, "score": 0.75}
+        for metric_id in (
+            "dynamic_degree",
+            "tracking_strength",
+            "dino_temporal_consistency",
+            "clip_temporal_consistency",
+            "temporal_motion_smoothness",
+            "mean_absolute_error",
+            "root_mean_square_error",
+            "aesthetic_quality",
+            "imaging_quality",
+            "camera_alignment",
+            "main_object_alignment",
+            "background_alignment",
+            "style_alignment",
+            "overall_alignment",
+            "fvd",
+            "fid",
+            "kid",
+            "mirabench_average",
+        )
+    ]
     metrics = compute_mirabench_metrics(rows=rows)["metrics"]
     assert metrics["dynamic_degree"] == 0.75
     assert metrics["mirabench_average"] == 0.75

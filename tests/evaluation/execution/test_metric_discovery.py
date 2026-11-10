@@ -14,7 +14,7 @@ class MetricDiscoveryTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_all_metric_declarations_load_without_optional_dependencies(self):
-        self.run_python('''
+        self.run_python("""
             import importlib.abc
             import sys
             class BlockOptional(importlib.abc.MetaPathFinder):
@@ -38,10 +38,10 @@ class MetricDiscoveryTests(unittest.TestCase):
             assert registry.get('clip-fid').id == 'fid'
             assert registry.get('fid').higher_is_better is False
             assert not blocker.attempts, blocker.attempts
-        ''')
+        """)
 
     def test_lazy_compute_alias_survives_repeated_calls(self):
-        self.run_python('''
+        self.run_python("""
             from unittest.mock import patch
             from worldfoundry.evals.tasks.metrics import fid
             with patch('worldfoundry.evals.tasks.metrics._shared.torch_fidelity.calculate_metrics',
@@ -50,7 +50,7 @@ class MetricDiscoveryTests(unittest.TestCase):
                              lambda: fid.compute('real', 'generated', cuda=False),
                              lambda: fid.compute_clip_fid('real', 'generated', cuda=False)):
                     assert call() == 0.25
-        ''')
+        """)
 
 
 if __name__ == "__main__":

@@ -33,9 +33,7 @@ assert runtime_profiles.BaseSynthesis.__module__ != runtime_profiles.__name__
 assert not hasattr(runtime_profiles, "BASE_SYNTHESIS_OPTIONAL_FALLBACK")
 """
     env = os.environ.copy()
-    env["PYTHONPATH"] = os.pathsep.join(
-        item for item in (str(REPO_ROOT), env.get("PYTHONPATH", "")) if item
-    )
+    env["PYTHONPATH"] = os.pathsep.join(item for item in (str(REPO_ROOT), env.get("PYTHONPATH", "")) if item)
     completed = subprocess.run(
         [sys.executable, "-c", code],
         cwd=REPO_ROOT,

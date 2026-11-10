@@ -23,18 +23,18 @@ def test_probes_disabled() -> None:
 
 def test_swiglu7_interleaved_matches_reference() -> None:
     x = torch.randn(4, 16)
-    g, l = x[..., ::2], x[..., 1::2]
+    g, lin = x[..., ::2], x[..., 1::2]
     gc = g.clamp(max=7.0)
-    ref = (gc * torch.sigmoid(1.702 * gc)) * (l.clamp(-7.0, 7.0) + 1.0)
+    ref = (gc * torch.sigmoid(1.702 * gc)) * (lin.clamp(-7.0, 7.0) + 1.0)
     assert torch.allclose(ops.swiglu7_interleaved(x), ref, atol=1e-5)
 
 
 def test_swiglu7_interleaved_chunked_matches_reference(monkeypatch) -> None:
     monkeypatch.setattr(ops, "_SWIGLU7_MAX_CHUNK_ELEMENTS", 16)
     x = torch.randn(2, 5, 8)
-    g, l = x[..., ::2], x[..., 1::2]
+    g, lin = x[..., ::2], x[..., 1::2]
     gc = g.clamp(max=7.0)
-    ref = (gc * torch.sigmoid(1.702 * gc)) * (l.clamp(-7.0, 7.0) + 1.0)
+    ref = (gc * torch.sigmoid(1.702 * gc)) * (lin.clamp(-7.0, 7.0) + 1.0)
 
     actual = ops.swiglu7_interleaved(x)
 

@@ -61,11 +61,14 @@ def test_auto_routing_prefers_artifact_and_distinguishes_ply(tmp_path: Path) -> 
 
     assert resolve_frontend_mode(entry, "auto", "scene.glb") == "points"
     assert STUDIO_VISUALIZATIONS.resolve_mode(entry, "auto") == "media"
-    assert STUDIO_VISUALIZATIONS.resolve_mode(
-        entry,
-        "world",
-        infer_visualization_artifact("preview.mp4"),
-    ) == "world"
+    assert (
+        STUDIO_VISUALIZATIONS.resolve_mode(
+            entry,
+            "world",
+            infer_visualization_artifact("preview.mp4"),
+        )
+        == "world"
+    )
 
 
 def test_rerun_scene_extraction_applies_dumped_node_transforms() -> None:

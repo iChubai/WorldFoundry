@@ -10,13 +10,12 @@ from worldfoundry.evals.tasks.execution.runners.physics_iq.physics_iq_metrics im
     metric_values_from_scores,
 )
 from worldfoundry.evals.tasks.execution.runners.physics_iq.physics_iq_prompts import (
+    load_description_rows,
     materialize_physics_iq_generation_requests,
     unique_generation_records,
-    load_description_rows,
 )
-from worldfoundry.evals.utils import benchmark_task_sample_path
 from worldfoundry.evals.tasks.execution.runners.physics_iq.protocols import ORIGINAL
-
+from worldfoundry.evals.utils import benchmark_task_sample_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

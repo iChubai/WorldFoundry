@@ -9,8 +9,7 @@ def test_dreamx_world_routes_to_the_in_tree_runnable_pipeline() -> None:
     profile = load_runtime_profile("dreamx-world-5b-cam")
 
     assert entry.pipeline_target == (
-        "worldfoundry.pipelines.dreamx_world.pipeline_dreamx_world:"
-        "DreamXWorld5BCamPipeline"
+        "worldfoundry.pipelines.dreamx_world.pipeline_dreamx_world:DreamXWorld5BCamPipeline"
     )
     assert entry.runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
     assert entry.output_artifacts == ("generated_world",)

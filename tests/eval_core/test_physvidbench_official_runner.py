@@ -9,10 +9,7 @@ from pathlib import Path
 from worldfoundry.evals.tasks.execution.runners.physvidbench.physvidbench_metrics import compute_physvidbench_metrics
 from worldfoundry.evals.tasks.execution.runners.physvidbench.physvidbench_prompts import (
     materialize_physvidbench_generation_requests,
-    unique_prompt_records,
-    load_prompt_rows,
 )
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

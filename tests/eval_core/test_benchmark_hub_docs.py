@@ -29,9 +29,7 @@ def _iter_text_files(root: Path, suffixes: Iterable[str]) -> Iterator[Path]:
 
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [
-            name
-            for name in dirnames
-            if name not in IGNORED_SCAN_DIRS and not name.startswith((".next-", "out.bak."))
+            name for name in dirnames if name not in IGNORED_SCAN_DIRS and not name.startswith((".next-", "out.bak."))
         ]
         directory = Path(dirpath)
         for filename in filenames:
@@ -65,8 +63,8 @@ def test_public_docs_do_not_reference_removed_evaluation_routes_or_gpu_zero_defa
         "worldfoundry/evals/" + "benchmark_zoo",
         "worldfoundry/evals/" + "model_zoo",
         "worldfoundry/evals/" + "pipeline_dispatch",
-        "<Folder name=\"" + "benchmark_zoo" + "\" defaultOpen>",
-        "<Folder name=\"" + "model_zoo" + "\" defaultOpen>",
+        '<Folder name="' + "benchmark_zoo" + '" defaultOpen>',
+        '<Folder name="' + "model_zoo" + '" defaultOpen>',
     )
     offenders: dict[str, list[str]] = {}
 
@@ -93,10 +91,7 @@ def test_benchmark_hub_ids_match_catalog_and_task_manifests() -> None:
     catalog_status = json.loads(BENCHMARK_CATALOG_STATUS.read_text(encoding="utf-8"))
     hub_ids = set(catalog_status)
 
-    task_ids = {
-        path.stem
-        for path in (REPO_ROOT / "worldfoundry/data/benchmarks/tasks/external").glob("*.yaml")
-    }
+    task_ids = {path.stem for path in (REPO_ROOT / "worldfoundry/data/benchmarks/tasks/external").glob("*.yaml")}
     formal_ids = set(formal_benchmark_ids())
 
     assert hub_ids <= task_ids

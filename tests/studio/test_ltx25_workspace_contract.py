@@ -33,26 +33,18 @@ def test_ltx25_default_variant_maps_the_complete_official_runtime() -> None:
         "bin",
         "python",
     )
-    assert Path(required["transformer_path"]).name == (
-        "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
-    )
-    assert Path(required["text_encoder_path"]).name == (
-        "gemma4-12b-with-proj-ltx-2.5-bf16.safetensors"
-    )
+    assert Path(required["transformer_path"]).name == ("ltx-2.5-22b-distilled-transformer-bf16.safetensors")
+    assert Path(required["text_encoder_path"]).name == ("gemma4-12b-with-proj-ltx-2.5-bf16.safetensors")
     assert Path(required["video_vae_path"]).name == "ltx-2.5-video-vae-bf16.safetensors"
     assert Path(required["audio_vae_path"]).name == "ltx-2.5-audio-vae-bf16.safetensors"
-    assert Path(required["spatial_upsampler_path"]).name == (
-        "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors"
-    )
+    assert Path(required["spatial_upsampler_path"]).name == ("ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors")
 
 
 def test_ltx25_workspace_call_contract_requires_real_execution() -> None:
     entry = find_entry("ltx-2.5")
 
     assert entry.default_call_kwargs["execute"] is True
-    assert {"execute", "num_frames", "height", "width", "fps", "seed"} <= set(
-        entry.call_params
-    )
+    assert {"execute", "num_frames", "height", "width", "fps", "seed"} <= set(entry.call_params)
 
 
 def test_ltx25_runtime_pins_cuda_12_8_torch_wheels() -> None:

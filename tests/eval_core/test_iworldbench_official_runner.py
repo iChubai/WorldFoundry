@@ -15,7 +15,6 @@ from worldfoundry.evals.tasks.execution.runners.iworldbench.iworldbench_prompts 
 )
 from worldfoundry.evals.utils import benchmark_task_sample_path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 UPSTREAM_ROOT = REPO_ROOT.parent / "github_repos" / "iWorld-Bench"
 

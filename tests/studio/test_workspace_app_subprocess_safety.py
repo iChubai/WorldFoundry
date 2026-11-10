@@ -12,9 +12,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-WORKSPACE_APP_PATH = (
-    Path(__file__).resolve().parents[2] / "worldfoundry" / "studio" / "workspace" / "app.py"
-)
+WORKSPACE_APP_PATH = Path(__file__).resolve().parents[2] / "worldfoundry" / "studio" / "workspace" / "app.py"
 
 
 def test_no_preexec_fn_in_workspace_app() -> None:

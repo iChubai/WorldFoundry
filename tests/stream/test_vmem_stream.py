@@ -1,9 +1,9 @@
-import imageio.v2 as imageio
 import os
+
+import imageio.v2 as imageio
 from PIL import Image
 
 from worldfoundry.pipelines.vmem.pipeline_vmem import VMemPipeline
-
 
 image_path = "./data/test_cases/test_image_case1/ref_image.png"
 input_image = Image.open(image_path).convert("RGB")

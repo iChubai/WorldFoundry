@@ -7,7 +7,6 @@ from worldfoundry.evals.api import ArtifactRef, GenerationRequest, GenerationRes
 from worldfoundry.evals.tasks.execution.orchestration.benchmark_generation import (
     get_benchmark_generation_adapter,
 )
-
 from worldfoundry.evals.tasks.execution.runners.wrbench.wrbench_prompts import (
     copy_wrbench_generated_videos,
 )

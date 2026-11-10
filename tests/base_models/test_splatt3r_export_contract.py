@@ -23,9 +23,7 @@ def test_covariance_export_round_trips_with_wxyz_quaternion() -> None:
     scales = np.array([0.5, 1.25, 2.0])
     covariance = rotation @ np.diag(scales**2) @ rotation.T
 
-    quaternion_wxyz, exported_scales = _covariance_to_quaternion_and_scale(
-        torch.from_numpy(covariance[None]).double()
-    )
+    quaternion_wxyz, exported_scales = _covariance_to_quaternion_and_scale(torch.from_numpy(covariance[None]).double())
 
     exported_rotation = Rotation.from_quat(quaternion_wxyz[:, [1, 2, 3, 0]]).as_matrix()[0]
     reconstructed = exported_rotation @ np.diag(exported_scales[0] ** 2) @ exported_rotation.T

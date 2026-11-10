@@ -11,8 +11,8 @@ from __future__ import annotations
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.networks.magi2.config import (
-    MHCConfig,
     Magi2PreviewConfig,
+    MHCConfig,
     MoEConfig,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.magi2.preview_dit import Transformer
@@ -85,8 +85,13 @@ def test_preview_model_forward_seam() -> None:
     dit = _tiny_preview().to(device)
     pipe = NativeMagi2Pipeline(preview_transformer=dit, text_encoder=_StubEncoder(64), device=device)
     pipe._plan = lambda **kw: {
-        "height": 64, "width": 64, "frames": 9, "video_latent_t": 2,
-        "latent_h": 4, "latent_w": 4, "audio_latent_t": 6,
+        "height": 64,
+        "width": 64,
+        "frames": 9,
+        "video_latent_t": 2,
+        "latent_h": 4,
+        "latent_w": 4,
+        "audio_latent_t": 6,
     }
     res = pipe.generate(prompt="a cat", num_inference_steps=3, seed=0, return_latents=True)
     vl, al = res["video_latent"], res["audio_latent"]

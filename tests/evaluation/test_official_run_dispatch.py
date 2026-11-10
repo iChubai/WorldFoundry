@@ -311,12 +311,12 @@ def test_single_video_vbench_runtime_is_bounded_evidence(tmp_path: Path) -> None
     import argparse
     import json
 
+    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
     from worldfoundry.evals.tasks.execution.runners.vbench.vbench_official_impl import (
         DEFAULT_VBENCH_ROOT,
         normalize_vbench_results,
         validate_prompt_suite_materialization,
     )
-    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
     full_info = bundled_benchmark_asset("vbench", "VBench_full_info.json")
     rows = json.loads(full_info.read_text(encoding="utf-8"))
@@ -465,12 +465,12 @@ def test_single_video_vbench_series_runtime_is_never_full_suite(
     import argparse
     import json
 
+    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
     from worldfoundry.evals.tasks.execution.runners.vbench_2_0.vbench_shared_official_impl import (
         build_vbench2_video_coverage,
         canonical_suite_coverage,
         normalize_results,
     )
-    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
     videos = tmp_path / variant / "videos"
     videos.mkdir(parents=True)

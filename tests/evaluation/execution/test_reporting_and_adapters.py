@@ -24,13 +24,18 @@ class ReportingAndAdapterTests(unittest.TestCase):
         video = self.root / "sample.mp4"
         video.touch()
         self.results = [
-            GenerationResult(sample_id=q.sample_id, artifacts={"generated_video": ArtifactRef(str(video), "video")},
-                             metadata={"scores": {"quality": value, "scene_consistency": value, "motion_correctness": 0.6}})
+            GenerationResult(
+                sample_id=q.sample_id,
+                artifacts={"generated_video": ArtifactRef(str(video), "video")},
+                metadata={"scores": {"quality": value, "scene_consistency": value, "motion_correctness": 0.6}},
+            )
             for q, value in zip(self.requests, (0.9, 0.1))
         ]
 
     def run_scores(self, name, metrics, **kwargs):
-        run_evaluate(output_dir=self.root / name, requests=self.requests, results=self.results, metrics=metrics, **kwargs)
+        run_evaluate(
+            output_dir=self.root / name, requests=self.requests, results=self.results, metrics=metrics, **kwargs
+        )
         return json.loads((self.root / name / "scorecard.json").read_text())
 
     def test_failed_and_partial_scores_remain_visible_without_winning(self):
@@ -40,17 +45,21 @@ class ReportingAndAdapterTests(unittest.TestCase):
         self.run_scores("failed", [metric])
         self.results[1] = GenerationResult(sample_id="1")
         self.run_scores("partial", [metric])
-        comparison = build_run_comparison([self.root / name for name in ("complete", "failed", "partial")],
-                                          labels=["complete", "failed", "partial"])
+        comparison = build_run_comparison(
+            [self.root / name for name in ("complete", "failed", "partial")], labels=["complete", "failed", "partial"]
+        )
         self.assertEqual(comparison["best_by_metric"]["quality"]["label"], "complete")
         self.assertEqual(comparison["metrics"]["quality"]["values"]["failed"], 0.9)
         self.assertEqual(comparison["metrics"]["quality"]["values"]["partial"], 0.9)
 
     def test_in_tree_rates_are_lower_is_better(self):
         for name, rate in (("low", 0.1), ("high", 0.9)):
-            self.results = [GenerationResult(sample_id=q.sample_id, artifacts=r.artifacts,
-                                             metadata={"scores": {"violence_nsfw_rate": rate}})
-                            for q, r in zip(self.requests, self.results)]
+            self.results = [
+                GenerationResult(
+                    sample_id=q.sample_id, artifacts=r.artifacts, metadata={"scores": {"violence_nsfw_rate": rate}}
+                )
+                for q, r in zip(self.requests, self.results)
+            ]
             self.run_scores(name, ["violence_nsfw_rate"], benchmark_id="t2v-safety-bench")
         comparison = build_run_comparison([self.root / "low", self.root / "high"], labels=["low", "high"])
         self.assertEqual(comparison["best_by_metric"]["violence_nsfw_rate"]["label"], "low")
@@ -61,10 +70,13 @@ class ReportingAndAdapterTests(unittest.TestCase):
         comparison = build_run_comparison([self.root / "one", self.root / "two"], metric_ids=["scene_consistency"])
         self.assertEqual(comparison["metric_ids"], ["scene_consistency"])
         self.run_scores("primary_one", ["scene_consistency", "ewmbench_average"], benchmark_id="ewmbench")
-        self.run_scores("primary_two", ["scene_consistency", "motion_correctness", "ewmbench_average"],
-                        benchmark_id="ewmbench")
+        self.run_scores(
+            "primary_two", ["scene_consistency", "motion_correctness", "ewmbench_average"], benchmark_id="ewmbench"
+        )
         with self.assertRaisesRegex(ValueError, "ewmbench_average"):
-            build_run_comparison([self.root / "primary_one", self.root / "primary_two"], metric_ids=["ewmbench_average"])
+            build_run_comparison(
+                [self.root / "primary_one", self.root / "primary_two"], metric_ids=["ewmbench_average"]
+            )
 
     def test_builtin_and_in_tree_metrics_can_be_selected_together(self):
         card = self.run_scores("mixed", ["scene_consistency", "artifact_count"], benchmark_id="ewmbench")
@@ -89,8 +101,10 @@ class ReportingAndAdapterTests(unittest.TestCase):
             ("full", [{"fid": 0.2, "other": 0.5}, {"fid": 0.2, "other": 0.5}]),
             ("partial", [{"fid": 0.1, "other": 0.5}, {"other": 0.5}]),
         ):
-            self.results = [GenerationResult(sample_id=q.sample_id, metadata={"scores": values})
-                            for q, values in zip(self.requests, scores)]
+            self.results = [
+                GenerationResult(sample_id=q.sample_id, metadata={"scores": values})
+                for q, values in zip(self.requests, scores)
+            ]
             card = self.run_scores(name, ["numeric"], metric_batch_size=1)
         metric = card["metrics"]["per_metric"]["fid"]
         self.assertEqual((metric["n_total"], metric["n_valid"], metric["n_skipped"]), (2, 1, 1))
@@ -98,16 +112,18 @@ class ReportingAndAdapterTests(unittest.TestCase):
         rows = [json.loads(line) for line in (self.root / "partial/metrics/per_sample.jsonl").read_text().splitlines()]
         missing = next(row for row in rows[1]["metric_results"] if row["metric_id"] == "fid")
         self.assertFalse(missing["valid"])
-        comparison = build_run_comparison([self.root / "full", self.root / "partial"],
-                                          labels=["full", "partial"], metric_ids=["fid"])
+        comparison = build_run_comparison(
+            [self.root / "full", self.root / "partial"], labels=["full", "partial"], metric_ids=["fid"]
+        )
         self.assertEqual(comparison["best_by_metric"]["fid"]["label"], "full")
         self.assertEqual(comparison["metrics"]["fid"]["values"]["partial"], 0.1)
 
     def test_numeric_wildcard_matches_explicit_fields_and_resolves_each_run(self):
         metric = BuiltinExistingResultsMetric(["numeric"])
         for name, field in (("first", "quality"), ("second", "another_quality")):
-            self.results = [GenerationResult(sample_id=q.sample_id, metadata={"scores": {field: 0.5}})
-                            for q in self.requests]
+            self.results = [
+                GenerationResult(sample_id=q.sample_id, metadata={"scores": {field: 0.5}}) for q in self.requests
+            ]
             self.run_scores(name, [metric])
             card = self.run_scores(name, [metric], resume=True)
             self.assertIsNotNone(card["metrics"]["per_metric"][field]["definition"])
@@ -129,8 +145,9 @@ class ReportingAndAdapterTests(unittest.TestCase):
 
     def test_builtin_numeric_fields_preserve_registered_direction(self):
         for name, value in (("low", 1), ("high", 9)):
-            self.results = [GenerationResult(sample_id=q.sample_id, metadata={"scores": {"fid": value}})
-                            for q in self.requests]
+            self.results = [
+                GenerationResult(sample_id=q.sample_id, metadata={"scores": {"fid": value}}) for q in self.requests
+            ]
             self.run_scores(name, ["numeric:fid"])
         comparison = build_run_comparison([self.root / "low", self.root / "high"], labels=["low", "high"])
         self.assertEqual(comparison["best_by_metric"]["fid"]["label"], "low")

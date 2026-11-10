@@ -14,10 +14,10 @@ from worldfoundry.evals.tasks.embodied import (
     CAPABILITY_WAM_WORLD_ACTION_MODELING,
     ActionSpaceKind,
     ActionSpaceSpec,
-    RunnerCapabilities,
     EmbodiedGenerationSpec,
     EvaluationTrack,
     RequestKind,
+    RunnerCapabilities,
     SessionControl,
     VlaVaWamRunnerContract,
 )

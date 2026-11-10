@@ -34,9 +34,7 @@ def _stage_runtime(tmp_path: Path) -> tuple[Path, Path, Path]:
 def test_runtime_spec_uses_dynamic_adapter() -> None:
     spec = runtime_manifest.runtime_spec("shotstream")
 
-    assert spec.runtime_module == (
-        "worldfoundry.synthesis.visual_generation.shotstream.worldfoundry_runtime"
-    )
+    assert spec.runtime_module == ("worldfoundry.synthesis.visual_generation.shotstream.worldfoundry_runtime")
     assert spec.runtime_root_func == "runtime_root"
     assert spec.blocked_reason == ""
 

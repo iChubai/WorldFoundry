@@ -6,9 +6,9 @@ from worldfoundry.evals.tasks.execution.orchestration.interfaces import (
     BenchmarkRunner,
     BenchmarkSample,
     DatasetMaterializationPlan,
+    OfficialBenchmarkRunner,
     OfficialRunResult,
     OfficialRunStage,
-    OfficialBenchmarkRunner,
 )
 
 

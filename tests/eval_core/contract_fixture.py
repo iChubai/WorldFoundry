@@ -4,7 +4,6 @@ from typing import Any, Mapping, Sequence
 
 from worldfoundry.evals.api import ArtifactRef, GenerationRequest, GenerationResult, WorldModelConfig
 
-
 CONTRACT_FIXTURE_MODEL_ID = "test-contract-model"
 CONTRACT_FIXTURE_RUNNER_TARGET = "tests.eval_core.contract_fixture:ContractFixtureRunner"
 CONTRACT_FIXTURE_RUNNER_ALIAS = "test:contract"
@@ -54,7 +53,7 @@ class ContractFixtureRunner:
         artifact_uri_template = str(
             parameters.get(
                 "artifact_uri_template",
-                f"memory://{{sample_id}}.{{artifact_ext}}" if artifact_ext else "memory://{sample_id}/{artifact_name}.json",
+                "memory://{sample_id}.{artifact_ext}" if artifact_ext else "memory://{sample_id}/{artifact_name}.json",
             )
         )
         if artifact_ext:

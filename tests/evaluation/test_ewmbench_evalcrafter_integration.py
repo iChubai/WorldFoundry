@@ -120,8 +120,8 @@ class BenchmarkInTreeSmokeTests(unittest.TestCase):
             self.assertIn("only supports the raw-video backend", scorecard["run"]["error"])
 
     def test_bundled_assets_resolve_without_env(self) -> None:
-        from worldfoundry.evals.tasks.execution.runners.ewmbench.ewmbench_paths import resolve_task_manifest_path
         from worldfoundry.evals.tasks.execution.runners.evalcrafter.evalcrafter_prompts import resolve_prompt700_path
+        from worldfoundry.evals.tasks.execution.runners.ewmbench.ewmbench_paths import resolve_task_manifest_path
 
         task_manifest = resolve_task_manifest_path()
         prompt700 = resolve_prompt700_path()

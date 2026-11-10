@@ -11,7 +11,7 @@ All models live under `mllm/`:
 
 | Path | Model / role |
 | --- | --- |
-| [`mllm/qwen/`](mllm/qwen/README.md) | Qwen family: Qwen2.5-VL prompt embedder, Qwen3 backbone, Qwen3Guard, Qwen-Image, Cosmos-Reason1, and Being-H / QwenPi policy backbones |
+| [`mllm/qwen/`](mllm/qwen/README.md) | Qwen family: Qwen-VL judges, Qwen3 backbone, Qwen-Image, Cosmos-Reason1, and Being-H / QwenPi policy backbones |
 | [`mllm/llava_next/`](mllm/llava_next/README.md), [`mllm/vila/`](mllm/vila/README.md), [`mllm/keye_vl/`](mllm/keye_vl/README.md), [`mllm/perceptionlm/`](mllm/perceptionlm/README.md) | General video/image MLLMs used as evaluators |
 | [`mllm/internvideo2/`](mllm/internvideo2/README.md), [`mllm/umt/`](mllm/umt/README.md) | Video–language encoders |
 | [`mllm/videophy2_autoeval/`](mllm/videophy2_autoeval/README.md), [`mllm/videocon_physics/`](mllm/videocon_physics/README.md) | Physical-commonsense judges (VideoPhy-2 AutoEval, VideoCon-Physics) |

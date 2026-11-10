@@ -349,12 +349,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "perception_core/segment/grounded_segment_anything/pipeline.py",
     ),
     _cap(
-        "mobile-sam",
-        "perception_core/segment/mobile_sam",
-        ("mask",),
-        "perception_core/segment/mobile_sam/predictor.py",
-    ),
-    _cap(
         "repvit-sam",
         "perception_core/segment/repvit_sam",
         ("mask",),

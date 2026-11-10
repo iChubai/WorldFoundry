@@ -15,8 +15,6 @@ for generation models.
 | `qwen3_backbone.py` | Qwen3 language backbone | GR00T policy (`synthesis/action_generation/gr00t`) |
 | `beingh/` | Qwen2 / Qwen3 NaViT backbones and tokenizers | Being-H0.5 policy (`synthesis/action_generation/being_h05`) |
 | `qwenpi_policy.py` | Qwen-π / π0 inference policy and a standalone policy server (`QwenPiServer`) | Run as a script; no in-repo importer |
-| `qwen_vl_embedder.py`, `qwen25_vl_prompt_embedder.py` | Qwen-VL / Qwen2.5-VL-7B text embedders | No in-repo caller |
-| `qwen3guard/` | Qwen3Guard content-safety classifier | No in-repo caller |
 
 ## Usage
 

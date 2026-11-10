@@ -595,7 +595,7 @@ def test_base_model_materialization_plan_schema_is_stable() -> None:
             "ok",
         } <= set(check)
     assert plan["summary"]["family_counts"]["detection"]["capability_count"] == 1
-    assert plan["summary"]["family_counts"]["segmentation"]["capability_count"] == 6
+    assert plan["summary"]["family_counts"]["segmentation"]["capability_count"] == 5
     assert plan["summary"]["family_counts"]["video_object_segmentation"]["capability_count"] == 1
     assert plan["summary"]["asset_counts_by_role"]["checkpoint"] >= 1
 

@@ -11,11 +11,11 @@ tracks, captions, embeddings).
 | --- | --- |
 | [`general_perception/`](general_perception/README.md) | Feature backbones and embeddings: DINO, DINOv2, DINOv3, OpenAI CLIP, OpenCLIP, UniCeption, Qwen3-VL entity features |
 | [`detection/`](detection/README.md) | Open-vocabulary detection: Grounding DINO, YOLO-World |
-| [`segment/`](segment/README.md) | SAM v1, SAM 2, SAM 3, MobileSAM, RepViT-SAM, Grounded-SAM, scene segmentation |
+| [`segment/`](segment/README.md) | SAM v1, SAM 2, SAM 3, RepViT-SAM, Grounded-SAM, scene segmentation |
 | [`tracking/`](tracking/README.md) | CoTracker, DOT, AOT, Track-Anything |
 | [`optical_flow/`](optical_flow/README.md) | RAFT, SEA-RAFT, FlowFormer++ |
 | [`video_quality/`](video_quality/README.md) | DOVER, FAST-VQA, LPIPS, DreamSim, HPSv3, TransNetV2, FETV StyleGAN-V |
-| [`video_text/`](video_text/README.md) | Video–text alignment: ViCLIP, VQAScore, BLIP-2 features, FETV BLIP, OpenS2V-Nexus |
+| [`video_text/`](video_text/README.md) | Video–text alignment: ViCLIP, VQAScore, BLIP-2 features, FETV BLIP |
 | [`captioning/`](captioning/README.md) | Tag2Text, GRiT |
 | [`action_recognition/`](action_recognition/README.md) | UMT, latent-action models |
 | [`frame_interpolation/`](frame_interpolation/README.md) | AMT, VFIMamba |

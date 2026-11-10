@@ -34,7 +34,7 @@ detection_stack:
 
 segmentation_stack:
   family: segmentation
-  capabilities: [mobile_sam, repvit_sam, sam_v1, sam2, sam3]
+  capabilities: [repvit_sam, sam_v1, sam2, sam3]
   note: SAM-family image and video segmentation assets.
 
 segmentation_tracking_stack:

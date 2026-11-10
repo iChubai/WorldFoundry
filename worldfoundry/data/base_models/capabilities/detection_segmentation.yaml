@@ -34,23 +34,6 @@ grounding_dino:
       required_any_paths: [model.safetensors, pytorch_model.bin]
       note: BERT text encoder used by the in-tree GroundingDINO model.
 
-mobile_sam:
-  family: segmentation
-  canonical_path: worldfoundry/base_models/perception_core/segment/mobile_sam
-  package_imports: [torch, torchvision, numpy]
-  assets:
-    - id: mobile_sam_checkpoint
-      kind: file
-      role: checkpoint
-      env: [WORLDFOUNDRY_MOBILE_SAM_CKPT]
-      local_path: ${WORLDFOUNDRY_CKPT_DIR}/MobileSAM/mobile_sam.pt
-      alternate_paths:
-        - ${WORLDFOUNDRY_CKPT_DIR}/mobile_sam.pt
-        - ${WORLDFOUNDRY_WORKSPACE_ROOT}/ckpt/MobileSAM/mobile_sam.pt
-      download_url: https://github.com/ChaoningZhang/MobileSAM/raw/master/weights/mobile_sam.pt
-      min_size_bytes: 40000000
-      note: Official MobileSAM TinyViT checkpoint from ChaoningZhang/MobileSAM.
-
 repvit_sam:
   family: segmentation
   canonical_path: worldfoundry/base_models/perception_core/segment/repvit_sam

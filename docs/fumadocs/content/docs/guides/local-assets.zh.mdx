@@ -210,19 +210,6 @@ python scripts/setup/prepare_benchmark_assets.py \
       <li className="pi-kv-row">
         <div className="pi-kv-head">
           <div className="pi-kv-names">
-            <code>mobile_sam</code>
-          </div>
-          <span className="pi-kv-default">
-            <span>覆盖变量</span>
-            <code>WORLDFOUNDRY_MOBILE_SAM_CKPT</code>
-          </span>
-        </div>
-        <p>官方来源：GitHub <a href="https://github.com/ChaoningZhang/MobileSAM/tree/master/weights">ChaoningZhang/MobileSAM</a> 的 <code>weights/</code>。文件名：<code>mobile_sam.pt</code></p>
-        <p className="pi-kv-read"><span>默认位置</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/MobileSAM/'}</code></p>
-      </li>
-      <li className="pi-kv-row">
-        <div className="pi-kv-head">
-          <div className="pi-kv-names">
             <code>repvit_sam</code>
           </div>
           <span className="pi-kv-default">
@@ -283,7 +270,6 @@ UniDepth V2 与 UniK3D 权重采用 CC-BY-NC-4.0；下载或再分发前需要�
 ```bash
 wf models assets \
   --capability sam2 \
-  --capability mobile_sam \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \
@@ -291,13 +277,12 @@ wf models assets \
   --json
 ```
 
-补齐缺失文件时添加 `--execute-downloads`。SAM2、UniDepth V2 与 UniK3D 的 Hugging Face 下载会遵循 `HF_ENDPOINT`；MobileSAM、RepViT-SAM 与 MiDaS 使用各自官方 GitHub repo/release URL：
+补齐缺失文件时添加 `--execute-downloads`。SAM2、UniDepth V2 与 UniK3D 的 Hugging Face 下载会遵循 `HF_ENDPOINT`；RepViT-SAM 与 MiDaS 使用各自官方 GitHub repo/release URL：
 
 ```bash
 export HF_ENDPOINT=https://hf-mirror.com
 wf models assets \
   --capability sam2 \
-  --capability mobile_sam \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \

@@ -13,4 +13,4 @@ Segment Anything ViT-H / ViT-B predictors and automatic mask generator.
 
 ## Usage
 
-Capabilities `sam_v1` (ViT-H, `WORLDFOUNDRY_SAM_VIT_H_CKPT`) and `sam_vit_b` (`WORLDFOUNDRY_SAM_VIT_B_CKPT`). MobileSAM and RepViT-SAM reuse its predictor.
+Capabilities `sam_v1` (ViT-H, `WORLDFOUNDRY_SAM_VIT_H_CKPT`) and `sam_vit_b` (`WORLDFOUNDRY_SAM_VIT_B_CKPT`). RepViT-SAM reuses its predictor.

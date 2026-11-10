@@ -40,6 +40,29 @@ _ATTENTION_FORWARDS_IMPORTING_NN = frozenset(
 )
 
 
+def _lazy_tables(init: Path) -> dict[str, str]:
+    """Return the ``_EXPORT_MODULES`` and ``_SUBMODULES`` entries a package initializer declares."""
+    entries: dict[str, str] = {}
+    for node in ast.parse(init.read_text()).body:
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id in {"_EXPORT_MODULES", "_SUBMODULES"} for target in node.targets
+        ):
+            entries.update(ast.literal_eval(node.value))
+    return entries
+
+
+def _binds_at_top_level(path: Path, name: str) -> bool:
+    """Return whether ``path`` defines or assigns ``name`` at module level."""
+    for node in ast.parse(path.read_text()).body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == name:
+            return True
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets):
+            return True
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == name:
+            return True
+    return False
+
+
 def _core_unit(module: str) -> str | None:
     """Return the layer-table unit that owns ``module``; ``None`` is the ``worldfoundry.core`` facade."""
     relative = module.removeprefix("worldfoundry.core").lstrip(".")
@@ -208,3 +231,35 @@ def test_core_imports_follow_the_layer_table() -> None:
         tuple(TopologicalSorter(graph).static_order())
     except CycleError as error:
         raise AssertionError(f"core units import each other: {error.args[1]}") from None
+
+
+def test_subpackage_facades_export_only_owned_names() -> None:
+    root = Path(__file__).resolve().parents[2]
+    foreign = []
+    for init in sorted((root / "worldfoundry/core").rglob("__init__.py")):
+        package = ".".join(init.relative_to(root).parts[:-1])
+        if package == "worldfoundry.core":
+            continue
+        targets = list(_lazy_tables(init).items())
+        for node in ast.parse(init.read_text()).body:
+            if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                module = node.module
+                if module.startswith("worldfoundry."):
+                    targets.extend((alias.name, module) for alias in node.names)
+        foreign.extend(
+            (package, name, target)
+            for name, target in targets
+            if target != package and not target.startswith(f"{package}.")
+        )
+    assert not foreign, f"package facades re-export names owned elsewhere: {foreign}"
+
+
+def test_core_facade_names_resolve_to_their_defining_modules() -> None:
+    root = Path(__file__).resolve().parents[2]
+    indirect = []
+    for name, target in _lazy_tables(root / "worldfoundry/core/__init__.py").items():
+        module = root.joinpath(*target.split("."))
+        path = module.with_suffix(".py") if module.with_suffix(".py").is_file() else module / "__init__.py"
+        if not _binds_at_top_level(path, name):
+            indirect.append((name, target))
+    assert not indirect, f"worldfoundry.core names that point at a re-exporting module: {indirect}"

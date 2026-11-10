@@ -13,7 +13,7 @@ from tqdm import tqdm
 from evaluation import metrics_calculator
 
 # isort: split
-from worldfoundry.core.io import extract_video_frames_to_directory
+from worldfoundry.core.media.codecs.video import extract_video_frames_to_directory
 
 THREE_D_METRICS = frozenset(
     {

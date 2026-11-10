@@ -17,9 +17,10 @@ from vbench2.utils import load_dimension_info
 # isort: split
 from tqdm import tqdm
 
-from worldfoundry.core.io import sample_video_frames
+from worldfoundry.core.execution.inference_runtime import resolve_generation_max_new_tokens
+from worldfoundry.core.media.codecs.video import sample_video_frames
 from worldfoundry.core.platform.device import resolve_inference_dtype
-from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
+from worldfoundry.core.utils import extract_yes_no_answer
 
 warnings.filterwarnings("ignore")
 

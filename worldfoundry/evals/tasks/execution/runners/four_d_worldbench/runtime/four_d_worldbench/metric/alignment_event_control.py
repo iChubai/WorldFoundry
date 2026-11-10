@@ -7,7 +7,8 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoProcessor
 
 from worldfoundry.core.attention import resolve_transformers_attention_implementation
-from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
+from worldfoundry.core.execution.inference_runtime import resolve_generation_max_new_tokens
+from worldfoundry.core.utils import extract_yes_no_answer
 
 from ..paths import keye_model_path
 from .utils import load_dimension_info

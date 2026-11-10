@@ -12,7 +12,8 @@ import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.core.io import load_json, write_video
+from worldfoundry.core.io import load_json
+from worldfoundry.core.media.codecs.video import write_video
 
 from ..pipeline_utils import PipelineABC
 

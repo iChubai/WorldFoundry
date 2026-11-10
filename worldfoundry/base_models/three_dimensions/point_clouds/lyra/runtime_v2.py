@@ -13,7 +13,7 @@ from worldfoundry.base_models.three_dimensions.point_clouds.lyra.utils import (
     resolve_repo_root,
     resolve_required_paths,
 )
-from worldfoundry.core.io import save_video_frames, video_tensor_to_uint8_frames
+from worldfoundry.core.media.codecs.video import save_video_frames, video_tensor_to_uint8_frames
 
 DEFAULT_DA3_MODEL_NAME = "depth-anything/DA3NESTED-GIANT-LARGE-1.1"
 

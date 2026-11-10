@@ -281,7 +281,7 @@ class WorldCamPipeline(PipelineABC):
             }
         )
         if output_path is not None:
-            from worldfoundry.core.io import write_video
+            from worldfoundry.core.media.codecs.video import write_video
 
             write_video(result["video"], output_path, fps=int(fps) if fps is not None else 30)
             result["artifact_path"] = str(output_path)

@@ -107,8 +107,7 @@ class Lyra1Runtime:
 
     @staticmethod
     def _dynamic_reference(visual_input: Any) -> Any:
-        from worldfoundry.core.io import coerce_video_frames
-        from worldfoundry.core.media.codecs.video import video_chunk_to_uint8_frames
+        from worldfoundry.core.media.codecs.video import coerce_video_frames, video_chunk_to_uint8_frames
         from worldfoundry.core.media.processing.postprocess import VideoChunk
         from worldfoundry.core.memory.media import to_pil_image
 

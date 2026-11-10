@@ -278,7 +278,7 @@ class LingBotPipeline(PipelineABC):
         video_chunk = VideoChunk(frames=output_video, layout="thwc", value_range="0,1")
         artifact_path = None
         if output_path is not None:
-            from worldfoundry.core.io import save_video_frames
+            from worldfoundry.core.media.codecs.video import save_video_frames
 
             output = Path(output_path).expanduser().resolve()
             output.parent.mkdir(parents=True, exist_ok=True)

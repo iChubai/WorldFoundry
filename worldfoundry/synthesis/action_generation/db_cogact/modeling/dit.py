@@ -11,8 +11,8 @@ import math
 import torch
 import torch.nn as nn
 
-from worldfoundry.core.attention import QKVSelfAttention as Attention
 from worldfoundry.core.nn import Mlp
+from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention as Attention
 
 
 def modulate(x, shift, scale):

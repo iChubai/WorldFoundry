@@ -12,8 +12,8 @@ from PIL import Image
 from worldfoundry.base_models.three_dimensions.point_clouds.lyra.runtime_v2 import (
     Lyra2Representation,
 )
-from worldfoundry.core.io import save_video_frames
 from worldfoundry.core.media.codecs.image import load_pil_image
+from worldfoundry.core.media.codecs.video import save_video_frames
 
 from ...operators.lyra_operator import LyraOperator
 from ...synthesis.visual_generation.lyra_2.synthesis import Lyra2Synthesis

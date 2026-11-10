@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from worldfoundry.core.io import save_video_h264 as _save_video_h264
+from worldfoundry.core.media.codecs.video import save_video_h264 as _save_video_h264
 from worldfoundry.core.model_loading import GeneralLoRALoader
 from worldfoundry.core.nn.diffusion.schedulers import (
     FlowMatchScheduler,

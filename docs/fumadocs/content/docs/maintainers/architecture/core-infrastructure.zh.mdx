@@ -164,10 +164,10 @@ core 的子包按固定顺序分层：模块只 import 本层或更低层，同�
 - 加速器探测和持久化编译缓存归 `platform`；attention 投影与精度调度归 `acceleration`；只服务评测的特征工具放在 `worldfoundry/evals`。
 - Wan 的序列并行适配器和 VGGT 的观测预处理归到对应模型；仓库代码盘点归到 `scripts/model_zoo`。
 
-公开的延迟加载函数及类入口保持稳定。内部模块使用实际所属的新路径，已删除目录不留下兼容转发壳。
+每个子包的延迟导出表只列本包自己的模块：`worldfoundry.core.io` 只导出 I/O 名字，媒体工具从 `worldfoundry.core.media` 导入。`worldfoundry.core` 入口把每个公开名字直接映射到定义它的模块。内部模块使用实际所属的新路径，已删除目录不留下兼容转发壳。
 
 ## 回归检查
 
-`tests/core/test_core_module_boundaries.py` 无需可选模型依赖即可检查延迟加载目标及 core 引用，并阻止 core 反向依赖模型或应用包，同时检查上面的分层表。实际导出解析在模型环境中测试。
+`tests/core/test_core_module_boundaries.py` 无需可选模型依赖即可检查延迟加载目标及 core 引用，并阻止 core 反向依赖模型或应用包，同时检查上面的分层表，以及各导出表只指向所属模块。实际导出解析在模型环境中测试。
 
 涉及实际模型的变更还需通过 `make test-geometry`：固定输入、权重、环境和随机种子，与接受过的基准输出比较数值，并检查回放记录的源码哈希仍对应当前代码。目录迁移必须同时保持计算行为和引用有效。

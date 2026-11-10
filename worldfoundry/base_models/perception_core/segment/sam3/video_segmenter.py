@@ -19,7 +19,7 @@ from PIL import Image
 from worldfoundry.base_models.perception_core.segment.sam3.model_builder import (
     build_sam3_video_predictor,
 )
-from worldfoundry.core.io import load_video_frames
+from worldfoundry.core.media.codecs.video import load_video_frames
 
 _NULL_PROMPT_PHRASES = (
     "nothing",

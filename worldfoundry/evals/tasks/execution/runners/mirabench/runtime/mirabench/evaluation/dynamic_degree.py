@@ -5,7 +5,7 @@ import cv2
 import torch
 
 from worldfoundry.base_models.perception_core.optical_flow.raft import RAFT, InputPadder
-from worldfoundry.core.io import list_numbered_frame_paths
+from worldfoundry.core.media.codecs.video import list_numbered_frame_paths
 
 
 class DynamicDegree:

@@ -12,7 +12,7 @@ import os
 
 from torch import Tensor
 
-from worldfoundry.core.attention import QKVSelfAttention
+from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention
 
 logger = logging.getLogger("dinov2")
 

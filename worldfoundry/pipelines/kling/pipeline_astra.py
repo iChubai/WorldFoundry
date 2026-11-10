@@ -400,7 +400,7 @@ class AstraPipeline(PipelineABC):
             video_np = video_np[: int(num_frames)]
         pil_frames = [Image.fromarray(frame) for frame in video_np]
         if output_path is not None:
-            from worldfoundry.core.io import write_video
+            from worldfoundry.core.media.codecs.video import write_video
 
             write_video(pil_frames, output_path, fps=16 if fps is None else fps)
         self.memory = memory

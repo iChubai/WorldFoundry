@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from worldfoundry.core.io import artifact_root_path, copy_uri, is_remote_uri, local_path_for_uri, uri_to_local_path
-from worldfoundry.core.utils import load_pil_image, materialize_image_input
+from worldfoundry.core.media.processing.image_utils import load_pil_image, materialize_image_input
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.synthesis.visual_generation.bernini.worldfoundry_runtime import (
     MODEL_CONFIG_KEYS,

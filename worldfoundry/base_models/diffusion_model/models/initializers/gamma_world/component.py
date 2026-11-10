@@ -3,7 +3,7 @@
 Requires the recipe-bound Wan :class:`~...contracts.LatentEncoder`.
 ``request.inputs[\"images\"]`` is one still per player, or a single
 horizontally concatenated strip that
-:func:`~worldfoundry.core.utils.split_horizontal_views` splits.
+:func:`~worldfoundry.core.media.processing.image_utils.split_horizontal_views` splits.
 ``initialize`` without an encoder always raises.
 
 Returned :class:`~...contracts.LatentInitialization` carries per-view
@@ -68,7 +68,7 @@ class GammaWorldLatentInitializer:
         images = list(value) if self._is_sequence(value) else [value]
         requested_players = int(request.inputs.get("n_players", self.num_players))
         if len(images) == 1 and requested_players > 1:
-            from worldfoundry.core.utils import split_horizontal_views
+            from worldfoundry.core.media.processing.image_utils import split_horizontal_views
 
             images = list(
                 split_horizontal_views(

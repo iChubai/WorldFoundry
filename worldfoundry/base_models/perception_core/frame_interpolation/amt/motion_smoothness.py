@@ -17,7 +17,7 @@ from worldfoundry.core.execution.inference_runtime import (
     is_accelerator_out_of_memory,
     resolve_inference_batch_size,
 )
-from worldfoundry.core.io import list_numbered_frame_paths
+from worldfoundry.core.media.codecs.video import list_numbered_frame_paths
 
 from .utils.build_utils import build_from_cfg
 from .utils.utils import InputPadder, check_dim_and_resize, img2tensor

@@ -10,7 +10,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.core.io import load_video_frames
+from worldfoundry.core.media.codecs.video import load_video_frames
 from worldfoundry.core.platform.device import resolve_inference_device
 from worldfoundry.core.utils import freeze_params as freeze_backbone
 

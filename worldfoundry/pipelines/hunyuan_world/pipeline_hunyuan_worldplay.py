@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Optional
 import torch
 from PIL import Image
 
-from worldfoundry.core.io import write_video
+from worldfoundry.core.media.codecs.video import write_video
 from worldfoundry.synthesis.visual_generation.hunyuan_world import load_hunyuan_world_runtime_defaults
 from worldfoundry.synthesis.visual_generation.hunyuan_world.worldplay_checkpoints import (
     resolve_worldplay_video_model_path,

@@ -14,7 +14,8 @@ from tqdm import tqdm
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.runtime_v1 import (
     DepthAnything1Representation,
 )
-from worldfoundry.core.io import artifact_root_path, read_video, write_video
+from worldfoundry.core.io import artifact_root_path
+from worldfoundry.core.media.codecs.video import read_video, write_video
 
 from ...operators.depth_anything_operator import DepthAnythingOperator
 from ..pipeline_utils import PipelineABC

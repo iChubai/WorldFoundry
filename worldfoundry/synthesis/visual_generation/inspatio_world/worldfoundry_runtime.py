@@ -11,11 +11,6 @@ from typing import Any
 
 import torch
 
-from worldfoundry.core.io import (
-    VIDEO_EXTENSIONS,
-    load_video_frames,
-    materialize_video_input,
-)
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
@@ -23,6 +18,8 @@ from worldfoundry.core.io.paths import (
     resolve_local_hf_model_path,
 )
 from worldfoundry.core.io.paths import package_module_root as package_root
+from worldfoundry.core.media.codecs.video import load_video_frames, materialize_video_input
+from worldfoundry.core.media.types import VIDEO_EXTENSIONS
 
 from .inspatio_world_runtime.utils.reproducibility import SEED_ENV, reproducibility_env
 

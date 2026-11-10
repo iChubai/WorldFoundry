@@ -431,7 +431,7 @@ def reconstruct_video_gaussians(
     from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.gsply_helpers import (
         save_gaussian_ply,
     )
-    from worldfoundry.core.io import save_video_h264
+    from worldfoundry.core.media.codecs.video import save_video_h264
     from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.depth_utils import load_da3_model
 
     input_video = Path(input_video_path).expanduser().resolve()

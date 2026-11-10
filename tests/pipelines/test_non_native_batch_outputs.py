@@ -199,7 +199,7 @@ def test_lingbot_constructor_owns_default_operator_and_frame_memory() -> None:
 
 
 def test_lingbot_export_matches_transport_pixels(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import worldfoundry.core.io as io
+    import worldfoundry.core.media.codecs.video as video_codecs
 
     pipeline, decoded = _lingbot(monkeypatch, 5)
     encoded: list[np.ndarray] = []
@@ -211,7 +211,7 @@ def test_lingbot_export_matches_transport_pixels(tmp_path: Path, monkeypatch: py
         encoded.append(frames)
         output.write_bytes(b"encoded-video")
 
-    monkeypatch.setattr(io, "save_video_frames", save)
+    monkeypatch.setattr(video_codecs, "save_video_frames", save)
     result = pipeline(
         images=Image.new("RGB", (4, 3)),
         prompt="scene",

@@ -8,7 +8,7 @@ from typing import Any
 
 from PIL import Image
 
-from worldfoundry.core.io import write_video
+from worldfoundry.core.media.codecs.video import write_video
 
 from ..pipeline_utils import PipelineABC
 

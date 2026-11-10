@@ -18,8 +18,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from worldfoundry.core.attention import QKNormRopeSelfAttention, scaled_dot_product_attention
+from worldfoundry.core.attention import scaled_dot_product_attention
 from worldfoundry.core.nn import Mlp
+from worldfoundry.core.nn.transformer.vit_qkv import QKNormRopeSelfAttention
 
 
 class RmsNorm(nn.Module):

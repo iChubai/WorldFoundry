@@ -7,7 +7,7 @@ from typing import Any
 
 from PIL import Image
 
-from worldfoundry.core.io import write_video
+from worldfoundry.core.media.codecs.video import write_video
 
 from ...operators.infinite_world_operator import InfiniteWorldOperator
 from ...synthesis.visual_generation.infinite_world.infinite_world_synthesis import InfiniteWorldSynthesis

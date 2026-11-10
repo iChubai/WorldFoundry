@@ -24,9 +24,9 @@ from typing import Any
 
 from torch import Tensor, nn
 
-from worldfoundry.core.attention import QKVSelfAttention
 from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
 from worldfoundry.core.nn.blocks.stochastic_depth import drop_add_residual_stochastic_depth
+from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention
 
 # ──────────────────────────────────────────────────────────────────────────
 # Residual schedule — full-batch DropPath vs subset-batch stochastic depth

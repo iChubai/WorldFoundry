@@ -49,7 +49,7 @@ from worldfoundry.base_models.perception_core.tracking.cotracker import CoTracke
 
 # isort: split
 from worldfoundry.base_models.capabilities import vbench_asset_path
-from worldfoundry.core.io import list_numbered_frame_paths
+from worldfoundry.core.media.codecs.video import list_numbered_frame_paths
 
 
 class metrics_calculator:

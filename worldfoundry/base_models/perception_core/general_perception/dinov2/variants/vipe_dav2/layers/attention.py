@@ -14,7 +14,7 @@ import torch
 from torch import Tensor
 
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import memory_efficient_attention
-from worldfoundry.core.attention import QKVSelfAttention
+from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention
 
 logger = logging.getLogger(__name__)
 

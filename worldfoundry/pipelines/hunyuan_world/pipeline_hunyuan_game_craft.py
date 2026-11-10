@@ -207,7 +207,7 @@ class HunyuanGameCraftPipeline(PipelineABC):
         if frames is not None and len(frames) != expected_frames:
             raise RuntimeError(f"GameCraft returned {len(frames)} frames; expected {expected_frames}.")
         if output_path is not None and frames is not None:
-            from worldfoundry.core.io import write_video
+            from worldfoundry.core.media.codecs.video import write_video
 
             write_video(frames, output_path, fps=int(fps))
         if return_dict:

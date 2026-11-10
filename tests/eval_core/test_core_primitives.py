@@ -15,17 +15,15 @@ from worldfoundry.core import (
     normalize_attention_backend,
     resolve_attention_backend,
 )
+from worldfoundry.core.attention.backends.native import attention_backend_info, scaled_dot_product_attention
+from worldfoundry.core.attention.rotary.rope import apply_rotary_embedding, rotary_frequencies
 from worldfoundry.core.io import (
-    MediaKind,
     artifact_root_path,
     cache_root_path,
     checkpoint_root_path,
     conda_envs_root_path,
     conda_root_path,
-    guess_mime_type,
     hfd_root_path,
-    infer_media_kind,
-    is_media_path,
     local_data_root_path,
     local_model_root_path,
     model_source_root_path,
@@ -39,10 +37,9 @@ from worldfoundry.core.io import (
     suffix_for_uri,
     worldfoundry_path_tokens,
 )
+from worldfoundry.core.media.types import MediaKind, guess_mime_type, infer_media_kind, is_media_path
 from worldfoundry.core.nn import (
     TransformerShapeSpec,
-    apply_rotary_embedding,
-    attention_backend_info,
     attention_head_dim,
     causal_attention_mask,
     layer_scale,
@@ -50,8 +47,6 @@ from worldfoundry.core.nn import (
     mlp_hidden_size,
     patchify_image,
     rms_norm,
-    rotary_frequencies,
-    scaled_dot_product_attention,
     split_attention_heads,
     transformer_shape_spec,
     unpatchify_image,
@@ -161,7 +156,7 @@ def test_core_media_suffix_and_mime_helpers() -> None:
 
 
 def test_core_artifact_visualization_helpers_are_canonical() -> None:
-    from worldfoundry.core.io import (
+    from worldfoundry.core.media.artifacts import (
         colorize_depth_map,
         colorize_normal_map,
         depth_to_uint8,

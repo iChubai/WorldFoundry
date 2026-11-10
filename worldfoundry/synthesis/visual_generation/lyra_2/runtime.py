@@ -682,8 +682,8 @@ class Lyra2Runtime:
         import numpy as np
         import torch
 
-        from worldfoundry.core.io import video_tensor_to_uint8_frames
         from worldfoundry.core.media.codecs.image import load_pil_image
+        from worldfoundry.core.media.codecs.video import video_tensor_to_uint8_frames
         from worldfoundry.core.media.processing.postprocess import VideoChunk
 
         self._install_runtime_aliases()

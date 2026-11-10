@@ -409,7 +409,7 @@ class MotionCtrlRuntime:
         import torch
         import torchvision
 
-        from worldfoundry.core.io import write_video
+        from worldfoundry.core.media.codecs.video import write_video
 
         raw = samples.detach().cpu().float()
 

@@ -12,13 +12,14 @@ from PIL import Image
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.runtime import (
     CUT3RRepresentation,
 )
-from worldfoundry.core.io import artifact_root_path, write_video
+from worldfoundry.core.io import artifact_root_path
 from worldfoundry.core.media.artifacts import (
     COLORMAP_VIRIDIS,
     depth_to_colormap_pil,
     save_depth_colormap,
     squeeze_depth_to_2d,
 )
+from worldfoundry.core.media.codecs.video import write_video
 
 from ...base_models.three_dimensions.point_clouds.ply_io import (
     write_point_cloud as storePly,

@@ -6,15 +6,15 @@ import numpy as np
 import pytest
 import torchvision.io
 
-from worldfoundry.core.io import (
-    VIDEO_EXTENSIONS,
+from worldfoundry.core.media.codecs import video as video_io
+from worldfoundry.core.media.codecs.video import (
     coerce_video_frames,
     load_video_frames,
     materialize_video_input,
     save_video_frames,
     video_tensor_to_uint8_frames,
 )
-from worldfoundry.core.media.codecs import video as video_io
+from worldfoundry.core.media.types import VIDEO_EXTENSIONS
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -40,8 +40,8 @@ def test_local_video_helpers_are_shared_runtime_api() -> None:
         REPO_ROOT / "worldfoundry/synthesis/visual_generation/inspatio_world/worldfoundry_runtime.py"
     ).read_text(encoding="utf-8")
 
-    assert "from worldfoundry.core.io import" in lyra_text
-    assert "from worldfoundry.core.io import" in inspatio_runtime_text
+    assert "from worldfoundry.core.media.codecs.video import" in lyra_text
+    assert "from worldfoundry.core.media.codecs.video import" in inspatio_runtime_text
     assert "worldfoundry.pipelines.lyra.lyra_utils" not in inspatio_runtime_text
     assert "worldfoundry.pipelines.lyra.lyra_utils" not in inspatio_synthesis_text
     assert "def materialize_video_input(" not in lyra_text

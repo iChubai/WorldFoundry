@@ -9,8 +9,7 @@ from typing import TYPE_CHECKING, Any, Optional, cast
 import torch
 from PIL import Image
 
-from worldfoundry.core.io import write_video
-from worldfoundry.core.media.codecs.video import video_chunk_to_uint8_frames
+from worldfoundry.core.media.codecs.video import video_chunk_to_uint8_frames, write_video
 from worldfoundry.core.media.processing.postprocess import VideoChunk
 from worldfoundry.runtime.env import resolve_ckpt_dir
 

@@ -15,7 +15,7 @@ from tqdm import tqdm
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.runtime_v2 import (
     DepthAnything2Representation,
 )
-from worldfoundry.core.io import read_video
+from worldfoundry.core.media.codecs.video import read_video
 
 from ...operators.depth_anything_operator import DepthAnythingOperator
 from ..pipeline_utils import PipelineABC

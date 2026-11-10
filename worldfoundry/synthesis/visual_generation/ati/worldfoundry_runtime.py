@@ -251,7 +251,7 @@ class ATIRuntime:
         )
         if video is None:
             raise RuntimeError("ATI did not return video frames on the current rank.")
-        from worldfoundry.core.io import save_image_or_video_tensor
+        from worldfoundry.core.media.codecs.video import save_image_or_video_tensor
 
         output = Path(output_path).expanduser().resolve()
         output.parent.mkdir(parents=True, exist_ok=True)

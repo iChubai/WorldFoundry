@@ -10,7 +10,7 @@
 
 import logging
 
-from worldfoundry.core.attention import QKNormRopeSelfAttention
+from worldfoundry.core.nn.transformer.vit_qkv import QKNormRopeSelfAttention
 
 logger = logging.getLogger("dinov2")
 

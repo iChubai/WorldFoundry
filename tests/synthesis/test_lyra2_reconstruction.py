@@ -17,7 +17,7 @@ pytest.importorskip("scipy")
 
 import cv2
 
-import worldfoundry.core.io as core_io
+import worldfoundry.core.media.codecs.video as video_codecs
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils import gs_renderer
 from worldfoundry.base_models.three_dimensions.point_clouds.lyra import runtime_v2
 from worldfoundry.base_models.three_dimensions.point_clouds.lyra.runtime_v2 import Lyra2Representation
@@ -123,7 +123,7 @@ def fakes(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     monkeypatch.setattr(depth_utils, "load_da3_model", load_da3_model)
     monkeypatch.setattr(reconstruction, "_run_vipe", run_vipe)
     monkeypatch.setattr(gs_renderer, "run_renderer_in_chunk_w_trj_mode", render)
-    monkeypatch.setattr(core_io, "save_video_h264", save_video)
+    monkeypatch.setattr(video_codecs, "save_video_h264", save_video)
     return state
 
 

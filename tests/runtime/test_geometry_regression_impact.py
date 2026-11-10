@@ -474,22 +474,33 @@ def test_realtime_layer_paths_select_cases_through_their_dependencies(realtime_l
             assert set(reason["kind"].split("+")) <= {"declared_component", "static_import", "recorded_import"}
 
 
-def test_unimported_studio_realtime_serving_files_require_only_their_cpu_contracts(realtime_layer_plan: dict) -> None:
-    assert (TOOLS.parents[1] / STUDIO_REALTIME_WEBRTC).is_file()
-    assert not cases_selected_by(realtime_layer_plan, STUDIO_REALTIME_WEBRTC)
+def test_studio_realtime_serving_changes_select_their_importers_or_cpu_contracts(realtime_layer_plan: dict) -> None:
+    """A serving file selects exactly the cases that import it; with no importer its CPU contracts apply."""
+    root = TOOLS.parents[1]
+    assert (root / STUDIO_REALTIME_WEBRTC).is_file()
+    cases, _ = impact.load_definitions(
+        TOOLS / "geometry_regression_cases.json",
+        TOOLS / "geometry_regression_dependencies.json",
+    )
+    graph = impact.ImportGraph(root)
+    importers = {name for name, case in cases.items() if STUDIO_REALTIME_WEBRTC in graph.closure(case["target"])}
+    selected = cases_selected_by(realtime_layer_plan, STUDIO_REALTIME_WEBRTC)
+    assert set(selected) == importers
+    for reasons in selected.values():
+        assert [reason["kind"] for reason in reasons] == ["static_import"]
     assert STUDIO_REALTIME_WEBRTC not in realtime_layer_plan["uncovered_paths"]
     contracts = [
         item["required_cpu_contracts"]
         for item in realtime_layer_plan["cpu_only_changes"]
         if item["path"] == STUDIO_REALTIME_WEBRTC
     ]
-    assert contracts == [
-        [
-            "tests/studio_visualization/test_realtime_delivery.py",
-            "tests/studio_visualization/test_realtime_presentation.py",
-        ]
+    declared = [
+        "tests/studio_visualization/test_realtime_delivery.py",
+        "tests/studio_visualization/test_realtime_presentation.py",
     ]
-    assert set(contracts[0]) <= set(realtime_layer_plan["required_cpu_contracts"])
+    assert contracts == ([] if importers else [declared])
+    if not importers:
+        assert set(declared) <= set(realtime_layer_plan["required_cpu_contracts"])
 
 
 def test_realtime_contracts_select_their_offline_importers_only(realtime_layer_plan: dict) -> None:

@@ -5,7 +5,7 @@ modelId: "lingbot-va"
 pageSource: authored
 ---
 
-LingBot-VA is Robbyant's video-action model, served through a vendored server/client runtime, with a base checkpoint plus RoboTwin and LIBERO-Long post-trained checkpoints (Apache-2.0). On an 80GB GPU the base transformer runs a CUDA forwa…
+LingBot-VA 是蚂蚁灵波科技（Robbyant）的视频-动作模型，经内置的 server/client 运行时提供服务，提供 base 以及 RoboTwin、LIBERO-Long 后训练 checkpoint（Apache-2.0）。在 80GB GPU 上，base transformer 可完成 CUDA 前向，LIBERO-Long 服务可启动并监听 websocket；端到端客户端 rollout 尚未验证。
 
 <ModelPaperFigures modelId="lingbot-va" locale="zh" />
 
@@ -41,7 +41,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LingBotVAPip
 
 运行 `wf run lingbot-va-base --pipeline.task-profile interactive-video` 预测动作。
 
-运行环境是独立 profile `worldfoundry-lingbot-va-cu12`（Python 3.10，Cu126 Or Newer，torch==2.9.0）。
+运行环境：独立环境 `worldfoundry-lingbot-va-cu12`（Python 3.10，Cu126 Or Newer，torch==2.9.0）。
 
 权重仓库：`robbyant/lingbot-va-base`、`robbyant/lingbot-va-posttrain-robotwin`、`robbyant/lingbot-va-posttrain-libero-long`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lingbot-va-base`；下载缺失的公开权重时加 `--download`。
 

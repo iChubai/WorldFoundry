@@ -450,7 +450,7 @@ TRAINING_PROSE_RE = re.compile(
     r"\boptimizer\b|\blearning rate\b|\bfinetun(?:e|ing)\b|"
     r"data-in-the-loop|reward backpropagation|UniHand|"
     r"预训练.{0,24}(小时|数据|数据集|本体)|"
-    r"训练数据|训练配方|训练环|优化器|学习率|后训练"
+    r"训练数据|训练配方|训练环|优化器|学习率"
     r")"
 )
 INFERENCE_KEEP_RE = re.compile(
@@ -990,9 +990,13 @@ def variants_paragraph(recipe: dict[str, Any], locale: str) -> str:
         all_checkpoints_verified = runtime_status.startswith(
             ("all_released_checkpoints_gpu_validated", "all_declared_variants_checkpoint_gpu_validated")
         )
-        raw = runtime_status or str(item.get("status") or "")
+        status = str(item.get("status") or "")
+        raw = runtime_status or status
         if shared_profile and not all_checkpoints_verified:
-            raw = str(item.get("status") or "")
+            raw = status
+        elif classify_token(status) == "verified":
+            # A variant recorded as verified keeps that label; its runtime status may only name the contract.
+            raw = status
         label = reader_label(classify_token(raw), locale) if raw and raw != "not_recorded" else ""
         if locale == "zh":
             piece = f"`{vid}`"

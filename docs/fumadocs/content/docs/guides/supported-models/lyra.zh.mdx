@@ -31,9 +31,9 @@ Lyra 有两代模型：Lyra-1 做图像/视频到世界视频，Lyra-2 做动作
 
 CLI task profile：`official-static-sdg`、`official-zoomgs`。绑定的 pipeline 类是 `LyraPipeline`。
 
-建议从 `lyra-1` 开始。该系列共有 2 个 variant，可在上方命令构建器中切换：`lyra-1`（`image-or-video-to-world-video`）：Runner 一致性待确认、`lyra-2`（`action-conditioned-world-video`）：Runner 一致性待确认。系列状态：**已验证**。
+建议从 `lyra-1` 开始。该系列共有 2 个 variant，可在上方命令构建器中切换：`lyra-1`（`image-or-video-to-world-video`）：已验证、`lyra-2`（`action-conditioned-world-video`）：已验证。系列状态：**已验证**。
 
-`official-zoomgs` 记录默认值：fps=16，seed=1。
+`official-zoomgs` 的默认值：fps=16，seed=1。
 
 按输入选 variant：从图像或视频出发用 lyra-1，用动作驱动世界用 lyra-2。默认 runner 解析到 Lyra-2。提交 Studio 任务前请就位所有所需资产。
 

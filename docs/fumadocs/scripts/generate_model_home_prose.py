@@ -193,8 +193,8 @@ MODALITY_ZH = {
     "depth": "深度",
     "point cloud": "点云",
     "trajectory": "轨迹",
-    "3D scene": "3D 场景",
-    "4D scene": "4D 场景",
+    "3d scene": "3D 场景",
+    "4d scene": "4D 场景",
     "world state": "世界状态",
     "mesh": "网格",
 }
@@ -392,6 +392,14 @@ def join_en(items: Any) -> str:
 def join_zh(items: Any) -> str:
     cleaned = [str(item) for item in items if item]
     return "、".join(cleaned)
+
+
+CJK_LATIN_GAP_RE = re.compile(r"(?<=[\u4e00-\u9fff])(?=[A-Za-z0-9])|(?<=[A-Za-z0-9])(?=[\u4e00-\u9fff])")
+
+
+def space_cjk_latin(text: str) -> str:
+    """Insert one space wherever a Chinese character meets a Latin letter or digit."""
+    return CJK_LATIN_GAP_RE.sub(" ", text)
 
 
 LICENSE_NAMES = {
@@ -815,10 +823,10 @@ def modality_sentence(docs: dict[str, Any], locale: str) -> str:
         return ""
     if locale == "zh":
         if inputs and outputs:
-            return f"模态上，它接受{join_zh(inputs)}，输出{join_zh(outputs)}。"
+            return space_cjk_latin(f"模态上，它接受{join_zh(inputs)}，输出{join_zh(outputs)}。")
         if inputs:
-            return f"输入模态包括{join_zh(inputs)}。"
-        return f"输出模态为{join_zh(outputs)}。"
+            return space_cjk_latin(f"输入模态包括{join_zh(inputs)}。")
+        return space_cjk_latin(f"输出模态为{join_zh(outputs)}。")
     if inputs and outputs:
         return f"Modalities: {join_en(inputs)} in, {join_en(outputs)} out."
     if inputs:
@@ -1115,7 +1123,7 @@ def method_paragraph(recipe: dict[str, Any], docs: dict[str, Any], locale: str, 
     publisher = publisher_name(docs, locale)
     extra = ""
     if is_real_publisher(publisher) and not mentions(lead, publisher, str(recipe.get("provider") or "")):
-        extra = f"该模型由{publisher}发布。" if locale == "zh" else f"It is published by {publisher}."
+        extra = space_cjk_latin(f"该模型由{publisher}发布。") if locale == "zh" else f"It is published by {publisher}."
     parts = [part for part in (text, extra) if part]
     return join_prose(parts, locale)
 
@@ -1945,7 +1953,7 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
         task_bit = f"{', '.join(tasks)}, and {more} more task{'s' if more > 1 else ''}" if more > 0 else join_en(tasks)
     else:
         task_bit = f"{join_zh(tasks)}等 {total_tasks} 项任务" if more > 0 else join_zh(tasks)
-    extra_bit = "; ".join(extras[:2])
+    extra_bit = ("；" if locale == "zh" else "; ").join(extras[:2])
     if locale == "zh":
         head = f"{name}" + (f"（{provider}）" if provider else "")
         desc = head + (f"：{task_bit}。" if task_bit else "。")
@@ -1966,6 +1974,8 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
         category_zh = str(recipe.get("categoryLabelZh") or "").strip()
         if category_zh:
             desc = f"{desc.rstrip('。')}；{category_zh}。"
+    if locale == "zh":
+        desc = space_cjk_latin(desc)
     return clip_sentence(desc, 200)
 
 

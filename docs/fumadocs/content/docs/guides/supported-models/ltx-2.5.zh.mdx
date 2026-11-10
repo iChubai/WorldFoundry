@@ -1,6 +1,6 @@
 ---
 title: "LTX-2.5 Distilled"
-description: "LTX-2.5 Distilled（Lightricks）：文生视频、图生视频等 3 项任务；Runner 一致性待确认; 独立环境 `ltx-2.5`。"
+description: "LTX-2.5 Distilled（Lightricks）：文生视频、图生视频等 3 项任务；Runner 一致性待确认；独立环境 `ltx-2.5`。"
 modelId: "ltx-2.5"
 pageSource: authored
 ---
@@ -17,7 +17,7 @@ LTX-2.5 是一个 22B 联合音视频模型。WorldFoundry 运行官方快速两
 
 用 `ltx-2.5` 同时完成文生视频和图生视频。
 
-官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。LTX-2.3 的单体权重加载器与 LTX-2.5 不兼容，因此 WorldFoundry 直接调用官方源码。该模型由Lightricks发布。
+官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。LTX-2.3 的单体权重加载器与 LTX-2.5 不兼容，因此 WorldFoundry 直接调用官方源码。该模型由 Lightricks 发布。
 
 任务：文生视频、图生视频、音视频联合生成。别名：`ltx2.5`、`ltx25`、`ltx-2.5-distilled`。模态上，它接受文本、图像，输出视频。
 

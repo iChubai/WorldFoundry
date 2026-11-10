@@ -1,6 +1,6 @@
 ---
 title: "Self-Forcing"
-description: "Self-Forcing（Adobe 研究院 / 得克萨斯大学奥斯汀分校）：文生视频；已验证; Self Forcing。"
+description: "Self-Forcing（Adobe 研究院 / 得克萨斯大学奥斯汀分校）：文生视频；已验证；Self Forcing。"
 modelId: "self-forcing"
 pageSource: generated
 ---
@@ -19,7 +19,7 @@ Self-Forcing 弥合了自回归视频扩散的训练-推理差距：在训练时
 
 `self-forcing` 根据文本提示词生成视频。
 
-因果 Wan2.1 T2V 1.3B generator（gdhe17/Self-Forcing 的 self_forcing_dmd.pt）在 shift 5 的 flow 时间表上，以 1000、750、500、250 四个蒸馏 x0 步去噪每个三潜帧块，再在时间步 0 把干净的块写入 21 个潜帧的 KV 缓存。rollout 由 autoregressive-window runner 负责；Wan2.1 umT5 编码器提供条件，bf16 的 Wan2.1 VAE 整段或逐块解码。该模型由Adobe 研究院 / 得克萨斯大学奥斯汀分校发布。
+因果 Wan2.1 T2V 1.3B generator（gdhe17/Self-Forcing 的 self_forcing_dmd.pt）在 shift 5 的 flow 时间表上，以 1000、750、500、250 四个蒸馏 x0 步去噪每个三潜帧块，再在时间步 0 把干净的块写入 21 个潜帧的 KV 缓存。rollout 由 autoregressive-window runner 负责；Wan2.1 umT5 编码器提供条件，bf16 的 Wan2.1 VAE 整段或逐块解码。该模型由 Adobe 研究院 / 得克萨斯大学奥斯汀分校发布。
 
 任务：文生视频、autoregressive-video-generation。别名：`Self-Forcing`、`selfforcing`、`self_forcing`。模态上，它接受文本，输出视频。
 

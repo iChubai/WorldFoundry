@@ -194,7 +194,10 @@ def _python_import_available(python_executable: str, module_name: str, pythonpat
 
 def _import_available(module_name: str, python_executable: str | Path | None = None) -> bool:
     if python_executable is None:
-        return importlib.util.find_spec(module_name) is not None
+        try:
+            return importlib.util.find_spec(module_name) is not None
+        except ModuleNotFoundError:  # a dotted name whose parent package is missing
+            return False
     return _python_import_available(str(python_executable), module_name, os.environ.get("PYTHONPATH", ""))
 
 

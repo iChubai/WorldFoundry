@@ -136,3 +136,8 @@ def test_in_tree_source_honours_the_runner_root_override(tmp_path: Path) -> None
 
     assert asset.env == ("WORLDFOUNDRY_MIND_ROOT",)
     assert asset.check({"WORLDFOUNDRY_MIND_ROOT": str(override)})["matched_path"] == str(override)
+
+
+@pytest.mark.unit
+def test_dotted_import_with_missing_parent_package_is_unavailable() -> None:
+    assert capabilities._import_available("wf_missing_parent_package.submodule") is False

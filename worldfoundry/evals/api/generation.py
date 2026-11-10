@@ -12,7 +12,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, cast
 
-from worldfoundry.evals.api.json_contract import JsonContract, copy_mapping
+from worldfoundry.core.json_contract import JsonContract, copy_mapping
 
 from .artifacts import ArtifactRef, coerce_artifact_refs, restore_artifact_refs
 

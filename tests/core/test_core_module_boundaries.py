@@ -13,7 +13,18 @@ from pathlib import Path
 # Core units from the bottom layer up. A unit imports its own layer or lower ones,
 # and units within one layer never import each other in a cycle.
 _LAYERS: tuple[frozenset[str], ...] = (
-    frozenset({"action_normalization", "contracts", "env_registry", "prompting", "registry", "utils"}),
+    frozenset(
+        {
+            "action_normalization",
+            "contracts",
+            "env_registry",
+            "json_contract",
+            "prompting",
+            "registry",
+            "utils",
+            "world_model_manifest",
+        }
+    ),
     frozenset({"observability"}),
     frozenset({"io"}),
     frozenset({"configuration", "platform"}),

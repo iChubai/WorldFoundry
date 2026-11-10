@@ -12,8 +12,8 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.api.json_contract import require_mapping as _require_mapping
-from worldfoundry.evals.api.json_contract import tuple_of_str as _string_tuple
+from worldfoundry.core.json_contract import require_mapping as _require_mapping
+from worldfoundry.core.json_contract import tuple_of_str as _string_tuple
 from worldfoundry.evals.tasks.catalog import CATALOG_TASK_SCHEMA_VERSION, BenchmarkSpec, WorldTaskConfig
 
 # Define schema version identifiers for task and benchmark YAML files.

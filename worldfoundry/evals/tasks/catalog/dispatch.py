@@ -15,7 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.api.json_contract import tuple_of_str as _str_tuple
+from worldfoundry.core.json_contract import tuple_of_str as _str_tuple
 from worldfoundry.evals.tasks.catalog.benchmark_catalog import readable_catalog_shards
 from worldfoundry.evals.tasks.catalog.benchmark_id import normalize_benchmark_id
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, REPO_ROOT

@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from worldfoundry.core.world_model_manifest import WorldModelManifest
 from worldfoundry.evals.api.artifacts import (
     ArtifactRef,
     coerce_artifact_refs,
@@ -26,7 +27,6 @@ from worldfoundry.evals.api.registry import (
     MetricSpecRegistry,
     ModelManifestRegistry,
 )
-from worldfoundry.evals.api.world_model_manifest import WorldModelManifest
 
 # ── EF-01: duplicate MetricSpec must raise the documented error ──────────
 

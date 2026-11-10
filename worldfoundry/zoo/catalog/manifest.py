@@ -17,8 +17,7 @@ from typing import Any
 import yaml
 
 from worldfoundry.core.io.paths import DATA_ROOT
-from worldfoundry.evals.api import WorldModelManifest
-from worldfoundry.evals.api.registry import ModelRegistry
+from worldfoundry.core.world_model_manifest import ModelManifestRegistry, WorldModelManifest
 
 from .schema import ModelZooEntry, load_entries, select_default_variant
 
@@ -648,15 +647,15 @@ def build_model_manifest_registry(
     *,
     provider: str | Mapping[str, str] = "source",
     capabilities_by_family: Mapping[str, Iterable[str] | str] | None = None,
-) -> ModelRegistry:
-    """Build a ModelRegistry from source loader and inference family mappings."""
+) -> ModelManifestRegistry:
+    """Build a ModelManifestRegistry from source loader and inference family mappings."""
     manifests = model_manifests_from_source_maps(
         loaders_by_family,
         infers_by_family,
         provider=provider,
         capabilities_by_family=capabilities_by_family,
     )
-    return ModelRegistry(manifests)
+    return ModelManifestRegistry(manifests)
 
 
 def _model_id_groups(loaders: SourceModelMap, infers: SourceModelMap) -> tuple[tuple[str, ...], ...]:

@@ -54,7 +54,7 @@ SYMBOLS = (
     SymbolSpec(
         "worldfoundry.evals.api",
         "WorldModelManifest",
-        "worldfoundry/evals/api/world_model_manifest.py",
+        "worldfoundry/core/world_model_manifest.py",
         "models",
     ),
     SymbolSpec("worldfoundry.evals.api", "WorldModelConfig", "worldfoundry/evals/api/models.py", "models"),

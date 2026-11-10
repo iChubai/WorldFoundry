@@ -13,7 +13,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
 
-from worldfoundry.evals.api.registry import lookup_key
+from worldfoundry.core.registry import lookup_key
 from worldfoundry.zoo.bindings import resolve_pipeline_route
 
 from .schema import ModelZooEntry

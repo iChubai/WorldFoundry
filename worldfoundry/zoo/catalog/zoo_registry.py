@@ -17,8 +17,8 @@ from typing import Any
 
 from worldfoundry.core.io.manifests import load_manifest, manifest_paths
 from worldfoundry.core.io.paths import DATA_ROOT
-from worldfoundry.evals.api import WorldModelManifest
-from worldfoundry.evals.api.registry import AliasRegistryStore, lookup_key
+from worldfoundry.core.registry import AliasRegistryStore, lookup_key
+from worldfoundry.core.world_model_manifest import WorldModelManifest
 
 from .manifest import model_zoo_entries_to_world_model_manifests
 from .schema import ModelVariantSpec, ModelZooEntry, iter_model_zoo_payloads

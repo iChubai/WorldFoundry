@@ -1,5 +1,7 @@
 """Core stdlib-only evaluation API contracts."""
 
+from worldfoundry.core.world_model_manifest import WORLD_MODEL_MANIFEST_SCHEMA_VERSION, WorldModelManifest
+
 from .artifacts import (
     ARTIFACT_REF_SCHEMA_VERSION,
     ArtifactRef,
@@ -43,7 +45,6 @@ from .tasks import (
     EvaluationProtocolSpec,
     WorldTaskConfig,
 )
-from .world_model_manifest import WORLD_MODEL_MANIFEST_SCHEMA_VERSION, WorldModelManifest
 
 __all__ = [
     "AGGREGATE_RESULT_SCHEMA_VERSION",

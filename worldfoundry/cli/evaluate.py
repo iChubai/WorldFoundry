@@ -133,7 +133,7 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     model_id = args.model_id
     model_runner = args.model_runner
     if args.embodied_spec is not None:
-        from worldfoundry.evals.api.json_contract import to_plain
+        from worldfoundry.core.json_contract import to_plain
         from worldfoundry.evals.tasks.embodied.contracts import (
             EmbodiedGenerationSpec,
             EvaluationTrack,

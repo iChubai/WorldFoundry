@@ -18,16 +18,16 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.api import GenerationRequest, GenerationResult, is_generation_result_successful
-from worldfoundry.evals.api.artifacts import ArtifactRef, local_path_for_uri
-from worldfoundry.evals.api.generation import validate_sample_ids
-from worldfoundry.evals.api.json_contract import (
+from worldfoundry.core.json_contract import (
     canonical_json_bytes,
     canonical_json_dumps,
     json_sha256,
     normalize_json,
     sha256_hex,
 )
+from worldfoundry.evals.api import GenerationRequest, GenerationResult, is_generation_result_successful
+from worldfoundry.evals.api.artifacts import ArtifactRef, local_path_for_uri
+from worldfoundry.evals.api.generation import validate_sample_ids
 
 DEFAULT_FILE_CHUNK_SIZE = 1024 * 1024
 _SQLITE_IN_CHUNK_SIZE = 400

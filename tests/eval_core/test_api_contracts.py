@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from worldfoundry.core.json_contract import canonical_json_dumps, json_sha256
 from worldfoundry.evals.api import (
     AggregateResult,
     ArtifactRef,
@@ -23,7 +24,6 @@ from worldfoundry.evals.api import (
     enrich_artifact_ref,
     local_path_for_uri,
 )
-from worldfoundry.evals.api.json_contract import canonical_json_dumps, json_sha256
 
 
 def _round_trip(contract):

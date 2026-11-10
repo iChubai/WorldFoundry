@@ -4,8 +4,8 @@ from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol, cast, runtime_checkable
 
-from worldfoundry.evals.api.json_contract import JsonContract, copy_mapping
-from worldfoundry.evals.api.world_model_manifest import (
+from worldfoundry.core.json_contract import JsonContract, copy_mapping
+from worldfoundry.core.world_model_manifest import (
     WorldModelManifest,
 )
 

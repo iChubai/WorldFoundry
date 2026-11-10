@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
-from worldfoundry.evals.api.json_contract import JsonContract, require_mapping, to_plain
-from worldfoundry.evals.api.json_contract import tuple_of_str as _tuple_of_str
+from worldfoundry.core.json_contract import JsonContract, require_mapping, to_plain
+from worldfoundry.core.json_contract import tuple_of_str as _tuple_of_str
 from worldfoundry.evals.utils import load_manifest
 
 from .runner_kinds import (

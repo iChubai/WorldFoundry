@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Any, cast
 
 from worldfoundry.core.io.manifests import load_manifest
-from worldfoundry.evals.api.json_contract import JsonContract, require_mapping, to_plain
-from worldfoundry.evals.api.json_contract import tuple_of_str as _tuple_of_str
+from worldfoundry.core.json_contract import JsonContract, require_mapping, to_plain
+from worldfoundry.core.json_contract import tuple_of_str as _tuple_of_str
 
 LOGGER = logging.getLogger(__name__)
 

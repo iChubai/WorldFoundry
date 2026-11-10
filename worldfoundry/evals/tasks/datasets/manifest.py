@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
-from worldfoundry.evals.api.json_contract import sha256_file as file_sha256
+from worldfoundry.core.json_contract import sha256_file as file_sha256
 from worldfoundry.evals.utils import jsonable, read_json, read_json_or_jsonl, write_json
 
 DATASET_MANIFEST_SCHEMA_VERSION = "worldfoundry-dataset-manifest"

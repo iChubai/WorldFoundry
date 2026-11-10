@@ -24,8 +24,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 
+from worldfoundry.core.json_contract import JsonContract, copy_mapping, to_plain
 from worldfoundry.evals.api import GenerationRequest, GenerationResult, WorldModelConfig
-from worldfoundry.evals.api.json_contract import JsonContract, copy_mapping, to_plain
 
 # Canonical schema version for all contracts in this module.
 VLA_VA_WAM_CONTRACT_SCHEMA_VERSION = "worldfoundry-vla-va-wam-contract"

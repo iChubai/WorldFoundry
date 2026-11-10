@@ -13,8 +13,8 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, cast
 
+from worldfoundry.core.json_contract import tuple_of_str as _coerce_str_tuple
 from worldfoundry.evals.api import GenerationRequest
-from worldfoundry.evals.api.json_contract import tuple_of_str as _coerce_str_tuple
 from worldfoundry.evals.tasks.catalog.benchmark_id import normalize_benchmark_id
 from worldfoundry.evals.tasks.catalog.registry import TaskRegistryEntry, load_task_registry_from_paths
 from worldfoundry.evals.tasks.datasets import (

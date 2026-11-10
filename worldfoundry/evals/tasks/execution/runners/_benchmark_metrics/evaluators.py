@@ -10,8 +10,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
+from worldfoundry.core.json_contract import to_plain
 from worldfoundry.evals.api import MetricResult
-from worldfoundry.evals.api.json_contract import to_plain
 
 from ....contracts import ExternalBenchmarkContract, list_external_benchmark_contracts
 from .bindings import FORMULA_EVALUATOR_BINDINGS, success_metric_bindings

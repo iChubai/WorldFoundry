@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
-from worldfoundry.evals.api.json_contract import JsonContract, copy_mapping, sha256_bytes, sha256_file
+from worldfoundry.core.json_contract import JsonContract, copy_mapping, sha256_bytes, sha256_file
 
 ARTIFACT_REF_SCHEMA_VERSION = "worldfoundry-artifact-ref"
 REMOTE_URI_SCHEMES = frozenset({"http", "https", "s3", "gs", "hf", "memory"})

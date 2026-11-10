@@ -4,7 +4,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from worldfoundry.evals.api.json_contract import JsonContract, copy_mapping, tuple_of_str
+from worldfoundry.core.json_contract import JsonContract, copy_mapping, tuple_of_str
 
 from .metrics import MetricSpec
 

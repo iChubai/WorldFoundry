@@ -14,7 +14,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.api.registry import AliasRegistryStore, lookup_key, require_text
+from worldfoundry.core.registry import AliasRegistryStore, lookup_key, require_text
 from worldfoundry.evals.tasks.catalog.benchmark_catalog import load_benchmark_catalog_entries
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR
 

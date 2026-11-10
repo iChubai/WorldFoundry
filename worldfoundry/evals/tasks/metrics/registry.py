@@ -9,6 +9,7 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any, Protocol, cast, runtime_checkable
 
+from worldfoundry.core.json_contract import to_plain
 from worldfoundry.evals.api import (
     AggregateResult,
     ArtifactRef,
@@ -19,7 +20,6 @@ from worldfoundry.evals.api import (
     is_generation_result_successful,
 )
 from worldfoundry.evals.api.artifacts import local_path_for_uri
-from worldfoundry.evals.api.json_contract import to_plain
 from worldfoundry.evals.api.metrics import aggregate_mean
 
 # ---------------------------------------------------------------------------

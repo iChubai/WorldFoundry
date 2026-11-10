@@ -9,7 +9,7 @@ from math import isfinite
 from numbers import Real
 from typing import Any, Protocol, cast, runtime_checkable
 
-from worldfoundry.evals.api.json_contract import JsonContract, copy_mapping, tuple_of_str
+from worldfoundry.core.json_contract import JsonContract, copy_mapping, tuple_of_str
 
 from .artifacts import ArtifactRef, coerce_artifact_refs
 from .generation import GenerationRequest, GenerationResult

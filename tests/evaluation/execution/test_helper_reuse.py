@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from worldfoundry.evals.api.json_contract import tuple_of_str
+from worldfoundry.core.json_contract import tuple_of_str
 from worldfoundry.evals.tasks.execution.framework.io import coerce_unit_score, optional_float, try_float
 from worldfoundry.evals.tasks.execution.framework.runner_common import build_video_coverage
 
@@ -109,7 +109,7 @@ def test_external_evaluator_coercion_and_failure_are_shared_without_catalog_sema
 
 
 def test_dataset_checksum_export_uses_canonical_file_reader() -> None:
-    from worldfoundry.evals.api.json_contract import sha256_file
+    from worldfoundry.core.json_contract import sha256_file
     from worldfoundry.evals.tasks.datasets import file_sha256
 
     assert file_sha256 is sha256_file

@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from worldfoundry.core.world_model_manifest import WorldModelManifest
 from worldfoundry.evals.api.metrics import MetricSpec
 from worldfoundry.evals.api.registry import (
     AliasRegistryStore,
@@ -19,7 +20,6 @@ from worldfoundry.evals.api.registry import (
     MetricSpecRegistry,
     ModelManifestRegistry,
 )
-from worldfoundry.evals.api.world_model_manifest import WorldModelManifest
 from worldfoundry.zoo.aliases import (
     PipelineAliasGroup,
     PipelineAliasRegistry,

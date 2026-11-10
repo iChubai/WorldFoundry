@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 
 import worldfoundry.evals.tasks.catalog as catalog_module
+from worldfoundry.core.json_contract import JsonContract, tuple_of_str
 from worldfoundry.evals.api import EvaluationProtocolSpec as ApiEvaluationProtocolSpec
-from worldfoundry.evals.api.json_contract import JsonContract, tuple_of_str
 from worldfoundry.evals.tasks.catalog import (
     BenchmarkSpec,
     CatalogRegistry,

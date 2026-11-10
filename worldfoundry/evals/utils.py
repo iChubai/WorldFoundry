@@ -73,6 +73,7 @@ from worldfoundry.core.io.paths import (
 from worldfoundry.core.io.paths import (
     resolve_worldfoundry_path as resolve_worldfoundry_path,
 )
+from worldfoundry.core.json_contract import sha256_file, to_plain
 from worldfoundry.evals.api import (
     AGGREGATE_RESULT_SCHEMA_VERSION,
     ARTIFACT_REF_SCHEMA_VERSION,
@@ -85,7 +86,6 @@ from worldfoundry.evals.api import (
     WORLD_MODEL_MANIFEST_SCHEMA_VERSION,
     WORLD_TASK_CONFIG_SCHEMA_VERSION,
 )
-from worldfoundry.evals.api.json_contract import sha256_file, to_plain
 
 # ── JSON / text formatting helpers ─────────────────────────────────────
 
@@ -310,7 +310,7 @@ def _callable_reference(value: Any) -> str:
 def stable_json_dumps(value: Any) -> str:
     """Serialize a JSON-safe dictionary with stable key-sorting and no extra whitespace.
 
-    Canonicalizes through :func:`~worldfoundry.evals.api.json_contract.to_plain`
+    Canonicalizes through :func:`~worldfoundry.core.json_contract.to_plain`
     first so ``set``/``frozenset`` members are deterministically ordered (plain
     ``jsonable`` preserves set iteration order, which varies across processes).
     """
@@ -330,7 +330,7 @@ def stable_hash(value: Any) -> str:
 def file_sha256(path: str | Path) -> str:
     """Calculate the SHA-256 hash of a file on disk.
 
-    Delegates to :func:`worldfoundry.evals.api.json_contract.sha256_file`
+    Delegates to :func:`worldfoundry.core.json_contract.sha256_file`
     (single canonical chunked implementation).
     """
     return sha256_file(path)

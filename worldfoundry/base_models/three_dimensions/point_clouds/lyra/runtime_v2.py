@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 import tempfile
 from pathlib import Path
 
@@ -10,8 +9,6 @@ import torch
 from worldfoundry.base_models.three_dimensions.point_clouds.lyra.utils import (
     configure_lyra_runtime_env,
     ensure_path_exists,
-    ensure_repo_on_path,
-    prepare_lyra2_runtime_root,
     resolve_checkpoint_root,
     resolve_repo_root,
     resolve_required_paths,
@@ -27,7 +24,6 @@ class Lyra2Representation:
     def __init__(
         self,
         repo_root: str,
-        runtime_root: str,
         device: str = "cuda",
         da3_model_name: str = DEFAULT_DA3_MODEL_NAME,
         da3_model_path_custom: str | None = None,
@@ -38,7 +34,6 @@ class Lyra2Representation:
         vipe_overrides: list[str] | None = None,
     ):
         self.repo_root = repo_root
-        self.runtime_root = runtime_root
         self.device = device
         self.da3_model_name = da3_model_name
         self.da3_model_path_custom = da3_model_path_custom
@@ -64,9 +59,7 @@ class Lyra2Representation:
     ):
         repo_root = resolve_repo_root(pretrained_model_path)
         weights_root = resolve_checkpoint_root(pretrained_model_path, repo_root=repo_root)
-        runtime_root = prepare_lyra2_runtime_root(repo_root, weights_root=weights_root)
         configure_lyra_runtime_env()
-        ensure_repo_on_path(runtime_root)
         required_paths = resolve_required_paths(
             repo_root,
             da3_model_path_custom=da3_model_path_custom,
@@ -75,7 +68,6 @@ class Lyra2Representation:
         ensure_path_exists(required_paths["da3_model_path_custom"], "Lyra-2 DA3 checkpoint")
         return cls(
             repo_root=repo_root,
-            runtime_root=runtime_root,
             device=device or "cuda",
             da3_model_name=da3_model_name,
             da3_model_path_custom=required_paths["da3_model_path_custom"],
@@ -120,44 +112,27 @@ class Lyra2Representation:
             output_dir = str(Path(video_path).with_name(f"{Path(video_path).stem}_gs_ours"))
         output_dir = str(Path(output_dir).expanduser().resolve())
 
-        command = [
-            sys.executable,
-            "-m",
-            "lyra_2._src.inference.vipe_da3_gs_recon",
-            "--input_video_path",
+        from worldfoundry.synthesis.visual_generation.lyra_2.reconstruction import reconstruct_video_gaussians
+
+        outputs = reconstruct_video_gaussians(
             video_path,
-            "--output_dir",
             output_dir,
-            "--device",
-            self.device,
-            "--da3_model_name",
-            self.da3_model_name,
-            "--da3_model_path_custom",
-            str(self.da3_model_path_custom),
-            "--render_chunk_size",
-            str(self.render_chunk_size),
-        ]
-        if self.no_vipe:
-            command.append("--no_vipe")
-        if self.force:
-            command.append("--force")
-        if self.render_fps is not None:
-            command.extend(["--render_fps", str(self.render_fps)])
-        if self.vipe_overrides:
-            command.append("--vipe_overrides")
-            command.extend(self.vipe_overrides)
-
-        raise RuntimeError(
-            "Lyra-2 reconstruction is blocked because this representation path would run a subprocess. "
-            f"Use the in-process Lyra-2 synthesis runtime or port `{command[2]}` into an in-process adapter."
+            da3_model_path_custom=self.da3_model_path_custom,
+            da3_model_name=self.da3_model_name,
+            device=self.device,
+            force=self.force,
+            no_vipe=self.no_vipe,
+            vipe_overrides=self.vipe_overrides,
+            render_fps=self.render_fps,
+            render_chunk_size=self.render_chunk_size,
         )
-
-        output_dir_path = Path(output_dir)
         return {
             "video_path": video_path,
-            "output_dir": str(output_dir_path),
-            "reconstructed_scene_path": str(output_dir_path / "reconstructed_scene.ply"),
-            "render_video_path": str(output_dir_path / "gs_trajectory.mp4"),
-            "camera_path": str(output_dir_path / "cameras.npz"),
-            "vipe_prediction_path": str(output_dir_path / "vipe_predictions.npz"),
+            "output_dir": str(outputs.output_dir),
+            "reconstructed_scene_path": str(outputs.reconstructed_scene_path),
+            "render_video_path": str(outputs.render_video_path),
+            "camera_path": str(outputs.camera_path),
+            "vipe_prediction_path": (
+                None if outputs.vipe_prediction_path is None else str(outputs.vipe_prediction_path)
+            ),
         }

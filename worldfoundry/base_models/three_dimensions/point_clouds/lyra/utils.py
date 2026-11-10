@@ -13,7 +13,6 @@ from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
     package_root,
-    scratch_directory,
 )
 
 DEFAULT_LYRA2_ALIAS = "lyra-2"
@@ -294,21 +293,6 @@ def device_index(device: str | None) -> int:
 def maybe_set_cuda_device(device: str | None):
     if device and str(device).startswith("cuda") and torch.cuda.is_available():
         torch.cuda.set_device(device_index(device))
-
-
-def prepare_lyra2_runtime_root(repo_root: str, weights_root: str | None = None) -> str:
-    repo_root_path = Path(repo_root).expanduser().resolve()
-    weights_root_path = Path(weights_root).expanduser().resolve() if weights_root else repo_root_path
-
-    if weights_root_path == repo_root_path and (repo_root_path / "checkpoints").is_dir():
-        return str(repo_root_path)
-
-    runtime_root = scratch_directory("lyra2_runtime_").resolve()
-    (runtime_root / "lyra_2").symlink_to(repo_root_path / "lyra_2", target_is_directory=True)
-    checkpoints_src = weights_root_path / "checkpoints"
-    if checkpoints_src.is_dir():
-        (runtime_root / "checkpoints").symlink_to(checkpoints_src, target_is_directory=True)
-    return str(runtime_root)
 
 
 @contextmanager

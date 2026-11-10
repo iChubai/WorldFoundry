@@ -33,7 +33,7 @@ Ctrl-World 以 Stable Video Diffusion 图生视频模型（stabilityai/stable-vi
 
 CLI task profile：`robot-action-video`。绑定的 pipeline 类是 `CtrlWorldPipeline`。
 
-`robot-action-video` 默认值：height=192, width=320, num_frames=5, num_inference_steps=4, guidance_scale=1.0, fps=4。4 步默认值只用于冒烟；质量运行请使用官方 25 步采样（`--pipeline.num-inference-steps 25`）。
+`robot-action-video` 默认值：height=192, width=320, num_frames=5, num_inference_steps=25, guidance_scale=1.0, fps=4。
 
 提交任务前请准备好全部三套 checkpoint。
 

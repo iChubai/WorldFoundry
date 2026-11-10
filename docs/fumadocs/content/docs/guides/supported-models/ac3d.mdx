@@ -1,6 +1,6 @@
 ---
 title: "AC3D"
-description: "Snap Research ControlNet plugin for CogVideoX 3D camera control. RealEstate10K demo validated with local weights; dedicated torch 2.4 / CUDA 12.4 env; Snap non-commercial license."
+description: "Snap Research ControlNet plugin for CogVideoX 3D camera control. dedicated torch 2.4 / CUDA 12.4 env; Snap non-commercial license."
 modelId: "ac3d"
 pageSource: authored
 ---
@@ -11,7 +11,7 @@ AC3D is Snap Research's **ControlNet-style** camera plugin for CogVideoX: text p
 
 The official paper is [AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers](https://arxiv.org/abs/2411.18673) (CVPR 2025, arXiv 2411.18673). Project: [snap-research.github.io/ac3d](https://snap-research.github.io/ac3d/). Code: [snap-research/ac3d](https://github.com/snap-research/ac3d). License: **Snap non-commercial research**.
 
-Validated with local CogVideoX-2B and AC3D ControlNet weights: the RealEstate10K camera-control demo runs through the official `inference/cli_demo_camera.py` path. The adapter keeps the official **2B ControlNet shape** settings even when the 5B ControlNet file is also staged.
+The adapter follows the official `inference/cli_demo_camera.py` camera-control path and keeps the official **2B ControlNet shape** settings even when the 5B ControlNet file is also staged.
 
 <ModelCommandBuilder modelId="ac3d" locale="en" />
 

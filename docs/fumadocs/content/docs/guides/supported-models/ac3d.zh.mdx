@@ -1,6 +1,6 @@
 ---
 title: "AC3D"
-description: "Snap Research 给 CogVideoX 的 ControlNet 式 3D 相机插件。RealEstate10K 相机控制 demo 已用本地权重验证；独立 torch 2.4 / CUDA 12.4 环境；Snap 非商用研究许可。"
+description: "Snap Research 给 CogVideoX 的 ControlNet 式 3D 相机插件。独立 torch 2.4 / CUDA 12.4 环境；Snap 非商用研究许可。"
 modelId: "ac3d"
 pageSource: authored
 ---
@@ -11,7 +11,7 @@ AC3D 是 Snap Research 给 CogVideoX 的 **ControlNet 风格**相机插件：文
 
 官方论文是 [AC3D: Analyzing and Improving 3D Camera Control in Video Diffusion Transformers](https://arxiv.org/abs/2411.18673)（CVPR 2025，arXiv 2411.18673）。项目页：[snap-research.github.io/ac3d](https://snap-research.github.io/ac3d/)。代码：[snap-research/ac3d](https://github.com/snap-research/ac3d)。许可证：**Snap 非商用研究许可**。
 
-已用本地 CogVideoX-2B 与 AC3D ControlNet 权重验证：RealEstate10K 相机控制 demo 按官方 `inference/cli_demo_camera.py` 路径运行。即使同时就位了 5B ControlNet，适配器仍保持官方 **2B ControlNet 形状**设置。
+适配器沿用官方 `inference/cli_demo_camera.py` 的相机控制路径；即使同时就位了 5B ControlNet，仍保持官方 **2B ControlNet 形状**设置。
 
 <ModelCommandBuilder modelId="ac3d" locale="zh" />
 

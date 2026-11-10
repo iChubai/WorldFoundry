@@ -33,7 +33,7 @@ Inputs `input-path`, `prompt`, `load.checkpoint-path`, `load.base-model-dir`, `l
 
 CLI task profiles: `robot-action-video`. WorldFoundry binds `CtrlWorldPipeline`.
 
-`robot-action-video` defaults: height=192, width=320, num_frames=5, num_inference_steps=4, guidance_scale=1.0, fps=4. The 4-step default is a smoke setting; use the released 25-step sampler (`--pipeline.num-inference-steps 25`) for quality runs.
+`robot-action-video` defaults: height=192, width=320, num_frames=5, num_inference_steps=25, guidance_scale=1.0, fps=4.
 
 Stage all three checkpoint sets before submitting jobs.
 

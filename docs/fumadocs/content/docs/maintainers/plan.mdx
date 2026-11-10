@@ -17,8 +17,6 @@ Integration work should follow the existing contract: runtime code in-tree under
 
 WorldFoundry's public framework surface covers inference, evaluation, Studio, and runtime integration.
 
-Training and post-training recipes (SFT, distillation, RL) live in `worldfoundry/training/`, beside the inference and evaluation path: they produce checkpoints that run through the normal inference path, and the package is excluded from the published wheel. Training launchers, dataset builders, and experiment-only callbacks do not belong in `core`, `base_models`, or `synthesis`. Training work follows the same evidence standard as inference and evaluation.
-
 ## Codebase unification
 
 WorldFoundry grew by integrating many upstream runtimes. The next phase is to **converge** on shared primitives and delete duplication.

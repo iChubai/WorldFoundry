@@ -482,6 +482,9 @@ try {
       console.error(`${name}: ${error}`);
     } finally {
       if (fixture) {
+        if (physicalEscape) {
+          fixture.result.physical_escape = await fixture.page.evaluate(() => window.fixturePhysicalEscape || null);
+        }
         await fixture.page.screenshot({path: join(output, `${name}.png`), fullPage: true});
       }
       await writeFile(join(output, 'browser.json'), JSON.stringify(report, null, 2));

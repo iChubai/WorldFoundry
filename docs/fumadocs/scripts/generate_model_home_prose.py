@@ -394,12 +394,6 @@ def join_zh(items: Any) -> str:
     return "、".join(cleaned)
 
 
-def zh_gap(text: str) -> str:
-    """Space before Latin text or inline code after Chinese; no space before Chinese."""
-
-    return " " if text[:1].isascii() and text[:1] not in ("", "（") else ""
-
-
 LICENSE_NAMES = {
     "apache-2.0": ("Apache-2.0", "Apache-2.0"),
     "mit": ("MIT", "MIT"),

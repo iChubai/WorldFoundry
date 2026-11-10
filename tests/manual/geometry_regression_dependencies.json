@@ -57,6 +57,7 @@
     ".gitattributes",
     "constraints/**",
     "requirements*.txt",
+    "scripts/inference/prepare_model_infer.sh",
     "scripts/setup/**",
     "tests/manual/geometry_regression_dependencies.json",
     "tests/manual/geometry_regression.py",
@@ -216,13 +217,17 @@
       "worldfoundry/pipelines/forcing/__init__.py",
       "worldfoundry/pipelines/forcing/pipeline_native_forcing.py",
       "worldfoundry/pipelines/native_diffusion*.py",
-      "worldfoundry/base_models/diffusion_model/**"
+      "worldfoundry/base_models/diffusion_model/**",
+      "worldfoundry/synthesis/visual_generation/forcing/self_forcing_runtime/**"
     ],
     "causal-forcing": [
       "worldfoundry/pipelines/forcing/__init__.py",
       "worldfoundry/pipelines/forcing/pipeline_native_forcing.py",
       "worldfoundry/pipelines/native_diffusion*.py",
-      "worldfoundry/base_models/diffusion_model/**"
+      "worldfoundry/base_models/diffusion_model/**",
+      "worldfoundry/synthesis/visual_generation/forcing/causal_forcing_runtime/eval_inputs.py",
+      "worldfoundry/synthesis/visual_generation/forcing/causal_forcing_runtime/inference.py",
+      "worldfoundry/synthesis/visual_generation/forcing/causal_forcing_runtime/pipeline/**"
     ],
     "gamma-world": [
       "worldfoundry/pipelines/gamma_world/**",
@@ -665,6 +670,16 @@
       "required_cpu_contracts": [
         "tests/studio_visualization/test_realtime_delivery.py",
         "tests/studio_visualization/test_realtime_presentation.py"
+      ]
+    },
+    {
+      "paths": [
+        "worldfoundry/synthesis/visual_generation/forcing/torchvision_video_compat/sitecustomize.py"
+      ],
+      "reason": "Torchvision video shim that the shared forcing bridge prepends to Rolling-Forcing subprocesses; no replay case launches that subprocess. The CPU contracts execute the shim and check its placement on the subprocess path.",
+      "required_cpu_contracts": [
+        "tests/pipelines/test_forcing_integration.py",
+        "tests/pipelines/test_forcing_runtime.py"
       ]
     }
   ],

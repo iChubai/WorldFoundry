@@ -2,7 +2,7 @@
 
 Binds xfuser SP ranks to Wan block forwards (AMP + rearrange). Requires
 the xfuser package. The in-tree substitute is
-:mod:`worldfoundry.core.attention.parallel.patch_xdit_context_parallel`.
+:mod:`worldfoundry.base_models.diffusion_model.models.networks.wan.sequence_parallel`.
 
 Public surface: :func:`usp_attn_forward`, :func:`usp_attn_s2v_forward`,
 :func:`sp_prope_forward`, and the RoPE helpers.

@@ -126,7 +126,7 @@ class WanATI:
         if use_usp:
             from xfuser.core.distributed import get_sequence_parallel_world_size
 
-            from worldfoundry.core.attention.parallel.video_xdit_context_parallel import (
+            from .xdit_context_parallel import (
                 usp_attn_forward,
                 usp_dit_forward,
             )

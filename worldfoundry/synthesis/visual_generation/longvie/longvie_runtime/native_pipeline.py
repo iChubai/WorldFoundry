@@ -398,7 +398,10 @@ class LongViePipeline(StagedDiffusionPipeline):
             )
 
     def enable_usp(self):
-        from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import usp_attn_forward, usp_dit_forward
+        from worldfoundry.base_models.diffusion_model.models.networks.wan.sequence_parallel import (
+            usp_attn_forward,
+            usp_dit_forward,
+        )
 
         for block in self.dit.blocks:
             block.self_attn.forward = types.MethodType(usp_attn_forward, block.self_attn)

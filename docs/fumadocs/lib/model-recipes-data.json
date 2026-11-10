@@ -131023,7 +131023,7 @@
         "notes": [
           "MosaicMem source route is registered for memory-plan artifacts; generator assets remain runtime-gated.",
           "Missing checkpoints/assets are reported by the runtime plan and are not catalog blockers.",
-          "WorldFoundry exposes MosaicMem through worldfoundry.core.memory for keyframe patch ingestion, target-view retrieval, coverage summaries, and latent-canvas composition.",
+          "WorldFoundry exposes MosaicMem through worldfoundry.synthesis.visual_generation.memory.mosaic for keyframe patch ingestion, target-view retrieval, coverage summaries, and latent-canvas composition.",
           "Official source is bound from ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/mosaicmem at 3178e01e3639d7e2e7a487d5d589fd5f53719904.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
@@ -131109,7 +131109,7 @@
         "MosaicMem source route is registered for memory-plan artifacts; generator assets remain runtime-gated.",
         "resolve_model_zoo_config and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged.",
         "Missing checkpoints/assets are reported by the runtime plan and are not catalog blockers.",
-        "WorldFoundry exposes MosaicMem through worldfoundry.core.memory for keyframe patch ingestion, target-view retrieval, coverage summaries, and latent-canvas composition.",
+        "WorldFoundry exposes MosaicMem through worldfoundry.synthesis.visual_generation.memory.mosaic for keyframe patch ingestion, target-view retrieval, coverage summaries, and latent-canvas composition.",
         "Official source is bound from ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/mosaicmem at 3178e01e3639d7e2e7a487d5d589fd5f53719904."
       ],
       "docs": {
@@ -131120,10 +131120,10 @@
           "kind": "lab"
         },
         "overview": [
-          "MosaicMem is a memory-augmented world-model component: it ingests keyframe patches, retrieves target views, summarizes coverage, and composes latent canvases — producing a memory index rather than video. In this catalog the source route is registered for memory-plan artifacts and is exposed through worldfoundry.core.memory; generator assets stay runtime-gated."
+          "MosaicMem is a memory-augmented world-model component: it ingests keyframe patches, retrieves target views, summarizes coverage, and composes latent canvases — producing a memory index rather than video. In this catalog the source route is registered for memory-plan artifacts and is exposed through worldfoundry.synthesis.visual_generation.memory.mosaic; generator assets stay runtime-gated."
         ],
         "overviewZh": [
-          "MosaicMem 是记忆增强的世界模型组件：摄取关键帧 patch、检索目标视图、汇总覆盖度并组合潜空间画布——产物是记忆索引而非视频。本 catalog 中其源码路径按记忆计划产物注册，并通过 worldfoundry.core.memory 暴露；生成器资产保持运行时限制。"
+          "MosaicMem 是记忆增强的世界模型组件：摄取关键帧 patch、检索目标视图、汇总覆盖度并组合潜空间画布——产物是记忆索引而非视频。本 catalog 中其源码路径按记忆计划产物注册，并通过 worldfoundry.synthesis.visual_generation.memory.mosaic 暴露；生成器资产保持运行时限制。"
         ],
         "architecture": [
           "Architecture internals are not recorded in this repository (MIT license); the source is bound at a pinned commit. The recorded artifact type is memory_index."

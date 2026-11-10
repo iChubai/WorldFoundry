@@ -16,7 +16,7 @@ bf16 tolerance. Eligibility is narrow (CUDA, bf16, contiguous, supported
 head_dim); anything else uses the exact PyTorch reference.
 
 Not this module:
-    Wan-style ``[B, S, H, D]`` QK RMSNorm+RoPE lives in :mod:`.triton_diffusion`.
+    Wan-style ``[B, S, H, D]`` QK RMSNorm+RoPE lives in :mod:`worldfoundry.core.kernels.triton_diffusion`.
     Eligibility for H3 is enforced by the caller, not this file.
 
 Public surface:

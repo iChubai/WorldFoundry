@@ -78,7 +78,7 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>memory</code></div></div>
         <p>语义及上下文记忆契约、检索、条件构建和持久化。</p>
-        <p className="pi-kv-read"><span>阅读入口</span> <code>base.py, conditioning.py, media.py, mosaic.py, retrieval.py, store.py</code></p>
+        <p className="pi-kv-read"><span>阅读入口</span> <code>base.py, conditioning.py, media.py, retrieval.py, store.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>geometry</code></div></div>
@@ -131,7 +131,7 @@ core 的子包按固定顺序分层：模块只 import 本层或更低层，同�
 11. `model_loading`
 12. `execution`、`memory`、`safety`
 
-低层需要的工具函数下沉到那一层，而不是向上 import。`tests/core/test_core_module_boundaries.py` 保存这张表，出现向上的 import 就失败。`attention/parallel` 下替换 Wan 系 DiT forward 的模块会 import `nn`，测试里按名字列出了它们。
+低层需要的工具函数下沉到那一层，而不是向上 import。`tests/core/test_core_module_boundaries.py` 保存这张表，出现向上的 import 就失败。
 
 ## 被谁消费
 

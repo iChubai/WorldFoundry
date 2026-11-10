@@ -6,8 +6,8 @@ do not require an external attention or serving checkout.
 Not this module:
     Capability gates, size thresholds, and PyTorch fallbacks live in
     :mod:`.diffusion`. GroupNorm+SiLU lives in :mod:`.triton_group_norm_silu`.
-    MiniMax H3 indexed AdaLN / QK RoPE live in the ``triton_minimax_h3_*``
-    modules.
+    MiniMax H3 indexed AdaLN and Q/K RoPE kernels live with the MiniMax H3
+    network in ``base_models/diffusion_model/models/networks/minimax_h3``.
 
 Public surface:
 

@@ -38,18 +38,6 @@ _LAYERS: tuple[frozenset[str], ...] = (
     frozenset({"execution", "memory", "safety"}),
 )
 
-# Wan-family DiT forward replacements that live under attention.parallel and import nn.
-_ATTENTION_FORWARDS_IMPORTING_NN = frozenset(
-    {
-        "worldfoundry.core.attention.parallel.causal_rope_sequence_parallel",
-        "worldfoundry.core.attention.parallel.memory_rope_sequence_parallel",
-        "worldfoundry.core.attention.parallel.patch_xdit_context_parallel",
-        "worldfoundry.core.attention.parallel.rope_sequence_parallel",
-        "worldfoundry.core.attention.parallel.scope_xdit_context_parallel",
-        "worldfoundry.core.attention.parallel.video_xdit_context_parallel",
-    }
-)
-
 
 def _lazy_tables(init: Path) -> dict[str, str]:
     """Return the ``_EXPORT_MODULES`` and ``_SUBMODULES`` entries a package initializer declares."""
@@ -230,8 +218,6 @@ def test_core_imports_follow_the_layer_table() -> None:
     for importer, imported in _core_import_edges(root):
         source, target = _core_unit(importer), _core_unit(imported)
         if source is None or source == target:
-            continue
-        if importer in _ATTENTION_FORWARDS_IMPORTING_NN and target == "nn":
             continue
         if target is None or layer_of.get(target, len(_LAYERS)) > layer_of.get(source, len(_LAYERS)):
             upward.append((importer, imported))

@@ -2,8 +2,8 @@
 
 Applies 3D RoPE on the local SP shard, then causal Ulysses attention.
 Frequencies are padded to the shard length so ranks with unequal tail
-tokens still broadcast. This is the LingBot causal path; non-causal Wan
-self-attn uses :mod:`worldfoundry.core.attention.parallel.rope_sequence_parallel`.
+tokens still broadcast. LingBot World and LingBot World v2 patch these
+forwards onto their causal Wan DiT.
 """
 
 import math

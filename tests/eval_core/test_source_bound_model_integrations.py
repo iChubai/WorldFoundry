@@ -106,7 +106,12 @@ def test_world_model_manifest_uses_explicit_source_root_not_legacy_github_checko
 
 
 def test_mosaicmem_memory_store_is_integrated_without_fake_pipeline() -> None:
-    from worldfoundry.core.memory import CameraIntrinsics, CameraPose, MosaicMemoryConfig, MosaicMemoryStore
+    from worldfoundry.synthesis.visual_generation.memory.mosaic import (
+        CameraIntrinsics,
+        CameraPose,
+        MosaicMemoryConfig,
+        MosaicMemoryStore,
+    )
 
     registry = load_model_zoo_registry(MODEL_CATALOG_DIR)
     entry = registry.get("mosaicmem")

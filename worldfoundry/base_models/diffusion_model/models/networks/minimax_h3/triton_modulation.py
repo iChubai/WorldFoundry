@@ -10,8 +10,8 @@ so the fused result is bit-compatible with the reference kernel boundary. Each
 row selects its modality-specific scale/shift/gate vector via ``indices``.
 
 Not this module:
-    Generic (non-indexed) AdaLN fusion lives in :mod:`.triton_diffusion`.
-    Registry dispatch lives in :mod:`.diffusion`.
+    Generic (non-indexed) AdaLN fusion lives in :mod:`worldfoundry.core.kernels.triton_diffusion`.
+    Registry dispatch lives in :mod:`worldfoundry.core.kernels.diffusion`.
 
 Public surface:
 

@@ -17,7 +17,7 @@ from tqdm import tqdm
 from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 
 # isort: split
-from worldfoundry.core.attention.parallel.memory_rope_sequence_parallel import (
+from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_3_runtime.sequence_parallel import (
     sp_attn_forward,
     sp_dit_forward,
 )

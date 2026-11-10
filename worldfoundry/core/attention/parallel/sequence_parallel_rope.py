@@ -8,10 +8,9 @@ positions. :func:`pad_freqs` and
 rank rotates with its global offsets.
 
 Not this module:
-    Causal vs non-causal attention is *not* chosen here — callers pick
-    :mod:`.causal_rope_sequence_parallel` or
-    :mod:`.rope_sequence_parallel` (and the padded-Ulysses variant for
-    memory tokens). Does not own the SP process group.
+    Causal vs non-causal attention is *not* chosen here; model families
+    bind these helpers to their own DiT forwards (Wan, LingBot World,
+    Matrix-Game 3). Does not own the SP process group.
 
 Public surface:
 

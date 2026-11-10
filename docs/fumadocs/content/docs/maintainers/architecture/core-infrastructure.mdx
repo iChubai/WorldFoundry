@@ -78,7 +78,7 @@ This is the layer to read when you are about to copy a utility into a model dire
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>memory</code></div></div>
         <p>Semantic/context memory contracts, retrieval, conditioning and persistence.</p>
-        <p className="pi-kv-read"><span>Start here</span> <code>base.py, conditioning.py, media.py, mosaic.py, retrieval.py, store.py</code></p>
+        <p className="pi-kv-read"><span>Start here</span> <code>base.py, conditioning.py, media.py, retrieval.py, store.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>geometry</code></div></div>
@@ -131,7 +131,7 @@ Core subpackages form a fixed stack. A module imports from its own layer or lowe
 11. `model_loading`
 12. `execution`, `memory`, `safety`
 
-A helper that a lower layer needs moves down to that layer instead of being imported upward. `tests/core/test_core_module_boundaries.py` holds the table and fails on any upward import. The Wan-family DiT forward replacements under `attention/parallel` import `nn`; the test lists them by name.
+A helper that a lower layer needs moves down to that layer instead of being imported upward. `tests/core/test_core_module_boundaries.py` holds the table and fails on any upward import.
 
 ## Where it is consumed
 

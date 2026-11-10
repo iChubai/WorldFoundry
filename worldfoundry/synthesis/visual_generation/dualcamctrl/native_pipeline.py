@@ -249,7 +249,7 @@ class WanVideoCameraPipeline(StagedDiffusionPipeline):
     def enable_usp(self):
         from xfuser.core.distributed import get_sequence_parallel_world_size
 
-        from worldfoundry.core.attention.parallel.patch_xdit_context_parallel import (
+        from worldfoundry.base_models.diffusion_model.models.networks.wan.sequence_parallel import (
             usp_attn_forward,
             usp_dit_forward,
         )

@@ -19,7 +19,7 @@ from worldfoundry.core import autocast_context
 from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 
 # isort: split
-from worldfoundry.core.attention.parallel.causal_rope_sequence_parallel import (
+from .sequence_parallel import (
     sp_attn_forward_causal,
     sp_attn_forward_causal_chunked,
     sp_dit_forward_causal,

@@ -1,15 +1,13 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
-"""Video DiT blocks using xFuser long-context attention and SP RoPE.
+"""ATI video DiT blocks using xFuser long-context attention and SP RoPE.
 
 Requires xfuser. Applies :func:`make_sequence_parallel_rope_apply` so
 frequencies match USP ranks, then runs ``xFuserLongContextAttention``.
 The no-xfuser equivalent is
-:mod:`worldfoundry.core.attention.parallel.patch_xdit_context_parallel`.
+:mod:`worldfoundry.base_models.diffusion_model.models.networks.wan.sequence_parallel`.
 
 Not this module:
-    Scope-style (non-VACE) xfuser forwards live in
-    :mod:`.scope_xdit_context_parallel`. In-tree Ulysses without xfuser
-    lives in :mod:`.patch_xdit_context_parallel`.
+    Does not own the xFuser process group.
 
 Public surface:
 

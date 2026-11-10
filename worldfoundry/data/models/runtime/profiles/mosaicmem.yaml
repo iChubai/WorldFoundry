@@ -23,6 +23,6 @@ notes:
   remain runtime-gated.
 - Missing checkpoints/assets are reported by the runtime plan and are not catalog
   blockers.
-- WorldFoundry exposes MosaicMem through worldfoundry.core.memory for keyframe patch
+- WorldFoundry exposes MosaicMem through worldfoundry.synthesis.visual_generation.memory.mosaic for keyframe patch
   ingestion, target-view retrieval, coverage summaries, and latent-canvas composition.
 - Official source is bound from ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/mosaicmem at 3178e01e3639d7e2e7a487d5d589fd5f53719904.

@@ -17,7 +17,7 @@ from worldfoundry.core import autocast_context
 from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
 
 # isort: split
-from worldfoundry.core.attention.parallel.causal_rope_sequence_parallel import sp_attn_forward, sp_dit_forward
+from .sequence_parallel import sp_attn_forward, sp_dit_forward
 
 # isort: split
 from worldfoundry.core.distributed.sequence_parallel.ops import get_world_size

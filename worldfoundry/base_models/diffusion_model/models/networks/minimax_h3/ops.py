@@ -73,7 +73,9 @@ def qk_norm_rope(
     """Apply per-head RMSNorm then RoPE, using the fused kernel when eligible."""
 
     if can_use_fused_qknorm_rope(q, k, cos_sin_cache):
-        from worldfoundry.core.kernels.triton_minimax_h3_qknorm_rope import fused_qknorm_rope
+        from worldfoundry.base_models.diffusion_model.models.networks.minimax_h3.triton_qknorm_rope import (
+            fused_qknorm_rope,
+        )
 
         return fused_qknorm_rope(q, k, q_norm.weight, k_norm.weight, cos_sin_cache, eps=float(q_norm.eps))
     q, k = apply_qk_norm(q, k, q_norm, k_norm, q.shape[-1])
@@ -205,7 +207,7 @@ def indexed_scale_shift(
     """Return ``x * (1 + scale[idx]) + shift[idx]`` cast to ``dtype``."""
 
     if dtype == _BF16 and can_use_fused_indexed_modulation(x, shift, scale):
-        from worldfoundry.core.kernels.triton_minimax_h3_modulation import (
+        from worldfoundry.base_models.diffusion_model.models.networks.minimax_h3.triton_modulation import (
             indexed_scale_shift_bf16_,
         )
 
@@ -226,7 +228,7 @@ def indexed_gate(
     """Return the gated residual ``x + gate[idx] * other`` cast to ``dtype``."""
 
     if dtype == _BF16 and can_use_fused_indexed_modulation(x, gate, other):
-        from worldfoundry.core.kernels.triton_minimax_h3_modulation import (
+        from worldfoundry.base_models.diffusion_model.models.networks.minimax_h3.triton_modulation import (
             indexed_gate_bf16_,
         )
 

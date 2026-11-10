@@ -1,17 +1,16 @@
-"""In-tree xDiT-style context parallel without requiring the xFuser package.
+"""In-tree xDiT-style sequence parallel for Wan DiT blocks without the xFuser package.
 
 xFuser's SP ranks/world-size are reimplemented with torch.distributed so
 Wan checkpoints can run Ulysses on a stock wheel. RoPE frequencies are
 padded to the sharded length; attention goes through
 :func:`~worldfoundry.core.attention.parallel.ulysses_attention.distributed_attention`.
 
-When the real xFuser stack is installed, prefer
-:mod:`worldfoundry.core.attention.parallel.scope_xdit_context_parallel`.
+When the xFuser stack is installed, :mod:`.parallel_adapter` binds xFuser
+sequence-parallel ranks to the same Wan block forwards.
 
 Not this module:
     Does not import xfuser / yunchang. Does not own process-group
-    teardown. Video VACE hooks live in
-    :mod:`.video_xdit_context_parallel`.
+    teardown.
 
 Public surface:
 

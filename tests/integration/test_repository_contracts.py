@@ -43,14 +43,17 @@ def test_reward_server_no_longer_unpickles_http_bodies() -> None:
     assert "REWARD_3D_ALLOW_NON_LOOPBACK" in source
 
 
-def test_runtime_modules_do_not_import_evaluation_utils() -> None:
-    runtime_dir = REPO_ROOT / "worldfoundry/runtime"
+def test_model_side_modules_do_not_import_evaluation_utils() -> None:
     offenders: list[str] = []
-    for path in runtime_dir.glob("*.py"):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module == "worldfoundry.evaluation.utils":
-                offenders.append(path.name)
+    for package in ("runtime", "synthesis", "base_models", "studio"):
+        pattern = "*.py" if package == "runtime" else "**/*.py"
+        for path in (REPO_ROOT / "worldfoundry" / package).glob(pattern):
+            source = path.read_text(encoding="utf-8", errors="replace")
+            if "worldfoundry.evaluation.utils" not in source:
+                continue
+            for node in ast.walk(ast.parse(source)):
+                if isinstance(node, ast.ImportFrom) and node.module == "worldfoundry.evaluation.utils":
+                    offenders.append(str(path.relative_to(REPO_ROOT)))
     assert offenders == []
 
 
@@ -312,14 +315,6 @@ def test_metric_sync_uses_module_logger() -> None:
     source = (REPO_ROOT / "worldfoundry/core/distributed/collectives/metric_sync.py").read_text(encoding="utf-8")
     assert "getLogger(__name__)" in source
     assert "getLogger()" not in source
-
-
-def test_fsim_iw_ssim_uses_linalg_eigh() -> None:
-    source = (REPO_ROOT / "worldfoundry/evaluation/tasks/metrics/fsim/vendor/piq/iw_ssim.py").read_text(
-        encoding="utf-8"
-    )
-    assert "torch.symeig" not in source
-    assert "torch.linalg.eigh" in source
 
 
 def test_trainer_logging_config_does_not_rewire_root() -> None:

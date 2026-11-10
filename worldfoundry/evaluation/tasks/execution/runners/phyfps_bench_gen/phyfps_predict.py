@@ -63,41 +63,6 @@ def mock_predict_directory(video_dir: Path, *, stride: int = 4, clip_length: int
     return records
 
 
-def build_official_predict_command(
-    *,
-    config: PhyFPSPredictConfig,
-    video_dir: Path,
-    output_csv: Path,
-) -> list[str]:
-    if config.chronometer_root is None:
-        raise ValueError("Visual Chronometer root is required for official PhyFPS prediction")
-    inference_root = config.chronometer_root / "inference"
-    predict_script = inference_root / "predict.py"
-    if not predict_script.is_file():
-        raise FileNotFoundError(f"Visual Chronometer predict.py not found: {predict_script}")
-    command = [
-        config.python_executable,
-        str(predict_script),
-        "--video_dir",
-        str(video_dir),
-        "--stride",
-        str(config.stride),
-        "--clip_length",
-        str(config.clip_length),
-        "--resolution",
-        str(config.resolution),
-        "--device",
-        config.device,
-        "--output_csv",
-        str(output_csv),
-    ]
-    if config.config_path is not None:
-        command.extend(["--config", str(config.config_path)])
-    if config.ckpt_path is not None:
-        command.extend(["--ckpt", str(config.ckpt_path)])
-    return command
-
-
 def run_official_predict(
     *,
     config: PhyFPSPredictConfig,

@@ -62,13 +62,5 @@ def natural25_root(explicit: Path | None = None) -> Path:
     return benchmark_assets_root(explicit) / "natural25"
 
 
-def model_configs_root(explicit: Path | None = None) -> Path:
-    return benchmark_assets_root(explicit) / "model_configs"
-
-
-def prompt_templates_root(explicit: Path | None = None) -> Path:
-    return benchmark_assets_root(explicit) / "prompts" / "templates"
-
-
 def published_results_path(explicit: Path | None = None) -> Path:
     return benchmark_assets_root(explicit) / "results" / "wrbench_23model_results.json"

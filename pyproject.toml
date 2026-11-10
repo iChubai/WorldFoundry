@@ -167,7 +167,6 @@ distribution_metrics = [
     "peft>=0.2.0",
     "piq>=0.8.0",
     "pillow",
-    "rke-score>=0.1.0",
     "scikit-image",
     "scikit-learn",
     "scipy",

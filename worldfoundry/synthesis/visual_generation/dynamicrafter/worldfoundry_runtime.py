@@ -4,9 +4,9 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import package_data_path
 
-DEFAULT_DYNAMICRAFTER_CONFIG_ROOT = worldfoundry_data_path(
+DEFAULT_DYNAMICRAFTER_CONFIG_ROOT = package_data_path(
     "models",
     "runtime",
     "configs",
@@ -62,7 +62,7 @@ def _resolve_config_path(config: str) -> Path:
     if config_path.is_absolute():
         return config_path
     if config_path.parts and config_path.parts[:2] == ("runtime", "configs"):
-        return worldfoundry_data_path("models", *config_path.parts)
+        return package_data_path("models", *config_path.parts)
     if len(config_path.parts) == 1:
         return DEFAULT_DYNAMICRAFTER_CONFIG_ROOT / config_path
     return config_path.resolve()

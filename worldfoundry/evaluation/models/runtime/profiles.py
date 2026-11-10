@@ -35,7 +35,7 @@ from ._shared import iter_manifest_mappings, schema_version_or_none, tuple_of_st
 # Primary model catalog root for runtime-profile synthesis.
 DEFAULT_CATALOG_MANIFEST = DATA_ROOT / "models" / "catalog"
 DEFAULT_CATALOG_MANIFESTS = (DEFAULT_CATALOG_MANIFEST,)
-# Canonical per-model runtime profile YAML files (schema v2 and legacy single-file profiles).
+# Canonical per-model runtime profile YAML files (schema v2).
 DEFAULT_RUNTIME_PROFILES_ROOT = DATA_ROOT / "models" / "runtime" / "profiles"
 DEFAULT_TARGET_PROFILE_MANIFESTS = (DEFAULT_RUNTIME_PROFILES_ROOT,)
 # Local cache root for cloned acquisition targets.
@@ -277,10 +277,10 @@ class RuntimeProfile:
 
     @classmethod
     def from_mapping(cls, data: Mapping[str, Any]) -> RuntimeProfile:
-        """Build a :class:`RuntimeProfile` from a raw YAML mapping.
+        """Build a :class:`RuntimeProfile` from a schema v2 YAML mapping.
 
-        Supports multiple legacy key names (e.g. ``"id"`` → ``"model_id"``) and
-        infers ``task_family``, ``artifact_kind``, and ``artifact_filename``
+        Accepts the target-profile spellings (``name``, ``artifact``, ``inputs``,
+        ``profile_id``) and infers ``artifact_kind`` and ``artifact_filename``
         when not explicitly provided.
 
         Args:
@@ -296,18 +296,17 @@ class RuntimeProfile:
         integration = (
             cast(Mapping[str, Any], data.get("integration")) if isinstance(data.get("integration"), Mapping) else {}
         )
-        profile_id = str(data.get("profile_id") or data.get("id") or data.get("model_id") or "")
-        model_id = str(data.get("model_id") or data.get("id") or profile_id)
+        model_id = str(data.get("model_id") or "")
+        profile_id = str(data.get("profile_id") or model_id)
         input_schema = (
             cast(Mapping[str, Any], data.get("input_schema")) if isinstance(data.get("input_schema"), Mapping) else {}
         )
-        # NOTE: Derive input_schema from legacy ``inputs`` mapping when not explicit.
         if not input_schema and inputs:
             input_schema = {
                 "required": list(_tuple_of_str(inputs.get("required"))),
                 "optional": list(_tuple_of_str(inputs.get("optional"))),
             }
-        task_family = str(data.get("task_family") or execution.get("task_family") or "video_generation")
+        task_family = str(data.get("task_family") or "video_generation")
         artifact_kind = str(artifact.get("kind") or data.get("artifact_kind") or _artifact_kind(task_family))
         profile = cls(
             model_id=model_id,
@@ -322,31 +321,20 @@ class RuntimeProfile:
             artifact_filename=str(
                 artifact.get("filename") or data.get("artifact_filename") or _artifact_filename(artifact_kind)
             ),
-            command_template=_tuple_of_str(execution.get("command_template") or data.get("command_template")),
+            command_template=_tuple_of_str(execution.get("command_template")),
             conda_env=dict(cast(Mapping[str, Any], data.get("conda_env")))
             if isinstance(data.get("conda_env"), Mapping)
             else {},
-            backend_stage=str(execution.get("backend_stage") or data.get("backend_stage") or "profile_only"),
-            runtime_status=str(execution.get("runtime_status") or data.get("runtime_status") or "profiled"),
-            integration_status=str(
-                integration.get("status")
-                or execution.get("integration_status")
-                or data.get("integration_status")
-                or "planned"
-            ),
+            backend_stage=str(execution.get("backend_stage") or "profile_only"),
+            runtime_status=str(execution.get("runtime_status") or "profiled"),
+            integration_status=str(integration.get("status") or execution.get("integration_status") or "planned"),
             execution=dict(execution),
             output=dict(output),
             notes=_profile_notes(data),
         )
         # Preserve the original profile_id inside execution if it differs from model_id.
-        if profile_id and profile_id != profile.model_id:
-            profile = replace(
-                profile,
-                execution={
-                    **dict(profile.execution),
-                    "profile_id": profile_id,
-                },
-            )
+        if profile_id != profile.model_id:
+            profile = replace(profile, execution={**dict(profile.execution), "profile_id": profile_id})
         profile.validate()
         return profile
 
@@ -437,7 +425,7 @@ def _iter_target_profile_mappings(path: Path) -> tuple[Mapping[str, Any], ...]:
     return iter_manifest_mappings(
         path,
         collection_keys=("profiles", "runtime_profiles"),
-        id_keys=("model_id", "profile_id", "id"),
+        id_keys=("model_id", "profile_id"),
         kind="runtime profile",
     )
 
@@ -585,15 +573,6 @@ def _iter_catalog_runtime_targets(root: Path) -> tuple[Mapping[str, Any], ...]:
     return tuple(targets)
 
 
-def _is_runtime_target(target: Mapping[str, Any]) -> bool:
-    """Filter out non-model / non-runtime acquisition targets like benchmarks or frameworks."""
-    target_id = str(target.get("id") or "")
-    if not target_id:
-        return False
-    kind = str(target.get("kind") or "model").lower()
-    return kind not in {"benchmark", "benchmark_runtime", "dataset", "framework", "simulator"}
-
-
 def _iter_runtime_targets(paths: Sequence[Path]) -> tuple[Mapping[str, Any], ...]:
     """Iterate, parse, and de-duplicate runtime targets from catalog manifests."""
     targets: list[Mapping[str, Any]] = []
@@ -626,10 +605,6 @@ def _profile_override_mapping(profile_path: str | Path | None) -> dict[str, Mapp
         for item in override_payload.get("profiles", [])
         if isinstance(item, Mapping) and item.get("id")
     }
-
-
-def _uses_catalog_manifest(paths: Sequence[Path]) -> bool:
-    return any(_is_catalog_manifest_root(path) for path in paths)
 
 
 def _profile_from_target(
@@ -893,11 +868,6 @@ def load_runtime_profile(model_id: str, **kwargs: Any) -> RuntimeProfile:
 
 
 # ── Utility helpers ──────────────────────────────────────────
-
-
-def available_runtime_profile_ids() -> tuple[str, ...]:
-    """Retrieve a sorted list of all available runtime profile IDs."""
-    return tuple(sorted(load_runtime_profiles()))
 
 
 def resolve_existing_tool(name: str) -> str:

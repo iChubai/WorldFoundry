@@ -7,9 +7,7 @@ already computed scores or preference rows in-tree.
 
 from __future__ import annotations
 
-import json
 import re
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -159,18 +157,6 @@ def _as_numpy(scores: Any) -> np.ndarray:
     return np.asarray(scores)
 
 
-def _load_scores(path: Path) -> np.ndarray:
-    if path.suffix == ".npy":
-        return np.load(path)
-    if path.suffix == ".json":
-        return np.asarray(json.loads(path.read_text(encoding="utf-8")))
-    if path.suffix == ".pt":
-        import torch
-
-        return _as_numpy(torch.load(path, map_location="cpu"))
-    raise ValueError(f"unsupported GenAI-Bench score format: {path}")
-
-
 def _mean_i2t_scores(scores: Any, item_count: int) -> list[float]:
     arr = _as_numpy(scores)
     if arr.shape[0] != item_count:
@@ -232,68 +218,4 @@ def evaluate_genai_alignment_scores(
                 )
             }
         result["per_skill"] = tag_results
-    return result
-
-
-def evaluate_genai_alignment_score_file(
-    score_path: Path,
-    metadata_path: Path,
-    *,
-    tags_path: Path | None = None,
-    prompt_to_items_path: Path | None = None,
-) -> dict[str, Any]:
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    if not isinstance(metadata, list):
-        raise ValueError(f"GenAI metadata must be a list of item records: {metadata_path}")
-    tags = json.loads(tags_path.read_text(encoding="utf-8")) if tags_path is not None and tags_path.is_file() else None
-    prompt_to_items = (
-        json.loads(prompt_to_items_path.read_text(encoding="utf-8"))
-        if prompt_to_items_path is not None and prompt_to_items_path.is_file()
-        else None
-    )
-    return evaluate_genai_alignment_scores(
-        _load_scores(score_path), metadata, tags=tags, prompt_to_items=prompt_to_items
-    )
-
-
-def evaluate_genai_ranking_scores(
-    scores: Any,
-    items: list[dict[str, Any]],
-    *,
-    images_to_prompt_idx: list[int] | None = None,
-    tags: dict[str, list[int]] | None = None,
-) -> dict[str, Any]:
-    """Evaluate GenAI image-ranking score tensors with the official 9-image layout."""
-
-    our_scores = np.asarray(_mean_i2t_scores(scores, len(items)), dtype=float)
-    human_scores = np.asarray(_human_alignment_from_items(items, key="human_score"), dtype=float)
-    if len(items) % 9 != 0:
-        raise ValueError("GenAI ranking evaluation expects 9 images per prompt")
-    prompt_count = len(items) // 9
-    our_per_prompt = our_scores.reshape(prompt_count, 9)
-    human_per_prompt = human_scores.reshape(prompt_count, 9)
-    argmax_human = np.argmax(human_per_prompt, axis=1)
-    argmin_human = np.argmin(human_per_prompt, axis=1)
-    ranking_accuracy = (
-        our_per_prompt[np.arange(prompt_count), argmax_human] > our_per_prompt[np.arange(prompt_count), argmin_human]
-    )
-
-    result: dict[str, Any] = {
-        "pearson": calc_pearson(human_scores, our_scores),
-        "kendall_b": calc_metric(human_scores, our_scores, variant="tau_b"),
-        "ranking_accuracy": float(ranking_accuracy.mean()) if ranking_accuracy.size else 0.0,
-        "num_prompts": int(prompt_count),
-    }
-    if tags is not None and images_to_prompt_idx is not None:
-        per_skill: dict[str, Any] = {}
-        for tag, prompt_indices in tags.items():
-            selected = [
-                index
-                for index, prompt_idx in enumerate(images_to_prompt_idx[:prompt_count])
-                if prompt_idx in prompt_indices
-            ]
-            if selected:
-                per_skill[tag] = float(ranking_accuracy[selected].mean())
-        per_skill["all"] = result["ranking_accuracy"]
-        result["per_skill"] = per_skill
     return result

@@ -10,12 +10,11 @@ from einops import rearrange
 from omegaconf import OmegaConf
 from safetensors.torch import load_file
 
-from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
+from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path, package_data_path
 from worldfoundry.core.media.artifacts import process_game_control_video as process_video
 from worldfoundry.core.utils.tensors.torch import set_seed_everywhere as set_seed
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 
-MATRIX_GAME_2_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "matrix_game_2")
+MATRIX_GAME_2_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "matrix_game_2")
 MODE_CHECKPOINTS = {
     "universal": ("base_distilled_model", "base_distill.safetensors"),
     "gta_drive": ("gta_distilled_model", "gta_keyboard2dim.safetensors"),

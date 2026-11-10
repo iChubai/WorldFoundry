@@ -5,11 +5,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import package_data_path
 
 
 def get_config_path() -> Path:
-    data_configs = worldfoundry_data_path("models", "runtime", "configs", "vipe")
+    data_configs = package_data_path("models", "runtime", "configs", "vipe")
     if (data_configs / "default.yaml").is_file():
         return data_configs
     repo_configs = Path(__file__).resolve().parents[1] / "configs"

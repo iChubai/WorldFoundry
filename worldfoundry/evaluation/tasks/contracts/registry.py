@@ -9,7 +9,7 @@ name collisions.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from typing import Literal
 
@@ -128,15 +128,6 @@ def register_external_benchmark_contract(
     return contract
 
 
-def supported_external_benchmark_contracts() -> Mapping[str, ExternalBenchmarkContract]:
-    """Returns a shallow snapshot of process-global benchmark contracts.
-
-    Returns:
-        A read-only Mapping representing all currently registered benchmark contracts.
-    """
-    return dict(_SUPPORTED_CONTRACTS)
-
-
 class ExternalBenchmarkContractRegistry:
     """Manages dynamic discovery, registration, and collision-handling for external benchmark definitions.
 
@@ -217,5 +208,4 @@ __all__ = [
     "ExternalBenchmarkContractRegistryError",
     "UnknownExternalBenchmarkContractError",
     "register_external_benchmark_contract",
-    "supported_external_benchmark_contracts",
 ]

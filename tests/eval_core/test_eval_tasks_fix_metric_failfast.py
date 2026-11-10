@@ -20,7 +20,7 @@ from worldfoundry.evaluation.tasks.metrics.registry import (
 
 
 def test_registered_but_uncomputable_metric_ids_fail_fast() -> None:
-    for metric_id in ("fid", "cmmd", "vqa_score", "clip_score"):
+    for metric_id in ("fid", "kid", "vqa_score", "clip_score"):
         # These ids resolve in the registry (they are real metric packages) ...
         assert default_metric_registry().get(metric_id) is not None
         # ... but the offline evaluator cannot compute them, so it must refuse.
@@ -67,7 +67,7 @@ def test_is_offline_computable_metric_id_matrix() -> None:
     assert is_offline_computable_metric_id("has_artifact:video")
     assert is_offline_computable_metric_id("numeric:quality")
     assert not is_offline_computable_metric_id("fid")
-    assert not is_offline_computable_metric_id("cmmd")
+    assert not is_offline_computable_metric_id("kid")
 
 
 def test_metric_resolution_reports_benchmark_supported_metrics() -> None:

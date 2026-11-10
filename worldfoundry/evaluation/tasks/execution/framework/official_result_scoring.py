@@ -285,21 +285,3 @@ def _loose_id(value: str) -> str:
     """Normalize ids for model/result matching while preserving explicit ids elsewhere."""
 
     return re.sub(r"[^a-z0-9]+", "", value.casefold())
-
-
-def _float_list(value: JsonValue) -> list[float]:
-    """Parse official list-valued CSV cells into floats.
-
-    Args:
-        value: CSV cell, JSON list, or scalar field.
-    """
-
-    if value in (None, ""):
-        return []
-    if isinstance(value, list):
-        return [float(item) for item in value if isinstance(item, (int, float)) and not isinstance(item, bool)]
-    if isinstance(value, str):
-        return [float(item) for item in re.findall(r"[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?", value)]
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return [float(value)]
-    return []

@@ -9,11 +9,10 @@ from typing import Any
 
 import yaml
 
-from worldfoundry.core.io.paths import checkpoint_root_candidates, hfd_root_path
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import checkpoint_root_candidates, hfd_root_path, package_data_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 
-_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "liveworld")
+_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "liveworld")
 
 
 def _first_local_path(*candidates: Path) -> Path:

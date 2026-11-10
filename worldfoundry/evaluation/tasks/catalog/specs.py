@@ -9,7 +9,6 @@ loading and writing these specifications from/to manifest files.
 from __future__ import annotations
 
 import importlib
-import json
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
@@ -289,26 +288,6 @@ def load_benchmark_specs(path: str | Path) -> tuple[BenchmarkSpec, ...]:
     """
     # Load raw entries from the specified path and then convert them to BenchmarkSpecs.
     return benchmark_zoo_entries_to_benchmark_specs(load_entries(path))
-
-
-def write_benchmark_specs_json(entries_path: str | Path, output_path: str | Path) -> Path:
-    """Loads benchmark-zoo entries from a manifest and exports their BenchmarkSpec representations to a JSON file.
-
-    Args:
-        entries_path: Path to the input benchmark-zoo manifest file.
-        output_path: Path to the output JSON file where the `BenchmarkSpec` objects will be written.
-
-    Returns:
-        The `Path` to the exported JSON file.
-    """
-    specs = load_benchmark_specs(entries_path)
-    destination = Path(output_path)
-    # Ensure the parent directory for the output file exists.
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    # Convert BenchmarkSpec objects to dictionaries for JSON serialization.
-    payload = [spec.to_dict() for spec in specs]
-    destination.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return destination
 
 
 BENCHMARK_ZOO_SUITE = "benchmark_zoo"

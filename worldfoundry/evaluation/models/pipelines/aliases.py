@@ -165,21 +165,6 @@ def build_alias_mapping(handlers: Mapping[str, HandlerT], aliases: Mapping[str, 
     return mapping
 
 
-def build_runtime_video_mapping(handlers: Mapping[str, HandlerT]) -> dict[str, HandlerT]:
-    """Build runtime-video dispatch entries from canonical handlers.
-
-    Selects only the video pipelines listed in :data:`RUNTIME_VIDEO_ALIASES`
-    and expands them with all their aliases.
-    """
-    canonical_handlers = {canonical_name: handlers[canonical_name] for canonical_name, _ in RUNTIME_VIDEO_ALIASES}
-    aliases = {
-        alias: canonical_name
-        for canonical_name, canonical_aliases in RUNTIME_VIDEO_ALIASES
-        for alias in canonical_aliases
-    }
-    return build_alias_mapping(canonical_handlers, aliases)
-
-
 # ── Private helpers ──────────────────────────────────────────────────
 
 
@@ -333,7 +318,6 @@ __all__ = [
     "PipelineAliasGroup",
     "PipelineAliasRegistry",
     "build_alias_mapping",
-    "build_runtime_video_mapping",
     "clear_pipeline_alias_registry_cache",
     "load_pipeline_alias_groups",
     "load_pipeline_alias_registry",

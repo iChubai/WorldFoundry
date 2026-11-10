@@ -231,16 +231,6 @@ def write_placeholder_video(path: Path, *, frames: int = 32, size: int = 224, fp
     return path
 
 
-def materialize_sample_generated_videos(
-    output_dir: Path, *, count: int = 1, frames: int = 32, size: int = 224, fps: int = 8
-) -> Path:
-    generated_dir = output_dir / "sample_generated_videos"
-    generated_dir.mkdir(parents=True, exist_ok=True)
-    for index in range(count):
-        write_placeholder_video(generated_dir / f"sample-{index}.mp4", frames=frames, size=size, fps=fps)
-    return generated_dir
-
-
 def main(argv: list[str] | None = None) -> int:
     """CLI compatibility for legacy ``create_tiny_video`` tests."""
     import argparse

@@ -413,23 +413,6 @@ def _validate_generation_manifest_row(
     return normalized, source
 
 
-def categories_from_generation_manifest(
-    *,
-    generated_video_dir: Path,
-    generation_manifest_path: Path | None = None,
-    assets_root: Path | None = None,
-) -> tuple[str, ...]:
-    """Return manifest categories in canonical order after strict validation."""
-
-    report = validate_t2v_compbench_generation_manifest(
-        generated_video_dir=generated_video_dir,
-        generation_manifest_path=generation_manifest_path,
-        assets_root=assets_root,
-    )
-    present = set(report["by_category"])
-    return tuple(category for category in CATEGORY_ORDER if category in present)
-
-
 def validate_t2v_compbench_generation_manifest(
     *,
     generated_video_dir: Path,
@@ -605,7 +588,6 @@ __all__ = [
     "GENERATION_MANIFEST_NAME",
     "OFFICIAL_LAYOUT_MANIFEST_NAME",
     "PROMPTS_PER_CATEGORY",
-    "categories_from_generation_manifest",
     "copy_t2v_compbench_generated_videos",
     "load_t2v_compbench_prompt_records",
     "materialize_t2v_compbench_generation_requests",

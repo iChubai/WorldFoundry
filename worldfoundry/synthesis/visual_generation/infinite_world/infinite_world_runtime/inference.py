@@ -8,8 +8,8 @@ from typing import Any
 import numpy as np
 import torch
 
+from worldfoundry.core.io.paths import package_data_path
 from worldfoundry.core.model_loading import load_torch_state_dict
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 from .bucket_registry import get_bucket_config
 from .plan import (
@@ -36,7 +36,7 @@ def default_config_path() -> str:
     Args:
         None.
     """
-    return str(worldfoundry_data_path("models", "runtime", "configs", "infinite_world", "inference.yaml"))
+    return str(package_data_path("models", "runtime", "configs", "infinite_world", "inference.yaml"))
 
 
 def build_runtime_plan(

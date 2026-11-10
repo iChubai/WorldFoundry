@@ -11,8 +11,13 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core import jsonable
-from worldfoundry.core.io.paths import conda_envs_root_path, conda_root_path, project_root, resolve_worldfoundry_path
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import (
+    conda_envs_root_path,
+    conda_root_path,
+    package_data_path,
+    project_root,
+    resolve_worldfoundry_path,
+)
 from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hfd_root
 
 RUNTIME_ROOT = Path(__file__).resolve().parent
@@ -27,7 +32,7 @@ DEFAULT_CONDA_DIR = os.environ.get(
     "WORLDFOUNDRY_MATRIX_GAME_1_CONDA_DIR",
     str(conda_envs_root_path() / "matrix-game-1.0"),
 )
-DEFAULT_RUNTIME_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "matrix_game_1")
+DEFAULT_RUNTIME_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "matrix_game_1")
 EXPECTED_DIT_FILES = tuple(f"dit/diffusion_pytorch_model-{index:05d}-of-00007.safetensors" for index in range(1, 8))
 EXPECTED_TEXT_ENCODER_FILES = tuple(f"text_encoder_i2v/model-{index:05d}-of-00004.safetensors" for index in range(1, 5))
 EXPECTED_VAE_FILES = ("vae/pytorch_model.pt",)

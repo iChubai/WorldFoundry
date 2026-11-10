@@ -26,21 +26,6 @@ PHYGENEVAL_DIR_REL = Path("PhyGenEval")
 OVERALL_SCRIPT_REL = PHYGENEVAL_DIR_REL / "overall.py"
 
 
-def resolve_phygeneval_dir(*, explicit: Path | None = None, repo_root: Path | None = None) -> Path | None:
-    if explicit is not None:
-        path = explicit.expanduser().resolve()
-        return path if path.is_dir() else None
-    env_dir = os.environ.get("WORLDFOUNDRY_PHYGENEVAL_DIR")
-    if env_dir:
-        geneval_path = Path(env_dir).expanduser().resolve()
-        return geneval_path if geneval_path.is_dir() else None
-    root = repo_root or resolve_phygenbench_root()
-    if root is None:
-        return None
-    candidate = root / PHYGENEVAL_DIR_REL
-    return candidate if candidate.is_dir() else None
-
-
 def resolve_overall_script(*, repo_root: Path | None = None) -> Path | None:
     root = repo_root or resolve_phygenbench_root()
     if root is None:

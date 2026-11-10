@@ -13,8 +13,6 @@ from PIL import Image
 
 from worldfoundry.evaluation.tasks.metrics._shared.bbox import bbox_iou
 from worldfoundry.evaluation.tasks.metrics.fid.scene import compute_scene_fid, extract_object_crops
-from worldfoundry.evaluation.tasks.metrics.lqs import compute_lqs
-from worldfoundry.evaluation.tasks.metrics.object_wise_consistency import compute_object_wise_consistency
 
 
 class SceneInputTests(unittest.TestCase):
@@ -101,22 +99,10 @@ class SceneInputTests(unittest.TestCase):
     def test_five_value_boxes_share_geometry_across_metrics(self):
         first, second = [10, 12, 15, 20, 0.9], [15, 12, 15, 20, 0.1]
         self.assertAlmostEqual(bbox_iou(first, second), 0.5)
-        corners = [{"label": "object", "bbox": [10, 12, 25, 32]}]
-        sized = [{"label": "object", "bbox": first}]
-        self.assertEqual(compute_lqs(corners, corners), compute_lqs(corners, sized))
         self.boxes.write_text(json.dumps({"nested/image.png": [first]}))
         crops = extract_object_crops(self.reference, self.boxes, self.root / "crops", min_crop_size=1)
         with Image.open(next(crops.glob("*.png"))) as crop:
             self.assertEqual(crop.size, (15, 20))
-
-    def test_four_value_boxes_preserve_iou_across_coordinate_scales(self):
-        for scale in (1, 100):
-            with self.subTest(scale=scale):
-                guidance = [([v / scale for v in (10, 10, 20, 20)], "chair")]
-                detections = [([v / scale for v in (14, 10, 24, 20)], "chair")]
-                score = compute_object_wise_consistency(guidance, detections)
-                self.assertAlmostEqual(score["object_wise_iou_mean"], 3 / 7)
-                self.assertEqual(score["object_wise_success_rate"], 0)
 
 
 if __name__ == "__main__":

@@ -72,81 +72,9 @@ def matrix_to_rot6d_interleaved(mat: np.ndarray) -> np.ndarray:
     return mat[:, :2].reshape(6).copy()
 
 
-def rot6d_interleaved_to_quat(v6: np.ndarray) -> np.ndarray:
-    """Convert an interleaved 6D rotation vector into a quaternion [x, y, z, w].
-
-    Args:
-        v6: Interleaved 6D rotation array.
-
-    Returns:
-        A quaternion array in [x, y, z, w] layout.
-    """
-    return matrix_to_quat(rot6d_interleaved_to_matrix(v6))
-
-
-def quat_to_rot6d_interleaved(q: np.ndarray) -> np.ndarray:
-    """Convert a quaternion [x, y, z, w] into an interleaved 6D rotation vector.
-
-    Args:
-        q: A quaternion array in [x, y, z, w] layout.
-
-    Returns:
-        The interleaved 6D rotation array.
-    """
-    return matrix_to_rot6d_interleaved(quat_to_matrix(q))
-
-
-def rot6d_interleaved_to_euler_xyz(v6: np.ndarray) -> np.ndarray:
-    """Convert an interleaved 6D rotation into extrinsic XYZ Euler angles (radians).
-
-    Args:
-        v6: Interleaved 6D rotation array.
-
-    Returns:
-        An array of 3 Euler angles [x, y, z] in radians.
-    """
-    return matrix_to_euler_xyz(rot6d_interleaved_to_matrix(v6))
-
-
-def euler_xyz_to_rot6d_interleaved(euler: np.ndarray) -> np.ndarray:
-    """Convert extrinsic XYZ Euler angles into an interleaved 6D rotation vector.
-
-    Args:
-        euler: Extrinsic XYZ Euler angles in radians.
-
-    Returns:
-        The interleaved 6D rotation array.
-    """
-    return matrix_to_rot6d_interleaved(euler_xyz_to_matrix(euler))
-
-
-def axisangle_to_rot6d_interleaved(aa: np.ndarray) -> np.ndarray:
-    """Convert an axis-angle representation (3D) into an interleaved 6D rotation vector.
-
-    Args:
-        aa: An axis-angle 3D array.
-
-    Returns:
-        The interleaved 6D rotation array.
-    """
-    return matrix_to_rot6d_interleaved(axisangle_to_matrix(aa)).astype(np.float32)
-
-
 # ---------------------------------------------------------------------------
 # Contiguous rot6d  (model-server convention)
 # ---------------------------------------------------------------------------
-
-
-def rot6d_contiguous_to_matrix(v6: np.ndarray) -> np.ndarray:
-    """Contiguous 6-D rotation → 3×3 rotation matrix.
-
-    Args:
-        v6: Contiguous 6D rotation array.
-
-    Returns:
-        The reconstructed 3x3 rotation matrix.
-    """
-    return gram_schmidt(v6[:3], v6[3:6])
 
 
 def matrix_to_rot6d_contiguous(mat: np.ndarray) -> np.ndarray:
@@ -253,30 +181,6 @@ def axisangle_to_matrix(aa: np.ndarray) -> np.ndarray:
     axis = aa / angle
     K = np.array([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]], [-axis[1], axis[0], 0]])
     return np.eye(3) + np.sin(angle) * K + (1 - np.cos(angle)) * (K @ K)
-
-
-def axisangle_to_rot6d_contiguous(aa: np.ndarray) -> np.ndarray:
-    """Axis-angle (3-D) → contiguous 6-D rotation.
-
-    Args:
-        aa: Axis-angle 3D array.
-
-    Returns:
-        The contiguous 6D rotation array.
-    """
-    return matrix_to_rot6d_contiguous(axisangle_to_matrix(aa)).astype(np.float32)
-
-
-def euler_xyz_to_rot6d_contiguous(euler: np.ndarray) -> np.ndarray:
-    """Extrinsic XYZ Euler → contiguous 6-D rotation.
-
-    Args:
-        euler: Extrinsic XYZ Euler angles.
-
-    Returns:
-        The contiguous 6D rotation array.
-    """
-    return matrix_to_rot6d_contiguous(euler_xyz_to_matrix(euler)).astype(np.float32)
 
 
 # ---------------------------------------------------------------------------

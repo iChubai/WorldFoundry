@@ -141,17 +141,6 @@ def load_prompt_records(*, prompts_path: Path | None = None) -> list[dict[str, s
     return records
 
 
-def load_cap_records(*, cap_path: Path | None = None) -> list[dict[str, str]]:
-    path = resolve_cap_path(explicit=cap_path)
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, list):
-        raise ValueError(f"PhyEduVideo cap.json must be a JSON list: {path}")
-    records = _flatten_prompt_payload(payload)
-    if not records:
-        raise ValueError(f"PhyEduVideo cap.json is empty after flattening: {path}")
-    return records
-
-
 def unique_prompt_records(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     seen: set[str] = set()
     records: list[dict[str, str]] = []

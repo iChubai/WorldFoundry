@@ -15,8 +15,8 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.io.paths import package_data_path
 from worldfoundry.evaluation.models.runtime.profiles import DEFAULT_SHARED_HFD_ROOT
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 
 def _find_official_motionctrl_root() -> Path | None:
@@ -36,7 +36,7 @@ OFFICIAL_MOTIONCTRL_CONFIG = (
     else None
 )
 # Path to the MotionCtrl configuration file vendored within WorldFoundry data.
-WORLDFOUNDRY_MOTIONCTRL_CONFIG = worldfoundry_data_path(
+WORLDFOUNDRY_MOTIONCTRL_CONFIG = package_data_path(
     "models", "runtime", "configs", "camera_control", "motionctrl_config_both.yaml"
 )
 # The default configuration path for MotionCtrl, preferring the official config if it exists.
@@ -46,7 +46,7 @@ DEFAULT_MOTIONCTRL_CONFIG = (
     else WORLDFOUNDRY_MOTIONCTRL_CONFIG
 )
 # Default directory for MotionCtrl condition files (e.g., camera poses, object trajectories).
-DEFAULT_MOTIONCTRL_COND_DIR = worldfoundry_data_path("test_cases", "motionctrl_conditions")
+DEFAULT_MOTIONCTRL_COND_DIR = package_data_path("test_cases", "motionctrl_conditions")
 # Default path to the MotionCtrl model checkpoint.
 DEFAULT_MOTIONCTRL_CKPT = DEFAULT_SHARED_HFD_ROOT / "TencentARC--MotionCtrl" / "motionctrl.pth"
 # Hugging Face ID for the OpenCLIP model used by MotionCtrl.

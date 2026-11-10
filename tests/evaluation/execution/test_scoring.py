@@ -445,7 +445,7 @@ class ScoringTests(unittest.TestCase):
                 output_dir=self.root / "invalid",
                 requests=self.requests,
                 runner=runner,
-                metrics=["cmmd"],
+                metrics=["kid"],
             )
         self.assertEqual(runner.calls, [])
 

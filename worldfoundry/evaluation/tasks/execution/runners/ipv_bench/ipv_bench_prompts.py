@@ -62,25 +62,6 @@ def resolve_prompt_suite_path(
     return candidate
 
 
-def resolve_understanding_file(
-    relative: Path,
-    *,
-    explicit: Path | None = None,
-    repo_root: Path | None = None,
-) -> Path | None:
-    if explicit is not None:
-        path = explicit.expanduser().resolve()
-        return path if path.is_file() else None
-    bundled = bundled_benchmark_asset(BENCHMARK_ID, relative)
-    if bundled.is_file():
-        return bundled
-    root = repo_root or resolve_ipv_bench_root()
-    if root is None:
-        return None
-    candidate = root / relative
-    return candidate if candidate.is_file() else None
-
-
 def _traverse_prompt_suite(
     data: Any, path: list[str] | None = None, result: list[dict[str, Any]] | None = None
 ) -> list[dict[str, Any]]:

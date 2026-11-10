@@ -12,8 +12,7 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
-from worldfoundry.core.io.paths import resolve_local_hf_model_path
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import package_data_path, resolve_local_hf_model_path
 
 from .easyanimate_runtime import load_easyanimate_components
 
@@ -32,7 +31,7 @@ def default_model_path() -> str:
     return str(ckpt_root.expanduser() / "hfd" / "alibaba-pai--EasyAnimateV5.1-7b-zh-InP")
 
 
-DEFAULT_EASYANIMATE_CONFIG_ROOT = worldfoundry_data_path(
+DEFAULT_EASYANIMATE_CONFIG_ROOT = package_data_path(
     "models",
     "runtime",
     "configs",
@@ -62,7 +61,7 @@ def resolve_config_path(config_path: str | Path) -> str:
 
     # If the path starts with 'runtime_configs', it's relative to the 'models' directory within worldfoundry data.
     if path.parts and path.parts[:2] == ("runtime", "configs"):
-        return str(worldfoundry_data_path("models", *path.parts))
+        return str(package_data_path("models", *path.parts))
     # If it's a single file name, assume it's in the default EasyAnimate config root.
     if len(path.parts) == 1:
         return str(DEFAULT_EASYANIMATE_CONFIG_ROOT / path)

@@ -34,13 +34,9 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/evaluation/execution/test_vmbench_cas_writer.py \
 	tests/evaluation/execution/test_vbench_sampling.py \
 	tests/evaluation/execution/test_vbench_metadata_errors.py \
-	tests/evaluation/metrics/test_nexus_configuration.py \
-	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
 	tests/evaluation/test_source_cache.py \
-	tests/evaluation/metrics/test_fvmd_colormaps.py \
 	tests/eval_core/test_videoverse_local_vlm.py \
-	tests/eval_core/test_vendi_molecule_kernel.py \
 	tests/eval_core/test_libero_mem_recording.py \
 	tests/eval_core/test_model_benchmark_resume_controls.py \
 	tests/eval_core/test_run_manifest.py \
@@ -276,8 +272,6 @@ EVALUATION_CPU_CONTRACTS = \
 	tests/evaluation/execution/test_vmbench_cas_writer.py \
 	tests/evaluation/execution/test_vbench_sampling.py \
 	tests/evaluation/execution/test_vbench_metadata_errors.py \
-	tests/evaluation/metrics/test_nexus_configuration.py \
-	tests/evaluation/metrics/test_vendi_dispatch.py \
 	tests/eval_core/test_worldmembench_official_runner.py \
 	tests/eval_core/test_worldmembench_runtime.py \
 	tests/evaluation/execution/test_resume_options.py \
@@ -294,8 +288,6 @@ EVALUATION_CPU_CONTRACTS = \
 	tests/evaluation/metrics/test_worldscore_aggregation.py \
 	tests/evaluation/metrics/test_fvd_batch_preprocessing.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
-	tests/evaluation/metrics/test_fvmd_colormaps.py \
-	tests/evaluation/metrics/test_artscore_loader.py \
 	tests/cli/test_cli_mcp_contracts.py \
 	tests/cli/test_cli_mcp_usage_context.py \
 	tests/cli/test_mcp_content_conversion.py \

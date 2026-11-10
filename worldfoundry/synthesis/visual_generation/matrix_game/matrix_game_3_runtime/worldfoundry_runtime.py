@@ -17,13 +17,13 @@ from worldfoundry.core import cuda_visible_devices_from_device, load_pil_image, 
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
+    package_data_path,
     project_root,
 )
 from worldfoundry.core.io.paths import (
     package_module_root as package_root,
 )
 from worldfoundry.core.media.processing.postprocess import VideoChunk
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 from worldfoundry.runtime.env import resolve_hfd_root
 
 DEFAULT_MATRIX_GAME3_ALIASES = {
@@ -37,7 +37,7 @@ DEFAULT_MATRIX_GAME3_ALIASES = {
 
 
 DEFAULT_MATRIX_GAME3_CHECKPOINT_DIR = resolve_hfd_root() / "Skywork--Matrix-Game-3.0"
-DEFAULT_MATRIX_GAME3_ASSET_ROOT = worldfoundry_data_path(
+DEFAULT_MATRIX_GAME3_ASSET_ROOT = package_data_path(
     "models",
     "runtime",
     "configs",

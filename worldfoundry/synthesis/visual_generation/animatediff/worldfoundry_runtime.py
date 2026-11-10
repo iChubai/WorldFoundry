@@ -14,13 +14,13 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.utils import REPO_ROOT, worldfoundry_data_path
+from worldfoundry.core.io.paths import REPO_ROOT, package_data_path
 from worldfoundry.runtime.env import resolve_hfd_root
 
 # Default paths for AnimateDiff repository, integrated assets, configurations, and models.
 DEFAULT_ANIMATEDIFF_REPO_ROOT = Path(__file__).resolve().parent
 DEFAULT_ANIMATEDIFF_INTEGRATED_ROOT = REPO_ROOT / "cache" / "generative_taxonomy" / "integrated" / "animatediff"
-DEFAULT_ANIMATEDIFF_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "animatediff")
+DEFAULT_ANIMATEDIFF_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "animatediff")
 DEFAULT_SHARED_HFD_ROOT = resolve_hfd_root()
 DEFAULT_SD15_ROOT = Path(
     os.environ.get(

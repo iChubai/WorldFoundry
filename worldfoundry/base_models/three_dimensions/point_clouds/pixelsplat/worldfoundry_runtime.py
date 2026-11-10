@@ -12,9 +12,8 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.io.paths import hfd_root_path
+from worldfoundry.core.io.paths import hfd_root_path, package_data_path
 from worldfoundry.core.io.paths import package_module_root as package_root
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 
 def _resolve_hfd_root() -> Path:
@@ -22,7 +21,7 @@ def _resolve_hfd_root() -> Path:
 
 
 DEFAULT_PIXELSPLAT_CKPT = _resolve_hfd_root() / "dylanebert--pixelSplat" / "re10k.ckpt"
-_PIXELSPLAT_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "pixelsplat")
+_PIXELSPLAT_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "pixelsplat")
 DEFAULT_PIXELSPLAT_ASSET_ROOT = _PIXELSPLAT_CONFIG_ROOT / "assets"
 DEFAULT_PIXELSPLAT_INDEX = DEFAULT_PIXELSPLAT_ASSET_ROOT / "evaluation_index_re10k.json"
 DEFAULT_PIXELSPLAT_DEMO_ROOT = DEFAULT_PIXELSPLAT_ASSET_ROOT / "demo_re10k"

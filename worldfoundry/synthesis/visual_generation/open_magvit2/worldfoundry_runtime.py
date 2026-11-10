@@ -9,12 +9,11 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.io.paths import hfd_root_path
+from worldfoundry.core.io.paths import hfd_root_path, package_data_path
 from worldfoundry.core.io.paths import package_module_root as package_root
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 # Root directory for default Open-MAGVIT2 runtime configurations within worldfoundry data.
-DEFAULT_OPEN_MAGVIT2_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "open_magvit2")
+DEFAULT_OPEN_MAGVIT2_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "open_magvit2")
 # Default configuration file for Open-MAGVIT2 model.
 DEFAULT_OPEN_MAGVIT2_CONFIG = DEFAULT_OPEN_MAGVIT2_CONFIG_ROOT / "imagenet_conditional_llama_L.yaml"
 

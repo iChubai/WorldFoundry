@@ -484,7 +484,7 @@ def test_lyra1_inference_configs_live_in_data_runtime_configs():
     assert expected_configs == {path.name for path in config_root.glob("*.yaml")}
 
     sample_text = sample_path.read_text(encoding="utf-8")
-    assert "worldfoundry_data_path" in sample_text
+    assert "package_data_path" in sample_text
     assert 'runtime", "configs", "lyra_1", "inference' in sample_text
     assert "configs/inference/default.yaml" not in sample_text
     assert "configs/training" not in sample_text
@@ -835,7 +835,7 @@ def test_camera_control_configs_live_in_data_runtime_configs():
         encoding="utf-8"
     )
     cameractrl_synthesis_text = synthesis_paths[0].read_text(encoding="utf-8")
-    assert "worldfoundry_data_path" in cameractrl_runtime_text
+    assert "package_data_path" in cameractrl_runtime_text
     assert '"runtime", "configs"' in cameractrl_runtime_text
     assert "worldfoundry.synthesis" not in cameractrl_runtime_text
     assert "CameraCtrlRuntime" in cameractrl_synthesis_text
@@ -845,7 +845,7 @@ def test_camera_control_configs_live_in_data_runtime_configs():
     motionctrl_base_text = (
         REPO_ROOT / "worldfoundry/synthesis/visual_generation/motionctrl/worldfoundry_runtime.py"
     ).read_text(encoding="utf-8")
-    assert "worldfoundry_data_path" in motionctrl_base_text
+    assert "package_data_path" in motionctrl_base_text
     assert '"runtime", "configs"' in motionctrl_base_text
 
 
@@ -865,7 +865,7 @@ def test_animatediff_configs_live_in_data_runtime_configs():
 
     runtime_text = runtime_path.read_text(encoding="utf-8")
     synthesis_text = synthesis_path.read_text(encoding="utf-8")
-    assert "worldfoundry_data_path" in runtime_text
+    assert "package_data_path" in runtime_text
     assert '"runtime", "configs"' in runtime_text
     assert "worldfoundry.synthesis" not in runtime_text
     assert "AnimateDiffRuntime" in synthesis_text
@@ -1071,7 +1071,7 @@ def test_open_magvit2_inference_configs_live_in_data_runtime_configs():
     } == {path.name for path in config_root.glob("*.yaml")}
 
     runtime_text = runtime_path.read_text(encoding="utf-8")
-    assert "worldfoundry_data_path" in runtime_text
+    assert "package_data_path" in runtime_text
     assert 'runtime", "configs", "open_magvit2' in runtime_text
     assert "configs/Open-MAGVIT2" not in runtime_text
     assert "pretrain_lfqgan" not in "\n".join(path.name for path in config_root.glob("*.yaml"))

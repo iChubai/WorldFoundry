@@ -23,19 +23,12 @@ DEFAULT_EMBODIED_CATALOG_DIR = BENCHMARK_ZOO_DIR / "embodied"
 DEFAULT_VIDEO_CATALOG_DIR = BENCHMARK_ZOO_DIR / "video"
 DEFAULT_CATALOG_SHARD_DIRS = (DEFAULT_EMBODIED_CATALOG_DIR, DEFAULT_VIDEO_CATALOG_DIR)
 CATALOG_MANIFEST_FILENAME = "_manifest.yaml"
-_LEGACY_CATALOG_SHARDS = ("embodied_world_benchmarks.yaml", "video_world_benchmarks.yaml")
 
-FORMAL_BENCHMARK_INVENTORY_SUITE_ID = "benchmark-inventory-catalog"
 EXCLUDED_BENCHMARK_IDS = frozenset({"met3r", "psivg"})
 
 DEFAULT_BENCHMARK_RUNTIME_PROFILES_DIR = BENCHMARK_RUNTIME_PROFILE_DIR / "official"
 DEFAULT_BENCHMARK_RUNTIME_PROFILE_PATH = DEFAULT_BENCHMARK_RUNTIME_PROFILES_DIR
 DEFAULT_BENCHMARK_RUNTIME_DEFAULTS_PATH = BENCHMARK_RUNTIME_PROFILE_DIR / "defaults.yaml"
-_LEGACY_RUNTIME_PROFILE_MONOLITH_PATH = BENCHMARK_RUNTIME_PROFILE_DIR / "benchmark_zoo_official_eval.yaml"
-
-
-class BenchmarkSuiteError(ValueError):
-    """Raised when a removed named suite preset is requested."""
 
 
 def is_catalog_metadata_manifest(path: Path) -> bool:
@@ -73,9 +66,6 @@ def iter_benchmark_catalog_manifest_paths(root: str | Path | None = None) -> tup
                         if candidate.is_file() and not is_catalog_metadata_manifest(candidate)
                     )
                 )
-        if paths:
-            return tuple(paths)
-        paths = [resolved_root / name for name in _LEGACY_CATALOG_SHARDS if (resolved_root / name).is_file()]
         return tuple(paths)
 
     return tuple(
@@ -129,22 +119,6 @@ def resolve_benchmark_manifest_path(value: str | Path, benchmark_id: str | None 
     return path
 
 
-def load_benchmark_catalog_metadata(root: str | Path | None = None) -> dict[str, Any]:
-    """Load shard metadata such as scope and verification policy."""
-    resolved_root = resolve_benchmark_catalog_root(root)
-    metadata: dict[str, Any] = {}
-    if not is_default_benchmark_catalog_root(resolved_root):
-        return metadata
-    for shard_dir in DEFAULT_CATALOG_SHARD_DIRS:
-        manifest_path = shard_dir / CATALOG_MANIFEST_FILENAME
-        if not manifest_path.is_file():
-            continue
-        payload = load_manifest(manifest_path)
-        if isinstance(payload, Mapping):
-            metadata[shard_dir.name] = dict(payload)
-    return metadata
-
-
 @lru_cache(maxsize=8)
 def benchmark_catalog_ids(root: str) -> tuple[str, ...]:
     """Return benchmark ids declared in catalog manifests."""
@@ -178,16 +152,6 @@ def load_benchmark_catalog_entries(root: str | Path | None = None) -> tuple[Any,
     return _load_benchmark_catalog_entries_cached(str(resolve_benchmark_catalog_root(root)))
 
 
-def clear_benchmark_catalog_cache() -> None:
-    """Clear cached benchmark catalog path indexes and loaded entries."""
-    from .dispatch import clear_catalog_dispatch_cache
-
-    _catalog_benchmark_path_index.cache_clear()
-    benchmark_catalog_ids.cache_clear()
-    _load_benchmark_catalog_entries_cached.cache_clear()
-    clear_catalog_dispatch_cache()
-
-
 def load_benchmark_catalog_shard_entries(shard: str, root: str | Path | None = None) -> tuple[Any, ...]:
     """Load benchmark-zoo entries from one catalog shard directory."""
     from .schema import load_entries
@@ -209,47 +173,20 @@ def formal_benchmark_ids(catalog_dir: str | Path | None = None) -> list[str]:
     )
 
 
-def benchmark_ids_for_suite(suite_id: str, suites_path: str | Path | None = None) -> list[str]:
-    """Resolve benchmark ids for legacy inventory suite aliases."""
-    del suites_path
-    normalized = str(suite_id).strip().lower().replace("_", "-")
-    if normalized in {
-        FORMAL_BENCHMARK_INVENTORY_SUITE_ID,
-        "benchmark-inventory",
-        "docs-inventory",
-    }:
-        return formal_benchmark_ids()
-    raise BenchmarkSuiteError(
-        "Named benchmark suite presets were removed; pass explicit --benchmark-id values "
-        f"or use --all-benchmarks instead of --suite {suite_id!r}."
-    )
-
-
 def resolve_benchmark_runtime_profile_root(path: str | Path | None = None) -> Path:
     """Resolve a runtime profile root path, file, or directory."""
-    candidate = Path(path or DEFAULT_BENCHMARK_RUNTIME_PROFILES_DIR)
-    if candidate.exists():
-        return candidate
-    if _LEGACY_RUNTIME_PROFILE_MONOLITH_PATH.exists() and path is None:
-        return _LEGACY_RUNTIME_PROFILE_MONOLITH_PATH
-    return candidate
+    return Path(path or DEFAULT_BENCHMARK_RUNTIME_PROFILES_DIR)
 
 
 def benchmark_runtime_defaults_path(root: str | Path | None = None) -> Path:
     """Return the shared defaults manifest path for benchmark runtime profiles."""
-    resolved_root = resolve_benchmark_runtime_profile_root(root)
-    if resolved_root.is_file():
-        return resolved_root.parent / "defaults.yaml"
-    return resolved_root.parent / "defaults.yaml"
+    return resolve_benchmark_runtime_profile_root(root).parent / "defaults.yaml"
 
 
 def iter_benchmark_runtime_profile_paths(root: str | Path | None = None) -> tuple[Path, ...]:
     """List per-benchmark runtime profile manifest paths."""
     resolved_root = resolve_benchmark_runtime_profile_root(root)
     if resolved_root.is_file():
-        payload = load_manifest(resolved_root)
-        if isinstance(payload, Mapping) and payload.get("profiles"):
-            return (resolved_root,)
         return (resolved_root,)
     profiles_dir = resolved_root if resolved_root.name == "official" else resolved_root / "official"
     if profiles_dir.is_dir():
@@ -331,26 +268,3 @@ def benchmark_runtime_profiles_by_id(root: str | Path | None = None) -> dict[str
             if benchmark_id:
                 profiles.setdefault(str(benchmark_id), dict(profile))
     return profiles
-
-
-def benchmark_runtime_profile_benchmark_ids(root: str | Path | None = None) -> set[str]:
-    """Return benchmark ids declared in runtime profile manifests."""
-    ids: set[str] = set()
-    for profile in load_benchmark_runtime_profiles(root).get("profiles") or ():
-        if not isinstance(profile, Mapping):
-            continue
-        for benchmark_id in profile.get("benchmark_ids") or ():
-            ids.add(str(benchmark_id))
-    return ids
-
-
-def iter_benchmark_runtime_profile_source_paths(root: str | Path | None = None) -> tuple[Path, ...]:
-    """Return manifest files scanned for runner-script references."""
-    resolved_root = resolve_benchmark_runtime_profile_root(root)
-    paths = list(iter_benchmark_runtime_profile_paths(resolved_root))
-    defaults_path = benchmark_runtime_defaults_path(resolved_root)
-    if defaults_path.is_file():
-        paths.insert(0, defaults_path)
-    if not paths and resolved_root.is_file():
-        paths = [resolved_root]
-    return tuple(paths)

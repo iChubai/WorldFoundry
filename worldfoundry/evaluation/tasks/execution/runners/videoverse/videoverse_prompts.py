@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -121,19 +120,3 @@ def copy_videoverse_generated_videos(
         rows.append(row)
     write_jsonl(artifact_manifest_path, rows, atomic=False)
     return materialized, 0
-
-
-def export_prompt_manifest_subset(
-    *,
-    output_path: Path,
-    limit: int | None = None,
-    prompt_manifest_path: Path | None = None,
-) -> Path:
-    manifest = load_prompt_manifest(prompt_manifest_path)
-    prompt_ids = sorted(manifest)
-    if limit is not None:
-        prompt_ids = prompt_ids[: int(limit)]
-    payload = {prompt_id: manifest[prompt_id] for prompt_id in prompt_ids}
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return output_path

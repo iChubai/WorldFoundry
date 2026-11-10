@@ -18,10 +18,10 @@ import numpy as np
 import torch
 from omegaconf import OmegaConf
 
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import package_data_path
 from worldfoundry.runtime.env import resolve_hfd_root
 
-DEFAULT_CAMERACTRL_CONFIG = worldfoundry_data_path(
+DEFAULT_CAMERACTRL_CONFIG = package_data_path(
     "models", "runtime", "configs", "camera_control", "cameractrl_256_384.yaml"
 )
 DEFAULT_SHARED_HFD_ROOT = resolve_hfd_root()

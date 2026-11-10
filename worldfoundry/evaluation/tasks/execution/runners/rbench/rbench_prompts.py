@@ -95,12 +95,6 @@ VLM_BACKENDS: tuple[str, ...] = ("gpt", "qwen_local", "qwen_api")
 DEFAULT_VLM_BACKEND = "gpt"
 
 
-# ``prefix_tag`` used in upstream summary filenames: qwen_api/qwen_local both write "qwen".
-def summary_prefix_tag(vlm_backend: str) -> str:
-    """Return the upstream ``score_summary_<tag>.csv`` tag for a VLM backend."""
-    return "gpt" if vlm_backend == "gpt" else "qwen"
-
-
 CANONICAL_EMBODIMENT_PROMPT_COUNT = sum(split.prompt_count for split in SPLITS if split.track == EMBODIMENT_TRACK)
 CANONICAL_TASK_PROMPT_COUNT = sum(split.prompt_count for split in SPLITS if split.track == TASK_TRACK)
 CANONICAL_PROMPT_COUNT = CANONICAL_EMBODIMENT_PROMPT_COUNT + CANONICAL_TASK_PROMPT_COUNT
@@ -120,12 +114,6 @@ def split_for_id(split_id: str) -> RBenchSplit:
     except KeyError as exc:
         known = ", ".join(sorted(SPLITS_BY_ID))
         raise KeyError(f"unknown RBench split {split_id!r}; known: {known}") from exc
-
-
-def splits_for_track(track: str) -> tuple[RBenchSplit, ...]:
-    """Return every split belonging to ``track``."""
-    order = EMBODIMENT_ORDER if track == EMBODIMENT_TRACK else TASK_ORDER
-    return tuple(SPLITS_BY_ID[split_id] for split_id in order)
 
 
 def resolve_prompt_dir(*, explicit: Path | None = None, data_root: Path | None = None) -> Path | None:
@@ -226,7 +214,5 @@ __all__ = [
     "prompt_index",
     "resolve_prompt_dir",
     "split_for_id",
-    "splits_for_track",
-    "summary_prefix_tag",
     "video_coverage",
 ]

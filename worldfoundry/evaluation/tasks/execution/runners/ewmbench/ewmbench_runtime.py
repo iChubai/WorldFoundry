@@ -27,23 +27,6 @@ SEMANTIC_RUBRIC_REL = Path("semantic_caption_rubric.txt")
 CONFIG_TEMPLATE_REL = Path("config.template.yaml")
 
 
-def resolve_semantic_rubric_path(*, repo_root: Path | None = None) -> Path | None:
-    from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
-
-    env_rubric = os.environ.get("WORLDFOUNDRY_EWMBENCH_SEMANTIC_RUBRIC")
-    if env_rubric:
-        rubric_path = Path(env_rubric).expanduser().resolve()
-        return rubric_path if rubric_path.is_file() else None
-    bundled = bundled_benchmark_asset("ewmbench", SEMANTIC_RUBRIC_REL)
-    if bundled.is_file():
-        return bundled
-    root = repo_root or resolve_ewmbench_root()
-    if root is None:
-        return None
-    candidate = root / SEMANTIC_RUBRIC_REL
-    return candidate if candidate.is_file() else None
-
-
 def resolve_config_template_path(*, repo_root: Path | None = None) -> Path | None:
     from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 

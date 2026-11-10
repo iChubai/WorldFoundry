@@ -8,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.utils import REPO_ROOT
+from worldfoundry.core.io.paths import REPO_ROOT
 from worldfoundry.runtime.inference_catalog import ASSET_GATED_WORLD_RUNTIME_MODEL_IDS
 from worldfoundry.studio.inference.catalog import LIVE_CONTROL_TAGS, CatalogEntry, discover_catalog, template_id_hint
 

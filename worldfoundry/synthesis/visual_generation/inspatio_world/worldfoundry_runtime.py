@@ -19,15 +19,15 @@ from worldfoundry.core.io import (
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
+    package_data_path,
     resolve_local_hf_model_path,
 )
 from worldfoundry.core.io.paths import package_module_root as package_root
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 
 from .inspatio_world_runtime.utils.reproducibility import SEED_ENV, reproducibility_env
 
 _BUNDLED_REPO_ROOT = package_root("worldfoundry.synthesis.visual_generation.inspatio_world") / "inspatio_world_runtime"
-_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "inspatio_world")
+_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "inspatio_world")
 _TRAJECTORY_ROOT = _CONFIG_ROOT / "traj"
 
 DEFAULT_CHECKPOINT_REPO = "inspatio/world"

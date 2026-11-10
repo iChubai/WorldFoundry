@@ -321,8 +321,7 @@ BENCHMARK_GENERATION_ADAPTERS = {
 BENCHMARK_GENERATION_ADAPTERS["vbench"] = BenchmarkGenerationAdapter(
     benchmark_id="vbench",
     request_provider=(
-        "worldfoundry.evaluation.tasks.execution.orchestration.benchmark_generation:"
-        "materialize_vbench_generation_requests"
+        "worldfoundry.evaluation.tasks.execution.orchestration.benchmark_generation:materialize_vbench_generation_requests"
     ),
     missing_requests_hint="restore the bundled VBench_full_info.json prompt suite",
     dataset_root_parameter="dataset_root",
@@ -336,16 +335,9 @@ def get_benchmark_generation_adapter(benchmark_id: str) -> BenchmarkGenerationAd
     return BENCHMARK_GENERATION_ADAPTERS.get(benchmark_id.strip().casefold())
 
 
-def benchmark_generation_ready(benchmark_id: str) -> bool:
-    """Return whether WorldFoundry can materialize official generation requests."""
-
-    return get_benchmark_generation_adapter(benchmark_id) is not None
-
-
 __all__ = [
     "BENCHMARK_GENERATION_ADAPTERS",
     "BenchmarkGenerationAdapter",
-    "benchmark_generation_ready",
     "get_benchmark_generation_adapter",
     "materialize_vbench_generation_requests",
 ]

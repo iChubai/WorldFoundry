@@ -15,12 +15,12 @@ from PIL import Image
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     local_model_root_path,
+    package_data_path,
     resolve_local_hf_model_path,
 )
 from worldfoundry.core.media.codecs.video import write_video
 from worldfoundry.core.model_loading import ModelConfig, load_state_dict
 from worldfoundry.core.model_loading.checkpoints import load_weights_only
-from worldfoundry.evaluation.utils import worldfoundry_data_path
 from worldfoundry.synthesis.visual_generation.dualcamctrl.native_pipeline import (
     WanVideoCameraPipeline,
 )
@@ -33,8 +33,8 @@ DEFAULT_TOKENIZER_REPO = "Wan-AI/Wan2.1-T2V-1.3B"
 DEFAULT_CLIP_REPO = "Wan-AI/Wan2.1-I2V-14B-480P"
 DEFAULT_DUALCAMCTRL_REPO = "FayeHongfeiZhang/DualCamCtrl"
 DEFAULT_DUALCAMCTRL_CHECKPOINT = "checkpoints/dualcamctrl_diffusion_transformer.pt"
-DEFAULT_CONFIG = worldfoundry_data_path("models", "runtime", "configs", "dualcamctrl", "controlnet_gate_asym_5_10.yaml")
-DEFAULT_TEST_CASE_DIR = worldfoundry_data_path("test_cases", "dualcamctrl", "demo_pic")
+DEFAULT_CONFIG = package_data_path("models", "runtime", "configs", "dualcamctrl", "controlnet_gate_asym_5_10.yaml")
+DEFAULT_TEST_CASE_DIR = package_data_path("test_cases", "dualcamctrl", "demo_pic")
 DEFAULT_NEGATIVE_PROMPT = (
     "Vibrant colors, overexposed, static, blurry details, subtitles, poorly drawn style or artwork, "
     "still image, overall grayish, worst quality, low quality, JPEG artifacts, ugly, incomplete, extra fingers, "

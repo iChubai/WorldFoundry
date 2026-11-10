@@ -47,11 +47,11 @@ from src.models.utils.checkpoint import get_most_recent_checkpoint
 from src.models.utils.data import write_dict_to_json
 from src.models.utils.misc import dtype_map, load_and_merge_configs, seed_everything
 
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import package_data_path
 
 logger = get_logger(__name__, log_level="INFO")
 
-DEFAULT_LYRA1_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "lyra_1", "inference")
+DEFAULT_LYRA1_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "lyra_1", "inference")
 
 
 def load_model(ckpt_path, config, weight_dtype):

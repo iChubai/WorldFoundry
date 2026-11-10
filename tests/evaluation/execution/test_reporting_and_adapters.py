@@ -1,9 +1,8 @@
-"""Regressions for metric selection, comparison, and Workspace subprocess results."""
+"""Regressions for metric selection and run comparison."""
 
 from __future__ import annotations
 
 import json
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,8 +10,6 @@ from unittest.mock import patch
 
 from worldfoundry.evaluation.api import ArtifactRef, GenerationRequest, GenerationResult
 from worldfoundry.evaluation.reporting.run_comparison import build_run_comparison
-from worldfoundry.evaluation.reporting.run_index import build_run_index
-from worldfoundry.evaluation.tasks.catalog.workspace_registry.dispatch import _run_cli_command
 from worldfoundry.evaluation.tasks.embodied.metrics import ResultFieldMetric
 from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import run_evaluate
 from worldfoundry.evaluation.tasks.metrics.registry import BuiltinExistingResultsMetric
@@ -35,10 +32,6 @@ class ReportingAndAdapterTests(unittest.TestCase):
     def run_scores(self, name, metrics, **kwargs):
         run_evaluate(output_dir=self.root / name, requests=self.requests, results=self.results, metrics=metrics, **kwargs)
         return json.loads((self.root / name / "scorecard.json").read_text())
-
-    def workspace(self, code):
-        return _run_cli_command([sys.executable, "-B", "-c", code, str(self.root)], output_dir=self.root,
-                                benchmark_id="fixture", delegate_runner="fixture", request={}, log_callback=None)
 
     def test_failed_and_partial_scores_remain_visible_without_winning(self):
         metric = ResultFieldMetric("quality", higher_is_better=True)
@@ -93,22 +86,22 @@ class ReportingAndAdapterTests(unittest.TestCase):
 
     def test_numeric_wildcard_records_missing_fields_and_keeps_partial_scores(self):
         for name, scores in (
-            ("full", [{"clean_fid": 0.2, "other": 0.5}, {"clean_fid": 0.2, "other": 0.5}]),
-            ("partial", [{"clean_fid": 0.1, "other": 0.5}, {"other": 0.5}]),
+            ("full", [{"fid": 0.2, "other": 0.5}, {"fid": 0.2, "other": 0.5}]),
+            ("partial", [{"fid": 0.1, "other": 0.5}, {"other": 0.5}]),
         ):
             self.results = [GenerationResult(sample_id=q.sample_id, metadata={"scores": values})
                             for q, values in zip(self.requests, scores)]
             card = self.run_scores(name, ["numeric"], metric_batch_size=1)
-        metric = card["metrics"]["per_metric"]["clean_fid"]
+        metric = card["metrics"]["per_metric"]["fid"]
         self.assertEqual((metric["n_total"], metric["n_valid"], metric["n_skipped"]), (2, 1, 1))
         self.assertIsNotNone(metric["definition"])
         rows = [json.loads(line) for line in (self.root / "partial/metrics/per_sample.jsonl").read_text().splitlines()]
-        missing = next(row for row in rows[1]["metric_results"] if row["metric_id"] == "clean_fid")
+        missing = next(row for row in rows[1]["metric_results"] if row["metric_id"] == "fid")
         self.assertFalse(missing["valid"])
         comparison = build_run_comparison([self.root / "full", self.root / "partial"],
-                                          labels=["full", "partial"], metric_ids=["clean_fid"])
-        self.assertEqual(comparison["best_by_metric"]["clean_fid"]["label"], "full")
-        self.assertEqual(comparison["metrics"]["clean_fid"]["values"]["partial"], 0.1)
+                                          labels=["full", "partial"], metric_ids=["fid"])
+        self.assertEqual(comparison["best_by_metric"]["fid"]["label"], "full")
+        self.assertEqual(comparison["metrics"]["fid"]["values"]["partial"], 0.1)
 
     def test_numeric_wildcard_matches_explicit_fields_and_resolves_each_run(self):
         metric = BuiltinExistingResultsMetric(["numeric"])
@@ -141,31 +134,6 @@ class ReportingAndAdapterTests(unittest.TestCase):
             self.run_scores(name, ["numeric:fid"])
         comparison = build_run_comparison([self.root / "low", self.root / "high"], labels=["low", "high"])
         self.assertEqual(comparison["best_by_metric"]["fid"]["label"], "low")
-
-    def test_failed_workspace_process_cannot_reuse_an_old_scorecard(self):
-        card = {"run": {"status": "succeeded"}, "normalization_ok": True,
-                "metrics": {"leaderboard": {"quality": 0.9}}}
-        (self.root / "scorecard.json").write_text(json.dumps(card))
-        (self.root / "summary.json").write_text("old report")
-        with self.assertRaisesRegex(RuntimeError, "exit=3"):
-            self.workspace("import sys; sys.exit(3)")
-        self.assertFalse((self.root / "scorecard.json").exists())
-        row = build_run_index(self.root)["runs"][0]
-        self.assertEqual(row["status"], "failed")
-        self.assertEqual(row["metrics"], {})
-
-    def test_workspace_exit_code_wins_over_successful_normalization(self):
-        card = {"schema_version": "worldfoundry-scorecard", "run": {"status": "succeeded", "returncode": 0},
-                "normalization_ok": True, "metrics": {"leaderboard": {"quality": 0.9}}}
-        code = ("import json, sys; from pathlib import Path; "
-                f"Path(sys.argv[1], 'scorecard.json').write_text({json.dumps(json.dumps(card))}); sys.exit(3)")
-        result = self.workspace(code)
-        self.assertEqual(result["exit_code"], 3)
-        self.assertEqual(result["status"], "failed")
-        self.assertEqual(result["leaderboard_metrics"]["quality"], 0.9)
-        row = build_run_index(self.root)["runs"][0]
-        self.assertEqual(row["status"], "failed")
-        self.assertFalse(row["score_valid"])
 
 
 if __name__ == "__main__":

@@ -16,8 +16,6 @@ from worldfoundry.evaluation.tasks.metrics import (
     compute_fid,
     compute_inception_score,
     compute_kid,
-    compute_mind,
-    compute_precision_recall,
 )
 from worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity import metrics as backend
 from worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity.feature_extractor_base import (
@@ -55,8 +53,6 @@ class DistributionInputTests(unittest.TestCase):
         cases = (
             (compute_fid, {}),
             (compute_kid, {"kid_subsets": 2, "kid_subset_size": 3}),
-            (compute_precision_recall, {"prc_neighborhood": 1}),
-            (compute_mind, {"mind_num_projections": 8}),
             (compute_distribution_metrics, {"metrics": ("fid", "kid"), "kid_subsets": 2, "kid_subset_size": 3}),
             (compute_inception_score, {"splits": 2}),
         )
@@ -114,13 +110,8 @@ class DistributionInputTests(unittest.TestCase):
             "create_feature_extractor",
             side_effect=lambda name, layers, **kwargs: PixelFeatures(name, layers),
         ):
-            for compute, extra in (
-                (compute_precision_recall, {}),
-                (compute_distribution_metrics, {"metrics": ("prc",)}),
-            ):
-                with self.subTest(metric=compute.__name__):
-                    result = compute(self.reference, self.generated, **options, **extra)
-                    self.assertEqual(result, {"precision": 1.0, "recall": 0.25, "f_score": 0.4})
+            result = compute_distribution_metrics(self.reference, self.generated, metrics=("prc",), **options)
+            self.assertEqual(result, {"precision": 1.0, "recall": 0.25, "f_score": 0.4})
 
     def test_bundled_inception_score_uses_generated_images(self):
         for directory, colors in (

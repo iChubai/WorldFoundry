@@ -340,40 +340,10 @@ def refresh_compat_views() -> None:
     CLI_RUNNERS.clear()
     CLI_RUNNERS.update(workspace_runner_registry())
     BENCHMARK_INTEGRATION_REGISTRY.clear()
-    BENCHMARK_INTEGRATION_REGISTRY.update(merge_integration_registry())
+    BENCHMARK_INTEGRATION_REGISTRY.update(_integration_registry())
 
 
-def video_runner_overrides() -> dict[str, dict[str, Any]]:
-    """Deprecated: catalog is the only source. Kept for existing callers."""
-    return {
-        key: {"script": spec.script, "results_flag": spec.results_flag} for key, spec in video_runner_registry().items()
-    }
-
-
-def integration_overrides() -> dict[str, dict[str, Any]]:
-    return {
-        key: {
-            "tier": spec.integration_tier,
-            "runner_script": spec.script,
-            "hf_dataset_id": spec.hf_dataset_id,
-            "judge_model_id": spec.judge_model_id,
-        }
-        for key, spec in official_runner_registry().items()
-        if spec.integration_tier and spec.script
-    }
-
-
-def workspace_runner_overrides() -> dict[str, dict[str, Any]]:
-    return {key: {"module": spec.module} for key, spec in workspace_runner_registry().items()}
-
-
-def merge_video_runner_registry(legacy: Mapping[str, Any] | None = None) -> dict[str, OfficialRunnerSpec]:
-    del legacy
-    return dict(video_runner_registry())
-
-
-def merge_integration_registry(legacy: Mapping[str, Any] | None = None) -> dict[str, BenchmarkIntegrationSpec]:
-    del legacy
+def _integration_registry() -> dict[str, BenchmarkIntegrationSpec]:
     merged: dict[str, BenchmarkIntegrationSpec] = {}
     allowed = ", ".join(item.value for item in IntegrationTier)
     for benchmark_id, spec in official_runner_registry().items():
@@ -407,11 +377,6 @@ def specialized_result_normalizer_scripts() -> dict[str, tuple[str, str]]:
     return {benchmark_id: (spec.script, spec.results_flag) for benchmark_id, spec in VIDEO_RUNNER_REGISTRY.items()}
 
 
-def merge_workspace_runner_registry(legacy: Mapping[str, Any] | None = None) -> dict[str, OfficialRunnerSpec]:
-    del legacy
-    return dict(workspace_runner_registry())
-
-
 refresh_compat_views()
 
 
@@ -427,12 +392,8 @@ __all__ = [
     "artifact_official_run_benchmarks",
     "clear_catalog_dispatch_cache",
     "embodied_result_normalizer_tracks",
-    "integration_overrides",
     "integration_spec",
     "load_catalog_dispatch_entries",
-    "merge_integration_registry",
-    "merge_video_runner_registry",
-    "merge_workspace_runner_registry",
     "official_runner_registry",
     "official_runner_spec",
     "parse_scoring_hook",
@@ -442,9 +403,7 @@ __all__ = [
     "scoring_hook_table",
     "script_to_module",
     "specialized_result_normalizer_scripts",
-    "video_runner_overrides",
     "video_runner_registry",
     "video_runner_spec",
-    "workspace_runner_overrides",
     "workspace_runner_registry",
 ]

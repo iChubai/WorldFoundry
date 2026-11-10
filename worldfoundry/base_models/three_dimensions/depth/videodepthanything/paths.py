@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from worldfoundry.evaluation.utils import REPO_ROOT
+from worldfoundry.core.io.paths import REPO_ROOT
 
 VDA_FILENAMES = {
     "vits": "video_depth_anything_vits.pth",

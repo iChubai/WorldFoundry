@@ -331,61 +331,6 @@ def coerce_task_config(data: Mapping[str, Any]) -> WorldTaskConfig:
     )
 
 
-def _iter_tasks(tasks: Any) -> list[Mapping[str, Any]]:
-    """Helper yielding task mappings from heterogeneous inputs (dicts or lists).
-
-    Args:
-        tasks: Raw dictionary mapping task IDs to task definitions, or list of tasks.
-
-    Returns:
-        A list of task dictionary mappings.
-
-    Raises:
-        TypeError: If a task in a tasks dictionary is not a mapping.
-    """
-    if tasks is None:
-        return []
-    # If tasks are provided as a dictionary, iterate through items
-    # and ensure each task config has a 'name' field.
-    if isinstance(tasks, Mapping):
-        result = []
-        for name, task_data in tasks.items():
-            if not isinstance(task_data, Mapping):
-                raise TypeError(f"tasks[{name!r}] must be a mapping")
-            task_mapping = dict(task_data)
-            task_mapping.setdefault("name", name)
-            result.append(task_mapping)
-        return result
-    return list(tasks)
-
-
-def coerce_benchmark_config(data: Mapping[str, Any]) -> BenchmarkSpec:
-    """Coerces a catalog benchmark mapping with embedded task dictionaries into a `BenchmarkSpec`.
-
-    This function processes a raw mapping, ensuring that nested task configurations
-    are also coerced into `WorldTaskConfig` instances.
-
-    Args:
-        data: A raw mapping representing a benchmark configuration.
-
-    Returns:
-        A `BenchmarkSpec` instance.
-    """
-    return BenchmarkSpec(
-        name=data.get("name"),
-        benchmark_id=data.get("benchmark_id"),
-        version=data.get("version", "1.0"),
-        tasks=[coerce_task_config(task) for task in _iter_tasks(data.get("tasks", ()))],
-        metrics=data.get("metrics", ()),
-        splits=data.get("splits", ("default",)),
-        tags=data.get("tags", ()),
-        description=data.get("description", ""),
-        dataset_root=data.get("dataset_root"),
-        metadata=data.get("metadata", {}),
-        schema_version=data.get("schema_version", "worldfoundry-catalog-benchmark"),
-    )
-
-
 class CatalogRegistryError(ValueError):
     """Base error for catalog registry failures."""
 
@@ -768,6 +713,5 @@ __all__ = [
     "EvaluationProtocolSpec",
     "UnknownCatalogKeyError",
     "WorldTaskConfig",
-    "coerce_benchmark_config",
     "coerce_task_config",
 ]

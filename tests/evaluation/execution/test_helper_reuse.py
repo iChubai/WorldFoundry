@@ -113,13 +113,3 @@ def test_dataset_checksum_export_uses_canonical_file_reader() -> None:
     from worldfoundry.evaluation.tasks.datasets import file_sha256
 
     assert file_sha256 is sha256_file
-
-
-def test_sadpad_registration_retains_both_public_compute_targets() -> None:
-    from worldfoundry.evaluation.tasks.metrics import sadpad
-
-    assert sadpad.compute is sadpad.compute_attribute_sad
-    assert [(entry.id, entry.implementation) for entry in sadpad.METRIC_MODULES] == [
-        ("attribute_sad", "worldfoundry.evaluation.tasks.metrics.sadpad:compute_attribute_sad"),
-        ("attribute_pad", "worldfoundry.evaluation.tasks.metrics.sadpad:compute_attribute_pad"),
-    ]

@@ -15,9 +15,8 @@ from typing import Any
 import yaml
 
 from worldfoundry.core.geometry.transforms import depth_to_world_points
-from worldfoundry.core.io.paths import package_data_path
+from worldfoundry.core.io.paths import REPO_ROOT, package_data_path
 from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.evaluation.utils import REPO_ROOT
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 
 

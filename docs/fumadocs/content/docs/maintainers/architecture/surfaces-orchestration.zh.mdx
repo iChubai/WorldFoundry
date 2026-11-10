@@ -28,8 +28,8 @@ Studio 是交互式预览界面，安装入口是 `worldfoundry/studio/cli.py:78
 
 MCP server 把 catalog、run 生命周期、metric、readiness 暴露为工具，让 agent 驱动同一工作流。它是复用同一套契约的薄壳，不含私有模型代码。
 
-- 入口：`mcp/__init__.py:30` `main()`；server 构造在 `mcp/server.py`（`create_mcp_server` `:38`、`run_server` `:55`）。
-- 工具经 `mcp/tools/registration.py:55` `register_tools` 注册，把每个 payload 绑定为 `@mcp.tool()`。
+- 入口：`mcp/__init__.py:43` `main()`；server 构造在 `mcp/server.py`（`create_mcp_server` `:43`、`run_server` `:58`）。
+- 每个 payload 用 `@mcp_tool`（`mcp/tools/spec.py:64`）声明一次；`mcp/tools/registration.py:19` `register_tools` 调用 `bind_tools`（`spec.py:130`），把每个 spec 注册为带行为注解的异步 FastMCP 工具。
 - 工具 payload 按职责分组，而非按模型：`discovery`（list/get model、benchmark、task）、`runs`（preview、evaluate、status、result、samples、cancel）、`metrics`（list、show）、`readiness`（benchmark dataset 检查）、`studio`（workspace 推理）、`context`（`MCPToolContext`）。
 
 因为每个工具都经同一 catalog 与编排服务解析，MCP 驱动的 run 与 CLI 驱动的 run 产出相同的 artifact 与 scorecard。

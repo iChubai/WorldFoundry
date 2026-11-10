@@ -28,8 +28,8 @@ Studio is the interactive preview surface. Its install/entry is `worldfoundry/st
 
 The MCP server exposes the catalog, run lifecycle, metrics, and readiness as tools so an agent can drive the same workflow. It is a thin shell over the same contracts; it contains no private model code.
 
-- Entry: `mcp/__init__.py:30` `main()`; server construction in `mcp/server.py` (`create_mcp_server` `:38`, `run_server` `:55`).
-- Tools are registered through `mcp/tools/registration.py:55` `register_tools`, which binds each payload as an `@mcp.tool()`.
+- Entry: `mcp/__init__.py:43` `main()`; server construction in `mcp/server.py` (`create_mcp_server` `:43`, `run_server` `:58`).
+- Each payload is declared once with `@mcp_tool` (`mcp/tools/spec.py:64`); `mcp/tools/registration.py:19` `register_tools` calls `bind_tools` (`spec.py:130`), which registers every spec as an async FastMCP tool with behaviour annotations.
 - Tool payloads are grouped by responsibility, not by model: `discovery` (list/get model, benchmark, task), `runs` (preview, evaluate, status, result, samples, cancel), `metrics` (list, show), `readiness` (benchmark dataset checks), `studio` (workspace inference), and `context` (`MCPToolContext`).
 
 Because every tool resolves through the same catalog and orchestration service, an MCP-driven run and a CLI-driven run produce the same artifacts and scorecards.

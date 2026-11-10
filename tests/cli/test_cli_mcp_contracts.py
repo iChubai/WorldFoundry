@@ -45,7 +45,7 @@ class FakeMCP:
     def __init__(self) -> None:
         self.tools: dict[str, object] = {}
 
-    def tool(self):
+    def tool(self, **_kwargs):
         def decorator(fn):
             self.tools[fn.__name__] = fn
             return fn
@@ -210,17 +210,17 @@ def test_run_print_config_without_model_is_usage_error(tmp_path: Path) -> None:
 
 def test_tool_errors_return_envelope_instead_of_raising(registered_tools: dict[str, object]) -> None:
     list_runs = registered_tools["list_runs"]
-    payload = list_runs(limit=0)
+    payload = asyncio.run(list_runs(limit=0))
     assert payload["ok"] is False
-    assert payload["error_type"] == "error"
+    assert payload["error_type"] == "invalid_argument"
     assert "limit" in payload["error"]
 
 
 def test_async_tool_errors_return_envelope(registered_tools: dict[str, object]) -> None:
     evaluate = registered_tools["evaluate"]
-    payload = asyncio.run(evaluate(model="m", benchmark="b", wait="bogus-strategy"))
+    payload = asyncio.run(evaluate(model="m", benchmarks=["b"], wait="bogus-strategy"))
     assert payload["ok"] is False
-    assert payload["error_type"] == "error"
+    assert payload["error_type"] == "invalid_argument"
     assert "wait" in payload["error"]
 
 
@@ -238,9 +238,7 @@ def test_studio_wait_default_timeout_is_finite() -> None:
     assert studio.DEFAULT_STUDIO_WAIT_TIMEOUT_S == 600.0
     for fn, param in (
         (studio.wait_for_studio_job_payload, "timeout_s"),
-        (studio.wait_for_studio_job_payload_async, "timeout_s"),
         (studio.submit_studio_inference_payload, "wait_timeout_s"),
-        (studio.submit_studio_inference_payload_async, "wait_timeout_s"),
     ):
         default = inspect.signature(fn).parameters[param].default
         assert default == studio.DEFAULT_STUDIO_WAIT_TIMEOUT_S
@@ -379,7 +377,7 @@ def test_mcp_context_restores_persisted_runs_for_payloads(tmp_path: Path) -> Non
     ctx = MCPToolContext(output_root=tmp_path)
     listed = list_runs_payload(context=ctx)
     assert listed["total"] == 1
-    assert listed["runs"][0]["job_id"] == "persisted-run"
+    assert listed["runs"][0]["run_id"] == "persisted-run"
     assert listed["runs"][0]["restored"] is True
     status = get_run_status_payload("persisted-run", context=ctx)
     assert status["status"] == "completed"
@@ -421,13 +419,13 @@ def test_create_mcp_server_writes_context_back_to_default(
     from worldfoundry.mcp.tools.context import get_default_context
 
     class FakeFastMCP:
-        def __init__(self, name, *, instructions=None, json_response=False) -> None:
+        def __init__(self, name, *, instructions=None, json_response=False, host=None, port=None) -> None:
             self.name = name
             self.tools: dict[str, object] = {}
 
-        def tool(self):
+        def tool(self, **kwargs):
             def decorator(fn):
-                self.tools[fn.__name__] = fn
+                self.tools[kwargs["name"]] = fn
                 return fn
 
             return decorator
@@ -448,7 +446,7 @@ def test_create_mcp_server_writes_context_back_to_default(
             metadata={"run_id": "shared-store-run"},
         )
         await job._task
-        return server.tools["list_runs"]()
+        return await server.tools["list_runs"]()
 
     envelope = asyncio.run(scenario())
     assert envelope["ok"] is True

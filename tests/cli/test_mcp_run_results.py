@@ -30,7 +30,7 @@ def test_sync_run_returns_the_result_of_a_job_evicted_after_completion(tmp_path:
     context = MCPToolContext(output_root=tmp_path, job_store=cast(AsyncCommandJobStore, _EvictingJobStore()))
 
     result = asyncio.run(
-        run_evaluation_payload(model=CONTRACT_FIXTURE_MODEL_ID, benchmark="robotwin", wait="sync", context=context)
+        run_evaluation_payload(model=CONTRACT_FIXTURE_MODEL_ID, benchmarks=["robotwin"], wait="sync", context=context)
     )
 
     assert result["status"] == "succeeded"

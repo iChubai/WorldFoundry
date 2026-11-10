@@ -321,7 +321,7 @@ wf run self-forcing --print-config --json
             <code>mcp</code>
           </div>
         </div>
-        <p>启动 MCP server（<code>--transport stdio|sse</code>，默认 <code>stdio</code>）。</p>
+        <p>启动 MCP server（<code>--transport stdio|streamable-http|sse</code>，默认 <code>stdio</code>；HTTP 传输用 <code>--host</code>/<code>--port</code>）。</p>
       </li>
     </ul>
   </section>
@@ -332,11 +332,35 @@ wf run self-forcing --print-config --json
 `wf mcp` 启动 FastMCP server（`worldfoundry/mcp/server.py`）。先安装 `python -m pip install -e ".[mcp]"`：
 
 ```bash
-wf mcp --transport stdio
-wf mcp --transport sse
+wf mcp                                              # stdio，供本地 agent 客户端使用
+wf mcp --transport streamable-http --port 8000      # HTTP 端点 http://127.0.0.1:8000/mcp
+wf mcp --transport sse                              # 旧版 SSE 客户端
 ```
 
-Server 注册 27 个工具：`server_info`；discovery（`list_models`、`get_model_info`、`list_benchmarks`、`get_benchmark_info`、`list_tasks`、`get_task_info`、`list_metrics`、`show_metric`、`check_benchmark_datasets`）；run 生命周期（`preview_run`、`evaluate`、`list_runs`、`get_run_status`、`get_run_result`、`get_run_samples`、`cancel_run`）；以及 Studio workspace（`list_studio_models`、`get_studio_model_info`、`submit_studio_inference`、`list_studio_jobs`、`get_studio_job`、`wait_for_studio_job`、`stop_studio_job`、`get_studio_job_logs`、`list_studio_artifacts`、`get_studio_manifest`）。Studio 工具默认访问 `WORLDFOUNDRY_STUDIO_WORKSPACE_URL`（通常是 `http://127.0.0.1:7870`）。Run 文件写到 `WORLDFOUNDRY_MCP_RUN_ROOT`；未设置时为 `runs/mcp`。
+HTTP 传输默认绑定 `127.0.0.1`，可用 `--host` 修改。建议先调用 `server_info`：它返回路径、带行为提示的工具清单和推荐流程。
+
+| 分组 | 工具 |
+| --- | --- |
+| Server | `server_info` |
+| 发现 | `list_models`、`get_model_info`、`list_benchmarks`、`get_benchmark_info`、`list_tasks`、`get_task_info`、`list_metrics`、`show_metric`、`check_benchmark_datasets` |
+| Run | `preview_run`、`evaluate`、`list_runs`、`get_run_status`、`get_run_result`、`get_run_samples`、`cancel_run` |
+| Studio workspace | `list_studio_models`、`get_studio_model_info`、`submit_studio_inference`、`list_studio_jobs`、`get_studio_job`、`wait_for_studio_job`、`stop_studio_job`、`get_studio_job_logs`、`list_studio_artifacts`、`get_studio_manifest` |
+
+工具约定：
+
+- 每个参数在工具的 JSON schema 中都带说明，固定取值用 enum 表示（`wait`：`auto|async|sync`；`generation_cache_mode`：`off|read|write|read-write|refresh`；`mode`；`detail`；run 的 `status`）。
+- 每个工具都声明 MCP annotations。发现和状态类工具只读；`evaluate` 与 `submit_studio_inference` 会启动任务；
+  `cancel_run` 与 `stop_studio_job` 是破坏性操作；Studio 工具会调用 Studio HTTP API，因此标记为 open-world。
+- `list_*` 工具以 `summary` 视图返回一页结果：用 `offset`/`limit` 翻页（最后一页 `next_offset` 为 `null`），传 `detail="full"` 获取全部字段。`get_*_info` 始终返回完整条目。
+- `preview_run` 和 `evaluate` 接收 `model`，以及 `benchmarks`（列表）或 `suite_ids`，并把 `mode`、`plan_only`、`resume`、
+  `generation_cache_dir`、`generation_cache_mode`、`model_variant`、`requests_path`、`task_name`、
+  `generated_artifact_dir`、`output_artifact`、`metrics` 传给 `wf run`。`preview_run` 只返回确切命令，不启动任务。
+- `evaluate` 返回 `run_id`。`wait="auto"` 时最多等待 `wait_timeout_s`，之后返回运行中状态；再用 `get_run_status`、`get_run_result`、`get_run_samples` 跟进。
+- 成功结果为 `{"ok": true, ...}`；失败为 `{"ok": false, "error": ..., "error_type": ...}`，其中 `error_type` 取
+  `not_found`（id 不存在，消息中会给出相近的 id）、`invalid_argument`、`unavailable`（例如 Studio 未启动）、`runtime` 或 `internal`。
+
+Studio 工具默认访问 `WORLDFOUNDRY_STUDIO_WORKSPACE_URL`（通常是 `http://127.0.0.1:7870`）。Run 文件写到
+`WORLDFOUNDRY_MCP_RUN_ROOT`；未设置时为 `runs/mcp`。
 
 Python 客户端可通过 `worldfoundry.mcp.client.MCPClient` 和
 `convert_result_to_openai_format()` 将工具结果转换为 OpenAI Chat 内容块。

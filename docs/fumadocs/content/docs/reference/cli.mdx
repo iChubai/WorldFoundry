@@ -324,7 +324,7 @@ Several commands can reach the evaluation core, but they start from different us
             <code>mcp</code>
           </div>
         </div>
-        <p>Start the MCP server (<code>--transport stdio|sse</code>, default <code>stdio</code>).</p>
+        <p>Start the MCP server (<code>--transport stdio|streamable-http|sse</code>, default <code>stdio</code>; <code>--host</code>/<code>--port</code> for HTTP).</p>
       </li>
     </ul>
   </section>
@@ -335,11 +335,42 @@ Several commands can reach the evaluation core, but they start from different us
 `wf mcp` starts the FastMCP server (`worldfoundry/mcp/server.py`). After `python -m pip install -e ".[mcp]"`:
 
 ```bash
-wf mcp --transport stdio
-wf mcp --transport sse
+wf mcp                                              # stdio, for local agent clients
+wf mcp --transport streamable-http --port 8000      # HTTP endpoint at http://127.0.0.1:8000/mcp
+wf mcp --transport sse                              # legacy SSE clients
 ```
 
-The server registers 27 tools: `server_info`; discovery (`list_models`, `get_model_info`, `list_benchmarks`, `get_benchmark_info`, `list_tasks`, `get_task_info`, `list_metrics`, `show_metric`, `check_benchmark_datasets`); run lifecycle (`preview_run`, `evaluate`, `list_runs`, `get_run_status`, `get_run_result`, `get_run_samples`, `cancel_run`); and Studio workspace (`list_studio_models`, `get_studio_model_info`, `submit_studio_inference`, `list_studio_jobs`, `get_studio_job`, `wait_for_studio_job`, `stop_studio_job`, `get_studio_job_logs`, `list_studio_artifacts`, `get_studio_manifest`). Studio tools default to `WORLDFOUNDRY_STUDIO_WORKSPACE_URL` (typically `http://127.0.0.1:7870`). Run files land under `WORLDFOUNDRY_MCP_RUN_ROOT`, or `runs/mcp` when that variable is unset.
+HTTP transports bind to `127.0.0.1` unless `--host` is given. Call `server_info` first: it returns paths, the tool list
+with behaviour hints, and the recommended workflow.
+
+| Group | Tools |
+| --- | --- |
+| Server | `server_info` |
+| Discovery | `list_models`, `get_model_info`, `list_benchmarks`, `get_benchmark_info`, `list_tasks`, `get_task_info`, `list_metrics`, `show_metric`, `check_benchmark_datasets` |
+| Runs | `preview_run`, `evaluate`, `list_runs`, `get_run_status`, `get_run_result`, `get_run_samples`, `cancel_run` |
+| Studio workspace | `list_studio_models`, `get_studio_model_info`, `submit_studio_inference`, `list_studio_jobs`, `get_studio_job`, `wait_for_studio_job`, `stop_studio_job`, `get_studio_job_logs`, `list_studio_artifacts`, `get_studio_manifest` |
+
+Tool contracts:
+
+- Every parameter carries a description in the tool's JSON schema, and fixed choices are enums
+  (`wait`: `auto|async|sync`; `generation_cache_mode`: `off|read|write|read-write|refresh`; `mode`; `detail`; run `status`).
+- Each tool declares MCP annotations. Discovery and status tools are read-only; `evaluate` and
+  `submit_studio_inference` start work; `cancel_run` and `stop_studio_job` are destructive; Studio tools are marked
+  open-world because they call the Studio HTTP API.
+- `list_*` tools return one page in a `summary` view: pass `offset`/`limit` to page (`next_offset` is `null` on the
+  last page) and `detail="full"` for every field. `get_*_info` always returns the full entry.
+- `preview_run` and `evaluate` take `model` plus `benchmarks` (a list) or `suite_ids`, and forward `mode`, `plan_only`,
+  `resume`, `generation_cache_dir`, `generation_cache_mode`, `model_variant`, `requests_path`, `task_name`,
+  `generated_artifact_dir`, `output_artifact`, and `metrics` to `wf run`. `preview_run` returns the exact command
+  without starting it.
+- `evaluate` returns a `run_id`. With `wait="auto"` it waits up to `wait_timeout_s` and then returns the running
+  status; follow up with `get_run_status`, `get_run_result`, and `get_run_samples`.
+- Results are `{"ok": true, ...}`. Failures are `{"ok": false, "error": ..., "error_type": ...}` where `error_type` is
+  `not_found` (unknown id; the message suggests close matches), `invalid_argument`, `unavailable` (for example, Studio
+  is not running), `runtime`, or `internal`.
+
+Studio tools default to `WORLDFOUNDRY_STUDIO_WORKSPACE_URL` (typically `http://127.0.0.1:7870`). Run files land under
+`WORLDFOUNDRY_MCP_RUN_ROOT`, or `runs/mcp` when that variable is unset.
 
 Python clients can use `worldfoundry.mcp.client.MCPClient` and
 `convert_result_to_openai_format()` to adapt tool results to OpenAI Chat content.

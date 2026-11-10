@@ -722,13 +722,7 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.dino_wm.datasets" = ["UPSTREAM.md"]
 "worldfoundry.synthesis.visual_generation.egowm" = ["nav_25dof_stats.json"]
 "worldfoundry.synthesis.visual_generation.vid2world.csgo_utils" = ["test_split.txt"]
-"worldfoundry.base_models.diffusion_model.models.networks.evoke" = ["PROVENANCE.md"]
-"worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6" = [
-    "mmaudio/ext/bigvgan_v2/config.json",
-    "mmaudio/ext/bigvgan_v2/LICENSE",
-    "mmaudio/ext/bigvgan_v2/incl_licenses/LICENSE_*",
-]
-"worldfoundry.base_models.three_dimensions.depth.vigeo" = ["PROVENANCE.md"]
+"worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6" = ["mmaudio/ext/bigvgan_v2/config.json"]
 "*" = ["*.npy", "*.npz"]
 "worldfoundry.cli.tui" = [
     "app.tcss",
@@ -768,7 +762,6 @@ include-package-data = true
 "worldfoundry.base_models" = [
     "perception_core/video_text/fetv_blip/**/*",
     "perception_core/video_quality/fetv_stylegan_v/**/*",
-    "diffusion_model/models/networks/cosmos3/README.md",
     "three_dimensions/general_3d/vipe/csrc/**/*",
 ]
 "worldfoundry.base_models.three_dimensions.slam" = [
@@ -783,9 +776,6 @@ include-package-data = true
 ]
 "worldfoundry.studio" = [
     "assets/**/*",
-]
-"worldfoundry.synthesis.visual_generation.lingbot_video" = [
-    "default_negative_prompt*.json",
 ]
 "worldfoundry.synthesis.visual_generation.ctrl_world" = [
     "action_stats.json",
@@ -873,7 +863,6 @@ include-package-data = true
 ]
 
 [tool.setuptools.exclude-package-data]
-"worldfoundry.synthesis.visual_generation" = ["open_sora/open_sora_runtime/**/*", "wonderworld/wonderworld_runtime/**/*"]
 "worldfoundry" = ["training/*", "training/**/*"]
 "worldfoundry.cli" = ["training.py", "training_commands/*", "training_commands/**/*"]
 "*" = [

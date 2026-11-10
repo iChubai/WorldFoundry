@@ -8,16 +8,13 @@ include THIRD-PARTY-NOTICES
 include worldfoundry/synthesis/visual_generation/dino_wm/datasets/UPSTREAM.md
 include worldfoundry/synthesis/visual_generation/egowm/nav_25dof_stats.json
 include worldfoundry/synthesis/visual_generation/vid2world/csgo_utils/test_split.txt
-include worldfoundry/base_models/three_dimensions/depth/vigeo/PROVENANCE.md
 recursive-include requirements *.txt *.md
 include worldfoundry/data/benchmarks/*.yaml
-include worldfoundry/data/benchmarks/*.md
 recursive-include worldfoundry/data/benchmarks/catalog *.yaml
 recursive-include worldfoundry/data/benchmarks/tasks *.yaml
 recursive-include worldfoundry/data/benchmarks/runtime_profiles *.yaml
 recursive-include worldfoundry/data/benchmarks/assets *.json *.jsonl *.csv *.txt *.md *.png
 recursive-include worldfoundry/data/benchmarks/assets/larybench *.yaml
-recursive-include worldfoundry/evals/tasks/execution/runners/larybench *.md
 recursive-include worldfoundry/synthesis/visual_generation/moverse/moverse_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/uni3c/uni3c_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/evoke/evoke_runtime *
@@ -54,7 +51,6 @@ recursive-include worldfoundry/data/models/runtime/configs *.py *.md
 recursive-include worldfoundry/data/models/runtime/environments *.yaml
 # Keep source distributions reproducible from a dirty development checkout.
 prune tmp
-prune tests
 prune cache
 prune cache*
 prune outputs
@@ -133,7 +129,7 @@ include .github/workflows/pr-checks.yml
 recursive-include scripts/dev *.py
 include Makefile scripts/setup/check_packaging_license_gate.py
 global-exclude */__pycache__/* */.pytest_cache/* */.mypy_cache/* */.ruff_cache/*
-global-exclude */tmp/* */temp/* */logs/* */outputs/* .env* *.py[cod]
+global-exclude */tmp/* */temp/* */logs/* */outputs/* .env*
 
 # Required iWorld-Bench camera trajectories (the only NumPy archives in package data).
 recursive-include worldfoundry/data/benchmarks/assets/iworld-bench/camera_trajectories *.npz

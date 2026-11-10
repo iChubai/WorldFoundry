@@ -5,15 +5,20 @@ import os
 import shutil
 import subprocess
 import time
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core import jsonable
-from worldfoundry.core.io.paths import conda_envs_root_path, conda_root_path, project_root, resolve_worldfoundry_path
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.core.io.paths import (
+    conda_envs_root_path,
+    conda_root_path,
+    package_data_path,
+    project_root,
+    resolve_worldfoundry_path,
+)
 from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hfd_root
-
 
 RUNTIME_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = project_root(RUNTIME_ROOT)
@@ -27,15 +32,9 @@ DEFAULT_CONDA_DIR = os.environ.get(
     "WORLDFOUNDRY_MATRIX_GAME_1_CONDA_DIR",
     str(conda_envs_root_path() / "matrix-game-1.0"),
 )
-DEFAULT_RUNTIME_CONFIG_ROOT = worldfoundry_data_path("models", "runtime", "configs", "matrix_game_1")
-EXPECTED_DIT_FILES = tuple(
-    f"dit/diffusion_pytorch_model-{index:05d}-of-00007.safetensors"
-    for index in range(1, 8)
-)
-EXPECTED_TEXT_ENCODER_FILES = tuple(
-    f"text_encoder_i2v/model-{index:05d}-of-00004.safetensors"
-    for index in range(1, 5)
-)
+DEFAULT_RUNTIME_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "matrix_game_1")
+EXPECTED_DIT_FILES = tuple(f"dit/diffusion_pytorch_model-{index:05d}-of-00007.safetensors" for index in range(1, 8))
+EXPECTED_TEXT_ENCODER_FILES = tuple(f"text_encoder_i2v/model-{index:05d}-of-00004.safetensors" for index in range(1, 5))
 EXPECTED_VAE_FILES = ("vae/pytorch_model.pt",)
 EXPECTED_CHECKPOINT_FILES = EXPECTED_DIT_FILES + EXPECTED_TEXT_ENCODER_FILES + EXPECTED_VAE_FILES
 REQUIRED_RUNTIME_CONFIG_FILES = ("environment.yml",)
@@ -165,7 +164,9 @@ class MatrixGame1Runtime:
         self.generation_type = "image_to_video"
         self.device = device
         selected_checkpoint_dir = checkpoint_dir or DEFAULT_CHECKPOINT_DIR
-        self.checkpoint_dir = _expand_runtime_path(selected_checkpoint_dir) or Path(selected_checkpoint_dir).expanduser()
+        self.checkpoint_dir = (
+            _expand_runtime_path(selected_checkpoint_dir) or Path(selected_checkpoint_dir).expanduser()
+        )
         self.conda_dir = _expand_runtime_path(conda_dir) if conda_dir is not None else None
         if self.conda_dir is None and DEFAULT_CONDA_DIR is not None:
             self.conda_dir = _expand_runtime_path(DEFAULT_CONDA_DIR)
@@ -179,7 +180,7 @@ class MatrixGame1Runtime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "MatrixGame1Runtime":
+    ) -> MatrixGame1Runtime:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
@@ -264,9 +265,9 @@ class MatrixGame1Runtime:
         missing_checkpoint = self.missing_checkpoint_files()
         missing_runtime = self.missing_runtime_files()
         missing_runtime_config = self.missing_runtime_config_files()
-        code_ready = not any(
-            item for item in missing_runtime if not item.endswith("/bin/python")
-        ) and not missing_runtime_config
+        code_ready = (
+            not any(item for item in missing_runtime if not item.endswith("/bin/python")) and not missing_runtime_config
+        )
         checkpoint_ready = len(missing_checkpoint) == 0
         env_ready = self.python_executable is None or self.python_executable.is_file()
         return {
@@ -540,7 +541,10 @@ class MatrixGame1Runtime:
                     source_video = video_candidates[0]
                     shutil.copyfile(source_video, target)
                     artifact_path = str(target)
-                    generated_files = [str(target), *[path for path in generated_files if str(Path(path)) != str(target)]]
+                    generated_files = [
+                        str(target),
+                        *[path for path in generated_files if str(Path(path)) != str(target)],
+                    ]
                     run_result = {
                         **run_result,
                         "generated_files": generated_files,
@@ -599,9 +603,9 @@ __all__ = [
     "DEFAULT_CHECKPOINT_DIR",
     "DEFAULT_CONDA_DIR",
     "EXPECTED_CHECKPOINT_FILES",
-    "MatrixGame1Runtime",
-    "MatrixGame1RuntimePlan",
     "OPTIONAL_CHECKPOINT_FILES",
     "REQUIRED_RUNTIME_FILES",
     "RUNTIME_ROOT",
+    "MatrixGame1Runtime",
+    "MatrixGame1RuntimePlan",
 ]

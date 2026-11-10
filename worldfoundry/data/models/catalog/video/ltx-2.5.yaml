@@ -51,7 +51,7 @@ integration:
   - Local required split components now pass CPU preflight; the two previously incomplete
     large files match the pinned official SHA-256 values. Checkpoint-backed GPU artifact
     parity remains pending.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:ltx-2.5
 pipeline_binding: ltx-2.5
 runner_parity:

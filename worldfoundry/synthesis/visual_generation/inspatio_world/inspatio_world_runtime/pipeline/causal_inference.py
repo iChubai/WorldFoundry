@@ -13,7 +13,9 @@ class CausalInferencePipeline(InspatioCausalRollout):
         folder = getattr(args, "wan_model_folder", None)
         super().__init__(
             args,
-            generator=generator if generator is not None else WanDiffusionWrapper(**getattr(args, "generator", {}), is_causal=True),
+            generator=generator
+            if generator is not None
+            else WanDiffusionWrapper(**getattr(args, "generator", {}), is_causal=True),
             text_encoder=text_encoder if text_encoder is not None else WanTextEncoder(model_folder=folder),
             vae=vae if vae is not None else WanVAEWrapper(model_folder=folder),
         )

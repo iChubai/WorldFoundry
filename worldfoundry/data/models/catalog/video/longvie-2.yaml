@@ -59,7 +59,7 @@ runner_parity:
   - A separate 2026-09-23 single-GPU smoke run with local control, DiT, and Wan
     weights produced nine decodable 640x352 frames at four denoising steps.
 runtime_profile: runtime-profile:longvie-2
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: longvie-2
 catalog_category: video
 catalog_scope: Video-generation and video-token catalog entries. Integrated entries

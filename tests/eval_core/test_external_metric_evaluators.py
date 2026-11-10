@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
+from worldfoundry.evals.tasks.metrics import (
     ExternalMetricEvaluationRequest,
     ExternalMetricEvaluatorEntry,
     ExternalMetricEvaluatorRegistry,
@@ -43,9 +43,9 @@ def test_external_contract_metric_evaluators_are_discoverable() -> None:
 
 
 def test_benchmark_contract_package_exports_canonical_contracts() -> None:
-    import worldfoundry.evaluation.tasks.contracts as canonical_contracts
-    import worldfoundry.evaluation.tasks.contracts.external as canonical_external
-    import worldfoundry.evaluation.tasks.contracts.registry as canonical_registry
+    import worldfoundry.evals.tasks.contracts as canonical_contracts
+    import worldfoundry.evals.tasks.contracts.external as canonical_external
+    import worldfoundry.evals.tasks.contracts.registry as canonical_registry
 
     assert canonical_contracts.ExternalBenchmarkContract is canonical_registry.ExternalBenchmarkContract
     assert canonical_contracts.ExternalBenchmarkContractRegistry is canonical_registry.ExternalBenchmarkContractRegistry
@@ -71,7 +71,7 @@ def test_external_metric_entries_report_blocked_runtime_for_non_local_metrics() 
 
 
 def test_external_contract_registry_uses_source_aware_registration_primitive() -> None:
-    from worldfoundry.evaluation.tasks.contracts.registry import (
+    from worldfoundry.evals.tasks.contracts.registry import (
         DuplicateExternalBenchmarkContractError,
         ExternalBenchmarkContract,
         ExternalBenchmarkContractRegistry,
@@ -110,15 +110,15 @@ def test_external_contract_registry_uses_source_aware_registration_primitive() -
 
 
 def test_metric_package_exports_canonical_metrics_registry() -> None:
-    import worldfoundry.evaluation.tasks.metrics.registry as canonical_artifacts
-    from worldfoundry.evaluation.tasks import metrics
-    from worldfoundry.evaluation.tasks.execution.runners._benchmark_metrics import (
+    import worldfoundry.evals.tasks.metrics.registry as canonical_artifacts
+    from worldfoundry.evals.tasks import metrics
+    from worldfoundry.evals.tasks.execution.runners._benchmark_metrics import (
         bindings as canonical_bindings,
     )
-    from worldfoundry.evaluation.tasks.execution.runners._benchmark_metrics import (
+    from worldfoundry.evals.tasks.execution.runners._benchmark_metrics import (
         evaluators as canonical,
     )
-    from worldfoundry.evaluation.tasks.execution.runners._benchmark_metrics import (
+    from worldfoundry.evals.tasks.execution.runners._benchmark_metrics import (
         local_evaluators as canonical_local_evaluators,
     )
 

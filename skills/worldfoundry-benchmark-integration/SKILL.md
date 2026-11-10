@@ -33,7 +33,7 @@ the same execution contract as the implementation reference.
    required, task YAML under `worldfoundry/data/benchmarks/tasks/external/`.
    Declare dataset references, access requirements, metrics, and blockers.
 2. Use the existing catalog parsers and registries. Keep runtime execution in
-   `worldfoundry/evaluation/tasks/execution/runners/`; use existing official
+   `worldfoundry/evals/tasks/execution/runners/`; use existing official
    runner and normalizer contracts instead of creating a parallel evaluator.
 3. Prove task materialization before generation. Inspect stable sample IDs,
    resolved input paths, and required artifacts using `wf task

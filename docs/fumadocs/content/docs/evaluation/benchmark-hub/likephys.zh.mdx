@@ -35,7 +35,7 @@ hf download JianhaoDYDY/LikePhys-Benchmark --repo-type dataset --local-dir "${WO
 
 WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT=/path/to/LikePhys \
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py \
   --run-official \
   --probe-model wan2.1-T2V-1.3b \
   --scenario ball_drop \

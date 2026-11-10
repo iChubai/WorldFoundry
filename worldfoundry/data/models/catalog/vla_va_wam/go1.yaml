@@ -1,4 +1,4 @@
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 id: go1
 name: GO-1
 aliases:

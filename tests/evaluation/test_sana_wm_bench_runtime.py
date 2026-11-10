@@ -3,10 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
-from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_generation import get_benchmark_generation_adapter
-from worldfoundry.evaluation.tasks.execution.runners.sana_wm_bench.sana_wm_bench_official_impl import main
-from worldfoundry.evaluation.tasks.execution.runners.sana_wm_bench.sana_wm_bench_prompts import (
+from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
+from worldfoundry.evals.tasks.execution.orchestration.benchmark_generation import get_benchmark_generation_adapter
+from worldfoundry.evals.tasks.execution.runners.sana_wm_bench.sana_wm_bench_official_impl import main
+from worldfoundry.evals.tasks.execution.runners.sana_wm_bench.sana_wm_bench_prompts import (
     CANONICAL_FPS,
     CANONICAL_FRAME_COUNT,
     materialize_sana_wm_bench_generation_requests,

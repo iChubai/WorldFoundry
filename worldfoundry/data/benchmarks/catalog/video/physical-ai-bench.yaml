@@ -45,9 +45,9 @@ metrics:
 - {id: lpips_diversity, higher_is_better: true, aggregator: mean}
 
 runner:
-  official_script: worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner
     dataset_root_arg: --dataset-root
     prompt_manifest_arg: --prompt-file
     answer_manifest_arg: --prediction-manifest
@@ -57,8 +57,8 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     default_metrics: [aesthetic_quality, background_consistency, imaging_quality, motion_smoothness, overall_consistency, subject_consistency]
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicalAIBenchContract
-  runner_script: worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicalAIBenchContract
+  runner_script: worldfoundry/evals/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
   run_command:
   - wf
   - zoo
@@ -78,7 +78,7 @@ runner:
   verification_status: verified
   runtime:
     kind: in_tree_multi_track_evaluator
-    implementation: worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/runtime/physical_ai_bench
+    implementation: worldfoundry/evals/tasks/execution/runners/physical_ai_bench/runtime/physical_ai_bench
     config: worldfoundry/data/benchmarks/assets/physical-ai-bench/evaluator.yaml
 
 integration:
@@ -115,7 +115,7 @@ data_refs:
 
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicalAIBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicalAIBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -128,7 +128,7 @@ checkpoint_refs:
 - {id: grounding_dino_checkpoint, cli_flag: --grounding-checkpoint, role: segmentation_metrics}
 - {id: sam2_checkpoint, cli_flag: --sam2-checkpoint, role: segmentation_metrics}
 - {id: dover_checkpoint, cli_flag: --dover-checkpoint, role: dover_tech_score}
-validation_command: ["${WORLDFOUNDRY_UNIFIED_PYTHON:-python}", -m, worldfoundry.evaluation.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner, --track, conditional-generation, --run-official, --dataset-root, "${WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT}", --generated-video-dir, "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}", --output-dir, <out>, --json]
+validation_command: ["${WORLDFOUNDRY_UNIFIED_PYTHON:-python}", -m, worldfoundry.evals.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner, --track, conditional-generation, --run-official, --dataset-root, "${WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT}", --generated-video-dir, "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}", --output-dir, <out>, --json]
 artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   dataset_root_env: WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT

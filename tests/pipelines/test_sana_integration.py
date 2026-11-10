@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS, get_sana_variant
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.sana.pipeline_sana import (
     LongsanaVideo2b480pPipeline,
     Sana1600M1024pxBf16Pipeline,

@@ -1,10 +1,11 @@
 # Adapted from https://github.com/junjun3518/alias-free-torch under the Apache License 2.0
 # License text: THIRD-PARTY-NOTICES, BigVGAN alias-free-torch LICENSE_3.
 
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
 if "sinc" in dir(torch):
     sinc = torch.sinc
@@ -27,9 +28,7 @@ else:
 # This code is adopted from adefossez's julius.lowpass.LowPassFilters under the MIT License
 # https://adefossez.github.io/julius/julius/lowpass.html
 # License text: THIRD-PARTY-NOTICES, BigVGAN Julius LICENSE_5.
-def kaiser_sinc_filter1d(
-    cutoff, half_width, kernel_size
-):  # return filter [1,1,kernel_size]
+def kaiser_sinc_filter1d(cutoff, half_width, kernel_size):  # return filter [1,1,kernel_size]
     even = kernel_size % 2 == 0
     half_size = kernel_size // 2
 
@@ -45,10 +44,7 @@ def kaiser_sinc_filter1d(
     window = torch.kaiser_window(kernel_size, beta=beta, periodic=False)
 
     # ratio = 0.5/cutoff -> 2 * cutoff = 1 / ratio
-    if even:
-        time = torch.arange(-half_size, half_size) + 0.5
-    else:
-        time = torch.arange(kernel_size) - half_size
+    time = torch.arange(-half_size, half_size) + 0.5 if even else torch.arange(kernel_size) - half_size
     if cutoff == 0:
         filter_ = torch.zeros_like(time)
     else:

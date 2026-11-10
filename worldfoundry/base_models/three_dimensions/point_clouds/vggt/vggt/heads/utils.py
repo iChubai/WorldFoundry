@@ -4,10 +4,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> heads -> utils.py functionality."""
-
 import torch
-import torch.nn as nn
 
 
 def position_grid_to_embed(pos_grid: torch.Tensor, embed_dim: int, omega_0: float = 100) -> torch.Tensor:
@@ -66,7 +63,7 @@ def make_sincos_pos_embed(embed_dim: int, pos: torch.Tensor, omega_0: float = 10
 
 
 def create_uv_grid(
-    width: int, height: int, aspect_ratio: float = None, dtype: torch.dtype = None, device: torch.device = None
+    width: int, height: int, aspect_ratio: float | None = None, dtype: torch.dtype = None, device: torch.device = None
 ) -> torch.Tensor:
     """
     Create a normalized UV grid of shape (width, height, 2).

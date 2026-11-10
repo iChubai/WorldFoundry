@@ -32,7 +32,7 @@ runner_parity:
   - Official PushT evaluation parity remains pending; per-run validation evidence
     is tracked outside the model catalog.
 runtime_profile: runtime-profile:leworldmodel
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: leworldmodel
 output_artifacts:
 - generated_world

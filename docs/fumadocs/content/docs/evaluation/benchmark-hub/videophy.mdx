@@ -31,7 +31,7 @@ wf zoo benchmark-run \
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/videophy/run_videophy_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/videophy/run_videophy_official_runner.py \
   --run-official \
   --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --videocon-checkpoint /path/to/videocon_physics \
@@ -41,7 +41,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 Env: `WORLDFOUNDRY_VIDEOPHY_RESULTS_PATH`, `WORLDFOUNDRY_VIDEOPHY_JUDGE_BACKEND`. Prompt list: `worldfoundry/data/benchmarks/assets/videophy/prompts.json`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/videophy.yaml`, `worldfoundry/evaluation/tasks/execution/runners/videophy`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/videophy.yaml`, `worldfoundry/evals/tasks/execution/runners/videophy`.
 
 Outputs include `scorecard.json` (primary `videophy_average`).
 

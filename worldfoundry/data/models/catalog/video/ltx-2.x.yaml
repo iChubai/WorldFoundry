@@ -5,7 +5,7 @@ description: >-
   image-to-video and text-to-video paths, plus official IC-LoRA control-video
   adapters for video-to-video. Per-configuration inference validation is tracked
   separately from integration status.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: ltx-2.x
 runtime_profile: runtime-profile:ltx-2.3-i2v
 tasks:
@@ -81,7 +81,7 @@ variants:
       status: pending_demo
     runner_parity:
       status: pending
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: ltx-2-t2v
     integration:
       status: integrated
@@ -105,7 +105,7 @@ variants:
           tracked outside the model catalog.
     runner_parity:
       status: pending
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: ltx-2-i2v
     integration:
       status: integrated
@@ -132,7 +132,7 @@ variants:
         - The official Pose-Control IC-LoRA path and public binding produced a
           17-frame 256x256 artifact from a static synthetic pose reference.
           Dynamic motion and default-resolution quality are not yet validated.
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: ltx-2-v2v
     integration:
       status: integrated
@@ -150,7 +150,7 @@ variants:
       status: pending_demo
     runner_parity:
       status: pending
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: ltx-2.3-t2v
     integration:
       status: integrated
@@ -174,7 +174,7 @@ variants:
           tracked outside the model catalog.
     runner_parity:
       status: pending
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: ltx-2.3-i2v
     integration:
       status: integrated
@@ -201,7 +201,7 @@ variants:
         - The official IC-LoRA control path and public binding produced a 17-frame
           256x256 artifact from a synthetic Canny reference. Natural-video
           semantics and default-resolution quality are not yet validated.
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: ltx-2.3-v2v
     integration:
       status: integrated

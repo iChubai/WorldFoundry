@@ -1,6 +1,6 @@
 id: open-sora-plan
 name: Open-Sora-Plan
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:open-sora-plan
 tasks:
 - text-to-video

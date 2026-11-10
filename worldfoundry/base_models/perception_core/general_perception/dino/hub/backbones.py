@@ -6,7 +6,6 @@ from .. import models as vits
 
 
 def dino_vits16(pretrained: bool = False, **kwargs):
-    """DINO ViT-S/16."""
     model = vits.vit_small(patch_size=16, num_classes=0, **kwargs)
     if pretrained:
         raise RuntimeError("Local DINO hub expects callers to provide checkpoint weights.")
@@ -14,7 +13,6 @@ def dino_vits16(pretrained: bool = False, **kwargs):
 
 
 def dino_vits8(pretrained: bool = False, **kwargs):
-    """DINO ViT-S/8."""
     model = vits.vit_small(patch_size=8, num_classes=0, **kwargs)
     if pretrained:
         raise RuntimeError("Local DINO hub expects callers to provide checkpoint weights.")
@@ -22,7 +20,6 @@ def dino_vits8(pretrained: bool = False, **kwargs):
 
 
 def dino_vitb16(pretrained: bool = False, **kwargs):
-    """DINO ViT-B/16."""
     model = vits.vit_base(patch_size=16, num_classes=0, **kwargs)
     if pretrained:
         raise RuntimeError("Local DINO hub expects callers to provide checkpoint weights.")
@@ -30,7 +27,6 @@ def dino_vitb16(pretrained: bool = False, **kwargs):
 
 
 def dino_vitb8(pretrained: bool = False, **kwargs):
-    """DINO ViT-B/8."""
     model = vits.vit_base(patch_size=8, num_classes=0, **kwargs)
     if pretrained:
         raise RuntimeError("Local DINO hub expects callers to provide checkpoint weights.")

@@ -97,17 +97,17 @@ metrics:
   output_unit: score
   primary: true
 runner:
-  official_script: worldfoundry/evaluation/tasks/execution/runners/videoverse/run_videoverse_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/videoverse/run_videoverse_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.videoverse.run_videoverse_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.videoverse.run_videoverse_official_runner
     generated_arg: --generated-artifact-dir
     limit_arg: --limit
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoVerseContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/videoverse/run_videoverse_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:VideoVerseContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/videoverse/run_videoverse_official_runner.py
   run_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" 
-    worldfoundry/evaluation/tasks/execution/runners/videoverse/run_videoverse_official_runner.py --run-official 
+    worldfoundry/evals/tasks/execution/runners/videoverse/run_videoverse_official_runner.py --run-official 
     --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" --output-dir 
     "${WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR}" --json
   validation_command:
@@ -195,7 +195,7 @@ data_refs:
   - worldfoundry/data/benchmarks/assets/videoverse/prompt/prompts_of_VideoVerse_decomposed.json
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoVerseContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:VideoVerseContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

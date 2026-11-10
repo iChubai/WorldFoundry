@@ -16,8 +16,9 @@ import subprocess
 import sys
 import tempfile
 from collections import deque
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import imageio.v3 as iio
 import numpy as np
@@ -148,7 +149,11 @@ def _default_config_path(runtime_root: str | Path, variant: str) -> str:
     Returns:
         The string representation of the default configuration file path.
     """
-    name = "kairos_4b_config.py" if str(variant).lower() in {"720p", "4b-720p", "pretrained"} else "kairos_4b_config_DMD.py"
+    name = (
+        "kairos_4b_config.py"
+        if str(variant).lower() in {"720p", "4b-720p", "pretrained"}
+        else "kairos_4b_config_DMD.py"
+    )
     root = Path(runtime_root).expanduser()
     candidates = (
         root / "kairos" / "configs" / name,
@@ -156,7 +161,7 @@ def _default_config_path(runtime_root: str | Path, variant: str) -> str:
         root / "configs" / name,
     )
     existing = _first_existing(candidates)
-    return str(existing or package_data_path('models', 'runtime', 'configs', 'kairos') / name)
+    return str(existing or package_data_path("models", "runtime", "configs", "kairos") / name)
 
 
 def _load_video_frames(video_path: str | Path) -> np.ndarray:
@@ -303,7 +308,7 @@ class KairosRuntime:
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "KairosRuntime":
+    ) -> KairosRuntime:
         """
         Alternative constructor to create a KairosRuntime instance from pretrained model information.
 
@@ -507,7 +512,9 @@ class KairosRuntime:
         patched.write_text(text + "\n".join(overrides) + "\n", encoding="utf-8")
         return patched
 
-    def _write_input_json(self, temp_dir: Path, prompt: str, images: Any, output_dir: Path, options: Mapping[str, Any]) -> Path:
+    def _write_input_json(
+        self, temp_dir: Path, prompt: str, images: Any, output_dir: Path, options: Mapping[str, Any]
+    ) -> Path:
         """
         Writes the input parameters for Kairos inference to a JSON file.
 
@@ -653,7 +660,7 @@ class KairosRuntime:
 
         # Handle `interactions` for setting the seed if not explicitly provided in kwargs
         if interactions and "seed" not in kwargs:
-            first = list(interactions)[0]
+            first = list(interactions)[0]  # noqa: RUF015 - Keeps eager list construction and IndexError.
             if isinstance(first, int):
                 options["seed"] = first
 

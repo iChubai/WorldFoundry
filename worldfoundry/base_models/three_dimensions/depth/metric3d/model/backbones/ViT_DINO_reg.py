@@ -8,12 +8,11 @@
 #   https://github.com/facebookresearch/dino/blob/main/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/models/vision_transformer.py
 
-"""Module for base_models -> three_dimensions -> depth -> metric3d -> model -> backbones -> ViT_DINO_reg.py functionality."""
-
 import logging
 import math
+from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -23,7 +22,11 @@ import torch.utils.checkpoint
 from torch import Tensor
 from torch.nn.init import trunc_normal_
 
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import index_select_cat, memory_efficient_attention, scaled_index_add
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import (
+    index_select_cat,
+    memory_efficient_attention,
+    scaled_index_add,
+)
 from worldfoundry.core.nn.blocks.module_utils import named_apply
 
 logger = logging.getLogger(__name__)
@@ -31,11 +34,6 @@ logger = logging.getLogger(__name__)
 
 # SSF finetuning originally by dongzelian
 def init_ssf_scale_shift(dim):
-    """Init ssf scale shift.
-
-    Args:
-        dim: The dim.
-    """
     scale = nn.Parameter(torch.ones(dim))
     shift = nn.Parameter(torch.zeros(dim))
 
@@ -46,13 +44,6 @@ def init_ssf_scale_shift(dim):
 
 
 def ssf_ada(x, scale, shift):
-    """Ssf ada.
-
-    Args:
-        x: The x.
-        scale: The scale.
-        shift: The shift.
-    """
     assert scale.shape == shift.shape
     if x.shape[-1] == scale.shape[0]:
         return x * scale + shift
@@ -64,7 +55,6 @@ def ssf_ada(x, scale, shift):
 
 # LoRA finetuning originally by edwardjhu
 class LoRALayer:
-    """Lo ra layer implementation."""
     def __init__(
         self,
         r: int,
@@ -72,14 +62,6 @@ class LoRALayer:
         lora_dropout: float,
         merge_weights: bool,
     ):
-        """Init.
-
-        Args:
-            r: The r.
-            lora_alpha: The lora alpha.
-            lora_dropout: The lora dropout.
-            merge_weights: The merge weights.
-        """
         self.r = r
         self.lora_alpha = lora_alpha
         # Optional dropout
@@ -93,7 +75,6 @@ class LoRALayer:
 
 
 class LoRALinear(nn.Linear, LoRALayer):
-    """Lo ra linear implementation."""
     # LoRA implemented in a dense layer
     def __init__(
         self,
@@ -106,17 +87,6 @@ class LoRALinear(nn.Linear, LoRALayer):
         merge_weights: bool = True,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            in_features: The in features.
-            out_features: The out features.
-            r: The r.
-            lora_alpha: The lora alpha.
-            lora_dropout: The lora dropout.
-            fan_in_fan_out: The fan in fan out.
-            merge_weights: The merge weights.
-        """
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
         LoRALayer.__init__(
             self,
@@ -139,7 +109,6 @@ class LoRALinear(nn.Linear, LoRALayer):
             self.weight.data = self.weight.data.transpose(0, 1)
 
     def reset_parameters(self):
-        """Reset parameters."""
         # nn.Linear.reset_parameters(self)
         if hasattr(self, "lora_A"):
             # initialize B the same way as the default for nn.Linear and A to zero
@@ -165,17 +134,7 @@ class LoRALinear(nn.Linear, LoRALayer):
     #             self.merged = True
 
     def forward(self, x: torch.Tensor):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         def T(w):
-            """T.
-
-            Args:
-                w: The w.
-            """
             return w.transpose(0, 1) if self.fan_in_fan_out else w
 
         if self.r > 0 and not self.merged:
@@ -187,11 +146,6 @@ class LoRALinear(nn.Linear, LoRALayer):
 
 
 def make_2tuple(x):
-    """Make 2tuple.
-
-    Args:
-        x: The x.
-    """
     if isinstance(x, tuple):
         assert len(x) == 2
         return x
@@ -201,13 +155,6 @@ def make_2tuple(x):
 
 
 def drop_path(x, drop_prob: float = 0.0, training: bool = False):
-    """Drop path.
-
-    Args:
-        x: The x.
-        drop_prob: The drop prob.
-        training: The training.
-    """
     if drop_prob == 0.0 or not training:
         return x
     keep_prob = 1 - drop_prob
@@ -223,54 +170,25 @@ class DropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks)."""
 
     def __init__(self, drop_prob=None):
-        """Init.
-
-        Args:
-            drop_prob: The drop prob.
-        """
-        super(DropPath, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return drop_path(x, self.drop_prob, self.training)
 
 
 class LayerScale(nn.Module):
-    """Layer scale implementation."""
     def __init__(
         self,
         dim: int,
-        init_values: Union[float, Tensor] = 1e-5,
+        init_values: float | Tensor = 1e-5,
         inplace: bool = False,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            init_values: The init values.
-            inplace: The inplace.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.inplace = inplace
         self.gamma = nn.Parameter(init_values * torch.ones(dim))
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
@@ -288,28 +206,14 @@ class PatchEmbed(nn.Module):
 
     def __init__(
         self,
-        img_size: Union[int, Tuple[int, int]] = 224,
-        patch_size: Union[int, Tuple[int, int]] = 16,
+        img_size: int | tuple[int, int] = 224,
+        patch_size: int | tuple[int, int] = 16,
         in_chans: int = 3,
         embed_dim: int = 768,
-        norm_layer: Optional[Callable] = None,
+        norm_layer: Callable | None = None,
         flatten_embedding: bool = True,
-        tuning_mode: Optional[str] = None,
+        tuning_mode: str | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            img_size: The img size.
-            patch_size: The patch size.
-            in_chans: The in chans.
-            embed_dim: The embed dim.
-            norm_layer: The norm layer.
-            flatten_embedding: The flatten embedding.
-            tuning_mode: The tuning mode.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         image_HW = make_2tuple(img_size)
@@ -343,14 +247,6 @@ class PatchEmbed(nn.Module):
             self.tuning_mode = None
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         _, _, H, W = x.shape
         patch_H, patch_W = self.patch_size
 
@@ -368,11 +264,6 @@ class PatchEmbed(nn.Module):
         return x
 
     def flops(self) -> float:
-        """Flops.
-
-        Returns:
-            The return value.
-        """
         Ho, Wo = self.patches_resolution
         flops = Ho * Wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
         if self.norm is not None:
@@ -381,31 +272,16 @@ class PatchEmbed(nn.Module):
 
 
 class Mlp(nn.Module):
-    """Mlp implementation."""
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
         act_layer: Callable[..., nn.Module] = nn.GELU,
         drop: float = 0.0,
         bias: bool = True,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            drop: The drop.
-            bias: The bias.
-            tuning_mode: The tuning mode.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -426,14 +302,6 @@ class Mlp(nn.Module):
             self.tuning_mode = None
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x = self.fc1(x)
         if self.tuning_mode == "ssf":
             x = ssf_ada(x, self.ssf_scale_1, self.ssf_shift_1)
@@ -449,31 +317,16 @@ class Mlp(nn.Module):
 
 
 class SwiGLUFFN(nn.Module):
-    """Swi gluffn implementation."""
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
-        act_layer: Callable[..., nn.Module] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: Callable[..., nn.Module] | None = None,
         drop: float = 0.0,
         bias: bool = True,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            drop: The drop.
-            bias: The bias.
-            tuning_mode: The tuning mode.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
@@ -492,14 +345,6 @@ class SwiGLUFFN(nn.Module):
             self.tuning_mode = None
 
     def forward(self, x: Tensor) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         x12 = self.w12(x)
         if self.tuning_mode == "ssf":
             x12 = ssf_ada(x12, self.ssf_scale_1, self.ssf_shift_1)
@@ -519,29 +364,15 @@ XFORMERS_AVAILABLE = False
 
 
 class SwiGLUFFNFused(SwiGLUFFN):
-    """Swi gluffn fused implementation."""
     def __init__(
         self,
         in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
-        act_layer: Callable[..., nn.Module] = None,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: Callable[..., nn.Module] | None = None,
         drop: float = 0.0,
         bias: bool = True,
     ) -> None:
-        """Init.
-
-        Args:
-            in_features: The in features.
-            hidden_features: The hidden features.
-            out_features: The out features.
-            act_layer: The act layer.
-            drop: The drop.
-            bias: The bias.
-
-        Returns:
-            The return value.
-        """
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         hidden_features = (int(hidden_features * 2 / 3) + 7) // 8 * 8
@@ -554,7 +385,6 @@ class SwiGLUFFNFused(SwiGLUFFN):
 
 
 class Attention(nn.Module):
-    """Attention implementation."""
     def __init__(
         self,
         dim: int,
@@ -564,23 +394,8 @@ class Attention(nn.Module):
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         window_size: int = 0,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            attn_drop: The attn drop.
-            proj_drop: The proj drop.
-            window_size: The window size.
-            tuning_mode: The tuning mode.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         self.num_heads = num_heads
         head_dim = dim // num_heads
@@ -618,15 +433,6 @@ class Attention(nn.Module):
         # self.attn = MultiHeadDispatch(dim_model=EMB, residual_dropout=DROPOUT, num_heads=HEADS, attention=attn)
 
     def forward(self, x: Tensor, attn_bias=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_bias: The attn bias.
-
-        Returns:
-            The return value.
-        """
         B, N, C = x.shape
         if self.tuning_mode == "ssf":
             qkv = (
@@ -657,17 +463,7 @@ class Attention(nn.Module):
 
 
 class MemEffAttention(Attention):
-    """Mem eff attention implementation."""
     def forward(self, x: Tensor, attn_bias=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_bias: The attn bias.
-
-        Returns:
-            The return value.
-        """
         if not XFORMERS_AVAILABLE:
             # if True:
             assert attn_bias is None, "xFormers is required for nested tensors usage"
@@ -697,7 +493,6 @@ class MemEffAttention(Attention):
 
 
 class Block(nn.Module):
-    """Block implementation."""
     def __init__(
         self,
         dim: int,
@@ -714,30 +509,8 @@ class Block(nn.Module):
         norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
         attn_class: Callable[..., nn.Module] = Attention,
         ffn_layer: Callable[..., nn.Module] = Mlp,
-        tuning_mode: Optional[int] = None,
+        tuning_mode: int | None = None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            attn_class: The attn class.
-            ffn_layer: The ffn layer.
-            tuning_mode: The tuning mode.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
         # print(f"biases: qkv: {qkv_bias}, proj: {proj_bias}, ffn: {ffn_bias}")
         self.norm1 = norm_layer(dim)
@@ -780,25 +553,7 @@ class Block(nn.Module):
         self.sample_drop_ratio = drop_path
 
     def forward(self, x: Tensor, attn_bias=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            attn_bias: The attn bias.
-
-        Returns:
-            The return value.
-        """
         def attn_residual_func(x: Tensor, attn_bias) -> Tensor:
-            """Attn residual func.
-
-            Args:
-                x: The x.
-                attn_bias: The attn bias.
-
-            Returns:
-                The return value.
-            """
             if self.tuning_mode == "ssf":
                 return self.ls1(
                     self.attn(
@@ -810,14 +565,6 @@ class Block(nn.Module):
                 return self.ls1(self.attn(self.norm1(x), attn_bias))
 
         def ffn_residual_func(x: Tensor) -> Tensor:
-            """Ffn residual func.
-
-            Args:
-                x: The x.
-
-            Returns:
-                The return value.
-            """
             if self.tuning_mode == "ssf":
                 return self.ls2(self.mlp(ssf_ada(self.norm2(x), self.ssf_scale_2, self.ssf_shift_2)))
             else:
@@ -851,17 +598,6 @@ def drop_add_residual_stochastic_depth(
     sample_drop_ratio: float = 0.0,
     attn_bias=None,
 ) -> Tensor:
-    """Drop add residual stochastic depth.
-
-    Args:
-        x: The x.
-        residual_func: The residual func.
-        sample_drop_ratio: The sample drop ratio.
-        attn_bias: The attn bias.
-
-    Returns:
-        The return value.
-    """
     # 1) extract subset using permutation
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
@@ -882,12 +618,6 @@ def drop_add_residual_stochastic_depth(
 
 
 def get_branges_scales(x, sample_drop_ratio=0.0):
-    """Get branges scales.
-
-    Args:
-        x: The x.
-        sample_drop_ratio: The sample drop ratio.
-    """
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
     brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
@@ -896,15 +626,6 @@ def get_branges_scales(x, sample_drop_ratio=0.0):
 
 
 def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None):
-    """Add residual.
-
-    Args:
-        x: The x.
-        brange: The brange.
-        residual: The residual.
-        residual_scale_factor: The residual scale factor.
-        scaling_vector: The scaling vector.
-    """
     if scaling_vector is None:
         x_flat = x.flatten(1)
         residual = residual.flatten(1)
@@ -920,7 +641,7 @@ def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None
     return x_plus_residual
 
 
-attn_bias_cache: Dict[Tuple, Any] = {}
+attn_bias_cache: dict[tuple, Any] = {}
 
 
 def get_attn_bias_and_cat(x_list, branges=None):
@@ -931,10 +652,10 @@ def get_attn_bias_and_cat(x_list, branges=None):
         raise NotImplementedError("Nested tensor attention requires xFormers, which is disabled in ViPE")
 
     batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list))
-    if all_shapes not in attn_bias_cache.keys():
+    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
+    if all_shapes not in attn_bias_cache:
         seqlens = []
-        for b, x in zip(batch_sizes, x_list):
+        for b, x in zip(batch_sizes, x_list, strict=False):
             for _ in range(b):
                 seqlens.append(x.shape[1])
         attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
@@ -951,22 +672,11 @@ def get_attn_bias_and_cat(x_list, branges=None):
 
 
 def drop_add_residual_stochastic_depth_list(
-    x_list: List[Tensor],
+    x_list: list[Tensor],
     residual_func: Callable[[Tensor, Any], Tensor],
     sample_drop_ratio: float = 0.0,
     scaling_vector=None,
 ) -> Tensor:
-    """Drop add residual stochastic depth list.
-
-    Args:
-        x_list: The x list.
-        residual_func: The residual func.
-        sample_drop_ratio: The sample drop ratio.
-        scaling_vector: The scaling vector.
-
-    Returns:
-        The return value.
-    """
     # 1) generate random set of indices for dropping samples in the batch
     branges_scales = [get_branges_scales(x, sample_drop_ratio=sample_drop_ratio) for x in x_list]
     branges = [s[0] for s in branges_scales]
@@ -979,14 +689,15 @@ def drop_add_residual_stochastic_depth_list(
     residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
 
     outputs = []
-    for x, brange, residual, residual_scale_factor in zip(x_list, branges, residual_list, residual_scale_factors):
+    for x, brange, residual, residual_scale_factor in zip(
+        x_list, branges, residual_list, residual_scale_factors, strict=False
+    ):
         outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
     return outputs
 
 
 class NestedTensorBlock(Block):
-    """Nested tensor block implementation."""
-    def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
+    def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
         """
@@ -995,27 +706,9 @@ class NestedTensorBlock(Block):
         if self.training and self.sample_drop_ratio > 0.0:
 
             def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Attn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.attn(self.norm1(x), attn_bias=attn_bias)
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Ffn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.mlp(self.norm2(x))
 
             x_list = drop_add_residual_stochastic_depth_list(
@@ -1034,27 +727,9 @@ class NestedTensorBlock(Block):
         else:
 
             def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Attn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls1(self.attn(self.norm1(x), attn_bias=attn_bias))
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Ffn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls2(self.mlp(self.norm2(x)))
 
             attn_bias, x = get_attn_bias_and_cat(x_list)
@@ -1063,12 +738,6 @@ class NestedTensorBlock(Block):
             return attn_bias.split(x)
 
     def forward(self, x_or_x_list, attn_bias=None):
-        """Forward.
-
-        Args:
-            x_or_x_list: The x or x list.
-            attn_bias: The attn bias.
-        """
         if isinstance(x_or_x_list, Tensor):
             return super().forward(x_or_x_list, attn_bias)
         elif isinstance(x_or_x_list, list):
@@ -1078,24 +747,13 @@ class NestedTensorBlock(Block):
 
 
 class BlockChunk(nn.ModuleList):
-    """Block chunk implementation."""
     def forward(self, x, others=None):
-        """Forward.
-
-        Args:
-            x: The x.
-            others: The others.
-        """
         for b in self:
-            if others is None:
-                x = b(x)
-            else:
-                x = b(x, others)
+            x = b(x) if others is None else b(x, others)
         return x
 
 
 class DinoVisionTransformer(nn.Module):
-    """Dino vision transformer implementation."""
     def __init__(
         self,
         img_size=518,
@@ -1126,7 +784,6 @@ class DinoVisionTransformer(nn.Module):
         """
         Args:
             img_size (int, tuple): input image size
-            patch_size (int, tuple): patch size
             in_chans (int): number of input channels
             embed_dim (int): embedding dimension
             depth (int): depth of transformer
@@ -1203,7 +860,6 @@ class DinoVisionTransformer(nn.Module):
             # logger.info("using Identity layer as FFN")
 
             def f(*args, **kwargs):
-                """F."""
                 return nn.Identity()
 
             ffn_layer = f
@@ -1247,7 +903,6 @@ class DinoVisionTransformer(nn.Module):
         self.init_weights()
 
     def init_weights(self):
-        """Init weights."""
         trunc_normal_(self.pos_embed, std=0.02)
         nn.init.normal_(self.cls_token, std=1e-6)
         if self.register_tokens is not None:
@@ -1255,13 +910,6 @@ class DinoVisionTransformer(nn.Module):
         named_apply(init_weights_vit_timm, self)
 
     def interpolate_pos_encoding(self, x, w, h):
-        """Interpolate pos encoding.
-
-        Args:
-            x: The x.
-            w: The w.
-            h: The h.
-        """
         previous_dtype = x.dtype
         npatch = x.shape[1] - 1
         N = self.pos_embed.shape[1] - 1
@@ -1292,12 +940,6 @@ class DinoVisionTransformer(nn.Module):
         return torch.cat((class_pos_embed.unsqueeze(0), patch_pos_embed), dim=1).to(previous_dtype)
 
     def prepare_tokens_with_masks(self, x, masks=None):
-        """Prepare tokens with masks.
-
-        Args:
-            x: The x.
-            masks: The masks.
-        """
         B, nc, w, h = x.shape
         x = self.patch_embed(x)
         if masks is not None:
@@ -1319,19 +961,13 @@ class DinoVisionTransformer(nn.Module):
         return x
 
     def forward_features_list(self, x_list, masks_list):
-        """Forward features list.
-
-        Args:
-            x_list: The x list.
-            masks_list: The masks list.
-        """
-        x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list)]
+        x = [self.prepare_tokens_with_masks(x, masks) for x, masks in zip(x_list, masks_list, strict=False)]
         for blk in self.blocks:
             x = blk(x)
 
         all_x = x
         output = []
-        for x, masks in zip(all_x, masks_list):
+        for x, masks in zip(all_x, masks_list, strict=False):
             x_norm = self.norm(x)
             output.append(
                 {
@@ -1345,12 +981,6 @@ class DinoVisionTransformer(nn.Module):
         return output
 
     def forward_features(self, x, masks=None):
-        """Forward features.
-
-        Args:
-            x: The x.
-            masks: The masks.
-        """
         if isinstance(x, list):
             return self.forward_features_list(x, masks)
 
@@ -1432,12 +1062,6 @@ class DinoVisionTransformer(nn.Module):
             ]
 
     def _get_intermediate_layers_not_chunked(self, x, n=1):
-        """Helper function to get intermediate layers not chunked.
-
-        Args:
-            x: The x.
-            n: The n.
-        """
         x = self.prepare_tokens_with_masks(x)
         # If n is an int, take the n last blocks. If it's a list, take them
         output, total_block_len = [], len(self.blocks)
@@ -1450,12 +1074,6 @@ class DinoVisionTransformer(nn.Module):
         return output
 
     def _get_intermediate_layers_chunked(self, x, n=1):
-        """Helper function to get intermediate layers chunked.
-
-        Args:
-            x: The x.
-            n: The n.
-        """
         x = self.prepare_tokens_with_masks(x)
         output, i, total_block_len = [], 0, len(self.blocks[-1])
         # If n is an int, take the n last blocks. If it's a list, take them
@@ -1472,23 +1090,11 @@ class DinoVisionTransformer(nn.Module):
     def get_intermediate_layers(
         self,
         x: torch.Tensor,
-        n: Union[int, Sequence] = 1,  # Layers or n last layers to take
+        n: int | Sequence = 1,  # Layers or n last layers to take
         reshape: bool = False,
         return_class_token: bool = False,
         norm=True,
-    ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor]]]:
-        """Get intermediate layers.
-
-        Args:
-            x: The x.
-            n: The n.
-            reshape: The reshape.
-            return_class_token: The return class token.
-            norm: The norm.
-
-        Returns:
-            The return value.
-        """
+    ) -> tuple[torch.Tensor | tuple[torch.Tensor]]:
         if self.chunked_blocks:
             outputs = self._get_intermediate_layers_chunked(x, n)
         else:
@@ -1504,11 +1110,10 @@ class DinoVisionTransformer(nn.Module):
                 for out in outputs
             ]
         if return_class_token:
-            return tuple(zip(outputs, class_tokens))
+            return tuple(zip(outputs, class_tokens, strict=False))
         return tuple(outputs)
 
     def forward(self, *args, is_training=False, **kwargs):
-        """Forward."""
         ret = self.forward_features(*args, **kwargs)
         return ret
         # if is_training:
@@ -1526,12 +1131,6 @@ def init_weights_vit_timm(module: nn.Module, name: str = ""):
 
 
 def load_ckpt_dino(checkpoint, model):
-    """Load ckpt dino.
-
-    Args:
-        checkpoint: The checkpoint.
-        model: The model.
-    """
     if checkpoint is not None:
         try:
             with open(checkpoint, "rb") as f:
@@ -1546,10 +1145,7 @@ def load_ckpt_dino(checkpoint, model):
         except Exception:
             new_state_dict = {}
             for key, value in state_dict.items():
-                if "blocks" in key:
-                    key_new = "blocks.0" + key[len("blocks") :]
-                else:
-                    key_new = key
+                key_new = "blocks.0" + key[len("blocks") :] if "blocks" in key else key
                 new_state_dict[key_new] = value
 
             model.load_state_dict(new_state_dict, strict=True)
@@ -1560,13 +1156,6 @@ def load_ckpt_dino(checkpoint, model):
 
 
 def vit_small(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
-    """Vit small.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        checkpoint: The checkpoint.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=384,
@@ -1584,13 +1173,6 @@ def vit_small(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
 
 
 def vit_base(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
-    """Vit base.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        checkpoint: The checkpoint.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=768,
@@ -1605,13 +1187,6 @@ def vit_base(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
 
 
 def vit_large(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
-    """Vit large.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        checkpoint: The checkpoint.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=1024,
@@ -1631,10 +1206,7 @@ def vit_large(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
         except Exception:
             new_state_dict = {}
             for key, value in state_dict.items():
-                if "blocks" in key:
-                    key_new = "blocks.0" + key[len("blocks") :]
-                else:
-                    key_new = key
+                key_new = "blocks.0" + key[len("blocks") :] if "blocks" in key else key
                 new_state_dict[key_new] = value
 
             model.load_state_dict(new_state_dict, strict=True)
@@ -1661,14 +1233,6 @@ def vit_giant2(patch_size=14, num_register_tokens=0, checkpoint=None, **kwargs):
 
 
 def vit_small_reg(patch_size=14, num_register_tokens=4, checkpoint=None, tuning_mode=None, **kwargs):
-    """Vit small reg.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        checkpoint: The checkpoint.
-        tuning_mode: The tuning mode.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=384,
@@ -1687,13 +1251,6 @@ def vit_small_reg(patch_size=14, num_register_tokens=4, checkpoint=None, tuning_
 
 
 def vit_base_reg(patch_size=14, num_register_tokens=4, checkpoint=None, **kwargs):
-    """Vit base reg.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        checkpoint: The checkpoint.
-    """
     model = DinoVisionTransformer(
         patch_size=patch_size,
         embed_dim=768,
@@ -1711,14 +1268,6 @@ def vit_base_reg(patch_size=14, num_register_tokens=4, checkpoint=None, **kwargs
 
 
 def vit_large_reg(patch_size=14, num_register_tokens=4, checkpoint=None, tuning_mode=None, **kwargs):
-    """Vit large reg.
-
-    Args:
-        patch_size: The patch size.
-        num_register_tokens: The num register tokens.
-        checkpoint: The checkpoint.
-        tuning_mode: The tuning mode.
-    """
     model = DinoVisionTransformer(
         img_size=518,
         patch_size=patch_size,

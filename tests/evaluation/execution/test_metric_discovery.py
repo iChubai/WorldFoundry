@@ -25,7 +25,7 @@ class MetricDiscoveryTests(unittest.TestCase):
                         raise ModuleNotFoundError(fullname)
             blocker = BlockOptional()
             sys.meta_path.insert(0, blocker)
-            from worldfoundry.evaluation.tasks.metrics.registry import (
+            from worldfoundry.evals.tasks.metrics.registry import (
                 _DISCOVERABLE_METRIC_PACKAGES, default_metric_registry, load_metric_module_specs,
                 list_metric_registry_entries,
             )
@@ -43,8 +43,8 @@ class MetricDiscoveryTests(unittest.TestCase):
     def test_lazy_compute_alias_survives_repeated_calls(self):
         self.run_python('''
             from unittest.mock import patch
-            from worldfoundry.evaluation.tasks.metrics import fid
-            with patch('worldfoundry.evaluation.tasks.metrics._shared.torch_fidelity.calculate_metrics',
+            from worldfoundry.evals.tasks.metrics import fid
+            with patch('worldfoundry.evals.tasks.metrics._shared.torch_fidelity.calculate_metrics',
                        return_value=lambda **kwargs: {'frechet_inception_distance': 0.25}):
                 for call in (lambda: fid.compute('real', 'generated', cuda=False),
                              lambda: fid.compute('real', 'generated', cuda=False),

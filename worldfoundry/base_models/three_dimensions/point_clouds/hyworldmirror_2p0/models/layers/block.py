@@ -2,32 +2,24 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
-"""Module for base_models -> three_dimensions -> point_clouds -> hyworldmirror_2p0 -> models -> layers -> block.py functionality."""
-
-from typing import Callable, List, Any, Tuple, Dict
+from collections.abc import Callable
+from typing import Any
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
+
+from worldfoundry.core.nn import DropPath, LayerScale, Mlp
 
 from .attention import Attention, DistAttention
-from worldfoundry.core.nn import DropPath, LayerScale, Mlp
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-
 
 XFORMERS_AVAILABLE = False
 
-def modulate(x, shift, scale):
-    """Modulate.
 
-    Args:
-        x: The x.
-        shift: The shift.
-        scale: The scale.
-    """
+def modulate(x, shift, scale):
     return x * (1 + scale.unsqueeze(2)) + shift.unsqueeze(2)
 
+
 class Block(nn.Module):
-    """Block implementation."""
     def __init__(
         self,
         dim: int,
@@ -46,32 +38,8 @@ class Block(nn.Module):
         ffn_layer: Callable[..., nn.Module] = Mlp,
         qk_norm: bool = False,
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
-        rope=None
+        rope=None,
     ) -> None:
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            qkv_bias: The qkv bias.
-            proj_bias: The proj bias.
-            ffn_bias: The ffn bias.
-            drop: The drop.
-            attn_drop: The attn drop.
-            init_values: The init values.
-            drop_path: The drop path.
-            act_layer: The act layer.
-            norm_layer: The norm layer.
-            attn_class: The attn class.
-            ffn_layer: The ffn layer.
-            qk_norm: The qk norm.
-            fused_attn: The fused attn.
-            rope: The rope.
-
-        Returns:
-            The return value.
-        """
         super().__init__()
 
         self.norm1 = norm_layer(dim)
@@ -101,38 +69,11 @@ class Block(nn.Module):
 
         self.sample_drop_ratio = drop_path
 
-
     def forward(self, x: Tensor, pos=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-
-        Returns:
-            The return value.
-        """
         def attn_residual_func(x: Tensor, pos=None) -> Tensor:
-            """Attn residual func.
-
-            Args:
-                x: The x.
-                pos: The pos.
-
-            Returns:
-                The return value.
-            """
             return self.ls1(self.attn(self.norm1(x), pos=pos))
 
         def ffn_residual_func(x: Tensor) -> Tensor:
-            """Ffn residual func.
-
-            Args:
-                x: The x.
-
-            Returns:
-                The return value.
-            """
             return self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.1:
@@ -151,66 +92,43 @@ class Block(nn.Module):
             x = x + ffn_residual_func(x)
         return x
 
+
 class DistBlock(Block):
-    """Dist block implementation."""
     def __init__(self, *args, attn_class: Callable[..., nn.Module] = DistAttention, **kwargs):
-        """Init."""
         super().__init__(*args, attn_class=attn_class, **kwargs)
 
-    def forward(self, x: Tensor, pos=None, sp_size=1,sp_group=None,padding_tokens=0,block_type = None, token_shape=None) -> Tensor:
-        """Forward.
-
-        Args:
-            x: The x.
-            pos: The pos.
-            sp_size: The sp size.
-            sp_group: The sp group.
-            padding_tokens: The padding tokens.
-            block_type: The block type.
-            token_shape: The token shape.
-
-        Returns:
-            The return value.
-        """
-        def attn_residual_func(x: Tensor, pos=None, sp_size=1,sp_group=None,padding_tokens=0) -> Tensor:
-            """Attn residual func.
-
-            Args:
-                x: The x.
-                pos: The pos.
-                sp_size: The sp size.
-                sp_group: The sp group.
-                padding_tokens: The padding tokens.
-
-            Returns:
-                The return value.
-            """
-            return self.ls1(self.attn(self.norm1(x), pos=pos,sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens))
+    def forward(
+        self, x: Tensor, pos=None, sp_size=1, sp_group=None, padding_tokens=0, block_type=None, token_shape=None
+    ) -> Tensor:
+        def attn_residual_func(x: Tensor, pos=None, sp_size=1, sp_group=None, padding_tokens=0) -> Tensor:
+            return self.ls1(
+                self.attn(self.norm1(x), pos=pos, sp_size=sp_size, sp_group=sp_group, padding_tokens=padding_tokens)
+            )
 
         def ffn_residual_func(x: Tensor) -> Tensor:
-            """Ffn residual func.
-
-            Args:
-                x: The x.
-
-            Returns:
-                The return value.
-            """
             return self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.1:
             # the overhead is compensated only for a drop path rate larger than 0.1
             x = drop_add_residual_stochastic_depth(
-                x, pos=pos, sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens,residual_func=attn_residual_func, sample_drop_ratio=self.sample_drop_ratio
+                x,
+                pos=pos,
+                sp_size=sp_size,
+                sp_group=sp_group,
+                padding_tokens=padding_tokens,
+                residual_func=attn_residual_func,
+                sample_drop_ratio=self.sample_drop_ratio,
             )
             x = drop_add_residual_stochastic_depth(
                 x, residual_func=ffn_residual_func, sample_drop_ratio=self.sample_drop_ratio
             )
         elif self.training and self.sample_drop_ratio > 0.0:
-            x = x + self.drop_path1(attn_residual_func(x, pos=pos,sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens))
+            x = x + self.drop_path1(
+                attn_residual_func(x, pos=pos, sp_size=sp_size, sp_group=sp_group, padding_tokens=padding_tokens)
+            )
             x = x + self.drop_path1(ffn_residual_func(x))  # FIXME: drop_path2
         else:
-            x = x + attn_residual_func(x, pos=pos,sp_size=sp_size,sp_group=sp_group,padding_tokens=padding_tokens)
+            x = x + attn_residual_func(x, pos=pos, sp_size=sp_size, sp_group=sp_group, padding_tokens=padding_tokens)
             x = x + ffn_residual_func(x)
         return x
 
@@ -218,17 +136,6 @@ class DistBlock(Block):
 def drop_add_residual_stochastic_depth(
     x: Tensor, residual_func: Callable[[Tensor], Tensor], sample_drop_ratio: float = 0.0, pos=None
 ) -> Tensor:
-    """Drop add residual stochastic depth.
-
-    Args:
-        x: The x.
-        residual_func: The residual func.
-        sample_drop_ratio: The sample drop ratio.
-        pos: The pos.
-
-    Returns:
-        The return value.
-    """
     # 1) extract subset using permutation
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
@@ -254,12 +161,6 @@ def drop_add_residual_stochastic_depth(
 
 
 def get_branges_scales(x, sample_drop_ratio=0.0):
-    """Get branges scales.
-
-    Args:
-        x: The x.
-        sample_drop_ratio: The sample drop ratio.
-    """
     b, n, d = x.shape
     sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
     brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
@@ -268,27 +169,18 @@ def get_branges_scales(x, sample_drop_ratio=0.0):
 
 
 def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None):
-    """Add residual.
-
-    Args:
-        x: The x.
-        brange: The brange.
-        residual: The residual.
-        residual_scale_factor: The residual scale factor.
-        scaling_vector: The scaling vector.
-    """
     if scaling_vector is None:
         x_flat = x.flatten(1)
         residual = residual.flatten(1)
         x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
     else:
-        x_plus_residual = scaled_index_add(
+        x_plus_residual = scaled_index_add(  # noqa: F821 - Name is undefined in the upstream source.
             x, brange, residual.to(dtype=x.dtype), scaling=scaling_vector, alpha=residual_scale_factor
         )
     return x_plus_residual
 
 
-attn_bias_cache: Dict[Tuple, Any] = {}
+attn_bias_cache: dict[tuple, Any] = {}
 
 
 def get_attn_bias_and_cat(x_list, branges=None):
@@ -296,18 +188,18 @@ def get_attn_bias_and_cat(x_list, branges=None):
     this will perform the index select, cat the tensors, and provide the attn_bias from cache
     """
     batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list))
-    if all_shapes not in attn_bias_cache.keys():
+    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
+    if all_shapes not in attn_bias_cache:
         seqlens = []
-        for b, x in zip(batch_sizes, x_list):
+        for b, x in zip(batch_sizes, x_list, strict=False):
             for _ in range(b):
                 seqlens.append(x.shape[1])
-        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
+        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)  # noqa: F821 - Name is undefined in the upstream source.
         attn_bias._batch_sizes = batch_sizes
         attn_bias_cache[all_shapes] = attn_bias
 
     if branges is not None:
-        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])
+        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])  # noqa: F821 - Name is undefined in the upstream source.
     else:
         tensors_bs1 = tuple(x.reshape([1, -1, *x.shape[2:]]) for x in x_list)
         cat_tensors = torch.cat(tensors_bs1, dim=1)
@@ -316,22 +208,11 @@ def get_attn_bias_and_cat(x_list, branges=None):
 
 
 def drop_add_residual_stochastic_depth_list(
-    x_list: List[Tensor],
+    x_list: list[Tensor],
     residual_func: Callable[[Tensor, Any], Tensor],
     sample_drop_ratio: float = 0.0,
     scaling_vector=None,
 ) -> Tensor:
-    """Drop add residual stochastic depth list.
-
-    Args:
-        x_list: The x list.
-        residual_func: The residual func.
-        sample_drop_ratio: The sample drop ratio.
-        scaling_vector: The scaling vector.
-
-    Returns:
-        The return value.
-    """
     # 1) generate random set of indices for dropping samples in the batch
     branges_scales = [get_branges_scales(x, sample_drop_ratio=sample_drop_ratio) for x in x_list]
     branges = [s[0] for s in branges_scales]
@@ -344,43 +225,26 @@ def drop_add_residual_stochastic_depth_list(
     residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
 
     outputs = []
-    for x, brange, residual, residual_scale_factor in zip(x_list, branges, residual_list, residual_scale_factors):
+    for x, brange, residual, residual_scale_factor in zip(
+        x_list, branges, residual_list, residual_scale_factors, strict=False
+    ):
         outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
     return outputs
 
 
 class NestedTensorBlock(Block):
-    """Nested tensor block implementation."""
-    def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
+    def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
         """
-        assert isinstance(self.attn, MemEffAttention)
+        assert isinstance(self.attn, MemEffAttention)  # noqa: F821 - Name is undefined in the upstream source.
 
         if self.training and self.sample_drop_ratio > 0.0:
 
             def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Attn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.attn(self.norm1(x), attn_bias=attn_bias)
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Ffn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.mlp(self.norm2(x))
 
             x_list = drop_add_residual_stochastic_depth_list(
@@ -399,27 +263,9 @@ class NestedTensorBlock(Block):
         else:
 
             def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Attn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls1(self.attn(self.norm1(x), attn_bias=attn_bias))
 
             def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                """Ffn residual func.
-
-                Args:
-                    x: The x.
-                    attn_bias: The attn bias.
-
-                Returns:
-                    The return value.
-                """
                 return self.ls2(self.mlp(self.norm2(x)))
 
             attn_bias, x = get_attn_bias_and_cat(x_list)
@@ -428,11 +274,6 @@ class NestedTensorBlock(Block):
             return attn_bias.split(x)
 
     def forward(self, x_or_x_list):
-        """Forward.
-
-        Args:
-            x_or_x_list: The x or x list.
-        """
         if isinstance(x_or_x_list, Tensor):
             return super().forward(x_or_x_list)
         elif isinstance(x_or_x_list, list):

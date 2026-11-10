@@ -8,7 +8,7 @@ RUNTIME_ROOT = Path(__file__).resolve().parents[1]
 if str(RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(RUNTIME_ROOT))
 
-from pano_gen.generate import generate
+from pano_gen.generate import generate  # noqa: E402 - Follows the sys.path setup.
 
 
 def parse_args() -> argparse.Namespace:

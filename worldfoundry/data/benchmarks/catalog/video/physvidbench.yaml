@@ -93,13 +93,13 @@ metrics:
 runner:
   normalization:
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.physvidbench.run_physvidbench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.physvidbench.run_physvidbench_official_runner
     generated_arg: null
     limit_arg: --limit
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysVidBenchContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
   validation_command:
   - wf
   - zoo
@@ -180,10 +180,10 @@ data_refs:
   bundled_asset_paths:
   - worldfoundry/data/benchmarks/assets/physvidbench/prompts_questions.csv
   - worldfoundry/data/benchmarks/assets/physvidbench/captions
-official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
+official_runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysVidBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

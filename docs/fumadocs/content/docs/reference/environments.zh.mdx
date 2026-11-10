@@ -480,7 +480,7 @@ wf embodied run \
 如果 benchmark config 直接写了 `docker.image`，或通过
 `worldfoundry/data/benchmarks/runtime_profiles/official/<benchmark>.yaml` 解析出
 `docker.image`，就会由
-`worldfoundry/evaluation/tasks/embodied/docker_runner.py` 通过 Docker 启动。容器内
+`worldfoundry/evals/tasks/embodied/docker_runner.py` 通过 Docker 启动。容器内
 负责 simulator 依赖；host 侧只负责挂载 dataset/checkpoint/result，并提供 policy
 server endpoint。
 

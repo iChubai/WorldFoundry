@@ -503,7 +503,7 @@ def test_mvdiffusion_plan_forwards_steps_and_skips_missing_prompt_file(tmp_path)
         ThreeDFourDRuntimeSynthesis,
         three_d_four_d_runtime_spec,
     )
-    from worldfoundry.evaluation.utils import REPO_ROOT
+    from worldfoundry.evals.utils import REPO_ROOT
     from worldfoundry.studio.inference.catalog import CURATED_OVERRIDES
 
     assert CURATED_OVERRIDES["mvdiffusion"]["default_call_kwargs"]["steps"] == 20

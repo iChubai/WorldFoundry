@@ -28,7 +28,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:RoboMMEContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:RoboMMEContract
   expected_artifacts:
   - scorecard.json
   - raw_results.jsonl
@@ -106,7 +106,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/robomme.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:RoboMMEContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:RoboMMEContract
   task_yaml_available: true
   runtime_verified: false
   normalizer_verified: true

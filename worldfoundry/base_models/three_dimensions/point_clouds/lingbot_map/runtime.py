@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any
 
 import numpy as np
 import torch
@@ -36,11 +37,7 @@ def _collect_image_paths(path: str | os.PathLike[str]) -> list[str]:
     path_obj = Path(path).expanduser()
     if path_obj.is_file():
         if path_obj.suffix.lower() == ".txt":
-            return [
-                line.strip()
-                for line in path_obj.read_text(encoding="utf-8").splitlines()
-                if line.strip()
-            ]
+            return [line.strip() for line in path_obj.read_text(encoding="utf-8").splitlines() if line.strip()]
         return [str(path_obj)]
     if not path_obj.is_dir():
         raise FileNotFoundError(f"Image path does not exist: {path}")
@@ -71,8 +68,7 @@ def _resolve_checkpoint_path(pretrained_model_path: str | os.PathLike[str] | Non
         if pt_files:
             return str(pt_files[0])
         raise FileNotFoundError(
-            f"No LingBot-Map checkpoint found in {candidate}. "
-            f"Tried: {', '.join(DEFAULT_CHECKPOINT_CANDIDATES)}"
+            f"No LingBot-Map checkpoint found in {candidate}. Tried: {', '.join(DEFAULT_CHECKPOINT_CANDIDATES)}"
         )
 
     path_text = str(pretrained_model_path)
@@ -95,10 +91,7 @@ def _pil_from_input(image: Any) -> Image.Image:
             if array.size and array.max() <= 1.0:
                 array = array * 255.0
             array = np.clip(array, 0, 255).astype("uint8")
-        if array.ndim == 2:
-            pil = Image.fromarray(array, mode="L")
-        else:
-            pil = Image.fromarray(array[..., :3])
+        pil = Image.fromarray(array, mode="L") if array.ndim == 2 else Image.fromarray(array[..., :3])
     else:
         pil = Image.open(image)
     pil = ImageOps.exif_transpose(pil)
@@ -172,7 +165,7 @@ class LingBotMapRepresentation:
     def __init__(
         self,
         model: Any = None,
-        device: Optional[str] = None,
+        device: str | None = None,
         *,
         mode: str = "streaming",
         image_size: int = 518,
@@ -203,9 +196,9 @@ class LingBotMapRepresentation:
     def from_pretrained(
         cls,
         pretrained_model_path: str | os.PathLike[str] | None,
-        device: Optional[str] = None,
+        device: str | None = None,
         **kwargs: Any,
-    ) -> "LingBotMapRepresentation":
+    ) -> LingBotMapRepresentation:
         _ensure_runtime_importable()
         mode = str(kwargs.get("mode", "streaming"))
         if mode not in {"streaming", "windowed"}:
@@ -255,7 +248,6 @@ class LingBotMapRepresentation:
             preprocess_mode=str(kwargs.get("preprocess_mode", "crop")),
         )
 
-
     def _prepare_images(self, images: Any, **kwargs: Any) -> torch.Tensor:
         _ensure_runtime_importable()
         image_size = int(kwargs.get("image_size", self.image_size))
@@ -293,7 +285,7 @@ class LingBotMapRepresentation:
             return 1 if num_frames <= 320 else (num_frames + 319) // 320
         return max(1, int(value))
 
-    def get_representation(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def get_representation(self, data: dict[str, Any]) -> dict[str, Any]:
         if self.model is None:
             raise RuntimeError("LingBot-Map model is not loaded. Use from_pretrained() first.")
         options = dict(data)
@@ -334,7 +326,7 @@ class LingBotMapRepresentation:
         from lingbot_map.utils.pose_enc import pose_encoding_to_extri_intri
 
         extrinsic, intrinsic = pose_encoding_to_extri_intri(predictions["pose_enc"], images.shape[-2:])
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "extrinsic": extrinsic.float().cpu().numpy().squeeze(0),
             "intrinsic": intrinsic.float().cpu().numpy().squeeze(0),
             "keyframe_interval": keyframe_interval,

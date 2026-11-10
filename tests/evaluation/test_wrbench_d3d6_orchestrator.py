@@ -7,7 +7,7 @@ import importlib
 import re
 import subprocess
 
-from worldfoundry.evaluation.tasks.execution.runners.wrbench.wrbench_paths import (
+from worldfoundry.evals.tasks.execution.runners.wrbench.wrbench_paths import (
     ensure_wrbench_importable,
     runtime_root,
 )

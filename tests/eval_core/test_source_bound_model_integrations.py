@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
-PIPELINE_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+PIPELINE_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 
 SOURCE_BOUND_RUNTIME_PLAN_MODEL_IDS = (
     "hma",
@@ -115,7 +115,7 @@ def test_mosaicmem_memory_store_is_integrated_without_fake_pipeline() -> None:
 
     assert entry.output_artifacts == ("memory_index",)
     assert entry.integration_status == "integrated"
-    assert entry.runner_target == "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+    assert entry.runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
     assert entry.pipeline_target == "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MosaicMemPipeline"
     assert profile.artifact_kind == "memory_index"
     assert profile.backend_stage == "worldfoundry_runtime_plan"

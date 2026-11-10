@@ -37,7 +37,7 @@ integration:
   - Native SD2 inpainting and Marigold recipes, canonical OneFormer/RepViT-SAM perception, guided depth, occlusion layers, and Gaussian reconstruction with gsplat projections and native compositing.
   - Finite offline image/camera-path requests export standard .splat artifacts without an external checkout or upstream server.
 runtime_profile: runtime-profile:wonderworld
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: wonderworld
 runner_parity:
   status: implemented_pending_gpu_parity

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from worldfoundry.evaluation.models.catalog.registry import discover_model_registry
+from worldfoundry.evals.models.catalog.registry import discover_model_registry
 from worldfoundry.operators.ac3d_operator import AC3DOperator
 from worldfoundry.pipelines.ac3d.pipeline_ac3d import AC3DPipeline
 from worldfoundry.synthesis.visual_generation.ac3d import runtime as runtime_module

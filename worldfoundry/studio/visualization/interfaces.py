@@ -248,7 +248,7 @@ def _runtime_profiles_index() -> Mapping[str, Any]:
     Args:
         None.
     """
-    from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profiles
+    from worldfoundry.evals.models.runtime.profiles import load_runtime_profiles
 
     return load_runtime_profiles(check_conda_env_exists=False)
 
@@ -424,5 +424,3 @@ def interface_spec_for_model(model_id: str, entry: CatalogEntry) -> StudioInterf
 
 def interface_spec_for_entry(entry: CatalogEntry) -> StudioInterfaceSpec:
     return interface_spec_for_model(entry.model_id, entry)
-
-

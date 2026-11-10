@@ -153,9 +153,7 @@ def _checkpoints(
         "upstream_source_revision": WAN21_UPSTREAM_SOURCE_REVISION,
     }
     dit_file = (
-        "diffusion_pytorch_model.safetensors.index.json"
-        if sharded_dit
-        else "diffusion_pytorch_model.safetensors"
+        "diffusion_pytorch_model.safetensors.index.json" if sharded_dit else "diffusion_pytorch_model.safetensors"
     )
     checkpoints = {
         "dit": CheckpointSpec(
@@ -231,9 +229,7 @@ def _wan21_recipe(
             ),
             ComponentSpec(
                 initializer,
-                build_wan_i2v_latent_initializer
-                if image_to_video
-                else build_wan_t2v_latent_initializer,
+                build_wan_i2v_latent_initializer if image_to_video else build_wan_t2v_latent_initializer,
             ),
             ComponentSpec(
                 scheduler,
@@ -452,11 +448,7 @@ def _wan22_a14b_recipe(*, image_to_video: bool) -> NativeDiffusionRecipe:
         components=(
             ComponentSpec(
                 denoiser,
-                (
-                    build_wan22_i2v_a14b_dual_denoiser
-                    if image_to_video
-                    else build_wan22_t2v_a14b_dual_denoiser
-                ),
+                (build_wan22_i2v_a14b_dual_denoiser if image_to_video else build_wan22_t2v_a14b_dual_denoiser),
                 {"high_weights": "high-dit", "low_weights": "low-dit"},
                 {"boundary_ratio": boundary_ratio},
             ),
@@ -467,9 +459,7 @@ def _wan22_a14b_recipe(*, image_to_video: bool) -> NativeDiffusionRecipe:
             ),
             ComponentSpec(
                 initializer,
-                build_wan_i2v_latent_initializer
-                if image_to_video
-                else build_wan_t2v_latent_initializer,
+                build_wan_i2v_latent_initializer if image_to_video else build_wan_t2v_latent_initializer,
             ),
             ComponentSpec(
                 scheduler,
@@ -609,9 +599,7 @@ def fastvideo_causal_wan22_i2v_14b_recipe() -> NativeDiffusionRecipe:
             options={"prediction_mode": "flow", "guidance_mode": "standard"},
         ),
         checkpoints=checkpoints,
-        capabilities=frozenset(
-            {"image-to-video", "causal-generation", "dual-expert", "self-forcing"}
-        ),
+        capabilities=frozenset({"image-to-video", "causal-generation", "dual-expert", "self-forcing"}),
         options={
             "latent_channels": 16,
             "spatial_compression": 8,
@@ -927,9 +915,7 @@ def wan22_ti2v_5b_recipe() -> NativeDiffusionRecipe:
         ),
         execution=ExecutionSpec(strategy="masked-latent", bindings=bindings),
         checkpoints=checkpoints,
-        capabilities=frozenset(
-            {"text-to-video", "image-to-video", "classifier-free-guidance", "per-token-timestep"}
-        ),
+        capabilities=frozenset({"text-to-video", "image-to-video", "classifier-free-guidance", "per-token-timestep"}),
         options={
             "latent_channels": 48,
             "spatial_compression": 16,
@@ -970,20 +956,20 @@ __all__ = [
     "WAN21_T2V_14B_MODEL_ID",
     "WAN21_T2V_14B_REPO_ID",
     "WAN21_T2V_14B_REVISION",
-    "WAN22_TI2V_5B_MODEL_ID",
-    "WAN22_TI2V_5B_REPO_ID",
-    "WAN22_TI2V_5B_REVISION",
-    "WAN22_T2V_A14B_MODEL_ID",
-    "WAN22_T2V_A14B_REPO_ID",
-    "WAN22_T2V_A14B_REVISION",
-    "WAN22_I2V_A14B_MODEL_ID",
-    "WAN22_I2V_A14B_REPO_ID",
-    "WAN22_I2V_A14B_REVISION",
+    "WAN21_UPSTREAM_SOURCE_REVISION",
     "WAN21_VACE_14B_MODEL_ID",
     "WAN21_VACE_14B_REPO_ID",
     "WAN21_VACE_14B_REVISION",
+    "WAN22_I2V_A14B_MODEL_ID",
+    "WAN22_I2V_A14B_REPO_ID",
+    "WAN22_I2V_A14B_REVISION",
+    "WAN22_T2V_A14B_MODEL_ID",
+    "WAN22_T2V_A14B_REPO_ID",
+    "WAN22_T2V_A14B_REVISION",
+    "WAN22_TI2V_5B_MODEL_ID",
+    "WAN22_TI2V_5B_REPO_ID",
+    "WAN22_TI2V_5B_REVISION",
     "WAN_TOKENIZER_FILES",
-    "WAN21_UPSTREAM_SOURCE_REVISION",
     "causal_forcing_chunkwise_recipe",
     "causal_forcing_framewise_1step_recipe",
     "causal_forcing_framewise_2step_recipe",
@@ -994,8 +980,8 @@ __all__ = [
     "wan21_i2v_14b_720p_recipe",
     "wan21_t2v_1p3b_recipe",
     "wan21_t2v_14b_recipe",
-    "wan22_ti2v_5b_recipe",
-    "wan22_t2v_a14b_recipe",
-    "wan22_i2v_a14b_recipe",
     "wan21_vace_14b_recipe",
+    "wan22_i2v_a14b_recipe",
+    "wan22_t2v_a14b_recipe",
+    "wan22_ti2v_5b_recipe",
 ]

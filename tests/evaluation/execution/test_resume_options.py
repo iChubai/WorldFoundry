@@ -12,10 +12,10 @@ from typing import Any
 import pytest
 
 from worldfoundry.cli.main import main
-from worldfoundry.evaluation import framework
-from worldfoundry.evaluation.tasks.datasets import build_dataset_manifest, write_dataset_manifest
-from worldfoundry.evaluation.tasks.execution.orchestration import model_benchmark, model_benchmark_suite, service
-from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import EvaluateRunRequest
+from worldfoundry.evals import framework
+from worldfoundry.evals.tasks.datasets import build_dataset_manifest, write_dataset_manifest
+from worldfoundry.evals.tasks.execution.orchestration import model_benchmark, model_benchmark_suite, service
+from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest
 from worldfoundry.studio.workspace import app as workspace
 from worldfoundry.studio.workspace.app import JobCreateRequest
 
@@ -260,7 +260,7 @@ def test_materialized_cli_forwards_controls(
         captured.append(request)
         return SimpleNamespace(exit_code=0, to_dict=lambda: {"status": "succeeded", "exit_code": 0})
 
-    monkeypatch.setattr("worldfoundry.evaluation.runner.execute_evaluate_run", execute)
+    monkeypatch.setattr("worldfoundry.evals.runner.execute_evaluate_run", execute)
     monkeypatch.setattr(framework, "execute_evaluate_run", execute)
     arguments = [command, "--results-path", str(samples)]
     if command == "run":
@@ -280,7 +280,7 @@ def test_direct_model_cli_forwards_controls(
 ) -> None:
     captured: list[EvaluateRunRequest] = []
     monkeypatch.setattr(
-        "worldfoundry.evaluation.runner.execute_evaluate_run",
+        "worldfoundry.evals.runner.execute_evaluate_run",
         lambda request: (
             captured.append(request) or SimpleNamespace(exit_code=0, to_dict=lambda: {"status": "succeeded"})
         ),
@@ -311,13 +311,13 @@ def test_evaluate_plan_replay_preserves_controls(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     captured: list[EvaluateRunRequest] = []
-    monkeypatch.setattr("worldfoundry.evaluation.runner.load_run_plan", lambda path: object())
+    monkeypatch.setattr("worldfoundry.evals.runner.load_run_plan", lambda path: object())
     monkeypatch.setattr(
-        "worldfoundry.evaluation.runner.evaluate_request_from_run_plan",
+        "worldfoundry.evals.runner.evaluate_request_from_run_plan",
         lambda plan: EvaluateRunRequest(output_dir=tmp_path),
     )
     monkeypatch.setattr(
-        "worldfoundry.evaluation.runner.execute_evaluate_run",
+        "worldfoundry.evals.runner.execute_evaluate_run",
         lambda row: (captured.append(row) or SimpleNamespace(exit_code=0, to_dict=lambda: {"status": "succeeded"})),
     )
     assert (
@@ -347,17 +347,15 @@ def test_workspace_request_preserves_controls(
 ) -> None:
     captured: list[EvaluateRunRequest] = []
     monkeypatch.setattr(
-        "worldfoundry.evaluation.runner.run_evaluate",
+        "worldfoundry.evals.runner.run_evaluate",
         lambda row: (captured.append(row) or SimpleNamespace(to_dict=lambda: {"status": "succeeded"})),
     )
+    monkeypatch.setattr("worldfoundry.evals.tasks.execution.orchestration.plan.load_run_plan", lambda path: object())
     monkeypatch.setattr(
-        "worldfoundry.evaluation.tasks.execution.orchestration.plan.load_run_plan", lambda path: object()
+        "worldfoundry.evals.tasks.execution.orchestration.plan.validate_run_plan", lambda plan: {"ok": True}
     )
     monkeypatch.setattr(
-        "worldfoundry.evaluation.tasks.execution.orchestration.plan.validate_run_plan", lambda plan: {"ok": True}
-    )
-    monkeypatch.setattr(
-        "worldfoundry.evaluation.tasks.execution.orchestration.plan.evaluate_request_from_run_plan",
+        "worldfoundry.evals.tasks.execution.orchestration.plan.evaluate_request_from_run_plan",
         lambda plan: EvaluateRunRequest(output_dir=tmp_path),
     )
     workspace._run_evaluation(

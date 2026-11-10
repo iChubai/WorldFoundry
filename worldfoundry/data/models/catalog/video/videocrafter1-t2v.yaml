@@ -19,7 +19,7 @@ integration:
   notes:
   - In-tree infer-only runtime wraps the official VideoCrafter text-to-video 1024 path.
   - Training, dataset, and download scripts are intentionally not packaged.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:videocrafter1-t2v
 runner_parity:
   status: pending

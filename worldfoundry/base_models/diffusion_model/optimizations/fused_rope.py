@@ -9,8 +9,9 @@ fused public operator returned numerically correct tensors.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 import torch
 from torch import nn
@@ -52,8 +53,7 @@ class FusedRoPERuntimeState:
         dispatches = [
             item
             for item in raw_dispatches
-            if isinstance(item, Mapping)
-            and item.get("op") == "hidden_qk_rmsnorm_rope_3d"
+            if isinstance(item, Mapping) and item.get("op") == "hidden_qk_rmsnorm_rope_3d"
         ]
         if len(dispatches) != 1:
             self.malformed_receipts += 1
@@ -133,9 +133,7 @@ def fused_rope_runtime_report(
         "quarantined_skips": state.quarantined_skips,
         "malformed_receipts": state.malformed_receipts,
         "provider_paths": sorted(state.provider_paths),
-        "last_dispatch": (
-            None if state.last_dispatch is None else dict(state.last_dispatch)
-        ),
+        "last_dispatch": (None if state.last_dispatch is None else dict(state.last_dispatch)),
     }
 
 

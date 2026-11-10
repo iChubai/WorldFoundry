@@ -23,7 +23,7 @@ Catalog-recorded bounded command:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
+  worldfoundry/evals/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
   --mode custom_input \
   --dimension aesthetic_quality
 ```
@@ -32,7 +32,7 @@ Score one dimension on a custom folder:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
+  worldfoundry/evals/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
   --mode custom_input \
   --dimension subject_consistency \
   --videos-path "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
@@ -44,7 +44,7 @@ Import an upstream `full_json` directory instead of re-running evaluators:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
+  worldfoundry/evals/tasks/execution/runners/vbench/run_vbench_official_runner.py run \
   --from-upstream-results /path/to/vbench_full_json_dir \
   --output-dir tmp/vbench/imported \
   --json
@@ -56,7 +56,7 @@ In-tree pointers:
 
 ```text
 worldfoundry/data/benchmarks/tasks/external/vbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/vbench/runtime
+worldfoundry/evals/tasks/execution/runners/vbench/runtime
 worldfoundry/data/benchmarks/assets/vbench/VBench_full_info.json
 ```
 

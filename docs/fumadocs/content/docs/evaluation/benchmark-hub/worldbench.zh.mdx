@@ -20,7 +20,7 @@ hf download worldbenchmark/IntuitivePhysics --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/worldbench/run_worldbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/worldbench/run_worldbench_official_runner.py \
   --run-official \
   --video-only \
   --dataset-root "${WORLDFOUNDRY_WORLDBENCH_DATASET_ROOT}" \
@@ -32,7 +32,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 已有掩码时用 `--predicted-mask-dir` 跳过 SAM2。`--text-only` 加 `--answer-manifest` 覆盖 QA。帧对齐：`--ground-truth-start-frame`、`--generated-skip-frames`。共享资源：`worldbench_dataset_assets`、`facebook/sam2.1-hiera-large`。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/worldbench`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldbench.yaml`，`worldfoundry/evals/tasks/execution/runners/worldbench`。
 
 产物包括 `scorecard.json`（主键 `foreground_miou`）与 `worldbench_evaluation.json`。
 

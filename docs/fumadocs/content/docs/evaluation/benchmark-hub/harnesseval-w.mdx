@@ -22,7 +22,7 @@ preserves the original comparison cohort.
 The synthetic fixture checks schemas and aggregation without data downloads or models:
 
 ```bash
-python -m worldfoundry.evaluation.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
+python -m worldfoundry.evals.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
   --run-fixture --strict --output-dir tmp/harnesseval-fixture --json
 ```
 
@@ -60,7 +60,7 @@ source tree. HPSv3 uses registered WorldFoundry HPSv3 assets; AMT/RAFT/CLIP/aest
 weights reuse staged base-model assets when absent from the configured directory.
 
 ```bash
-python -m worldfoundry.evaluation.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
+python -m worldfoundry.evals.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
   --run-official --generated-artifact-dir /path/to/generation \
   --manifest /path/to/manifest.json --plan-root /path/to/plans \
   --assets-root /path/to/dataset --model-id my-model \

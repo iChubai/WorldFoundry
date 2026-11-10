@@ -27,7 +27,6 @@ from __future__ import annotations
 import argparse
 import gc
 import os
-from typing import List, Tuple
 
 import cv2
 import numpy as np
@@ -60,8 +59,8 @@ torch.backends.cudnn.enabled = False
 def _da3_infer_depth_intrinsics_single(
     da3_model,
     img_rgb_uint8: torch.Tensor,
-    target_hw: Tuple[int, int],
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    target_hw: tuple[int, int],
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """DA3 single-image depth: RGB uint8 HWC -> (image_chw01, depth_hw, K_33, mask_hw)."""
     Ht, Wt = target_hw
     img_np = img_rgb_uint8.detach().cpu().numpy()
@@ -86,10 +85,7 @@ def _da3_infer_depth_intrinsics_single(
     depths_np = getattr(prediction, "depth", None)
     if depths_np is None:
         raise RuntimeError("DA3 prediction has no 'depth' field.")
-    if isinstance(depths_np, torch.Tensor):
-        depth_np = depths_np[0].detach().cpu().numpy()
-    else:
-        depth_np = np.asarray(depths_np)[0]
+    depth_np = depths_np[0].detach().cpu().numpy() if isinstance(depths_np, torch.Tensor) else np.asarray(depths_np)[0]
     Hd, Wd = depth_np.shape[-2:]
 
     depth_t = torch.from_numpy(depth_np.astype(np.float32)).unsqueeze(0).unsqueeze(0)
@@ -103,10 +99,7 @@ def _da3_infer_depth_intrinsics_single(
         ixts_np = getattr(prediction, "intrinsics", None)
         if ixts_np is None:
             raise AttributeError
-        if isinstance(ixts_np, torch.Tensor):
-            K_np = ixts_np[0].detach().cpu().numpy()
-        else:
-            K_np = np.asarray(ixts_np)[0]
+        K_np = ixts_np[0].detach().cpu().numpy() if isinstance(ixts_np, torch.Tensor) else np.asarray(ixts_np)[0]
         K_33 = torch.from_numpy(K_np.astype(np.float32))
         scale_x = float(Wt) / float(Wd)
         scale_y = float(Ht) / float(Hd)
@@ -297,7 +290,7 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _build_image_list(path: str) -> List[str]:
+def _build_image_list(path: str) -> list[str]:
     if os.path.isdir(path):
         exts = {".png", ".jpg", ".jpeg", ".PNG", ".JPG", ".JPEG"}
         files = [os.path.join(path, f) for f in sorted(os.listdir(path)) if os.path.splitext(f)[1] in exts]
@@ -551,8 +544,8 @@ if __name__ == "__main__":
 
     process_group = None
     if args.context_parallel_size > 1:
-        from worldfoundry.core.distributed.runtime import torch_process_group as distributed
         from worldfoundry.core.distributed.model_parallel.megatron_compat import parallel_state
+        from worldfoundry.core.distributed.runtime import torch_process_group as distributed
 
         distributed.init()
         parallel_state.initialize_model_parallel(context_parallel_size=args.context_parallel_size)
@@ -730,7 +723,7 @@ if __name__ == "__main__":
             if not os.path.isfile(txt_path):
                 log.error(f"Caption file not found: {txt_path}  (expected for image {base_name})")
                 continue
-            with open(txt_path, "r") as f:
+            with open(txt_path) as f:
                 caption = f.read().strip()
             log.info(f"Loaded caption from {txt_path}: {caption}", rank0_only=True)
         else:

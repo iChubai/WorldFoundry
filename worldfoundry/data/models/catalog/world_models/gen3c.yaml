@@ -28,7 +28,7 @@ integration:
   - Named camera trajectories, MoGe depth, and RGBD forward warping are native preprocessing
     inside the latent-initializer role; callers may also provide pre-rendered 3D-cache tensors.
   - The previous official-runtime demo evidence does not establish parity for the new native path.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: gen3c
 runner_parity:
   status: pending

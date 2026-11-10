@@ -9,7 +9,6 @@ from .pipeline_utils import PipelineABC
 
 
 def _load_target(target: str) -> type[Any]:
-    """Load target helper function."""
     module_name, class_name = target.split(":", 1)
     # Dynamically load target module to prevent eager-import overhead
     module = importlib.import_module(module_name)
@@ -92,7 +91,6 @@ def _component_pipeline_class(
     generation_type: str | None = None,
     model_path_option: str = "repo_root",
 ) -> type[ComponentPipeline]:
-    """Component pipeline class helper function."""
     attributes: dict[str, Any] = {
         "__doc__": doc,
         "__module__": __name__,
@@ -252,7 +250,6 @@ StarVLAPipeline.MODEL_PATH_OPTION = "checkpoint_dir"
 def _official_policy_pipeline(
     name: str, *, model_id: str, doc: str, generation_type: str = "vla_policy"
 ) -> type[ComponentPipeline]:
-    """Official policy pipeline helper function."""
     return _component_pipeline_class(
         name,
         doc=doc,

@@ -39,7 +39,7 @@ checkpoint_refs:
   revision: 206a9ee1b7bfaaf8f7e4d81335650533490646a3
   license: apache-2.0
   notes: [Shared UMT5, tokenizer, Wan2.1 VAE and model configuration assets.]
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: worldplay2
 runtime_profile: runtime-profile:worldplay2
 catalog_category: world_models

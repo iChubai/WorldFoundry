@@ -8,7 +8,7 @@ source:
   license: apache-2.0-code-and-cc-by-nc-sa-4.0-model-materials
 checkpoint: LuckyLiGY/MagicWorld
 runtime_profile: runtime-profile:magicworld
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: magicworld
 official_sources:
   project_page: https://vivocameraresearch.github.io/magicworld/

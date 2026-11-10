@@ -101,7 +101,7 @@ def python_module_command(command: Sequence[str], *, python_executable: str | No
     if not items:
         raise ValueError("command cannot be empty")
     if items[0] == "wf":
-        return (python_executable or sys.executable, "-m", "worldfoundry.evaluation", *items[1:])
+        return (python_executable or sys.executable, "-m", "worldfoundry.evals", *items[1:])
     return items
 
 

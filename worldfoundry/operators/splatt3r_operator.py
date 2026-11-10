@@ -29,7 +29,6 @@ class Splatt3ROperator(BaseOperator):
 
     @staticmethod
     def _views(interaction) -> list[str]:
-        """Views implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, (str, Path)):

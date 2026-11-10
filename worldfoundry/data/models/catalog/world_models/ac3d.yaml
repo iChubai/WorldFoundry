@@ -1,4 +1,4 @@
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 availability: open_source
 checkpoints:
 - local_dir: ${WORLDFOUNDRY_CKPT_DIR}/ac3d/2B/checkpoint-10000.pt

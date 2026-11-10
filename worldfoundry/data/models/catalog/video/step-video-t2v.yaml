@@ -27,7 +27,7 @@ integration:
   - The public pipeline is assembled from native role-based components and the shared
     WorldFoundry diffusion runner.
 runtime_profile: runtime-profile:step-video-t2v
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: step-video-t2v
 runner_parity:
   status: verified

@@ -26,7 +26,7 @@ official_sources:
   paper_url: https://ai2thor.allenai.org/
   license: upstream_terms
 runner:
-  runner_target: worldfoundry.evaluation.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
+  runner_target: worldfoundry.evals.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
   run_command:
   - wf
   - embodied
@@ -102,7 +102,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/ai2thor.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
+  runner_target: worldfoundry.evals.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
   runner_script_available: false
   task_yaml_available: true
   runtime_verified: false

@@ -32,7 +32,6 @@ hybrids live in sibling modules and reuse these blocks.
 """
 
 import os
-from typing import Optional
 
 import torch
 import torch.nn as nn
@@ -83,16 +82,11 @@ from worldfoundry.core.nn.blocks.layers import DropPath
 
 _triton_modules_available = False
 if is_triton_module_available():
-    from worldfoundry.base_models.diffusion_model.models.networks.sana.fastlinear.modules import (
-        TritonLiteMLA,
-        TritonMBConvPreGLU,
-    )
-
     _triton_modules_available = True
 
 _xformers_available = False if os.environ.get("DISABLE_XFORMERS", "0") == "1" else is_xformers_available()
 if _xformers_available:
-    import xformers.ops
+    pass
 
 
 class SanaVideoMSBlock(nn.Module):
@@ -118,24 +112,6 @@ class SanaVideoMSBlock(nn.Module):
         flash_attn_window_count=None,
         **block_kwargs,
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            drop_path: The drop path.
-            qk_norm: The qk norm.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_image_embeds: The cross attn image embeds.
-            t_kernel_size: The t kernel size.
-            additional_flash_attn: The additional flash attn.
-            flash_attn_window_count: The flash attn window count.
-        """
         super().__init__()
         self.hidden_size = hidden_size
         self.norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
@@ -240,7 +216,10 @@ class SanaVideoMSBlock(nn.Module):
                 t_kernel_size=t_kernel_size,
             )
         elif ffn_type == "mlp":
-            approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+            def approx_gelu():
+                return nn.GELU(approximate="tanh")
+
             self.mlp = Mlp(
                 in_features=hidden_size, hidden_features=int(hidden_size * mlp_ratio), act_layer=approx_gelu, drop=0
             )
@@ -249,20 +228,9 @@ class SanaVideoMSBlock(nn.Module):
 
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.scale_shift_table = nn.Parameter(torch.randn(6, hidden_size) / hidden_size**0.5)
-        self.block_hook: Optional[BlockHook] = None
+        self.block_hook: BlockHook | None = None
 
     def forward_frame_aware(self, x, y, t, mask=None, THW=None, rotary_emb=None, chunk_index=None, **kwargs):
-        """Forward frame aware.
-
-        Args:
-            x: The x.
-            y: The y.
-            t: The t.
-            mask: The mask.
-            THW: The thw.
-            rotary_emb: The rotary emb.
-            chunk_index: The chunk index.
-        """
         B, N, C = x.shape
         num_frames = t.shape[2]
 
@@ -289,7 +257,7 @@ class SanaVideoMSBlock(nn.Module):
             x = x + self.flash_attn_additional(x, HW=THW)
 
         if self.cross_attn_image_embeds:
-            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds", None))
+            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds"))
         else:
             x = x + self.cross_attn(x, y, mask=mask)
 
@@ -309,17 +277,6 @@ class SanaVideoMSBlock(nn.Module):
         return x
 
     def forward(self, x, y, t, mask=None, THW=None, rotary_emb=None, chunk_index=None, **kwargs):
-        """Forward.
-
-        Args:
-            x: The x.
-            y: The y.
-            t: The t.
-            mask: The mask.
-            THW: The thw.
-            rotary_emb: The rotary emb.
-            chunk_index: The chunk index.
-        """
         if len(t.shape) > 2:
             return self.forward_frame_aware(
                 x,
@@ -349,10 +306,10 @@ class SanaVideoMSBlock(nn.Module):
         }
         if chunk_index is not None:
             self_attn_kwargs["chunk_index"] = chunk_index[:]  # NOTE: important, copy the list
-        save_kv_cache = kwargs.get("save_kv_cache", None)
+        save_kv_cache = kwargs.get("save_kv_cache")
         if save_kv_cache is not None:
             self_attn_kwargs["save_kv_cache"] = save_kv_cache
-        kv_cache = kwargs.get("kv_cache", None)
+        kv_cache = kwargs.get("kv_cache")
         if kv_cache is not None:
             self_attn_kwargs["kv_cache"] = kv_cache
         x_sa = self.attn(x_sa_in, **self_attn_kwargs)
@@ -367,7 +324,7 @@ class SanaVideoMSBlock(nn.Module):
         x = gated_residual(x, x_sa, gate_msa, self.drop_path, policy=self._worldfoundry_block_fusion)
 
         if self.cross_attn_image_embeds:
-            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds", None))
+            x = x + self.cross_attn(x, y, mask=mask, image_embeds=kwargs.get("image_embeds"))
         else:
             x = x + self.cross_attn(x, y, mask=mask)
 
@@ -445,44 +402,6 @@ class SanaMSVideo(Sana):
         pack_latents=False,
         **kwargs,
     ):
-        """Init.
-
-        Args:
-            input_size: The input size.
-            patch_size: The patch size.
-            in_channels: The in channels.
-            hidden_size: The hidden size.
-            depth: The depth.
-            num_heads: The num heads.
-            mlp_ratio: The mlp ratio.
-            class_dropout_prob: The class dropout prob.
-            learn_sigma: The learn sigma.
-            pred_sigma: The pred sigma.
-            drop_path: The drop path.
-            caption_channels: The caption channels.
-            pe_interpolation: The pe interpolation.
-            config: The config.
-            model_max_length: The model max length.
-            qk_norm: The qk norm.
-            y_norm: The y norm.
-            norm_eps: The norm eps.
-            attn_type: The attn type.
-            ffn_type: The ffn type.
-            use_pe: The use pe.
-            y_norm_scale_factor: The y norm scale factor.
-            patch_embed_kernel: The patch embed kernel.
-            mlp_acts: The mlp acts.
-            linear_head_dim: The linear head dim.
-            cross_norm: The cross norm.
-            cross_attn_type: The cross attn type.
-            cross_attn_image_embeds: The cross attn image embeds.
-            image_embed_channels: The image embed channels.
-            pos_embed_type: The pos embed type.
-            rope_fhw_dim: The rope fhw dim.
-            t_kernel_size: The t kernel size.
-            flash_attn_window_count: The flash attn window count.
-            pack_latents: The pack latents.
-        """
         super().__init__(
             input_size=input_size,
             patch_size=patch_size,
@@ -516,7 +435,10 @@ class SanaMSVideo(Sana):
         )
         self.patch_size = patch_size
         self.h = self.w = 0
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.t_block = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 6 * hidden_size, bias=True))
         self.pos_embed_ms = None
         self.pack_latents = pack_latents
@@ -544,10 +466,7 @@ class SanaMSVideo(Sana):
         else:
             self.image_embedder = None
 
-        if attn_type in ["flash"]:
-            attention_head_dim = hidden_size // num_heads
-        else:
-            attention_head_dim = linear_head_dim
+        attention_head_dim = hidden_size // num_heads if attn_type in ["flash"] else linear_head_dim
         if self.use_pe:
             self.rope = self.get_rope(pos_embed_type, attention_head_dim, patch_size, rope_fhw_dim)
         else:
@@ -580,21 +499,12 @@ class SanaMSVideo(Sana):
 
         self.final_layer = T2IFinalLayer(hidden_size, patch_size, self.out_channels)
 
-        if get_rank() == 0:
-            if ffn_type == "GLUMBConvTemp":
-                self.logger(f"{ffn_type} Temporal kernal: {t_kernel_size}")
+        if get_rank() == 0 and ffn_type == "GLUMBConvTemp":
+            self.logger(f"{ffn_type} Temporal kernal: {t_kernel_size}")
 
         self.initialize()
 
     def get_rope(self, pos_embed_type, attention_head_dim, patch_size, rope_fhw_dim):
-        """Get rope.
-
-        Args:
-            pos_embed_type: The pos embed type.
-            attention_head_dim: The attention head dim.
-            patch_size: The patch size.
-            rope_fhw_dim: The rope fhw dim.
-        """
         if pos_embed_type == "wan_rope":
             rope = WanRotaryPosEmbed(
                 attention_head_dim=attention_head_dim, patch_size=patch_size, max_seq_len=1024, fhw_dim=rope_fhw_dim
@@ -614,16 +524,6 @@ class SanaMSVideo(Sana):
 
     @staticmethod
     def _pack_latents(latents, batch_size, num_channels_latents, height, width, frame):
-        """Helper function to pack latents.
-
-        Args:
-            latents: The latents.
-            batch_size: The batch size.
-            num_channels_latents: The num channels latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         latents = latents.view(batch_size, num_channels_latents, frame, height // 2, 2, width // 2, 2)
         latents = latents.permute(0, 1, 4, 6, 2, 3, 5)
         latents = latents.reshape(batch_size, num_channels_latents * 4, frame, height // 2, width // 2)
@@ -632,14 +532,6 @@ class SanaMSVideo(Sana):
 
     @staticmethod
     def _unpack_latents(latents, height, width, frame):
-        """Helper function to unpack latents.
-
-        Args:
-            latents: The latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         batch_size, channels, frame, H, W = latents.shape
 
         assert height % 2 == 0 and width % 2 == 0
@@ -652,14 +544,6 @@ class SanaMSVideo(Sana):
 
     @staticmethod
     def _unpack_latents_additional_layers(latents, height, width, frame):
-        """Helper function to unpack latents additional layers.
-
-        Args:
-            latents: The latents.
-            height: The height.
-            width: The width.
-            frame: The frame.
-        """
         batch_size, num_patches, channels = latents.shape
 
         # latent height and width to be divisible by 2.
@@ -788,7 +672,14 @@ class SanaMSVideo(Sana):
             raise ValueError(f"Attention type is not available due to _xformers_available={_xformers_available}.")
 
         x = run_sana_blocks(
-            self.blocks, x, y, t0, y_lens, (self.f, self.h, self.w), image_pos_embed, **kwargs,
+            self.blocks,
+            x,
+            y,
+            t0,
+            y_lens,
+            (self.f, self.h, self.w),
+            image_pos_embed,
+            **kwargs,
         )
 
         x = self.final_layer(x, t)  # (N, T, patch_size ** 2 * out_channels)
@@ -813,8 +704,8 @@ class SanaMSVideo(Sana):
         else:
             timestep = timestep.long().to(torch.float32)
         y = y.to(self.dtype)
-        start_f = kwargs.get("start_f", None)
-        end_f = kwargs.get("end_f", None)
+        start_f = kwargs.get("start_f")
+        end_f = kwargs.get("end_f")
         kv_cache = kwargs.pop("kv_cache", None)
         if start_f is not None and end_f is not None:
             assert self.pos_embed_type == "casual_wan_rope"
@@ -929,16 +820,10 @@ class SanaMSVideo(Sana):
         return imgs
 
     def initialize(self):
-        """Initialize."""
         super().initialize_weights()
 
         # Initialize transformer layers:
         def _basic_init(module):
-            """Helper function to basic init.
-
-            Args:
-                module: The module.
-            """
             if isinstance(module, nn.Linear):
                 torch.nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
@@ -1024,13 +909,7 @@ class SanaMSVideo(Sana):
                     new_param[2 * new_hidden_size : 2 * new_hidden_size + old_hidden_size] = checkpoint_param[
                         2 * old_hidden_size :
                     ]
-                elif "q_norm.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "q_norm.bias" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "k_norm.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "k_norm.bias" in key:
+                elif "q_norm.weight" in key or "q_norm.bias" in key or "k_norm.weight" in key or "k_norm.bias" in key:
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "cross_attn.q_linear.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
@@ -1052,11 +931,11 @@ class SanaMSVideo(Sana):
                     new_param[:, :old_hidden_size] = checkpoint_param
                 elif "final_layer.linear.weight" in key:
                     new_param[:, : checkpoint_param.shape[1]] = checkpoint_param
-                elif "final_layer.linear.bias" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "t_embedder.mlp.0.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "t_embedder.mlp.0.bias" in key:
+                elif (
+                    "final_layer.linear.bias" in key
+                    or "t_embedder.mlp.0.weight" in key
+                    or "t_embedder.mlp.0.bias" in key
+                ):
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "t_embedder.mlp.2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
@@ -1086,9 +965,7 @@ class SanaMSVideo(Sana):
                         ]
                 elif "t_block.2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
-                elif "y_embedder.y_proj.fc1.weight" in key:
-                    new_param[: checkpoint_param.shape[0]] = checkpoint_param
-                elif "y_embedder.y_proj.fc1.bias" in key:
+                elif "y_embedder.y_proj.fc1.weight" in key or "y_embedder.y_proj.fc1.bias" in key:
                     new_param[: checkpoint_param.shape[0]] = checkpoint_param
                 elif "y_embedder.y_proj.fc2.weight" in key:
                     new_param[: checkpoint_param.shape[0], : checkpoint_param.shape[1]] = checkpoint_param
@@ -1153,20 +1030,11 @@ class SanaMSVideo(Sana):
         return super().load_state_dict(new_state_dict, strict=strict, assign=assign)
 
     def register_block_hook(self, layers=None, device="cpu", detach=True, score_only=True):
-        """Register block hook.
-
-        Args:
-            layers: The layers.
-            device: The device.
-            detach: The detach.
-            score_only: The score only.
-        """
         for i, block in enumerate(self.blocks):
             if layers is None or i in layers:
                 block.block_hook = BlockHook(device, detach, score_only)
 
     def get_block_output(self):
-        """Get block output."""
         block_outputs = {}
         for i, block in enumerate(self.blocks):
             if block.block_hook is not None:
@@ -1181,29 +1049,24 @@ class SanaMSVideo(Sana):
 
 
 def SanaMSVideo_600M_P1_D28(**kwargs):
-    """Sanamsvideo 600m p1 d28."""
     return SanaMSVideo(depth=28, hidden_size=1152, patch_size=(1, 1, 1), num_heads=16, **kwargs)
 
 
 def SanaMSVideo_600M_P2_D28(**kwargs):
-    """Sanamsvideo 600m p2 d28."""
     return SanaMSVideo(depth=28, hidden_size=1152, patch_size=(1, 2, 2), num_heads=16, **kwargs)
 
 
 def SanaMSVideo_2000M_P1_D20(**kwargs):
-    """Sanamsvideo 2000m p1 d20."""
     # 20 layers, 1648.48M
     return SanaMSVideo(depth=20, hidden_size=2240, patch_size=(1, 1, 1), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_2000M_P2_D20(**kwargs):
-    """Sanamsvideo 2000m p2 d20."""
     # 20 layers, 1648.48M
     return SanaMSVideo(depth=20, hidden_size=2240, patch_size=(1, 2, 2), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_2000M_P2S1_D20(**kwargs):
-    """Sanamsvideo 2000m p2s1 d20."""
     # 20 layers, 1648.48M
     return SanaMSVideo(
         depth=20, hidden_size=2240, patch_size=(1, 1, 1), num_heads=20, patch_embed_kernel=(1, 2, 2), **kwargs
@@ -1211,18 +1074,15 @@ def SanaMSVideo_2000M_P2S1_D20(**kwargs):
 
 
 def SanaMSVideo_4000M_P2_D28(**kwargs):
-    """Sanamsvideo 4000m p2 d28."""
     # 28 layers, 3459.49M
     return SanaMSVideo(depth=28, hidden_size=2560, patch_size=(1, 2, 2), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_4800M_P1_D60(**kwargs):
-    """Sanamsvideo 4800m p1 d60."""
     # 60 layers, 4800M
     return SanaMSVideo(depth=60, hidden_size=2240, patch_size=(1, 1, 1), num_heads=20, **kwargs)
 
 
 def SanaMSVideo_4800M_P2_D60(**kwargs):
-    """Sanamsvideo 4800m p2 d60."""
     # 60 layers, 4800M
     return SanaMSVideo(depth=60, hidden_size=2240, patch_size=(1, 2, 2), num_heads=20, **kwargs)

@@ -23,7 +23,7 @@ hf download Efficient-Large-Model/SANA-WM-Bench --repo-type dataset \
   --local-dir "${WORLDFOUNDRY_SANA_WM_BENCH_DATASET_ROOT}"
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/sana_wm_bench/run_sana_wm_bench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/sana_wm_bench/run_sana_wm_bench_official_runner.py \
   --run-official \
   --dataset-root "${WORLDFOUNDRY_SANA_WM_BENCH_DATASET_ROOT}" \
   --generated-video-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \

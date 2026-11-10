@@ -213,7 +213,9 @@ def _dualcamctrl_default_load_kwargs() -> dict[str, Any]:
         "tokenizer_repo": "Wan-AI/Wan2.1-T2V-1.3B",
         "dualcamctrl_repo": "FayeHongfeiZhang/DualCamCtrl",
         "checkpoint_name": "checkpoints/dualcamctrl_diffusion_transformer.pt",
-        "config_path": str(resolve._data_path("models", "runtime", "configs", "dualcamctrl", "controlnet_gate_asym_5_10.yaml")),
+        "config_path": str(
+            resolve._data_path("models", "runtime", "configs", "dualcamctrl", "controlnet_gate_asym_5_10.yaml")
+        ),
         "torch_dtype": "bfloat16",
         "download_resource": "HuggingFace",
         "allow_download": True,
@@ -1716,7 +1718,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "A close-up of a wet white cat wearing oversized amber sunglasses in a sunlit swimming pool, "
             "while the camera smoothly pushes forward toward the cat."
         ),
-        "default_input_path": str(resolve._data_path("test_cases", "uni3c", "synthetic-forward-9f-768x480", "reference.jpg")),
+        "default_input_path": str(
+            resolve._data_path("test_cases", "uni3c", "synthetic-forward-9f-768x480", "reference.jpg")
+        ),
         "default_call_kwargs": {
             "render_path": str(resolve._data_path("test_cases", "uni3c", "synthetic-forward-9f-768x480")),
             "mode": "camera",
@@ -1799,7 +1803,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "ddim_steps": 50,
             "condtype": "camera_motion",
             "camera_pose_path": str(
-                resolve._data_path("test_cases", "motionctrl_conditions", "camera_poses", "test_camera_Round-ZoomIn.json")
+                resolve._data_path(
+                    "test_cases", "motionctrl_conditions", "camera_poses", "test_camera_Round-ZoomIn.json"
+                )
             ),
             "seed": 42,
         },
@@ -2188,7 +2194,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "seed": 1234,
             "nproc_per_node": 1,
             "ae": "WFVAEModel_D8_4x8x8",
-            "text_encoder_name_1": resolve._checkpoint_model_ref("mt5-xxl", fallback=str(checkpoint_root_path("mt5-xxl"))),
+            "text_encoder_name_1": resolve._checkpoint_model_ref(
+                "mt5-xxl", fallback=str(checkpoint_root_path("mt5-xxl"))
+            ),
         },
         "call_params": _official_video_call_params(),
         "load_params": _official_video_load_params(),

@@ -3,7 +3,7 @@ name: EasyAnimate
 aliases:
   - easyanimate_i2v
   - easyanimate-i2v
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:easyanimate-i2v
 tasks:
   - text-to-video

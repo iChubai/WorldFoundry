@@ -21,14 +21,12 @@ _DEFAULT_NEGATIVE_PROMPT = (
 
 
 def _coerce_path(target: Path | str | None, *, fallback_name: str) -> Path:
-    """Coerce path helper function."""
     if target is None:
         return Path.cwd() / fallback_name
     return Path(target).expanduser().resolve()
 
 
 def _coerce_report_path(output_path: Path | str | None) -> Path:
-    """Coerce report path helper function."""
     report_path = _coerce_path(output_path, fallback_name="longcat_video_result.json")
     if report_path.suffix.lower() in {".mp4", ".mov", ".webm", ".gif"}:
         return report_path.with_suffix(".json")
@@ -40,7 +38,6 @@ def _coerce_report_artifact_path(
     *,
     artifact_suffix: str,
 ) -> Path:
-    """Coerce report artifact path helper function."""
     artifact_path = _coerce_path(output_path, fallback_name=f"longcat_video.{artifact_suffix}")
     if artifact_path.suffix.lower() in {".mp4", ".mov", ".webm", ".gif"}:
         return artifact_path

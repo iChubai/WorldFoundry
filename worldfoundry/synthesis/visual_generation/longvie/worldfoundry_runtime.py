@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import inspect
 import os
+from collections.abc import Mapping, Sequence
 from importlib import metadata as importlib_metadata
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 from PIL import Image
@@ -16,7 +17,6 @@ from .runtime_env import (
     resolve_wan21_i2v_dir,
     resolve_wan21_tokenizer_dir,
 )
-
 
 LONGVIE_NEGATIVE_PROMPT = (
     "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，"
@@ -164,9 +164,7 @@ class LongVieOfficialRuntime:
         )
         if self.variant == "longvie-1":
             if self.dit_weight_path:
-                raise ValueError(
-                    "LongVie-1 does not accept a DiT override; dit.safetensors belongs to LongVie2."
-                )
+                raise ValueError("LongVie-1 does not accept a DiT override; dit.safetensors belongs to LongVie2.")
             if (control_path.parent / "dit.safetensors").is_file():
                 raise ValueError(
                     "LongVie-1 cannot use a checkpoint directory containing LongVie2's "
@@ -192,9 +190,7 @@ class LongVieOfficialRuntime:
 
             transformers_version = Version(importlib_metadata.version("transformers"))
         except (importlib_metadata.PackageNotFoundError, ImportError, ValueError) as exc:
-            raise RuntimeError(
-                "LongVie requires transformers>=4.57,<5 in its isolated runtime environment."
-            ) from exc
+            raise RuntimeError("LongVie requires transformers>=4.57,<5 in its isolated runtime environment.") from exc
         if not (Version("4.57.0") <= transformers_version < Version("5")):
             raise RuntimeError(
                 "LongVie requires transformers>=4.57,<5; "

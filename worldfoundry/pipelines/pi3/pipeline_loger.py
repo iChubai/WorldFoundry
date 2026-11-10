@@ -7,7 +7,7 @@ import json
 import logging
 import math
 import os
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from PIL import Image
@@ -30,7 +30,6 @@ def _default_output_dir(name: str = "loger_output") -> str:
 
 
 def _apply_camera_delta(c2w: np.ndarray, delta: list[float]) -> np.ndarray:
-    """Apply camera delta helper function."""
     dx, dy, dz, theta_x, theta_z = delta
     result = c2w.copy()
 
@@ -160,7 +159,6 @@ class LoGeRResult:
 
 
 def _build_camera_range(camera_params: list[dict[str, Any]]) -> dict[str, Any]:
-    """Build camera range helper function."""
     n = len(camera_params)
     if n == 0:
         return {}
@@ -258,9 +256,7 @@ class LoGeRPipeline(PipelineABC):
             if not isinstance(images_data, list):
                 images_data = [images_data]
 
-            if self.representation_model is None:
-                raise RuntimeError("LoGeR representation model is not loaded. Use from_pretrained() first.")
-            device = self.representation_model.device
+            device = cast(LoGeRRepresentation, self.representation_model).device
             imgs_tensor = self.operator.images_to_tensor(images_data, device=device)
             resized_images = [imgs_tensor[0, i].permute(1, 2, 0).cpu().numpy() for i in range(imgs_tensor.shape[1])]
 
@@ -398,11 +394,9 @@ class LoGeRPipeline(PipelineABC):
         if res is None:
             raise RuntimeError("No result available. Run reconstruction first.")
 
-        if res.input_images is None:
-            raise RuntimeError("No input images in result for coloring.")
         pts_all = res.numpy_data["points"][0]
         masks = res.numpy_data["masks"][0].astype(bool)
-        colors_all = np.stack(res.input_images, axis=0)
+        colors_all = np.stack(cast(list[np.ndarray], res.input_images), axis=0)
         pts = pts_all[masks].astype(np.float64)
         cols = (colors_all[masks] * 255).clip(0, 255).astype(np.uint8)
         h, w = pts_all.shape[1], pts_all.shape[2]
@@ -461,7 +455,7 @@ class LoGeRPipeline(PipelineABC):
                     hold_img = self.render_view(camera_to_world=self._current_camera)
                     frames.extend([hold_img] * n_hold)
 
-                    # operator 层：单条交互信号 → delta
+                    # The operator turns each interaction signal into a camera delta.
                     processed = self.process(interactions=[sig])
                     delta = processed["delta"]
                     sub_delta = [d / n_move for d in delta]
@@ -501,7 +495,7 @@ class LoGeRPipeline(PipelineABC):
         """Stream visual generation outputs chunk by chunk."""
         visual_input = videos or video_path or images or image_path
 
-        # ── 有新输入：先做重建 ──
+        # New visual input: reconstruct the scene first.
         if visual_input is not None:
             logger.info("--- Stream: reconstructing scene ---")
             processed = self.process(images=visual_input, interval=kwargs.get("interval", -1))
@@ -518,7 +512,7 @@ class LoGeRPipeline(PipelineABC):
                 raise RuntimeError("No camera parameters available in cached result.")
             self._current_camera = np.array(self._cached_result.camera_params[0]["camera_to_world"])
 
-        # ── 无交互：直接渲染当前视角 ──
+        # No interaction: render the current view.
         if interactions is None:
             return self.render_view(
                 result=self._cached_result,
@@ -526,7 +520,7 @@ class LoGeRPipeline(PipelineABC):
                 camera_to_world=self._current_camera,
             )
 
-        # ── 有交互：operator 层处理，更新相机，渲染 ──
+        # Interactions: the operator computes a camera delta, then the updated view is rendered.
         if isinstance(interactions, str):
             interactions = [interactions]
 

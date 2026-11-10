@@ -48,7 +48,7 @@ runner_parity:
   - Per-run visual QA and artifact checks are tracked in the validation reference,
     not in the model catalog YAML.
 runtime_profile: runtime-profile:pusa-vidgen
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: pusa-vidgen
 catalog_category: video
 catalog_scope: Video-generation and video-token catalog entries. Integrated entries

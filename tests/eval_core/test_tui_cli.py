@@ -502,8 +502,8 @@ def test_tui_cli_writes_suite_plan(tmp_path, capsys) -> None:
 
 
 def test_robotics_framework_imports_use_embodied_owner() -> None:
-    embodied = importlib.import_module("worldfoundry.evaluation.tasks.embodied")
-    normalizer = importlib.import_module("worldfoundry.evaluation.tasks.embodied.normalizer")
+    embodied = importlib.import_module("worldfoundry.evals.tasks.embodied")
+    normalizer = importlib.import_module("worldfoundry.evals.tasks.embodied.normalizer")
 
     assert hasattr(embodied, "EmbodiedGenerationSpec")
     assert hasattr(embodied, "run_vla_va_wam")

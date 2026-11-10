@@ -18,25 +18,22 @@ def _image_to_data_url(image_input: Image.Image) -> tuple[str, str]:
 
 
 class Veo3Operator(BaseOperator):
-    """
-    Veo3 数据处理 Operator
+    """Validate prompts and PIL images that are passed directly to the Gemini Veo 3 SDK.
 
-    负责输入类型检查并把 PIL 图像直接交给 Gemini SDK
-    不涉及模型推理和API调用
+    The operator only preprocesses inputs; it runs no model inference and makes no API calls.
     """
 
     def __init__(self, operation_types: list | None = None):
         """
-        初始化 Veo3Operator
+        Initialize the Veo 3 operator.
 
         Args:
-            operation_types: 操作类型列表
+            operation_types: Operation types handled by the operator.
         """
         if operation_types is None:
             operation_types = ["image_processing", "prompt_processing"]
         super().__init__(operation_types)
 
-        # 初始化交互模板
         self.interaction_template = ["text_prompt", "image_prompt", "multimodal_prompt"]
         self.interaction_template_init()
 
@@ -55,7 +52,7 @@ class Veo3Operator(BaseOperator):
         seed: int | None = None,
         person_generation: str | None = None,
         reference_images: list[Image.Image] | None = None,
-        image: Image.Image | None = None,  # 可为 None（T2V）
+        image: Image.Image | None = None,  # None for text-to-video
         last_frame: Image.Image | None = None,
         enhance_prompt: bool | None = None,
         generate_audio: bool | None = None,
@@ -133,28 +130,27 @@ class Veo3Operator(BaseOperator):
         **kwargs,
     ) -> dict[str, Any]:
         """
-        处理交互输入，生成模型所需的输入格式
+        Validate image inputs and collect the Veo generation settings.
 
         Args:
-            prompt: 文本提示词
-            images: 主图像（PIL.Image，可选）
-            aspect_ratio: 宽高比
-            resolution: 分辨率
-            duration_seconds: 视频时长（秒）
-            negative_prompt: 负面提示词
-            seed: 随机种子
-            last_frame: 最后一帧图像（PIL.Image，可选）
-            reference_images: 参考图像列表（PIL.Image，可选）
-            person_generation: 人物生成设置（可选）
-            **kwargs: 其他参数
+            prompt: Text prompt.
+            images: Optional PIL first-frame image.
+            aspect_ratio: Aspect ratio such as ``"16:9"``.
+            resolution: Resolution such as ``"720p"``.
+            duration_seconds: Video duration in seconds.
+            seed: Random seed.
+            last_frame: Optional PIL last-frame image.
+            reference_images: Optional list of PIL reference images.
+            person_generation: Optional person-generation setting.
+            **kwargs: Ignored.
 
         Returns:
-            Dict 包含处理后的输入数据：
-                - prompt: 文本提示词
-                - images: 主图像（如果有）
-                - reference_images: 参考图像列表（如果有）
+            Dict with ``images``, ``reference_images``, ``last_frame`` and ``veo_config``, the
+            generation settings keyed by name.
+
+        Raises:
+            TypeError: An image input is not a PIL image.
         """
-        # 类型检查
         if images is not None and not isinstance(images, Image.Image):
             raise TypeError(f"images must be PIL.Image, got {type(images)}")
         if last_frame is not None and not isinstance(last_frame, Image.Image):

@@ -293,7 +293,7 @@ class MatrixGame35Runtime:
         )
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "MatrixGame35Runtime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> MatrixGame35Runtime:
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
             options["checkpoint_path"] = pretrained_model_path
@@ -744,12 +744,12 @@ class MatrixGame35Runtime:
 
 __all__ = [
     "DA3_REPO",
-    "MATRIX_GAME_35_CHECKPOINT_REPO",
     "INFERENCE_ENTRYPOINT",
-    "PROJECT_ROOT",
-    "SHARED_DA3_ROOT",
+    "MATRIX_GAME_35_CHECKPOINT_REPO",
     "NATIVE_DIFFUSION_ROOT",
+    "PROJECT_ROOT",
     "RUNTIME_ROOT",
+    "SHARED_DA3_ROOT",
     "SOURCE_REPOSITORY",
     "SOURCE_REVISION",
     "WAN_22_TI2V_REPO",

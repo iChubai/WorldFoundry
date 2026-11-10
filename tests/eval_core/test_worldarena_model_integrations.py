@@ -9,9 +9,9 @@ import pytest
 # torch-less environments (e.g. the minimal CI runner).
 torch = pytest.importorskip("torch")
 
-from worldfoundry.evaluation.models.catalog import UnknownModelZooKeyError, load_model_zoo_registry  # noqa: E402
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile, load_runtime_profiles  # noqa: E402
-from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry  # noqa: E402
+from worldfoundry.evals.models.catalog import UnknownModelZooKeyError, load_model_zoo_registry  # noqa: E402
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile, load_runtime_profiles  # noqa: E402
+from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
@@ -64,7 +64,7 @@ def test_worldarena_models_are_in_tree_runtime_manifest_entries() -> None:
         assert entry.runner_entry_kind == "runnable_runner"
         assert entry.output_artifacts == ()
         assert entry.runtime_profile == f"runtime-profile:{model_id}"
-        assert entry.runner_target == "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+        assert entry.runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
         assert entry.pipeline_target is not None
         assert entry.pipeline_target.startswith("worldfoundry.pipelines.")
 
@@ -74,7 +74,7 @@ def test_worldarena_official_lives_in_benchmark_zoo_registry() -> None:
     entry = registry.get("worldarena")
 
     assert entry.benchmark_id == "worldarena"
-    assert entry.runner_target == "worldfoundry.evaluation.tasks.contracts.external:WorldArenaContract"
+    assert entry.runner_target == "worldfoundry.evals.tasks.contracts.external:WorldArenaContract"
     assert entry.runner_availability["surface"] == "official_runner"
     assert entry.data_refs["task_yaml"].endswith("worldarena.yaml")
 
@@ -113,7 +113,7 @@ def test_worldarena_runtime_profiles_track_sources_with_in_tree_runners() -> Non
 
 
 def test_worldarena_model_request_plan_wrapper_was_removed() -> None:
-    assert not (REPO_ROOT / "worldfoundry/evaluation/tasks/official/worldarena.py").exists()
+    assert not (REPO_ROOT / "worldfoundry/evals/tasks/official/worldarena.py").exists()
 
 
 def test_worldarena_existing_models_are_not_revendored() -> None:
@@ -122,7 +122,7 @@ def test_worldarena_existing_models_are_not_revendored() -> None:
 
     for model_id in EXISTING_WORLDARENA_MODEL_IDS:
         entry = registry.get(model_id)
-        assert entry.runner_target == "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+        assert entry.runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
         assert entry.pipeline_target is not None
         assert entry.runtime_profile is not None
         assert entry.output_artifacts == ()

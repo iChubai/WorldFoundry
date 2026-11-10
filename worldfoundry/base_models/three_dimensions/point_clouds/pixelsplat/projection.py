@@ -1,10 +1,7 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> pixelsplat -> projection.py functionality."""
-
 from math import prod
 
 import torch
 from einops import einsum, rearrange, reduce, repeat
-from torch import Tensor
 
 
 def homogenize_points(
@@ -51,14 +48,6 @@ def project_camera_space(
     epsilon,
     infinity,
 ):
-    """Project camera space.
-
-    Args:
-        points: The points.
-        intrinsics: The intrinsics.
-        epsilon: The epsilon.
-        infinity: The infinity.
-    """
     points = points / (points[..., -1:] + epsilon)
     points = points.nan_to_num(posinf=infinity, neginf=-infinity)
     points = einsum(intrinsics, points, "... i j, ... j -> ... i")
@@ -71,14 +60,6 @@ def project(
     intrinsics,
     epsilon,
 ):
-    """Project.
-
-    Args:
-        points: The points.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-        epsilon: The epsilon.
-    """
     points = homogenize_points(points)
     points = transform_world2cam(points, extrinsics)[..., :-1]
     in_front_of_camera = points[..., -1] >= 0
@@ -94,9 +75,7 @@ def unproject(
 
     # Apply the inverse intrinsics to the coordinates.
     coordinates = homogenize_points(coordinates)
-    ray_directions = einsum(
-        intrinsics.inverse(), coordinates, "... i j, ... j -> ... i"
-    )
+    ray_directions = einsum(intrinsics.inverse(), coordinates, "... i j, ... j -> ... i")
 
     # Apply the supplied depth values.
     return ray_directions * z[..., None]
@@ -107,13 +86,6 @@ def get_world_rays(
     extrinsics,
     intrinsics,
 ):
-    """Get world rays.
-
-    Args:
-        coordinates: The coordinates.
-        extrinsics: The extrinsics.
-        intrinsics: The intrinsics.
-    """
     # Get camera-space ray directions.
     directions = unproject(
         coordinates,
@@ -134,7 +106,7 @@ def get_world_rays(
 
 def sample_image_grid(
     shape: tuple[int, ...],
-    device: torch.device = torch.device("cpu"),
+    device: torch.device = torch.device("cpu"),  # noqa: B008 - Default evaluated once at definition, as upstream.
 ):
     """Get normalized (range 0 to 1) coordinates and integer indices for an image."""
 
@@ -145,7 +117,7 @@ def sample_image_grid(
 
     # Each entry is a floating-point coordinate in the range (0, 1). In the 2D case,
     # each entry is an (x, y) coordinate.
-    coordinates = [(idx + 0.5) / length for idx, length in zip(indices, shape)]
+    coordinates = [(idx + 0.5) / length for idx, length in zip(indices, shape, strict=False)]
     coordinates = reversed(coordinates)
     coordinates = torch.stack(torch.meshgrid(*coordinates, indexing="xy"), dim=-1)
 
@@ -158,14 +130,6 @@ def sample_training_rays(
     extrinsics,
     num_rays: int,
 ):
-    """Sample training rays.
-
-    Args:
-        image: The image.
-        intrinsics: The intrinsics.
-        extrinsics: The extrinsics.
-        num_rays: The num rays.
-    """
     device = extrinsics.device
     b, v, _, *grid_shape = image.shape
 
@@ -250,19 +214,9 @@ def intersect_rays(
 
 
 def get_fov(intrinsics):
-    """Get fov.
-
-    Args:
-        intrinsics: The intrinsics.
-    """
     intrinsics_inv = intrinsics.inverse()
 
     def process_vector(vector):
-        """Process vector.
-
-        Args:
-            vector: The vector.
-        """
         vector = torch.tensor(vector, dtype=torch.float32, device=intrinsics.device)
         vector = einsum(intrinsics_inv, vector, "b i j, j -> b i")
         return vector / vector.norm(dim=-1, keepdim=True)

@@ -31,7 +31,7 @@ integration:
   - WorldFoundry registers an in-tree runtime manifest pipeline for the vendored TesserAct source.
   - Official WorldArena-listed source is vendored in-tree under worldfoundry/synthesis/action_generation/tesseract/tesseract_runtime.
 runtime_profile: runtime-profile:tesseract
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: tesseract
 runner_parity:
   status: implemented_checkpoint_required

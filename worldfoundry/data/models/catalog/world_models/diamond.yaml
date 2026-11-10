@@ -50,7 +50,7 @@ runner_parity:
     match pre-change code bitwise. Only Pong opposite-action semantics received a
     controlled check.
 runtime_profile: runtime-profile:diamond
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: diamond
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry

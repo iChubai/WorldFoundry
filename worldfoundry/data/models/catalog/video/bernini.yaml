@@ -30,7 +30,7 @@ runner_parity:
   notes:
   - Official single-request 8-GPU Ulysses dispatch is implemented; artifact parity still requires staged weights and H100-class GPUs.
 runtime_profile: runtime-profile:bernini
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: bernini
 catalog_category: video
 docs:

@@ -21,7 +21,7 @@ WorldFoundry **仓内内置 VBench++ runtime**。有界长视频组件已验证�
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
   --benchmark-id vbench-plus-plus \
   --variant long \
   --videos-path "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
@@ -34,7 +34,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 I2V 使用官方图像套件命名。可选 checkout 覆盖：`WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT`。共享栈：`vbench_perception_metric_stack`。Prompt / 图像套件在公开 VBench 仓库中。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml`，`worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml`，`worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/runtime`。
 
 产物包括 `scorecard.json`（主键 `vbench_plus_plus_average`）与 `dimension_scores.json`。
 

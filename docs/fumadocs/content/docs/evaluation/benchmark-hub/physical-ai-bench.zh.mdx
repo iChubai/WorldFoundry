@@ -22,7 +22,7 @@ WorldFoundry 仓内 evaluator **只实现两条赛道**：
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py \
   --run-official \
   --track generation \
   --dataset-root "${WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT}" \
@@ -35,7 +35,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  -m worldfoundry.evaluation.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner \
+  -m worldfoundry.evals.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner \
   --run-official \
   --track conditional-generation \
   --dataset-root "${WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT}" \

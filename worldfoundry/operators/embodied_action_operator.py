@@ -10,7 +10,6 @@ from .base_operator import BaseOperator
 
 
 def _is_empty_value(value: Any) -> bool:
-    """Is empty value implementation."""
     if value is None:
         return True
     if isinstance(value, str):
@@ -21,7 +20,6 @@ def _is_empty_value(value: Any) -> bool:
 
 
 def _as_action_list(value: Any) -> list[Any]:
-    """As action list implementation."""
     if _is_empty_value(value):
         return []
     if isinstance(value, (str, Mapping)):
@@ -32,12 +30,10 @@ def _as_action_list(value: Any) -> list[Any]:
 
 
 def _compact_dict(value: Mapping[str, Any]) -> dict[str, Any]:
-    """Compact dict implementation."""
     return {str(key): item for key, item in value.items() if not _is_empty_value(item)}
 
 
 def _first_present(mapping: Mapping[str, Any], *keys: str) -> Any:
-    """First present implementation."""
     for key in keys:
         if key in mapping and not _is_empty_value(mapping[key]):
             return mapping[key]
@@ -45,7 +41,6 @@ def _first_present(mapping: Mapping[str, Any], *keys: str) -> Any:
 
 
 def _extract_action_signal(value: Any, *keys: str) -> list[Any]:
-    """Extract action signal implementation."""
     if isinstance(value, Mapping):
         action_value = _first_present(
             value,

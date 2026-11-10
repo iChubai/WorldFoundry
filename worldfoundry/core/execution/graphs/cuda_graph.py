@@ -70,11 +70,13 @@ def _tree_unflatten(values, spec):
 
 # Transformer Engine is optional; the ImportError fallback also covers releases without these helpers.
 try:
-    from transformer_engine.pytorch.distributed import (  # ty: ignore[unresolved-import]
+    from transformer_engine.pytorch.distributed import (  # ty: ignore[unresolved-import]  # Optional Transformer Engine dependency.
         get_all_rng_states,
         graph_safe_rng_available,
     )
-    from transformer_engine.pytorch.module.base import TransformerEngineBaseModule  # ty: ignore[unresolved-import]
+    from transformer_engine.pytorch.module.base import (  # ty: ignore[unresolved-import]  # Optional Transformer Engine dependency.
+        TransformerEngineBaseModule,
+    )
 except ImportError:
 
     class TransformerEngineBaseModule(torch.nn.Module):
@@ -335,13 +337,6 @@ def _make_graphed_callables(
     visited_te_modules = set()
 
     def hook_fn(module, inputs, outputs):  # pylint: disable=unused-argument
-        """Hook fn.
-
-        Args:
-            module: The module.
-            inputs: The inputs.
-            outputs: The outputs.
-        """
         if isinstance(module, TransformerEngineBaseModule):
             visited_te_modules.add(module)
 
@@ -394,28 +389,11 @@ def _make_graphed_callables(
         static_input_surface,
         static_outputs,
     ):
-        """Make graphed autograd function.
-
-        Args:
-            fwd_graph: The fwd graph.
-            module_params: The module params.
-            kwargs_keys: The kwargs keys.
-            len_user_args: The len user args.
-            output_unflatten_spec: The output unflatten spec.
-            static_input_surface: The static input surface.
-            static_outputs: The static outputs.
-        """
-
         class Graphed(torch.autograd.Function):
             """Autograd function for graph replay."""
 
             @staticmethod
             def forward(ctx, *inputs):
-                """Forward.
-
-                Args:
-                    ctx: The ctx.
-                """
                 # pylint: disable=missing-function-docstring
 
                 # Copy values from new tensors into static tensors
@@ -429,7 +407,6 @@ def _make_graphed_callables(
                 return tuple(o.detach() for o in static_outputs)
 
         def functionalized(*user_args, **user_kwargs):
-            """Functionalized."""
             # Check that required kwargs are provided
             for key in kwargs_keys:
                 if key not in user_kwargs:
@@ -466,17 +443,7 @@ def _make_graphed_callables(
         if isinstance(func, torch.nn.Module):
 
             def make_graphed_forward(func, graph_training_state, graphed, orig_fwd):
-                """Make graphed forward.
-
-                Args:
-                    func: The func.
-                    graph_training_state: The graph training state.
-                    graphed: The graphed.
-                    orig_fwd: The orig fwd.
-                """
-
                 def new_fwd(*user_args, **user_kwargs):
-                    """New fwd."""
                     # If the module's training-or-eval state matches what we graphed,
                     # run the graph, otherwise run the original forward method
                     if func.training == graph_training_state:
@@ -582,28 +549,19 @@ def create_cuda_graph(
     tensor_kwargs: dict[str, Any],
     extra_key: str | None = None,
 ) -> str:
-    """Create cuda graph.
+    """Capture forward CUDA graphs for ``blocks`` once per input contract and return the cache key.
 
-    Args:
-        cuda_graphs_storage: The cuda graphs storage.
-        blocks: The blocks.
-        tensor_args: The tensor args.
-        tensor_kwargs: The tensor kwargs.
-        extra_key: The extra key.
+    Graphs are captured on dummy inputs with the shapes, strides and dtypes of ``tensor_args`` and
+    ``tensor_kwargs``; ``None`` keyword values are dropped. The captured callables, one per block, are
+    stored in ``cuda_graphs_storage`` under a key built from the block classes, the input layouts,
+    the grad, autocast, matmul-precision and distributed state, and ``extra_key``.
 
-    Returns:
-        The return value.
+    Raises:
+        TypeError: A positional argument is ``None``, an input leaf is not a tensor, or a tensor is
+            not strided or has named dimensions.
     """
 
     def _make_dummy_tensor_like(t: torch.Tensor) -> torch.Tensor:
-        """Helper function to make dummy tensor like.
-
-        Args:
-            t: The t.
-
-        Returns:
-            The return value.
-        """
         if t.layout != torch.strided:
             raise TypeError(f"create_cuda_graph only supports strided tensors; got {t.layout}")
         if any(name is not None for name in t.names):
@@ -634,14 +592,6 @@ def create_cuda_graph(
         return dummy.requires_grad_(t.requires_grad)
 
     def _make_dummy_tree(x: Any) -> Any:
-        """Helper function to make dummy tree.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         flat, spec = _tree_flatten(x)
         dummy_flat: list[torch.Tensor] = []
         for leaf in flat:

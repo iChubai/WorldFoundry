@@ -129,15 +129,15 @@ runner:
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/wrbench/run_wrbench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/wrbench/run_wrbench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.wrbench.run_wrbench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.wrbench.run_wrbench_official_runner
     generated_arg: --generated-artifact-dir
     limit_arg: --limit
     supports_official_runtime: true
     accepts_generated_artifacts: true
     supports_fixture: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:WRBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:WRBenchContract
   validation_command:
   - wf
   - zoo
@@ -155,13 +155,13 @@ runner:
   - --json
   run_command: >-
     ${WORLDFOUNDRY_UNIFIED_PYTHON:-python}
-    worldfoundry/evaluation/tasks/execution/runners/wrbench/run_wrbench_official_runner.py
+    worldfoundry/evals/tasks/execution/runners/wrbench/run_wrbench_official_runner.py
     --benchmark-id wrbench --run-official
     --output-dir "$WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR"
     --generated-artifact-dir "$WORLDFOUNDRY_GENERATED_ARTIFACT_DIR" --json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime
+    root: worldfoundry/evals/tasks/execution/runners/wrbench/runtime
     root_env: WORLDFOUNDRY_WRBENCH_ROOT
     repo_url: https://github.com/JinPLu/WRBench.git
     repo_revision: 629595dc60ec08a29711af0377280c4ac9dd40bc
@@ -208,10 +208,10 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/wrbench.yaml
   bundled_assets: worldfoundry/data/benchmarks/assets/wrbench
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench
+  - worldfoundry/evals/tasks/execution/runners/wrbench/runtime/wrbench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:WRBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:WRBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

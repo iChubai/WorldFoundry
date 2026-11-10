@@ -3,9 +3,9 @@
 import importlib
 import os
 import sys
+from collections.abc import Iterable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, Iterable, Optional
 
 import torch
 
@@ -21,7 +21,6 @@ DEFAULT_LYRA1_ALIAS = "lyra-1"
 
 
 def lyra_runtime_root(name: str) -> Path:
-    """Lyra runtime root helper function."""
     visual_generation_root = package_root() / "synthesis" / "visual_generation"
     if name == "lyra2_runtime":
         return visual_generation_root / "lyra_2"
@@ -34,8 +33,7 @@ def _candidate_subdir(
     path_value: Path,
     repo_dir_name: str,
     sentinel_parts: Iterable[str],
-) -> Optional[Path]:
-    """Candidate subdir helper function."""
+) -> Path | None:
     sentinel_parts = tuple(sentinel_parts)
     if path_value.joinpath(*sentinel_parts).is_file():
         return path_value
@@ -45,8 +43,7 @@ def _candidate_subdir(
     return None
 
 
-def _candidate_lyra2_subdir(path_value: Path) -> Optional[Path]:
-    """Candidate lyra2 subdir helper function."""
+def _candidate_lyra2_subdir(path_value: Path) -> Path | None:
     return _candidate_subdir(
         path_value,
         repo_dir_name="Lyra-2",
@@ -54,8 +51,7 @@ def _candidate_lyra2_subdir(path_value: Path) -> Optional[Path]:
     )
 
 
-def _candidate_lyra2_checkpoint_subdir(path_value: Path) -> Optional[Path]:
-    """Candidate lyra2 checkpoint subdir helper function."""
+def _candidate_lyra2_checkpoint_subdir(path_value: Path) -> Path | None:
     candidates = [
         path_value,
         path_value / "Lyra-2.0",
@@ -70,8 +66,7 @@ def _candidate_lyra2_checkpoint_subdir(path_value: Path) -> Optional[Path]:
     return None
 
 
-def _candidate_lyra1_subdir(path_value: Path) -> Optional[Path]:
-    """Candidate lyra1 subdir helper function."""
+def _candidate_lyra1_subdir(path_value: Path) -> Path | None:
     return _candidate_subdir(
         path_value,
         repo_dir_name="Lyra-1",
@@ -80,7 +75,6 @@ def _candidate_lyra1_subdir(path_value: Path) -> Optional[Path]:
 
 
 def _repo_candidates(repo_dir_name: str) -> list[Path]:
-    """Repo candidates helper function."""
     runtime_name = "lyra2_runtime" if repo_dir_name == "Lyra-2" else "lyra1_runtime"
     return [
         lyra_runtime_root(runtime_name),
@@ -88,12 +82,10 @@ def _repo_candidates(repo_dir_name: str) -> list[Path]:
 
 
 def local_repo_candidates() -> list[Path]:
-    """Local repo candidates helper function."""
     return _repo_candidates("Lyra-2")
 
 
 def local_lyra2_checkpoint_candidates() -> list[Path]:
-    """Local lyra2 checkpoint candidates helper function."""
     ckpt_root = checkpoint_root_path()
     hfd_root = hfd_root_path()
     return [
@@ -104,8 +96,7 @@ def local_lyra2_checkpoint_candidates() -> list[Path]:
     ]
 
 
-def default_local_repo() -> Optional[Path]:
-    """Default local repo helper function."""
+def default_local_repo() -> Path | None:
     for candidate in local_repo_candidates():
         resolved = _candidate_lyra2_subdir(candidate)
         if resolved is not None and resolved.is_dir():
@@ -114,12 +105,10 @@ def default_local_repo() -> Optional[Path]:
 
 
 def local_lyra1_repo_candidates() -> list[Path]:
-    """Local lyra1 repo candidates helper function."""
     return _repo_candidates("Lyra-1")
 
 
-def default_local_lyra2_checkpoint_root() -> Optional[Path]:
-    """Default local lyra2 checkpoint root helper function."""
+def default_local_lyra2_checkpoint_root() -> Path | None:
     for candidate in local_lyra2_checkpoint_candidates():
         resolved = _candidate_lyra2_checkpoint_subdir(candidate)
         if resolved is not None and resolved.is_dir():
@@ -127,8 +116,7 @@ def default_local_lyra2_checkpoint_root() -> Optional[Path]:
     return None
 
 
-def default_local_lyra1_repo() -> Optional[Path]:
-    """Default local lyra1 repo helper function."""
+def default_local_lyra1_repo() -> Path | None:
     for candidate in local_lyra1_repo_candidates():
         resolved = _candidate_lyra1_subdir(candidate)
         if resolved is not None and resolved.is_dir():
@@ -137,7 +125,6 @@ def default_local_lyra1_repo() -> Optional[Path]:
 
 
 def local_lyra1_checkpoint_candidates() -> list[Path]:
-    """Local lyra1 checkpoint candidates helper function."""
     ckpt_root = checkpoint_root_path()
     hfd_root = hfd_root_path()
     return [
@@ -148,16 +135,14 @@ def local_lyra1_checkpoint_candidates() -> list[Path]:
     ]
 
 
-def default_local_lyra1_checkpoint_root() -> Optional[Path]:
-    """Default local lyra1 checkpoint root helper function."""
+def default_local_lyra1_checkpoint_root() -> Path | None:
     for candidate in local_lyra1_checkpoint_candidates():
         if _candidate_lyra1_weights_subdir(candidate) is not None:
             return candidate.resolve()
     return None
 
 
-def resolve_repo_root(pretrained_model_path: Optional[str]) -> str:
-    """Resolve repo root helper function."""
+def resolve_repo_root(pretrained_model_path: str | None) -> str:
     default_runtime = default_local_repo()
     if pretrained_model_path is None or str(pretrained_model_path).strip() in {
         "",
@@ -185,8 +170,7 @@ def resolve_repo_root(pretrained_model_path: Optional[str]) -> str:
     )
 
 
-def resolve_lyra1_repo_root(pretrained_model_path: Optional[str]) -> str:
-    """Resolve lyra1 repo root helper function."""
+def resolve_lyra1_repo_root(pretrained_model_path: str | None) -> str:
     default_runtime = default_local_lyra1_repo()
     if pretrained_model_path is None or str(pretrained_model_path).strip() in {
         "",
@@ -213,8 +197,7 @@ def resolve_lyra1_repo_root(pretrained_model_path: Optional[str]) -> str:
     )
 
 
-def _candidate_lyra1_weights_subdir(path_value: Path) -> Optional[Path]:
-    """Candidate lyra1 weights subdir helper function."""
+def _candidate_lyra1_weights_subdir(path_value: Path) -> Path | None:
     candidates = [
         path_value,
         path_value / "Lyra",
@@ -227,7 +210,6 @@ def _candidate_lyra1_weights_subdir(path_value: Path) -> Optional[Path]:
 
 
 def ensure_repo_on_path(repo_root: str):
-    """Ensure repo on path helper function."""
     repo_root = os.path.abspath(repo_root)
     if repo_root not in sys.path:
         sys.path.insert(0, repo_root)
@@ -237,12 +219,10 @@ def ensure_repo_on_path(repo_root: str):
 def configure_lyra_runtime_env():
     # TransformerEngine fused attention currently crashes in this Lyra-2 setup on H100.
     # Keep FlashAttention/unfused paths enabled, but disable the fused backend by default.
-    """Configure lyra runtime env helper function."""
     os.environ.setdefault("NVTE_FUSED_ATTN", "0")
 
 
-def resolve_path(path_value: Optional[str], repo_root: str) -> Optional[str]:
-    """Resolve path helper function."""
+def resolve_path(path_value: str | None, repo_root: str) -> str | None:
     if path_value is None:
         return None
     candidate = Path(str(path_value)).expanduser()
@@ -252,10 +232,9 @@ def resolve_path(path_value: Optional[str], repo_root: str) -> Optional[str]:
 
 
 def resolve_checkpoint_root(
-    pretrained_model_path: Optional[str],
-    repo_root: Optional[str] = None,
-) -> Optional[str]:
-    """Resolve checkpoint root helper function."""
+    pretrained_model_path: str | None,
+    repo_root: str | None = None,
+) -> str | None:
     candidates = []
     if pretrained_model_path is not None and str(pretrained_model_path).strip():
         candidates.append(Path(str(pretrained_model_path)).expanduser())
@@ -275,12 +254,11 @@ def resolve_checkpoint_root(
 
 def resolve_required_paths(
     repo_root: str,
-    checkpoint_dir: Optional[str] = None,
-    negative_prompt_path: Optional[str] = None,
-    da3_model_path_custom: Optional[str] = None,
-    weights_root: Optional[str] = None,
-) -> Dict[str, str]:
-    """Resolve required paths helper function."""
+    checkpoint_dir: str | None = None,
+    negative_prompt_path: str | None = None,
+    da3_model_path_custom: str | None = None,
+    weights_root: str | None = None,
+) -> dict[str, str]:
     base_root = weights_root or repo_root
     paths = {
         "checkpoint_dir": resolve_path(checkpoint_dir or "checkpoints/model", base_root),
@@ -296,16 +274,14 @@ def resolve_required_paths(
     return paths
 
 
-def ensure_path_exists(path_value: Optional[str], name: str):
-    """Ensure path exists helper function."""
+def ensure_path_exists(path_value: str | None, name: str):
     if path_value is None:
         raise FileNotFoundError(f"{name} is not configured.")
     if not Path(path_value).exists():
         raise FileNotFoundError(f"{name} not found: {path_value}")
 
 
-def device_index(device: Optional[str]) -> int:
-    """Device index helper function."""
+def device_index(device: str | None) -> int:
     if not device or not str(device).startswith("cuda"):
         return 0
     if ":" in str(device):
@@ -315,14 +291,12 @@ def device_index(device: Optional[str]) -> int:
     return 0
 
 
-def maybe_set_cuda_device(device: Optional[str]):
-    """Maybe set cuda device helper function."""
+def maybe_set_cuda_device(device: str | None):
     if device and str(device).startswith("cuda") and torch.cuda.is_available():
         torch.cuda.set_device(device_index(device))
 
 
-def prepare_lyra2_runtime_root(repo_root: str, weights_root: Optional[str] = None) -> str:
-    """Prepare lyra2 runtime root helper function."""
+def prepare_lyra2_runtime_root(repo_root: str, weights_root: str | None = None) -> str:
     repo_root_path = Path(repo_root).expanduser().resolve()
     weights_root_path = Path(weights_root).expanduser().resolve() if weights_root else repo_root_path
 
@@ -339,7 +313,6 @@ def prepare_lyra2_runtime_root(repo_root: str, weights_root: Optional[str] = Non
 
 @contextmanager
 def working_directory(path: str):
-    """Working directory helper function."""
     previous = os.getcwd()
     os.chdir(path)
     try:

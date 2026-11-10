@@ -12,7 +12,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR
+from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR
 
 from .presentation import print_details
 from .utils import (
@@ -29,7 +29,7 @@ _BENCHMARK_RUN_MODE_CHOICES = ("normalizer", "official-run", "official-validatio
 
 def execute_run_plan_file(args: argparse.Namespace):
     """Load and execute a run-plan JSON file through the evaluation runner."""
-    from worldfoundry.evaluation.runner import evaluate_request_from_run_plan, execute_evaluate_run, load_run_plan
+    from worldfoundry.evals.runner import evaluate_request_from_run_plan, execute_evaluate_run, load_run_plan
 
     plan = load_run_plan(args.plan)
     request = replace(
@@ -86,7 +86,7 @@ def _resolved_model_run_options(args: argparse.Namespace):
 
 def _run_model_parameters(args: argparse.Namespace) -> dict[str, Any]:
     """Merge legacy KEY=VALUE parameters with typed model-specific load options."""
-    from worldfoundry.evaluation.models.pipelines.loading import GENERATION_DEFAULTS_PARAMETER
+    from worldfoundry.evals.models.pipelines.loading import GENERATION_DEFAULTS_PARAMETER
 
     resolution = _resolved_model_run_options(args)
     parameters = _deep_merge_mapping(
@@ -122,7 +122,7 @@ def _suite_presets_declare_models(args: argparse.Namespace) -> bool:
     if not suite_ids:
         return False
     try:
-        from worldfoundry.evaluation.runner import get_model_benchmark_suite_preset
+        from worldfoundry.evals.runner import get_model_benchmark_suite_preset
 
         return all(
             bool(get_model_benchmark_suite_preset(suite_id, args.suite_preset_path).get("model_ids"))
@@ -143,7 +143,7 @@ def _run_output_artifact(args: argparse.Namespace) -> str | None:
 
 def _worldfoundry_run_request_from_args(args: argparse.Namespace):
     """Build a ``WorldFoundryRunRequest`` from CLI args for the unified facade."""
-    from worldfoundry.evaluation.framework import WorldFoundryRunRequest
+    from worldfoundry.evals.framework import WorldFoundryRunRequest
 
     return WorldFoundryRunRequest(
         output_dir=args.output_dir,
@@ -202,7 +202,7 @@ def _worldfoundry_run_request_from_args(args: argparse.Namespace):
 
 def _handle_worldfoundry_run(args: argparse.Namespace) -> int:
     """Run the unified worldfoundry facade and return the framework exit code."""
-    from worldfoundry.evaluation.framework import run_worldfoundry
+    from worldfoundry.evals.framework import run_worldfoundry
 
     performance_profile = getattr(args, "performance_profile", "balanced")
     if performance_profile == "throughput":
@@ -233,7 +233,7 @@ def _handle_worldfoundry_run(args: argparse.Namespace) -> int:
 
 def _model_run_plan(args: argparse.Namespace) -> dict[str, Any]:
     """Build a side-effect-free report of the resolved model-specific configuration."""
-    from worldfoundry.evaluation.models.pipelines.loading import GENERATION_DEFAULTS_PARAMETER
+    from worldfoundry.evals.models.pipelines.loading import GENERATION_DEFAULTS_PARAMETER
 
     schema = getattr(args, "model_run_schema", None)
     if schema is None:
@@ -307,8 +307,8 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
     if missing and args.requests_path is None:
         raise CliUsageError(f"direct {schema.model_id} inference requires {', '.join(missing)}")
 
-    from worldfoundry.evaluation.api import GenerationRequest
-    from worldfoundry.evaluation.runner import EvaluateRunRequest, execute_evaluate_run
+    from worldfoundry.evals.api import GenerationRequest
+    from worldfoundry.evals.runner import EvaluateRunRequest, execute_evaluate_run
 
     requests = None
     if args.requests_path is None:
@@ -439,7 +439,7 @@ def _handle_run(args: argparse.Namespace) -> int:
 
 def _handle_run_in_process(args: argparse.Namespace) -> int:
     from worldfoundry.cli.utils import resolve_cli_benchmark_for_materialize
-    from worldfoundry.evaluation.runner import (
+    from worldfoundry.evals.runner import (
         EvaluateRunRequest,
         execute_evaluate_run,
         materialize_requests_from_benchmark,

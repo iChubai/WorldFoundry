@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
-from worldfoundry.evaluation.models.catalog.registry import discover_model_registry
-from worldfoundry.evaluation.models.runtime.assets import load_runtime_asset_profile_by_id
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.catalog.registry import discover_model_registry
+from worldfoundry.evals.models.runtime.assets import load_runtime_asset_profile_by_id
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.pipelines.matrix_game.pipeline_matrix_game_1 import MatrixGame1Pipeline
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.studio.inference.catalog import discover_catalog, find_entry

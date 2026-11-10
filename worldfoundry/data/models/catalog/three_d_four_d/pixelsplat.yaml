@@ -26,7 +26,7 @@ integration:
   - Original convolutional re10k.ckpt and acid.ckpt are supported through the public
     pipeline with local rasterization dependencies and calibrated input views.
 runtime_profile: runtime-profile:pixelsplat
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: pixelsplat
 runner_parity:
   status: selected_checkpoint_gpu_validated

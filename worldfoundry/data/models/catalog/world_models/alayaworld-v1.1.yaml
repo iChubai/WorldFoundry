@@ -40,7 +40,7 @@ integration:
     and GPU artifact parity remain pending.
   - Single-GPU inference bridge; full-window native VAE encoding may use more peak
     memory than the upstream streaming encoder.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:alayaworld-v1.1
 pipeline_binding: alayaworld-v1.1
 runner_parity:

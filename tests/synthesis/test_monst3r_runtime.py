@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from worldfoundry.evaluation.utils import REPO_ROOT
+from worldfoundry.evals.utils import REPO_ROOT
 from worldfoundry.studio.inference.catalog import find_entry
 from worldfoundry.base_models.three_dimensions.three_d_four_d.runtime import (
     ThreeDFourDRuntimeSynthesis,

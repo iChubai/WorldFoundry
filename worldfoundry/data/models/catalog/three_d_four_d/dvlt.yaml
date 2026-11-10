@@ -43,7 +43,7 @@ integration:
     GLB export path when CUDA, dependencies, source, inputs, and weights are
     available locally.
 runtime_profile: runtime-profile:dvlt
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: dvlt
 runner_parity:
   status: pending

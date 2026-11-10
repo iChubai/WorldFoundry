@@ -39,7 +39,7 @@ python scripts/setup/prepare_benchmark_assets.py \
 
 ```bash
 PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" -m \
-  worldfoundry.evaluation.tasks.execution.orchestration.runtime_preflight \
+  worldfoundry.evals.tasks.execution.orchestration.runtime_preflight \
   --profile <benchmark-id> \
   --manifest worldfoundry/data/benchmarks/runtime_profiles/official/<benchmark-id>.yaml \
   --output-dir tmp/worldfoundry_preflight/<benchmark-id> \

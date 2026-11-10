@@ -97,12 +97,10 @@ class Pi3Operator(BaseOperator):
 
     @staticmethod
     def _is_video(path: str) -> bool:
-        """Is video implementation."""
         VIDEO_EXTS = {".mp4", ".avi", ".mov", ".mkv", ".webm", ".flv"}
         return os.path.splitext(path)[1].lower() in VIDEO_EXTS
 
     def _load_video_frames(self, video_path: str, interval: int = 10) -> list[np.ndarray]:
-        """Load video frames implementation."""
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             raise ValueError(f"Could not open video: {video_path}")
@@ -123,7 +121,6 @@ class Pi3Operator(BaseOperator):
         return frames
 
     def _load_single_image(self, image_path: str) -> np.ndarray:
-        """Load single image implementation."""
         raw_image = cv2.imread(image_path)
         if raw_image is None:
             raise ValueError(f"Could not read image from {image_path}")
@@ -136,7 +133,6 @@ class Pi3Operator(BaseOperator):
         patch_size: int = 14,
         pixel_limit: int = 255000,
     ) -> tuple:
-        """Compute target size implementation."""
         scale = math.sqrt(pixel_limit / (W_orig * H_orig)) if W_orig * H_orig > 0 else 1
         W_target, H_target = W_orig * scale, H_orig * scale
         k, m = round(W_target / patch_size), round(H_target / patch_size)
@@ -148,7 +144,15 @@ class Pi3Operator(BaseOperator):
         return max(1, k) * patch_size, max(1, m) * patch_size
 
     def images_to_tensor(self, images: list[np.ndarray], device: str = "cuda") -> torch.Tensor:
-        """Images to tensor implementation."""
+        """Resize images with Lanczos to one patch-aligned size and stack them as a ``[1, N, 3, H, W]`` tensor.
+
+        The target size comes from the first image: multiples of ``PATCH_SIZE`` per side, close to its
+        aspect ratio, with at most ``PIXEL_LIMIT`` pixels. Non-uint8 images are taken as values in
+        [0, 1]; grayscale images are replicated to three channels. The result lies in [0, 1].
+
+        Raises:
+            ValueError: ``images`` is empty.
+        """
         if len(images) == 0:
             raise ValueError("No images provided")
 

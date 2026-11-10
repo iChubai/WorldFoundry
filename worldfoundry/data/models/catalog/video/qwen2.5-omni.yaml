@@ -1,6 +1,6 @@
 id: qwen2.5-omni
 name: Qwen2.5-Omni
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: qwen2.5-omni
 aliases:
 - qwen2p5-omni

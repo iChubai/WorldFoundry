@@ -23,7 +23,7 @@ integration:
   status: runtime_ported
   notes:
   - In-tree VGGT two-stage 3DGS pipeline is registered; distinct from vggt-omega and vggt-world catalog entries.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: vggt
 runner_parity:
   status: pending

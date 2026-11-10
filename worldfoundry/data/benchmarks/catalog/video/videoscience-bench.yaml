@@ -85,13 +85,13 @@ runner:
   scoring:
     engines: [in_tree]
     hooks:
-      in_tree: worldfoundry.evaluation.tasks.execution.runners.videoscience_bench.videoscience_bench_in_tree_evaluator:IN_TREE_CONFIG
-  official_script: worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
+      in_tree: worldfoundry.evals.tasks.execution.runners.videoscience_bench.videoscience_bench_in_tree_evaluator:IN_TREE_CONFIG
+  official_script: worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.videoscience_bench.run_videoscience_bench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.videoscience_bench.run_videoscience_bench_official_runner
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoScienceBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
   validation_command:
   - wf
   - zoo
@@ -109,7 +109,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
+    root: worldfoundry/evals/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
     repo_url: https://github.com/hao-ai-lab/VideoScience.git
     repo_revision: 0b3bb2da74388991bf842bca1096a6a25d3c9311
     root_env: WORLDFOUNDRY_VIDEOSCIENCE_BENCH_ROOT
@@ -153,12 +153,12 @@ blockers:
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/videoscience-bench.yaml
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
+  - worldfoundry/evals/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
 official_runner_script: 
-  worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
+  worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoScienceBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

@@ -21,10 +21,10 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def run(args: argparse.Namespace) -> Path:
+    import huggingface_hub
     import numpy as np
     import torch
     from PIL import Image
-    import huggingface_hub
 
     classes = [label.strip() for label in args.classes.split(",") if label.strip()]
     if not classes:
@@ -112,7 +112,7 @@ def run(args: argparse.Namespace) -> Path:
     path = args.output_path.resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path, **output)
-    print(json.dumps({"output_path": str(path), "detections": int(len(output["scores"])), "keys": list(output)}))
+    print(json.dumps({"output_path": str(path), "detections": len(output["scores"]), "keys": list(output)}))
     return path
 
 

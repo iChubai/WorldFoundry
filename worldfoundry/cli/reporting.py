@@ -13,7 +13,7 @@ from .utils import CliUsageError, json_dump
 
 def _handle_compare_runs(args: argparse.Namespace) -> int:
     """Compare WorldFoundry run results, optionally selecting runs from an index."""
-    from worldfoundry.evaluation.reporting import (
+    from worldfoundry.evals.reporting import (
         build_markdown_comparison,
         run_paths_from_index,
         write_run_comparison,
@@ -92,7 +92,7 @@ def _handle_compare_runs(args: argparse.Namespace) -> int:
 
 def _handle_index_runs(args: argparse.Namespace) -> int:
     """Index WorldFoundry run directories below one or more roots."""
-    from worldfoundry.evaluation.reporting import build_markdown_run_index, write_run_index
+    from worldfoundry.evals.reporting import build_markdown_run_index, write_run_index
 
     try:
         index = write_run_index(
@@ -118,14 +118,14 @@ def _handle_index_runs(args: argparse.Namespace) -> int:
 
 def _validate_artifact_kind_choices() -> tuple[str, ...]:
     """Resolve the accepted artifact-kind choices from the reporting module."""
-    from worldfoundry.evaluation.reporting import CONTRACT_ARTIFACT_KIND_CHOICES
+    from worldfoundry.evals.reporting import CONTRACT_ARTIFACT_KIND_CHOICES
 
     return CONTRACT_ARTIFACT_KIND_CHOICES
 
 
 def _handle_validate_artifact(args: argparse.Namespace) -> int:
     """Validate WorldFoundry summary, scorecard, index, comparison, or suite artifacts."""
-    from worldfoundry.evaluation.reporting import (
+    from worldfoundry.evals.reporting import (
         build_markdown_contract_validation,
         normalize_contract_artifact_kind,
         validate_contract_paths,

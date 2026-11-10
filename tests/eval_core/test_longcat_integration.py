@@ -11,9 +11,9 @@ import pytest
 
 pytest.importorskip("torch")
 
-from worldfoundry.evaluation.api import GenerationRequest
-from worldfoundry.evaluation.models import resolve_model_zoo_runner
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.api import GenerationRequest
+from worldfoundry.evals.models import resolve_model_zoo_runner
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.pipelines.longcat_video.pipeline_longcat_video import LongCatVideoPipeline
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime import tokenizer_loading, video_io
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.pipeline_longcat_video import (

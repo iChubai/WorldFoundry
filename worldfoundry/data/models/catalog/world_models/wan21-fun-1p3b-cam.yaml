@@ -8,7 +8,7 @@ source:
   license: apache-2.0
 checkpoint: alibaba-pai/Wan2.1-Fun-V1.1-1.3B-Control-Camera
 runtime_profile: runtime-profile:wan21-fun-1p3b-cam
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: wan21-fun-1p3b-cam
 integration:
   status: checkpoint_gpu_validated

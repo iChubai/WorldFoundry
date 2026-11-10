@@ -49,9 +49,9 @@ metadata:
     350-instance manifest, and upstream submission evidence.
   - Leaderboard answers are withheld, so local regression must use public outputs or caller-provided official-shaped
     result files.
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldModelBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
   official_runner_script:
-    worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
+    worldfoundry/evals/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
   prompt_suite:
     hf_dataset_id: Efficient-Large-Model/worldmodelbench
     split: test
@@ -63,7 +63,7 @@ metadata:
     kind: in_tree_official_source
     repo_url: https://github.com/WorldModelBench-Team/WorldModelBench
     repo_revision: 00b7aa17a05f9fd1ab5c8f66bcf476d04c9c33bf
-    root: worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime
+    root: worldfoundry/evals/tasks/execution/runners/worldmodelbench/runtime
     root_env: WORLDFOUNDRY_WORLDMODELBENCH_ROOT
     results_path_env: WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH
   release_status: experimental
@@ -75,12 +75,12 @@ metadata:
     - cache/worldfoundry/data/hfd_datasets/datasets--Efficient-Large-Model--worldmodelbench
     - cache/worldfoundry/data/hfd_datasets/worldmodelbench
     in_tree_runtime_paths:
-    - worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
+    - worldfoundry/evals/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
     - worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json
     task_yaml: worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldModelBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -88,7 +88,7 @@ metadata:
     normalizer_verified: true
   official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
-    target: worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
+    target: worldfoundry/evals/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
     status: implemented
     protocol: worldmodelbench_official_in_tree
     official_result_normalization:
@@ -169,9 +169,9 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldModelBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
       runner_script:
-        worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
+        worldfoundry/evals/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
       required_judge: true
       metric_ids:
       - instruction_following

@@ -19,7 +19,6 @@ from worldfoundry.base_models.three_dimensions.depth.dvlt.runtime import (
     DVLTRuntime,
     load_runtime,
 )
-
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 
 
@@ -48,7 +47,7 @@ class DVLTSynthesis(BaseSynthesis):
         self.runtime = runtime
 
     @classmethod
-    def from_pretrained(cls, *args: Any, **kwargs: Any) -> "DVLTSynthesis":
+    def from_pretrained(cls, *args: Any, **kwargs: Any) -> DVLTSynthesis:
         """
         Factory method to create a DVLTSynthesis instance by loading a pretrained
         DVLT runtime.

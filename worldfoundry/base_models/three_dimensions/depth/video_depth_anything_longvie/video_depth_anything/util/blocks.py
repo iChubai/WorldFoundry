@@ -1,17 +1,7 @@
-"""Module for base_models -> three_dimensions -> depth -> video_depth_anything_longvie -> video_depth_anything -> util -> blocks.py functionality."""
-
 import torch.nn as nn
 
 
 def _make_scratch(in_shape, out_shape, groups=1, expand=False):
-    """Helper function to make scratch.
-
-    Args:
-        in_shape: The in shape.
-        out_shape: The out shape.
-        groups: The groups.
-        expand: The expand.
-    """
     scratch = nn.Module()
 
     out_shape1 = out_shape
@@ -48,8 +38,7 @@ class ResidualConvUnit(nn.Module):
     """Residual convolution module."""
 
     def __init__(self, features, activation, bn):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -59,13 +48,9 @@ class ResidualConvUnit(nn.Module):
 
         self.groups = 1
 
-        self.conv1 = nn.Conv2d(
-            features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups
-        )
+        self.conv1 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups)
 
-        self.conv2 = nn.Conv2d(
-            features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups
-        )
+        self.conv2 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups)
 
         if self.bn is True:
             self.bn1 = nn.BatchNorm2d(features)
@@ -76,8 +61,7 @@ class ResidualConvUnit(nn.Module):
         self.skip_add = nn.quantized.FloatFunctional()
 
     def forward(self, x):
-        """Forward pass.
-
+        """
         Args:
             x (tensor): input
 
@@ -102,8 +86,6 @@ class ResidualConvUnit(nn.Module):
 
 
 class FeatureFusionBlock(nn.Module):
-    """Feature fusion block."""
-
     def __init__(
         self,
         features,
@@ -114,8 +96,7 @@ class FeatureFusionBlock(nn.Module):
         align_corners=True,
         size=None,
     ):
-        """Init.
-
+        """
         Args:
             features (int): number of features
         """
@@ -131,9 +112,7 @@ class FeatureFusionBlock(nn.Module):
         if self.expand is True:
             out_features = features // 2
 
-        self.out_conv = nn.Conv2d(
-            features, out_features, kernel_size=1, stride=1, padding=0, bias=True, groups=1
-        )
+        self.out_conv = nn.Conv2d(features, out_features, kernel_size=1, stride=1, padding=0, bias=True, groups=1)
 
         self.resConfUnit1 = ResidualConvUnit(features, activation, bn)
         self.resConfUnit2 = ResidualConvUnit(features, activation, bn)
@@ -143,8 +122,7 @@ class FeatureFusionBlock(nn.Module):
         self.size = size
 
     def forward(self, *xs, size=None):
-        """Forward pass.
-
+        """
         Returns:
             tensor: output
         """

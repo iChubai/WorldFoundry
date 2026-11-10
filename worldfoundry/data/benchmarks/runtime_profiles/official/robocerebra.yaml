@@ -32,7 +32,7 @@ required_packages:
 - numpy
 required_paths:
 - id: official_result_normalizer
-  path: worldfoundry/evaluation/tasks/embodied/normalizer.py
+  path: worldfoundry/evals/tasks/embodied/normalizer.py
 - id: task_yaml
   path: worldfoundry/data/benchmarks/tasks/external/robocerebra.yaml
 requires_cuda_visibility: false

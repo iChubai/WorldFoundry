@@ -27,7 +27,7 @@ integration:
   status: verified
   notes:
   - In-tree VMem runtime at worldfoundry/synthesis/visual_generation/vmem/vmem_runtime; no external checkout is required.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: vmem
 runner_parity:
   status: verified

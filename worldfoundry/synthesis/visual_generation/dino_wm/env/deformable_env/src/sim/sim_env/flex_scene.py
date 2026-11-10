@@ -1,7 +1,7 @@
 import numpy as np
 import pyflex
 
-from .scenes import *
+from .scenes import *  # noqa: F403 - Upstream star import kept as written.
 
 
 class FlexScene:
@@ -18,13 +18,13 @@ class FlexScene:
 
         if self.obj == "rope":
             self.env_idx = 26
-            self.scene_params, self.property_params = rope_scene(obj_params)
+            self.scene_params, self.property_params = rope_scene(obj_params)  # noqa: F405 - Name comes from the upstream star import.
         elif self.obj == "granular":
             self.env_idx = 35
-            self.scene_params, self.property_params = granular_scene(obj_params)
+            self.scene_params, self.property_params = granular_scene(obj_params)  # noqa: F405 - Name comes from the upstream star import.
         elif self.obj == "cloth":
             self.env_idx = 29
-            self.scene_params, self.property_params = cloth_scene(obj_params)
+            self.scene_params, self.property_params = cloth_scene(obj_params)  # noqa: F405 - Name comes from the upstream star import.
         else:
             raise ValueError("Unknown Scene.")
 

@@ -148,12 +148,14 @@ class HyNomasConditioner:
         boundaries = []
         for variant in action_variants(prompt):
             other = self._tokenize(variant, self.length + crop)["input_ids"][0].tolist()
-            common = next((i for i, (a, b) in enumerate(zip(ids, other)) if a != b), min(len(ids), len(other)))
+            common = next(
+                (i for i, (a, b) in enumerate(zip(ids, other, strict=False)) if a != b), min(len(ids), len(other))
+            )
             boundaries.append(max(boundaries[-1] if boundaries else 0, min(self.length - 1, common - crop)))
         return {
             "encoder_hidden_states": encoded.hidden_states[-3][:, crop:].to(device=device, dtype=dtype),
             "encoder_attention_mask": tokens["attention_mask"][:, crop:].to(device=device),
-            "action_text_offsets": [boundaries + [min(self.length, int(tokens["attention_mask"].sum()))]]
+            "action_text_offsets": [boundaries + [min(self.length, int(tokens["attention_mask"].sum()))]]  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             if boundaries
             else None,
             "cache_action_start": boundaries[0] if boundaries else None,

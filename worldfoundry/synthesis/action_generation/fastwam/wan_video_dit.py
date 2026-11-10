@@ -1,23 +1,31 @@
 # SPDX-License-Identifier: MIT
 # Derived from FastWAM official source revision 45d8e1458921d83f8ad6cf9ce993d371208dabd0.
+import logging
+import math
+from typing import Any
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import math
-from typing import Any, Dict, Tuple, Optional
 from einops import rearrange
-from .gradient import gradient_checkpoint_forward
+
 from worldfoundry.core.attention import (
     native_sdpa_priority,
     scaled_dot_product_attention,
 )
 
-import logging
+from .gradient import gradient_checkpoint_forward
 
 logger = logging.getLogger(__name__)
 
 
-def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, ctx_mask: Optional[torch.Tensor] = None, compatibility_mode=True):
+def flash_attention(
+    q: torch.Tensor,
+    k: torch.Tensor,
+    v: torch.Tensor,
+    num_heads: int,
+    ctx_mask: torch.Tensor | None = None,
+    compatibility_mode=True,
+):
     if compatibility_mode:
         q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
         k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
@@ -32,17 +40,20 @@ def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads
         x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
         return x
     else:
-        raise NotImplementedError("Only compatibility mode is implemented for flash attention. Please set compatibility_mode=True.")
-
+        raise NotImplementedError(
+            "Only compatibility mode is implemented for flash attention. Please set compatibility_mode=True."
+        )
 
 
 def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor):
-    return (x * (1 + scale) + shift)
+    return x * (1 + scale) + shift
 
 
 def sinusoidal_embedding_1d(dim, position):
-    sinusoid = torch.outer(position.type(torch.float64), torch.pow(
-        10000, -torch.arange(dim//2, dtype=torch.float64, device=position.device).div(dim//2)))
+    sinusoid = torch.outer(
+        position.type(torch.float64),
+        torch.pow(10000, -torch.arange(dim // 2, dtype=torch.float64, device=position.device).div(dim // 2)),
+    )
     x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
     return x.to(position.dtype)
 
@@ -57,8 +68,7 @@ def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
 
 def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
     # 1d rope precompute
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)
-                   [: (dim // 2)].double() / dim))
+    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].double() / dim))
     freqs = torch.outer(torch.arange(end, device=freqs.device), freqs)
     freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
     return freqs_cis
@@ -66,8 +76,7 @@ def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
 
 def rope_apply(x, freqs, num_heads):
     x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)
-    x_out = torch.view_as_complex(x.to(torch.float64).reshape(
-        x.shape[0], x.shape[1], x.shape[2], -1, 2))
+    x_out = torch.view_as_complex(x.to(torch.float64).reshape(x.shape[0], x.shape[1], x.shape[2], -1, 2))
     freqs = freqs.to(torch.complex64) if freqs.device.type == "npu" else freqs
     x_out = torch.view_as_real(x_out * freqs).flatten(2)
     return x_out.to(x.dtype)
@@ -197,7 +206,7 @@ class SelfAttention(nn.Module):
 
         # self.attn = AttentionModule(self.num_heads)
 
-    def forward(self, x, freqs, self_attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x, freqs, self_attn_mask: torch.Tensor | None = None):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(x))
         v = self.v(x)
@@ -208,7 +217,13 @@ class SelfAttention(nn.Module):
 
 
 class CrossAttention(nn.Module):
-    def __init__(self, hidden_dim: int, attn_head_dim: int, num_heads: int, eps: float = 1e-6,):
+    def __init__(
+        self,
+        hidden_dim: int,
+        attn_head_dim: int,
+        num_heads: int,
+        eps: float = 1e-6,
+    ):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.num_heads = num_heads
@@ -224,7 +239,7 @@ class CrossAttention(nn.Module):
 
         # self.attn = AttentionModule(self.num_heads)
 
-    def forward(self, x: torch.Tensor, ctx: torch.Tensor, ctx_mask: Optional[torch.Tensor] = None):
+    def forward(self, x: torch.Tensor, ctx: torch.Tensor, ctx_mask: torch.Tensor | None = None):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(ctx))
         v = self.v(ctx)
@@ -233,14 +248,17 @@ class CrossAttention(nn.Module):
 
 
 class GateModule(nn.Module):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         super().__init__()
 
     def forward(self, x, gate, residual):
         return x + gate * residual
 
+
 class DiTBlock(nn.Module):
-    def __init__(self,  hidden_dim: int, attn_head_dim: int, num_heads: int, ffn_dim: int, eps: float = 1e-6):
+    def __init__(self, hidden_dim: int, attn_head_dim: int, num_heads: int, ffn_dim: int, eps: float = 1e-6):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.attn_head_dim = attn_head_dim
@@ -248,29 +266,34 @@ class DiTBlock(nn.Module):
         self.ffn_dim = ffn_dim
 
         self.self_attn = SelfAttention(hidden_dim, attn_head_dim, num_heads, eps)
-        self.cross_attn = CrossAttention(
-            hidden_dim, attn_head_dim, num_heads, eps)
+        self.cross_attn = CrossAttention(hidden_dim, attn_head_dim, num_heads, eps)
         self.norm1 = nn.LayerNorm(hidden_dim, eps=eps, elementwise_affine=False)
         self.norm2 = nn.LayerNorm(hidden_dim, eps=eps, elementwise_affine=False)
         self.norm3 = nn.LayerNorm(hidden_dim, eps=eps)
-        self.ffn = nn.Sequential(nn.Linear(hidden_dim, ffn_dim), nn.GELU(
-            approximate='tanh'), nn.Linear(ffn_dim, hidden_dim))
+        self.ffn = nn.Sequential(
+            nn.Linear(hidden_dim, ffn_dim), nn.GELU(approximate="tanh"), nn.Linear(ffn_dim, hidden_dim)
+        )
         self.modulation = nn.Parameter(torch.randn(1, 6, hidden_dim) / hidden_dim**0.5)
         self.gate = GateModule()
 
-    def forward(self, x, context, t_mod, freqs, context_mask=None, self_attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x, context, t_mod, freqs, context_mask=None, self_attn_mask: torch.Tensor | None = None):
         if context_mask is not None and context_mask.dim() == 3:
-            context_mask = context_mask.unsqueeze(1) # (B, 1, seq_len, context_len), 1 for heads
+            context_mask = context_mask.unsqueeze(1)  # (B, 1, seq_len, context_len), 1 for heads
         has_seq = len(t_mod.shape) == 4
         chunk_dim = 2 if has_seq else 1
         # msa: multi-head self-attention  mlp: multi-layer perceptron
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
-            self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(6, dim=chunk_dim)
+            self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod
+        ).chunk(6, dim=chunk_dim)
         if has_seq:
             # means t_mod has separate modulation for each token, otherwise same modulation for all tokens in the block
             shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
-                shift_msa.squeeze(2), scale_msa.squeeze(2), gate_msa.squeeze(2),
-                shift_mlp.squeeze(2), scale_mlp.squeeze(2), gate_mlp.squeeze(2),
+                shift_msa.squeeze(2),
+                scale_msa.squeeze(2),
+                gate_msa.squeeze(2),
+                shift_mlp.squeeze(2),
+                scale_mlp.squeeze(2),
+                gate_mlp.squeeze(2),
             )
         input_x = modulate(self.norm1(x), shift_msa, scale_msa)
         x = self.gate(x, gate_msa, self.self_attn(input_x, freqs, self_attn_mask=self_attn_mask))
@@ -288,7 +311,7 @@ class MLP(torch.nn.Module):
             nn.Linear(in_dim, in_dim),
             nn.GELU(),
             nn.Linear(in_dim, out_dim),
-            nn.LayerNorm(out_dim)
+            nn.LayerNorm(out_dim),
         )
         self.has_pos_emb = has_pos_emb
         if has_pos_emb:
@@ -301,7 +324,7 @@ class MLP(torch.nn.Module):
 
 
 class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float):
+    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
         super().__init__()
         self.dim = dim
         self.patch_size = patch_size
@@ -311,11 +334,13 @@ class Head(nn.Module):
 
     def forward(self, x, t_mod):
         if len(t_mod.shape) == 3:
-            shift, scale = (self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)).chunk(2, dim=2)
-            x = (self.head(self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2)))
+            shift, scale = (
+                self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)
+            ).chunk(2, dim=2)
+            x = self.head(self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2))
         else:
             shift, scale = (self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(2, dim=1)
-            x = (self.head(self.norm(x) * (1 + scale) + shift))
+            x = self.head(self.norm(x) * (1 + scale) + shift)
         return x
 
 
@@ -329,7 +354,7 @@ class WanVideoDiT(torch.nn.Module):
         text_dim: int,
         freq_dim: int,
         eps: float,
-        patch_size: Tuple[int, int, int],
+        patch_size: tuple[int, int, int],
         num_heads: int,
         attn_head_dim: int,
         num_layers: int,
@@ -344,7 +369,7 @@ class WanVideoDiT(torch.nn.Module):
         fuse_vae_embedding_in_latents: bool = True,
         action_conditioned: bool = False,
         action_dim: int = 7,
-        action_group_causal_mask_mode = "causal",
+        action_group_causal_mask_mode="causal",
         video_attention_mask_mode: str = "bidirectional",
         use_gradient_checkpointing: bool = False,
     ):
@@ -366,34 +391,27 @@ class WanVideoDiT(torch.nn.Module):
         if attn_head_dim <= 0:
             raise ValueError(f"`attn_head_dim` must be > 0, got {attn_head_dim}")
         if attn_head_dim % 2 != 0:
-            raise ValueError(
-                f"`attn_head_dim` must be even for RoPE, got {attn_head_dim}"
-            )
+            raise ValueError(f"`attn_head_dim` must be even for RoPE, got {attn_head_dim}")
 
         self.action_conditioned = action_conditioned
         self.action_dim = action_dim
-        assert has_image_input == False
-        assert require_clip_embedding == False
-        assert require_vae_embedding == False and fuse_vae_embedding_in_latents == True, "Only support fusing vae embedding in latents"
+        assert has_image_input == False  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
+        assert require_clip_embedding == False  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
+        assert require_vae_embedding == False and fuse_vae_embedding_in_latents == True, (  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
+            "Only support fusing vae embedding in latents"
+        )
 
-        self.patch_embedding = nn.Conv3d(
-            in_dim, hidden_dim, kernel_size=patch_size, stride=patch_size)
+        self.patch_embedding = nn.Conv3d(in_dim, hidden_dim, kernel_size=patch_size, stride=patch_size)
         self.text_embedding = nn.Sequential(
-            nn.Linear(text_dim, hidden_dim),
-            nn.GELU(approximate='tanh'),
-            nn.Linear(hidden_dim, hidden_dim)
+            nn.Linear(text_dim, hidden_dim), nn.GELU(approximate="tanh"), nn.Linear(hidden_dim, hidden_dim)
         )
         self.time_embedding = nn.Sequential(
-            nn.Linear(freq_dim, hidden_dim),
-            nn.SiLU(),
-            nn.Linear(hidden_dim, hidden_dim)
+            nn.Linear(freq_dim, hidden_dim), nn.SiLU(), nn.Linear(hidden_dim, hidden_dim)
         )
-        self.time_projection = nn.Sequential(
-            nn.SiLU(), nn.Linear(hidden_dim, hidden_dim * 6))
-        self.blocks = nn.ModuleList([
-            DiTBlock(hidden_dim, attn_head_dim, num_heads, ffn_dim, eps)
-            for _ in range(num_layers)
-        ])
+        self.time_projection = nn.Sequential(nn.SiLU(), nn.Linear(hidden_dim, hidden_dim * 6))
+        self.blocks = nn.ModuleList(
+            [DiTBlock(hidden_dim, attn_head_dim, num_heads, ffn_dim, eps) for _ in range(num_layers)]
+        )
         self.head = Head(hidden_dim, out_dim, patch_size, eps)
         self.freqs = precompute_freqs_cis_3d(attn_head_dim)
         if has_ref_conv:
@@ -410,20 +428,24 @@ class WanVideoDiT(torch.nn.Module):
         if self.use_gradient_checkpointing:
             logger.info("Using gradient checkpointing for DiT blocks. This will save memory but use more computation.")
 
-
-    def patchify(self, x: torch.Tensor, control_camera_latents_input: Optional[torch.Tensor] = None):
+    def patchify(self, x: torch.Tensor, control_camera_latents_input: torch.Tensor | None = None):
         x = self.patch_embedding(x)
         if self.control_adapter is not None and control_camera_latents_input is not None:
             y_camera = self.control_adapter(control_camera_latents_input)
-            x = [u + v for u, v in zip(x, y_camera)]
+            x = [u + v for u, v in zip(x, y_camera, strict=False)]
             x = x[0].unsqueeze(0)
         return x
 
     def unpatchify(self, x: torch.Tensor, grid_size: torch.Tensor):
         return rearrange(
-            x, 'b (f h w) (x y z c) -> b c (f x) (h y) (w z)',
-            f=grid_size[0], h=grid_size[1], w=grid_size[2],
-            x=self.patch_size[0], y=self.patch_size[1], z=self.patch_size[2]
+            x,
+            "b (f h w) (x y z c) -> b c (f x) (h y) (w z)",
+            f=grid_size[0],
+            h=grid_size[1],
+            w=grid_size[2],
+            x=self.patch_size[0],
+            y=self.patch_size[1],
+            z=self.patch_size[2],
         )
 
     def _validate_forward_inputs(
@@ -431,8 +453,8 @@ class WanVideoDiT(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor],
-        action: Optional[torch.Tensor],
+        context_mask: torch.Tensor | None,
+        action: torch.Tensor | None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         if x.ndim != 5:
             raise ValueError(f"`latents` must be 5D [B, C, T, H, W], got shape {tuple(x.shape)}")
@@ -442,11 +464,13 @@ class WanVideoDiT(torch.nn.Module):
         if timestep.ndim != 1:
             raise ValueError(f"`timestep` must be 1D [B] or [1], got shape {tuple(timestep.shape)}")
         if self.action_conditioned:
-            allow_text_only_single_frame = (num_latent_frames == 1 and action is None)
+            allow_text_only_single_frame = num_latent_frames == 1 and action is None
             if not allow_text_only_single_frame:
                 assert action is not None, "Action input is required for action-conditioned model."
                 if action.ndim != 3:
-                    raise ValueError(f"`action` must be 3D [B, action_horizon, action_dim], got shape {tuple(action.shape)}")
+                    raise ValueError(
+                        f"`action` must be 3D [B, action_horizon, action_dim], got shape {tuple(action.shape)}"
+                    )
                 if action.shape[2] != self.action_dim:
                     raise ValueError(f"`action` last dimension must be {self.action_dim}, got {action.shape[2]}")
                 if num_latent_frames <= 1:
@@ -461,7 +485,9 @@ class WanVideoDiT(torch.nn.Module):
             if context_mask.ndim != 2:
                 raise ValueError(f"`context_mask` must be 2D [B, L], got shape {tuple(context_mask.shape)}")
             if context_mask.shape[0] != context.shape[0] or context_mask.shape[1] != context.shape[1]:
-                raise ValueError(f"`context_mask` shape must match `context` shape [B, L], got {tuple(context_mask.shape)} vs {tuple(context.shape)}")
+                raise ValueError(
+                    f"`context_mask` shape must match `context` shape [B, L], got {tuple(context_mask.shape)} vs {tuple(context.shape)}"
+                )
 
         batch_size = x.shape[0]
         if batch_size != context.shape[0]:
@@ -469,14 +495,10 @@ class WanVideoDiT(torch.nn.Module):
                 x = x.expand(context.shape[0], -1, -1, -1, -1)
                 batch_size = context.shape[0]
             else:
-                raise ValueError(
-                    f"Batch mismatch between latents and context: {batch_size} vs {context.shape[0]}."
-                )
+                raise ValueError(f"Batch mismatch between latents and context: {batch_size} vs {context.shape[0]}.")
 
         if timestep.shape[0] not in (1, batch_size):
-            raise ValueError(
-                f"`timestep` length must be 1 or batch_size({batch_size}), got {timestep.shape[0]}"
-            )
+            raise ValueError(f"`timestep` length must be 1 or batch_size({batch_size}), got {timestep.shape[0]}")
         if timestep.shape[0] == 1 and batch_size > 1:
             assert not self.training, "During training, timestep length must match batch_size."
             timestep = timestep.expand(batch_size)
@@ -503,9 +525,7 @@ class WanVideoDiT(torch.nn.Module):
                     f"got {video_seq_len} and {video_tokens_per_frame}"
                 )
             num_video_frames = video_seq_len // video_tokens_per_frame
-            frame_causal = torch.tril(
-                torch.ones((num_video_frames, num_video_frames), dtype=torch.bool, device=device)
-            )
+            frame_causal = torch.tril(torch.ones((num_video_frames, num_video_frames), dtype=torch.bool, device=device))
             return frame_causal.repeat_interleave(video_tokens_per_frame, dim=0).repeat_interleave(
                 video_tokens_per_frame, dim=1
             )
@@ -523,11 +543,11 @@ class WanVideoDiT(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor] = None,
-        action: Optional[torch.Tensor] = None,
+        context_mask: torch.Tensor | None = None,
+        action: torch.Tensor | None = None,
         fuse_vae_embedding_in_latents: bool = False,
-        control_camera_latents_input: Optional[torch.Tensor] = None,
-    ) -> Dict[str, Any]:
+        control_camera_latents_input: torch.Tensor | None = None,
+    ) -> dict[str, Any]:
         x, timestep, context_mask = self._validate_forward_inputs(
             x=x,
             timestep=timestep,
@@ -571,14 +591,18 @@ class WanVideoDiT(torch.nn.Module):
         f_rope = frame_freqs[:num_frames].view(num_frames, 1, 1, -1)
         h_rope = height_freqs[:grid_h].view(1, grid_h, 1, -1)
         w_rope = width_freqs[:grid_w].view(1, 1, grid_w, -1)
-        freqs = torch.cat(
-            (
-                f_rope.expand(-1, grid_h, grid_w, -1),
-                h_rope.expand(num_frames, -1, grid_w, -1),
-                w_rope.expand(num_frames, grid_h, -1, -1),
-            ),
-            dim=-1,
-        ).reshape(num_frames * grid_h * grid_w, 1, -1).to(x.device)
+        freqs = (
+            torch.cat(
+                (
+                    f_rope.expand(-1, grid_h, grid_w, -1),
+                    h_rope.expand(num_frames, -1, grid_w, -1),
+                    w_rope.expand(num_frames, grid_h, -1, -1),
+                ),
+                dim=-1,
+            )
+            .reshape(num_frames * grid_h * grid_w, 1, -1)
+            .to(x.device)
+        )
         tokens = rearrange(x, "b c f h w -> b (f h w) c")
         return {
             "tokens": tokens,
@@ -593,7 +617,7 @@ class WanVideoDiT(torch.nn.Module):
             },
         }
 
-    def post_dit(self, x_tokens: torch.Tensor, pre_state: Dict[str, Any]) -> torch.Tensor:
+    def post_dit(self, x_tokens: torch.Tensor, pre_state: dict[str, Any]) -> torch.Tensor:
         f, h, w = pre_state["meta"]["grid_size"]
         x = self.head(x_tokens, pre_state["t"])
         x = self.unpatchify(x, (f, h, w))
@@ -604,8 +628,8 @@ class WanVideoDiT(torch.nn.Module):
         x: torch.Tensor,
         timestep: torch.Tensor,
         context: torch.Tensor,
-        context_mask: Optional[torch.Tensor] = None,
-        action: Optional[torch.Tensor] = None,
+        context_mask: torch.Tensor | None = None,
+        action: torch.Tensor | None = None,
         fuse_vae_embedding_in_latents: bool = False,
     ):
         pre_state = self.pre_dit(
@@ -621,20 +645,31 @@ class WanVideoDiT(torch.nn.Module):
         t_mod = pre_state["t_mod"]
         freqs = pre_state["freqs"]
         context_attn_mask = pre_state["context_mask"]
-        self_attn_mask = self.build_video_to_video_mask(
-            video_seq_len=x_tokens.shape[1],
-            video_tokens_per_frame=int(pre_state["meta"]["tokens_per_frame"]),
-            device=x_tokens.device,
-        ) if self.video_attention_mask_mode != "bidirectional" else None # special rule for faster speed
+        self_attn_mask = (
+            self.build_video_to_video_mask(
+                video_seq_len=x_tokens.shape[1],
+                video_tokens_per_frame=int(pre_state["meta"]["tokens_per_frame"]),
+                device=x_tokens.device,
+            )
+            if self.video_attention_mask_mode != "bidirectional"
+            else None
+        )  # special rule for faster speed
 
         for block in self.blocks:
             if self.use_gradient_checkpointing:
                 x_tokens = gradient_checkpoint_forward(
                     block,
                     self.use_gradient_checkpointing,
-                    x_tokens, context_emb, t_mod, freqs, context_mask=context_attn_mask, self_attn_mask=self_attn_mask
+                    x_tokens,
+                    context_emb,
+                    t_mod,
+                    freqs,
+                    context_mask=context_attn_mask,
+                    self_attn_mask=self_attn_mask,
                 )
             else:
-                x_tokens = block(x_tokens, context_emb, t_mod, freqs, context_mask=context_attn_mask, self_attn_mask=self_attn_mask)
+                x_tokens = block(
+                    x_tokens, context_emb, t_mod, freqs, context_mask=context_attn_mask, self_attn_mask=self_attn_mask
+                )
 
         return self.post_dit(x_tokens, pre_state)

@@ -7,6 +7,7 @@ import shutil
 import tempfile
 from dataclasses import replace
 from pathlib import Path
+from typing import ClassVar
 
 import yaml
 
@@ -18,7 +19,7 @@ class SolarWMRuntime(OfficialInferenceRuntime):
     MODEL_ID = "solarwm"
     REVISION = "2fe1ea9aca072f787bbba07ee9380b0e1ea7563b"
     REQUIRED_SOURCE_FILES = ("src/solarwm/__main__.py", "src/solarwm/cli.py")
-    ASSET_KEYS = {
+    ASSET_KEYS: ClassVar[set] = {
         "model.codec.video_vae_path",
         "model.codec.gemma4_path",
         "data.silence_latents_path",
@@ -28,7 +29,7 @@ class SolarWMRuntime(OfficialInferenceRuntime):
         "inference.plan",
         "inference.dataset_root",
     }
-    REQUEST_KEYS = {
+    REQUEST_KEYS: ClassVar[set] = {
         "data.test_index",
         "data.index",
         "inference.sample_count",

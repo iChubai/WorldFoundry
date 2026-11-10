@@ -1,7 +1,6 @@
-"""Module for base_models -> capabilities.py functionality."""
-
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import os
 import shlex
@@ -21,14 +20,6 @@ REPO_ROOT = Path(
 
 
 def _path_tokens(env: Mapping[str, str] | None = None) -> dict[str, str]:
-    """Helper function to path tokens.
-
-    Args:
-        env: The env.
-
-    Returns:
-        The return value.
-    """
     environ = os.environ if env is None else env
     core_tokens = worldfoundry_path_tokens(environ)
     repo_root_path = Path(environ.get("WORLDFOUNDRY_REPO_ROOT") or core_tokens["WORLDFOUNDRY_REPO_ROOT"]).expanduser()
@@ -76,14 +67,11 @@ def _path_tokens(env: Mapping[str, str] | None = None) -> dict[str, str]:
 
 
 def expand_capability_path(value: str | Path, env: Mapping[str, str] | None = None) -> Path:
-    """Expand capability path.
+    """Expand known WorldFoundry path tokens and tilde, anchoring relative paths at the repository root.
 
-    Args:
-        value: The value.
-        env: The env.
-
-    Returns:
-        The return value.
+    Use the supplied environment mapping, or os.environ when omitted, to derive
+    known token defaults; unknown tokens remain literal. No paths are created
+    or checked, and the result is not resolved through symlinks.
     """
     expanded = str(value)
     tokens = _path_tokens(env)
@@ -94,15 +82,6 @@ def expand_capability_path(value: str | Path, env: Mapping[str, str] | None = No
 
 
 def _dir_file_count_ready(path: Path, min_file_count: int | None) -> bool:
-    """Helper function to dir file count ready.
-
-    Args:
-        path: The path.
-        min_file_count: The min file count.
-
-    Returns:
-        The return value.
-    """
     if min_file_count is None:
         return True
     count = 0
@@ -121,41 +100,14 @@ def _dir_file_count_ready(path: Path, min_file_count: int | None) -> bool:
 
 
 def _required_files_ready(path: Path, required_files: tuple[str, ...]) -> bool:
-    """Helper function to required files ready.
-
-    Args:
-        path: The path.
-        required_files: The required files.
-
-    Returns:
-        The return value.
-    """
     return all((path / filename).is_file() for filename in required_files)
 
 
 def _required_paths_ready(path: Path, required_paths: tuple[str, ...]) -> bool:
-    """Helper function to required paths ready.
-
-    Args:
-        path: The path.
-        required_paths: The required paths.
-
-    Returns:
-        The return value.
-    """
     return all((path / name).exists() for name in required_paths)
 
 
 def _required_any_paths_ready(path: Path, required_any_paths: tuple[str, ...]) -> bool:
-    """Helper function to required any paths ready.
-
-    Args:
-        path: The path.
-        required_any_paths: The required any paths.
-
-    Returns:
-        The return value.
-    """
     return not required_any_paths or any((path / name).exists() for name in required_any_paths)
 
 
@@ -169,14 +121,6 @@ def _path_ready(
     required_paths: tuple[str, ...] = (),
     required_any_paths: tuple[str, ...] = (),
 ) -> bool:
-    """Helper function to path ready.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     try:
         if kind == "dir":
             return (
@@ -194,14 +138,6 @@ def _path_ready(
 
 
 def _unique_paths(paths: list[Path]) -> list[Path]:
-    """Helper function to unique paths.
-
-    Args:
-        paths: The paths.
-
-    Returns:
-        The return value.
-    """
     unique: list[Path] = []
     seen: set[str] = set()
     for path in paths:
@@ -215,16 +151,6 @@ def _unique_paths(paths: list[Path]) -> list[Path]:
 
 @lru_cache(maxsize=256)
 def _python_import_available(python_executable: str, module_name: str, pythonpath: str) -> bool:
-    """Helper function to python import available.
-
-    Args:
-        python_executable: The python executable.
-        module_name: The module name.
-        pythonpath: The pythonpath.
-
-    Returns:
-        The return value.
-    """
     executable = Path(python_executable).expanduser()
     if not executable.is_file():
         return False
@@ -248,33 +174,20 @@ def _python_import_available(python_executable: str, module_name: str, pythonpat
     try:
         return process.wait(timeout=timeout) == 0
     except subprocess.TimeoutExpired:
-        try:
+        with contextlib.suppress(ProcessLookupError):
             if os.name == "nt":
                 process.kill()
             else:
                 os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        try:
+        # Some broken external envs can block in uninterruptible filesystem
+        # or loader state. Readiness must report that import as unavailable
+        # instead of blocking the whole benchmark inventory.
+        with contextlib.suppress(subprocess.TimeoutExpired):
             process.wait(timeout=kill_timeout)
-        except subprocess.TimeoutExpired:
-            # Some broken external envs can block in uninterruptible filesystem
-            # or loader state. Readiness must report that import as unavailable
-            # instead of blocking the whole benchmark inventory.
-            pass
         return False
 
 
 def _import_available(module_name: str, python_executable: str | Path | None = None) -> bool:
-    """Helper function to import available.
-
-    Args:
-        module_name: The module name.
-        python_executable: The python executable.
-
-    Returns:
-        The return value.
-    """
     if python_executable is None:
         return importlib.util.find_spec(module_name) is not None
     return _python_import_available(str(python_executable), module_name, os.environ.get("PYTHONPATH", ""))
@@ -288,14 +201,6 @@ def _hf_download_command(
     revision: str | None = None,
     local_dir: str | Path,
 ) -> list[str]:
-    """Helper function to hf download command.
-
-    Args:
-        repo_id: The repo id.
-
-    Returns:
-        The return value.
-    """
     command = ["hf", "download", repo_id]
     if filename:
         command.append(filename)
@@ -308,15 +213,6 @@ def _hf_download_command(
 
 
 def _curl_download_command(url: str, output_path: str | Path) -> list[str]:
-    """Helper function to curl download command.
-
-    Args:
-        url: The url.
-        output_path: The output path.
-
-    Returns:
-        The return value.
-    """
     return [
         "curl",
         "-L",
@@ -359,25 +255,22 @@ class BaseModelAsset:
     note: str | None = None
 
     def local_dir(self, env: Mapping[str, str] | None = None) -> Path:
-        """Local dir.
+        """Return the expanded local directory, or the parent of a file asset path.
 
-        Args:
-            env: The env.
-
-        Returns:
-            The return value.
+        Use env (os.environ by default) for path tokens; asset-specific environment
+        overrides are not consulted and the directory is not created.
         """
         local_path = expand_capability_path(self.local_path, env)
         return local_path if self.kind == "dir" else local_path.parent
 
     def download_command(self, env: Mapping[str, str] | None = None) -> list[str] | None:
-        """Download command.
+        """Build download argv for the declared local path without executing it.
 
-        Args:
-            env: The env.
-
-        Returns:
-            The return value.
+        Expand path tokens using env, or os.environ by default. A shell template
+        takes precedence; Git sources and assets without a download source return
+        None. URL downloads use mkdir and curl; Hugging Face downloads honor the
+        repo type, revision and filename. Model directories with required file
+        constraints download those files and the first required-any path only.
         """
         if self.download_command_template:
             command = str(self.download_command_template)
@@ -431,13 +324,13 @@ class BaseModelAsset:
         )
 
     def check(self, env: Mapping[str, str] | None = None) -> dict[str, Any]:
-        """Check.
+        """Inspect environment overrides, then local and alternate paths, for a ready asset.
 
-        Args:
-            env: The env.
-
-        Returns:
-            The return value.
+        Use os.environ when env is omitted. Check file size or directory contents
+        against the asset constraints and select the first ready path. Return
+        metadata, per-variable status, candidate paths, readiness and suggested
+        download/export commands; export to the matched path or the local default.
+        Read the filesystem without creating files, downloading or modifying env.
         """
         environ = os.environ if env is None else env
         local_path = expand_capability_path(self.local_path, environ)
@@ -541,25 +434,25 @@ class BaseModelCapability:
     gpu_required: bool = True
 
     def owner_path(self) -> Path:
-        """Owner path.
+        """Return canonical_path unchanged if absolute, otherwise relative to the module-level REPO_ROOT.
 
-        Returns:
-            The return value.
+        Do not expand tokens or tilde, resolve symlinks, or check existence.
         """
         path = Path(self.canonical_path)
         return path if path.is_absolute() else REPO_ROOT / path
 
     def pip_package_by_import(self) -> dict[str, str]:
-        """Pip package by import.
+        """Map pip-installable imports to package names, excluding non-pip imports and empty packages.
 
-        Returns:
-            The return value.
+        Equal-length import/package lists pair positionally before exclusions.
+        Otherwise pair packages with the filtered imports, falling back to each
+        import name when no corresponding package is supplied. No packages are installed.
         """
         non_pip = set(self.non_pip_imports)
         if not self.package_imports:
             return {}
         if self.install_packages and len(self.install_packages) == len(self.package_imports):
-            pairs = zip(self.package_imports, self.install_packages)
+            pairs = zip(self.package_imports, self.install_packages, strict=False)
             return {import_name: package for import_name, package in pairs if import_name not in non_pip and package}
         pip_imports = [name for name in self.package_imports if name not in non_pip]
         install_packages = self.install_packages or tuple(pip_imports)
@@ -570,10 +463,10 @@ class BaseModelCapability:
         }
 
     def to_dict(self) -> dict[str, Any]:
-        """To dict.
+        """Serialize capability metadata and asset specifications into a JSON-compatible dictionary.
 
-        Returns:
-            The return value.
+        Convert tuples to lists and derive install_packages from the import mapping.
+        Keep asset paths unexpanded; do not probe imports, inspect assets or install anything.
         """
         return {
             "id": self.id,
@@ -627,10 +520,9 @@ class BaseModelStack:
     note: str
 
     def to_dict(self) -> dict[str, Any]:
-        """To dict.
+        """Return the stack ID, family, note and ordered capability IDs as JSON-compatible metadata.
 
-        Returns:
-            The return value.
+        Copy capability_ids into a list without resolving or checking its members.
         """
         return {
             "id": self.id,
@@ -653,11 +545,6 @@ def _hf_dataset_asset(
     required: bool = True,
     note: str | None = None,
 ) -> BaseModelAsset:
-    """Helper function to hf dataset asset.
-
-    Returns:
-        The return value.
-    """
     alternates = tuple(
         path
         for name in alternate_local_names
@@ -686,15 +573,6 @@ def _benchmark_dataset_capability(
     capability_id: str,
     specs: tuple[dict[str, Any], ...],
 ) -> BaseModelCapability:
-    """Helper function to benchmark dataset capability.
-
-    Args:
-        capability_id: The capability id.
-        specs: The specs.
-
-    Returns:
-        The return value.
-    """
     assets = tuple(
         _hf_dataset_asset(
             asset_id=str(spec["asset_id"]),
@@ -724,31 +602,31 @@ def _benchmark_dataset_capability(
 
 _IN_TREE_SOURCE_ASSETS: dict[str, tuple[str, str]] = {
     "bridgedata_v2_source_assets": ("file", "worldfoundry/data/benchmarks/tasks/external/bridgedata-v2.yaml"),
-    "calvin_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/calvin"),
-    "libero_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/libero"),
+    "calvin_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/calvin"),
+    "libero_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/libero"),
     "maniskill_source_assets": ("file", "worldfoundry/data/benchmarks/tasks/external/maniskill.yaml"),
     "metaworld_source_assets": ("file", "worldfoundry/data/benchmarks/tasks/external/metaworld.yaml"),
-    "rlbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/rlbench"),
-    "robocasa_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/robocasa"),
-    "simpler_env_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/simpler"),
-    "iworld_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/iworldbench"),
-    "t2vworldbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/t2vworldbench"),
-    "vmbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/vmbench"),
-    "mirabench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/mirabench"),
-    "devil_dynamics_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/devil_dynamics"),
-    "phygenbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/phygenbench"),
-    "physvidbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/physvidbench"),
+    "rlbench_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/rlbench"),
+    "robocasa_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/robocasa"),
+    "simpler_env_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/simpler"),
+    "iworld_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/iworldbench"),
+    "t2vworldbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/t2vworldbench"),
+    "vmbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/vmbench"),
+    "mirabench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/mirabench"),
+    "devil_dynamics_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/devil_dynamics"),
+    "phygenbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/phygenbench"),
+    "physvidbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/physvidbench"),
     "visual_chronometer_source_assets": (
         "dir",
-        "worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer",
+        "worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer",
     ),
-    "videophy_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/videophy"),
-    "physics_iq_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/physics_iq"),
-    "t2v_safety_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/t2v_safety_bench"),
-    "ipv_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/ipv_bench"),
-    "videoscience_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/videoscience_bench"),
-    "phyeduvideo_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/phyeduvideo"),
-    "worldarena_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/worldarena"),
+    "videophy_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/videophy"),
+    "physics_iq_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/physics_iq"),
+    "t2v_safety_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/t2v_safety_bench"),
+    "ipv_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/ipv_bench"),
+    "videoscience_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/videoscience_bench"),
+    "phyeduvideo_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/phyeduvideo"),
+    "worldarena_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/worldarena"),
 }
 
 
@@ -765,11 +643,6 @@ def _source_repo_capability(
     role: str = "benchmark_source_repo",
     note: str | None = None,
 ) -> BaseModelCapability:
-    """Helper function to source repo capability.
-
-    Returns:
-        The return value.
-    """
     try:
         in_tree_kind, in_tree_path = _IN_TREE_SOURCE_ASSETS[capability_id]
     except KeyError as exc:
@@ -821,11 +694,6 @@ def _external_dir_capability(
     manual_action: str | None = None,
     note: str | None = None,
 ) -> BaseModelCapability:
-    """Helper function to external dir capability.
-
-    Returns:
-        The return value.
-    """
     return BaseModelCapability(
         id=capability_id,
         family="benchmark_data_asset",
@@ -867,11 +735,6 @@ def _perception_data_capability(
     role: str = "perception_eval_dataset",
     note: str | None = None,
 ) -> BaseModelCapability:
-    """Helper function to perception data capability.
-
-    Returns:
-        The return value.
-    """
     return BaseModelCapability(
         id=capability_id,
         family="perception_data_asset",
@@ -2678,8 +2541,8 @@ BASE_MODEL_CAPABILITIES.update(
         "t2v_metrics_blip2_itm": BaseModelCapability(
             id="t2v_metrics_blip2_itm",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners._scorers.itm_score",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/_scorers/itm_score",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners._scorers.itm_score",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/_scorers/itm_score",
             package_imports=("torch", "transformers", "PIL", "numpy", "timm"),
             install_packages=("torch", "transformers", "Pillow", "numpy", "timm"),
             asset_env=("WORLDFOUNDRY_T2V_METRICS_BLIP2_ITM_DIR",),
@@ -2701,8 +2564,8 @@ BASE_MODEL_CAPABILITIES.update(
         "t2v_metrics_internvideo2_itm": BaseModelCapability(
             id="t2v_metrics_internvideo2_itm",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners._scorers.itm_score",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/_scorers/itm_score",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners._scorers.itm_score",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/_scorers/itm_score",
             package_imports=("torch", "transformers", "decord", "PIL", "numpy"),
             install_packages=("torch", "transformers", "decord", "Pillow", "numpy"),
             asset_env=("WORLDFOUNDRY_T2V_METRICS_INTERNVIDEO2_ITM_DIR",),
@@ -2726,8 +2589,8 @@ BASE_MODEL_CAPABILITIES.update(
         "jedi_source_assets": BaseModelCapability(
             id="jedi_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.metrics.jedi",
-            canonical_path="worldfoundry/evaluation/tasks/metrics/jedi",
+            canonical_owner="worldfoundry.evals.tasks.metrics.jedi",
+            canonical_path="worldfoundry/evals/tasks/metrics/jedi",
             asset_env=("WORLDFOUNDRY_JEDI_ROOT",),
             assets=(
                 BaseModelAsset(
@@ -2735,7 +2598,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=("WORLDFOUNDRY_JEDI_ROOT",),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/metrics/jedi",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/metrics/jedi",
                     min_file_count=4,
                     required_files=("JEDi.py", "V_JEPA.py", "mmd_polynomial.py", "utils.py"),
                     note=(
@@ -2758,8 +2621,8 @@ BASE_MODEL_CAPABILITIES.update(
         "jedi_vjepa_vith16": BaseModelCapability(
             id="jedi_vjepa_vith16",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.metrics.jedi",
-            canonical_path="worldfoundry/evaluation/tasks/metrics/jedi",
+            canonical_owner="worldfoundry.evals.tasks.metrics.jedi",
+            canonical_path="worldfoundry/evals/tasks/metrics/jedi",
             package_imports=("torch", "vjepa", "numpy", "yaml"),
             install_packages=("torch", "vjepa", "numpy", "pyyaml"),
             asset_env=("WORLDFOUNDRY_JEDI_MODEL_DIR", "WORLDFOUNDRY_JEDI_VJEPA_DIR"),
@@ -2780,8 +2643,8 @@ BASE_MODEL_CAPABILITIES.update(
         "jedi_vjepa_ssv2_probe": BaseModelCapability(
             id="jedi_vjepa_ssv2_probe",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.metrics.jedi",
-            canonical_path="worldfoundry/evaluation/tasks/metrics/jedi",
+            canonical_owner="worldfoundry.evals.tasks.metrics.jedi",
+            canonical_path="worldfoundry/evals/tasks/metrics/jedi",
             package_imports=("torch", "vjepa", "numpy", "yaml"),
             install_packages=("torch", "vjepa", "numpy", "pyyaml"),
             asset_env=("WORLDFOUNDRY_JEDI_MODEL_DIR", "WORLDFOUNDRY_JEDI_VJEPA_DIR"),
@@ -3191,8 +3054,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench_source_assets": BaseModelCapability(
             id="vbench_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench/runtime",
             asset_env=(),
             assets=(
                 BaseModelAsset(
@@ -3200,7 +3063,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=(),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/vbench/runtime",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/vbench/runtime",
                     min_file_count=1,
                     required_files=("vbench/VBench_full_info.json",),
                     required_paths=("vbench", "prompts"),
@@ -3212,8 +3075,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench_plus_plus_source_assets": BaseModelCapability(
             id="vbench_plus_plus_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench_plus_plus",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench_plus_plus",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/runtime",
             asset_env=(),
             assets=(
                 BaseModelAsset(
@@ -3221,7 +3084,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=(),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/runtime",
                     min_file_count=1,
                     required_files=(
                         "vbench2_beta_i2v/vbench2_i2v_full_info.json",
@@ -3237,8 +3100,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench2_source_assets": BaseModelCapability(
             id="vbench2_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench_2_0",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench_2_0",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench_2_0/runtime",
             asset_env=(),
             assets=(
                 BaseModelAsset(
@@ -3246,7 +3109,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=(),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/vbench_2_0/runtime",
                     min_file_count=1,
                     required_files=("vbench2/VBench2_full_info.json",),
                     required_paths=("entrypoints", "vbench2"),
@@ -3258,8 +3121,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench_metric_checkpoint_assets": BaseModelCapability(
             id="vbench_metric_checkpoint_assets",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench/runtime",
             package_imports=("torch", "torchvision", "transformers", "open_clip", "cv2", "numpy"),
             install_packages=("torch", "torchvision", "transformers", "open-clip-torch", "opencv-python", "numpy"),
             asset_env=(
@@ -4211,30 +4074,12 @@ def benchmark_base_model_dependency_ids(
 
 
 def _append_group(groups: dict[str, list[str]], key: str, value: str) -> None:
-    """Helper function to append group.
-
-    Args:
-        groups: The groups.
-        key: The key.
-        value: The value.
-
-    Returns:
-        The return value.
-    """
     group = groups.setdefault(key, [])
     if value not in group:
         group.append(value)
 
 
 def _count_asset_roles(capabilities: Mapping[str, BaseModelCapability]) -> dict[str, int]:
-    """Helper function to count asset roles.
-
-    Args:
-        capabilities: The capabilities.
-
-    Returns:
-        The return value.
-    """
     counts: dict[str, int] = {}
     for capability in capabilities.values():
         for asset in capability.assets:
@@ -4243,11 +4088,6 @@ def _count_asset_roles(capabilities: Mapping[str, BaseModelCapability]) -> dict[
 
 
 def _capabilities_by_family() -> dict[str, list[str]]:
-    """Helper function to capabilities by family.
-
-    Returns:
-        The return value.
-    """
     groups: dict[str, list[str]] = {}
     for capability_id, capability in BASE_MODEL_CAPABILITIES.items():
         _append_group(groups, capability.family, capability_id)
@@ -4255,11 +4095,6 @@ def _capabilities_by_family() -> dict[str, list[str]]:
 
 
 def _stacks_by_family() -> dict[str, list[str]]:
-    """Helper function to stacks by family.
-
-    Returns:
-        The return value.
-    """
     groups: dict[str, list[str]] = {}
     for stack_id, stack in BASE_MODEL_STACKS.items():
         _append_group(groups, stack.family, stack_id)
@@ -4267,10 +4102,10 @@ def _stacks_by_family() -> dict[str, list[str]]:
 
 
 def base_model_inventory() -> dict[str, Any]:
-    """Base model inventory.
+    """Return versioned catalog metadata, family groupings and asset counts without readiness probes.
 
-    Returns:
-        The return value.
+    Include capabilities and stacks sorted by ID, role counts and benchmark
+    data-asset mappings. No imports, downloads or asset checks are performed.
     """
     asset_count = sum(len(capability.assets) for capability in BASE_MODEL_CAPABILITIES.values())
     return {
@@ -4304,14 +4139,6 @@ def _base_model_plan_summary(
     pip_install_packages: list[str],
     manual_actions: list[str],
 ) -> dict[str, Any]:
-    """Helper function to base model plan summary.
-
-    Args:
-        checks: The checks.
-
-    Returns:
-        The return value.
-    """
     family_counts: dict[str, dict[str, int]] = {}
     asset_counts_by_role: dict[str, int] = {}
     missing_required_asset_ids: list[str] = []
@@ -4369,13 +4196,11 @@ def _base_model_plan_summary(
 
 
 def resolve_base_model_capability_ids(capability_or_stack_ids: list[str] | tuple[str, ...]) -> list[str]:
-    """Resolve base model capability ids.
+    """Expand capability and stack IDs into a deduplicated list in first-seen order.
 
-    Args:
-        capability_or_stack_ids: The capability or stack ids.
-
-    Returns:
-        The return value.
+    Convert each input to str and expand stacks by their declared member order.
+    Raise KeyError with the available IDs for an unknown input; an empty input
+    returns an empty list.
     """
     resolved: list[str] = []
     for raw_id in capability_or_stack_ids:
@@ -4394,13 +4219,10 @@ def resolve_base_model_capability_ids(capability_or_stack_ids: list[str] | tuple
 
 
 def get_base_model_capability(capability_id: str) -> BaseModelCapability:
-    """Get base model capability.
+    """Return the registered capability object for an exact ID, without checking readiness.
 
-    Args:
-        capability_id: The capability id.
-
-    Returns:
-        The return value.
+    Raise KeyError listing available capability IDs when the ID is unknown;
+    stack IDs are not expanded.
     """
     try:
         return BASE_MODEL_CAPABILITIES[capability_id]
@@ -4461,16 +4283,15 @@ def check_base_model_capability(
     python_executable: str | Path | None = None,
     check_imports: bool = True,
 ) -> dict[str, Any]:
-    """Check base model capability.
+    """Report owner-path, package-discovery and required-asset readiness with repair suggestions.
 
-    Args:
-        capability_id: The capability id.
-        env: The env.
-        python_executable: The python executable.
-        check_imports: The check imports.
-
-    Returns:
-        The return value.
+    Use env (os.environ by default) for assets, not for import probes. By default,
+    find package specs in the current interpreter; python_executable selects
+    cached subprocess probes instead. Dotted spec lookup may import parents.
+    With check_imports=False, report imports as skipped and do not gate on them.
+    Read asset paths and owner existence, but do not install or download.
+    The returned metadata includes statuses, repair_hints and ok; gpu_required
+    is metadata only, not a GPU probe. Unknown capability IDs raise KeyError.
     """
     environ = os.environ if env is None else env
     capability = get_base_model_capability(capability_id)
@@ -4570,16 +4391,14 @@ def check_base_model_dependencies(
     python_executable: str | Path | None = None,
     check_imports: bool = True,
 ) -> dict[str, Any]:
-    """Check base model dependencies.
+    """Expand stacks and aggregate capability readiness checks into one status dictionary.
 
-    Args:
-        capability_ids: The capability ids.
-        env: The env.
-        python_executable: The python executable.
-        check_imports: The check imports.
-
-    Returns:
-        The return value.
+    Preserve requested IDs and stack IDs, deduplicate resolved capabilities,
+    and forward env, python_executable and check_imports to each check.
+    Defaults use process environment and current-interpreter package discovery.
+    Return per-capability checks and their combined ok (True for empty input).
+    Unknown IDs raise KeyError; checks inspect paths and may probe subprocesses
+    but do not install or download.
     """
     resolved_ids = resolve_base_model_capability_ids(capability_ids)
     stack_ids = [str(capability_id) for capability_id in capability_ids if str(capability_id) in BASE_MODEL_STACKS]
@@ -4608,15 +4427,14 @@ def base_model_materialization_plan(
     env: Mapping[str, str] | None = None,
     python_executable: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Base model materialization plan.
+    """Build a versioned readiness and repair plan for selected capabilities or stacks.
 
-    Args:
-        capability_ids: The capability ids.
-        env: The env.
-        python_executable: The python executable.
-
-    Returns:
-        The return value.
+    None selects every capability sorted by ID; an empty sequence selects none.
+    Use env (os.environ by default) for asset paths and python_executable for
+    package probes, with current-interpreter discovery by default. Aggregate
+    checks, stack metadata, summary counts, download/export commands, sorted
+    unique pip packages and manual actions. Probes read paths and may start
+    subprocesses; no suggested command is executed. Unknown IDs raise KeyError.
     """
     requested_ids = sorted(BASE_MODEL_CAPABILITIES) if capability_ids is None else list(capability_ids)
     selected_ids = resolve_base_model_capability_ids(requested_ids)

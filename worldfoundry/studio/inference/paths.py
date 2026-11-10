@@ -169,5 +169,3 @@ def studio_hfd_cache_roots(
             cache_dir / "hfd",
         )
     )
-
-

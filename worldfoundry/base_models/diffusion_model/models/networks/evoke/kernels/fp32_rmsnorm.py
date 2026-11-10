@@ -1,16 +1,14 @@
 import torch
 import torch.nn as nn
-
 from diffusers.models.normalization import RMSNorm
 from diffusers.utils import is_torch_npu_available, is_torch_version
-
 
 # ------------------------------- replace funtion -------------------------------
 
 
 def replace_rmsnorm_with_fp32(model):
     patched_count = 0
-    for name, module in model.named_modules():
+    for _name, module in model.named_modules():
         if isinstance(module, (torch.nn.RMSNorm, RMSNorm)):
 
             def new_forward(self, x):

@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from worldfoundry.cli import main
-from worldfoundry.evaluation.runner import EvaluateRunRequest, execute_evaluate_run
-from worldfoundry.evaluation.tasks.embodied import (
+from worldfoundry.evals.runner import EvaluateRunRequest, execute_evaluate_run
+from worldfoundry.evals.tasks.embodied import (
     VlaVaWamRunRequest,
     materialize_vla_va_wam_requests,
     metric_suite,

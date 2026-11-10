@@ -27,14 +27,14 @@ confirmation: Public GitHub source and official FantasyWorld, Wan2.2-I2V-A14B, r
 output_artifacts:
 - generated_world
 runtime_profile: runtime-profile:fantasyworld
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: fantasyworld
 variants:
 - id: fantasyworld-wan21
   task: image-to-world-video
   provider: official_repo
   runtime_profile: runtime-profile:fantasyworld-wan21
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: fantasyworld-wan21
   integration:
     status: verified
@@ -47,7 +47,7 @@ variants:
   task: camera-controlled-world-video
   provider: official_repo
   runtime_profile: runtime-profile:fantasyworld-wan22
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: fantasyworld-wan22
   integration:
     status: checkpoint_assets_staged_cpu_schema_validated_gpu_pending

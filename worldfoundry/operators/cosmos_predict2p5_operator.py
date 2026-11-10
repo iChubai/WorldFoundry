@@ -79,7 +79,6 @@ def get_image_size(
 
 
 def _load_input_image(input_path: str | Path | Image.Image) -> Image.Image:
-    """Load input image implementation."""
     if isinstance(input_path, Image.Image):
         return input_path.convert("RGB")
 

@@ -25,7 +25,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: physvidbench
   contract_validation_command: wf zoo benchmark-run --benchmark-id physvidbench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/physvidbench --json
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysVidBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
   official_runner_command: wf zoo benchmark-run
   prompt_suite:
     source: bundled_official_assets
@@ -74,10 +74,10 @@ metadata:
     bundled_asset_paths:
     - worldfoundry/data/benchmarks/assets/physvidbench/prompts_questions.csv
     - worldfoundry/data/benchmarks/assets/physvidbench/captions
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysVidBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -85,7 +85,7 @@ metadata:
     normalizer_verified: false
   open_source_status: in_tree_artifact_scores_ready
   local_evaluator:
-    target: worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
+    target: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
     status: implemented
     protocol: result_import_and_bounded_caption_qa
   official_result_entrypoint: wf zoo benchmark-run
@@ -161,8 +161,8 @@ tasks:
       - material_property_consistency
       - temporal_dynamics_consistency
       - physvidbench_average
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysVidBenchContract
-      runner_script: worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
+      runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+      runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
     - name: external_official_runner
       metric_ids:
       - physical_commonsense_accuracy
@@ -171,5 +171,5 @@ tasks:
       - material_property_consistency
       - temporal_dynamics_consistency
       - physvidbench_average
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysVidBenchContract
-      runner_script: worldfoundry/evaluation/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
+      runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+      runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py

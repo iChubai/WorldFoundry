@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.api import GenerationRequest
-from worldfoundry.evaluation.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
+from worldfoundry.evals.api import GenerationRequest
+from worldfoundry.evals.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
 from worldfoundry.pipelines.scope.pipeline_scope import SCOPEPipeline
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

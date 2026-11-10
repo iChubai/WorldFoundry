@@ -65,7 +65,7 @@ class BatchedPerturbationConfig:
     perturbations: list[PerturbationConfig]
 
     def mask(
-        self, perturbation_type: PerturbationType, block: int, device: DeviceLikeType,         dtype: torch.dtype
+        self, perturbation_type: PerturbationType, block: int, device: DeviceLikeType, dtype: torch.dtype
     ) -> torch.Tensor:
         """Per-sample ``[B]`` mask: 1 keeps the branch, 0 skips it."""
         mask = torch.ones((len(self.perturbations),), device=device, dtype=dtype)

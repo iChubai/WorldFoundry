@@ -33,7 +33,7 @@ def parse_args() -> argparse.Namespace:
 def _write_config(repo_root: Path, checkpoint_path: Path, output_path: Path) -> Path:
     base_config = repo_root / "configs" / "self_forcing_server_14b.yaml"
     if not base_config.is_file():
-        base_config = package_data_path('models', 'runtime', 'configs', 'krea_realtime', 'self_forcing_server_14b.yaml')
+        base_config = package_data_path("models", "runtime", "configs", "krea_realtime", "self_forcing_server_14b.yaml")
     if not base_config.is_file():
         raise FileNotFoundError(f"Krea official config not found: {base_config}")
     config = OmegaConf.load(base_config)
@@ -76,7 +76,7 @@ def main() -> None:
         sys.path.insert(0, str(repo_root))
     if "dotenv" not in sys.modules:
         try:
-            import dotenv  # noqa: F401
+            import dotenv  # noqa: F401 - Availability probe; a stub is installed when it is missing.
         except ModuleNotFoundError:
             shim = types.ModuleType("dotenv")
             shim.load_dotenv = lambda *_, **__: False

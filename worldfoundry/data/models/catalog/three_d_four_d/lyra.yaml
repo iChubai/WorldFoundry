@@ -29,14 +29,14 @@ output_artifacts:
 - generated_world
 - generated_3d_asset
 runtime_profile: runtime-profile:lyra
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: lyra
 variants:
 - id: lyra-1
   task: image-or-video-to-world-video
   provider: official_repo
   runtime_profile: runtime-profile:lyra-1
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: lyra-1
   integration:
     status: verified
@@ -49,7 +49,7 @@ variants:
   task: action-conditioned-world-video
   provider: official_repo
   runtime_profile: runtime-profile:lyra-2
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: lyra-2
   integration:
     status: verified

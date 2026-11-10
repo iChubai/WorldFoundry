@@ -7,8 +7,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from worldfoundry.evaluation.tasks.embodied.simulators.calvin.benchmark import CALVINBenchmark
-from worldfoundry.evaluation.tasks.embodied.simulators.robotwin.benchmark import RoboTwinBenchmark
+from worldfoundry.evals.tasks.embodied.simulators.calvin.benchmark import CALVINBenchmark
+from worldfoundry.evals.tasks.embodied.simulators.robotwin.benchmark import RoboTwinBenchmark
 
 
 class EmbodiedInfraRound6Tests(unittest.TestCase):

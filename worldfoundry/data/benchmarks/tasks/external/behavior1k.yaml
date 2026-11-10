@@ -24,7 +24,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: behavior1k
   status: integrated
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:Behavior1KContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:Behavior1KContract
   prompt_suite:
     split: eval
   runtime:
@@ -34,7 +34,7 @@ metadata:
     preflight_profile: behavior1k
   official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
-    target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
+    target: worldfoundry.evals.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
   contract_validation_command: wf zoo benchmark-run --benchmark-id behavior1k --mode contract 
@@ -54,7 +54,7 @@ metadata:
   - Full leaderboard parity is not claimed until official rollouts are executed and imported.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:Behavior1KContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:Behavior1KContract
     task_yaml_available: true
     runtime_verified: false
     normalizer_verified: true
@@ -129,4 +129,4 @@ tasks:
       - task_success
       - episode_success
       - subgoal_success
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:Behavior1KContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:Behavior1KContract

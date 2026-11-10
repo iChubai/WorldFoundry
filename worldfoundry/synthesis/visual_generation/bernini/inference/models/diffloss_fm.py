@@ -18,10 +18,8 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.distributed as dist
 from torch.utils.checkpoint import checkpoint
 from tqdm import tqdm
-from transformers.utils import logging
 
 try:
     from torch.utils.checkpoint import (
@@ -141,18 +139,18 @@ class DiffLoss_FM(nn.Module):
         if img_cfg is not None and cfg > 1.0:
             noise = torch.randn(z.shape[0] // 3, self.in_channels).to(device)
             noise = torch.cat([noise, noise, noise], dim=0)
-            model_kwargs = dict(c=z, txt_cfg_scale=cfg, img_cfg_scale=img_cfg)
+            model_kwargs = {"c": z, "txt_cfg_scale": cfg, "img_cfg_scale": img_cfg}
             sample_fn = self.net.forward_with_txt_img_cfg
 
         elif cfg > 1.0:
             noise = torch.randn(z.shape[0] // 2, self.in_channels).to(device)
             noise = torch.cat([noise, noise], dim=0)
-            model_kwargs = dict(c=z, cfg_scale=cfg)
+            model_kwargs = {"c": z, "cfg_scale": cfg}
             sample_fn = self.net.forward_with_cfg
 
         else:
             noise = torch.randn(z.shape[0], self.in_channels).to(device)
-            model_kwargs = dict(c=z)
+            model_kwargs = {"c": z}
             sample_fn = self.net.forward
 
         # Prepare timesteps
@@ -164,10 +162,8 @@ class DiffLoss_FM(nn.Module):
 
         # Denoising loop
         samples = noise.to(z.dtype)
-        progress_bar = (
-            tqdm(timesteps, desc=f"Vit diffusion with cfg={cfg}") if verbose else None
-        )
-        for i, t in enumerate(timesteps):
+        progress_bar = tqdm(timesteps, desc=f"Vit diffusion with cfg={cfg}") if verbose else None
+        for _i, t in enumerate(timesteps):
             timestep = t.unsqueeze(0).to(dtype=z.dtype, device=device)
 
             # Inference
@@ -258,8 +254,8 @@ class ResBlock(nn.Module):
 
         self.in_ln = nn.LayerNorm(channels, eps=1e-6)
 
-        USE_MLP_NORM = os.environ.get('USE_MLP_NORM_IN_RESBLOCK_OF_FM', 'False').lower()
-        if USE_MLP_NORM in ('true', '1'):
+        USE_MLP_NORM = os.environ.get("USE_MLP_NORM_IN_RESBLOCK_OF_FM", "False").lower()
+        if USE_MLP_NORM in ("true", "1"):
             self.mlp = nn.Sequential(
                 nn.Linear(channels, channels, bias=True),
                 nn.LayerNorm(channels, eps=1e-6),
@@ -368,7 +364,7 @@ class SimpleMLPAdaLN(nn.Module):
         self.input_proj = nn.Linear(in_channels, model_channels)
 
         res_blocks = []
-        for i in range(num_res_blocks):
+        for _i in range(num_res_blocks):
             res_blocks.append(
                 ResBlock(
                     model_channels,
@@ -452,9 +448,7 @@ class SimpleMLPAdaLN(nn.Module):
 
         eps, rest = model_out[:, : self.in_channels], model_out[:, self.in_channels :]
         cond_eps, uncond_eps, imgcond_eps = torch.split(eps, len(eps) // 3, dim=0)
-        part_eps = uncond_eps + \
-            img_cfg_scale * (imgcond_eps - uncond_eps) + \
-            txt_cfg_scale * (cond_eps - imgcond_eps)
+        part_eps = uncond_eps + img_cfg_scale * (imgcond_eps - uncond_eps) + txt_cfg_scale * (cond_eps - imgcond_eps)
 
         eps = torch.cat([part_eps, part_eps, part_eps], dim=0)
         return torch.cat([eps, rest], dim=1)

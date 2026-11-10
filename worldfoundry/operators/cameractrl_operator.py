@@ -29,7 +29,6 @@ class CameraCtrlOperator(BaseOperator):
 
     @staticmethod
     def _trajectories(interaction) -> list[str]:
-        """Trajectories implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, (str, Path)):

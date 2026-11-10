@@ -31,7 +31,7 @@ wf zoo benchmark-run \
 
 `--run-official` 执行仓内 Step 1（`--mode both|synthetic|real`）。V-D-R 边界会按生成视频帧数缩放。环境变量：`WORLDFOUNDRY_MEMOBENCH_RESULTS_PATH`、`WORLDFOUNDRY_MEMOBENCH_GENERATED_SYNTHETIC_DIR`、`WORLDFOUNDRY_MEMOBENCH_GENERATED_REAL_DIR`。共享栈：`video_quality_dino_motion_stack`。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/memobench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/memobench.yaml`，`worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench`。
 
 产物包括 `scorecard.json`（主键 `memobench_average`），以及存在时的 `eval_csv`、`ors_scores.csv`、`leaderboard.csv`。
 

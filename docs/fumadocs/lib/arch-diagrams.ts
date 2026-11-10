@@ -121,7 +121,7 @@ const SYSTEM: ArchDiagramSpec = {
     orchestration: {
       role: { en: 'Orchestration', zh: '编排' },
       title: 'prepare_evaluation / execute_prepared',
-      file: 'evaluation/tasks/execution/orchestration/service.py',
+      file: 'evals/tasks/execution/orchestration/service.py',
       detail: {
         en: 'Compile intent into PreparedEvaluation, then into a runner request',
         zh: '把 intent 编译成 PreparedEvaluation，再变成 runner request',
@@ -263,7 +263,7 @@ const MODEL_RUNTIME: ArchDiagramSpec = {
     {
       type: 'call',
       label: 'resolve_pipeline_route()',
-      file: 'evaluation/models/pipelines/bindings.py:359',
+      file: 'evals/models/pipelines/bindings.py:359',
     },
     { type: 'lane', label: { en: 'Runtime', zh: '运行时' } },
     { type: 'node', id: 'pipeline' },
@@ -320,7 +320,7 @@ const MODEL_RUNTIME_BRIDGE: ArchDiagramSpec = {
     route: {
       role: { en: 'Resolver', zh: '解析' },
       title: 'resolve_pipeline_route()',
-      file: 'evaluation/models/pipelines/bindings.py:359',
+      file: 'evals/models/pipelines/bindings.py:359',
       detail: {
         en: 'Canonical binding helpers; do not re-parse route strings',
         zh: '唯一绑定入口；不要各自重解析 route string',
@@ -329,7 +329,7 @@ const MODEL_RUNTIME_BRIDGE: ArchDiagramSpec = {
     runner: {
       role: { en: 'Resolver', zh: '解析' },
       title: 'resolve_model_zoo_runner()',
-      file: 'evaluation/models/runners/resolver.py:386',
+      file: 'evals/models/runners/resolver.py:386',
       detail: {
         en: 'Returns a WorldModelRunner instance',
         zh: '返回 WorldModelRunner 实例',
@@ -468,7 +468,7 @@ const EVALUATION_CORE: ArchDiagramSpec = {
     facade: {
       role: { en: 'Facade', zh: '门面' },
       title: 'execute_prepared_evaluation()',
-      file: 'evaluation/tasks/execution/orchestration/service.py:775',
+      file: 'evals/tasks/execution/orchestration/service.py:775',
       detail: {
         en: 'Dispatch: EvaluateRunRequest → run_evaluate; ModelBenchmarkRunRequest → run_model_benchmark',
         zh: '分发：EvaluateRunRequest → run_evaluate；ModelBenchmarkRunRequest → run_model_benchmark',
@@ -740,7 +740,7 @@ const WORKFLOW: ArchDiagramSpec = {
     facade: {
       role: { en: 'Facade', zh: '门面' },
       title: 'run_evaluate()',
-      file: 'evaluation/tasks/execution/orchestration/evaluate.py:1071',
+      file: 'evals/tasks/execution/orchestration/evaluate.py:1071',
       detail: {
         en: 'Validate, choose mode, hand off',
         zh: '校验、选 mode、移交',
@@ -1105,7 +1105,7 @@ const CATALOG_SCORECARD: ArchDiagramSpec = {
       resolve: {
         role: { en: 'Resolve', zh: '解析' },
         title: 'resolve_model_zoo_runner()',
-        file: 'evaluation/models/runners/resolver.py:386',
+        file: 'evals/models/runners/resolver.py:386',
       },
     },
     steps: [

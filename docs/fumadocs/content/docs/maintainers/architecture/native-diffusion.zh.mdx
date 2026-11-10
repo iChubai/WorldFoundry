@@ -55,7 +55,7 @@ Attention 与可复用 transformer mechanics 也遵守同一规则。Capability 
 
 ## 依赖规则
 
-Canonical files 可以依赖 PyTorch、可复用的 `diffusers` model/operator primitive，以及小而明确的 framework-core utility。`diffusers` 可以作为 library dependency，但它的 Pipeline 抽象不能成为第二套 runtime backend 或 ownership boundary。Canonical files 不能 import `diffsynth`、legacy `diffsynth/`、`image/`、`video/` 子目录、`worldfoundry.synthesis`、`worldfoundry.pipelines`、`worldfoundry.studio`、`worldfoundry.operators` 或 `worldfoundry.evaluation`。边界门禁同时检查普通 import、lazy import 和字符串注册目标。
+Canonical files 可以依赖 PyTorch、可复用的 `diffusers` model/operator primitive，以及小而明确的 framework-core utility。`diffusers` 可以作为 library dependency，但它的 Pipeline 抽象不能成为第二套 runtime backend 或 ownership boundary。Canonical files 不能 import `diffsynth`、legacy `diffsynth/`、`image/`、`video/` 子目录、`worldfoundry.synthesis`、`worldfoundry.pipelines`、`worldfoundry.studio`、`worldfoundry.operators` 或 `worldfoundry.evals`。边界门禁同时检查普通 import、lazy import 和字符串注册目标。
 
 迁移只有一个方向：
 

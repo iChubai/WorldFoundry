@@ -3,7 +3,7 @@
 import json
 import math
 import os
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import numpy as np
 from PIL import Image
@@ -371,11 +371,9 @@ class Pi3Pipeline(PipelineABC):
         if res is None:
             raise RuntimeError("No result available. Run reconstruction first.")
 
-        if res.input_images is None:
-            raise RuntimeError("No input images in result for coloring.")
         pts_all = res.numpy_data["points"][0]
         masks = res.numpy_data["masks"][0].astype(bool)
-        colors_all = np.stack(res.input_images, axis=0)
+        colors_all = np.stack(cast(list[np.ndarray], res.input_images), axis=0)
         pts = pts_all[masks].astype(np.float64)
         cols = (colors_all[masks] * 255).clip(0, 255).astype(np.uint8)
         h, w = pts_all.shape[1], pts_all.shape[2]

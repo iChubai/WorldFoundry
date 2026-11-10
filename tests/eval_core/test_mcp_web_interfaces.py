@@ -40,7 +40,7 @@ def test_mcp_server_info_documentation_routes_exist(tmp_path: Path) -> None:
 def test_python_module_command_rewrites_console_entrypoint() -> None:
     command = python_module_command(("wf", "run", "--json"), python_executable="/usr/bin/python")
 
-    assert command == ("/usr/bin/python", "-m", "worldfoundry.evaluation", "run", "--json")
+    assert command == ("/usr/bin/python", "-m", "worldfoundry.evals", "run", "--json")
 
 
 def test_command_job_store_captures_json_result() -> None:

@@ -206,8 +206,8 @@ def test_checkpoint_config_binds_local_snapshot_without_mutating_defaults(tmp_pa
 
 
 def test_standard_evaluation_invocation(tmp_path):
-    from worldfoundry.evaluation.api.generation import GenerationRequest
-    from worldfoundry.evaluation.models.pipelines.invocation import build_pipeline_invocation, invoke_pipeline
+    from worldfoundry.evals.api.generation import GenerationRequest
+    from worldfoundry.evals.models.pipelines.invocation import build_pipeline_invocation, invoke_pipeline
 
     class Native:
         model_id = "kandinsky6-pro-distill"

@@ -4,24 +4,19 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> lingbot_map -> lingbot_map -> utils -> pose_enc.py functionality."""
-
-import torch
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import quat_to_mat, mat_to_quat
-import os
-import torch
 import numpy as np
-import gzip
-import json
-import random
-import logging
-import warnings
+import torch
 
-from .geometry import closed_form_inverse_se3, closed_form_inverse_se3_general
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import mat_to_quat, quat_to_mat
+
+from .geometry import closed_form_inverse_se3
 
 
 def extri_intri_to_pose_encoding(
-    extrinsics, intrinsics, image_size_hw=None, pose_encoding_type="absT_quaR_FoV"  # e.g., (256, 512)
+    extrinsics,
+    intrinsics,
+    image_size_hw=None,
+    pose_encoding_type="absT_quaR_FoV",  # e.g., (256, 512)
 ):
     """Convert camera extrinsics and intrinsics to a compact pose encoding.
 
@@ -72,7 +67,10 @@ def extri_intri_to_pose_encoding(
 
 
 def pose_encoding_to_extri_intri(
-    pose_encoding, image_size_hw=None, pose_encoding_type="absT_quaR_FoV", build_intrinsics=True  # e.g., (256, 512)
+    pose_encoding,
+    image_size_hw=None,
+    pose_encoding_type="absT_quaR_FoV",
+    build_intrinsics=True,  # e.g., (256, 512)
 ):
     """Convert a pose encoding back to camera extrinsics and intrinsics.
 
@@ -124,7 +122,7 @@ def pose_encoding_to_extri_intri(
             H, W = image_size_hw
             fy = (H / 2.0) / torch.tan(fov_h / 2.0)
             fx = (W / 2.0) / torch.tan(fov_w / 2.0)
-            intrinsics = torch.zeros(pose_encoding.shape[:2] + (3, 3), device=pose_encoding.device)
+            intrinsics = torch.zeros(pose_encoding.shape[:2] + (3, 3), device=pose_encoding.device)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             intrinsics[..., 0, 0] = fx
             intrinsics[..., 1, 1] = fy
             intrinsics[..., 0, 2] = W / 2
@@ -140,6 +138,7 @@ def pose_encoding_to_extri_intri(
         intrinsics = None
 
     return extrinsics, intrinsics
+
 
 def convert_pt3d_RT_to_opencv(Rot, Trans):
     """
@@ -292,19 +291,11 @@ def se3_to_relative_pose_error(pred_se3, gt_se3, num_frames):
     """
     pair_idx_i1, pair_idx_i2 = build_pair_index(num_frames)
 
-    relative_pose_gt = gt_se3[pair_idx_i1].bmm(
-        closed_form_inverse_se3(gt_se3[pair_idx_i2])
-    )
-    relative_pose_pred = pred_se3[pair_idx_i1].bmm(
-        closed_form_inverse_se3(pred_se3[pair_idx_i2])
-    )
+    relative_pose_gt = gt_se3[pair_idx_i1].bmm(closed_form_inverse_se3(gt_se3[pair_idx_i2]))
+    relative_pose_pred = pred_se3[pair_idx_i1].bmm(closed_form_inverse_se3(pred_se3[pair_idx_i2]))
 
-    rel_rangle_deg = rotation_angle(
-        relative_pose_gt[:, :3, :3], relative_pose_pred[:, :3, :3]
-    )
-    rel_tangle_deg = translation_angle(
-        relative_pose_gt[:, :3, 3], relative_pose_pred[:, :3, 3]
-    )
+    rel_rangle_deg = rotation_angle(relative_pose_gt[:, :3, :3], relative_pose_pred[:, :3, :3])
+    rel_tangle_deg = translation_angle(relative_pose_gt[:, :3, 3], relative_pose_pred[:, :3, 3])
 
     return rel_rangle_deg, rel_tangle_deg
 
@@ -320,19 +311,15 @@ def colmap_to_opencv_intrinsics(K):
     K[..., 0, 2] -= 0.5
     K[..., 1, 2] -= 0.5
     return K
-    
-def read_camera_parameters(filename):
-    """Read camera parameters.
 
-    Args:
-        filename: The filename.
-    """
+
+def read_camera_parameters(filename):
     with open(filename) as f:
         lines = f.readlines()
         lines = [line.rstrip() for line in lines]
     # extrinsics: line [1,5), 4x4 matrix
-    extrinsics = np.fromstring(' '.join(lines[1:5]), dtype=np.float32, sep=' ').reshape((4, 4))
+    extrinsics = np.fromstring(" ".join(lines[1:5]), dtype=np.float32, sep=" ").reshape((4, 4))
     # intrinsics: line [7-10), 3x3 matrix
-    intrinsics = np.fromstring(' '.join(lines[7:10]), dtype=np.float32, sep=' ').reshape((3, 3))
-  
+    intrinsics = np.fromstring(" ".join(lines[7:10]), dtype=np.float32, sep=" ").reshape((3, 3))
+
     return intrinsics, extrinsics

@@ -24,7 +24,7 @@ integration:
   - Runtime source is vendored in-tree and the CUDA generation wrapper is wired.
   - Full 256-token class-conditional generation passed checkpoint-backed GPU and semantic visual QA.
 runtime_profile: runtime-profile:open-magvit2
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: open-magvit2
 runner_parity:
   status: checkpoint_backed_verified

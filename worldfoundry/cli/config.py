@@ -13,7 +13,7 @@ from typing import Any
 
 import yaml
 
-from worldfoundry.evaluation.utils import REPO_ROOT
+from worldfoundry.evals.utils import REPO_ROOT
 
 from .presentation import print_table, terminal_enabled
 from .utils import json_dump, parse_key_value_strings

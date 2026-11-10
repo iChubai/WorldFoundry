@@ -27,7 +27,7 @@ WorldMemBench's MUSIQ-SPAQ is a different metric backend profile.
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/wbench/run_wbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/wbench/run_wbench_official_runner.py \
   --run-official \
   --model-name <model_name> \
   --phase gpu \
@@ -40,7 +40,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 `--submission-protocol text_multi_turn|camera_conditioned|action_conditioned` only when videos truly follow that official multi-turn interface. Env: `WORLDFOUNDRY_WBENCH_RESULTS_PATH`, `WORLDFOUNDRY_WBENCH_ROOT`. Shared stack: `video_world_perception_stack`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/wbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/wbench`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/wbench.yaml`, `worldfoundry/evals/tasks/execution/runners/wbench`.
 
 Outputs include `scorecard.json` (primary `wbench_average`).
 

@@ -18,16 +18,16 @@ from worldfoundry.base_models.capabilities import (
     check_base_model_dependencies,
     resolve_base_model_capability_ids,
 )
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import formal_benchmark_ids
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import formal_benchmark_ids
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TASK_ROOT = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "tasks" / "external"
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import (
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
     iter_benchmark_catalog_manifest_paths,
 )
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import load_benchmark_runtime_profiles
-from worldfoundry.evaluation.utils import load_manifest
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import load_benchmark_runtime_profiles
+from worldfoundry.evals.utils import load_manifest
 
 
 def _dependency_tuple(payload: dict, key: str) -> tuple[str, ...]:

@@ -25,7 +25,7 @@ runner_parity:
     official runner byte-for-byte.
   - No task success, long-horizon consistency, or benchmark parity is claimed.
 runtime_profile: runtime-profile:adaworld
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: adaworld
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain

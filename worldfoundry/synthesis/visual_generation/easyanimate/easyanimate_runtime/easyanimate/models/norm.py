@@ -1,9 +1,6 @@
-from typing import Any, Dict, Optional, Tuple
-
 import torch
 import torch.nn.functional as F
-from diffusers.models.embeddings import (CombinedTimestepLabelEmbeddings,
-                                         TimestepEmbedding, Timesteps)
+from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from torch import nn
 
 
@@ -13,17 +10,17 @@ def zero_module(module):
         p.detach().zero_()
     return module
 
+
 class FP32LayerNorm(nn.LayerNorm):
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         origin_dtype = inputs.dtype
-        if hasattr(self, 'weight') and self.weight is not None:
+        if hasattr(self, "weight") and self.weight is not None:
             return F.layer_norm(
                 inputs.float(), self.normalized_shape, self.weight.float(), self.bias.float(), self.eps
             ).to(origin_dtype)
         else:
-            return F.layer_norm(
-                inputs.float(), self.normalized_shape, None, None, self.eps
-            ).to(origin_dtype)
+            return F.layer_norm(inputs.float(), self.normalized_shape, None, None, self.eps).to(origin_dtype)
+
 
 class EasyAnimateRMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-6):
@@ -40,6 +37,7 @@ class EasyAnimateRMSNorm(nn.Module):
 
     def extra_repr(self):
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
+
 
 class PixArtAlphaCombinedTimestepSizeEmbeddings(nn.Module):
     """
@@ -61,7 +59,7 @@ class PixArtAlphaCombinedTimestepSizeEmbeddings(nn.Module):
             self.additional_condition_proj = Timesteps(num_channels=256, flip_sin_to_cos=True, downscale_freq_shift=0)
             self.resolution_embedder = TimestepEmbedding(in_channels=256, time_embed_dim=size_emb_dim)
             self.aspect_ratio_embedder = TimestepEmbedding(in_channels=256, time_embed_dim=size_emb_dim)
-            
+
             self.resolution_embedder.linear_2 = zero_module(self.resolution_embedder.linear_2)
             self.aspect_ratio_embedder.linear_2 = zero_module(self.aspect_ratio_embedder.linear_2)
 
@@ -79,6 +77,7 @@ class PixArtAlphaCombinedTimestepSizeEmbeddings(nn.Module):
             conditioning = timesteps_emb
 
         return conditioning
+
 
 class AdaLayerNormSingle(nn.Module):
     r"""
@@ -104,13 +103,14 @@ class AdaLayerNormSingle(nn.Module):
     def forward(
         self,
         timestep: torch.Tensor,
-        added_cond_kwargs: Optional[Dict[str, torch.Tensor]] = None,
-        batch_size: Optional[int] = None,
-        hidden_dtype: Optional[torch.dtype] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        added_cond_kwargs: dict[str, torch.Tensor] | None = None,
+        batch_size: int | None = None,
+        hidden_dtype: torch.dtype | None = None,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         # No modulation happening here.
         embedded_timestep = self.emb(timestep, **added_cond_kwargs, batch_size=batch_size, hidden_dtype=hidden_dtype)
         return self.linear(self.silu(embedded_timestep)), embedded_timestep
+
 
 class AdaLayerNormShift(nn.Module):
     r"""
@@ -131,6 +131,7 @@ class AdaLayerNormShift(nn.Module):
         shift = self.linear(self.silu(emb.to(torch.float32)).to(emb.dtype))
         x = self.norm(x) + shift.unsqueeze(dim=1)
         return x
+
 
 class EasyAnimateLayerNormZero(nn.Module):
     # Modified from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/normalization.py
@@ -159,7 +160,7 @@ class EasyAnimateLayerNormZero(nn.Module):
 
     def forward(
         self, hidden_states: torch.Tensor, encoder_hidden_states: torch.Tensor, temb: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         shift, scale, gate, enc_shift, enc_scale, enc_gate = self.linear(self.silu(temb)).chunk(6, dim=1)
         hidden_states = self.norm(hidden_states) * (1 + scale)[:, None, :] + shift[:, None, :]
         encoder_hidden_states = self.norm(encoder_hidden_states) * (1 + enc_scale)[:, None, :] + enc_shift[:, None, :]

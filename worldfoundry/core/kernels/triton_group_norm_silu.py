@@ -25,8 +25,8 @@ from worldfoundry.core.execution.compile_cache import configure_persistent_compi
 
 configure_persistent_compile_cache(namespace="group-norm-triton")
 
-import triton  # noqa: E402
-import triton.language as tl  # noqa: E402
+import triton  # noqa: E402 - Follows the Triton compile-cache configuration.
+import triton.language as tl  # noqa: E402 - Follows the Triton compile-cache configuration.
 
 _LARGE_GROUP_THRESHOLD = 1 << 18
 _BLOCK_SIZE = 4096

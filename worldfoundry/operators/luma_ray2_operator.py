@@ -7,15 +7,32 @@ from .base_operator import BaseOperator
 
 
 def _validate_public_url(url: str, field_name: str) -> str:
-    """Validate public url implementation."""
     return require_public_url(url, field_name, "Luma")
 
 
-class LumaRay2Operator(BaseOperator):
-    """
-    Luma Ray2 数据处理 Operator
+def _keyframe(
+    url: str | None, url_field: str, generation_id: str | None, generation_field: str
+) -> dict[str, Any] | None:
+    """Build a Luma keyframe from a public image URL, else from a generation ID, else None."""
+    if url is not None:
+        return {
+            "type": "image",
+            "url": _validate_public_url(url, url_field),
+        }
+    if generation_id is None:
+        return None
+    if not isinstance(generation_id, str):
+        raise TypeError(f"{generation_field} must be a string, got {type(generation_id)}")
+    return {
+        "type": "generation",
+        "id": generation_id,
+    }
 
-    Luma keyframe 输入需要公网 URL 或 generation id。
+
+class LumaRay2Operator(BaseOperator):
+    """Prepare prompts and keyframes for Luma Ray2 requests.
+
+    Each Luma keyframe is either a public image URL or a generation ID.
     """
 
     def __init__(
@@ -64,32 +81,12 @@ class LumaRay2Operator(BaseOperator):
             raise ValueError("Luma frame1 accepts either last_frame or end_generation_id, not both.")
 
         keyframes: dict[str, Any] = {}
-
-        if images is not None:
-            keyframes["frame0"] = {
-                "type": "image",
-                "url": _validate_public_url(images, "images"),
-            }
-        elif start_generation_id is not None:
-            if not isinstance(start_generation_id, str):
-                raise TypeError(f"start_generation_id must be a string, got {type(start_generation_id)}")
-            keyframes["frame0"] = {
-                "type": "generation",
-                "id": start_generation_id,
-            }
-
-        if last_frame is not None:
-            keyframes["frame1"] = {
-                "type": "image",
-                "url": _validate_public_url(last_frame, "last_frame"),
-            }
-        elif end_generation_id is not None:
-            if not isinstance(end_generation_id, str):
-                raise TypeError(f"end_generation_id must be a string, got {type(end_generation_id)}")
-            keyframes["frame1"] = {
-                "type": "generation",
-                "id": end_generation_id,
-            }
+        frame0 = _keyframe(images, "images", start_generation_id, "start_generation_id")
+        if frame0 is not None:
+            keyframes["frame0"] = frame0
+        frame1 = _keyframe(last_frame, "last_frame", end_generation_id, "end_generation_id")
+        if frame1 is not None:
+            keyframes["frame1"] = frame1
 
         return {
             "keyframes": keyframes or None,

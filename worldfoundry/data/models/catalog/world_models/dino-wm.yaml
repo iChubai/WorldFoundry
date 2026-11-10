@@ -30,7 +30,7 @@ runner_parity:
     a nontrivial target was not solved; neither establishes planning quality.
   - The released pusht and point_maze checkpoints have not been validated with their task datasets and simulators.
 runtime_profile: runtime-profile:dino-wm
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: dino-wm
 output_artifacts:
 - generated_world

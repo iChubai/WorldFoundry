@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for base_models -> three_dimensions -> depth -> depth_anything -> depth_anything_v3 -> model -> utils -> head_utils.py functionality."""
-
-from typing import Tuple, Union
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -85,35 +82,17 @@ def activate_head_gs(out, activation="norm_exp", conf_activation="expp1", conf_d
 class Permute(nn.Module):
     """nn.Module wrapper around Tensor.permute for cleaner nn.Sequential usage."""
 
-    dims: Tuple[int, ...]
+    dims: tuple[int, ...]
 
-    def __init__(self, dims: Tuple[int, ...]) -> None:
-        """Init.
-
-        Args:
-            dims: The dims.
-
-        Returns:
-            The return value.
-        """
+    def __init__(self, dims: tuple[int, ...]) -> None:
         super().__init__()
         self.dims = dims
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:  # type: ignore[override]
-        """Forward.
-
-        Args:
-            x: The x.
-
-        Returns:
-            The return value.
-        """
         return x.permute(*self.dims)
 
 
-def position_grid_to_embed(
-    pos_grid: torch.Tensor, embed_dim: int, omega_0: float = 100
-) -> torch.Tensor:
+def position_grid_to_embed(pos_grid: torch.Tensor, embed_dim: int, omega_0: float = 100) -> torch.Tensor:
     """
     Convert 2D position grid (HxWx2) to sinusoidal embeddings (HxWxC)
 
@@ -170,7 +149,7 @@ def make_sincos_pos_embed(embed_dim: int, pos: torch.Tensor, omega_0: float = 10
 def create_uv_grid(
     width: int,
     height: int,
-    aspect_ratio: float = None,
+    aspect_ratio: float | None = None,
     dtype: torch.dtype = None,
     device: torch.device = None,
 ) -> torch.Tensor:
@@ -222,8 +201,8 @@ def create_uv_grid(
 # -----------------------------------------------------------------------------
 def custom_interpolate(
     x: torch.Tensor,
-    size: Union[Tuple[int, int], None] = None,
-    scale_factor: Union[float, None] = None,
+    size: tuple[int, int] | None = None,
+    scale_factor: float | None = None,
     mode: str = "bilinear",
     align_corners: bool = True,
 ) -> torch.Tensor:
@@ -239,10 +218,7 @@ def custom_interpolate(
 
     if total > INT_MAX:
         chunks = torch.chunk(x, chunks=(total // INT_MAX) + 1, dim=0)
-        outs = [
-            nn.functional.interpolate(c, size=size, mode=mode, align_corners=align_corners)
-            for c in chunks
-        ]
+        outs = [nn.functional.interpolate(c, size=size, mode=mode, align_corners=align_corners) for c in chunks]
         return torch.cat(outs, dim=0).contiguous()
 
     return nn.functional.interpolate(x, size=size, mode=mode, align_corners=align_corners)

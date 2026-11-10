@@ -4,7 +4,6 @@ from pathlib import Path
 
 from worldfoundry.core.io.paths import resolve_data_path
 
-
 RUNTIME_DIR = Path(__file__).resolve().parent
 INFERENCE_ENTRYPOINT = RUNTIME_DIR / "inference.py"
 BLOCKED_REASON = (
@@ -41,7 +40,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         elif not Path(value).expanduser().exists():
             missing.append({"kind": "asset", "path": value, "reason": f"MineWorld `{key}` path does not exist"})
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "MineWorld inference.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "MineWorld inference.py is missing"}
+        )
     return missing
 
 

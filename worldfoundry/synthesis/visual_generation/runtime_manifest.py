@@ -6,12 +6,13 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 
 from ..base_synthesis import BaseSynthesis
@@ -276,7 +277,12 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
             "Stable Video Diffusion img2vid base model",
             "official EgoWM source checkout",
         ),
-        input_schema={"prompt": True, "image": True, "video": True, "actions": ["navigation_action", "egocentric_action"]},
+        input_schema={
+            "prompt": True,
+            "image": True,
+            "video": True,
+            "actions": ["navigation_action", "egocentric_action"],
+        },
     ),
     "happyoyster": WorldModelRuntimeSpec(
         model_id="happyoyster",
@@ -309,7 +315,12 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         entrypoint_relative="demo_scenegen.py",
         blocked_reason="HunyuanWorld 1.0 official source route is registered; execution requires tencent/HunyuanWorld-1 weights plus reviewed third-party runtime assets.",
         required_assets=("tencent/HunyuanWorld-1 checkpoint", "Real-ESRGAN/ZIM/MoGe/Open3D runtime assets"),
-        input_schema={"prompt": True, "image": True, "video": False, "actions": ["camera_navigation", "scene_generation"]},
+        input_schema={
+            "prompt": True,
+            "image": True,
+            "video": False,
+            "actions": ["camera_navigation", "scene_generation"],
+        },
     ),
     "mosaicmem": WorldModelRuntimeSpec(
         model_id="mosaicmem",
@@ -328,7 +339,12 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         official_repo_url="https://github.com/NVlabs/GR00T-WholeBodyControl",
         blocked_reason="MotionBricks official source route is registered; execution requires motion checkpoints, robot assets, and a validated whole-body-control runtime configuration.",
         required_assets=("MotionBricks checkpoint/assets", "robot morphology/task assets"),
-        input_schema={"prompt": True, "image": False, "video": True, "actions": ["whole_body_motion", "control_sequence"]},
+        input_schema={
+            "prompt": True,
+            "image": False,
+            "video": True,
+            "actions": ["whole_body_motion", "control_sequence"],
+        },
     ),
     "omniforcing": WorldModelRuntimeSpec(
         model_id="omniforcing",
@@ -337,7 +353,13 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         official_repo_url="https://github.com/OmniForcing/OmniForcing",
         blocked_reason="OmniForcing official source route is registered; execution requires the official audio-visual runtime stack and checkpoints.",
         required_assets=("OmniForcing checkpoint/assets",),
-        input_schema={"prompt": True, "image": True, "video": True, "audio": True, "actions": ["forcing_signal", "interaction"]},
+        input_schema={
+            "prompt": True,
+            "image": True,
+            "video": True,
+            "audio": True,
+            "actions": ["forcing_signal", "interaction"],
+        },
     ),
     "pointworld": WorldModelRuntimeSpec(
         model_id="pointworld",
@@ -346,7 +368,13 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         official_repo_url="https://github.com/NVlabs/PointWorld",
         blocked_reason="PointWorld official source route is registered; execution requires nvidia/PointWorld_models assets and point-cloud/robot task inputs.",
         required_assets=("nvidia/PointWorld_models checkpoint assets", "point-cloud or robot task input"),
-        input_schema={"prompt": True, "image": True, "video": True, "point_cloud": True, "actions": ["robot_action", "point_cloud_condition"]},
+        input_schema={
+            "prompt": True,
+            "image": True,
+            "video": True,
+            "point_cloud": True,
+            "actions": ["robot_action", "point_cloud_condition"],
+        },
     ),
     "shotstream": WorldModelRuntimeSpec(
         model_id="shotstream",
@@ -391,7 +419,12 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         entrypoint_relative="setup.py",
         blocked_reason="SimWorld route is registered; execution requires a running simulator/UnrealCV backend and task assets.",
         required_assets=("SimWorld simulator assets", "UnrealCV/runtime server"),
-        input_schema={"prompt": True, "image": False, "video": False, "actions": ["simulator_action", "multi_agent_action"]},
+        input_schema={
+            "prompt": True,
+            "image": False,
+            "video": False,
+            "actions": ["simulator_action", "multi_agent_action"],
+        },
     ),
     "uwm": WorldModelRuntimeSpec(
         model_id="uwm",
@@ -430,7 +463,12 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         runtime_root_func="runtime_root",
         official_repo_url="https://github.com/allenai/WildDet3D",
         blocked_reason="",
-        required_assets=("allenai/WildDet3D checkpoint", "robbyant/lingbot-depth-postrain-dc-vitl14 model.pt", "official source checkout and submodules", "RGB image"),
+        required_assets=(
+            "allenai/WildDet3D checkpoint",
+            "robbyant/lingbot-depth-postrain-dc-vitl14 model.pt",
+            "official source checkout and submodules",
+            "RGB image",
+        ),
         input_schema={"prompt": True, "image": True, "video": False, "actions": ["detection_query"]},
     ),
     "wildworld": WorldModelRuntimeSpec(
@@ -450,7 +488,12 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         entrypoint_relative="trellis/pipelines/world_grow.py",
         blocked_reason="WorldGrow official source route is registered; execution requires UranusITS/WorldGrow checkpoints and TRELLIS runtime assets.",
         required_assets=("UranusITS/WorldGrow checkpoint/assets", "TRELLIS assets"),
-        input_schema={"prompt": True, "image": True, "video": True, "actions": ["camera_navigation", "scene_expansion"]},
+        input_schema={
+            "prompt": True,
+            "image": True,
+            "video": True,
+            "actions": ["camera_navigation", "scene_expansion"],
+        },
     ),
     "worldmem": WorldModelRuntimeSpec(
         model_id="worldmem",
@@ -497,7 +540,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
         device: str | None = None,
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> "WorldModelRuntimeSynthesis":
+    ) -> WorldModelRuntimeSynthesis:
         del args
         options = dict(pretrained_model_path) if isinstance(pretrained_model_path, Mapping) else {}
         if pretrained_model_path is not None and not isinstance(pretrained_model_path, Mapping):
@@ -521,7 +564,14 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
 
     def _checkpoint_paths(self) -> list[Path]:
         paths: list[Path] = []
-        for key in ("checkpoint_path", "checkpoint_dir", "ckpt_path", "ckpt_base_path", "model_path", "pretrained_model_path"):
+        for key in (
+            "checkpoint_path",
+            "checkpoint_dir",
+            "ckpt_path",
+            "ckpt_base_path",
+            "model_path",
+            "pretrained_model_path",
+        ):
             value = self.options.get(key)
             if isinstance(value, (str, Path)) and str(value).strip():
                 paths.append(expand_worldfoundry_path(value))
@@ -561,7 +611,9 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
             )
         for env_name in self.profile.required_env:
             if not os.getenv(env_name):
-                missing.append({"kind": "environment", "path": env_name, "reason": "required environment variable is not set"})
+                missing.append(
+                    {"kind": "environment", "path": env_name, "reason": "required environment variable is not set"}
+                )
 
         checkpoint_paths = self._checkpoint_paths()
         if checkpoint_paths:
@@ -639,9 +691,7 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
         if hook is not None:
             extra_entries = hook(runtime_root=self.runtime_root, options=self.options, profile=self.runtime_profile)
             pythonpath_entries.extend(str(item) for item in extra_entries or ())
-        pythonpath_entries.extend(
-            [str(self.runtime_root), str(project_root(__file__)), env.get("PYTHONPATH", "")]
-        )
+        pythonpath_entries.extend([str(self.runtime_root), str(project_root(__file__)), env.get("PYTHONPATH", "")])
         env["PYTHONPATH"] = os.pathsep.join(item for item in pythonpath_entries if item)
         env["WORLDFOUNDRY_MODEL_ID"] = self.model_id
         env["WORLDFOUNDRY_OUTPUT_PATH"] = str(output_path)
@@ -737,7 +787,9 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
         plan_path = _plan_path(output_path, self.model_id)
         plan_path.parent.mkdir(parents=True, exist_ok=True)
         plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        output = _artifact_output_path(output_path, self.model_id, getattr(self.runtime_profile, "artifact_filename", "world.mp4"))
+        output = _artifact_output_path(
+            output_path, self.model_id, getattr(self.runtime_profile, "artifact_filename", "world.mp4")
+        )
         missing = list(plan["missing_assets"])
         if plan_only:
             return {
@@ -897,7 +949,12 @@ def resolve_runtime_manifest(spec: WorldModelRuntimeSpec) -> tuple[Path, Path | 
         entrypoint = (runtime_root / spec.entrypoint_relative).expanduser().resolve()
 
     blocked_reason = spec.blocked_reason
-    if blocked_reason is None and module is not None and spec.blocked_reason_attr and hasattr(module, spec.blocked_reason_attr):
+    if (
+        blocked_reason is None
+        and module is not None
+        and spec.blocked_reason_attr
+        and hasattr(module, spec.blocked_reason_attr)
+    ):
         blocked_reason = str(getattr(module, spec.blocked_reason_attr))
     if blocked_reason is None:
         blocked_reason = f"{spec.display_name} runtime is vendored in-tree but remains checkpoint/environment gated."

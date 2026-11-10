@@ -27,58 +27,42 @@ from .model import HuggingfaceTokenizer
 from .xlm_roberta import XLMRoberta
 
 __all__ = [
-    'XLMRobertaCLIP',
-    'clip_xlm_roberta_vit_h_14',
-    'CLIPModel',
+    "CLIPModel",
+    "XLMRobertaCLIP",
+    "clip_xlm_roberta_vit_h_14",
 ]
 
 
 def pos_interpolate(pos, seq_len):
-    """Pos interpolate.
-
-    Args:
-        pos: The pos.
-        seq_len: The seq len.
-    """
     if pos.size(1) == seq_len:
         return pos
     else:
         src_grid = int(math.sqrt(pos.size(1)))
         tar_grid = int(math.sqrt(seq_len))
         n = pos.size(1) - src_grid * src_grid
-        return torch.cat([
-            pos[:, :n],
-            F.interpolate(
-                pos[:, n:].float().reshape(1, src_grid, src_grid, -1).permute(
-                    0, 3, 1, 2),
-                size=(tar_grid, tar_grid),
-                mode='bicubic',
-                align_corners=False).flatten(2).transpose(1, 2)
-        ],
-                         dim=1)
+        return torch.cat(
+            [
+                pos[:, :n],
+                F.interpolate(
+                    pos[:, n:].float().reshape(1, src_grid, src_grid, -1).permute(0, 3, 1, 2),
+                    size=(tar_grid, tar_grid),
+                    mode="bicubic",
+                    align_corners=False,
+                )
+                .flatten(2)
+                .transpose(1, 2),
+            ],
+            dim=1,
+        )
 
 
 class QuickGELU(nn.Module):
-    """Quick gelu implementation."""
-
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         return x * torch.sigmoid(1.702 * x)
 
 
 class LayerNorm(nn.LayerNorm):
-    """Layer norm implementation."""
-
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # Keep the numerically sensitive normalization in FP32 even after
         # Accelerate has materialized/offloaded this module in BF16.  Calling
         # ``nn.LayerNorm.forward`` with an FP32 input and BF16 affine weights
@@ -95,23 +79,7 @@ class LayerNorm(nn.LayerNorm):
 
 
 class SelfAttention(nn.Module):
-    """Self attention implementation."""
-
-    def __init__(self,
-                 dim,
-                 num_heads,
-                 causal=False,
-                 attn_dropout=0.0,
-                 proj_dropout=0.0):
-        """Init.
-
-        Args:
-            dim: The dim.
-            num_heads: The num heads.
-            causal: The causal.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-        """
+    def __init__(self, dim, num_heads, causal=False, attn_dropout=0.0, proj_dropout=0.0):
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -146,15 +114,7 @@ class SelfAttention(nn.Module):
 
 
 class SwiGLU(nn.Module):
-    """Swi glu implementation."""
-
     def __init__(self, dim, mid_dim):
-        """Init.
-
-        Args:
-            dim: The dim.
-            mid_dim: The mid dim.
-        """
         super().__init__()
         self.dim = dim
         self.mid_dim = mid_dim
@@ -165,43 +125,25 @@ class SwiGLU(nn.Module):
         self.fc3 = nn.Linear(mid_dim, dim)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         x = F.silu(self.fc1(x)) * self.fc2(x)
         x = self.fc3(x)
         return x
 
 
 class AttentionBlock(nn.Module):
-    """Attention block implementation."""
-
-    def __init__(self,
-                 dim,
-                 mlp_ratio,
-                 num_heads,
-                 post_norm=False,
-                 causal=False,
-                 activation='quick_gelu',
-                 attn_dropout=0.0,
-                 proj_dropout=0.0,
-                 norm_eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            mlp_ratio: The mlp ratio.
-            num_heads: The num heads.
-            post_norm: The post norm.
-            causal: The causal.
-            activation: The activation.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-            norm_eps: The norm eps.
-        """
-        assert activation in ['quick_gelu', 'gelu', 'swi_glu']
+    def __init__(
+        self,
+        dim,
+        mlp_ratio,
+        num_heads,
+        post_norm=False,
+        causal=False,
+        activation="quick_gelu",
+        attn_dropout=0.0,
+        proj_dropout=0.0,
+        norm_eps=1e-5,
+    ):
+        assert activation in ["quick_gelu", "gelu", "swi_glu"]
         super().__init__()
         self.dim = dim
         self.mlp_ratio = mlp_ratio
@@ -212,23 +154,19 @@ class AttentionBlock(nn.Module):
 
         # layers
         self.norm1 = LayerNorm(dim, eps=norm_eps)
-        self.attn = SelfAttention(dim, num_heads, causal, attn_dropout,
-                                  proj_dropout)
+        self.attn = SelfAttention(dim, num_heads, causal, attn_dropout, proj_dropout)
         self.norm2 = LayerNorm(dim, eps=norm_eps)
-        if activation == 'swi_glu':
+        if activation == "swi_glu":
             self.mlp = SwiGLU(dim, int(dim * mlp_ratio))
         else:
             self.mlp = nn.Sequential(
                 nn.Linear(dim, int(dim * mlp_ratio)),
-                QuickGELU() if activation == 'quick_gelu' else nn.GELU(),
-                nn.Linear(int(dim * mlp_ratio), dim), nn.Dropout(proj_dropout))
+                QuickGELU() if activation == "quick_gelu" else nn.GELU(),
+                nn.Linear(int(dim * mlp_ratio), dim),
+                nn.Dropout(proj_dropout),
+            )
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.post_norm:
             x = x + self.norm1(self.attn(x))
             x = x + self.norm2(self.mlp(x))
@@ -239,25 +177,7 @@ class AttentionBlock(nn.Module):
 
 
 class AttentionPool(nn.Module):
-    """Attention pool implementation."""
-
-    def __init__(self,
-                 dim,
-                 mlp_ratio,
-                 num_heads,
-                 activation='gelu',
-                 proj_dropout=0.0,
-                 norm_eps=1e-5):
-        """Init.
-
-        Args:
-            dim: The dim.
-            mlp_ratio: The mlp ratio.
-            num_heads: The num heads.
-            activation: The activation.
-            proj_dropout: The proj dropout.
-            norm_eps: The norm eps.
-        """
+    def __init__(self, dim, mlp_ratio, num_heads, activation="gelu", proj_dropout=0.0, norm_eps=1e-5):
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -276,8 +196,10 @@ class AttentionPool(nn.Module):
         self.norm = LayerNorm(dim, eps=norm_eps)
         self.mlp = nn.Sequential(
             nn.Linear(dim, int(dim * mlp_ratio)),
-            QuickGELU() if activation == 'quick_gelu' else nn.GELU(),
-            nn.Linear(int(dim * mlp_ratio), dim), nn.Dropout(proj_dropout))
+            QuickGELU() if activation == "quick_gelu" else nn.GELU(),
+            nn.Linear(int(dim * mlp_ratio), dim),
+            nn.Dropout(proj_dropout),
+        )
 
     def forward(self, x):
         """
@@ -303,53 +225,32 @@ class AttentionPool(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    """Vision transformer implementation."""
-
-    def __init__(self,
-                 image_size=224,
-                 patch_size=16,
-                 dim=768,
-                 mlp_ratio=4,
-                 out_dim=512,
-                 num_heads=12,
-                 num_layers=12,
-                 pool_type='token',
-                 pre_norm=True,
-                 post_norm=False,
-                 activation='quick_gelu',
-                 attn_dropout=0.0,
-                 proj_dropout=0.0,
-                 embedding_dropout=0.0,
-                 norm_eps=1e-5):
-        """Init.
-
-        Args:
-            image_size: The image size.
-            patch_size: The patch size.
-            dim: The dim.
-            mlp_ratio: The mlp ratio.
-            out_dim: The out dim.
-            num_heads: The num heads.
-            num_layers: The num layers.
-            pool_type: The pool type.
-            pre_norm: The pre norm.
-            post_norm: The post norm.
-            activation: The activation.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-            embedding_dropout: The embedding dropout.
-            norm_eps: The norm eps.
-        """
+    def __init__(
+        self,
+        image_size=224,
+        patch_size=16,
+        dim=768,
+        mlp_ratio=4,
+        out_dim=512,
+        num_heads=12,
+        num_layers=12,
+        pool_type="token",
+        pre_norm=True,
+        post_norm=False,
+        activation="quick_gelu",
+        attn_dropout=0.0,
+        proj_dropout=0.0,
+        embedding_dropout=0.0,
+        norm_eps=1e-5,
+    ):
         if image_size % patch_size != 0:
-            print(
-                '[WARNING] image_size is not divisible by patch_size',
-                flush=True)
-        assert pool_type in ('token', 'token_fc', 'attn_pool')
+            print("[WARNING] image_size is not divisible by patch_size", flush=True)
+        assert pool_type in ("token", "token_fc", "attn_pool")
         out_dim = out_dim or dim
         super().__init__()
         self.image_size = image_size
         self.patch_size = patch_size
-        self.num_patches = (image_size // patch_size)**2
+        self.num_patches = (image_size // patch_size) ** 2
         self.dim = dim
         self.mlp_ratio = mlp_ratio
         self.out_dim = out_dim
@@ -361,56 +262,43 @@ class VisionTransformer(nn.Module):
 
         # embeddings
         gain = 1.0 / math.sqrt(dim)
-        self.patch_embedding = nn.Conv2d(
-            3,
-            dim,
-            kernel_size=patch_size,
-            stride=patch_size,
-            bias=not pre_norm)
-        if pool_type in ('token', 'token_fc'):
+        self.patch_embedding = nn.Conv2d(3, dim, kernel_size=patch_size, stride=patch_size, bias=not pre_norm)
+        if pool_type in ("token", "token_fc"):
             self.cls_embedding = nn.Parameter(gain * torch.randn(1, 1, dim))
-        self.pos_embedding = nn.Parameter(gain * torch.randn(
-            1, self.num_patches +
-            (1 if pool_type in ('token', 'token_fc') else 0), dim))
+        self.pos_embedding = nn.Parameter(
+            gain * torch.randn(1, self.num_patches + (1 if pool_type in ("token", "token_fc") else 0), dim)
+        )
         self.dropout = nn.Dropout(embedding_dropout)
 
         # transformer
         self.pre_norm = LayerNorm(dim, eps=norm_eps) if pre_norm else None
-        self.transformer = nn.Sequential(*[
-            AttentionBlock(dim, mlp_ratio, num_heads, post_norm, False,
-                           activation, attn_dropout, proj_dropout, norm_eps)
-            for _ in range(num_layers)
-        ])
+        self.transformer = nn.Sequential(
+            *[
+                AttentionBlock(
+                    dim, mlp_ratio, num_heads, post_norm, False, activation, attn_dropout, proj_dropout, norm_eps
+                )
+                for _ in range(num_layers)
+            ]
+        )
         self.post_norm = LayerNorm(dim, eps=norm_eps)
 
         # head
-        if pool_type == 'token':
+        if pool_type == "token":
             self.head = nn.Parameter(gain * torch.randn(dim, out_dim))
-        elif pool_type == 'token_fc':
+        elif pool_type == "token_fc":
             self.head = nn.Linear(dim, out_dim)
-        elif pool_type == 'attn_pool':
-            self.head = AttentionPool(dim, mlp_ratio, num_heads, activation,
-                                      proj_dropout, norm_eps)
+        elif pool_type == "attn_pool":
+            self.head = AttentionPool(dim, mlp_ratio, num_heads, activation, proj_dropout, norm_eps)
 
     def forward(self, x, interpolation=False, use_31_block=False):
-        """Forward.
-
-        Args:
-            x: The x.
-            interpolation: The interpolation.
-            use_31_block: The use 31 block.
-        """
         b = x.size(0)
 
         # embeddings
         x = self.patch_embedding(x).flatten(2).permute(0, 2, 1)
-        if self.pool_type in ('token', 'token_fc'):
+        if self.pool_type in ("token", "token_fc"):
             cls_embedding = self.cls_embedding.to(device=x.device, dtype=x.dtype)
             x = torch.cat([cls_embedding.expand(b, -1, -1), x], dim=1)
-        if interpolation:
-            e = pos_interpolate(self.pos_embedding, x.size(1))
-        else:
-            e = self.pos_embedding
+        e = pos_interpolate(self.pos_embedding, x.size(1)) if interpolation else self.pos_embedding
         # Direct parameters are not child modules and therefore are not
         # materialized by per-layer VRAM wrappers.  Align them with the patch
         # activation for offloaded Wan image encoders.
@@ -429,25 +317,17 @@ class VisionTransformer(nn.Module):
 
 
 class XLMRobertaWithHead(XLMRoberta):
-    """Xlm roberta with head implementation."""
-
     def __init__(self, **kwargs):
-        """Init."""
-        self.out_dim = kwargs.pop('out_dim')
+        self.out_dim = kwargs.pop("out_dim")
         super().__init__(**kwargs)
 
         # head
         mid_dim = (self.dim + self.out_dim) // 2
         self.head = nn.Sequential(
-            nn.Linear(self.dim, mid_dim, bias=False), nn.GELU(),
-            nn.Linear(mid_dim, self.out_dim, bias=False))
+            nn.Linear(self.dim, mid_dim, bias=False), nn.GELU(), nn.Linear(mid_dim, self.out_dim, bias=False)
+        )
 
     def forward(self, ids):
-        """Forward.
-
-        Args:
-            ids: The ids.
-        """
         # xlm-roberta
         x = super().forward(ids)
 
@@ -461,61 +341,33 @@ class XLMRobertaWithHead(XLMRoberta):
 
 
 class XLMRobertaCLIP(nn.Module):
-    """Xlm roberta clip implementation."""
-
-    def __init__(self,
-                 embed_dim=1024,
-                 image_size=224,
-                 patch_size=14,
-                 vision_dim=1280,
-                 vision_mlp_ratio=4,
-                 vision_heads=16,
-                 vision_layers=32,
-                 vision_pool='token',
-                 vision_pre_norm=True,
-                 vision_post_norm=False,
-                 activation='gelu',
-                 vocab_size=250002,
-                 max_text_len=514,
-                 type_size=1,
-                 pad_id=1,
-                 text_dim=1024,
-                 text_heads=16,
-                 text_layers=24,
-                 text_post_norm=True,
-                 text_dropout=0.1,
-                 attn_dropout=0.0,
-                 proj_dropout=0.0,
-                 embedding_dropout=0.0,
-                 norm_eps=1e-5):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            image_size: The image size.
-            patch_size: The patch size.
-            vision_dim: The vision dim.
-            vision_mlp_ratio: The vision mlp ratio.
-            vision_heads: The vision heads.
-            vision_layers: The vision layers.
-            vision_pool: The vision pool.
-            vision_pre_norm: The vision pre norm.
-            vision_post_norm: The vision post norm.
-            activation: The activation.
-            vocab_size: The vocab size.
-            max_text_len: The max text len.
-            type_size: The type size.
-            pad_id: The pad id.
-            text_dim: The text dim.
-            text_heads: The text heads.
-            text_layers: The text layers.
-            text_post_norm: The text post norm.
-            text_dropout: The text dropout.
-            attn_dropout: The attn dropout.
-            proj_dropout: The proj dropout.
-            embedding_dropout: The embedding dropout.
-            norm_eps: The norm eps.
-        """
+    def __init__(
+        self,
+        embed_dim=1024,
+        image_size=224,
+        patch_size=14,
+        vision_dim=1280,
+        vision_mlp_ratio=4,
+        vision_heads=16,
+        vision_layers=32,
+        vision_pool="token",
+        vision_pre_norm=True,
+        vision_post_norm=False,
+        activation="gelu",
+        vocab_size=250002,
+        max_text_len=514,
+        type_size=1,
+        pad_id=1,
+        text_dim=1024,
+        text_heads=16,
+        text_layers=24,
+        text_post_norm=True,
+        text_dropout=0.1,
+        attn_dropout=0.0,
+        proj_dropout=0.0,
+        embedding_dropout=0.0,
+        norm_eps=1e-5,
+    ):
         super().__init__()
         self.embed_dim = embed_dim
         self.image_size = image_size
@@ -553,7 +405,8 @@ class XLMRobertaCLIP(nn.Module):
             attn_dropout=attn_dropout,
             proj_dropout=proj_dropout,
             embedding_dropout=embedding_dropout,
-            norm_eps=norm_eps)
+            norm_eps=norm_eps,
+        )
         self.textual = XLMRobertaWithHead(
             vocab_size=vocab_size,
             max_seq_len=max_text_len,
@@ -564,7 +417,8 @@ class XLMRobertaCLIP(nn.Module):
             num_heads=text_heads,
             num_layers=text_layers,
             post_norm=text_post_norm,
-            dropout=text_dropout)
+            dropout=text_dropout,
+        )
         self.log_scale = nn.Parameter(math.log(1 / 0.07) * torch.ones([]))
 
     def forward(self, imgs, txt_ids):
@@ -580,43 +434,27 @@ class XLMRobertaCLIP(nn.Module):
         return xi, xt
 
     def param_groups(self):
-        """Param groups."""
-        groups = [{
-            'params': [
-                p for n, p in self.named_parameters()
-                if 'norm' in n or n.endswith('bias')
-            ],
-            'weight_decay': 0.0
-        }, {
-            'params': [
-                p for n, p in self.named_parameters()
-                if not ('norm' in n or n.endswith('bias'))
-            ]
-        }]
+        groups = [
+            {
+                "params": [p for n, p in self.named_parameters() if "norm" in n or n.endswith("bias")],
+                "weight_decay": 0.0,
+            },
+            {"params": [p for n, p in self.named_parameters() if not ("norm" in n or n.endswith("bias"))]},
+        ]
         return groups
 
 
-def _clip(pretrained=False,
-          pretrained_name=None,
-          model_cls=XLMRobertaCLIP,
-          return_transforms=False,
-          return_tokenizer=False,
-          tokenizer_padding='eos',
-          dtype=torch.float32,
-          device='cpu',
-          **kwargs):
-    """Helper function to clip.
-
-    Args:
-        pretrained: The pretrained.
-        pretrained_name: The pretrained name.
-        model_cls: The model cls.
-        return_transforms: The return transforms.
-        return_tokenizer: The return tokenizer.
-        tokenizer_padding: The tokenizer padding.
-        dtype: The dtype.
-        device: The device.
-    """
+def _clip(
+    pretrained=False,
+    pretrained_name=None,
+    model_cls=XLMRobertaCLIP,
+    return_transforms=False,
+    return_tokenizer=False,
+    tokenizer_padding="eos",
+    dtype=torch.float32,
+    device="cpu",
+    **kwargs,
+):
     # init a model on device
     with torch.device(device):
         model = model_cls(**kwargs)
@@ -630,71 +468,54 @@ def _clip(pretrained=False,
         import torchvision.transforms as T
 
         # mean and std
-        if 'siglip' in pretrained_name.lower():
+        if "siglip" in pretrained_name.lower():
             mean, std = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]
         else:
             mean = [0.48145466, 0.4578275, 0.40821073]
             std = [0.26862954, 0.26130258, 0.27577711]
 
         # transforms
-        transforms = T.Compose([
-            T.Resize((model.image_size, model.image_size),
-                     interpolation=T.InterpolationMode.BICUBIC),
-            T.ToTensor(),
-            T.Normalize(mean=mean, std=std)
-        ])
+        transforms = T.Compose(
+            [
+                T.Resize((model.image_size, model.image_size), interpolation=T.InterpolationMode.BICUBIC),
+                T.ToTensor(),
+                T.Normalize(mean=mean, std=std),
+            ]
+        )
         output += (transforms,)
     return output[0] if len(output) == 1 else output
 
 
-def clip_xlm_roberta_vit_h_14(
-        pretrained=False,
-        pretrained_name='open-clip-xlm-roberta-large-vit-huge-14',
-        **kwargs):
-    """Clip xlm roberta vit h 14.
-
-    Args:
-        pretrained: The pretrained.
-        pretrained_name: The pretrained name.
-    """
-    cfg = dict(
-        embed_dim=1024,
-        image_size=224,
-        patch_size=14,
-        vision_dim=1280,
-        vision_mlp_ratio=4,
-        vision_heads=16,
-        vision_layers=32,
-        vision_pool='token',
-        activation='gelu',
-        vocab_size=250002,
-        max_text_len=514,
-        type_size=1,
-        pad_id=1,
-        text_dim=1024,
-        text_heads=16,
-        text_layers=24,
-        text_post_norm=True,
-        text_dropout=0.1,
-        attn_dropout=0.0,
-        proj_dropout=0.0,
-        embedding_dropout=0.0)
+def clip_xlm_roberta_vit_h_14(pretrained=False, pretrained_name="open-clip-xlm-roberta-large-vit-huge-14", **kwargs):
+    cfg = {
+        "embed_dim": 1024,
+        "image_size": 224,
+        "patch_size": 14,
+        "vision_dim": 1280,
+        "vision_mlp_ratio": 4,
+        "vision_heads": 16,
+        "vision_layers": 32,
+        "vision_pool": "token",
+        "activation": "gelu",
+        "vocab_size": 250002,
+        "max_text_len": 514,
+        "type_size": 1,
+        "pad_id": 1,
+        "text_dim": 1024,
+        "text_heads": 16,
+        "text_layers": 24,
+        "text_post_norm": True,
+        "text_dropout": 0.1,
+        "attn_dropout": 0.0,
+        "proj_dropout": 0.0,
+        "embedding_dropout": 0.0,
+    }
     cfg.update(**kwargs)
     return _clip(pretrained, pretrained_name, XLMRobertaCLIP, **cfg)
 
 
 class CLIPModel:
-    """Clip model implementation."""
-
     def __init__(self, dtype, device, checkpoint_path, tokenizer_path):
-        """Init.
-
-        Args:
-            dtype: The dtype.
-            device: The device.
-            checkpoint_path: The checkpoint path.
-            tokenizer_path: The tokenizer path.
-        """
         self.dtype = dtype
         self.device = device
         self.checkpoint_path = checkpoint_path
@@ -702,54 +523,42 @@ class CLIPModel:
 
         # init model
         self.model, self.transforms = clip_xlm_roberta_vit_h_14(
-            pretrained=False,
-            return_transforms=True,
-            return_tokenizer=False,
-            dtype=dtype,
-            device=device)
+            pretrained=False, return_transforms=True, return_tokenizer=False, dtype=dtype, device=device
+        )
         self.model = self.model.eval().requires_grad_(False)
-        logging.info(f'loading {checkpoint_path}')
-        self.model.load_state_dict(
-            load_torch_state_dict(checkpoint_path, map_location='cpu'))
+        logging.info(f"loading {checkpoint_path}")
+        self.model.load_state_dict(load_torch_state_dict(checkpoint_path, map_location="cpu"))
 
         # init tokenizer
         self.tokenizer = HuggingfaceTokenizer(
-            name=tokenizer_path,
-            seq_len=self.model.max_text_len - 2,
-            clean='whitespace')
+            name=tokenizer_path, seq_len=self.model.max_text_len - 2, clean="whitespace"
+        )
 
     def visual(self, videos):
-        """Visual.
-
-        Args:
-            videos: The videos.
-        """
         # preprocess
         size = (self.model.image_size,) * 2
         if isinstance(videos, (list, tuple)):
             if not videos:
-                raise ValueError('CLIP visual input sequence must not be empty')
+                raise ValueError("CLIP visual input sequence must not be empty")
             if any(not isinstance(sample, torch.Tensor) or sample.ndim != 4 for sample in videos):
-                raise ValueError('CLIP visual input sequence must contain CTHW tensors')
-            images = torch.cat([
-                F.interpolate(
-                    sample.transpose(0, 1),
-                    size=size,
-                    mode='bicubic',
-                    align_corners=False) for sample in videos
-            ])
+                raise ValueError("CLIP visual input sequence must contain CTHW tensors")
+            images = torch.cat(
+                [
+                    F.interpolate(sample.transpose(0, 1), size=size, mode="bicubic", align_corners=False)
+                    for sample in videos
+                ]
+            )
         elif videos.ndim == 4:
-            images = F.interpolate(videos, size=size, mode='bicubic', align_corners=False)
+            images = F.interpolate(videos, size=size, mode="bicubic", align_corners=False)
         elif videos.ndim == 5:
-            images = torch.cat([
-                F.interpolate(
-                    sample.transpose(0, 1),
-                    size=size,
-                    mode='bicubic',
-                    align_corners=False) for sample in videos
-            ])
+            images = torch.cat(
+                [
+                    F.interpolate(sample.transpose(0, 1), size=size, mode="bicubic", align_corners=False)
+                    for sample in videos
+                ]
+            )
         else:
-            raise ValueError(f'CLIP visual input must be BCHW or BCTHW, got {tuple(videos.shape)}')
+            raise ValueError(f"CLIP visual input must be BCHW or BCTHW, got {tuple(videos.shape)}")
         images = self.transforms.transforms[-1](images.mul(0.5).add(0.5))
         # Native Wan/Yume checkpoints keep the vision tower in bf16 while
         # decoded conditioning frames arrive as fp32.  Preserve the live
@@ -762,7 +571,7 @@ class CLIPModel:
         with torch.autocast(
             device_type=device_type,
             dtype=self.dtype,
-            enabled=device_type == 'cuda' and self.dtype in {torch.float16, torch.bfloat16},
+            enabled=device_type == "cuda" and self.dtype in {torch.float16, torch.bfloat16},
         ):
             out = self.model.visual(images, use_31_block=True)
             return out

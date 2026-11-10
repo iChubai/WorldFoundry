@@ -85,16 +85,16 @@ runner:
   scoring:
     engines: [in_tree]
     hooks:
-      in_tree: worldfoundry.evaluation.tasks.execution.runners.ewmbench.ewmbench_in_tree_evaluator:IN_TREE_CONFIG
+      in_tree: worldfoundry.evals.tasks.execution.runners.ewmbench.ewmbench_in_tree_evaluator:IN_TREE_CONFIG
   normalization:
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/ewmbench/run_ewmbench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/ewmbench/run_ewmbench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.ewmbench.run_ewmbench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.ewmbench.run_ewmbench_official_runner
     generated_arg: null
     limit_arg: --limit
     supports_fixture: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:EWMBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:EWMBenchContract
   validation_command:
   - wf
   - zoo
@@ -112,7 +112,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/ewmbench/runtime/ewmbench
+    root: worldfoundry/evals/tasks/execution/runners/ewmbench/runtime/ewmbench
     repo_url: https://github.com/AgibotTech/EWMBench.git
     repo_revision: 3a5531c0e6b6be51431251ed5617b9e48c852098
     results_path_env: WORLDFOUNDRY_EWMBENCH_RESULTS_PATH
@@ -155,11 +155,11 @@ blockers:
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/ewmbench.yaml
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/ewmbench/runtime/ewmbench
-official_runner_script: worldfoundry/evaluation/tasks/execution/runners/ewmbench/run_ewmbench_official_runner.py
+  - worldfoundry/evals/tasks/execution/runners/ewmbench/runtime/ewmbench
+official_runner_script: worldfoundry/evals/tasks/execution/runners/ewmbench/run_ewmbench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:EWMBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:EWMBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

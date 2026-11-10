@@ -26,7 +26,7 @@ def _write_manifest(manifest_dir: Path, runtime: dict[str, str]) -> None:
         "name": "Pinned Bench",
         "status": "confirmed_official_code",
         "runner": {
-            "runner_target": "worldfoundry.evaluation.tasks.contracts.external:VBenchContract",
+            "runner_target": "worldfoundry.evals.tasks.contracts.external:VBenchContract",
             "runtime": {"kind": "in_tree_official_source", **runtime},
         },
         "metrics": [{"id": "overall_quality", "higher_is_better": True, "primary": True}],

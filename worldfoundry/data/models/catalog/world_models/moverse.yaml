@@ -47,7 +47,7 @@ integration:
   - Runtime planning and missing-asset diagnostics work without importing the heavyweight model stack.
 runtime_profile: runtime-profile:moverse
 pipeline_binding: moverse
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runner_parity:
   status: implemented
   notes:

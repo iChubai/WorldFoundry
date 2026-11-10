@@ -659,7 +659,7 @@ def _safe_json(value: Any) -> Any:
 def _redact_manifest_secrets(value: Any) -> Any:
     """Redact nested credentials without adding evaluation to Studio import time."""
 
-    from worldfoundry.evaluation.reporting.run_manifest import redact_secrets
+    from worldfoundry.evals.reporting.run_manifest import redact_secrets
 
     return redact_secrets(_safe_json(value))
 
@@ -3795,5 +3795,3 @@ class StudioManager:
             return str(result or "")
         message = self._unload_local(model_id)
         return message
-
-

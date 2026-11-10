@@ -2,7 +2,7 @@
 Conv head is from MoGe (https://github.com/microsoft/moge)
 """
 
-from typing import List, Literal
+from typing import Literal
 
 import torch
 import torch.nn as nn
@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 
 def normalized_view_plane_uv(
-    width: int, height: int, aspect_ratio: float = None, dtype: torch.dtype = None, device: torch.device = None
+    width: int, height: int, aspect_ratio: float | None = None, dtype: torch.dtype = None, device: torch.device = None
 ) -> torch.Tensor:
     "UV with left-top corner as (-width / diagonal, -height / diagonal) and right-bottom corner as (width / diagonal, height / diagonal)"
     if aspect_ratio is None:
@@ -32,13 +32,13 @@ class ResidualConvBlock(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        out_channels: int = None,
-        hidden_channels: int = None,
+        out_channels: int | None = None,
+        hidden_channels: int | None = None,
         padding_mode: str = "replicate",
         activation: Literal["relu", "leaky_relu", "silu", "elu"] = "relu",
         norm: Literal["group_norm", "layer_norm"] = "group_norm",
     ):
-        super(ResidualConvBlock, self).__init__()
+        super().__init__()
         if out_channels is None:
             out_channels = in_channels
         if hidden_channels is None:
@@ -90,9 +90,9 @@ class ConvHead(nn.Module):
         self,
         num_features: int,
         dim_in: int,
-        dim_out: List[int],
+        dim_out: list[int],
         dim_proj: int = 512,
-        dim_upsample: List[int] = [256, 128, 128],
+        dim_upsample: list[int] = [256, 128, 128],  # noqa: B006 - Keeps the upstream default object and signature.
         dim_times_res_block_hidden: int = 1,
         num_res_blocks: int = 1,
         res_block_norm: Literal["group_norm", "layer_norm"] = "group_norm",
@@ -119,7 +119,7 @@ class ConvHead(nn.Module):
                         for _ in range(num_res_blocks)
                     ),
                 )
-                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample)
+                for in_ch, out_ch in zip([dim_proj] + dim_upsample[:-1], dim_upsample, strict=False)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
             ]
         )
 
@@ -180,7 +180,11 @@ class ConvHead(nn.Module):
         )
 
     def forward(
-        self, hidden_states: torch.Tensor, image: torch.Tensor = None, patch_h: int = None, patch_w: int = None
+        self,
+        hidden_states: torch.Tensor,
+        image: torch.Tensor = None,
+        patch_h: int | None = None,
+        patch_w: int | None = None,
     ):
         if image is not None:
             img_h, img_w = image.shape[-2:]
@@ -198,7 +202,7 @@ class ConvHead(nn.Module):
 
         # Upsample stage
         # (patch_h, patch_w) -> (patch_h * 2, patch_w * 2) -> (patch_h * 4, patch_w * 4) -> (patch_h * 8, patch_w * 8)
-        for i, block in enumerate(self.upsample_blocks):
+        for _i, block in enumerate(self.upsample_blocks):
             # UV coordinates is for awareness of image aspect ratio
             if self.using_uv:
                 uv = normalized_view_plane_uv(

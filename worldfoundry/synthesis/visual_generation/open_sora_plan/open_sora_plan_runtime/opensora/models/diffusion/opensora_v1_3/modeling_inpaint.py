@@ -1,17 +1,11 @@
-import os
-import numpy as np
-from torch import nn
-import torch
-from einops import rearrange, repeat
-from typing import Any, Dict, Optional, Tuple
 from diffusers.configuration_utils import register_to_config
+from einops import rearrange
+from torch import nn
+
 from opensora.models.diffusion.common import PatchEmbed2D
+from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3 as OpenSoraT2V
 from opensora.utils.utils import to_2tuple
 
-
-from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3 as OpenSoraT2V
-
-import glob
 
 def zero_module(module):
     for p in module.parameters():
@@ -27,24 +21,24 @@ class OpenSoraInpaint_v1_3(OpenSoraT2V):
         self,
         num_attention_heads: int = 16,
         attention_head_dim: int = 88,
-        in_channels: Optional[int] = None,
-        out_channels: Optional[int] = None,
+        in_channels: int | None = None,
+        out_channels: int | None = None,
         num_layers: int = 1,
         dropout: float = 0.0,
-        cross_attention_dim: Optional[int] = None,
+        cross_attention_dim: int | None = None,
         attention_bias: bool = True,
-        sample_size_h: Optional[int] = None,
-        sample_size_w: Optional[int] = None,
-        sample_size_t: Optional[int] = None,
-        patch_size: Optional[int] = None,
-        patch_size_t: Optional[int] = None,
+        sample_size_h: int | None = None,
+        sample_size_w: int | None = None,
+        sample_size_t: int | None = None,
+        patch_size: int | None = None,
+        patch_size_t: int | None = None,
         activation_fn: str = "geglu",
         only_cross_attention: bool = False,
         double_self_attention: bool = False,
         upcast_attention: bool = False,
         norm_elementwise_affine: bool = False,
         norm_eps: float = 1e-6,
-        caption_channels: int = None,
+        caption_channels: int | None = None,
         interpolation_scale_h: float = 1.0,
         interpolation_scale_w: float = 1.0,
         interpolation_scale_t: float = 1.0,
@@ -86,7 +80,6 @@ class OpenSoraInpaint_v1_3(OpenSoraT2V):
         self._init_patched_inputs_for_inpainting()
 
     def _init_patched_inputs_for_inpainting(self):
-
         self.config.sample_size = to_2tuple(self.config.sample_size)
 
         self.pos_embed_masked_hidden_states = nn.ModuleList(
@@ -116,7 +109,11 @@ class OpenSoraInpaint_v1_3(OpenSoraT2V):
         assert hidden_states.shape[1] == 2 * self.config.in_channels + self.vae_scale_factor_t
         in_channels = self.config.in_channels
 
-        input_hidden_states, input_masked_hidden_states, input_mask = hidden_states[:, :in_channels], hidden_states[:, in_channels: 2 * in_channels], hidden_states[:, 2 * in_channels:]
+        input_hidden_states, input_masked_hidden_states, input_mask = (
+            hidden_states[:, :in_channels],
+            hidden_states[:, in_channels : 2 * in_channels],
+            hidden_states[:, 2 * in_channels :],
+        )
 
         input_hidden_states = self.pos_embed(input_hidden_states.to(self.dtype))
 
@@ -135,15 +132,24 @@ class OpenSoraInpaint_v1_3(OpenSoraT2V):
 
         encoder_hidden_states = self.caption_projection(encoder_hidden_states)  # b, 1, l, d or b, 1, l, d
         assert encoder_hidden_states.shape[1] == 1
-        encoder_hidden_states = rearrange(encoder_hidden_states, 'b 1 l d -> (b 1) l d')
+        encoder_hidden_states = rearrange(encoder_hidden_states, "b 1 l d -> (b 1) l d")
 
         return hidden_states, encoder_hidden_states, timestep, embedded_timestep
 
+
 def OpenSoraInpaint_v1_3_2B_122(**kwargs):
-   return OpenSoraInpaint_v1_3(
-        num_layers=32, attention_head_dim=96, num_attention_heads=24, patch_size_t=1, patch_size=2,
-        caption_channels=4096, cross_attention_dim=2304, activation_fn="gelu-approximate", **kwargs
+    return OpenSoraInpaint_v1_3(
+        num_layers=32,
+        attention_head_dim=96,
+        num_attention_heads=24,
+        patch_size_t=1,
+        patch_size=2,
+        caption_channels=4096,
+        cross_attention_dim=2304,
+        activation_fn="gelu-approximate",
+        **kwargs,
     )
+
 
 OpenSoraInpaint_v1_3_models = {
     "OpenSoraInpaint_v1_3-2B/122": OpenSoraInpaint_v1_3_2B_122,  # 2.7B

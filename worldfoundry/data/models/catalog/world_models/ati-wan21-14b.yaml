@@ -18,7 +18,7 @@ official_sources:
   huggingface:
   - repo_id: bytedance-research/ATI
     type: model
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: ati-wan21-14b
 runtime_profile: runtime-profile:ati-wan21-14b
 integration:

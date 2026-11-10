@@ -1,23 +1,30 @@
 from .src.sim.sim_env.flex_env import FlexEnv
 
-import os
-import numpy as np
-import gym
-import torch
+# isort: split
+
 import math
+import os
 from pathlib import Path
 
-from .src.sim.utils import load_yaml
+import numpy as np
+import torch
+
 from worldfoundry.core.io.paths import resolve_data_path
+
+from .src.sim.utils import load_yaml
 
 ENV_ACTION_DIM = 4
 BASE_DIR = os.path.abspath(os.path.join(__file__, "../../../"))
-DINO_WM_CONFIG_ROOT = Path(
-    os.environ.get(
-        "WORLDFOUNDRY_DINO_WM_CONFIG_ROOT",
-        str(resolve_data_path("models", "runtime", "configs", "dino_wm")),
+DINO_WM_CONFIG_ROOT = (
+    Path(
+        os.environ.get(
+            "WORLDFOUNDRY_DINO_WM_CONFIG_ROOT",
+            str(resolve_data_path("models", "runtime", "configs", "dino_wm")),
+        )
     )
-).expanduser().resolve()
+    .expanduser()
+    .resolve()
+)
 
 
 def aggregate_dct(dcts):
@@ -34,16 +41,18 @@ def aggregate_dct(dcts):
             full_dct[key] = np.stack(value)
     return full_dct
 
+
 def chamfer_distance(x, y):
     # x: [B, N, D]
     # y: [B, M, D]
     # NOTE: only the first 3 dim is taken!
-    x = x[:, :, None, :3].repeat(1, 1, y.size(1), 1) # x: [B, N, M, D]
-    y = y[:, None, :, :3].repeat(1, x.size(1), 1, 1) # y: [B, N, M, D]
-    dis = torch.norm(torch.add(x, -y), 2, dim=3)    # dis: [B, N, M]
-    dis_xy = torch.mean(torch.min(dis, dim=2)[0])   # dis_xy: mean over N
-    dis_yx = torch.mean(torch.min(dis, dim=1)[0])   # dis_yx: mean over M
+    x = x[:, :, None, :3].repeat(1, 1, y.size(1), 1)  # x: [B, N, M, D]
+    y = y[:, None, :, :3].repeat(1, x.size(1), 1, 1)  # y: [B, N, M, D]
+    dis = torch.norm(torch.add(x, -y), 2, dim=3)  # dis: [B, N, M]
+    dis_xy = torch.mean(torch.min(dis, dim=2)[0])  # dis_xy: mean over N
+    dis_yx = torch.mean(torch.min(dis, dim=1)[0])  # dis_yx: mean over M
     return dis_xy + dis_yx
+
 
 class FlexEnvWrapper(FlexEnv):
     def __init__(self, object_name):
@@ -64,7 +73,7 @@ class FlexEnvWrapper(FlexEnv):
         }
         return metrics
 
-    def update_env(self, env_info): 
+    def update_env(self, env_info):
         pass
 
     def sample_random_init_goal_states(self, seed):
@@ -98,7 +107,7 @@ class FlexEnvWrapper(FlexEnv):
             state[:, 2] += delta_z
             return state
 
-        if self.obj == 'granular':
+        if self.obj == "granular":
             state = torch.tensor(particle_pos_list[0])
             goal_scale, goal_theta, goal_delta = (
                 np.random.uniform(0.6, 0.9),
@@ -107,8 +116,8 @@ class FlexEnvWrapper(FlexEnv):
             )
             goal_state = transfer_state(state, goal_scale, goal_theta, goal_delta)
             return state, goal_state
-        
-        elif self.obj == 'rope':
+
+        elif self.obj == "rope":
             state = torch.tensor(particle_pos_list[0])
             goal_scale, goal_theta, goal_delta = (
                 1,
@@ -117,7 +126,6 @@ class FlexEnvWrapper(FlexEnv):
             )
             goal_state = transfer_state(state, goal_scale, goal_theta, goal_delta)
             return state, goal_state
-
 
     def prepare(self, seed, init_state):
         """
@@ -140,18 +148,16 @@ class FlexEnvWrapper(FlexEnv):
         infos = []
         for action in actions:
             step_data = [], [], []
-            obs, out_data = self.step(
-                action, save_data=True, data=step_data
-            )  # o: (H, W, 5)
+            obs, out_data = self.step(action, save_data=True, data=step_data)  # o: (H, W, 5)
             imgs_list, particle_pos_list, eef_states_list = (
                 out_data  # imgs_list: (num_cameras, H, W, 5); particle_pos_list: (n_particles, 4); eef_states_list: (1,14)
             )
 
             obs = {
                 "visual": imgs_list[-1][self.camera_view][..., :3][..., ::-1],
-                "proprio": np.zeros(1).astype(np.float32), # dummy proprio
+                "proprio": np.zeros(1).astype(np.float32),  # dummy proprio
             }
-            info = {"pos_agent": eef_states_list[-1], "state": particle_pos_list[-1]} # dummy 
+            info = {"pos_agent": eef_states_list[-1], "state": particle_pos_list[-1]}  # dummy
             obses.append(obs)
             infos.append(info)
         obses = aggregate_dct(obses)
@@ -171,7 +177,7 @@ class FlexEnvWrapper(FlexEnv):
         """
         obs, state_dct = self.prepare(seed, init_state)
         obses, rewards, dones, infos = self.step_multiple(actions)
-        for k in obses.keys():
+        for k in obses.keys():  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
             obses[k] = np.vstack([np.expand_dims(obs[k], 0), obses[k]])
         states = np.vstack([np.expand_dims(state_dct["state"], 0), infos["state"]])
         states = np.stack(states)

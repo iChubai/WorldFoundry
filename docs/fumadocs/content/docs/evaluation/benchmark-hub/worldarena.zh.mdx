@@ -18,7 +18,7 @@ WorldFoundry **接入官方视频质量指标 runtime**（`runners/worldarena/ru
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
   --run-official \
   --dimension action_following \
   --config-path <worldarena_config.yaml> \
@@ -29,7 +29,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 真值比较用 `--gt-data-dir` / `--action-gt-data-dir`。权重从 `--ckpt-root` 解析。`--official-results-path` 导入已有结果文件。环境变量：`WORLDFOUNDRY_WORLDARENA_RESULTS_PATH`、`WORLDFOUNDRY_WORLDARENA_ROOT`。合同条目不要求 Hugging Face 数据集。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldarena.yaml`，`worldfoundry/evaluation/tasks/execution/runners/worldarena`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldarena.yaml`，`worldfoundry/evals/tasks/execution/runners/worldarena`。
 
 产物包括 `scorecard.json`（主键 `ewm_score`）。
 

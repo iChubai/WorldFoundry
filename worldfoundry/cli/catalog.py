@@ -27,7 +27,7 @@ from worldfoundry.cli.inference_variants import (
     infer_variant_options,
     is_script_infer_model_id,
 )
-from worldfoundry.evaluation.utils import (
+from worldfoundry.evals.utils import (
     BENCHMARK_ZOO_DIR,
     MODEL_RUNTIME_ENVIRONMENTS_ROOT,
     MODEL_RUNTIME_PROFILES_ROOT,
@@ -675,8 +675,8 @@ def load_catalog(
     Returns:
         A fully populated :class:`Catalog`.
     """
-    from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
+    from worldfoundry.evals.models.catalog import load_model_zoo_registry
+    from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 
     # ── Load registries ──
     model_registry = load_model_zoo_registry(model_manifest_dir or DEFAULT_MODEL_ZOO_DIR)

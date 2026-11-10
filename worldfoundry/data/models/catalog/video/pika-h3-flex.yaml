@@ -46,7 +46,7 @@ checkpoints:
 integration:
   status: integrated
   backend_stage: shared_base_model_runtime
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:pika-h3-flex
 pipeline_binding: pika-h3-flex
 runner_parity:

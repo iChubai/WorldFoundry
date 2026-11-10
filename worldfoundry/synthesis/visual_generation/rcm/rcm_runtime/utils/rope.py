@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional, Tuple
 
 import torch
 from einops import rearrange, repeat
@@ -24,9 +23,9 @@ class RopeCache:
     post-RoPE mode to rotate the new key before caching.
     """
 
-    query_freqs: Optional[torch.Tensor] = None
-    key_freqs: Optional[torch.Tensor] = None
-    current_key_freqs: Optional[torch.Tensor] = None
+    query_freqs: torch.Tensor | None = None
+    key_freqs: torch.Tensor | None = None
+    current_key_freqs: torch.Tensor | None = None
     use_fused: bool = True
     cached_k_rotated: bool = True
 
@@ -39,7 +38,9 @@ def rotate_half(x: torch.Tensor, interleaved: bool = False) -> torch.Tensor:
     return rearrange(torch.stack((-x2, x1), dim=-1), "... d two -> ... (d two)", two=2)
 
 
-def apply_rotary_emb_torch(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor, interleaved: bool = False) -> torch.Tensor:
+def apply_rotary_emb_torch(
+    x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor, interleaved: bool = False
+) -> torch.Tensor:
     ro_dim = cos.shape[-1] * 2
     assert ro_dim <= x.shape[-1]
     cos = repeat(cos, "... d -> ... 1 (2 d)" if not interleaved else "... d -> ... 1 (d 2)")
@@ -53,7 +54,7 @@ def apply_rotary_emb_torch(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor
     )
 
 
-def apply_rope(x: torch.Tensor, freqs: Optional[torch.Tensor], fused: bool = True) -> torch.Tensor:
+def apply_rope(x: torch.Tensor, freqs: torch.Tensor | None, fused: bool = True) -> torch.Tensor:
     if freqs is None:
         return x
 
@@ -85,7 +86,7 @@ def rope_time_delta_(k: torch.Tensor, delta_frames: int, dim_t: int, t_ntk_facto
     """
     if delta_frames == 0:
         return
-    head_dim = k.shape[-1]
+    _head_dim = k.shape[-1]
     half_t = dim_t // 2
     t_theta = 10000.0 * t_ntk_factor
     dim_range = torch.arange(0, dim_t, 2, device=k.device, dtype=torch.float32)[:half_t] / dim_t
@@ -104,11 +105,11 @@ def rope_time_delta_(k: torch.Tensor, delta_frames: int, dim_t: int, t_ntk_facto
 
 
 def apply_rope_with_tangent(
-    x: torch.Tensor, t_x: torch.Tensor, freqs: Optional[torch.Tensor], fused: bool = False
-) -> Tuple[torch.Tensor, torch.Tensor]:
+    x: torch.Tensor, t_x: torch.Tensor, freqs: torch.Tensor | None, fused: bool = False
+) -> tuple[torch.Tensor, torch.Tensor]:
     if freqs is None:
         return x, t_x
 
-    assert fused == False
+    assert fused == False  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
     out, t_out = torch.func.jvp(lambda inp: apply_rope(inp, freqs, fused=False), (x,), (t_x,))
     return out, t_out

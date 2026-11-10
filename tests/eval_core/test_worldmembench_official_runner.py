@@ -12,16 +12,16 @@ from typing import Any
 import pytest
 import yaml
 
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import formal_benchmark_ids
-from worldfoundry.evaluation.tasks.catalog.dispatch import official_runner_spec
-from worldfoundry.evaluation.tasks.catalog.registry import load_task_registry_from_paths
-from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
-from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_runner import (
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import formal_benchmark_ids
+from worldfoundry.evals.tasks.catalog.dispatch import official_runner_spec
+from worldfoundry.evals.tasks.catalog.registry import load_task_registry_from_paths
+from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
+from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import (
     build_benchmark_runner_registry,
     run_benchmark_execution,
 )
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench import run_worldmembench_official_runner as runner
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.worldmembench_metrics import (
+from worldfoundry.evals.tasks.execution.runners.worldmembench import run_worldmembench_official_runner as runner
+from worldfoundry.evals.tasks.execution.runners.worldmembench.worldmembench_metrics import (
     METRIC_SPECS,
     load_official_results,
 )
@@ -29,7 +29,7 @@ from worldfoundry.evaluation.tasks.execution.runners.worldmembench.worldmembench
 pytestmark = pytest.mark.unit
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-MODULE = "worldfoundry.evaluation.tasks.execution.runners.worldmembench.run_worldmembench_official_runner"
+MODULE = "worldfoundry.evals.tasks.execution.runners.worldmembench.run_worldmembench_official_runner"
 
 
 def _write_result(
@@ -278,7 +278,7 @@ def test_official_execution_uses_in_tree_runtime_and_respects_exit_status(
     assert command[:5] == [
         sys.executable,
         "-m",
-        "worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime",
+        "worldfoundry.evals.tasks.execution.runners.worldmembench.runtime",
         "eval",
         str(manifest),
     ]
@@ -338,7 +338,7 @@ def test_standard_official_run_dispatches_generated_videos(tmp_path: Path) -> No
     interpreter.write_text(
         f"#!{sys.executable}\n"
         "import json, pathlib, sys\n"
-        "assert sys.argv[1:4] == ['-m', 'worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime', 'eval']\n"
+        "assert sys.argv[1:4] == ['-m', 'worldfoundry.evals.tasks.execution.runners.worldmembench.runtime', 'eval']\n"
         "output = pathlib.Path(sys.argv[sys.argv.index('--output') + 1])\n"
         "directory = output / 'metrics' / 'imaging_quality'\n"
         "directory.mkdir(parents=True)\n"

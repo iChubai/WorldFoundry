@@ -252,10 +252,10 @@ runner:
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
   pass_benchmark_id: false
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.evalcrafter.run_evalcrafter_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.evalcrafter.run_evalcrafter_official_runner
     prompt_manifest_arg: --prompt-manifest
     metric_arg: --metrics
     limit_arg: --limit
@@ -263,7 +263,7 @@ runner:
     accepts_generated_artifacts: true
     supports_fixture: true
     default_metrics: [clip_score, clip_temp_score, face_consistency_score]
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:EvalCrafterContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:EvalCrafterContract
   run_command:
   - wf
   - zoo
@@ -350,8 +350,8 @@ blockers:
 - The full suite still requires the isolated DOVER, OCR, action-recognition, BLIP2, SDXL, and celebrity-ID stack.
 data_refs:
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
-  - worldfoundry/evaluation/tasks/execution/runners/evalcrafter/evalcrafter_raw_metrics.py
+  - worldfoundry/evals/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
+  - worldfoundry/evals/tasks/execution/runners/evalcrafter/evalcrafter_raw_metrics.py
   task_yaml: worldfoundry/data/benchmarks/tasks/external/evalcrafter.yaml
 runner_availability:
   available: true
@@ -361,7 +361,7 @@ runner_availability:
   - clip_score
   - clip_temp_score
   - face_consistency_score
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:EvalCrafterContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:EvalCrafterContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true

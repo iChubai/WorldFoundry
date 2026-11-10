@@ -85,9 +85,7 @@ def pack_parts(value: Any, parts: Sequence[Mapping[str, Any]], *, label: str) ->
                 raise ValueError(f"LDA-1B {label} mapping is missing {key!r}")
             array = np.asarray(value[key], dtype=np.float32)
             if array.shape[-1] != dim:
-                raise ValueError(
-                    f"LDA-1B {label} field {key!r} expects {dim} values, got {array.shape}"
-                )
+                raise ValueError(f"LDA-1B {label} field {key!r} expects {dim} values, got {array.shape}")
             array = array.reshape(-1, dim)
             leading = array.shape[0] if leading is None else leading
             if array.shape[0] != leading:
@@ -98,9 +96,7 @@ def pack_parts(value: Any, parts: Sequence[Mapping[str, Any]], *, label: str) ->
     if array.ndim == 1:
         array = array[None, :]
     if array.ndim != 2 or array.shape[-1] != expected:
-        raise ValueError(
-            f"LDA-1B {label} expects shape (history, {expected}) or ({expected},), got {array.shape}"
-        )
+        raise ValueError(f"LDA-1B {label} expects shape (history, {expected}) or ({expected},), got {array.shape}")
     return array
 
 
@@ -110,9 +106,7 @@ def state_sincos(raw_state: np.ndarray, *, steps: int, expected_dim: int) -> np.
         selected = np.concatenate((selected[:1], selected), axis=0)
     encoded = np.concatenate((np.sin(selected), np.cos(selected)), axis=-1).astype(np.float32)
     if encoded.shape[-1] != expected_dim:
-        raise ValueError(
-            f"LDA-1B sin/cos state width {encoded.shape[-1]} does not match model width {expected_dim}"
-        )
+        raise ValueError(f"LDA-1B sin/cos state width {encoded.shape[-1]} does not match model width {expected_dim}")
     return encoded
 
 

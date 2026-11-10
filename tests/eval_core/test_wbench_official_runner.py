@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.tasks.execution.runners.wbench import run_wbench_official_runner
+from worldfoundry.evals.tasks.execution.runners.wbench import run_wbench_official_runner
 
 pytestmark = pytest.mark.unit
 

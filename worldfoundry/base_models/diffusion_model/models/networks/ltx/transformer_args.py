@@ -11,8 +11,6 @@ from dataclasses import dataclass, replace
 
 import torch
 
-from worldfoundry.core.attention.cache.context import ContextAttentionCache
-
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.adaln import AdaLayerNormSingle
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import (
@@ -25,6 +23,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
     generate_freq_grid_pytorch,
     precompute_freqs_cis,
 )
+from worldfoundry.core.attention.cache.context import ContextAttentionCache
 
 
 @dataclass(frozen=True)
@@ -109,7 +108,7 @@ class BlockPerturbationsProcessor:
 class TransformerArgsPreprocessor:
     """Single-modality stem: patch proj, AdaLN, RoPE, caption proj, masks."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         patchify_proj: torch.nn.Linear,
         adaln: AdaLayerNormSingle,
@@ -140,7 +139,11 @@ class TransformerArgsPreprocessor:
         self.action_embedder = action_embedder
 
     def _prepare_timestep(
-        self, timestep: torch.Tensor, adaln: AdaLayerNormSingle, batch_size: int, hidden_dtype: torch.dtype,
+        self,
+        timestep: torch.Tensor,
+        adaln: AdaLayerNormSingle,
+        batch_size: int,
+        hidden_dtype: torch.dtype,
         video_control: object | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Prepare timestep embeddings."""
@@ -151,7 +154,9 @@ class TransformerArgsPreprocessor:
             embedded_timestep = adaln.emb(timestep_scaled.flatten(), hidden_dtype=hidden_dtype)
             embedded_timestep = embedded_timestep.view(batch_size, -1, embedded_timestep.shape[-1])
             embedded_timestep = embedded_timestep + self.action_embedder(
-                video_control.action_ids, video_control.action_valid_mask, hidden_dtype=hidden_dtype,
+                video_control.action_ids,
+                video_control.action_valid_mask,
+                hidden_dtype=hidden_dtype,
             )
             timestep = adaln.linear(adaln.silu(embedded_timestep))
         # Second dimension is 1 or number of tokens (if timestep_per_token)
@@ -172,7 +177,6 @@ class TransformerArgsPreprocessor:
         return context.view(batch_size, -1, x.shape[-1])
 
     def _prepare_attention_mask(self, attention_mask: torch.Tensor | None, x_dtype: torch.dtype) -> torch.Tensor | None:
-        """Prepare attention mask."""
         if attention_mask is None or torch.is_floating_point(attention_mask):
             return attention_mask
 
@@ -220,7 +224,6 @@ class TransformerArgsPreprocessor:
         num_attention_heads: int,
         x_dtype: torch.dtype,
     ) -> torch.Tensor:
-        """Prepare positional embeddings."""
         freq_grid_generator = generate_freq_grid_np if self.double_precision_rope else generate_freq_grid_pytorch
         pe = precompute_freqs_cis(
             positions,
@@ -238,7 +241,7 @@ class TransformerArgsPreprocessor:
     def prepare(
         self,
         modality: Modality,
-        cross_modality: Modality | None = None,  # noqa: ARG002
+        cross_modality: Modality | None = None,
     ) -> TransformerArgs:
         """Lift a :class:`Modality` into block-ready :class:`TransformerArgs`."""
         x = self.patchify_proj(modality.latent)
@@ -283,7 +286,7 @@ class TransformerArgsPreprocessor:
 class MultiModalTransformerArgsPreprocessor:
     """Joint-AV stem: single-stream prep plus A↔V RoPE and cross-attn AdaLN."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         patchify_proj: torch.nn.Linear,
         adaln: AdaLayerNormSingle,

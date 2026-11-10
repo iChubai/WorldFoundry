@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.models.catalog.registry import discover_model_registry
-from worldfoundry.evaluation.models.runtime import (
+from worldfoundry.evals.models.catalog.registry import discover_model_registry
+from worldfoundry.evals.models.runtime import (
     RuntimeProfile,
     load_runtime_asset_profile_by_id,
     load_runtime_asset_profiles,
@@ -309,7 +309,7 @@ def test_runtime_profiles_cover_matrix_game_1_binding_environment_and_assets() -
     registry_entry = discover_model_registry().get("matrix-game-1")
 
     assert runtime_profile.display_name == "Matrix-Game 1.0"
-    assert runtime_profile.schema_version is None
+    assert runtime_profile.schema_version == 2
     assert runtime_profile.task_family == "world_model"
     assert runtime_profile.artifact_kind == "generated_world"
     assert runtime_profile.artifact_filename == "world.mp4"

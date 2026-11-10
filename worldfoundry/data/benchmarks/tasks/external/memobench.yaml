@@ -49,7 +49,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: memobench
   contract_validation_command: wf zoo benchmark-run --benchmark-id memobench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/memobench --json
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:MemoBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
   official_runner_command: wf zoo benchmark-run
   name: MemoBench
   domain:
@@ -76,9 +76,9 @@ metadata:
       revision: 8822e2713b01db90820a2c75115a37814ff992a0
       role: vendored_runtime_source
     local_runtime:
-      path: worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
+      path: worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench
     docs:
-      path: worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench/docs
+      path: worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench/docs
   input_contract:
   - generated_synthetic_dir
   - generated_real_dir
@@ -108,11 +108,11 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/memobench.yaml
     sample_results: worldfoundry/data/benchmarks/assets/memobench/sample_results.csv
     in_tree_runtime_paths:
-    - worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py
+    - worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:MemoBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -124,7 +124,7 @@ metadata:
     filename_template: scorecard.json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
+    root: worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench
     root_env: WORLDFOUNDRY_MEMOBENCH_ROOT
     repo_url: https://github.com/MemoBench-Team/MemoBench.git
     revision: 8822e2713b01db90820a2c75115a37814ff992a0
@@ -154,7 +154,7 @@ metadata:
     - official_scorecard_normalization
     - artifact_presence_format
   local_evaluator:
-    target: worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py
+    target: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
     status: implemented
     protocol: official_result_normalization
     official_result_normalization:

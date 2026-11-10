@@ -17,9 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class Wan2p5Pipeline(PipelineABC):
-    """
-    将输入通过 operator 处理后再传给模型进行推理，
-    实现数据预处理和模型推理的分离。
+    """Wan2.5 hosted-API pipeline.
+
+    The operator preprocesses inputs before the synthesis model calls the API, keeping
+    preprocessing separate from inference.
     """
 
     def __init__(
@@ -30,13 +31,13 @@ class Wan2p5Pipeline(PipelineABC):
         api_key: str = "your_api_key",
     ):
         """
-        初始化 Wan2p5Pipeline
+        Initialize the Wan2.5 pipeline.
 
         Args:
-            operator: Wan2p5 operator 实例（如果为None则自动创建）
-            synthesis_model: Wan2p5 synthesis 模型实例（如果为None则自动创建）
-            endpoint: API基础URL
-            api_key: API密钥
+            operator: Optional Wan2.5 operator; ``api_init`` creates one.
+            synthesis_model: Optional Wan2.5 synthesis model; ``api_init`` creates one.
+            endpoint: API base URL.
+            api_key: API key; read from the environment when empty or a placeholder.
         """
         api_key = resolve_api_key(api_key, _API_KEY_ENV, "Wan2.5")
         self.endpoint = endpoint
@@ -74,22 +75,21 @@ class Wan2p5Pipeline(PipelineABC):
         **kwargs,
     ) -> "Wan2p5Pipeline":
         """
-        从配置加载完整的 pipeline
+        Build the pipeline with its synthesis model and operator from API settings.
 
         Args:
-            endpoint: API基础URL
-            api_key: API密钥
-            logger: 日志记录器
-            **kwargs: 额外参数
+            endpoint: API base URL.
+            api_key: API key; read from the environment when empty or a placeholder.
+            logger: Optional logger for progress messages.
+            **kwargs: Forwarded to ``Wan2p5Synthesis.api_init``.
 
         Returns:
-            Wan2p5Pipeline: 初始化的 pipeline 实例
+            Wan2p5Pipeline: The initialized pipeline.
         """
         if logger:
             logger.info(f"Loading Wan2p5 pipeline with endpoint: {endpoint}")
         api_key = resolve_api_key(api_key, _API_KEY_ENV, "Wan2.5")
 
-        # 加载 synthesis 模型
         if logger:
             logger.info("Loading Wan2p5 synthesis model...")
 
@@ -109,15 +109,15 @@ class Wan2p5Pipeline(PipelineABC):
 
     def process(self, prompt: str, images: Image.Image | None = None, **kwargs) -> dict[str, Any]:
         """
-        处理输入，通过 operator 预处理后传给 synthesis 模型
+        Preprocess the prompt and optional reference image with the operator for the synthesis model.
 
         Args:
-            prompt: 文本提示词
-            images: 参考图像（可选）
-            **kwargs: 其他参数
+            prompt: Text prompt.
+            images: Optional reference image.
+            **kwargs: Forwarded to ``Wan2p5Operator.process_perception``.
 
         Returns:
-            Dict 包含处理后的数据
+            Dict with ``prompt``, ``encoded_image`` and ``images``.
         """
         if self.operator is None:
             raise ValueError("Operator is not initialized")
@@ -150,29 +150,28 @@ class Wan2p5Pipeline(PipelineABC):
         **kwargs,
     ) -> dict[str, Any]:
         """
-        统一的调用接口，自动判断任务类型
+        Generate a video, inferring the task type unless it is given.
 
         Args:
-            prompt: 文本提示词
-            images: 参考图像（可选），如果提供则使用 i2av，否则使用 t2av
-            task_type: 任务类型，"auto" 自动判断，"t2av" 文本到视频，"i2av" 图像到视频
-            size: t2av 任务的视频尺寸
-            resolution: i2av 任务的分辨率
-            duration: 视频时长（秒）
-            negative_prompt: 负面提示词
-            audio: 是否生成音频
-            prompt_extend: 是否扩展提示词
-            watermark: 是否添加水印
-            seed: 随机种子
-            **kwargs: 其他参数
+            prompt: Text prompt.
+            images: Optional reference image; with ``task_type="auto"`` it selects i2av, otherwise t2av.
+            task_type: ``"auto"`` to infer the task, ``"t2av"`` for text-to-video, ``"i2av"`` for image-to-video.
+            size: Video size of t2av tasks.
+            resolution: Resolution of i2av tasks.
+            duration: Video duration in seconds.
+            audio: Whether to generate audio.
+            prompt_extend: Whether the service extends the prompt.
+            watermark: Whether to add a watermark.
+            seed: Random seed.
+            **kwargs: Forwarded to preprocessing and ``Wan2p5Synthesis.predict``.
 
         Returns:
-            Dict 包含生成的结果：
-                - response: API响应对象
-                - task_type: 实际使用的任务类型
-                - prompt: 使用的提示词
-                - video_url: 视频URL（如果API调用成功）
-                - task_id: 任务ID（如果API调用成功）
+            Dict with:
+                - response: API response object.
+                - task_type: The task type used.
+                - prompt: The prompt used.
+                - video_url: Video URL, or None unless the API call succeeded.
+                - task_id: Task ID, or None unless the API call succeeded.
         """
         if self.synthesis_model is None:
             raise ValueError("Synthesis model is not initialized")
@@ -180,10 +179,8 @@ class Wan2p5Pipeline(PipelineABC):
         if self.operator is None:
             raise ValueError("Operator is not initialized")
 
-        # 使用 operator 预处理输入
         processed_data = self.process(prompt=prompt, images=images, **kwargs)
 
-        # 使用 synthesis 模型的 predict 方法进行推理
         result = self.synthesis_model.predict(
             processed_data=processed_data,
             task_type=task_type,
@@ -198,11 +195,9 @@ class Wan2p5Pipeline(PipelineABC):
             **kwargs,
         )
 
-        # 提取视频信息（video_url 和 task_id）
         response = result.get("response")
         task_type = result.get("task_type")
 
-        # 检查响应状态
         if response and hasattr(response, "status_code") and response.status_code == HTTPStatus.OK:
             logger.info("Wan2.5 API call succeeded with status code %s", response.status_code)
 
@@ -230,9 +225,9 @@ class Wan2p5Pipeline(PipelineABC):
         return result
 
     def get_operator(self) -> Wan2p5Operator | None:
-        """获取 operator 实例"""
+        """Return the operator."""
         return self.operator
 
     def get_synthesis_model(self) -> Wan2p5Synthesis | None:
-        """获取 synthesis 模型实例"""
+        """Return the synthesis model."""
         return self.synthesis_model

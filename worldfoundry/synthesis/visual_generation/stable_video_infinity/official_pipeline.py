@@ -73,7 +73,7 @@ class SVIVideoPipeline(WanStagedPipeline):
         torch_dtype: torch.dtype,
         device: str,
         use_usp: bool = False,
-    ) -> "SVIVideoPipeline":
+    ) -> SVIVideoPipeline:
         pipe = cls(device=device, torch_dtype=torch_dtype, tokenizer_path=tokenizer_path)
         pipe.text_encoder = text_encoder
         pipe.image_encoder = image_encoder

@@ -29,7 +29,6 @@ class AC3DOperator(BaseOperator):
 
     @staticmethod
     def _camera_indices(interaction: Any) -> list[int]:
-        """Camera indices implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, int):

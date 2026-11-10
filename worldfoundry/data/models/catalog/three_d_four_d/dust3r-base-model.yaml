@@ -24,7 +24,7 @@ integration:
   - Base-model profile for the DUSt3R catalog entry; exposed through the shared geometry-prior pipeline/operator contract.
   - Aligns with the dust3r catalog entry, which vendors the same in-tree source under worldfoundry.base_models.three_dimensions.general_3d.dust3r.
 runtime_profile: runtime-profile:dust3r-base-model
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: dust3r-base-model
 runner_parity:
   status: verified

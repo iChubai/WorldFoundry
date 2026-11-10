@@ -24,7 +24,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.evaluation.tasks.catalog.workspace_registry import (
+from worldfoundry.evals.tasks.catalog.workspace_registry import (
     validate_workspace_registry,
     workspace_benchmark_runtime_hint,
     workspace_benchmark_runtime_hints,
@@ -865,7 +865,7 @@ def _official_links_from_sources(sources: Mapping[str, Any]) -> dict[str, str]:
 
 
 def _official_links_from_catalog_entry(entry: Mapping[str, Any]) -> dict[str, str]:
-    from worldfoundry.evaluation.models.catalog.schema import _github_url_from_sources
+    from worldfoundry.evals.models.catalog.schema import _github_url_from_sources
 
     links: dict[str, str] = {}
     github = _github_url_from_sources(entry)
@@ -933,7 +933,7 @@ def _github_url_from_model_ref(model_ref: str) -> str:
 
 @lru_cache(maxsize=1)
 def _model_catalog_links_index() -> dict[str, dict[str, str]]:
-    from worldfoundry.evaluation.models.catalog.manifest import _catalog_paths, _iter_catalog_mappings
+    from worldfoundry.evals.models.catalog.manifest import _catalog_paths, _iter_catalog_mappings
 
     index: dict[str, dict[str, str]] = {}
     for path in _catalog_paths():
@@ -1071,9 +1071,9 @@ def _safe_jsonable(value: Any) -> Any:
 @lru_cache(maxsize=1)
 def _evaluation_catalog_payload() -> dict[str, Any]:
     try:
-        from worldfoundry.evaluation.models.catalog.registry import discover_model_registry
-        from worldfoundry.evaluation.tasks.catalog.specs import list_benchmark_zoo_cli_tasks
-        from worldfoundry.evaluation.tasks.metrics.registry import list_metric_registry_entries
+        from worldfoundry.evals.models.catalog.registry import discover_model_registry
+        from worldfoundry.evals.tasks.catalog.specs import list_benchmark_zoo_cli_tasks
+        from worldfoundry.evals.tasks.metrics.registry import list_metric_registry_entries
 
         benchmarks = list_benchmark_zoo_cli_tasks()
         models = [item.to_dict() for item in discover_model_registry().list()]
@@ -1152,7 +1152,7 @@ _PREPARED_EVALUATION_MODES = frozenset({"score-artifacts", "model-benchmark", "g
 def _prepared_evaluation_from_payload(payload: JobCreateRequest, output_dir: str | Path):
     """Compile a Workspace payload through the shared evaluation intent service."""
 
-    from worldfoundry.evaluation.tasks.execution.orchestration.service import (
+    from worldfoundry.evals.tasks.execution.orchestration.service import (
         GenerateAndScoreIntent,
         ModelBenchmarkIntent,
         ScoreArtifactsIntent,
@@ -1217,8 +1217,8 @@ def _prepared_evaluation_from_payload(payload: JobCreateRequest, output_dir: str
 
 
 def _run_evaluation(payload: JobCreateRequest, job: StudioJob | None = None) -> dict[str, Any]:
-    from worldfoundry.evaluation.runner import EvaluateRunRequest, run_evaluate
-    from worldfoundry.evaluation.tasks.execution.orchestration.plan import (
+    from worldfoundry.evals.runner import EvaluateRunRequest, run_evaluate
+    from worldfoundry.evals.tasks.execution.orchestration.plan import (
         evaluate_request_from_run_plan,
         load_run_plan,
         validate_run_plan,
@@ -1229,7 +1229,7 @@ def _run_evaluation(payload: JobCreateRequest, job: StudioJob | None = None) -> 
     )
     intent_mode = (payload.eval_mode or "existing-results").strip().lower().replace("_", "-")
     if intent_mode in _PREPARED_EVALUATION_MODES:
-        from worldfoundry.evaluation.tasks.execution.orchestration.service import execute_prepared_evaluation
+        from worldfoundry.evals.tasks.execution.orchestration.service import execute_prepared_evaluation
 
         prepared = _prepared_evaluation_from_payload(payload, output_dir)
         if job is not None:

@@ -142,7 +142,9 @@ def _recipe(
                 {"weights": "text-encoder", "tokenizer": "tokenizer"},
             ),
             ComponentSpec(
-                codec, _build_cosmos25_video_codec, {"weights": "vae"},
+                codec,
+                _build_cosmos25_video_codec,
+                {"weights": "vae"},
                 options={
                     "minimum_frames": minimum_frames,
                     "zero_pad_image": zero_pad_image,

@@ -33,7 +33,6 @@ class OpenMAGVIT2Operator(BaseOperator):
 
     @staticmethod
     def _class_ids(interaction) -> list[str]:
-        """Class ids implementation."""
         if interaction is None:
             return []
         if isinstance(interaction, (int, float)):

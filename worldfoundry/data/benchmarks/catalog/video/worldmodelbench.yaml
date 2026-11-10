@@ -114,15 +114,15 @@ metrics:
   output_unit: score
   primary: true
 runner:
-  official_script: worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.worldmodelbench.run_worldmodelbench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.worldmodelbench.run_worldmodelbench_official_runner
     generated_arg: --video-dir
     dataset_root_arg: --data-root
     supports_run_official: false
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldModelBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
   repo_url: https://github.com/WorldModelBench-Team/WorldModelBench
   repo_revision: 00b7aa17a05f9fd1ab5c8f66bcf476d04c9c33bf
   validation_command:
@@ -144,7 +144,7 @@ runner:
   - --json
   run_command:
   - ${WORLDFOUNDRY_UNIFIED_PYTHON}
-  - worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
+  - worldfoundry/evals/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
   required_env:
   - WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH
   - WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
@@ -153,7 +153,7 @@ runner:
     kind: in_tree_official_source
     repo_url: https://github.com/WorldModelBench-Team/WorldModelBench
     repo_revision: 00b7aa17a05f9fd1ab5c8f66bcf476d04c9c33bf
-    root: worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime
+    root: worldfoundry/evals/tasks/execution/runners/worldmodelbench/runtime
     root_env: WORLDFOUNDRY_WORLDMODELBENCH_ROOT
     generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
     official_entrypoints:
@@ -204,12 +204,12 @@ data_refs:
   - cache/worldfoundry/data/hfd_datasets/datasets--Efficient-Large-Model--worldmodelbench
   - cache/worldfoundry/data/hfd_datasets/worldmodelbench
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
+  - worldfoundry/evals/tasks/execution/runners/worldmodelbench/runtime/evaluation.py
   - worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json
   task_yaml: worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldModelBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

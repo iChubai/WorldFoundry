@@ -9,7 +9,7 @@ import logging
 import os
 import sys
 import warnings
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -17,8 +17,9 @@ from typing import Any
 import numpy as np
 import torch
 import torch.distributed as dist
-from torch.distributed.device_mesh import DeviceMesh
 from PIL import Image
+from torch.distributed.device_mesh import DeviceMesh
+
 
 def _env_flag(name: str, default: bool = False) -> bool:
     raw = os.environ.get(name)
@@ -46,14 +47,12 @@ def _configure_concise_import_logs() -> None:
         "ignore",
         message=r"barrier\(\): using the device under current context.*",
     )
-    logging.getLogger(
-        "sglang.srt.layers.moe.moe_runner.triton_utils.fused_moe_triton_config"
-    ).setLevel(logging.ERROR)
+    logging.getLogger("sglang.srt.layers.moe.moe_runner.triton_utils.fused_moe_triton_config").setLevel(logging.ERROR)
 
 
 _configure_concise_import_logs()
 
-from .inference_backend import (  # noqa: E402
+from .inference_backend import (  # noqa: E402 - Follows the import-log configuration.
     resolve_backend_engine,
     resolve_negative_prompt_arg,
 )
@@ -123,12 +122,8 @@ def _checkpoint_module_aliases():
     package = importlib.import_module(__package__)
     aliases = {
         "lingbot_video": package,
-        "lingbot_video.scheduling_flow_unipc": importlib.import_module(
-            f"{__package__}.scheduling_flow_unipc"
-        ),
-        "lingbot_video.transformer_lingbot_video": importlib.import_module(
-            f"{__package__}.transformer_lingbot_video"
-        ),
+        "lingbot_video.scheduling_flow_unipc": importlib.import_module(f"{__package__}.scheduling_flow_unipc"),
+        "lingbot_video.transformer_lingbot_video": importlib.import_module(f"{__package__}.transformer_lingbot_video"),
     }
     previous = {name: sys.modules.get(name) for name in aliases}
     sys.modules.update(aliases)
@@ -152,6 +147,7 @@ def _qwen_attn_implementation() -> str:
     if importlib.util.find_spec("flash_attn_3") is not None:
         return "flash_attention_3"
     return "sdpa"
+
 
 try:
     from .fsdp_inference import (
@@ -265,10 +261,8 @@ def _restore_cuda_sdp_state(state: dict[str, bool | None]) -> None:
         fn = getattr(cuda_backends, setter, None)
         if fn is None:
             continue
-        try:
+        with suppress(Exception):
             fn(value)
-        except Exception:
-            pass
 
 
 _BASELINE_CUDA_SDP_STATE = _cuda_sdp_state()
@@ -370,9 +364,7 @@ def _init_parallel(
     cfg_parallel_group = None
     if cfg_degree > 1:
         lane_groups = [
-            dist.new_group(
-                ranks=[cfg_rank * context_degree + context_rank for cfg_rank in range(cfg_degree)]
-            )
+            dist.new_group(ranks=[cfg_rank * context_degree + context_rank for cfg_rank in range(cfg_degree)])
             for context_rank in range(context_degree)
         ]
         cfg_parallel_group = lane_groups[context_rank]
@@ -380,10 +372,7 @@ def _init_parallel(
     context_mesh = None
     if context_degree > 1 and cfg_degree > 1:
         mesh_ranks = [
-            [
-                cfg_rank * context_degree + context_rank
-                for context_rank in range(context_degree)
-            ]
+            [cfg_rank * context_degree + context_rank for context_rank in range(context_degree)]
             for cfg_rank in range(cfg_degree)
         ]
         context_mesh = DeviceMesh(
@@ -393,6 +382,7 @@ def _init_parallel(
         )
 
     return rank, local_rank, world_size, cfg_parallel_group, context_mesh, cfg_branch_rank, context_rank
+
 
 try:
     from .native_backend import (
@@ -489,7 +479,7 @@ def _module_dtype(module: Any) -> str | None:
     if module is None:
         return None
     if hasattr(module, "dtype"):
-        dtype = getattr(module, "dtype")
+        dtype = module.dtype
         if isinstance(dtype, torch.dtype):
             return _dtype_name(dtype)
     if isinstance(module, torch.nn.Module):
@@ -596,9 +586,7 @@ def _apply_fsdp_inference_if_requested(
     inner_pipe = _inner_diffusers_pipe(pipe)
     transformer = getattr(inner_pipe, "transformer", None)
     if not isinstance(transformer, torch.nn.Module):
-        raise ValueError(
-            "FSDP inference requires a pipeline with a torch.nn.Module transformer."
-        )
+        raise ValueError("FSDP inference requires a pipeline with a torch.nn.Module transformer.")
     _log_progress("applying FSDP inference sharding")
     info = apply_fsdp_inference(transformer, mesh)
     _log_progress(f"applied FSDP inference sharding: {info}")
@@ -694,9 +682,7 @@ def _load_transformer_component(
     dtype_map: dict[str, torch.dtype],
 ) -> Any:
     if LingBotVideoTransformer3DModel is None:
-        raise RuntimeError(
-            "LingBotVideoTransformer3DModel is not importable."
-        ) from _TRANSFORMER_IMPORT_ERROR
+        raise RuntimeError("LingBotVideoTransformer3DModel is not importable.") from _TRANSFORMER_IMPORT_ERROR
     if model_component_dir is None:
         raise RuntimeError("model path helpers are not importable.") from _LINGBOT_PIPELINE_IMPORT_ERROR
     model_component_dir(model_dir, transformer_subfolder)
@@ -762,9 +748,7 @@ def _load_sglang_native_pipe(
     defer_transformer_to_device: bool = False,
 ) -> Any:
     if LingBotVideoNativePipeline is None or register_lingbot_native_pipeline is None:
-        raise RuntimeError(
-            "LingBotVideo SGLang native backend is not importable."
-        ) from _NATIVE_BACKEND_IMPORT_ERROR
+        raise RuntimeError("LingBotVideo SGLang native backend is not importable.") from _NATIVE_BACKEND_IMPORT_ERROR
     _restore_cuda_sdp_state(_BASELINE_CUDA_SDP_STATE)
     try:
         register_lingbot_native_pipeline()
@@ -852,9 +836,7 @@ def _maybe_preload_refiner(
 ) -> dict[str, Any]:
     requested = bool(args.run_refiner)
     available = (
-        _refiner_model_available(args.refiner_model_dir, args.refiner_transformer_subfolder)
-        if requested
-        else False
+        _refiner_model_available(args.refiner_model_dir, args.refiner_transformer_subfolder) if requested else False
     )
     state: dict[str, Any] = {
         "refiner_requested": requested,
@@ -890,8 +872,7 @@ def _maybe_preload_refiner(
     expected_refiner_vae_dtype = _dtype_name(refiner_dtype_map["vae"])
     if refiner_component_dtypes.get("vae") != expected_refiner_vae_dtype:
         raise AssertionError(
-            f"Refiner VAE dtype mismatch: requested {expected_refiner_vae_dtype}, "
-            f"got {refiner_component_dtypes}"
+            f"Refiner VAE dtype mismatch: requested {expected_refiner_vae_dtype}, got {refiner_component_dtypes}"
         )
     if args.context_parallel_degree > 1:
         _enable_context_parallel(
@@ -919,13 +900,9 @@ def _extract_frames(result: Any) -> np.ndarray:
         tensor = frames.detach().cpu().float()
         if tensor.ndim == 5:
             # Accept B,T,C,H,W or B,C,T,H,W.
-            if tensor.shape[2] in (1, 3, 4):
-                tensor = tensor[0].permute(0, 2, 3, 1)
-            else:
-                tensor = tensor[0].permute(1, 2, 3, 0)
-        elif tensor.ndim == 4:
-            if tensor.shape[1] in (1, 3, 4):
-                tensor = tensor.permute(0, 2, 3, 1)
+            tensor = tensor[0].permute(0, 2, 3, 1) if tensor.shape[2] in (1, 3, 4) else tensor[0].permute(1, 2, 3, 0)
+        elif tensor.ndim == 4 and tensor.shape[1] in (1, 3, 4):
+            tensor = tensor.permute(0, 2, 3, 1)
         return tensor.numpy()
     if isinstance(frames, list):
         return np.asarray(frames[0])
@@ -1022,9 +999,11 @@ def main() -> None:
     parser.add_argument("--mode", choices=["t2i", "t2v", "ti2v"], required=True)
     parser.add_argument("--prompt", default=None)
     parser.add_argument("--prompt_json", default=None)
-    parser.add_argument("--negative_prompt", default=None,
-                        help="negative prompt; if unset, uses the mode's default "
-                             "(image default for t2i, video default for t2v/ti2v)")
+    parser.add_argument(
+        "--negative_prompt",
+        default=None,
+        help="negative prompt; if unset, uses the mode's default (image default for t2i, video default for t2v/ti2v)",
+    )
     parser.add_argument(
         "--negative_prompt_json",
         default=None,
@@ -1104,17 +1083,13 @@ def main() -> None:
         if args.duration is None and "duration" in prompt_sample:
             args.duration = float(prompt_sample["duration"])
     if args.prompt is None:
-        raise ValueError(
-            "Provide `--prompt_json <path_to_structured_prompt.json>` or an explicit `--prompt`."
-        )
+        raise ValueError("Provide `--prompt_json <path_to_structured_prompt.json>` or an explicit `--prompt`.")
     if args.resolution or args.ratio:
         if not args.resolution or not args.ratio:
             raise ValueError("`--resolution` and `--ratio` must be provided together.")
         args.height, args.width = _height_width_from_bucket(args.resolution, args.ratio)
     if args.negative_prompt is None:
-        args.negative_prompt = (
-            DEFAULT_NEGATIVE_PROMPT_IMAGE if args.mode == "t2i" else DEFAULT_NEGATIVE_PROMPT
-        )
+        args.negative_prompt = DEFAULT_NEGATIVE_PROMPT_IMAGE if args.mode == "t2i" else DEFAULT_NEGATIVE_PROMPT
     if args.mode != "t2i" and args.duration is not None:
         if num_frames_from_duration is None:
             raise RuntimeError("num_frames_from_duration is not importable.") from _LINGBOT_PIPELINE_IMPORT_ERROR
@@ -1141,15 +1116,11 @@ def main() -> None:
     if args.cfg_parallel_degree > 1 and args.batch_cfg:
         raise ValueError("`--cfg_parallel_degree > 1` and `--batch_cfg` are mutually exclusive.")
     if args.refiner_model_dir and args.cfg_parallel_degree > 1 and args.refiner_batch_cfg:
-        raise ValueError(
-            "`--cfg_parallel_degree > 1` and `--refiner_batch_cfg` are mutually exclusive."
-        )
+        raise ValueError("`--cfg_parallel_degree > 1` and `--refiner_batch_cfg` are mutually exclusive.")
     if args.run_refiner and args.mode == "t2i":
         raise ValueError("Refiner is only supported for video modes.")
     if args.run_refiner and args.mode == "ti2v" and not args.image:
-        raise ValueError(
-            "The ti2v refiner conditions on the clean first frame; `--image` is required."
-        )
+        raise ValueError("The ti2v refiner conditions on the clean first frame; `--image` is required.")
     if args.diffusers_attn_backend:
         os.environ["DIFFUSERS_ATTN_BACKEND"] = args.diffusers_attn_backend
     if args.allow_tf32:
@@ -1175,9 +1146,7 @@ def main() -> None:
     component_dtypes = _component_dtypes(pipe)
     expected_vae_dtype = _dtype_name(dtype_map["vae"])
     if component_dtypes.get("vae") != expected_vae_dtype:
-        raise AssertionError(
-            f"VAE dtype mismatch: requested {expected_vae_dtype}, got {component_dtypes}"
-        )
+        raise AssertionError(f"VAE dtype mismatch: requested {expected_vae_dtype}, got {component_dtypes}")
     device = _default_device()
     if args.context_parallel_degree > 1:
         _enable_context_parallel(
@@ -1228,9 +1197,7 @@ def main() -> None:
     )
     if args.mode == "ti2v":
         input_image = (
-            Image.open(args.image).convert("RGB")
-            if args.image
-            else _make_default_image(args.height, args.width)
+            Image.open(args.image).convert("RGB") if args.image else _make_default_image(args.height, args.width)
         )
         if should_cache_conditions:
             condition_cache, ti2v_image_tensor_cpu = _cache_ti2v_prompt_conditions(
@@ -1378,9 +1345,7 @@ def main() -> None:
         )
     elif refiner_null_clone_zero:
         refiner_condition_cache = dict(refiner_condition_cache)
-        refiner_condition_cache["negative_prompt_embeds"] = torch.zeros_like(
-            refiner_condition_cache["prompt_embeds"]
-        )
+        refiner_condition_cache["negative_prompt_embeds"] = torch.zeros_like(refiner_condition_cache["prompt_embeds"])
         refiner_condition_cache["negative_prompt_mask"] = refiner_condition_cache["prompt_mask"].clone()
 
     if rank == 0:

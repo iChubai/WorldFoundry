@@ -7,7 +7,6 @@ import gc
 import sys
 from pathlib import Path
 
-
 NUM_VIEWS = 3
 
 
@@ -217,44 +216,48 @@ def run(args: argparse.Namespace) -> Path:
     import torch
     from diffusers import FlowMatchEulerDiscreteScheduler
     from einops import rearrange
-    from safetensors.torch import load_file
-    from transformers import T5EncoderModel, T5Tokenizer
-
     from models.ltx_models.autoencoder_kl_ltx import AutoencoderKLLTXVideo
     from models.ltx_models.transformer_ltx_multiview import LTXVideoTransformer3DModel
     from models.pipeline.custom_pipeline import CustomPipeline
+    from safetensors.torch import load_file
+    from transformers import T5EncoderModel, T5Tokenizer
+
     from worldfoundry.core.media.codecs.video import save_video_h264
 
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; Genie Envisioner inference cannot run")
-    dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[
-        args.mixed_precision
-    ]
+    dtype = {"bf16": torch.bfloat16, "fp16": torch.float16, "fp32": torch.float32}[args.mixed_precision]
     device = torch.device(args.device)
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
     base_model_dir = args.base_model_dir.expanduser().resolve()
     print("Loading local LTX tokenizer and text encoder...")
-    tokenizer = T5Tokenizer.from_pretrained(
-        base_model_dir, subfolder="tokenizer", local_files_only=True
+    tokenizer = T5Tokenizer.from_pretrained(base_model_dir, subfolder="tokenizer", local_files_only=True)
+    text_encoder = (
+        T5EncoderModel.from_pretrained(
+            base_model_dir,
+            subfolder="text_encoder",
+            dtype=dtype,
+            local_files_only=True,
+            low_cpu_mem_usage=True,
+        )
+        .to(device=device, dtype=dtype)
+        .eval()
     )
-    text_encoder = T5EncoderModel.from_pretrained(
-        base_model_dir,
-        subfolder="text_encoder",
-        dtype=dtype,
-        local_files_only=True,
-        low_cpu_mem_usage=True,
-    ).to(device=device, dtype=dtype).eval()
 
     print("Loading local LTX VAE...")
-    vae = AutoencoderKLLTXVideo.from_pretrained(
-        base_model_dir,
-        subfolder="vae",
-        torch_dtype=dtype,
-        local_files_only=True,
-        low_cpu_mem_usage=True,
-    ).to(device=device, dtype=dtype).eval()
+    vae = (
+        AutoencoderKLLTXVideo.from_pretrained(
+            base_model_dir,
+            subfolder="vae",
+            torch_dtype=dtype,
+            local_files_only=True,
+            low_cpu_mem_usage=True,
+        )
+        .to(device=device, dtype=dtype)
+        .eval()
+    )
     vae.enable_slicing()
     vae.enable_tiling()
 

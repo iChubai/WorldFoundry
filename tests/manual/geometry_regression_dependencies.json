@@ -76,7 +76,7 @@
     "tests/**",
     "worldfoundry/cli/**",
     "worldfoundry/mcp/**",
-    "worldfoundry/evaluation/**",
+    "worldfoundry/evals/**",
     "worldfoundry/data/benchmarks/**",
     "worldfoundry/studio/visualization/**",
     "worldfoundry/studio/frontend/**",

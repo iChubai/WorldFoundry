@@ -31,7 +31,7 @@ integration:
   - WorldFoundry exposes an in-tree adapter that runs the upstream LagrNVS minimal_inference.py command.
   - Missing HF_TOKEN/gated checkpoint access is reported at inference time.
 runtime_profile: runtime-profile:lagernvs
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: lagernvs
 runner_parity:
   status: pending

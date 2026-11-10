@@ -42,7 +42,7 @@ integration:
     next Studio validation pass.
   - The 65-frame official default hit single-A100 80GB OOM in the unified env and
     needs an accepted memory strategy before promotion.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:matrix-game-1
 pipeline_binding: matrix-game-1
 catalog_category: world_models

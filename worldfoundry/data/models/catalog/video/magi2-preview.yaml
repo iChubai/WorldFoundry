@@ -6,7 +6,7 @@ aliases:
   - magi2
   - magi2_preview
   - magi-2-preview
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: magi2-preview
 tasks:
   - text-to-video

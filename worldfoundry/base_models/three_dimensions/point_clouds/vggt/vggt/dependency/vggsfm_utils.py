@@ -4,14 +4,16 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Module for base_models -> three_dimensions -> point_clouds -> vggt -> vggt -> dependency -> vggsfm_utils.py functionality."""
-
 import logging
 import warnings
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict as Dict  # noqa: UP035 - Re-exported to modules that star-import this namespace.
+from typing import List as List  # noqa: UP035 - Re-exported to modules that star-import this namespace.
+from typing import Optional as Optional
+from typing import Tuple as Tuple  # noqa: UP035 - Re-exported to modules that star-import this namespace.
+from typing import Union as Union
 
-import numpy as np
-import pycolmap
+import numpy as np  # noqa: F401 - Re-exported under this name.
+import pycolmap as pycolmap
 import torch
 import torch.nn.functional as F
 from lightglue import ALIKED, SIFT, SuperPoint
@@ -241,7 +243,7 @@ def extract_keypoints(query_image, extractors, round_keypoints=True):
     query_points = None
 
     with torch.no_grad():
-        for extractor_name, extractor in extractors.items():
+        for _extractor_name, extractor in extractors.items():
             query_points_data = extractor.extract(query_image, invalid_mask=None)
             extractor_points = query_points_data["keypoints"]
             if round_keypoints:
@@ -300,9 +302,6 @@ def predict_tracks_in_chunks(
     fine_pred_track = torch.cat(fine_pred_track_list, dim=2)
     pred_vis = torch.cat(pred_vis_list, dim=2)
 
-    if pred_score is not None:
-        pred_score = torch.cat(pred_score_list, dim=2)
-    else:
-        pred_score = None
+    pred_score = torch.cat(pred_score_list, dim=2) if pred_score is not None else None
 
     return fine_pred_track, pred_vis, pred_score

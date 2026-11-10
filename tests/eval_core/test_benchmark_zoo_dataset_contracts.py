@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import load_benchmark_catalog_shard_entries
-from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_runner import (
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import load_benchmark_catalog_shard_entries
+from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import (
     BenchmarkExecutionUnavailableError,
     BenchmarkRunnerRegistry,
     build_benchmark_runner_registry,

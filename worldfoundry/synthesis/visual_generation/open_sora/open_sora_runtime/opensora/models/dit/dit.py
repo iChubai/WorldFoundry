@@ -226,11 +226,10 @@ class DiT(nn.Module):
     def initialize_weights(self):
         # Initialize transformer layers:
         def _basic_init(module):
-            if isinstance(module, nn.Linear):
-                if module.weight.requires_grad_:
-                    torch.nn.init.xavier_uniform_(module.weight)
-                    if module.bias is not None:
-                        nn.init.constant_(module.bias, 0)
+            if isinstance(module, nn.Linear) and module.weight.requires_grad_:
+                torch.nn.init.xavier_uniform_(module.weight)
+                if module.bias is not None:
+                    nn.init.constant_(module.bias, 0)
 
         self.apply(_basic_init)
 

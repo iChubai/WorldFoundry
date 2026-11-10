@@ -8,7 +8,7 @@ source:
   license: apache-2.0
 checkpoint: ZichengD/LiveWorld
 runtime_profile: runtime-profile:liveworld
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: liveworld
 official_sources:
   project_page: https://zichengduan.github.io/LiveWorld

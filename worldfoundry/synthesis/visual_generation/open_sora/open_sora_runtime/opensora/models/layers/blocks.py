@@ -11,7 +11,6 @@
 
 import functools
 import math
-from typing import Optional
 
 import numpy as np
 import torch
@@ -26,7 +25,9 @@ from timm.models.vision_transformer import Mlp
 from opensora.acceleration.communications import all_to_all, split_forward_gather_backward
 from opensora.acceleration.parallel_states import get_sequence_parallel_group
 
-approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+def approx_gelu():
+    return nn.GELU(approximate="tanh")
 
 
 class LlamaRMSNorm(nn.Module):
@@ -53,7 +54,7 @@ def get_layernorm(hidden_size: torch.Tensor, eps: float, affine: bool, use_kerne
 
             return FusedLayerNorm(hidden_size, elementwise_affine=affine, eps=eps)
         except ImportError:
-            raise RuntimeError("FusedLayerNorm not available. Please install apex.")
+            raise RuntimeError("FusedLayerNorm not available. Please install apex.")  # noqa: B904 - Keeps the implicit exception context.
     else:
         return nn.LayerNorm(hidden_size, eps, elementwise_affine=affine)
 
@@ -108,7 +109,6 @@ class PatchEmbed3D(nn.Module):
             self.norm = None
 
     def forward(self, x):
-        """Forward function."""
         # padding
         _, _, D, H, W = x.size()
         if W % self.patch_size[2] != 0:
@@ -385,7 +385,7 @@ class SeqParallelAttention(Attention):
         # [B, SUB_N, 3, NUM_HEAD, HEAD_DIM] -> [B, N, 3, NUM_HEAD_PER_DEVICE, HEAD_DIM]
         qkv = all_to_all(qkv, sp_group, scatter_dim=3, gather_dim=1)
 
-        if self.enable_flash_attn:
+        if self.enable_flash_attn:  # noqa: SIM108 - Branches carry per-case comments.
             qkv_permute_shape = (
                 2,
                 0,
@@ -443,7 +443,7 @@ class SeqParallelAttention(Attention):
 
 class MultiHeadCrossAttention(nn.Module):
     def __init__(self, d_model, num_heads, attn_drop=0.0, proj_drop=0.0):
-        super(MultiHeadCrossAttention, self).__init__()
+        super().__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
 
         self.d_model = d_model
@@ -706,7 +706,7 @@ class CaptionEmbedder(nn.Module):
         in_channels,
         hidden_size,
         uncond_prob,
-        act_layer=nn.GELU(approximate="tanh"),
+        act_layer=nn.GELU(approximate="tanh"),  # noqa: B008 - Default evaluated once at definition, as upstream.
         token_num=120,
     ):
         super().__init__()
@@ -759,7 +759,7 @@ class PositionEmbedding2D(nn.Module):
         emb_sin = torch.sin(out)
         return torch.cat((emb_sin, emb_cos), dim=-1)
 
-    @functools.lru_cache(maxsize=512)
+    @functools.lru_cache(maxsize=512)  # noqa: B019 - Keeps the upstream per-instance method cache.
     def _get_cached_emb(
         self,
         device: torch.device,
@@ -767,7 +767,7 @@ class PositionEmbedding2D(nn.Module):
         h: int,
         w: int,
         scale: float = 1.0,
-        base_size: Optional[int] = None,
+        base_size: int | None = None,
     ):
         grid_h = torch.arange(h, device=device) / scale
         grid_w = torch.arange(w, device=device) / scale
@@ -790,8 +790,8 @@ class PositionEmbedding2D(nn.Module):
         x: torch.Tensor,
         h: int,
         w: int,
-        scale: Optional[float] = 1.0,
-        base_size: Optional[int] = None,
+        scale: float | None = 1.0,
+        base_size: int | None = None,
     ) -> torch.Tensor:
         return self._get_cached_emb(x.device, x.dtype, h, w, scale, base_size)
 

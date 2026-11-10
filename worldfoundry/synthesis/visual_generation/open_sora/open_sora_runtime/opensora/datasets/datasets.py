@@ -70,7 +70,7 @@ class VideoTextDataset(torch.utils.data.Dataset):
         if file_type == "video":
             # loading
             vframes, vinfo = read_video(path, backend="av")
-            video_fps = vinfo["video_fps"] if "video_fps" in vinfo else 24
+            video_fps = vinfo["video_fps"] if "video_fps" in vinfo else 24  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
             # Sampling video frames
             video = temporal_random_crop(vframes, self.num_frames, self.frame_interval)
@@ -147,7 +147,7 @@ class VariableVideoTextDataset(VideoTextDataset):
         if file_type == "video":
             # loading
             vframes, vinfo = read_video(path, backend="av")
-            video_fps = vinfo["video_fps"] if "video_fps" in vinfo else 24
+            video_fps = vinfo["video_fps"] if "video_fps" in vinfo else 24  # noqa: SIM401 - Keeps explicit lookup semantics for custom mappings.
 
             # Sampling video frames
             video = temporal_random_crop(vframes, num_frames, self.frame_interval)

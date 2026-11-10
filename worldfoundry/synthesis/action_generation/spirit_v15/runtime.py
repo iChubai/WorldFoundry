@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.synthesis.action_generation._native_policy_runtime import (
@@ -175,8 +176,7 @@ class SpiritV15Runtime:
         expected_dim = model.config.input_features["observation.state"].shape[0]
         if state_tensor.shape[-1] != expected_dim:
             raise ValueError(
-                f"Spirit-v1.5 checkpoint expects {expected_dim} state values, "
-                f"received {state_tensor.shape[-1]}"
+                f"Spirit-v1.5 checkpoint expects {expected_dim} state values, received {state_tensor.shape[-1]}"
             )
 
         batch: dict[str, Any] = {

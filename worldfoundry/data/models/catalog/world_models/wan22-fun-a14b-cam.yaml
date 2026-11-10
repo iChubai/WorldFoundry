@@ -8,7 +8,7 @@ source:
   license: apache-2.0
 checkpoint: alibaba-pai/Wan2.2-Fun-A14B-Control-Camera
 runtime_profile: runtime-profile:wan22-fun-a14b-cam
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: wan22-fun-a14b-cam
 integration:
   status: integrated

@@ -7,7 +7,7 @@ aliases:
   - minimax-h3-t2va
   - minimax-h3-fl2va
   - minimax-h3-ref2va
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: minimax-h3
 tasks:
   - text-to-video

@@ -13,7 +13,11 @@ from .base_operator import BaseOperator
 
 
 def load_pil_image(image_input) -> Image.Image:
-    """Load pil image implementation."""
+    """Return a PIL image or an image file path as an RGB PIL image.
+
+    Raises:
+        TypeError: The input is neither a PIL image nor a string path.
+    """
     if isinstance(image_input, Image.Image):
         return image_input.convert("RGB")
     if isinstance(image_input, str):
@@ -147,7 +151,6 @@ class MatrixGame3Operator(BaseOperator):
         return load_pil_image(input_image)
 
     def _normalize_interaction(self, interaction: str | dict[str, Any]) -> dict[str, str]:
-        """Normalize interaction implementation."""
         if isinstance(interaction, str):
             return {"action": interaction}
         if isinstance(interaction, dict):
@@ -158,7 +161,6 @@ class MatrixGame3Operator(BaseOperator):
         raise TypeError(f"Unsupported interaction type: {type(interaction)}")
 
     def _encode_action(self, action: str):
-        """Encode action implementation."""
         action_list = self.COMBINATION_MAP.get(action, [action])
         keyboard = torch.zeros(self.KEYBOARD_DIM, dtype=torch.float32)
         mouse = torch.zeros(2, dtype=torch.float32)
@@ -181,7 +183,6 @@ class MatrixGame3Operator(BaseOperator):
         total_frames: int,
         frames_per_action: int,
     ):
-        """Build sequence implementation."""
         keyboard_rows: list[torch.Tensor] = []
         mouse_rows: list[torch.Tensor] = []
 

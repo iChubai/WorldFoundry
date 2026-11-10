@@ -45,7 +45,7 @@ integration:
     model_path/lora_path/pi3x_ckpt_path or WAH_HELIOS_DISTILLED_PATH/WAH_LORA_PATH/WAH_PI3X_CKPT_PATH.
   - The vendored official BMX/graffiti warp-video demo uses the dedicated
     warp-as-history conda environment.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: warp-as-history
 runtime_profile: runtime-profile:warp-as-history
 runner_parity:
@@ -65,7 +65,7 @@ variants:
     filename: model.safetensors
   - repo_id: yyfz233/warp-as-history
     filename: visible_lora_state_step1000.safetensors
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: warp-as-history
   runtime_profile: runtime-profile:warp-as-history
   demo_parity:

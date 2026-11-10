@@ -37,7 +37,7 @@ integration:
   - Runtime source is vendored in-tree under worldfoundry/base_models/three_dimensions/point_clouds/lingbot_map;
     checkpoints remain external cache assets.
   - WorldFoundry exposes streaming and windowed reconstruction through LingBotMapPipeline.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: lingbot-map
 runtime_profile: runtime-profile:lingbot-map
 runner_parity:

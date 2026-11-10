@@ -110,7 +110,6 @@ class InfiniteVGGTResult:
 
 
 def _write_ascii_pointcloud(out_path: Path, points: np.ndarray, colors: np.ndarray) -> Path:
-    """Write ascii pointcloud helper function."""
     lines = [
         "ply",
         "format ascii 1.0",
@@ -161,7 +160,7 @@ class InfiniteVGGTPipeline(PipelineABC):
         **kwargs,
     ) -> "InfiniteVGGTPipeline":
         """
-        在这里对 representation, reasoning, synthesis 模型进行权重加载。
+        Load the representation, reasoning and synthesis model weights.
         Returns cls(representation_model, reasoning_model, synthesis_model).
         """
         component_options = dict(required_components or {})
@@ -202,7 +201,7 @@ class InfiniteVGGTPipeline(PipelineABC):
         interaction: dict[str, Any] | None = None,
     ) -> InfiniteVGGTResult:
         """
-        input_: 图片、视频等输入 (image path, video path, image dir, or list of paths).
+        input_: Image or video input (image path, video path, image dir, or list of paths).
         interaction: from operator.process_interaction().
         Returns result with PIL.Image / video frame list (no save).
         """
@@ -256,8 +255,8 @@ class InfiniteVGGTPipeline(PipelineABC):
         **kwargs,
     ) -> InfiniteVGGTResult:
         """
-        Pipeline 调用入口。不在此处 save；返回可保存对象 (PIL.Image, video frame list)，
-        由用户在 test 中保存或后续处理。
+        Run the pipeline without saving; return savable objects (PIL.Image, video frame list)
+        that callers save or post-process.
         """
         if interaction is None and self.operator.current_interaction:
             interaction = self.operator.process_interaction()

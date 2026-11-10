@@ -23,8 +23,8 @@ from __future__ import annotations
 import json
 import re
 import time
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence
 
 import numpy as np
 import torch
@@ -66,14 +66,6 @@ _REPO_TO_MODEL_NAME = {
 
 
 def _model_name_from_repo_id(repo_id: str) -> str:
-    """Helper function to model name from repo id.
-
-    Args:
-        repo_id: The repo id.
-
-    Returns:
-        The return value.
-    """
     if repo_id in _REPO_TO_MODEL_NAME:
         return _REPO_TO_MODEL_NAME[repo_id]
 
@@ -102,14 +94,6 @@ def _model_name_from_repo_id(repo_id: str) -> str:
 
 
 def _load_state_dict_file(path: str | Path) -> dict[str, torch.Tensor]:
-    """Helper function to load state dict file.
-
-    Args:
-        path: The path.
-
-    Returns:
-        The return value.
-    """
     path = Path(path)
     if path.suffix == ".safetensors":
         try:
@@ -124,11 +108,7 @@ def _load_state_dict_file(path: str | Path) -> dict[str, torch.Tensor]:
     state = torch.load(path, map_location="cpu")
     while isinstance(state, dict):
         wrapped = next(
-            (
-                state[key]
-                for key in ("state_dict", "module", "model")
-                if key in state and isinstance(state[key], dict)
-            ),
+            (state[key] for key in ("state_dict", "module", "model") if key in state and isinstance(state[key], dict)),
             None,
         )
         if wrapped is None:
@@ -198,7 +178,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         model_name: str | None = None,
         weights_path: str | None = None,
         **kwargs,
-    ) -> "DepthAnything3":
+    ) -> DepthAnything3:
         """Load Depth Anything 3 from a local checkpoint or Hugging Face repo."""
         resolved_model_name = model_name or _model_name_from_repo_id(repo_id)
         model = cls(model_name=resolved_model_name, **kwargs)
@@ -224,23 +204,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         return model
 
     def _load_flexible_state_dict(self, state: dict[str, torch.Tensor]) -> None:
-        """Helper function to load flexible state dict.
-
-        Args:
-            state: The state.
-
-        Returns:
-            The return value.
-        """
         def strip_prefix(prefix: str) -> dict[str, torch.Tensor]:
-            """Strip prefix.
-
-            Args:
-                prefix: The prefix.
-
-            Returns:
-                The return value.
-            """
             return {key[len(prefix) :]: value for key, value in state.items() if key.startswith(prefix)}
 
         candidates = [
@@ -291,15 +255,17 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         # autoregressive spatial-memory updates.
         use_autocast = image.device.type == "cuda"
         autocast_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-        with torch.no_grad():
-            with torch.autocast(
+        with (
+            torch.no_grad(),
+            torch.autocast(
                 device_type=image.device.type,
                 dtype=autocast_dtype,
                 enabled=use_autocast,
-            ):
-                return self.model(
-                    image, extrinsics, intrinsics, export_feat_layers, infer_gs, use_ray_pose, ref_view_strategy
-                )
+            ),
+        ):
+            return self.model(
+                image, extrinsics, intrinsics, export_feat_layers, infer_gs, use_ray_pose, ref_view_strategy
+            )
 
     def inference(
         self,
@@ -326,7 +292,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         # Feat_vis export parameters
         feat_vis_fps: int = 15,
         # Other export parameters, e.g., gs_ply, gs_video
-        export_kwargs: Optional[dict] = None,
+        export_kwargs: dict | None = None,
     ) -> Prediction:
         """
         Run inference on input images.
@@ -399,7 +365,6 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
 
         # Export if requested
         if export_dir is not None:
-
             if "gs" in export_format:
                 if infer_gs and "gs_video" not in export_format:
                     export_format = f"{export_format}-gs_video"
@@ -487,21 +452,12 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         imgs = imgs_cpu.to(device, non_blocking=True)[None].float()
 
         # Convert camera parameters to tensors
-        ex_t = (
-            extrinsics.to(device, non_blocking=True)[None].float()
-            if extrinsics is not None
-            else None
-        )
-        in_t = (
-            intrinsics.to(device, non_blocking=True)[None].float()
-            if intrinsics is not None
-            else None
-        )
+        ex_t = extrinsics.to(device, non_blocking=True)[None].float() if extrinsics is not None else None
+        in_t = intrinsics.to(device, non_blocking=True)[None].float() if intrinsics is not None else None
 
         return imgs, ex_t, in_t
 
     def _normalize_extrinsics(self, ex_t: torch.Tensor | None) -> torch.Tensor | None:
-        """Normalize extrinsics"""
         if ex_t is None:
             return None
         transform = affine_inverse(ex_t[:, :1])
@@ -587,9 +543,7 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         prediction.processed_images = processed_imgs
         return prediction
 
-    def _export_results(
-        self, prediction: Prediction, export_format: str, export_dir: str, **kwargs
-    ) -> None:
+    def _export_results(self, prediction: Prediction, export_format: str, export_dir: str, **kwargs) -> None:
         """Export results to specified format and directory."""
         start_time = time.time()
         from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.export import export

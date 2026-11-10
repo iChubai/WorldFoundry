@@ -71,8 +71,10 @@ def piecewise_attention_available(device: torch.device | str | None = None) -> b
         from worldfoundry.core.execution.compile_cache import configure_persistent_compile_cache
 
         configure_persistent_compile_cache(namespace="pisa-triton")
-        import triton  # noqa: F401
-        from triton.tools.tensor_descriptor import TensorDescriptor  # noqa: F401
+        import triton  # noqa: F401 - Availability probe for the Triton backend.
+        from triton.tools.tensor_descriptor import (
+            TensorDescriptor,  # noqa: F401 - Availability probe for the Triton backend.
+        )
     except (ImportError, OSError):
         return False
     return True

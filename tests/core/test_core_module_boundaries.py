@@ -77,7 +77,7 @@ def test_core_imports_resolve_without_family_dependencies() -> None:
                         "worldfoundry.pipelines",
                         "worldfoundry.synthesis",
                         "worldfoundry.studio",
-                        "worldfoundry.evaluation",
+                        "worldfoundry.evals",
                         "worldfoundry.operators",
                         "worldfoundry.training",
                     )

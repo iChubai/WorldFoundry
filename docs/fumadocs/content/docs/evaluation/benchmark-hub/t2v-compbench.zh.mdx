@@ -35,7 +35,7 @@ wf zoo benchmark-run \
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py \
   --generated-video-dir <generated_videos_with_t2v_compbench_generation_manifest.jsonl> \
   --category generative_numeracy \
   --output-dir tmp/t2v-compbench/numeracy \
@@ -48,7 +48,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 ```text
 worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
+worldfoundry/evals/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
 ```
 
 产物包括 `scorecard.json`（齐备时主键 `t2v_compbench_average`）、`raw_metric_table.jsonl`，以及来源提供时的逐样本行。

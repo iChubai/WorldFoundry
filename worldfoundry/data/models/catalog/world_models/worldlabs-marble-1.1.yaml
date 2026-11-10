@@ -15,7 +15,7 @@ official_sources:
   release_notes: https://radiancefields.com/world-labs-releases-marble-1.1-and-marble-1.1-plus
   api: https://api.worldlabs.ai
 runtime_profile: runtime-profile:worldlabs-marble-1.1
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: worldlabs-marble-1.1
 integration:
   status: integrated

@@ -8,14 +8,14 @@ from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
-from worldfoundry.evaluation import framework
-from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, MetricResult, WorldModelConfig
-from worldfoundry.evaluation.api.metrics import aggregate_mean
-from worldfoundry.evaluation.tasks.embodied import evaluate as embodied
-from worldfoundry.evaluation.tasks.execution.orchestration import model_benchmark_suite
-from worldfoundry.evaluation.tasks.execution.orchestration.contract import ContractRunRequest, run_contract
-from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import EvaluateRunRequest, run_evaluate
-from worldfoundry.evaluation.tasks.execution.orchestration.existing_results import (
+from worldfoundry.evals import framework
+from worldfoundry.evals.api import GenerationRequest, GenerationResult, MetricResult, WorldModelConfig
+from worldfoundry.evals.api.metrics import aggregate_mean
+from worldfoundry.evals.tasks.embodied import evaluate as embodied
+from worldfoundry.evals.tasks.execution.orchestration import model_benchmark_suite
+from worldfoundry.evals.tasks.execution.orchestration.contract import ContractRunRequest, run_contract
+from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest, run_evaluate
+from worldfoundry.evals.tasks.execution.orchestration.existing_results import (
     ExistingResultsRunRequest,
     run_existing_results,
 )

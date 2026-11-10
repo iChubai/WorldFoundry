@@ -61,17 +61,17 @@ runner:
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/run_visual_chronometer_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/run_visual_chronometer_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.phyfps_bench_gen.run_visual_chronometer_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.phyfps_bench_gen.run_visual_chronometer_official_runner
     generated_arg: --generated-artifact-dir
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VisualChronometerContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:VisualChronometerContract
   official_runner_script: 
-    worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/run_visual_chronometer_official_runner.py
+    worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/run_visual_chronometer_official_runner.py
   run_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" 
-    worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/run_visual_chronometer_official_runner.py 
+    worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/run_visual_chronometer_official_runner.py 
     --run-official --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" --output-dir 
     "${WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR}" --json
   validation_command:
@@ -93,7 +93,7 @@ runner:
     kind: in_tree_official_runtime
     repo_url: https://github.com/taco-group/Visual_Chronometer.git
     repo_revision: 0dc1fd68641f476f18e76c9d1d0931278c02a386
-    root: worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
+    root: worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
     optional_root_env: WORLDFOUNDRY_VISUAL_CHRONOMETER_ROOT
     results_path_env: WORLDFOUNDRY_VISUAL_CHRONOMETER_RESULTS_PATH
     generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
@@ -139,7 +139,7 @@ framework_acceptance:
   videos pass strict coverage checks and all declared metrics are normalized.
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VisualChronometerContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:VisualChronometerContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -150,7 +150,7 @@ runner_availability:
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/visual-chronometer.yaml
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
+  - worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
 validation_command:
 - wf
 - zoo

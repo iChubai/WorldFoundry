@@ -25,7 +25,7 @@ confirmation: Upstream GitHub repo is public; license file states Creative Commo
 output_artifacts:
 - generated_4d_scene
 runtime_profile: runtime-profile:monst3r
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: monst3r
 runner_parity:
   status: verified

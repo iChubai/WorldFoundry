@@ -25,8 +25,8 @@ from worldfoundry.core.execution.compile_cache import configure_persistent_compi
 
 configure_persistent_compile_cache(namespace="diffusion-triton")
 
-import triton  # noqa: E402
-import triton.language as tl  # noqa: E402
+import triton  # noqa: E402 - Follows the Triton compile-cache configuration.
+import triton.language as tl  # noqa: E402 - Follows the Triton compile-cache configuration.
 
 # ──────────────────────────────────────────────────────────────────────────
 # Pointwise SiLU — BLOCK=1024; fp32 sigmoid then store in the output dtype

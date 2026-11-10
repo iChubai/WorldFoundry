@@ -68,10 +68,7 @@ def _policy_checkpoint(location: str, filename: str) -> Path:
     direct = resolve_worldfoundry_path(location)
     if direct.is_file():
         return direct.resolve()
-    if direct.is_dir():
-        root = direct.resolve()
-    else:
-        root = resolve_local_hf_model_path(location, required_files=(filename,))
+    root = direct.resolve() if direct.is_dir() else resolve_local_hf_model_path(location, required_files=(filename,))
     path = root / filename
     if not path.is_file():
         raise FileNotFoundError(f"AHA-WAM policy checkpoint is missing: {path}")
@@ -306,9 +303,7 @@ class AHAWAMRuntime:
 
     def _episode(self, observation: Mapping[str, Any]) -> None:
         episode = first_present(observation, "episode_id", "episode", "trajectory_id")
-        if option_bool(observation.get("reset"), False):
-            self.reset(episode)
-        elif episode is not None and str(episode) != self._episode_id:
+        if option_bool(observation.get("reset"), False) or (episode is not None and str(episode) != self._episode_id):
             self.reset(episode)
 
     def _soft_reprefill(self) -> None:

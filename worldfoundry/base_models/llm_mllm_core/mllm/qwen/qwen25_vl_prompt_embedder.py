@@ -1,24 +1,15 @@
-"""Module for base_models -> llm_mllm_core -> mllm -> qwen -> qwen25_vl_prompt_embedder.py functionality."""
-
 import torch
 
 
 class Qwen25VL_7b_Embedder(torch.nn.Module):
     """Qwen b embedder implementation."""
-    def __init__(self, model_path, max_length=640, dtype=torch.bfloat16, device="cuda"):
-        """Init.
 
-        Args:
-            model_path: The model path.
-            max_length: The max length.
-            dtype: The dtype.
-            device: The device.
-        """
-        super(Qwen25VL_7b_Embedder, self).__init__()
+    def __init__(self, model_path, max_length=640, dtype=torch.bfloat16, device="cuda"):
+        super().__init__()
         self.max_length = max_length
         self.dtype = dtype
         self.device = device
-        
+
         from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
@@ -27,39 +18,24 @@ class Qwen25VL_7b_Embedder(torch.nn.Module):
         ).to(torch.cuda.current_device())
 
         self.model.requires_grad_(False)
-        self.processor = AutoProcessor.from_pretrained(
-            model_path, min_pixels=256 * 28 * 28, max_pixels=324 * 28 * 28
-        )
-        
-        Qwen25VL_7b_PREFIX = '''Given a user prompt, generate an "Enhanced prompt" that provides detailed visual descriptions suitable for image generation. Evaluate the level of detail in the user prompt:
+        self.processor = AutoProcessor.from_pretrained(model_path, min_pixels=256 * 28 * 28, max_pixels=324 * 28 * 28)
+
+        Qwen25VL_7b_PREFIX = """Given a user prompt, generate an "Enhanced prompt" that provides detailed visual descriptions suitable for image generation. Evaluate the level of detail in the user prompt:
 - If the prompt is simple, focus on adding specifics about colors, shapes, sizes, textures, and spatial relationships to create vivid and concrete scenes.
 - If the prompt is already detailed, refine and enhance the existing details slightly without overcomplicating.\n
 Here are examples of how to transform or refine prompts:
 - User Prompt: A cat sleeping -> Enhanced: A small, fluffy white cat curled up in a round shape, sleeping peacefully on a warm sunny windowsill, surrounded by pots of blooming red flowers.
 - User Prompt: A busy city street -> Enhanced: A bustling city street scene at dusk, featuring glowing street lamps, a diverse crowd of people in colorful clothing, and a double-decker bus passing by towering glass skyscrapers.\n
 Please generate only the enhanced description for the prompt below and avoid including any additional commentary or evaluations:
-User Prompt:'''
+User Prompt:"""
 
         self.prefix = Qwen25VL_7b_PREFIX
-        
+
     @staticmethod
     def from_pretrained(path, torch_dtype=torch.bfloat16, device="cuda"):
-        """From pretrained.
-
-        Args:
-            path: The path.
-            torch_dtype: The torch dtype.
-            device: The device.
-        """
         return Qwen25VL_7b_Embedder(path, dtype=torch_dtype, device=device)
 
     def forward(self, caption, ref_images):
-        """Forward.
-
-        Args:
-            caption: The caption.
-            ref_images: The ref images.
-        """
         text_list = caption
         embs = torch.zeros(
             len(text_list),
@@ -68,7 +44,7 @@ User Prompt:'''
             dtype=torch.bfloat16,
             device=torch.cuda.current_device(),
         )
-        hidden_states = torch.zeros(
+        _hidden_states = torch.zeros(
             len(text_list),
             self.max_length,
             self.model.config.hidden_size,
@@ -81,23 +57,15 @@ User Prompt:'''
             dtype=torch.long,
             device=torch.cuda.current_device(),
         )
-        input_ids_list = []
-        attention_mask_list = []
-        emb_list = []
 
         def split_string(s):
-            """Split string.
-
-            Args:
-                s: The s.
-            """
             s = s.replace("“", '"').replace("”", '"').replace("'", '''"''')  # use english quotes
             result = []
             in_quotes = False
             temp = ""
 
-            for idx,char in enumerate(s):
-                if char == '"' and idx>155:
+            for idx, char in enumerate(s):
+                if char == '"' and idx > 155:
                     temp += char
                     if not in_quotes:
                         result.append(temp)
@@ -118,15 +86,13 @@ User Prompt:'''
 
             return result
 
-        for idx, (txt, imgs) in enumerate(zip(text_list, ref_images)):
-
+        for idx, (txt, imgs) in enumerate(zip(text_list, ref_images, strict=False)):
             messages = [{"role": "user", "content": []}]
 
             messages[0]["content"].append({"type": "text", "text": f"{self.prefix}"})
 
             messages[0]["content"].append({"type": "image", "image": imgs})
 
-            # 再添加 text
             messages[0]["content"].append({"type": "text", "text": f"{txt}"})
 
             # Preparation for inference
@@ -169,9 +135,7 @@ User Prompt:'''
             idx1 = (old_inputs_ids == 151653).nonzero(as_tuple=True)[1][0]
             idx2 = (new_txt_ids == 151653).nonzero(as_tuple=True)[1][0]
             inputs.input_ids = (
-                torch.cat([old_inputs_ids[0, :idx1], new_txt_ids[0, idx2:]], dim=0)
-                .unsqueeze(0)
-                .to("cuda")
+                torch.cat([old_inputs_ids[0, :idx1], new_txt_ids[0, idx2:]], dim=0).unsqueeze(0).to("cuda")
             )
             inputs.attention_mask = (inputs.input_ids > 0).long().to("cuda")
             outputs = self.model(
@@ -184,9 +148,7 @@ User Prompt:'''
 
             emb = outputs["hidden_states"][-1]
 
-            embs[idx, : min(self.max_length, emb.shape[1] - 217)] = emb[0, 217:][
-                : self.max_length
-            ]
+            embs[idx, : min(self.max_length, emb.shape[1] - 217)] = emb[0, 217:][: self.max_length]
 
             masks[idx, : min(self.max_length, emb.shape[1] - 217)] = torch.ones(
                 (min(self.max_length, emb.shape[1] - 217)),

@@ -1,6 +1,6 @@
 id: framepack
 name: FramePack
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:framepack
 tasks:
 - image-to-video

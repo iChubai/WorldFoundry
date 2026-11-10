@@ -5,7 +5,7 @@ aliases:
   - wan2.1_i2v
   - wan21-t2v
   - wan21-i2v
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: wan2.1
 tasks:
   - text-to-video
@@ -112,7 +112,7 @@ variants:
             expected_duration_seconds: 5.0625
             duration_tolerance_seconds: 0.05
       notes: A prior local WorldFoundry Wan2.1 T2V run used the same prompt, seed, checkpoint, resolution, frame count, shift, and CFG scale as the official run; no public demo script is packaged.
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: wan2.1-t2v-1.3b
   - id: wan2.1-t2v-14b
     task: text-to-video
@@ -126,7 +126,7 @@ variants:
     runtime_profile: wan2.1-t2v-14b
     demo_parity:
       status: pending
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: wan2.1-t2v-14b
     integration:
       status: integrated
@@ -142,7 +142,7 @@ variants:
     runtime_profile: wan2.1-i2v-14b-480p
     demo_parity:
       status: pending
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: wan2.1-i2v-14b-480p
     integration:
       status: integrated
@@ -158,7 +158,7 @@ variants:
     runtime_profile: wan2.1-i2v-14b-720p
     demo_parity:
       status: pending
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: wan2.1-i2v-14b-720p
     integration:
       status: integrated

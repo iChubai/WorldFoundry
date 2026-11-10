@@ -28,14 +28,14 @@ notes:
 - Full leaderboard parity still needs complete evaluation.json trees and full GPU metric execution.
   CUDA_VISIBLE_DEVICES=7; both cu118 stacks initialized CUDA and completed a one-element tensor sum.
 preflight_command:
-  PYTHONPATH=${WORLDFOUNDRY_REPO_ROOT}:${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/worldscore/runtime/worldscore
+  PYTHONPATH=${WORLDFOUNDRY_REPO_ROOT}:${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/worldscore/runtime/worldscore
   ${WORLDFOUNDRY_UNIFIED_PYTHON:-python} -m
-  worldfoundry.evaluation.tasks.execution.orchestration.runtime_preflight --profile worldscore --manifest
+  worldfoundry.evals.tasks.execution.orchestration.runtime_preflight --profile worldscore --manifest
   worldfoundry/data/benchmarks/runtime_profiles/official/worldscore.yaml --output-dir
   tmp/worldfoundry_preflight/worldscore --json
 python_path: ${WORLDFOUNDRY_UNIFIED_PYTHON:-python}
 pythonpath_roots:
-- ${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/worldscore/runtime/worldscore
+- ${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/worldscore/runtime/worldscore
 required_assets:
   local_dataset_paths:
   - cache/worldfoundry/data/hfd_datasets/Howieeeee/WorldScore
@@ -113,7 +113,7 @@ required_packages:
 - causal-conv1d
 required_paths:
 - id: official_runner_script
-  path: worldfoundry/evaluation/tasks/execution/runners/worldscore/run_worldscore_official_runner.py
+  path: worldfoundry/evals/tasks/execution/runners/worldscore/run_worldscore_official_runner.py
 - id: task_yaml
   path: worldfoundry/data/benchmarks/tasks/external/worldscore.yaml
 - id: metric_checkpoint_dir
@@ -152,7 +152,7 @@ base_model_dependency_preflight:
     WORLDFOUNDRY_VFIMAMBA_CKPT: ckpt/WorldScore/VFIMamba.pkl
   runtime_env:
     WORLDFOUNDRY_WORLDSCORE_ROOT:
-      ${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/worldscore/runtime/worldscore
+      ${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/worldscore/runtime/worldscore
     WORLDFOUNDRY_WORLDSCORE_CONFIG_ROOT:
       ${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/data/benchmarks/assets/worldscore/config
     WORLDFOUNDRY_WORLDSCORE_ASSET_CHECKPOINT_DIR: cache/worldfoundry/assets/worldscore_official/metrics/checkpoints

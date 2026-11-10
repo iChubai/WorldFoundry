@@ -6,8 +6,9 @@ import json
 import os
 import shutil
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_candidates, resolve_data_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
@@ -41,8 +42,7 @@ def _resolve_depth_pro_checkpoint() -> Path:
             if candidate.is_file():
                 return candidate.resolve()
     raise FileNotFoundError(
-        "MagicWorld requires a local DepthPro checkpoint at "
-        "$WORLDFOUNDRY_CKPT_DIR/apple--DepthPro/depth_pro.pt"
+        "MagicWorld requires a local DepthPro checkpoint at $WORLDFOUNDRY_CKPT_DIR/apple--DepthPro/depth_pro.pt"
     )
 
 
@@ -86,7 +86,7 @@ def _coerce_native_rows(value: Any) -> list[list[float]]:
                 raw_rows.append([float(field) for field in fields])
             except ValueError:
                 if raw_rows:
-                    raise ValueError(f"MagicWorld camera row {line_number} is not numeric: {path}")
+                    raise ValueError(f"MagicWorld camera row {line_number} is not numeric: {path}")  # noqa: B904 - Keeps the implicit exception context.
                 continue
     elif isinstance(value, (list, tuple)):
         raw_rows = list(value)
@@ -99,9 +99,7 @@ def _coerce_native_rows(value: Any) -> list[list[float]]:
             raise TypeError(f"MagicWorld camera row {index} must be a sequence")
         converted = [float(item) for item in row]
         if len(converted) not in (19, 25):
-            raise ValueError(
-                f"MagicWorld camera row {index} has {len(converted)} values; expected 19 or 25"
-            )
+            raise ValueError(f"MagicWorld camera row {index} has {len(converted)} values; expected 19 or 25")
         rows.append(converted)
     if not rows:
         raise ValueError("MagicWorld camera rows are empty")
@@ -140,9 +138,7 @@ class MagicWorldRuntime:
     ) -> None:
         self.repo_root = ensure_in_tree_runtime(self.bundled_repo_root(), package_file=__file__)
         hfd = Path(os.environ.get("WORLDFOUNDRY_HFD_ROOT", "cache/hfd"))
-        self.checkpoint_path = _resolve_local_checkpoint_alias(
-            checkpoint_path or hfd / "LuckyLiGY--MagicWorld"
-        )
+        self.checkpoint_path = _resolve_local_checkpoint_alias(checkpoint_path or hfd / "LuckyLiGY--MagicWorld")
         self.base_model_path = _resolve_local_checkpoint_alias(
             base_model_path or hfd / "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-InP"
         )
@@ -170,7 +166,7 @@ class MagicWorldRuntime:
         return worldfoundry_root / "base_models" / "three_dimensions" / "depth" / "depth_pro"
 
     @classmethod
-    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> "MagicWorldRuntime":
+    def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> MagicWorldRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
 
     def plan(self, **kwargs: Any) -> dict[str, Any]:
@@ -234,23 +230,17 @@ class MagicWorldRuntime:
             "WORLDFOUNDRY_MAGICWORLD_WAN_ROOT": str(wan_root),
             "WORLDFOUNDRY_MAGICWORLD_BASE_ROOT": str(magic_base),
             "WORLDFOUNDRY_MAGICWORLD_CONFIG": str(
-                resolve_data_path(
-                    "models", "runtime", "configs", "video_x_fun", "wan2.1", "wan_civitai.yaml"
-                )
+                resolve_data_path("models", "runtime", "configs", "video_x_fun", "wan2.1", "wan_civitai.yaml")
             ),
             "WORLDFOUNDRY_MAGICWORLD_DEFAULT_CONFIG": str(
-                resolve_data_path(
-                    "models", "runtime", "configs", "magic_world", "default_config.yaml"
-                )
+                resolve_data_path("models", "runtime", "configs", "magic_world", "default_config.yaml")
             ),
         }
         command = [
             self.python_executable,
             "inference/inference_magicworld_fast.py",
             "--config_path",
-            resolve_data_path(
-                "models", "runtime", "configs", "magic_world", "reward_forcing_switch.yaml"
-            ),
+            resolve_data_path("models", "runtime", "configs", "magic_world", "reward_forcing_switch.yaml"),
             "--checkpoint_path",
             checkpoint,
             "--data_path",

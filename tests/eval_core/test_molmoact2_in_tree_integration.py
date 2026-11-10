@@ -6,10 +6,10 @@ from pathlib import Path
 
 import yaml
 
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.operators import MolmoAct2Operator
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -20,7 +20,7 @@ def test_molmoact2_model_zoo_and_runtime_profile_are_registered() -> None:
     entry = registry.get("molmoact2")
     profile = load_runtime_profile("molmoact2")
 
-    assert entry.runner_target == "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+    assert entry.runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
     assert entry.pipeline_target == "worldfoundry.pipelines.component_pipelines:MolmoAct2Pipeline"
     assert entry.runtime_profile == "runtime-profile:molmoact2"
     # The catalog records in_tree_checkpoint_runtime_static_verified, which is

@@ -42,7 +42,7 @@ integration:
   - The WorldFoundry wrapper runs the in-tree native SCOPE assembly for execute=True
     Workspace jobs.
 runtime_profile: runtime-profile:scope
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: scope
 runner_parity:
   status: verified

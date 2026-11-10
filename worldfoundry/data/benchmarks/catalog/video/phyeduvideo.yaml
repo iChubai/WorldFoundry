@@ -88,17 +88,17 @@ runner:
   scoring:
     engines: [in_tree]
     hooks:
-      in_tree: worldfoundry.evaluation.tasks.execution.runners.phyeduvideo.phyeduvideo_in_tree_evaluator:IN_TREE_CONFIG
+      in_tree: worldfoundry.evals.tasks.execution.runners.phyeduvideo.phyeduvideo_in_tree_evaluator:IN_TREE_CONFIG
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.phyeduvideo.run_phyeduvideo_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.phyeduvideo.run_phyeduvideo_official_runner
     generated_arg: null
     limit_arg: --limit
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhyEduVideoContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
   validation_command:
   - wf
   - zoo
@@ -116,7 +116,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_result_importer
-    root: worldfoundry/evaluation/tasks/execution/runners/phyeduvideo
+    root: worldfoundry/evals/tasks/execution/runners/phyeduvideo
     repo_url: https://github.com/meghamariamkm/PhyEduVideo.git
     repo_revision: 5a36a13818552095c9ed12c6562f236d5b5011bd
     root_env: WORLDFOUNDRY_PHYEDUVIDEO_ROOT
@@ -169,11 +169,11 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/phyeduvideo.yaml
   bundled_assets: worldfoundry/data/benchmarks/assets/phyeduvideo
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/phyeduvideo
-official_runner_script: worldfoundry/evaluation/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
+  - worldfoundry/evals/tasks/execution/runners/phyeduvideo
+official_runner_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhyEduVideoContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

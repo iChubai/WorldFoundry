@@ -10,13 +10,11 @@ References: DUSt3R, MoGe
 """
 
 from numbers import Number
-from typing import Tuple, Union
 
 import einops as ein
 import numpy as np
 import torch
 import torch.nn.functional as F
-
 from mapanything.utils.misc import invalid_to_zeros
 from mapanything.utils.warnings import no_warnings
 
@@ -97,12 +95,8 @@ def depthmap_to_world_frame(depthmap, intrinsics, camera_pose=None):
             squeeze_batch_dim = False
 
         # Convert points from camera frame to world frame
-        pts3d_cam_homo = torch.cat(
-            [pts3d_cam, torch.ones_like(pts3d_cam[..., :1])], dim=-1
-        )
-        pts3d_world = ein.einsum(
-            camera_pose, pts3d_cam_homo, "b i k, b h w k -> b h w i"
-        )
+        pts3d_cam_homo = torch.cat([pts3d_cam, torch.ones_like(pts3d_cam[..., :1])], dim=-1)
+        pts3d_world = ein.einsum(camera_pose, pts3d_cam_homo, "b i k, b h w k -> b h w i")
         pts3d_world = pts3d_world[..., :3]
 
         # Remove batch dimension if it was added
@@ -137,9 +131,7 @@ def transform_pts3d(pts3d, transformation):
     pts3d_homo = torch.cat([pts3d, torch.ones_like(pts3d[..., :1])], dim=-1)
 
     # Transform points
-    transformed_pts3d = ein.einsum(
-        transformation, pts3d_homo, "b i k, b h w k -> b h w i"
-    )
+    transformed_pts3d = ein.einsum(transformation, pts3d_homo, "b i k, b h w k -> b h w i")
     transformed_pts3d = transformed_pts3d[..., :3]
 
     # Remove batch dimension if it was added
@@ -229,9 +221,7 @@ def get_rays_in_camera_frame(intrinsics, height, width, normalize_to_unit_sphere
 
     # Normalize ray directions to unit sphere if required (else rays will lie on unit plane)
     if normalize_to_unit_sphere:
-        ray_directions = ray_directions / torch.norm(
-            ray_directions, dim=-1, keepdim=True
-        )
+        ray_directions = ray_directions / torch.norm(ray_directions, dim=-1, keepdim=True)
 
     # Remove batch dimension if it was added
     if squeeze_batch_dim:
@@ -241,9 +231,7 @@ def get_rays_in_camera_frame(intrinsics, height, width, normalize_to_unit_sphere
     return ray_origins, ray_directions
 
 
-def get_rays_in_world_frame(
-    intrinsics, height, width, normalize_to_unit_sphere, camera_pose=None
-):
+def get_rays_in_world_frame(intrinsics, height, width, normalize_to_unit_sphere, camera_pose=None):
     """
     Convert camera intrinsics & camera_pose (if provided) to a raymap (ray origins + directions) in camera or world frame (if camera_pose is provided).
     Note: Currently only supports pinhole camera model.
@@ -260,9 +248,7 @@ def get_rays_in_world_frame(
         - ray_directions: (HxWx3 or BxHxWx3) tensor
     """
     # Get rays in camera frame
-    ray_origins, ray_directions = get_rays_in_camera_frame(
-        intrinsics, height, width, normalize_to_unit_sphere
-    )
+    ray_origins, ray_directions = get_rays_in_camera_frame(intrinsics, height, width, normalize_to_unit_sphere)
 
     if camera_pose is not None:
         # Add batch dimension if not present
@@ -275,18 +261,10 @@ def get_rays_in_world_frame(
             squeeze_batch_dim = False
 
         # Convert rays from camera frame to world frame
-        ray_origins_homo = torch.cat(
-            [ray_origins, torch.ones_like(ray_origins[..., :1])], dim=-1
-        )
-        ray_directions_homo = torch.cat(
-            [ray_directions, torch.zeros_like(ray_directions[..., :1])], dim=-1
-        )
-        ray_origins_world = ein.einsum(
-            camera_pose, ray_origins_homo, "b i k, b h w k -> b h w i"
-        )
-        ray_directions_world = ein.einsum(
-            camera_pose, ray_directions_homo, "b i k, b h w k -> b h w i"
-        )
+        ray_origins_homo = torch.cat([ray_origins, torch.ones_like(ray_origins[..., :1])], dim=-1)
+        ray_directions_homo = torch.cat([ray_directions, torch.zeros_like(ray_directions[..., :1])], dim=-1)
+        ray_origins_world = ein.einsum(camera_pose, ray_origins_homo, "b i k, b h w k -> b h w i")
+        ray_directions_world = ein.einsum(camera_pose, ray_directions_homo, "b i k, b h w k -> b h w i")
         ray_origins_world = ray_origins_world[..., :3]
         ray_directions_world = ray_directions_world[..., :3]
 
@@ -301,9 +279,7 @@ def get_rays_in_world_frame(
     return ray_origins_world, ray_directions_world
 
 
-def recover_pinhole_intrinsics_from_ray_directions(
-    ray_directions, use_geometric_calculation=False
-):
+def recover_pinhole_intrinsics_from_ray_directions(ray_directions, use_geometric_calculation=False):
     """
     Recover pinhole camera intrinsics from ray directions, supporting both batched and non-batched inputs.
 
@@ -368,9 +344,7 @@ def recover_pinhole_intrinsics_from_ray_directions(
 
         # Calculate fy and cy
         fy_top = (quarter_h - center_h) / (top_rays[:, 1] - center_rays[:, 1])
-        fy_bottom = (three_quarter_h - center_h) / (
-            bottom_rays[:, 1] - center_rays[:, 1]
-        )
+        fy_bottom = (three_quarter_h - center_h) / (bottom_rays[:, 1] - center_rays[:, 1])
         fy = (fy_top + fy_bottom) / 2
 
         cy = center_h - fy * center_rays[:, 1]
@@ -386,9 +360,7 @@ def recover_pinhole_intrinsics_from_ray_directions(
         # Extract subset of coordinates
         x_sampled = x_grid[:, h_indices[:, None], w_indices[None, :]]  # [B, H', W']
         y_sampled = y_grid[:, h_indices[:, None], w_indices[None, :]]  # [B, H', W']
-        rays_sampled = ray_directions[
-            :, h_indices[:, None], w_indices[None, :], :
-        ]  # [B, H', W', 3]
+        rays_sampled = ray_directions[:, h_indices[:, None], w_indices[None, :], :]  # [B, H', W', 3]
 
         # Reshape for linear regression
         x_flat = x_sampled.reshape(batch_size, -1)  # [B, N]
@@ -470,18 +442,10 @@ def transform_rays(ray_origins, ray_directions, transformation):
         squeeze_batch_dim = False
 
     # Transform ray origins and directions
-    ray_origins_homo = torch.cat(
-        [ray_origins, torch.ones_like(ray_origins[..., :1])], dim=-1
-    )
-    ray_directions_homo = torch.cat(
-        [ray_directions, torch.zeros_like(ray_directions[..., :1])], dim=-1
-    )
-    transformed_ray_origins = ein.einsum(
-        transformation, ray_origins_homo, "b i k, b h w k -> b h w i"
-    )
-    transformed_ray_directions = ein.einsum(
-        transformation, ray_directions_homo, "b i k, b h w k -> b h w i"
-    )
+    ray_origins_homo = torch.cat([ray_origins, torch.ones_like(ray_origins[..., :1])], dim=-1)
+    ray_directions_homo = torch.cat([ray_directions, torch.zeros_like(ray_directions[..., :1])], dim=-1)
+    transformed_ray_origins = ein.einsum(transformation, ray_origins_homo, "b i k, b h w k -> b h w i")
+    transformed_ray_directions = ein.einsum(transformation, ray_directions_homo, "b i k, b h w k -> b h w i")
     transformed_ray_origins = transformed_ray_origins[..., :3]
     transformed_ray_directions = transformed_ray_directions[..., :3]
 
@@ -514,9 +478,7 @@ def convert_z_depth_to_depth_along_ray(z_depth, intrinsics):
 
     # Get rays in camera frame
     batch_size, height, width = z_depth.shape
-    _, ray_directions = get_rays_in_camera_frame(
-        intrinsics, height, width, normalize_to_unit_sphere=False
-    )
+    _, ray_directions = get_rays_in_camera_frame(intrinsics, height, width, normalize_to_unit_sphere=False)
 
     # Compute depth along ray
     pts3d_cam = z_depth[..., None] * ray_directions
@@ -584,9 +546,7 @@ def convert_raymap_z_depth_quats_to_pointmap(ray_origins, ray_directions, depth,
     pts3d_local = depth * ray_directions
 
     # Rotate the local points using the quaternions
-    rotated_pts3d_local = ein.einsum(
-        rot_mat, pts3d_local, "b h w i k, b h w k -> b h w i"
-    )
+    rotated_pts3d_local = ein.einsum(rot_mat, pts3d_local, "b h w i k, b h w k -> b h w i")
 
     # Compute 3D point in world frame associated with each pixel
     pts3d = ray_origins + rotated_pts3d_local
@@ -667,9 +627,7 @@ def rotation_matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
 
     batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(
-        matrix.reshape(batch_dim + (9,)), dim=-1
-    )
+    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     q_abs = _sqrt_positive_part(
         torch.stack(
@@ -701,9 +659,7 @@ def rotation_matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
 
     # if not for numerical problems, quat_candidates[i] should be same (up to a sign),
     # forall i; we pick the best-conditioned one (with the largest denominator)
-    out = quat_candidates[
-        F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :
-    ].reshape(batch_dim + (4,))
+    out = quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(batch_dim + (4,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     # Convert from rijk to ijkr
     out = out[..., [1, 2, 3, 0]]
@@ -949,10 +905,10 @@ def xy_grid(
         def ones(*a):
             return torch.ones(*a, device=device)
 
-    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin)]
+    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin, strict=False)]
     grid = meshgrid(tw, th, indexing="xy")
     if homogeneous:
-        grid = grid + (ones((H, W)),)
+        grid = grid + (ones((H, W)),)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if unsqueeze is not None:
         grid = (grid[0].unsqueeze(unsqueeze), grid[1].unsqueeze(unsqueeze))
     if cat_dim is not None:
@@ -987,20 +943,12 @@ def geotrf(Trf, pts, ncol=None, norm=False):
     ncol = ncol or pts.shape[-1]
 
     # Optimized code
-    if (
-        isinstance(Trf, torch.Tensor)
-        and isinstance(pts, torch.Tensor)
-        and Trf.ndim == 3
-        and pts.ndim == 4
-    ):
+    if isinstance(Trf, torch.Tensor) and isinstance(pts, torch.Tensor) and Trf.ndim == 3 and pts.ndim == 4:
         d = pts.shape[3]
         if Trf.shape[-1] == d:
             pts = torch.einsum("bij, bhwj -> bhwi", Trf, pts)
         elif Trf.shape[-1] == d + 1:
-            pts = (
-                torch.einsum("bij, bhwj -> bhwi", Trf[:, :d, :d], pts)
-                + Trf[:, None, None, :d, d]
-            )
+            pts = torch.einsum("bij, bhwj -> bhwi", Trf[:, :d, :d], pts) + Trf[:, None, None, :d, d]
         else:
             raise ValueError(f"bad shape, not ending with 3 or 4, for {pts.shape=}")
     else:
@@ -1048,9 +996,7 @@ def inv(mat):
     raise ValueError(f"bad matrix type = {type(mat)}")
 
 
-def closed_form_pose_inverse(
-    pose_matrices, rotation_matrices=None, translation_vectors=None
-):
+def closed_form_pose_inverse(pose_matrices, rotation_matrices=None, translation_vectors=None):
     """
     Compute the inverse of each 4x4 (or 3x4) SE3 pose matrices in a batch.
 
@@ -1075,9 +1021,7 @@ def closed_form_pose_inverse(
 
     # Validate shapes
     if pose_matrices.shape[-2:] != (4, 4) and pose_matrices.shape[-2:] != (3, 4):
-        raise ValueError(
-            f"pose_matrices must be of shape (N,4,4), got {pose_matrices.shape}."
-        )
+        raise ValueError(f"pose_matrices must be of shape (N,4,4), got {pose_matrices.shape}.")
 
     # Extract rotation_matrices and translation_vectors if not provided
     if rotation_matrices is None:
@@ -1094,9 +1038,7 @@ def closed_form_pose_inverse(
         rotation_transposed = rotation_matrices.transpose(1, 2)
         new_translation = -torch.bmm(rotation_transposed, translation_vectors)
         inverted_matrix = torch.eye(4, 4)[None].repeat(len(rotation_matrices), 1, 1)
-        inverted_matrix = inverted_matrix.to(rotation_matrices.dtype).to(
-            rotation_matrices.device
-        )
+        inverted_matrix = inverted_matrix.to(rotation_matrices.dtype).to(rotation_matrices.device)
     inverted_matrix[:, :3, :3] = rotation_transposed
     inverted_matrix[:, :3, 3:] = new_translation
 
@@ -1134,27 +1076,15 @@ def relative_pose_transformation(trans_01, trans_02):
         >>> trans_12 = relative_pose_transformation(trans_01, trans_02)  # 4x4
     """
     if not torch.is_tensor(trans_01):
-        raise TypeError(
-            "Input trans_01 type is not a torch.Tensor. Got {}".format(type(trans_01))
-        )
+        raise TypeError(f"Input trans_01 type is not a torch.Tensor. Got {type(trans_01)}")
     if not torch.is_tensor(trans_02):
-        raise TypeError(
-            "Input trans_02 type is not a torch.Tensor. Got {}".format(type(trans_02))
-        )
+        raise TypeError(f"Input trans_02 type is not a torch.Tensor. Got {type(trans_02)}")
     if trans_01.dim() not in (2, 3) and trans_01.shape[-2:] == (4, 4):
-        raise ValueError(
-            "Input must be a of the shape Nx4x4 or 4x4. Got {}".format(trans_01.shape)
-        )
+        raise ValueError(f"Input must be a of the shape Nx4x4 or 4x4. Got {trans_01.shape}")
     if trans_02.dim() not in (2, 3) and trans_02.shape[-2:] == (4, 4):
-        raise ValueError(
-            "Input must be a of the shape Nx4x4 or 4x4. Got {}".format(trans_02.shape)
-        )
+        raise ValueError(f"Input must be a of the shape Nx4x4 or 4x4. Got {trans_02.shape}")
     if not trans_01.dim() == trans_02.dim():
-        raise ValueError(
-            "Input number of dims must match. Got {} and {}".format(
-                trans_01.dim(), trans_02.dim()
-            )
-        )
+        raise ValueError(f"Input number of dims must match. Got {trans_01.dim()} and {trans_02.dim()}")
 
     # Convert to Nx4x4 if inputs are 4x4
     squeeze_batch_dim = False
@@ -1195,10 +1125,7 @@ def depthmap_to_pts3d(depth, pseudo_focal, pp=None, **_):
         pseudo_focalx = pseudo_focaly = pseudo_focal
     elif len(pseudo_focal.shape) == 4:  # [B,2,H,W] or [B,1,H,W]
         pseudo_focalx = pseudo_focal[:, 0]
-        if pseudo_focal.shape[1] == 2:
-            pseudo_focaly = pseudo_focal[:, 1]
-        else:
-            pseudo_focaly = pseudo_focalx
+        pseudo_focaly = pseudo_focal[:, 1] if pseudo_focal.shape[1] == 2 else pseudo_focalx
     else:
         raise NotImplementedError("Error, unknown input focal shape format.")
 
@@ -1263,9 +1190,7 @@ def depthmap_to_camera_coordinates(depthmap, camera_intrinsics, pseudo_focal=Non
     return X_cam, valid_mask
 
 
-def depthmap_to_absolute_camera_coordinates(
-    depthmap, camera_intrinsics, camera_pose, **kw
-):
+def depthmap_to_absolute_camera_coordinates(depthmap, camera_intrinsics, camera_pose, **kw):
     """
     Args:
         - depthmap (HxW array):
@@ -1284,16 +1209,12 @@ def depthmap_to_absolute_camera_coordinates(
         t_cam2world = camera_pose[:3, 3]
 
         # Express in absolute coordinates (invalid depth values)
-        X_world = (
-            np.einsum("ik, vuk -> vui", R_cam2world, X_cam) + t_cam2world[None, None, :]
-        )
+        X_world = np.einsum("ik, vuk -> vui", R_cam2world, X_cam) + t_cam2world[None, None, :]
 
     return X_world, valid_mask
 
 
-def get_absolute_pointmaps_and_rays_info(
-    depthmap, camera_intrinsics, camera_pose, **kw
-):
+def get_absolute_pointmaps_and_rays_info(depthmap, camera_intrinsics, camera_pose, **kw):
     """
     Args:
         - depthmap (HxW array):
@@ -1325,18 +1246,14 @@ def get_absolute_pointmaps_and_rays_info(
     x_cam = (u - cu) / fu
     y_cam = (v - cv) / fv
     z_cam = np.ones_like(x_cam)
-    ray_dirs_cam_on_unit_plane = np.stack((x_cam, y_cam, z_cam), axis=-1).astype(
-        np.float32
-    )
+    ray_dirs_cam_on_unit_plane = np.stack((x_cam, y_cam, z_cam), axis=-1).astype(np.float32)
 
     # Compute the 3d points in the local camera coordinate system
     pts_cam = depthmap[..., None] * ray_dirs_cam_on_unit_plane
 
     # Get the depth along the ray and compute the ray directions on the unit sphere
     depth_along_ray = np.linalg.norm(pts_cam, axis=-1, keepdims=True)
-    ray_directions_cam = ray_dirs_cam_on_unit_plane / np.linalg.norm(
-        ray_dirs_cam_on_unit_plane, axis=-1, keepdims=True
-    )
+    ray_directions_cam = ray_dirs_cam_on_unit_plane / np.linalg.norm(ray_dirs_cam_on_unit_plane, axis=-1, keepdims=True)
 
     # Mask for valid coordinates
     valid_mask = depthmap > 0.0
@@ -1351,9 +1268,7 @@ def get_absolute_pointmaps_and_rays_info(
 
         # Express in absolute coordinates
         ray_origins_world = ray_origins_world + t_cam2world[None, None, :]
-        ray_directions_world = np.einsum(
-            "ik, vuk -> vui", R_cam2world, ray_directions_cam
-        )
+        ray_directions_world = np.einsum("ik, vuk -> vui", R_cam2world, ray_directions_cam)
         pts_world = ray_origins_world + ray_directions_world * depth_along_ray
 
     return (
@@ -1461,14 +1376,11 @@ def crop_to_aspect_ratio(image, depth, camera_params, target_ratio=1.5):
         cropped_image = image.crop((left, 0, right, height))
 
         # Crop depth
-        if len(depth.shape) == 3:
-            cropped_depth = depth[:, left:right, :]
-        else:
-            cropped_depth = depth[:, left:right]
+        cropped_depth = depth[:, left:right, :] if len(depth.shape) == 3 else depth[:, left:right]
 
         # Adjust camera parameters
         new_cx = cx - left
-        adjusted_params = [fx, fy, new_cx, cy] + list(camera_params[4:])
+        adjusted_params = [fx, fy, new_cx, cy] + list(camera_params[4:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     else:
         # Image is taller than target ratio, crop height
@@ -1480,14 +1392,11 @@ def crop_to_aspect_ratio(image, depth, camera_params, target_ratio=1.5):
         cropped_image = image.crop((0, top, width, bottom))
 
         # Crop depth
-        if len(depth.shape) == 3:
-            cropped_depth = depth[top:bottom, :, :]
-        else:
-            cropped_depth = depth[top:bottom, :]
+        cropped_depth = depth[top:bottom, :, :] if len(depth.shape) == 3 else depth[top:bottom, :]
 
         # Adjust camera parameters
         new_cy = cy - top
-        adjusted_params = [fx, fy, cx, new_cy] + list(camera_params[4:])
+        adjusted_params = [fx, fy, cx, new_cy] + list(camera_params[4:])  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     return cropped_image, cropped_depth, adjusted_params
 
@@ -1547,9 +1456,7 @@ def normalize_depth_using_non_zero_pixels(depth, return_norm_factor=False):
 
     # Create the output tuple
     output = (
-        (normalized_depth, norm_factor.squeeze(-1).squeeze(-1).squeeze(-1))
-        if return_norm_factor
-        else normalized_depth
+        (normalized_depth, norm_factor.squeeze(-1).squeeze(-1).squeeze(-1)) if return_norm_factor else normalized_depth
     )
 
     return output
@@ -1572,32 +1479,22 @@ def normalize_pose_translations(pose_translations, return_norm_factor=False):
 
     # Calculate the average norm of the translations across all views (considering only views with non-zero translations)
     sum_of_all_views_pose_translations = pose_translations_dis.sum(dim=1)  # [B]
-    count_of_all_views_with_non_zero_pose_translations = (
-        non_zero_pose_translations_dis.sum(dim=1)
-    )  # [B]
+    count_of_all_views_with_non_zero_pose_translations = non_zero_pose_translations_dis.sum(dim=1)  # [B]
     norm_factor = sum_of_all_views_pose_translations / (
         count_of_all_views_with_non_zero_pose_translations + 1e-8
     )  # [B]
 
     # Normalize the pose translations by the norm factor
     norm_factor = norm_factor.clip(min=1e-8)
-    normalized_pose_translations = pose_translations / norm_factor.unsqueeze(
-        -1
-    ).unsqueeze(-1)
+    normalized_pose_translations = pose_translations / norm_factor.unsqueeze(-1).unsqueeze(-1)
 
     # Create the output tuple
-    output = (
-        (normalized_pose_translations, norm_factor)
-        if return_norm_factor
-        else normalized_pose_translations
-    )
+    output = (normalized_pose_translations, norm_factor) if return_norm_factor else normalized_pose_translations
 
     return output
 
 
-def normalize_multiple_pointclouds(
-    pts_list, valid_masks=None, norm_mode="avg_dis", ret_factor=False
-):
+def normalize_multiple_pointclouds(pts_list, valid_masks=None, norm_mode="avg_dis", ret_factor=False):
     """
     Normalize multiple point clouds using a joint normalization strategy.
 
@@ -1622,9 +1519,7 @@ def normalize_multiple_pointclouds(
 
     # Gather all points together (joint normalization)
     nan_pts_list = [
-        invalid_to_zeros(pts, valid_masks[i], ndim=3)
-        if valid_masks
-        else invalid_to_zeros(pts, None, ndim=3)
+        invalid_to_zeros(pts, valid_masks[i], ndim=3) if valid_masks else invalid_to_zeros(pts, None, ndim=3)
         for i, pts in enumerate(pts_list)
     ]
     all_pts = torch.cat([nan_pts for nan_pts, _ in nan_pts_list], dim=1)
@@ -1642,9 +1537,7 @@ def normalize_multiple_pointclouds(
         warp_factor = log_dis / all_dis.clip(min=1e-8)
         for i, pts in enumerate(pts_list):
             H, W = pts.shape[1:-1]
-            pts_list[i] = pts * warp_factor[:, i * (H * W) : (i + 1) * (H * W)].view(
-                -1, H, W, 1
-            )
+            pts_list[i] = pts * warp_factor[:, i * (H * W) : (i + 1) * (H * W)].view(-1, H, W, 1)
         all_dis = log_dis
     else:
         raise ValueError(f"bad {dis_mode=}")
@@ -1708,15 +1601,11 @@ def angle_diff_vec3_numpy(v1: np.ndarray, v2: np.ndarray, eps: float = 1e-12):
     Returns:
         np.ndarray: Angle differences in radians
     """
-    return np.arctan2(
-        np.linalg.norm(np.cross(v1, v2, axis=-1), axis=-1) + eps, (v1 * v2).sum(axis=-1)
-    )
+    return np.arctan2(np.linalg.norm(np.cross(v1, v2, axis=-1), axis=-1) + eps, (v1 * v2).sum(axis=-1))
 
 
 @no_warnings(category=RuntimeWarning)
-def points_to_normals(
-    point: np.ndarray, mask: np.ndarray = None, edge_threshold: float = None
-) -> np.ndarray:
+def points_to_normals(point: np.ndarray, mask: np.ndarray = None, edge_threshold: float | None = None) -> np.ndarray:
     """
     Calculate normal map from point map. Value range is [-1, 1].
 
@@ -1808,9 +1697,7 @@ def sliding_window_1d(x: np.ndarray, window_size: int, stride: int, axis: int = 
         array([[1, 2, 3],
                [3, 4, 5]])
     """
-    assert x.shape[axis] >= window_size, (
-        f"kernel_size ({window_size}) is larger than axis_size ({x.shape[axis]})"
-    )
+    assert x.shape[axis] >= window_size, f"kernel_size ({window_size}) is larger than axis_size ({x.shape[axis]})"
     axis = axis % x.ndim
     shape = (
         *x.shape[:axis],
@@ -1830,9 +1717,9 @@ def sliding_window_1d(x: np.ndarray, window_size: int, stride: int, axis: int = 
 
 def sliding_window_nd(
     x: np.ndarray,
-    window_size: Tuple[int, ...],
-    stride: Tuple[int, ...],
-    axis: Tuple[int, ...],
+    window_size: tuple[int, ...],
+    stride: tuple[int, ...],
+    axis: tuple[int, ...],
 ) -> np.ndarray:
     """
     Create sliding windows along multiple dimensions of the input array.
@@ -1867,9 +1754,9 @@ def sliding_window_nd(
 
 def sliding_window_2d(
     x: np.ndarray,
-    window_size: Union[int, Tuple[int, int]],
-    stride: Union[int, Tuple[int, int]],
-    axis: Tuple[int, int] = (-2, -1),
+    window_size: int | tuple[int, int],
+    stride: int | tuple[int, int],
+    axis: tuple[int, int] = (-2, -1),
 ) -> np.ndarray:
     """
     Create 2D sliding windows over the input array.
@@ -1902,9 +1789,7 @@ def sliding_window_2d(
     return sliding_window_nd(x, window_size, stride, axis)
 
 
-def max_pool_1d(
-    x: np.ndarray, kernel_size: int, stride: int, padding: int = 0, axis: int = -1
-):
+def max_pool_1d(x: np.ndarray, kernel_size: int, stride: int, padding: int = 0, axis: int = -1):
     """
     Perform 1D max pooling on the input array.
 
@@ -1948,10 +1833,10 @@ def max_pool_1d(
 
 def max_pool_nd(
     x: np.ndarray,
-    kernel_size: Tuple[int, ...],
-    stride: Tuple[int, ...],
-    padding: Tuple[int, ...],
-    axis: Tuple[int, ...],
+    kernel_size: tuple[int, ...],
+    stride: tuple[int, ...],
+    padding: tuple[int, ...],
+    axis: tuple[int, ...],
 ) -> np.ndarray:
     """
     Perform N-dimensional max pooling on the input array.
@@ -1987,10 +1872,10 @@ def max_pool_nd(
 
 def max_pool_2d(
     x: np.ndarray,
-    kernel_size: Union[int, Tuple[int, int]],
-    stride: Union[int, Tuple[int, int]],
-    padding: Union[int, Tuple[int, int]],
-    axis: Tuple[int, int] = (-2, -1),
+    kernel_size: int | tuple[int, int],
+    stride: int | tuple[int, int],
+    padding: int | tuple[int, int],
+    axis: tuple[int, int] = (-2, -1),
 ):
     """
     Perform 2D max pooling on the input array.
@@ -2030,8 +1915,8 @@ def max_pool_2d(
 @no_warnings(category=RuntimeWarning)
 def depth_edge(
     depth: np.ndarray,
-    atol: float = None,
-    rtol: float = None,
+    atol: float | None = None,
+    rtol: float | None = None,
     kernel_size: int = 3,
     mask: np.ndarray = None,
 ) -> np.ndarray:
@@ -2047,9 +1932,9 @@ def depth_edge(
         edge (np.ndarray): shape (..., height, width) of dtype torch.bool
     """
     if mask is None:
-        diff = max_pool_2d(
-            depth, kernel_size, stride=1, padding=kernel_size // 2
-        ) + max_pool_2d(-depth, kernel_size, stride=1, padding=kernel_size // 2)
+        diff = max_pool_2d(depth, kernel_size, stride=1, padding=kernel_size // 2) + max_pool_2d(
+            -depth, kernel_size, stride=1, padding=kernel_size // 2
+        )
     else:
         diff = max_pool_2d(
             np.where(mask, depth, -np.inf),
@@ -2074,8 +1959,8 @@ def depth_edge(
 
 def depth_aliasing(
     depth: np.ndarray,
-    atol: float = None,
-    rtol: float = None,
+    atol: float | None = None,
+    rtol: float | None = None,
     kernel_size: int = 3,
     mask: np.ndarray = None,
 ) -> np.ndarray:
@@ -2090,12 +1975,8 @@ def depth_aliasing(
         edge (np.ndarray): shape (..., height, width) of dtype torch.bool
     """
     if mask is None:
-        diff_max = (
-            max_pool_2d(depth, kernel_size, stride=1, padding=kernel_size // 2) - depth
-        )
-        diff_min = (
-            max_pool_2d(-depth, kernel_size, stride=1, padding=kernel_size // 2) + depth
-        )
+        diff_max = max_pool_2d(depth, kernel_size, stride=1, padding=kernel_size // 2) - depth
+        diff_min = max_pool_2d(-depth, kernel_size, stride=1, padding=kernel_size // 2) + depth
     else:
         diff_max = (
             max_pool_2d(
@@ -2126,9 +2007,7 @@ def depth_aliasing(
 
 
 @no_warnings(category=RuntimeWarning)
-def normals_edge(
-    normals: np.ndarray, tol: float, kernel_size: int = 3, mask: np.ndarray = None
-) -> np.ndarray:
+def normals_edge(normals: np.ndarray, tol: float, kernel_size: int = 3, mask: np.ndarray = None) -> np.ndarray:
     """
     Compute the edge mask from normal map.
 
@@ -2139,9 +2018,7 @@ def normals_edge(
     Returns:
         edge (np.ndarray): shape (..., height, width) of dtype torch.bool
     """
-    assert normals.ndim >= 3 and normals.shape[-1] == 3, (
-        "normal should be of shape (..., height, width, 3)"
-    )
+    assert normals.ndim >= 3 and normals.shape[-1] == 3, "normal should be of shape (..., height, width, 3)"
     normals = normals / (np.linalg.norm(normals, axis=-1, keepdims=True) + 1e-12)
 
     padding = kernel_size // 2
@@ -2161,9 +2038,7 @@ def normals_edge(
         axis=(-3, -2),
     )
     if mask is None:
-        angle_diff = np.arccos(
-            (normals[..., None, None] * normals_window).sum(axis=-3)
-        ).max(axis=(-2, -1))
+        angle_diff = np.arccos((normals[..., None, None] * normals_window).sum(axis=-3)).max(axis=(-2, -1))
     else:
         mask_window = sliding_window_2d(
             np.pad(
@@ -2181,8 +2056,6 @@ def normals_edge(
             0,
         ).max(axis=(-2, -1))
 
-    angle_diff = max_pool_2d(
-        angle_diff, kernel_size, stride=1, padding=kernel_size // 2
-    )
+    angle_diff = max_pool_2d(angle_diff, kernel_size, stride=1, padding=kernel_size // 2)
     edge = angle_diff > np.deg2rad(tol)
     return edge

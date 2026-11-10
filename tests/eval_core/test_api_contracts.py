@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.api import (
+from worldfoundry.evals.api import (
     AggregateResult,
     ArtifactRef,
     BenchmarkSpec,
@@ -23,7 +23,7 @@ from worldfoundry.evaluation.api import (
     enrich_artifact_ref,
     local_path_for_uri,
 )
-from worldfoundry.evaluation.api.json_contract import canonical_json_dumps, json_sha256
+from worldfoundry.evals.api.json_contract import canonical_json_dumps, json_sha256
 
 
 def _round_trip(contract):
@@ -239,7 +239,7 @@ def test_world_model_runner_protocol_accepts_minimal_runner() -> None:
 
 def test_api_contract_imports_are_stdlib_only() -> None:
     repo_root = Path(__file__).resolve().parents[2]
-    api_root = repo_root / "src" / "worldfoundry" / "evaluation" / "api"
+    api_root = repo_root / "src" / "worldfoundry" / "evals" / "api"
     local_modules = {path.stem for path in api_root.glob("*.py")}
     allowed_external = set(sys.stdlib_module_names) | {"__future__"}
 
@@ -257,7 +257,7 @@ def test_api_contract_imports_are_stdlib_only() -> None:
                     name = alias.name.split(".", 1)[0]
                     if name == "worldfoundry":
                         assert alias.name.startswith(
-                            "worldfoundry.evaluation.api"
+                            "worldfoundry.evals.api"
                         ), f"{path} imports disallowed first-party {alias.name!r}"
                     else:
                         assert name in allowed_external, f"{path} imports non-stdlib module {name!r}"
@@ -271,7 +271,7 @@ def test_api_contract_imports_are_stdlib_only() -> None:
                         continue
                     if node.module.startswith("worldfoundry."):
                         assert node.module.startswith(
-                            "worldfoundry.evaluation.api."
+                            "worldfoundry.evals.api."
                         ), f"{path} imports disallowed first-party {node.module!r}"
                         continue
                     modules = {node.module.split(".", 1)[0]}

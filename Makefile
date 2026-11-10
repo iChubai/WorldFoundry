@@ -23,12 +23,20 @@ INFER_TENSOR_MANIFEST ?= tmp/inference-cpu-selection.json
 INFER_TENSOR_JUNIT ?= tmp/inference-cpu-contracts.xml
 STRICT_TEST_RUNNER = $(PYTHON) tests/manual/validate_junit_contract.py run
 PUBLIC_GATE_CONTRACTS = \
-	tests/evaluation/metrics/test_nexus_configuration.py \
-	tests/evaluation/metrics/test_vendi_dispatch.py \
+	tests/evaluation/execution/test_videobench_text_alignment.py \
+	tests/evaluation/execution/test_wbench_sam2_tracking_summary.py \
+	tests/evaluation/execution/test_stevo_bench_eval_utils.py \
+	tests/evaluation/execution/test_t2vworldbench_evaluator_imports.py \
+	tests/evaluation/execution/test_t2v_compbench_mllm_metric_imports.py \
+	tests/evaluation/execution/test_fetv_blip_modes.py \
+	tests/evaluation/execution/test_fetv_video_frames.py \
+	tests/evaluation/execution/test_vmbench_qalign_helpers.py \
+	tests/evaluation/execution/test_vmbench_cas_writer.py \
+	tests/evaluation/execution/test_vbench_sampling.py \
+	tests/evaluation/execution/test_vbench_metadata_errors.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
 	tests/evaluation/test_source_cache.py \
 	tests/eval_core/test_videoverse_local_vlm.py \
-	tests/eval_core/test_vendi_molecule_kernel.py \
 	tests/eval_core/test_libero_mem_recording.py \
 	tests/eval_core/test_model_benchmark_resume_controls.py \
 	tests/eval_core/test_run_manifest.py \
@@ -49,6 +57,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/studio/test_canonical_catalog_lookup.py \
 	tests/studio/test_catalog_class_constants.py \
 	tests/base_models/diffusion_model/test_module_boundaries.py \
+	tests/base_models/test_transnetv2_unsupported_options.py \
 	tests/studio/test_pipeline_owned_stream_state.py \
 	tests/studio/test_dispatch_lifecycle.py \
 	tests/studio/test_stream_init.py \
@@ -58,6 +67,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/core/utils/python/test_pattern_filters.py \
 	tests/core/utils/python/test_tree_utils.py
 VIDEO_TENSOR_CONTRACTS = \
+	tests/base_models/three_dimensions/point_clouds/hyworldmirror_2p0/comm/test_padding.py \
 	tests/core/test_video_tensor_regression.py \
 	tests/core/test_video_codec_contracts.py \
 	tests/core/test_causal_video_cache.py \
@@ -138,6 +148,9 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_image_request_batching.py \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
+	tests/synthesis/test_ac3d_controlnet_pipeline.py \
+	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
+	tests/base_models/test_vqascore_llama32_molmo_gemini.py \
 	tests/pipelines/test_kandinsky6_replay_recipes.py \
 	tests/base_models/diffusion_model/test_build_purpose.py \
 	tests/synthesis/test_inspatio_v15_tensors.py \
@@ -180,6 +193,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/pipelines/test_reason1_runtime_options.py \
 	tests/pipelines/test_cosmos_inference_parallel_options.py \
 	tests/pipelines/test_hunyuan_video_checkpoint_paths.py \
+	tests/pipelines/test_hunyuan_mirror_masks.py \
 	tests/studio/test_cosmos_predict25_local_overrides.py \
 	tests/studio/test_cosmos_predict2_workspace_defaults.py \
 	tests/studio/test_hunyuan_safe_checkpoint_overrides.py \
@@ -233,6 +247,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_wonderworld_stages.py \
 	tests/core/test_gaussian_surfels.py \
 	tests/base_models/diffusion_model/models/encoders/test_wan_animate_pose_render.py \
+	tests/base_models/diffusion_model/models/encoders/test_wan_animate_pose_sequence.py \
 	tests/core/distributed \
 	tests/core/test_compile_cache_layering.py \
 	tests/core/test_cache_atomicity.py \
@@ -254,8 +269,17 @@ INFER_TENSOR_CONTRACTS = \
 	tests/eval_core/test_catalog_integration_status.py \
 	$(EVALUATION_CPU_CONTRACTS)
 EVALUATION_CPU_CONTRACTS = \
-	tests/evaluation/metrics/test_nexus_configuration.py \
-	tests/evaluation/metrics/test_vendi_dispatch.py \
+	tests/evaluation/execution/test_videobench_text_alignment.py \
+	tests/evaluation/execution/test_wbench_sam2_tracking_summary.py \
+	tests/evaluation/execution/test_stevo_bench_eval_utils.py \
+	tests/evaluation/execution/test_t2vworldbench_evaluator_imports.py \
+	tests/evaluation/execution/test_t2v_compbench_mllm_metric_imports.py \
+	tests/evaluation/execution/test_fetv_blip_modes.py \
+	tests/evaluation/execution/test_fetv_video_frames.py \
+	tests/evaluation/execution/test_vmbench_qalign_helpers.py \
+	tests/evaluation/execution/test_vmbench_cas_writer.py \
+	tests/evaluation/execution/test_vbench_sampling.py \
+	tests/evaluation/execution/test_vbench_metadata_errors.py \
 	tests/eval_core/test_worldmembench_official_runner.py \
 	tests/eval_core/test_worldmembench_runtime.py \
 	tests/evaluation/execution/test_resume_options.py \
@@ -272,7 +296,6 @@ EVALUATION_CPU_CONTRACTS = \
 	tests/evaluation/metrics/test_worldscore_aggregation.py \
 	tests/evaluation/metrics/test_fvd_batch_preprocessing.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
-	tests/evaluation/metrics/test_artscore_loader.py \
 	tests/cli/test_cli_mcp_contracts.py \
 	tests/cli/test_cli_mcp_usage_context.py \
 	tests/cli/test_mcp_content_conversion.py \
@@ -379,15 +402,11 @@ CANONICAL_DIFFUSION_SOURCES ?= \
 	worldfoundry/base_models/diffusion_model/recipes \
 	worldfoundry/base_models/diffusion_model/runners \
 	worldfoundry/base_models/diffusion_model/schedulers
-RUFF_SOURCES ?= \
-	worldfoundry/cli \
-	worldfoundry/evaluation/api \
-	worldfoundry/evaluation/models/runtime \
-	worldfoundry/evaluation/tasks/catalog \
-	worldfoundry/evaluation/tasks/execution/orchestration \
-	worldfoundry/mcp \
-	worldfoundry/runtime \
-	scripts/model_zoo
+# Ruff reads tracked Python sources from Git's index: a directory walk would also visit local
+# license-gated runtimes and skip tracked sources below ignored names such as checkpoints/.
+RUFF_SOURCES ?= worldfoundry scripts/model_zoo
+RUFF_FORMAT_SOURCES ?= worldfoundry
+ruff_tracked_files = git ls-files -z -- $(foreach path,$(1),'$(path)/*.py' '$(path)/*.pyi' '$(path)/*.ipynb')
 
 help:
 	@printf '%s\n' \
@@ -550,10 +569,11 @@ cli-entrypoint-check:
 lint: ruff-check format-check shell-check data-check runtime-registry-check workspace-registry-check
 
 ruff-check:
-	$(PYTHON) -m ruff check $(RUFF_SOURCES)
+	$(call ruff_tracked_files,$(RUFF_SOURCES)) | xargs -0 -r $(PYTHON) -m ruff check --force-exclude
 
 format-check:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q $(CANONICAL_DIFFUSION_SOURCES) worldfoundry/evaluation scripts
+	$(call ruff_tracked_files,$(RUFF_FORMAT_SOURCES)) | xargs -0 -r $(PYTHON) -m ruff format --check --force-exclude
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q $(CANONICAL_DIFFUSION_SOURCES) worldfoundry/evals scripts
 
 # BeeGFS: enumerate the bounded tracked paths from Git's index, not a recursive filesystem walk.
 shell-check:
@@ -568,10 +588,10 @@ data-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo benchmarks --json >/dev/null
 
 runtime-registry-check:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evaluation.models.runtime.validate import validate_runtime_registry; errors = [issue for issue in validate_runtime_registry() if issue.severity == "error"]; assert not errors, "\\n".join(f"[{issue.code}] {issue.message}" for issue in errors)'
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evals.models.runtime.validate import validate_runtime_registry; errors = [issue for issue in validate_runtime_registry() if issue.severity == "error"]; assert not errors, "\\n".join(f"[{issue.code}] {issue.message}" for issue in errors)'
 
 workspace-registry-check:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evaluation.tasks.catalog.integrity import catalog_runner_table_issues, video_catalog_dispatch_issues; from worldfoundry.evaluation.tasks.catalog.workspace_registry import validate_workspace_registry; issues = [*validate_workspace_registry(), *video_catalog_dispatch_issues(), *catalog_runner_table_issues()]; assert not issues, "\n".join(issues); print("workspace registry OK")'
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evals.tasks.catalog.integrity import catalog_runner_table_issues, video_catalog_dispatch_issues; from worldfoundry.evals.tasks.catalog.workspace_registry import validate_workspace_registry; issues = [*validate_workspace_registry(), *video_catalog_dispatch_issues(), *catalog_runner_table_issues()]; assert not issues, "\n".join(issues); print("workspace registry OK")'
 
 check-cuda-constraints:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_cuda_torch_constraints.py
@@ -581,7 +601,7 @@ packaging-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) scripts/setup/check_packaging_license_gate.py $(if $(WHEEL),--wheel $(WHEEL),) $(if $(SDIST),--sdist $(SDIST),)
 
 compile-eval:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q worldfoundry/evaluation scripts
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m compileall -q worldfoundry/evals scripts
 
 cli-check:
 	rm -rf $(CLI_CHECK_OUTPUT)

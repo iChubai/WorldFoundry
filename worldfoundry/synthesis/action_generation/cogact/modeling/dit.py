@@ -13,12 +13,14 @@
 # MAE: https://github.com/facebookresearch/mae/blob/main/models_mae.py
 # --------------------------------------------------------
 
+import math
+
 import torch
 import torch.nn as nn
-import math
 
 from worldfoundry.core.attention import QKVSelfAttention as Attention
 from worldfoundry.core.nn import Mlp
+
 
 def modulate(x, shift, scale):
     return x * (1 + scale) + shift
@@ -28,10 +30,12 @@ def modulate(x, shift, scale):
 #               Embedding Layers for Timesteps and conditions                 #
 #################################################################################
 
+
 class TimestepEmbedder(nn.Module):
     """
     Embeds scalar timesteps into vector representations.
     """
+
     def __init__(self, hidden_size, frequency_embedding_size=256):
         super().__init__()
         self.mlp = nn.Sequential(
@@ -53,9 +57,9 @@ class TimestepEmbedder(nn.Module):
         """
         # https://github.com/openai/glide-text2im/blob/main/glide_text2im/nn.py
         half = dim // 2
-        freqs = torch.exp(
-            -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half
-        ).to(device=t.device)
+        freqs = torch.exp(-math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half).to(
+            device=t.device
+        )
         args = t[:, None].float() * freqs[None]
         embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
         if dim % 2:
@@ -67,10 +71,12 @@ class TimestepEmbedder(nn.Module):
         t_emb = self.mlp(t_freq)
         return t_emb
 
+
 class LabelEmbedder(nn.Module):
     """
     Embeds conditions into vector representations. Also handles label dropout for classifier-free guidance.
     """
+
     def __init__(self, in_size, hidden_size, dropout_prob=0.1, conditions_shape=(1, 1, 4096)):
         super().__init__()
         self.linear = nn.Linear(in_size, hidden_size)
@@ -86,9 +92,12 @@ class LabelEmbedder(nn.Module):
             drop_ids = torch.rand(conditions.shape[0], device=conditions.device) < self.dropout_prob
         else:
             drop_ids = force_drop_ids == 1
-        conditions = torch.where(drop_ids.unsqueeze(1).unsqueeze(1).expand(conditions.shape[0], *self.uncondition.shape), self.uncondition, conditions)
+        conditions = torch.where(
+            drop_ids.unsqueeze(1).unsqueeze(1).expand(conditions.shape[0], *self.uncondition.shape),
+            self.uncondition,
+            conditions,
+        )
         return conditions
-
 
     def forward(self, conditions, train, force_drop_ids=None):
         use_dropout = self.dropout_prob > 0
@@ -96,6 +105,7 @@ class LabelEmbedder(nn.Module):
             conditions = self.token_drop(conditions, force_drop_ids)
         embeddings = self.linear(conditions)
         return embeddings
+
 
 #################################################################################
 #                      Embedding Layers for Actions and                         #
@@ -109,6 +119,7 @@ class ActionEmbedder(nn.Module):
         x = self.linear(x)
         return x
 
+
 # Action_History is not used now
 class HistoryEmbedder(nn.Module):
     def __init__(self, action_size, hidden_size):
@@ -119,21 +130,27 @@ class HistoryEmbedder(nn.Module):
         x = self.linear(x)
         return x
 
+
 #################################################################################
 #                                 Core DiT Model                                #
 #################################################################################
+
 
 class DiTBlock(nn.Module):
     """
     A DiT block with self-attention conditioning.
     """
+
     def __init__(self, hidden_size, num_heads, mlp_ratio=4.0, **block_kwargs):
         super().__init__()
         self.norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         self.attn = Attention(hidden_size, num_heads=num_heads, qkv_bias=True, **block_kwargs)
         self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
         mlp_hidden_dim = int(hidden_size * mlp_ratio)
-        approx_gelu = lambda: nn.GELU(approximate="tanh")
+
+        def approx_gelu():
+            return nn.GELU(approximate="tanh")
+
         self.mlp = Mlp(in_features=hidden_size, hidden_features=mlp_hidden_dim, act_layer=approx_gelu, drop=0)
 
     def forward(self, x):
@@ -146,6 +163,7 @@ class FinalLayer(nn.Module):
     """
     The final layer of DiT.
     """
+
     def __init__(self, hidden_size, out_channels):
         super().__init__()
         self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
@@ -161,6 +179,7 @@ class DiT(nn.Module):
     """
     Diffusion model with a Transformer backbone.
     """
+
     def __init__(
         self,
         in_channels=7,
@@ -192,16 +211,15 @@ class DiT(nn.Module):
         self.x_embedder = ActionEmbedder(action_size=in_channels, hidden_size=hidden_size)
         self.t_embedder = TimestepEmbedder(hidden_size)
         self.z_embedder = LabelEmbedder(in_size=token_size, hidden_size=hidden_size, dropout_prob=class_dropout_prob)
-        scale = hidden_size ** -0.5
+        scale = hidden_size**-0.5
 
         # Learnable positional embeddings
         # +2, one for the conditional token, and one for the current action prediction
         self.positional_embedding = nn.Parameter(
-                scale * torch.randn(future_action_window_size + past_action_window_size + 2, hidden_size))
+            scale * torch.randn(future_action_window_size + past_action_window_size + 2, hidden_size)
+        )
 
-        self.blocks = nn.ModuleList([
-            DiTBlock(hidden_size, num_heads, mlp_ratio=mlp_ratio) for _ in range(depth)
-        ])
+        self.blocks = nn.ModuleList([DiTBlock(hidden_size, num_heads, mlp_ratio=mlp_ratio) for _ in range(depth)])
         self.final_layer = FinalLayer(hidden_size, self.out_channels)
         self.initialize_weights()
 
@@ -212,6 +230,7 @@ class DiT(nn.Module):
                 torch.nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
                     nn.init.constant_(module.bias, 0)
+
         self.apply(_basic_init)
 
         # # Initialize token_embed like nn.Linear
@@ -242,16 +261,16 @@ class DiT(nn.Module):
         t: (N,) tensor of diffusion timesteps
         z: (N, 1, D) tensor of conditions
         """
-        x = self.x_embedder(x)                              # (N, T, D)
-        t = self.t_embedder(t)                              # (N, D)
-        z = self.z_embedder(z, self.training)               # (N, 1, D)
-        c = t.unsqueeze(1) + z                              # (N, 1, D)
-        x = torch.cat((c, x), dim=1)                        # (N, T+1, D)
-        x = x + self.positional_embedding                   # (N, T+1, D)
+        x = self.x_embedder(x)  # (N, T, D)
+        t = self.t_embedder(t)  # (N, D)
+        z = self.z_embedder(z, self.training)  # (N, 1, D)
+        c = t.unsqueeze(1) + z  # (N, 1, D)
+        x = torch.cat((c, x), dim=1)  # (N, T+1, D)
+        x = x + self.positional_embedding  # (N, T+1, D)
         for block in self.blocks:
-            x = block(x)                                    # (N, T+1, D)
-        x = self.final_layer(x)                             # (N, T+1, out_channels)
-        return x[:, 1:, :]     # (N, T, C)
+            x = block(x)  # (N, T+1, D)
+        x = self.final_layer(x)  # (N, T+1, out_channels)
+        return x[:, 1:, :]  # (N, T, C)
 
     def forward_with_cfg(self, x, t, z, cfg_scale):
         """
@@ -263,7 +282,7 @@ class DiT(nn.Module):
         combined = torch.cat([half, half], dim=0).to(next(self.x_embedder.parameters()).dtype)
         model_out = self.forward(combined, t, z)
         # eps, rest = model_out[:, :self.in_channels], model_out[:, self.in_channels:]
-        eps, rest = model_out[:, :, :self.in_channels], model_out[:, :, self.in_channels:]
+        eps, rest = model_out[:, :, : self.in_channels], model_out[:, :, self.in_channels :]
         cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
         half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
         eps = torch.cat([half_eps, half_eps], dim=0)

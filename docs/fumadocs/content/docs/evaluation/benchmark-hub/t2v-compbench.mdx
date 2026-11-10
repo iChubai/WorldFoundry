@@ -35,7 +35,7 @@ Recompute a category from staged videos (numeracy needs GroundingDINO + a BERT-c
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py \
   --generated-video-dir <generated_videos_with_t2v_compbench_generation_manifest.jsonl> \
   --category generative_numeracy \
   --output-dir tmp/t2v-compbench/numeracy \
@@ -48,7 +48,7 @@ In-tree pointers:
 
 ```text
 worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
-worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
+worldfoundry/evals/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench
 ```
 
 Outputs include `scorecard.json` (primary `t2v_compbench_average` when complete), `raw_metric_table.jsonl`, and per-sample rows when the source exposes them.

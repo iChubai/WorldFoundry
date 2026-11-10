@@ -21,7 +21,6 @@ _CAMERA_ALIASES: dict[str, tuple[str, ...]] = {
 
 
 def _camera_mapping_from_kwargs(camera_keys: tuple[str, ...], kwargs: Mapping[str, Any]) -> dict[str, Any]:
-    """Camera mapping from kwargs implementation."""
     cameras: dict[str, Any] = {}
     for camera_key in camera_keys:
         for alias in _CAMERA_ALIASES.get(camera_key, (camera_key,)):

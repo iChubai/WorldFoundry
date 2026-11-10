@@ -1,16 +1,14 @@
 # Adapted from https://github.com/huggingface/diffusers/blob/main/src/diffusers/models/resnet.py
 
-from einops import rearrange, repeat
 from functools import partial
-from typing import Optional
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from diffusers.models.activations import get_activation
-from diffusers.models.normalization import AdaGroupNorm
 from diffusers.models.attention_processor import SpatialNorm
+from diffusers.models.normalization import AdaGroupNorm
+from einops import rearrange, repeat
 
 
 class InflatedConv3d(nn.Conv2d):
@@ -35,6 +33,7 @@ class InflatedGroupNorm(nn.GroupNorm):
         x = rearrange(x, "(b f) c h w -> b c f h w", f=video_length)
 
         return x
+
 
 def zero_module(module):
     # Zero out the parameters of a module and return it.
@@ -75,29 +74,28 @@ class FusionBlock2D(nn.Module):
     """
 
     def __init__(
-            self,
-            *,
-            in_channels,
-            out_channels=None,
-            conv_shortcut=False,
-            dropout=0.0,
-            temb_channels=512,
-            groups=32,
-            groups_out=None,
-            pre_norm=True,
-            eps=1e-6,
-            non_linearity="swish",
-            skip_time_act=False,
-            time_embedding_norm="default",  # default, scale_shift, ada_group, spatial
-            kernel=None,
-            output_scale_factor=1.0,
-            use_in_shortcut=None,
-            up=False,
-            down=False,
-            conv_shortcut_bias: bool = True,
-            conv_2d_out_channels: Optional[int] = None,
-
-            zero_init=True,
+        self,
+        *,
+        in_channels,
+        out_channels=None,
+        conv_shortcut=False,
+        dropout=0.0,
+        temb_channels=512,
+        groups=32,
+        groups_out=None,
+        pre_norm=True,
+        eps=1e-6,
+        non_linearity="swish",
+        skip_time_act=False,
+        time_embedding_norm="default",  # default, scale_shift, ada_group, spatial
+        kernel=None,
+        output_scale_factor=1.0,
+        use_in_shortcut=None,
+        up=False,
+        down=False,
+        conv_shortcut_bias: bool = True,
+        conv_2d_out_channels: int | None = None,
+        zero_init=True,
     ):
         super().__init__()
         self.pre_norm = pre_norm
@@ -157,19 +155,19 @@ class FusionBlock2D(nn.Module):
         if self.up:
             if kernel == "fir":
                 fir_kernel = (1, 3, 3, 1)
-                self.upsample = lambda x: upsample_2d(x, kernel=fir_kernel)
+                self.upsample = lambda x: upsample_2d(x, kernel=fir_kernel)  # noqa: F821 - Name is undefined in the upstream source.
             elif kernel == "sde_vp":
                 self.upsample = partial(F.interpolate, scale_factor=2.0, mode="nearest")
             else:
-                self.upsample = Upsample2D(in_channels, use_conv=False)
+                self.upsample = Upsample2D(in_channels, use_conv=False)  # noqa: F821 - Name is undefined in the upstream source.
         elif self.down:
             if kernel == "fir":
                 fir_kernel = (1, 3, 3, 1)
-                self.downsample = lambda x: downsample_2d(x, kernel=fir_kernel)
+                self.downsample = lambda x: downsample_2d(x, kernel=fir_kernel)  # noqa: F821 - Name is undefined in the upstream source.
             elif kernel == "sde_vp":
                 self.downsample = partial(F.avg_pool2d, kernel_size=2, stride=2)
             else:
-                self.downsample = Downsample2D(in_channels, use_conv=False, padding=1, name="op")
+                self.downsample = Downsample2D(in_channels, use_conv=False, padding=1, name="op")  # noqa: F821 - Name is undefined in the upstream source.
 
         self.use_in_shortcut = self.in_channels != conv_2d_out_channels if use_in_shortcut is None else use_in_shortcut
 
@@ -180,7 +178,11 @@ class FusionBlock2D(nn.Module):
             )
 
         conv_out = torch.nn.Conv2d(
-            conv_2d_out_channels, conv_2d_out_channels, kernel_size=1, stride=1, padding=0,
+            conv_2d_out_channels,
+            conv_2d_out_channels,
+            kernel_size=1,
+            stride=1,
+            padding=0,
         )
         self.conv_out = zero_module(conv_out) if zero_init else conv_out
 
@@ -256,6 +258,7 @@ class FusionBlock2D(nn.Module):
 
         return output_tensor
 
+
 class Upsample3D(nn.Module):
     def __init__(self, channels, use_conv=False, use_conv_transpose=False, out_channels=None, name="conv"):
         super().__init__()
@@ -265,7 +268,6 @@ class Upsample3D(nn.Module):
         self.use_conv_transpose = use_conv_transpose
         self.name = name
 
-        conv = None
         if use_conv_transpose:
             raise NotImplementedError
         elif use_conv:
@@ -335,21 +337,21 @@ class Downsample3D(nn.Module):
 
 class ResnetBlock3D(nn.Module):
     def __init__(
-            self,
-            *,
-            in_channels,
-            out_channels=None,
-            conv_shortcut=False,
-            dropout=0.0,
-            temb_channels=512,
-            groups=32,
-            groups_out=None,
-            pre_norm=True,
-            eps=1e-6,
-            non_linearity="swish",
-            time_embedding_norm="default",
-            output_scale_factor=1.0,
-            use_in_shortcut=None,
+        self,
+        *,
+        in_channels,
+        out_channels=None,
+        conv_shortcut=False,
+        dropout=0.0,
+        temb_channels=512,
+        groups=32,
+        groups_out=None,
+        pre_norm=True,
+        eps=1e-6,
+        non_linearity="swish",
+        time_embedding_norm="default",
+        output_scale_factor=1.0,
+        use_in_shortcut=None,
     ):
         super().__init__()
         self.pre_norm = pre_norm
@@ -403,7 +405,7 @@ class ResnetBlock3D(nn.Module):
         hidden_states = input_tensor
 
         video_length = hidden_states.shape[2]
-        emb = repeat(emb, "b c -> (b f) c", f=video_length)
+        emb = repeat(emb, "b c -> (b f) c", f=video_length)  # noqa: F821, F841 - Upstream reads this local before assigning it.
 
         hidden_states = self.norm1(hidden_states)
         hidden_states = self.nonlinearity(hidden_states)

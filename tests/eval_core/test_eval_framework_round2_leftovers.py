@@ -12,37 +12,37 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.api.metrics import MetricSpec
-from worldfoundry.evaluation.api.registry import (
+from worldfoundry.evals.api.metrics import MetricSpec
+from worldfoundry.evals.api.registry import (
     AliasRegistryStore,
     DuplicateRegistryKeyError,
     MetricSpecRegistry,
     ModelManifestRegistry,
 )
-from worldfoundry.evaluation.api.world_model_manifest import WorldModelManifest
-from worldfoundry.evaluation.models.catalog import schema as catalog_schema
-from worldfoundry.evaluation.models.catalog.registry import (
+from worldfoundry.evals.api.world_model_manifest import WorldModelManifest
+from worldfoundry.evals.models.catalog import schema as catalog_schema
+from worldfoundry.evals.models.catalog.registry import (
     clear_model_registry_cache,
     discover_model_registry,
 )
-from worldfoundry.evaluation.models.catalog.schema import (
+from worldfoundry.evals.models.catalog.schema import (
     ModelZooEntry,
     _normalize_demo_status,
     _normalize_integration_status,
     _normalize_source_status,
 )
-from worldfoundry.evaluation.models.catalog.zoo_registry import (
+from worldfoundry.evals.models.catalog.zoo_registry import (
     ModelZooRegistry,
     clear_model_zoo_registry_cache,
     load_model_zoo_registry,
 )
-from worldfoundry.evaluation.models.pipelines.aliases import (
+from worldfoundry.evals.models.pipelines.aliases import (
     PipelineAliasGroup,
     PipelineAliasRegistry,
     clear_pipeline_alias_registry_cache,
     load_pipeline_alias_registry,
 )
-from worldfoundry.evaluation.models.pipelines.bindings import (
+from worldfoundry.evals.models.pipelines.bindings import (
     PipelineBinding,
     clear_pipeline_binding_registry_cache,
     load_pipeline_binding_registry,
@@ -173,7 +173,7 @@ def test_clear_model_registry_cache_empties_lru() -> None:
 
 
 def test_registered_catalog_statuses_do_not_warn(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.WARNING, logger="worldfoundry.evaluation.models.catalog.schema"):
+    with caplog.at_level(logging.WARNING, logger="worldfoundry.evals.models.catalog.schema"):
         assert _normalize_integration_status("runtime_ported") == "integrated"
         assert _normalize_integration_status("verified") == "integrated"
         assert _normalize_integration_status("route_ready") == "integrated"
@@ -185,17 +185,17 @@ def test_registered_catalog_statuses_do_not_warn(caplog: pytest.LogCaptureFixtur
 
 
 def test_unknown_status_still_warns_once(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.WARNING, logger="worldfoundry.evaluation.models.catalog.schema"):
+    with caplog.at_level(logging.WARNING, logger="worldfoundry.evals.models.catalog.schema"):
         assert _normalize_integration_status("typo_integarted") == "planned"
     assert any("typo_integarted" in record.getMessage() for record in caplog.records)
 
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="worldfoundry.evaluation.models.catalog.schema"):
+    with caplog.at_level(logging.WARNING, logger="worldfoundry.evals.models.catalog.schema"):
         assert _normalize_integration_status("typo_integarted") == "planned"
     assert not caplog.records
 
 
 def test_unknown_source_status_warns(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.WARNING, logger="worldfoundry.evaluation.models.catalog.schema"):
+    with caplog.at_level(logging.WARNING, logger="worldfoundry.evals.models.catalog.schema"):
         assert _normalize_source_status("totally_made_up_source") == "unknown"
     assert any("totally_made_up_source" in record.getMessage() for record in caplog.records)

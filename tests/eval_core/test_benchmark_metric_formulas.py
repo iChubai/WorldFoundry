@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     BenchmarkMetricInput,
     boolean_accuracy,
     camera_binary_classification_metrics,
@@ -18,7 +18,7 @@ from worldfoundry.evaluation.tasks.metrics import (
     videoverse_subquestion_metrics,
     worldmodelbench_score,
 )
-from worldfoundry.evaluation.tasks.metrics import evaluate_external_metric
+from worldfoundry.evals.tasks.metrics import evaluate_external_metric
 
 
 def test_benchmark_metric_input_protocol_normalizes_records() -> None:

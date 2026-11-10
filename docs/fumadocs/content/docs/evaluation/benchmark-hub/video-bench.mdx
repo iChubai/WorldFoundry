@@ -33,7 +33,7 @@ wf zoo benchmark-run \
 
 Runtime judging needs `WORLDFOUNDRY_VIDEOBENCH_GPT4O_API_KEY` (or `OPENAI_API_KEY`), annotation root, and generated videos. `--dimension` / `--mode` restrict the protocol. Env: `WORLDFOUNDRY_VIDEOBENCH_RESULTS_PATH`, `WORLDFOUNDRY_VIDEOBENCH_ANNOTATION_ROOT`, `WORLDFOUNDRY_VIDEOBENCH_MODEL_OUTPUT_DIR`. Shared asset: `video_bench_dataset_assets`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/video-bench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/videobench/runtime`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/video-bench.yaml`, `worldfoundry/evals/tasks/execution/runners/videobench/runtime`.
 
 Outputs include `scorecard.json` (primary `videobench_average`, leaderboard key `overall_average`).
 

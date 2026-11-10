@@ -478,9 +478,7 @@ class NativeMagi2Pipeline(PipelineABC):
             # cat([cond, uncond]) plus ref features); the data proxy wants the
             # text tensor as `context` with ref fields as separate kwargs.
             ctx = context or {}
-            txt_feat = ctx.get("txt_feat")
-            if txt_feat is None:
-                raise ValueError("MAGI-2 sampler conditioning must provide txt_feat")
+            txt_feat = cast(torch.Tensor, ctx.get("txt_feat"))
             inputs = proxy.build_model_inputs(
                 latent=x_t,
                 audio_latent=audio_x_t,

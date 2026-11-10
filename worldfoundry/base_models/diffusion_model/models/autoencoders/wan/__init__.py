@@ -30,12 +30,12 @@ from .model import (
 )
 
 __all__ = [
-    "WanVideoVAE",
-    "WanVideoVAE38",
-    "WanVideoVAEStateDictConverter",
     "Wan21TAEPreviewDecoder",
     "WanTAEPreviewDecoder",
     "WanVideoDecoder",
+    "WanVideoVAE",
+    "WanVideoVAE38",
+    "WanVideoVAEStateDictConverter",
     "build_diffusers_wan_video_codec",
     "build_wan_video_decoder",
     "build_wan_video_vae38_decoder",

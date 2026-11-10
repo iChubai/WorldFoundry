@@ -90,7 +90,8 @@ def _sigma_schedule(num_inference_steps: int) -> list[float]:
 
 def _install_optional_ray_stub() -> None:
     try:
-        import ray  # noqa: F401
+        import ray  # noqa: F401 - Availability probe; a stub is installed when it is missing.
+
         return
     except ImportError:
         pass
@@ -99,7 +100,9 @@ def _install_optional_ray_stub() -> None:
 
     def _missing_ray(*args: Any, **kwargs: Any) -> Any:
         del args, kwargs
-        raise ImportError("ray is required for Pusa multi-GPU mode, but this runner uses single-GPU validation inference.")
+        raise ImportError(
+            "ray is required for Pusa multi-GPU mode, but this runner uses single-GPU validation inference."
+        )
 
     ray_stub.init = _missing_ray  # type: ignore[attr-defined]
     ray_stub.remote = _missing_ray  # type: ignore[attr-defined]
@@ -136,6 +139,7 @@ def main() -> int:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     from genmo.lib.progress import progress_bar
+
     _install_optional_ray_stub()
     from genmo.mochi_preview.pipelines import (
         DecoderModelFactory,

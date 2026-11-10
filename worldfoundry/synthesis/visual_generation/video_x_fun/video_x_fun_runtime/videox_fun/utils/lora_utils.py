@@ -5,14 +5,13 @@ from collections import defaultdict
 import torch
 from safetensors.torch import load_file
 
-from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
-
 from videox_fun.utils.group_offload import (
     _is_group_offload_enabled,
     register_auto_device_hook,
     safe_enable_group_offload,
     safe_remove_group_offloading,
 )
+from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 
 def _load_lora(path):
@@ -39,7 +38,7 @@ def _normalise_lora_key(key):
     }
     for suffix, replacement in suffixes.items():
         if key.endswith(suffix):
-            return key[:-len(suffix)] + replacement
+            return key[: -len(suffix)] + replacement
     return key
 
 
@@ -78,16 +77,16 @@ def _target_module(pipeline, layer, sub_transformer_name, transformer_only):
         if transformer_only:
             return None
         root = pipeline.text_encoder
-        name = layer[len("lora_te"):]
+        name = layer[len("lora_te") :]
     else:
         root = getattr(pipeline, sub_transformer_name)
-        name = layer[len("lora_unet"):]
+        name = layer[len("lora_unet") :]
         name = name.strip("_")
         if name == sub_transformer_name:
             return root
         prefix = f"{sub_transformer_name}_"
         if name.startswith(prefix):
-            name = name[len(prefix):]
+            name = name[len(prefix) :]
     return _resolve_module(root, name)
 
 
@@ -138,8 +137,7 @@ def _apply_lora(
     with torch.no_grad():
         for layer, elements in updates.items():
             try:
-                module = _target_module(
-                    pipeline, layer, sub_transformer_name, transformer_only)
+                module = _target_module(pipeline, layer, sub_transformer_name, transformer_only)
                 if module is None:
                     skipped += 1
                     continue

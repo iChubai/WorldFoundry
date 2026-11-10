@@ -1,6 +1,4 @@
 # Inference-only PLY export adapted from the official Splatt3R demo utilities.
-"""Module for base_models -> three_dimensions -> general_3d -> splatt3r -> splatt3r_runtime -> utils -> export.py functionality."""
-
 from __future__ import annotations
 
 import einops
@@ -38,25 +36,7 @@ def _covariance_to_quaternion_and_scale(covariance: torch.Tensor) -> tuple[np.nd
 
 
 def save_as_ply(pred1, pred2, save_path: str) -> None:
-    """Save as ply.
-
-    Args:
-        pred1: The pred1.
-        pred2: The pred2.
-        save_path: The save path.
-
-    Returns:
-        The return value.
-    """
     def construct_list_of_attributes(num_rest: int) -> list[str]:
-        """Construct list of attributes.
-
-        Args:
-            num_rest: The num rest.
-
-        Returns:
-            The return value.
-        """
         attributes = ["x", "y", "z", "nx", "ny", "nz"]
         for i in range(3):
             attributes.append(f"f_dc_{i}")

@@ -84,7 +84,6 @@ _PITCH_PER_SEGMENT = np.pi / 6
 
 
 def _quat_wxyz_to_R(q: list[float]) -> np.ndarray:
-    """Quat wxyz to r implementation."""
     t = torch.tensor(q, dtype=torch.float32).unsqueeze(0)
     return quaternion_to_matrix(t).squeeze(0).detach().cpu().numpy()
 
@@ -111,20 +110,17 @@ def _camera_right_world_from_quat(quat_wxyz: list[float]) -> np.ndarray:
 
 
 def _R_to_quat_wxyz(r: np.ndarray) -> list[float]:
-    """R to quat wxyz implementation."""
     t = torch.from_numpy(r.astype(np.float32)).unsqueeze(0)
     q = matrix_to_quaternion(t).squeeze(0)
     return [float(q[i]) for i in range(4)]
 
 
 def _rot_y(angle: float) -> np.ndarray:
-    """Rot y implementation."""
     c, s = np.cos(angle), np.sin(angle)
     return np.array([[c, 0.0, s], [0.0, 1.0, 0.0], [-s, 0.0, c]], dtype=np.float64)
 
 
 def _axis_angle_matrix(axis: np.ndarray, angle: float) -> np.ndarray:
-    """Axis angle matrix implementation."""
     axis = np.asarray(axis, dtype=np.float64)
     axis = axis / (np.linalg.norm(axis) + 1e-8)
     x, y, z = axis
@@ -429,8 +425,6 @@ class FlashWorldOperator(BaseOperator):
 
         Args:
             num_frames: Number of frames
-            image_width: Image width
-            image_height: Image height
 
         Returns:
             List of camera dictionaries

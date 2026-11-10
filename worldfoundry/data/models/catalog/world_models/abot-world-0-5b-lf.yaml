@@ -41,7 +41,7 @@ integration:
   - Real A100 Workspace inference produced a fully decodable 1280x704 nine-frame H.264 artifact.
 runtime_profile: runtime-profile:abot-world-0-5b-lf
 pipeline_binding: abot-world-0-5b-lf
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 output_artifacts:
 - generated_world_video
 catalog_category: world_models

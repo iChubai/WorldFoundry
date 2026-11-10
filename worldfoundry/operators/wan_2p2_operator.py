@@ -10,7 +10,6 @@ from .base_operator import BaseOperator
 
 
 def _load_input_image(input_path: str | Path | Image.Image) -> Image.Image:
-    """Load input image implementation."""
     if isinstance(input_path, Image.Image):
         return input_path.convert("RGB")
 
@@ -22,12 +21,11 @@ def _load_input_image(input_path: str | Path | Image.Image) -> Image.Image:
 
 
 class Wan2p2Operator(BaseOperator):
-    """
-    Wan2.2 ti2v 数据处理 Operator
+    """Prepare prompts and input images for Wan2.2 TI2V.
 
-    - process_interaction: 处理文本（含可选的 prompt 扩写）
-    - process_perception: 处理图像
-    - 不创建模型、不做推理
+    - process_interaction: returns the prompt, optionally extended by a prompt expander.
+    - process_perception: loads the optional input image.
+    - The operator creates no generation model and runs no inference.
     """
 
     def __init__(self, operation_types=None) -> None:
@@ -55,12 +53,12 @@ class Wan2p2Operator(BaseOperator):
         *,
         mode: str,
         images: Image.Image | None = None,
-        # prompt 扩写相关参数（只在 ti2v 任务下生效）
+        # Prompt extension settings; they apply only to ti2v modes.
         use_prompt_extend: bool = False,
         prompt_extend_method: str = "local_qwen",
         prompt_extend_model: str | None = None,
         prompt_extend_target_lang: str = "zh",
-        # 由调用方注入 prompt 扩写模型所用的设备，避免钉死 cuda:0。
+        # Device of the prompt expander, chosen by the caller instead of a fixed cuda:0.
         prompt_extend_device: int | str = 0,
         base_seed: int = -1,
         **kwargs,
@@ -70,10 +68,8 @@ class Wan2p2Operator(BaseOperator):
             raise ValueError("No interaction to process")
         prompt = self.current_interaction[-1]
 
-        # 记录交互历史
         self.interaction_history.append(prompt)
 
-        # 仅在 ti2v 任务下，且打开 use_prompt_extend 时做扩写
         if "ti2v" in mode and use_prompt_extend:
             logging.info("Extending prompt ...")
             from ..base_models.diffusion_model.models.encoders.wan.prompt_expander import (
@@ -122,9 +118,10 @@ class Wan2p2Operator(BaseOperator):
         **kwargs,
     ) -> dict[str, Any]:
         """
-        处理图像输入：
-        - ti2v 允许没有参考图像，此时返回的 input_image 为 None
-        - 如果提供了 input_path，则加载为 PIL.Image
+        Load the optional input image.
+
+        ti2v accepts a missing reference image, in which case ``input_image`` is None;
+        otherwise ``input_path`` is loaded as an RGB PIL image.
         """
         input_image = None if input_path is None else _load_input_image(input_path)
 

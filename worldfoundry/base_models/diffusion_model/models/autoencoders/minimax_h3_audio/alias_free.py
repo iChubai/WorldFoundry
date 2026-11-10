@@ -40,9 +40,7 @@ else:
 
 # This code is adopted from adefossez's julius.lowpass.LowPassFilters under the MIT License
 # https://adefossez.github.io/julius/julius/lowpass.html
-def kaiser_sinc_filter1d(
-    cutoff, half_width, kernel_size
-):  # return filter [1,1,kernel_size]
+def kaiser_sinc_filter1d(cutoff, half_width, kernel_size):  # return filter [1,1,kernel_size]
     """Build a Kaiser-windowed sinc kernel for alias-free 1-D resample."""
     even = kernel_size % 2 == 0
     half_size = kernel_size // 2
@@ -59,10 +57,7 @@ def kaiser_sinc_filter1d(
     window = torch.kaiser_window(kernel_size, beta=beta, periodic=False)
 
     # ratio = 0.5/cutoff -> 2 * cutoff = 1 / ratio
-    if even:
-        time = torch.arange(-half_size, half_size) + 0.5
-    else:
-        time = torch.arange(kernel_size) - half_size
+    time = torch.arange(-half_size, half_size) + 0.5 if even else torch.arange(kernel_size) - half_size
     if cutoff == 0:
         filter_ = torch.zeros_like(time)
     else:
@@ -78,6 +73,7 @@ def kaiser_sinc_filter1d(
 
 class LowPassFilter1d(nn.Module):
     """Depthwise 1-D low-pass convolution used by alias-free resample."""
+
     def __init__(
         self,
         cutoff=0.5,
@@ -118,18 +114,15 @@ class LowPassFilter1d(nn.Module):
 
 class UpSample1d(nn.Module):
     """Alias-free 1-D upsample used by MiniMax H3 vocoder activations."""
+
     def __init__(self, ratio=2, kernel_size=None):
         super().__init__()
         self.ratio = ratio
-        self.kernel_size = (
-            int(6 * ratio // 2) * 2 if kernel_size is None else kernel_size
-        )
+        self.kernel_size = int(6 * ratio // 2) * 2 if kernel_size is None else kernel_size
         self.stride = ratio
         self.pad = self.kernel_size // ratio - 1
         self.pad_left = self.pad * self.stride + (self.kernel_size - self.stride) // 2
-        self.pad_right = (
-            self.pad * self.stride + (self.kernel_size - self.stride + 1) // 2
-        )
+        self.pad_right = self.pad * self.stride + (self.kernel_size - self.stride + 1) // 2
         filter = kaiser_sinc_filter1d(
             cutoff=0.5 / ratio,
             half_width=0.6 / ratio,
@@ -141,9 +134,7 @@ class UpSample1d(nn.Module):
         _, C, _ = x.shape
 
         x = F.pad(x, (self.pad, self.pad), mode="replicate")
-        x = F.conv_transpose1d(
-            x, self.filter.expand(C, -1, -1), stride=self.stride, groups=C
-        )
+        x = F.conv_transpose1d(x, self.filter.expand(C, -1, -1), stride=self.stride, groups=C)
         x.mul_(self.ratio)
         x = x[..., self.pad_left : -self.pad_right]
 
@@ -152,12 +143,11 @@ class UpSample1d(nn.Module):
 
 class DownSample1d(nn.Module):
     """Alias-free 1-D downsample used by MiniMax H3 vocoder activations."""
+
     def __init__(self, ratio=2, kernel_size=None):
         super().__init__()
         self.ratio = ratio
-        self.kernel_size = (
-            int(6 * ratio // 2) * 2 if kernel_size is None else kernel_size
-        )
+        self.kernel_size = int(6 * ratio // 2) * 2 if kernel_size is None else kernel_size
         self.lowpass = LowPassFilter1d(
             cutoff=0.5 / ratio,
             half_width=0.6 / ratio,
@@ -173,6 +163,7 @@ class DownSample1d(nn.Module):
 
 class Activation1d(nn.Module):
     """Periodic activation wrapped with alias-free up/down sampling."""
+
     def __init__(
         self,
         activation,

@@ -55,7 +55,7 @@ Catalog 条目与变体通过 `runtime_profile` 与 `pipeline_binding` 引用 pr
 
 Python 不会随意直读 raw YAML。每个 catalog 领域遵循相同三步：**schema 解析** 把较松的作者输入归一化为 typed entry；**registry 构建** 创建 CLI 查询用的 alias 索引；**spec 转换** 产出 evaluation API 导入的公开契约。
 
-Model 侧：`schema.py` 产出 `ModelZooEntry`；`zoo_registry.py` 按 id、alias、task、integration status 索引；`manifest.py` 转为 `WorldModelManifest`。Benchmark 侧：`evaluation/tasks/catalog/` 中的平行链路产出 `BenchmarkZooEntry` → `BenchmarkZooRegistry` → `BenchmarkSpec`。
+Model 侧：`schema.py` 产出 `ModelZooEntry`；`zoo_registry.py` 按 id、alias、task、integration status 索引；`manifest.py` 转为 `WorldModelManifest`。Benchmark 侧：`evals/tasks/catalog/` 中的平行链路产出 `BenchmarkZooEntry` → `BenchmarkZooRegistry` → `BenchmarkSpec`。
 
 Catalog field 迁移或重命名时先改 schema parser——registry 查询、resolver 行为与 docs export 都依赖它。
 

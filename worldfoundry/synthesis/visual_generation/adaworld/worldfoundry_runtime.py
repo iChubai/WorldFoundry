@@ -45,7 +45,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
     elif source_video and not Path(source_video).expanduser().is_file():
         missing.append({"kind": "asset", "path": source_video, "reason": "AdaWorld source_video does not exist"})
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "AdaWorld worldmodel/sample.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "AdaWorld worldmodel/sample.py is missing"}
+        )
     return missing
 
 

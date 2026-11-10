@@ -29,7 +29,7 @@ integration:
   status: integrated
   notes:
   - In-tree Depth Anything V1 pipeline is registered for relative depth and geometry artifact export.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: depth-anything-v1
 runner_parity:
   status: verified

@@ -3,7 +3,7 @@ name: Wan2.2
 aliases:
   - wan-2p2
   - wan2p2
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:wan2.2-ti2v-5b-1280x704-121f
 tasks:
   - text-to-video
@@ -54,7 +54,7 @@ variants:
         gated: false
     min_vram_gb: 80
     runtime_profile: wan2.2-t2v-a14b
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: wan2.2-t2v-a14b
     integration:
       status: integrated
@@ -70,7 +70,7 @@ variants:
         gated: false
     min_vram_gb: 80
     runtime_profile: wan2.2-i2v-a14b
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: wan2.2-i2v-a14b
     integration:
       status: integrated
@@ -94,7 +94,7 @@ variants:
       status: verified
       notes: The WorldFoundry Wan2.2 TI2V-5B pipeline completed the full 121-frame,
         1280x704, 24 FPS, 50-step route with block offload and no collapsed frames.
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: wan2.2-ti2v-5b
     integration:
       status: integrated

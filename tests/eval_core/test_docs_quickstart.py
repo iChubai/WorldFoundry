@@ -4,11 +4,11 @@ import json
 import subprocess
 from pathlib import Path
 
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import (
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
     formal_benchmark_ids,
     iter_benchmark_catalog_manifest_paths,
 )
-from worldfoundry.evaluation.utils import load_manifest
+from worldfoundry.evals.utils import load_manifest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

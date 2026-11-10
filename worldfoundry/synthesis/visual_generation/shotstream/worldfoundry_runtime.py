@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import importlib.util
-import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, official_runtime_repo_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
-
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "infer.py"
@@ -88,8 +87,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 "kind": "source_repo",
                 "path": str(root),
                 "reason": (
-                    f"ShotStream checkout is not staged; clone {OFFICIAL_REPO_URL} here or set "
-                    f"{SOURCE_ENV_VAR}"
+                    f"ShotStream checkout is not staged; clone {OFFICIAL_REPO_URL} here or set {SOURCE_ENV_VAR}"
                 ),
             }
         )
@@ -151,9 +149,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
                 {"kind": "asset", "path": str(resolved_data_path), "reason": "ShotStream input CSV is missing"}
             )
 
-    for module_name in (
-        "torch", "torchvision", "omegaconf", "pandas", "decord", "flash_attn", "easydict", "flask"
-    ):
+    for module_name in ("torch", "torchvision", "omegaconf", "pandas", "decord", "flash_attn", "easydict", "flask"):
         if importlib.util.find_spec(module_name) is None:
             missing.append(
                 {

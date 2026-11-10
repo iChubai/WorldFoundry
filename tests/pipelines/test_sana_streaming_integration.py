@@ -15,7 +15,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_v2v_attn
 )
 from worldfoundry.base_models.diffusion_model.recipes.sana import sana_recipe
 from worldfoundry.cli.model_run import load_model_run_schema
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.runtime.inference_catalog import get_model_inference_spec
 from worldfoundry.runtime.inference_specs.sana_streaming import SANA_STREAMING_DEMO_PROMPT
 from worldfoundry.studio.inference import catalog as studio_catalog

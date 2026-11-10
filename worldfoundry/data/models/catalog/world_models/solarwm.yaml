@@ -48,7 +48,7 @@ variants:
   task: camera-conditioned-video
   runtime_profile: runtime-profile:solarwm
   pipeline_binding: solarwm
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   integration:
     status: integrated
   runner_parity:
@@ -59,7 +59,7 @@ variants:
   task: camera-conditioned-video
   runtime_profile: runtime-profile:solarwm
   pipeline_binding: solarwm
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   integration:
     status: integrated
   runner_parity:
@@ -70,7 +70,7 @@ variants:
   task: camera-conditioned-video
   runtime_profile: runtime-profile:solarwm
   pipeline_binding: solarwm
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   integration:
     status: integrated
   runner_parity:
@@ -81,7 +81,7 @@ variants:
   task: camera-conditioned-video
   runtime_profile: runtime-profile:solarwm
   pipeline_binding: solarwm
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   integration:
     status: integrated
   runner_parity:
@@ -96,7 +96,7 @@ integration:
   - Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community
     licenses and restrictions.
   - Checkpoint-backed GPU generation is pending.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:solarwm
 pipeline_binding: solarwm
 runner_parity:

@@ -4,7 +4,6 @@
 
 import numpy as np
 import torch
-
 from uniception.models.encoders.image_normalizations import IMAGE_NORMALIZATION_DICT
 
 

@@ -1,4 +1,4 @@
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 availability: open_source_noncommercial
 checkpoint_refs:
 - repo_id: InternRobotics/InternVLA-A1-3B

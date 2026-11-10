@@ -1,6 +1,6 @@
 id: hunyuanvideo
 name: HunyuanVideo
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: hunyuanvideo
 runtime_profile: runtime-profile:hunyuanvideo-t2v
 tasks:
@@ -43,7 +43,7 @@ variants:
     private: false
     gated: false
   runtime_profile: hunyuanvideo-t2v
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: hunyuanvideo-t2v
   integration:
     status: integrated
@@ -65,7 +65,7 @@ variants:
     private: false
     gated: false
   runtime_profile: hunyuanvideo-i2v
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: hunyuanvideo-i2v
   integration:
     status: integrated

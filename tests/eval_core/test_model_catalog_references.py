@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from worldfoundry.evaluation.models.catalog import ModelVariantSpec, ModelZooEntry, default_model_zoo_dir
-from worldfoundry.evaluation.models.pipelines import build_pipeline_runner_spec, import_pipeline_target
-from worldfoundry.evaluation.models.pipelines.bindings import PipelineBindingRegistry
-from worldfoundry.evaluation.models.runners.registry import ModelRunnerRegistry
-from worldfoundry.evaluation.models.runners.resolver import resolve_model_zoo_config
-from worldfoundry.evaluation.models.runtime import validate_catalog_references
+from worldfoundry.evals.models.catalog import ModelVariantSpec, ModelZooEntry, default_model_zoo_dir
+from worldfoundry.evals.models.pipelines import build_pipeline_runner_spec, import_pipeline_target
+from worldfoundry.evals.models.pipelines.bindings import PipelineBindingRegistry
+from worldfoundry.evals.models.runners.registry import ModelRunnerRegistry
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config
+from worldfoundry.evals.models.runtime import validate_catalog_references
 
 
 HOSTED_API_PIPELINES = (

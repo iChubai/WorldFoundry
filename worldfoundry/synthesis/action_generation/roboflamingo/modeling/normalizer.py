@@ -1,5 +1,6 @@
+from typing import ClassVar
+
 # Inference-only RoboFlamingo source retained in-tree.
-from typing import Union, Dict
 import numpy as np
 import torch
 import torch.nn as nn
@@ -16,7 +17,9 @@ class DictOfTensorMixin(nn.Module):
     def device(self):
         return next(iter(self.parameters())).device
 
-    def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs):
+    def _load_from_state_dict(
+        self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+    ):
         def dfs_add(dest, keys, value: torch.Tensor):
             if len(keys) == 1:
                 dest[keys[0]] = value
@@ -31,86 +34,70 @@ class DictOfTensorMixin(nn.Module):
             for key, value in state_dict.items():
                 value: torch.Tensor
                 if key.startswith(prefix):
-                    param_keys = key[len(prefix):].split('.')[1:]
+                    param_keys = key[len(prefix) :].split(".")[1:]
                     # if len(param_keys) == 0:
                     #     import pdb; pdb.set_trace()
                     dfs_add(out_dict, param_keys, value.clone())
             return out_dict
 
-        self.params_dict = load_dict(state_dict, prefix + 'params_dict')
+        self.params_dict = load_dict(state_dict, prefix + "params_dict")
         self.params_dict.requires_grad_(False)
         return
 
+
 class LinearNormalizer(DictOfTensorMixin):
-    avaliable_modes = ['limits', 'gaussian']
+    avaliable_modes: ClassVar[list] = ["limits", "gaussian"]
 
-
-    def __call__(self, x: Union[Dict, torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def __call__(self, x: dict | torch.Tensor | np.ndarray) -> torch.Tensor:
         return self.normalize(x)
 
     def __getitem__(self, key: str):
         return SingleFieldLinearNormalizer(self.params_dict[key])
 
-
     def _normalize_impl(self, x, forward=True):
         if isinstance(x, dict):
-            result = dict()
+            result = {}
             for key, value in x.items():
                 params = self.params_dict[key]
                 result[key] = _normalize(value, params, forward=forward)
             return result
         else:
-            if '_default' not in self.params_dict:
+            if "_default" not in self.params_dict:
                 raise RuntimeError("Not initialized")
-            params = self.params_dict['_default']
+            params = self.params_dict["_default"]
             return _normalize(x, params, forward=forward)
 
-    def normalize(self, x: Union[Dict, torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def normalize(self, x: dict | torch.Tensor | np.ndarray) -> torch.Tensor:
         return self._normalize_impl(x, forward=True)
 
-    def unnormalize(self, x: Union[Dict, torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def unnormalize(self, x: dict | torch.Tensor | np.ndarray) -> torch.Tensor:
         return self._normalize_impl(x, forward=False)
 
 
-
-
-
 class SingleFieldLinearNormalizer(DictOfTensorMixin):
-    avaliable_modes = ['limits', 'gaussian']
+    avaliable_modes: ClassVar[list] = ["limits", "gaussian"]
 
-
-
-
-
-    def normalize(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def normalize(self, x: torch.Tensor | np.ndarray) -> torch.Tensor:
         return _normalize(x, self.params_dict, forward=True)
 
-    def unnormalize(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def unnormalize(self, x: torch.Tensor | np.ndarray) -> torch.Tensor:
         return _normalize(x, self.params_dict, forward=False)
 
-
-
-    def __call__(self, x: Union[torch.Tensor, np.ndarray]) -> torch.Tensor:
+    def __call__(self, x: torch.Tensor | np.ndarray) -> torch.Tensor:
         return self.normalize(x)
 
 
-
-
-
 def _normalize(x, params, forward=True):
-    assert 'scale' in params
-    scale = params['scale']
+    assert "scale" in params
+    scale = params["scale"]
     if isinstance(x, np.ndarray):
         x = torch.from_numpy(x)
         x = x.to(device=scale.device, dtype=scale.dtype)
     scale = scale.to(device=x.device, dtype=x.dtype)
-    offset = params['offset'].to(device=x.device, dtype=x.dtype)
+    offset = params["offset"].to(device=x.device, dtype=x.dtype)
     # x = x.to(device=scale.device, dtype=scale.dtype)
     src_shape = x.shape
     x = x.reshape(-1, scale.shape[0])
-    if forward:
-        x = x * scale + offset
-    else:
-        x = (x - offset) / scale
+    x = x * scale + offset if forward else (x - offset) / scale
     x = x.reshape(src_shape)
     return x

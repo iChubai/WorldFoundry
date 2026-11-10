@@ -30,9 +30,9 @@ configure_persistent_compile_cache(namespace="fp8-triton")
 # Kernel — one row per program; BLOCK_SIZE is next_power_of_2(K)
 # ──────────────────────────────────────────────────────────────────────────
 
-import triton  # noqa: E402
-import triton.language as tl  # noqa: E402
-from triton.language.extra import libdevice  # noqa: E402
+import triton  # noqa: E402 - Follows the Triton compile-cache configuration.
+import triton.language as tl  # noqa: E402 - Follows the Triton compile-cache configuration.
+from triton.language.extra import libdevice  # noqa: E402 - Follows the Triton compile-cache configuration.
 
 _FP8_TL_DTYPE = {
     torch.float8_e4m3fn: tl.float8e4nv,

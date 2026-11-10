@@ -173,15 +173,15 @@ runner:
   scoring:
     engines: [video_quality]
     hooks:
-      video_quality: worldfoundry.evaluation.tasks.execution.framework.video_quality_contract:evaluate_mirabench_video_quality_contract_file
+      video_quality: worldfoundry.evals.tasks.execution.framework.video_quality_contract:evaluate_mirabench_video_quality_contract_file
   normalization:
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/mirabench/run_mirabench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/mirabench/run_mirabench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.mirabench.run_mirabench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.mirabench.run_mirabench_official_runner
     generated_arg: null
     supports_fixture: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:MiraBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:MiraBenchContract
   validation_command:
   - wf
   - zoo
@@ -199,7 +199,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/mirabench/runtime/mirabench
+    root: worldfoundry/evals/tasks/execution/runners/mirabench/runtime/mirabench
     repo_url: https://github.com/mira-space/MiraData.git
     repo_revision: 7ad05795dd74acdc6b364222a9fa885a94b0c1a2
     results_path_env: WORLDFOUNDRY_MIRABENCH_RESULTS_PATH
@@ -244,10 +244,10 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/mirabench.yaml
   bundled_assets: worldfoundry/data/benchmarks/assets/mirabench
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/mirabench/runtime/mirabench
+  - worldfoundry/evals/tasks/execution/runners/mirabench/runtime/mirabench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:MiraBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:MiraBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

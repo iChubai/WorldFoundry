@@ -132,7 +132,6 @@ class HunyuanWorldPlayOperator(BaseOperator):
         return latent_num * 4 - 3
 
     def _is_action_sequence(self, interaction) -> bool:
-        """Is action sequence implementation."""
         if not isinstance(interaction, list) or len(interaction) == 0:
             return False
         if not all(isinstance(item, str) for item in interaction):
@@ -140,7 +139,6 @@ class HunyuanWorldPlayOperator(BaseOperator):
         return all(item in self.interaction_template for item in interaction)
 
     def _actions_to_pose_json(self, actions: list[str]) -> dict:
-        """Actions to pose json implementation."""
         forward_speed = self.forward_speed
         yaw_speed = np.deg2rad(self.yaw_speed_deg)
         pitch_speed = np.deg2rad(self.pitch_speed_deg)

@@ -376,14 +376,14 @@ def ltx_video_i2v_recipe() -> NativeDiffusionRecipe:
 
 
 __all__ = [
-    "LTX23_I2V_MODEL_ID",
-    "LTX23_T2V_MODEL_ID",
     "LTX2_I2V_MODEL_ID",
     "LTX2_T2V_MODEL_ID",
+    "LTX23_I2V_MODEL_ID",
+    "LTX23_T2V_MODEL_ID",
     "LTX_VIDEO_I2V_MODEL_ID",
-    "ltx23_i2v_recipe",
-    "ltx23_t2v_recipe",
     "ltx2_i2v_recipe",
     "ltx2_t2v_recipe",
+    "ltx23_i2v_recipe",
+    "ltx23_t2v_recipe",
     "ltx_video_i2v_recipe",
 ]

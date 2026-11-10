@@ -73,7 +73,7 @@ def test_parser_build_stays_off_heavy_import_paths() -> None:
         "from worldfoundry.cli.main import _build_parser\n"
         "_build_parser()\n"
         "assert 'torch' not in sys.modules, 'torch imported during parser build'\n"
-        "heavy = 'worldfoundry.evaluation.tasks.execution.orchestration.service'\n"
+        "heavy = 'worldfoundry.evals.tasks.execution.orchestration.service'\n"
         "assert heavy not in sys.modules, 'orchestration.service imported during parser build'\n"
     )
     env = dict(os.environ)
@@ -145,7 +145,7 @@ def test_score_usage_error_fails_fast_before_heavy_import(tmp_path: Path) -> Non
         "from worldfoundry.cli.main import main\n"
         "rc = main(['score', '--benchmark', 'x', '--output-dir', sys.argv[1]])\n"
         "assert rc == 2, rc\n"
-        "heavy = 'worldfoundry.evaluation.tasks.execution.orchestration.service'\n"
+        "heavy = 'worldfoundry.evals.tasks.execution.orchestration.service'\n"
         "assert heavy not in sys.modules, 'orchestration.service imported for a usage error'\n"
         "print('USAGE_CONTRACT_OK')\n"
     )

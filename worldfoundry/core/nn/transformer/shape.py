@@ -24,6 +24,12 @@ from typing import Any
 import numpy as np
 import torch
 
+from worldfoundry.core.nn.blocks.stochastic_depth import (
+    add_residual,
+    drop_add_residual_stochastic_depth,
+    get_branges_scales,
+)
+
 # ──────────────────────────────────────────────────────────────────────────
 # Shape spec — hidden / heads / MLP width with divisibility checks
 # ──────────────────────────────────────────────────────────────────────────
@@ -179,12 +185,6 @@ def _swapaxes(value: Any, axis1: int, axis2: int) -> Any:
         return value.transpose(axis1, axis2)
     raise TypeError(f"object of type {type(value).__name__} does not support axis swapping.")
 
-
-from worldfoundry.core.nn.blocks.stochastic_depth import (  # noqa: E402
-    add_residual,
-    drop_add_residual_stochastic_depth,
-    get_branges_scales,
-)
 
 __all__ = [
     "TransformerShapeSpec",

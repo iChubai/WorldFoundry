@@ -51,7 +51,7 @@ integration:
     controls are mapped explicitly.
   - Checkpoint-backed GPU artifact parity remains pending because this workspace has
     no CUDA device or weights.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:joyai-echo-wm
 pipeline_binding: joyai-echo-wm
 runner_parity:

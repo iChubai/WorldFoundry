@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 
 
 def test_dreamx_world_routes_to_the_in_tree_runnable_pipeline() -> None:
@@ -12,7 +12,7 @@ def test_dreamx_world_routes_to_the_in_tree_runnable_pipeline() -> None:
         "worldfoundry.pipelines.dreamx_world.pipeline_dreamx_world:"
         "DreamXWorld5BCamPipeline"
     )
-    assert entry.runner_target == "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+    assert entry.runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
     assert entry.output_artifacts == ("generated_world",)
     assert entry.integration_status == "integrated"
     assert profile.artifact_kind == "generated_world"

@@ -19,6 +19,7 @@ from .klvae import AutoencoderKLLegacy
 
 class MiniMaxH3VideoVAE(AutoencoderKLLegacy):
     """Encode/decode MiniMax H3 video (CNN encoder, ViT decoder)."""
+
     def __init__(self, config: MiniMaxH3VideoVAEConfig) -> None:
         arch = config.arch_config
         parallel_decode_mode = config.resolved_parallel_decode_mode()

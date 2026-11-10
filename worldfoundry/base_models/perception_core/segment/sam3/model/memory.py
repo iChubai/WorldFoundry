@@ -2,10 +2,7 @@
 
 # pyre-unsafe
 
-"""Module for base_models -> perception_core -> segment -> sam3 -> model -> memory.py functionality."""
-
 import math
-from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -17,8 +14,9 @@ except ModuleNotFoundError:
     # compatibility for older timm versions
     from timm.models.layers import DropPath
 
-from .model_misc import get_clones
 from worldfoundry.core.nn.blocks.layers import LayerNorm2d
+
+from .model_misc import get_clones
 
 
 class SimpleMaskDownSampler(nn.Module):
@@ -46,20 +44,6 @@ class SimpleMaskDownSampler(nn.Module):
         starting_out_chan: int = 1,
         input_channel_multiplier: int = 1,
     ):
-        """Init.
-
-        Args:
-            embed_dim: The embed dim.
-            kernel_size: The kernel size.
-            stride: The stride.
-            padding: The padding.
-            total_stride: The total stride.
-            activation: The activation.
-            interpol_size: The interpol size.
-            multiplex_count: The multiplex count.
-            starting_out_chan: The starting out chan.
-            input_channel_multiplier: The input channel multiplier.
-        """
         super().__init__()
         num_layers = int(math.log2(total_stride) // math.log2(stride))
         multiplex_count = multiplex_count * input_channel_multiplier
@@ -92,11 +76,6 @@ class SimpleMaskDownSampler(nn.Module):
             assert len(self.interpol_size) == 2
 
     def forward(self, x: torch.Tensor):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         if self.interpol_size is not None and self.interpol_size != list(x.shape[-2:]):
             x = F.interpolate(
                 x.float(),
@@ -130,16 +109,6 @@ class CXBlock(nn.Module):
         layer_scale_init_value=1e-6,
         use_dwconv=True,
     ):
-        """Init.
-
-        Args:
-            dim: The dim.
-            kernel_size: The kernel size.
-            padding: The padding.
-            drop_path: The drop path.
-            layer_scale_init_value: The layer scale init value.
-            use_dwconv: The use dwconv.
-        """
         super().__init__()
         self.dwconv = nn.Conv2d(
             dim,
@@ -149,24 +118,17 @@ class CXBlock(nn.Module):
             groups=dim if use_dwconv else 1,
         )  # depthwise conv
         self.norm = LayerNorm2d(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(
-            dim, 4 * dim
-        )  # pointwise/1x1 convs, implemented with linear layers
+        self.pwconv1 = nn.Linear(dim, 4 * dim)  # pointwise/1x1 convs, implemented with linear layers
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(4 * dim, dim)
         self.gamma = (
-            nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+            nn.Parameter(layer_scale_init_value * torch.ones(dim), requires_grad=True)
             if layer_scale_init_value > 0
             else None
         )
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         input = x
         x = self.dwconv(x)
         x = self.norm(x)
@@ -183,16 +145,7 @@ class CXBlock(nn.Module):
 
 
 class SimpleFuser(nn.Module):
-    """Simple fuser implementation."""
     def __init__(self, layer, num_layers, dim=None, input_projection=False):
-        """Init.
-
-        Args:
-            layer: The layer.
-            num_layers: The num layers.
-            dim: The dim.
-            input_projection: The input projection.
-        """
         super().__init__()
         self.proj = nn.Identity()
         self.layers = get_clones(layer, num_layers)
@@ -202,11 +155,6 @@ class SimpleFuser(nn.Module):
             self.proj = nn.Conv2d(dim, dim, kernel_size=1)
 
     def forward(self, x):
-        """Forward.
-
-        Args:
-            x: The x.
-        """
         # normally x: (N, C, H, W)
         x = self.proj(x)
         for layer in self.layers:
@@ -215,7 +163,6 @@ class SimpleFuser(nn.Module):
 
 
 class SimpleMaskEncoder(nn.Module):
-    """Simple mask encoder implementation."""
     def __init__(
         self,
         out_dim,
@@ -224,15 +171,6 @@ class SimpleMaskEncoder(nn.Module):
         position_encoding,
         in_dim=256,  # in_dim of pix_feats
     ):
-        """Init.
-
-        Args:
-            out_dim: The out dim.
-            mask_downsampler: The mask downsampler.
-            fuser: The fuser.
-            position_encoding: The position encoding.
-            in_dim: The in dim.
-        """
         super().__init__()
 
         self.mask_downsampler = mask_downsampler
@@ -249,17 +187,7 @@ class SimpleMaskEncoder(nn.Module):
         pix_feat: torch.Tensor,
         masks: torch.Tensor,
         skip_mask_sigmoid: bool = False,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Forward.
-
-        Args:
-            pix_feat: The pix feat.
-            masks: The masks.
-            skip_mask_sigmoid: The skip mask sigmoid.
-
-        Returns:
-            The return value.
-        """
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         ## Process masks
         # sigmoid, so that less domain shift from gt masks which are bool
         if not skip_mask_sigmoid:

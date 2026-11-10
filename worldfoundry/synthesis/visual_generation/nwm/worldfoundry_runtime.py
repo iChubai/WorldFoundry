@@ -25,7 +25,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         if not _option(options, key):
             missing.append({"kind": "option", "path": key, "reason": f"required NWM option `{key}` is not set"})
     if entrypoint is None or not Path(entrypoint).is_file():
-        missing.append({"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "NWM isolated_nwm_infer.py is missing"})
+        missing.append(
+            {"kind": "entrypoint", "path": str(entrypoint or ""), "reason": "NWM isolated_nwm_infer.py is missing"}
+        )
     return missing
 
 

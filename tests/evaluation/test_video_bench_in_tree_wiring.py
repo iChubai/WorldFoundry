@@ -19,14 +19,14 @@ from pathlib import Path
 import pytest
 import yaml
 
-from worldfoundry.evaluation.tasks.execution.framework.official_sources import benchmark_source_spec
+from worldfoundry.evals.tasks.execution.framework.official_sources import benchmark_source_spec
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-RUNNERS_ROOT = REPO_ROOT / "worldfoundry" / "evaluation" / "tasks" / "execution" / "runners"
+RUNNERS_ROOT = REPO_ROOT / "worldfoundry" / "evals" / "tasks" / "execution" / "runners"
 CATALOG_ROOT = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "catalog" / "video"
 TASKS_ROOT = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "tasks" / "external"
 PROFILES_ROOT = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "runtime_profiles" / "official"
-RUNNER_BASE = "worldfoundry.evaluation.tasks.execution.runners"
+RUNNER_BASE = "worldfoundry.evals.tasks.execution.runners"
 
 # runner package -> (entry module, catalog file stem)
 VIDEO_BENCH_RUNNERS: dict[str, tuple[str, str]] = {

@@ -26,8 +26,9 @@ import importlib.util
 import os
 import shutil
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, official_runtime_repo_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings, plan_payload
@@ -309,7 +310,9 @@ def build_command(context) -> list[str]:
     output_dir = Path(str(context.get("output_dir") or output_path.parent))
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    context_frames = max(int(_option(settings, "context_frames", "num_context_frames", default=DEFAULT_CONTEXT_FRAMES)), 1)
+    context_frames = max(
+        int(_option(settings, "context_frames", "num_context_frames", default=DEFAULT_CONTEXT_FRAMES)), 1
+    )
     horizon = max(int(_option(settings, "horizon", "num_frames", default=DEFAULT_HORIZON)), 1)
     num_steps = max(int(_option(settings, "num_steps", "num_inference_steps", default=DEFAULT_NUM_STEPS)), 1)
     decode_chunk_size = max(int(_option(settings, "decode_chunk_size", default=DEFAULT_DECODE_CHUNK_SIZE)), 1)

@@ -194,9 +194,7 @@ class GigaWorldPolicyRuntime:
         policy = self._load()
         views = collect_images(observation, image, self.config.camera_keys)
         if len(views) < 3:
-            raise ValueError(
-                "GigaWorld-Policy requires three RGB views ordered as head, left wrist, and right wrist"
-            )
+            raise ValueError("GigaWorld-Policy requires three RGB views ordered as head, left wrist, and right wrist")
         state_value = first_present(
             observation,
             "state",

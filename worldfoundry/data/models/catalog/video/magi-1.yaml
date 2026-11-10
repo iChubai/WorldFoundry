@@ -1,6 +1,6 @@
 id: magi-1
 name: MAGI-1
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:magi-1
 tasks:
 - image-to-video

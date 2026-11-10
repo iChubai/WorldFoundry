@@ -60,7 +60,7 @@ def _rewrite_demo_script(
     reference_image: str = DEFAULT_REF_IMAGE,
 ) -> str:
     text = source
-    case = f'[1, {json.dumps(reference_image)}, {json.dumps(DEFAULT_POSE_DIR)}]'
+    case = f"[1, {json.dumps(reference_image)}, {json.dumps(DEFAULT_POSE_DIR)}]"
     text = re.sub(r"^height\s*=\s*\d+", f"height = {height}", text, flags=re.MULTILINE)
     text = re.sub(r"^width\s*=\s*\d+", f"width = {width}", text, flags=re.MULTILINE)
     text = re.sub(r"^seed\s*=\s*\d+", f"seed = {seed}", text, flags=re.MULTILINE)
@@ -89,11 +89,7 @@ def _rewrite_demo_script(
 
 
 def _newest_mp4(root: Path, *, since: float) -> Path | None:
-    candidates = [
-        path
-        for path in root.rglob("*.mp4")
-        if path.is_file() and path.stat().st_mtime >= since
-    ]
+    candidates = [path for path in root.rglob("*.mp4") if path.is_file() and path.stat().st_mtime >= since]
     if not candidates:
         return None
     return max(candidates, key=lambda path: path.stat().st_mtime)
@@ -156,8 +152,7 @@ def _ensure_demo_assets(repo_root: Path) -> None:
 def _ensure_demo_pose(workspace_root: Path, source_repo_root: Path, reference_image: str) -> None:
     pose_dir = workspace_root / DEFAULT_POSE_DIR
     if (pose_dir / "pose.jpg").is_file() and any(
-        path.name != "pose.jpg" and path.suffix.lower() in {".jpg", ".png"}
-        for path in pose_dir.iterdir()
+        path.name != "pose.jpg" and path.suffix.lower() in {".jpg", ".png"} for path in pose_dir.iterdir()
     ):
         return
     align_script = source_repo_root / "run_align_pose.py"
@@ -177,8 +172,7 @@ def _ensure_demo_pose(workspace_root: Path, source_repo_root: Path, reference_im
         ],
         cwd=str(workspace_root),
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     if completed.returncode != 0:
@@ -246,7 +240,9 @@ def main() -> None:
     env = os.environ.copy()
     worldfoundry_parent = package_root("worldfoundry").parent
     env["PYTHONPATH"] = os.pathsep.join(
-        item for item in (str(worldfoundry_parent), str(repo_root), str(workspace_root), env.get("PYTHONPATH", "")) if item
+        item
+        for item in (str(worldfoundry_parent), str(repo_root), str(workspace_root), env.get("PYTHONPATH", ""))
+        if item
     )
     env["WORLDFOUNDRY_UNIANIMATE_USE_USP"] = "1" if _as_bool(args.use_usp) else "0"
     if _as_bool(args.use_usp):
@@ -265,8 +261,7 @@ def main() -> None:
         cwd=str(workspace_root),
         env=env,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
     if completed.returncode != 0:

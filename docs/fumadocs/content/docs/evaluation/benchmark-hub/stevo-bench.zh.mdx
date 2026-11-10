@@ -24,7 +24,7 @@ export WORLDFOUNDRY_STEVO_BENCH_VLM_PROVIDER=gemini
 export GOOGLE_API_KEY=<your-key>
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py \
   --run-official \
   --generated-artifact-dir /path/to/generated \
   --task-root "${WORLDFOUNDRY_STEVO_BENCH_TASK_ROOT}" \
@@ -51,7 +51,7 @@ wf zoo benchmark-run \
 
 生成视频应放在同一目录：`<task_id>.mp4`，外加恰好一份 `output_map.json`，把每个任务 YAML 的 `id` 映射到相对该目录的文件名。额外 Python 依赖（裁判 API、OpenCV）在 `worldfoundry/data/benchmarks/requirements/stevo-bench.txt`；跨模型 ensemble 额外依赖在 `worldfoundry/data/benchmarks/requirements/stevo-bench-eval-se.txt`。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/stevo-bench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/stevo-bench.yaml`，`worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench`。
 
 产物包括带 `leaderboard_blockers` / `comparability_blockers` 的 `scorecard.json`（主键 `task_success`）。
 

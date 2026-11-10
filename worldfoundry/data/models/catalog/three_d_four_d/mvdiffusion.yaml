@@ -27,7 +27,7 @@ confirmation: Upstream project page links code/demo; no license file was confirm
 output_artifacts:
 - generated_image
 runtime_profile: runtime-profile:mvdiffusion
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: mvdiffusion
 runner_parity:
   status: local_gpu_quality_concern

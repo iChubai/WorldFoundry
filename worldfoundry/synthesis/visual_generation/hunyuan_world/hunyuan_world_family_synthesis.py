@@ -75,7 +75,7 @@ class HunyuanWorldPlanSynthesis(BaseSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "HunyuanWorldPlanSynthesis":
+    ) -> HunyuanWorldPlanSynthesis:
         """Returns a plan-only synthesis instance without actual executable synthesis.
 
         This method is provided for API compatibility but ignores all input
@@ -151,9 +151,7 @@ class HunyuanWorldPlanSynthesis(BaseSynthesis):
         """
         # These parameters are intentionally ignored as API initialization is not supported.
         del api_key, endpoint
-        raise HunyuanWorldIntegrationError(
-            f"{self.status.model_id} has no in-tree API synthesis backend."
-        )
+        raise HunyuanWorldIntegrationError(f"{self.status.model_id} has no in-tree API synthesis backend.")
 
 
 class HunyuanWorld1Synthesis(HunyuanWorldPlanSynthesis):
@@ -224,7 +222,7 @@ class HunyuanWorldMirrorSynthesis(HunyuanWorldPlanSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "HunyuanWorldMirrorSynthesis":
+    ) -> HunyuanWorldMirrorSynthesis:
         """Loads and initializes the HunyuanWorld-Mirror model pipeline.
 
         This method retrieves the HunyuanMirrorPipeline from `worldfoundry` and
@@ -279,7 +277,11 @@ class HunyuanWorldMirrorSynthesis(HunyuanWorldPlanSynthesis):
         run_dir = None
         if output_path:
             requested = Path(str(output_path)).expanduser()
-            run_dir = requested.with_suffix("") if requested.suffix.lower() in {".mp4", ".mov", ".webm", ".ply", ".zip"} else requested
+            run_dir = (
+                requested.with_suffix("")
+                if requested.suffix.lower() in {".mp4", ".mov", ".webm", ".ply", ".zip"}
+                else requested
+            )
             kwargs["output_path"] = str(run_dir)
 
         results = self.pipeline(*args, **kwargs)
@@ -311,7 +313,9 @@ class HunyuanWorldMirrorSynthesis(HunyuanWorldPlanSynthesis):
             "artifact_kind": "generated_3d_asset",
             "artifact_path": str(run_dir),
             "run_dir": str(run_dir),
-            "preview_video": preview_video if isinstance(preview_video, str) and Path(preview_video).is_file() else None,
+            "preview_video": preview_video
+            if isinstance(preview_video, str) and Path(preview_video).is_file()
+            else None,
             "preview_image": preview_image,
             "model_path": preview_model if isinstance(preview_model, str) and Path(preview_model).is_file() else None,
             "metadata": {
@@ -391,7 +395,7 @@ class HYWorld2PanoSynthesis(BaseSynthesis):
         args: Any = None,
         device: str | None = None,
         **kwargs: Any,
-    ) -> "HYWorld2PanoSynthesis":
+    ) -> HYWorld2PanoSynthesis:
         """Loads and initializes the HY-Pano 2.0 pipeline from its vendored runtime.
 
         This method is responsible for setting up the `HunyuanPanoPipeline`
@@ -476,11 +480,11 @@ class HYWorld2PanoSynthesis(BaseSynthesis):
 
 
 __all__ = [
+    "HYWorld2PanoSynthesis",
+    "HYWorld2Synthesis",
+    "HunyuanWorld1Synthesis",
     "HunyuanWorldIntegrationError",
     "HunyuanWorldIntegrationStatus",
-    "HunyuanWorldPlanSynthesis",
-    "HunyuanWorld1Synthesis",
     "HunyuanWorldMirrorSynthesis",
-    "HYWorld2Synthesis",
-    "HYWorld2PanoSynthesis",
+    "HunyuanWorldPlanSynthesis",
 ]

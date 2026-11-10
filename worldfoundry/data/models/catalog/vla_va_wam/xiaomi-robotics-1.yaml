@@ -6,7 +6,7 @@ aliases:
 provider: official_repo
 availability: open_source
 license: apache-2.0
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: xiaomi-robotics-1
 runtime_profile: runtime-profile:xiaomi-robotics-1
 checkpoint:

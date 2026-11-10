@@ -41,15 +41,11 @@ def _check_model_weights(model: object, checkpoint_dir: Path) -> dict[str, objec
 
     model_shapes = {key: tuple(value.shape) for key, value in model.state_dict().items()}
     with safe_open(checkpoint_dir / "model.safetensors", framework="pt", device="cpu") as reader:
-        checkpoint_shapes = {
-            key: tuple(reader.get_slice(key).get_shape()) for key in reader.keys()
-        }
+        checkpoint_shapes = {key: tuple(reader.get_slice(key).get_shape()) for key in reader.keys()}  # noqa: SIM118 - Keeps the keys view for mappings with custom membership.
     missing = sorted(model_shapes.keys() - checkpoint_shapes.keys())
     unexpected = sorted(checkpoint_shapes.keys() - model_shapes.keys())
     mismatched = sorted(
-        key
-        for key in model_shapes.keys() & checkpoint_shapes.keys()
-        if model_shapes[key] != checkpoint_shapes[key]
+        key for key in model_shapes.keys() & checkpoint_shapes.keys() if model_shapes[key] != checkpoint_shapes[key]
     )
     record = {
         "checkpoint_tensors": len(checkpoint_shapes),
@@ -91,9 +87,7 @@ def run(request_path: Path) -> None:
     import transformers
 
     if transformers.__version__ != "4.45.2":
-        raise RuntimeError(
-            f"Original GR00T-N1 requires transformers==4.45.2; found {transformers.__version__}"
-        )
+        raise RuntimeError(f"Original GR00T-N1 requires transformers==4.45.2; found {transformers.__version__}")
     torch.set_num_threads(8)
     _install_eager_attention()
 
@@ -174,9 +168,7 @@ def run(request_path: Path) -> None:
             "data_config_name": data_config_name,
             "load_record": load_record,
             "action_checks": checks,
-            "peak_cuda_memory_allocated": torch.cuda.max_memory_allocated()
-            if torch.cuda.is_available()
-            else 0,
+            "peak_cuda_memory_allocated": torch.cuda.max_memory_allocated() if torch.cuda.is_available() else 0,
         },
         "duration_seconds": round(time.monotonic() - started, 3),
         "metadata": request.get("extra_metadata", {}),

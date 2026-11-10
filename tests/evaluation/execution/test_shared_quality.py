@@ -14,11 +14,11 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.metrics._shared.aesthetic import (
+from worldfoundry.evals.tasks.metrics._shared.aesthetic import (
     load_laion_aesthetic_linear_head,
     load_laion_aesthetic_mlp_head,
 )
-from worldfoundry.evaluation.tasks.metrics._shared.pyiqa import ImageQualityMetric, PyIQAMetric
+from worldfoundry.evals.tasks.metrics._shared.pyiqa import ImageQualityMetric, PyIQAMetric
 
 pytestmark = pytest.mark.unit
 
@@ -123,7 +123,7 @@ def test_dinov2_loader_preserves_explicit_cls_and_pooler_semantics(
 def test_masked_dino_batch_and_single_paths_keep_the_official_transform(torch_cpu: Any) -> None:
     from torchvision import transforms
 
-    from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.features import (
+    from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.features import (
         MaskedDinoV2Features,
     )
 
@@ -162,12 +162,12 @@ def test_memory_protocols_share_backbone_but_not_batch_state(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, torch_cpu: Any
 ) -> None:
     from worldfoundry.base_models.perception_core.general_perception import dino_embeddings
-    from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.context import EvaluationContext
-    from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.features import get_dino_model
-    from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.human.evaluator import (
+    from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.context import EvaluationContext
+    from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.features import get_dino_model
+    from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.human.evaluator import (
         _dino_extractor,
     )
-    from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.object.evaluator import (
+    from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.object.evaluator import (
         _feature_extractor,
     )
 
@@ -207,7 +207,7 @@ def test_wbench_binds_the_official_koniq_asset_without_global_cache_changes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, torch_cpu: Any
 ) -> None:
     from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES
-    from worldfoundry.evaluation.tasks.execution.runners.wbench.runtime.wbench.src.metrics.video_quality import (
+    from worldfoundry.evals.tasks.execution.runners.wbench.runtime.wbench.src.metrics.video_quality import (
         imaging_quality,
     )
 
@@ -237,7 +237,7 @@ def test_worldmembench_spaq_preserves_opencv_aspect_resize(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, torch_cpu: Any, height: int, width: int
 ) -> None:
     cv2 = pytest.importorskip("cv2")
-    from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.general_video_quality.musiq import (
+    from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.general_video_quality.musiq import (
         MusiqSpaqBackend,
     )
 

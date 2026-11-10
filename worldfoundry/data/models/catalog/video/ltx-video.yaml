@@ -5,7 +5,7 @@ description: >-
   image-to-video route. The implemented path uses the official spatial
   upscaler between two denoising stages; broader upstream task support is not
   yet exposed as a WorldFoundry runner.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: ltx-video
 runtime_profile: runtime-profile:ltx-video-i2v
 tasks:
@@ -89,7 +89,7 @@ variants:
   - id: ltx-video-i2v
     task: image-to-video
     runtime_profile: ltx-video-i2v
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: ltx-video-i2v
     integration:
       status: integrated

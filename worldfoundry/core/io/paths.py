@@ -527,7 +527,7 @@ def repo_relative_path(path: str | Path, *, root: str | Path | None = None) -> s
 
 
 # Canonical roots consumed by runtime/evaluation. Kept here so lower layers
-# do not import ``worldfoundry.evaluation.utils``.
+# do not import ``worldfoundry.evals.utils``.
 REPO_ROOT = project_root()
 DATA_ROOT = package_data_root()
 BENCHMARKS_DATA_ROOT = DATA_ROOT / "benchmarks"

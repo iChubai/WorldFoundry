@@ -52,9 +52,9 @@ def _resolve_endpoint(endpoint: str | None) -> str:
 
 
 class Veo3Pipeline(PipelineABC):
-    """
-    使用 Gemini 原生视频生成 API 实现的 Veo3 管线。
-    通过检测是否携带图像自动区分 T2V / I2V。
+    """Veo 3 pipeline built on the native Gemini video generation API.
+
+    Text-to-video or image-to-video is chosen from whether an image is given.
     """
 
     def __init__(
@@ -65,13 +65,12 @@ class Veo3Pipeline(PipelineABC):
         api_key: str = "your_api_key",
     ):
         """
-        初始化 Veo3Pipeline
+        Initialize the Veo 3 pipeline.
 
         Args:
-            operator: Veo3 operator 实例（如果为None则自动创建）
-            synthesis_model: Veo3 synthesis 模型实例（如果为None则自动创建）
-            api_key: API密钥
-            endpoint: API基础URL
+            operator: Optional Veo 3 operator; ``api_init`` creates one.
+            synthesis_model: Optional Veo 3 synthesis model; ``api_init`` creates one.
+            endpoint: API base URL.
         """
         self.api_key = api_key
         self.endpoint = endpoint
@@ -114,23 +113,25 @@ class Veo3Pipeline(PipelineABC):
     @classmethod
     def api_init(cls, api_key: str | None = None, endpoint: str | None = None, logger=None, **kwargs) -> Veo3Pipeline:
         """
-        从配置加载完整的 pipeline
+        Build the pipeline with its synthesis model and operator from API settings.
 
         Args:
-            api_key: API密钥
-            endpoint: API基础URL
-            logger: 日志记录器
-            **kwargs: 额外参数
+            api_key: API key; resolved from the environment when omitted.
+            endpoint: API base URL; resolved from the environment or the Gemini default when omitted.
+            logger: Optional logger for progress messages.
+            **kwargs: Forwarded to ``Veo3Synthesis.api_init``.
 
         Returns:
-            Veo3Pipeline: 初始化的 pipeline 实例
+            Veo3Pipeline: The initialized pipeline.
+
+        Raises:
+            ValueError: No API key is passed or set in the environment.
         """
         endpoint = _resolve_endpoint(endpoint)
         api_key = _resolve_api_key(api_key)
         if logger:
             logger.info(f"Loading Veo3 pipeline with endpoint: {endpoint}")
 
-        # 加载 synthesis 模型
         if logger:
             logger.info("Loading Veo3 synthesis model...")
         synthesis_model = Veo3Synthesis.api_init(endpoint=endpoint, api_key=api_key, logger=logger, **kwargs)
@@ -164,23 +165,23 @@ class Veo3Pipeline(PipelineABC):
         **kwargs,
     ) -> dict[str, Any]:
         """
-        处理输入，通过 operator 预处理后传给 synthesis 模型
+        Preprocess the prompt and images with the operator for the synthesis model.
 
         Args:
-            prompt: 文本提示词
-            images: 主图像（可选）
-            aspect_ratio: 宽高比
-            resolution: 分辨率
-            duration_seconds: 视频时长（秒）
-            negative_prompt: 负面提示词
-            seed: 随机种子
-            last_frame: 最后一帧图像（可选）
-            reference_images: 参考图像列表（可选）
-            person_generation: 人物生成设置（可选）
-            **kwargs: 其他参数
+            prompt: Text prompt.
+            images: Optional first-frame image.
+            aspect_ratio: Aspect ratio such as ``"16:9"``.
+            resolution: Resolution such as ``"720p"``.
+            duration_seconds: Video duration in seconds.
+            seed: Random seed.
+            last_frame: Optional last-frame image.
+            reference_images: Optional list of reference images.
+            person_generation: Optional person-generation setting.
+            **kwargs: Forwarded to ``Veo3Operator.process_perception``.
 
         Returns:
-            Dict 包含处理后的数据
+            Dict with ``prompt`` and the operator's ``images``, ``reference_images``, ``last_frame``
+            and ``veo_config``.
         """
         if self.operator is None:
             raise ValueError("Operator is not initialized")
@@ -231,26 +232,25 @@ class Veo3Pipeline(PipelineABC):
         **kwargs,
     ) -> dict[str, Any]:
         """
-        自动根据是否提供 image 选择 T2V 或 I2V
+        Generate a video, choosing text-to-video or image-to-video from whether ``images`` is given.
 
         Args:
-            prompt: 文本提示词
-            images: 主图像（可选），如果提供则自动使用 i2av
-            task_type: 任务类型，"auto" 自动判断，"t2av" 文本到视频，"i2av" 图像到视频
-            aspect_ratio: 宽高比
-            resolution: 分辨率
-            duration_seconds: 视频时长（秒）
-            negative_prompt: 负面提示词
-            seed: 随机种子
-            last_frame: 最后一帧图像（可选）
-            reference_images: 参考图像列表（可选）
-            person_generation: 人物生成设置（可选）
-            **kwargs: 其他参数
+            prompt: Text prompt.
+            images: Optional first-frame image; with ``task_type="auto"`` it selects i2av.
+            task_type: ``"auto"`` to infer the task, ``"t2av"`` for text-to-video, ``"i2av"`` for image-to-video.
+            aspect_ratio: Aspect ratio such as ``"16:9"``.
+            resolution: Resolution such as ``"720p"``.
+            duration_seconds: Video duration in seconds.
+            seed: Random seed.
+            last_frame: Optional last-frame image.
+            reference_images: Optional list of reference images.
+            person_generation: Optional person-generation setting.
+            **kwargs: Forwarded to preprocessing and ``Veo3Synthesis.predict``.
 
         Returns:
-            Dict 包含生成结果：
-                - task_type: 任务类型
-                - result: 生成结果
+            Dict with:
+                - task_type: The task type used.
+                - result: The generation result.
         """
         if self.synthesis_model is None:
             raise ValueError("Synthesis model is not initialized")
@@ -260,7 +260,6 @@ class Veo3Pipeline(PipelineABC):
         _resolve_api_key(self.api_key)
         _resolve_endpoint(self.endpoint)
 
-        # 使用 operator 预处理输入
         processed_data = self.process(
             prompt=prompt,
             images=images,
@@ -278,15 +277,14 @@ class Veo3Pipeline(PipelineABC):
             **kwargs,
         )
 
-        # 使用 synthesis 模型的 predict 方法进行推理
         response = self.synthesis_model.predict(processed_data=processed_data, task_type=task_type, **kwargs)
 
         return response
 
     def get_operator(self) -> Veo3Operator | None:
-        """获取 operator 实例"""
+        """Return the operator."""
         return self.operator
 
     def get_synthesis_model(self) -> Veo3Synthesis | None:
-        """获取 synthesis 模型实例"""
+        """Return the synthesis model."""
         return self.synthesis_model

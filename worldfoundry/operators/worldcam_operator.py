@@ -37,7 +37,6 @@ _INTRINSICS_1920X1080 = np.array([722.91626, 722.6145, 960.0, 540.0], dtype=np.f
 
 
 def _normalize_action(action: str) -> str:
-    """Normalize action implementation."""
     key = action.strip().lower().replace("-", "_").replace(" ", "_")
     if key not in _ACTION_ALIASES:
         raise ValueError(f"Unsupported WorldCam interaction: {action}")
@@ -45,7 +44,6 @@ def _normalize_action(action: str) -> str:
 
 
 def _to_uint8_image(array: np.ndarray) -> np.ndarray:
-    """To uint8 image implementation."""
     data = np.asarray(array)
     if data.dtype in (np.float16, np.float32, np.float64):
         if data.min() >= -1.0 and data.max() <= 1.0:
@@ -57,7 +55,6 @@ def _to_uint8_image(array: np.ndarray) -> np.ndarray:
 
 
 def _to_pil_image(data: Any) -> Image.Image:
-    """To pil image implementation."""
     if isinstance(data, Image.Image):
         return data.convert("RGB")
     if isinstance(data, str):
@@ -182,7 +179,6 @@ class WorldCamOperator(BaseOperator):
         }
 
     def _build_pose_sequence(self, expanded_actions: Sequence[str]) -> list[np.ndarray]:
-        """Build pose sequence implementation."""
         position = np.zeros(3, dtype=np.float32)
         yaw = 0.0
         pitch = 0.0
@@ -214,7 +210,6 @@ class WorldCamOperator(BaseOperator):
         pitch: float,
         action: str,
     ) -> tuple[np.ndarray, float, float]:
-        """Apply action end state implementation."""
         end_position = position.copy()
         end_yaw = float(yaw)
         end_pitch = float(pitch)
@@ -261,7 +256,6 @@ class WorldCamOperator(BaseOperator):
 
     @staticmethod
     def _compose_c2w(position: np.ndarray, yaw: float, pitch: float) -> np.ndarray:
-        """Compose c2w implementation."""
         forward, right, up = WorldCamOperator._camera_axes(yaw, pitch)
         c2w = np.eye(4, dtype=np.float32)
         c2w[:3, :3] = np.stack([right, up, forward], axis=1)
@@ -270,7 +264,6 @@ class WorldCamOperator(BaseOperator):
 
     @staticmethod
     def _camera_axes(yaw: float, pitch: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Camera axes implementation."""
         forward = np.array(
             [
                 np.sin(yaw) * np.cos(pitch),

@@ -24,7 +24,7 @@ export WORLDFOUNDRY_STEVO_BENCH_VLM_PROVIDER=gemini
 export GOOGLE_API_KEY=<your-key>
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py \
   --run-official \
   --generated-artifact-dir /path/to/generated \
   --task-root "${WORLDFOUNDRY_STEVO_BENCH_TASK_ROOT}" \
@@ -51,7 +51,7 @@ Pass `--output-map` when stems are ambiguous. Filename-derived maps, sub-3 ensem
 
 Generated videos should sit in one directory as `<task_id>.mp4` plus exactly one `output_map.json` that maps each task YAML `id` to a filename relative to that directory. Extra vendor Python deps (judge APIs, OpenCV) live in `worldfoundry/data/benchmarks/requirements/stevo-bench.txt`; the cross-model ensemble extras are in `worldfoundry/data/benchmarks/requirements/stevo-bench-eval-se.txt`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/stevo-bench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/stevo-bench.yaml`, `worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench`.
 
 Outputs include `scorecard.json` (primary `task_success`) with `leaderboard_blockers` / `comparability_blockers`.
 

@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-from worldfoundry.evaluation.models.catalog import clear_model_zoo_registry_cache, load_model_zoo_registry
+from worldfoundry.evals.models.catalog import clear_model_zoo_registry_cache, load_model_zoo_registry
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

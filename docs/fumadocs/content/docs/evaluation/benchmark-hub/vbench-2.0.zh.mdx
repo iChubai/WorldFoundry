@@ -21,7 +21,7 @@ WorldFoundry **仓内内置 VBench-2.0 runtime**。调度评测器前会检查 p
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py \
   --benchmark-id vbench-2.0 \
   --variant vbench2 \
   --dimension Motion_Order_Understanding \
@@ -33,7 +33,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 环境变量：`WORLDFOUNDRY_VBENCH2_DATASET_ROOT`、`WORLDFOUNDRY_VBENCH2_RESULTS_PATH`、`WORLDFOUNDRY_VBENCH2_ROOT`、`WORLDFOUNDRY_HF_CACHE_DIR`。共享栈：`vbench_perception_metric_stack`。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml`，`worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml`，`worldfoundry/evals/tasks/execution/runners/vbench_2_0/runtime`。
 
 产物包括 `scorecard.json`（主键 `vbench2_total`）、`dimension_scores.json` 与覆盖清单。
 

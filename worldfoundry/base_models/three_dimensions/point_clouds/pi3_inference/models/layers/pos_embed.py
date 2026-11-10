@@ -8,4 +8,4 @@ class RoPE2D(RotaryPositionEmbedding2D):
         super().__init__(frequency=freq, scaling_factor=F0)
 
 
-__all__ = ["RoPE2D", "PositionGetter"]
+__all__ = ["PositionGetter", "RoPE2D"]

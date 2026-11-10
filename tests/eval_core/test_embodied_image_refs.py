@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from worldfoundry.evaluation.tasks.embodied import docker_runner
-from worldfoundry.evaluation.tasks.embodied.docker_runner import build_docker_run_command
-from worldfoundry.evaluation.tasks.embodied.image_refs import (
+from worldfoundry.evals.tasks.embodied import docker_runner
+from worldfoundry.evals.tasks.embodied.docker_runner import build_docker_run_command
+from worldfoundry.evals.tasks.embodied.image_refs import (
     AUTH_GATED_FLOATING_OFFICIAL_PROFILES,
     CROSS_REPO_FLOATING_MIRROR_PROFILES,
     KNOWN_FLOATING_OFFICIAL_PROFILES,

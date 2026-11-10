@@ -138,9 +138,7 @@ class _FusedQKVLinear(nn.Linear):
         # Text identities stay specialized across models. Integer identities
         # can become symbolic during recompilation and cannot be passed to an
         # assume_constant_result helper.
-        self._worldfoundry_qkv_receipt_token = _register_qkv_fusion_state(
-            fusion_state
-        )
+        self._worldfoundry_qkv_receipt_token = _register_qkv_fusion_state(fusion_state)
 
     def _record_projection(self, path: str) -> None:
         state = self._worldfoundry_qkv_fusion_state
@@ -217,9 +215,7 @@ def project_fused_qkv(
     if not isinstance(packed, torch.Tensor) or packed.shape[:-1] != input.shape[:-1]:
         raise RuntimeError("fused Wan qkv projection must preserve leading dimensions")
     if packed.shape[-1] != input.shape[-1] * 3:
-        raise RuntimeError(
-            "fused Wan qkv projection must return exactly 3 * hidden width"
-        )
+        raise RuntimeError("fused Wan qkv projection must return exactly 3 * hidden width")
     return packed.chunk(3, dim=-1)
 
 
@@ -256,18 +252,14 @@ def _is_fusible_self_attention(module: nn.Module) -> bool:
     if not hasattr(module, "norm_q") or not hasattr(module, "norm_k"):
         return False
     native_projection_dispatch = getattr(module, "supports_fused_qkv", False) is True
-    if not native_projection_dispatch and (
-        type(module).__name__ != "SelfAttention" or not hasattr(module, "attn")
-    ):
+    if not native_projection_dispatch and (type(module).__name__ != "SelfAttention" or not hasattr(module, "attn")):
         return False
     dim = q.in_features
     for layer in (q, k, v):
         if layer.in_features != dim or layer.out_features != dim:
             return False
     bias_flags = {layer.bias is not None for layer in (q, k, v)}
-    if len(bias_flags) != 1:
-        return False
-    return True
+    return len(bias_flags) == 1
 
 
 def _fused_self_attention_forward(
@@ -392,9 +384,7 @@ def restore_fused_qkv_processor_dispatch(module: nn.Module) -> bool:
         )
     class_forward = getattr(type(module), "forward", None)
     if not callable(class_forward):
-        raise TypeError(
-            "cannot restore fused QKV processor dispatch without a class forward"
-        )
+        raise TypeError("cannot restore fused QKV processor dispatch without a class forward")
     module.forward = types.MethodType(class_forward, module)
     return True
 

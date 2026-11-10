@@ -308,8 +308,8 @@ def _suggestions(model_id: str) -> str:
     except Exception:
         pass
     try:
-        from worldfoundry.evaluation.models.catalog.zoo_registry import load_model_zoo_registry
-        from worldfoundry.evaluation.utils import MODEL_ZOO_DIR
+        from worldfoundry.evals.models.catalog.zoo_registry import load_model_zoo_registry
+        from worldfoundry.evals.utils import MODEL_ZOO_DIR
 
         ids.extend(entry.model_id for entry in load_model_zoo_registry(MODEL_ZOO_DIR).list())
     except Exception:
@@ -349,7 +349,7 @@ def _runtime_profile_id(value: Any) -> str:
 
 @lru_cache(maxsize=1)
 def _runtime_profile_paths_by_stem() -> Mapping[str, tuple[Any, ...]]:
-    from worldfoundry.evaluation.models.runtime.profiles import DEFAULT_RUNTIME_PROFILES_ROOT
+    from worldfoundry.evals.models.runtime.profiles import DEFAULT_RUNTIME_PROFILES_ROOT
 
     paths: dict[str, list[Any]] = {}
     for path in DEFAULT_RUNTIME_PROFILES_ROOT.rglob("*.y*ml"):
@@ -368,7 +368,7 @@ def _load_catalog_runtime_profile(entry: Any, variant: Any | None) -> tuple[Any 
             getattr(entry, "model_id", None),
         )
     )
-    from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile_manifests
+    from worldfoundry.evals.models.runtime.profiles import load_runtime_profile_manifests
 
     paths_by_stem = _runtime_profile_paths_by_stem()
     for candidate in candidates:
@@ -764,9 +764,9 @@ def load_model_run_schema(
     task_id: str | None = None,
 ) -> ModelRunSchema:
     """Resolve one model into a Studio contract or Model Zoo/runtime fallback."""
-    from worldfoundry.evaluation.models.catalog.schema import select_default_variant
-    from worldfoundry.evaluation.models.catalog.zoo_registry import load_model_zoo_registry
-    from worldfoundry.evaluation.utils import MODEL_ZOO_DIR
+    from worldfoundry.evals.models.catalog.schema import select_default_variant
+    from worldfoundry.evals.models.catalog.zoo_registry import load_model_zoo_registry
+    from worldfoundry.evals.utils import MODEL_ZOO_DIR
     from worldfoundry.runtime.inference_catalog import model_inference_spec
     from worldfoundry.runtime.interactive_inference_catalog import interactive_task_for_variant
     from worldfoundry.studio.inference.catalog import find_entry

@@ -1,6 +1,6 @@
 id: unianimate-dit
 name: UniAnimate-DiT
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: unianimate-dit
 tasks:
 - human-image-animation

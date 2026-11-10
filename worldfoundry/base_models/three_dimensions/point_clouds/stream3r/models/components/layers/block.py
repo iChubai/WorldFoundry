@@ -7,19 +7,16 @@
 #   https://github.com/facebookresearch/dino/blob/master/vision_transformer.py
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/patch_embed.py
 
-import logging
-import os
-from typing import Callable, List, Any, Tuple, Dict
-import warnings
+from collections.abc import Callable
+from typing import Any
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from .attention import Attention
 from .drop_path import DropPath
 from .layer_scale import LayerScale
 from .mlp import Mlp
-
 
 XFORMERS_AVAILABLE = False
 
@@ -92,7 +89,9 @@ class Block(nn.Module):
             return self.ls2(self.mlp(self.norm2(x)))
 
         if self.training and self.sample_drop_ratio > 0.1:
-            assert attn_mask is None and kv_cache is None, "attn_mask and kv_cache are not supported for drop_add_residual_stochastic_depth yet"
+            assert attn_mask is None and kv_cache is None, (
+                "attn_mask and kv_cache are not supported for drop_add_residual_stochastic_depth yet"
+            )
             # the overhead is compensated only for a drop path rate larger than 0.1
             x = drop_add_residual_stochastic_depth(
                 x,
@@ -170,13 +169,13 @@ def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None
         residual = residual.flatten(1)
         x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
     else:
-        x_plus_residual = scaled_index_add(
+        x_plus_residual = scaled_index_add(  # noqa: F821 - Name is undefined in the upstream source.
             x, brange, residual.to(dtype=x.dtype), scaling=scaling_vector, alpha=residual_scale_factor
         )
     return x_plus_residual
 
 
-attn_bias_cache: Dict[Tuple, Any] = {}
+attn_bias_cache: dict[tuple, Any] = {}
 
 
 def get_attn_bias_and_cat(x_list, branges=None):
@@ -184,18 +183,18 @@ def get_attn_bias_and_cat(x_list, branges=None):
     this will perform the index select, cat the tensors, and provide the attn_bias from cache
     """
     batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list))
-    if all_shapes not in attn_bias_cache.keys():
+    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
+    if all_shapes not in attn_bias_cache:
         seqlens = []
-        for b, x in zip(batch_sizes, x_list):
+        for b, x in zip(batch_sizes, x_list, strict=False):
             for _ in range(b):
                 seqlens.append(x.shape[1])
-        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
+        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)  # noqa: F821 - Name is undefined in the upstream source.
         attn_bias._batch_sizes = batch_sizes
         attn_bias_cache[all_shapes] = attn_bias
 
     if branges is not None:
-        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])
+        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])  # noqa: F821 - Name is undefined in the upstream source.
     else:
         tensors_bs1 = tuple(x.reshape([1, -1, *x.shape[2:]]) for x in x_list)
         cat_tensors = torch.cat(tensors_bs1, dim=1)
@@ -204,7 +203,7 @@ def get_attn_bias_and_cat(x_list, branges=None):
 
 
 def drop_add_residual_stochastic_depth_list(
-    x_list: List[Tensor],
+    x_list: list[Tensor],
     residual_func: Callable[[Tensor, Any], Tensor],
     sample_drop_ratio: float = 0.0,
     scaling_vector=None,
@@ -221,17 +220,19 @@ def drop_add_residual_stochastic_depth_list(
     residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
 
     outputs = []
-    for x, brange, residual, residual_scale_factor in zip(x_list, branges, residual_list, residual_scale_factors):
+    for x, brange, residual, residual_scale_factor in zip(
+        x_list, branges, residual_list, residual_scale_factors, strict=False
+    ):
         outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
     return outputs
 
 
 class NestedTensorBlock(Block):
-    def forward_nested(self, x_list: List[Tensor]) -> List[Tensor]:
+    def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
         """
         x_list contains a list of tensors to nest together and run
         """
-        assert isinstance(self.attn, MemEffAttention)
+        assert isinstance(self.attn, MemEffAttention)  # noqa: F821 - Name is undefined in the upstream source.
 
         if self.training and self.sample_drop_ratio > 0.0:
 

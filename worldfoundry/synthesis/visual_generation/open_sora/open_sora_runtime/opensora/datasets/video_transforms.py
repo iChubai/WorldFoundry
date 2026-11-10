@@ -24,10 +24,10 @@ import torch
 
 def _is_tensor_video_clip(clip):
     if not torch.is_tensor(clip):
-        raise TypeError("clip should be Tensor. Got %s" % type(clip))
+        raise TypeError("clip should be Tensor. Got %s" % type(clip))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     if not clip.ndimension() == 4:
-        raise ValueError("clip should be 4D. Got %dD" % clip.dim())
+        raise ValueError("clip should be 4D. Got %dD" % clip.dim())  # noqa: UP031 - Keeps printf conversions that depend on argument types.
 
     return True
 
@@ -84,8 +84,8 @@ def center_crop(clip, crop_size):
     if h < th or w < tw:
         raise ValueError("height and width must be no smaller than crop_size")
 
-    i = int(round((h - th) / 2.0))
-    j = int(round((w - tw) / 2.0))
+    i = int(round((h - th) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
+    j = int(round((w - tw) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     return crop(clip, i, j, th, tw)
 
 
@@ -96,10 +96,10 @@ def center_crop_using_short_edge(clip):
     if h < w:
         th, tw = h, h
         i = 0
-        j = int(round((w - tw) / 2.0))
+        j = int(round((w - tw) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
     else:
         th, tw = w, w
-        i = int(round((h - th) / 2.0))
+        i = int(round((h - th) / 2.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
         j = 0
     return crop(clip, i, j, th, tw)
 
@@ -132,10 +132,7 @@ def random_shift_crop(clip):
         raise ValueError("clip should be a 4D torch.tensor")
     h, w = clip.size(-2), clip.size(-1)
 
-    if h <= w:
-        short_edge = h
-    else:
-        short_edge = w
+    short_edge = h if h <= w else w
 
     th, tw = short_edge, short_edge
 
@@ -155,7 +152,7 @@ def to_tensor(clip):
     """
     _is_tensor_video_clip(clip)
     if not clip.dtype == torch.uint8:
-        raise TypeError("clip tensor should have data type uint8. Got %s" % str(clip.dtype))
+        raise TypeError("clip tensor should have data type uint8. Got %s" % str(clip.dtype))  # noqa: UP031 - Keeps printf conversions that depend on argument types.
     # return clip.float().permute(3, 0, 1, 2) / 255.0
     return clip.float() / 255.0
 
@@ -448,7 +445,7 @@ class RandomHorizontalFlipVideo:
 #  ------------------------------------------------------------
 #  ---------------------  Sampling  ---------------------------
 #  ------------------------------------------------------------
-class TemporalRandomCrop(object):
+class TemporalRandomCrop:
     """Temporally crop the given frame indices at a random location.
 
     Args:
@@ -516,5 +513,8 @@ if __name__ == "__main__":
 
     for i in range(target_video_len):
         save_image(
-            select_vframes_trans[i], os.path.join("./test000", "%04d.png" % i), normalize=True, value_range=(-1, 1)
+            select_vframes_trans[i],
+            os.path.join("./test000", "%04d.png" % i),  # noqa: UP031 - Keeps printf conversions that depend on argument types.
+            normalize=True,
+            value_range=(-1, 1),
         )

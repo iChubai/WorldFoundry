@@ -3,11 +3,11 @@ from __future__ import annotations
 from importlib.util import find_spec
 from pathlib import Path
 
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
-UNIFIED_MODEL_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+UNIFIED_MODEL_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 
 FORMER_NATIVE_TEMPLATE_MODEL_IDS = (
     "emu3.5",

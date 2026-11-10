@@ -40,23 +40,23 @@ class ReCamMasterOperator(BaseOperator):
         self.height, self.width = height, width
 
     def rotation_matrix_z(self, theta: float) -> np.ndarray:
-        """Rotation matrix z implementation."""
+        """Return the 4x4 homogeneous rotation by ``theta`` radians about the z axis."""
         return np.array(
             [[np.cos(theta), -np.sin(theta), 0, 0], [np.sin(theta), np.cos(theta), 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
         )
 
     def rotation_matrix_x(self, theta: float) -> np.ndarray:
-        """Rotation matrix x implementation."""
+        """Return the 4x4 homogeneous rotation by ``theta`` radians about the x axis."""
         return np.array(
             [[1, 0, 0, 0], [0, np.cos(theta), -np.sin(theta), 0], [0, np.sin(theta), np.cos(theta), 0], [0, 0, 0, 1]]
         )
 
     def translation_matrix(self, dx: float, dy: float, dz: float) -> np.ndarray:
-        """Translation matrix implementation."""
+        """Return a 4x4 matrix whose last row is ``(dx + 3390, dy + 1380, dz + 240, 0)``, added to a pose before it is transposed."""
         return np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [dx + 3390, dy + 1380, dz + 240, 0]])
 
     def crop_and_resize(self, image):
-        """Crop and resize implementation."""
+        """Resize ``image`` bilinearly, keeping its aspect ratio, so that it covers ``(self.height, self.width)``."""
         width, height = image.size
         scale = max(self.width / width, self.height / height)
         image = TF.resize(
@@ -71,7 +71,10 @@ class ReCamMasterOperator(BaseOperator):
         file_path,
         start_frame_id=0,
     ):
-        """Load frames using imageio implementation."""
+        """Read ``num_frames`` frames every ``frame_interval`` frames from ``start_frame_id`` as a ``[1, C, T, H, W]`` tensor.
+
+        Returns None and logs a warning when the video is too short.
+        """
         reader = imageio.get_reader(file_path)
         # The FFmpeg reader that opens these videos defines count_frames; ImageIO's generic Reader stub does not.
         frame_count = reader.count_frames()  # ty: ignore[unresolved-attribute]
@@ -105,7 +108,7 @@ class ReCamMasterOperator(BaseOperator):
         return frames.unsqueeze(0)
 
     def get_relative_pose(self, cam_params):
-        """Get relative pose implementation."""
+        """Return the camera-to-world poses of ``cam_params`` relative to the first camera as a float32 ``[N, 4, 4]`` array."""
         abs_w2cs = [cam_param.w2c_mat for cam_param in cam_params]
         abs_c2ws = [cam_param.c2w_mat for cam_param in cam_params]
 
@@ -162,9 +165,11 @@ class ReCamMasterOperator(BaseOperator):
         self,
     ):
         """
-        处理当前交互指令，生成平滑的相机轨迹。
-        输入: cur_interaction["camera_viewpoint"] = [dx, dy, dz, theta_x, theta_z]
-        输出: 相机姿态嵌入张量，形状为 (num_frames, 12)
+        Turn the latest interaction into a smooth camera trajectory.
+
+        Input: ``cur_interaction["camera_viewpoint"] = [dx, dy, dz, theta_x, theta_z]`` with angles in degrees.
+        Output: camera pose embedding of shape (1, len(range(0, num_frames, 4)), 12), for example
+        (1, 21, 12) for 81 frames.
         """
         cur_interaction = self.current_interaction[-1]
         camera_change = cur_interaction["camera_viewpoint"]  # [dx, dy, dz, theta_x, theta_z]

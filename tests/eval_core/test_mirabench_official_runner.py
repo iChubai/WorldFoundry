@@ -6,13 +6,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-from worldfoundry.evaluation.tasks.execution.runners.mirabench.mirabench_metrics import compute_mirabench_metrics
-from worldfoundry.evaluation.tasks.execution.runners.mirabench.mirabench_prompts import (
+from worldfoundry.evals.tasks.execution.runners.mirabench.mirabench_metrics import compute_mirabench_metrics
+from worldfoundry.evals.tasks.execution.runners.mirabench.mirabench_prompts import (
     CANONICAL_PROMPT_COUNT,
     materialize_mirabench_generation_requests,
     unique_prompt_records,
 )
-from worldfoundry.evaluation.utils import benchmark_task_sample_path
+from worldfoundry.evals.utils import benchmark_task_sample_path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -25,7 +25,7 @@ def test_mirabench_prompt_materialization_uses_video_idx_ids() -> None:
 
 
 def test_mirabench_example_prompt_count_from_upstream_repo() -> None:
-    from worldfoundry.evaluation.tasks.execution.runners.mirabench.mirabench_prompts import load_prompt_records
+    from worldfoundry.evals.tasks.execution.runners.mirabench.mirabench_prompts import load_prompt_records
 
     records = unique_prompt_records(load_prompt_records())
     assert len(records) == 2
@@ -82,7 +82,7 @@ def test_mirabench_official_runner_normalizes_sample_results(tmp_path: Path) -> 
     completed = subprocess.run(
         [
             sys.executable,
-            "worldfoundry/evaluation/tasks/execution/runners/mirabench/run_mirabench_official_runner.py",
+            "worldfoundry/evals/tasks/execution/runners/mirabench/run_mirabench_official_runner.py",
             "--official-results-path",
             str(sample_path),
             "--output-dir",
@@ -112,7 +112,7 @@ def test_mirabench_official_run_with_mock_backend_writes_scorecard(tmp_path: Pat
     completed = subprocess.run(
         [
             sys.executable,
-            "worldfoundry/evaluation/tasks/execution/runners/mirabench/run_mirabench_official_runner.py",
+            "worldfoundry/evals/tasks/execution/runners/mirabench/run_mirabench_official_runner.py",
             "--run-official",
             "--generated-artifact-dir",
             str(generated_dir),

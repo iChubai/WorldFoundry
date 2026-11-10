@@ -8,7 +8,8 @@
 #   https://github.com/rwightman/pytorch-image-models/tree/master/timm/layers/mlp.py
 
 
-from typing import Callable
+from collections.abc import Callable
+
 from torch import Tensor, nn
 
 

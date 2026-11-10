@@ -200,9 +200,7 @@ class WonderWorldSynthesis(BaseSynthesis):
                 self.models[mode] = NativeDiffusionPipeline.from_pretrained(
                     model_id,
                     policy=policy,
-                    checkpoint_overrides={
-                        key: root for key in ("unet", "text_encoder", "tokenizer", "vae", "scheduler")
-                    },
+                    checkpoint_overrides=dict.fromkeys(("unet", "text_encoder", "tokenizer", "vae", "scheduler"), root),
                     extensions=(DecodedDepthGuidance(),) if mode == "depth" else (),
                 )
             self.segmenter = SceneSegmenter.from_pretrained(

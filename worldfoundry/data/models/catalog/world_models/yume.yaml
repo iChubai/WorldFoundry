@@ -38,14 +38,14 @@ integration:
 output_artifacts:
 - generated_world
 runtime_profile: runtime-profile:yume
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: yume
 variants:
 - id: yume
   task: image/video-to-world-video
   provider: official_huggingface
   runtime_profile: runtime-profile:yume
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: yume
   checkpoint_refs:
   - repo_id: stdstu123/Yume-I2V-540P
@@ -60,7 +60,7 @@ variants:
   task: image/video/text-to-world-video
   provider: official_huggingface
   runtime_profile: runtime-profile:yume-1p5
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: yume-1p5
   checkpoint_refs:
   - repo_id: stdstu123/Yume-5B-720P

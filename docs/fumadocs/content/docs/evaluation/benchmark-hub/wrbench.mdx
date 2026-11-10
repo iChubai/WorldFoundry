@@ -32,7 +32,7 @@ wf zoo benchmark-run \
 
 `--run-official` scores generated videos plus camera sidecars against Natural-25 (`--scorer-profile`, `--sidecar-profile-gate`). Rows without re-observation support are **excluded** from D5/D6, not counted as failures. Env: `WORLDFOUNDRY_WRBENCH_RESULTS_PATH`, `WORLDFOUNDRY_WRBENCH_ROOT`. Shared stack: `vggt_omega`, `dinov2`, `qwen3_5_vl`, `qwen3_vl`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/wrbench.yaml`, `worldfoundry/data/benchmarks/assets/wrbench`, `worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/wrbench.yaml`, `worldfoundry/data/benchmarks/assets/wrbench`, `worldfoundry/evals/tasks/execution/runners/wrbench/runtime/wrbench`.
 
 Outputs include `scorecard.json` (primary `wrbench_average`, leaderboard key `Avg`) and `generation_requests.jsonl`.
 

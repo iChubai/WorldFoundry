@@ -99,10 +99,10 @@ runner:
   scoring:
     engines: [physics_contract]
     hooks:
-      physics_contract: worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_contract_evaluator:write_likephys_evaluation
-  official_script: worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py
+      physics_contract: worldfoundry.evals.tasks.execution.runners.likephys.likephys_contract_evaluator:write_likephys_evaluation
+  official_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.likephys.run_likephys_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.likephys.run_likephys_official_runner
     generated_arg: --generated-artifact-dir
     dataset_root_arg: --benchmark-data-root
     limit_arg: --limit
@@ -111,8 +111,8 @@ runner:
     supports_official_runtime: true
     default_metrics: [likephys_misrank_rate]
     input_kind: likephys_results_root_or_probe_dataset
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:LikePhysContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
   validation_command:
   - wf
   - zoo
@@ -128,7 +128,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_runner
-    root: worldfoundry/evaluation/tasks/execution/runners/likephys
+    root: worldfoundry/evals/tasks/execution/runners/likephys
     repo_url: https://github.com/YuanJianhao508/LikePhys.git
     evaluator_root_env: WORLDFOUNDRY_LIKEPHYS_EVALUATOR_ROOT
     results_path_env: WORLDFOUNDRY_LIKEPHYS_RESULTS_PATH
@@ -175,10 +175,10 @@ data_refs:
   - <likephys_data_root>/<scenario>_videos/subgroup_XXX/<variation>_00.mp4
   local_results_layout:
   - <likephys_results_root>/<scenario>/results_<probe_model>.json
-official_runner_script: worldfoundry/evaluation/tasks/execution/runners/likephys/run_likephys_official_runner.py
+official_runner_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:LikePhysContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

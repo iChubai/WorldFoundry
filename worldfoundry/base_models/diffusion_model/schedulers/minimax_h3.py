@@ -21,6 +21,7 @@ Contract, kept identical to the reference:
 
 from __future__ import annotations
 
+import itertools
 import math
 from collections.abc import Sequence
 from typing import Any
@@ -175,7 +176,7 @@ def minimax_h3_frame_count_from_video_latent_t(out_t: int) -> int:
 def minimax_h3_audio_latent_t(duration_seconds: float) -> int:
     """Audio latent temporal length at the 40 Hz latent boundary."""
 
-    return int(round(float(duration_seconds) * 40.0))
+    return int(round(float(duration_seconds) * 40.0))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
 
 
 # --------------------------------------------------------------------------- #
@@ -210,7 +211,7 @@ def minimax_h3_sigma_schedule(knots: Sequence[float], *, shift_scale: float) -> 
         raise ValueError("MiniMax H3 knots must start at 1.0 and end at 0.0")
     if any(not math.isfinite(value) or value < 0.0 or value > 1.0 for value in values):
         raise ValueError("MiniMax H3 knots must be finite values in [0, 1]")
-    if any(left <= right for left, right in zip(values, values[1:])):
+    if any(left <= right for left, right in itertools.pairwise(values)):
         raise ValueError("MiniMax H3 knots must be strictly decreasing")
     if not math.isfinite(float(shift_scale)) or shift_scale <= 0.0:
         raise ValueError("MiniMax H3 shift_scale must be finite and positive")

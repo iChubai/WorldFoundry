@@ -33,7 +33,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:CALVINContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:CALVINContract
   verification_status: normalizer_only
   validation_command:
   - wf
@@ -101,7 +101,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/calvin.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:CALVINContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:CALVINContract
   runner_script_available: false
   task_yaml_available: true
   runtime_verified: false

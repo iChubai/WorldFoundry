@@ -35,7 +35,7 @@ metadata:
   status: integrated
   contract_validation_command: wf zoo benchmark-run --benchmark-id robotwin --mode contract --output-dir
     tmp/benchmark_zoo/benchmark_contract/robotwin --json
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:RoboTwinContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:RoboTwinContract
   prompt_suite:
     hf_dataset_id: TianxingChen/RoboTwin2.0
     split: demo_clean,demo_randomized
@@ -163,7 +163,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/robotwin.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:RoboTwinContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:RoboTwinContract
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -271,4 +271,4 @@ tasks:
       - clean_success
       - randomized_success
       - reward
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:RoboTwinContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:RoboTwinContract

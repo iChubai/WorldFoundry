@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.api import GenerationRequest, WorldModelConfig
-from worldfoundry.evaluation.models import (
+from worldfoundry.evals.api import GenerationRequest, WorldModelConfig
+from worldfoundry.evals.models import (
     ModelResolutionError,
     resolve_model_zoo_runner,
     resolve_world_model_runner,

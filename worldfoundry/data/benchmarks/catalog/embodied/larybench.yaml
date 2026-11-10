@@ -70,9 +70,9 @@ metrics:
   higher_is_better: false
   stage: regress
 runner:
-  official_script: worldfoundry/evaluation/tasks/execution/runners/larybench/run_larybench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/larybench/run_larybench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.larybench.run_larybench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.larybench.run_larybench_official_runner
     generated_arg: null
     dataset_root_arg: --dataset-root
     split_arg: --split
@@ -80,7 +80,7 @@ runner:
     supports_official_runtime: true
     default_metrics: [top1_accuracy]
     input_kind: dataset_root_or_official_results
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:LARYBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:LARYBenchContract
   validation_command:
   - wf
   - zoo
@@ -96,7 +96,7 @@ runner:
   - --json
   run_command: >-
     ${WORLDFOUNDRY_UNIFIED_PYTHON:-python} -m
-    worldfoundry.evaluation.tasks.execution.runners.larybench.run_larybench_official_runner
+    worldfoundry.evals.tasks.execution.runners.larybench.run_larybench_official_runner
     --benchmark-id larybench --run-official --stage classify
     --dataset "$LARY_DATASET" --model "$LARY_MODEL" --dim "$LARY_DIM"
     --classes "$LARY_CLASSES" --dataset-root "$DATA_DIR"
@@ -104,7 +104,7 @@ runner:
     --gpus "${CUDA_VISIBLE_DEVICES:-0}" --output-dir "$WORLDFOUNDRY_BENCHMARK_OUTPUT_DIR" --json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/larybench
+    root: worldfoundry/evals/tasks/execution/runners/larybench
     repo_url: https://github.com/meituan-longcat/LARYBench.git
     repo_revision: e7feaf1b72921ee2c34e489adb0f45faf356ecee
     results_path_env: WORLDFOUNDRY_LARYBENCH_RESULTS_PATH
@@ -146,13 +146,13 @@ data_refs:
   hf_dataset_id: meituan-longcat/LARYBench
   task_yaml: worldfoundry/data/benchmarks/tasks/external/larybench.yaml
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/larybench/cli.py
-  - worldfoundry/evaluation/tasks/execution/runners/larybench/extract.py
-  - worldfoundry/evaluation/tasks/execution/runners/larybench/classification.py
-  - worldfoundry/evaluation/tasks/execution/runners/larybench/regression.py
+  - worldfoundry/evals/tasks/execution/runners/larybench/cli.py
+  - worldfoundry/evals/tasks/execution/runners/larybench/extract.py
+  - worldfoundry/evals/tasks/execution/runners/larybench/classification.py
+  - worldfoundry/evals/tasks/execution/runners/larybench/regression.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:LARYBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:LARYBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true

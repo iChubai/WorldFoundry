@@ -264,13 +264,9 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         )
         scale = context.request.sampling.guidance_scale
         if self.guidance_mode == "positive":
-            guided = positive_output.sample + scale * (
-                positive_output.sample - negative_output.sample
-            )
+            guided = positive_output.sample + scale * (positive_output.sample - negative_output.sample)
         else:
-            guided = negative_output.sample + scale * (
-                positive_output.sample - negative_output.sample
-            )
+            guided = negative_output.sample + scale * (positive_output.sample - negative_output.sample)
         return DenoiserOutput(
             sample=guided,
             extras={"positive": positive_output.extras, "negative": negative_output.extras},
@@ -341,9 +337,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
         timesteps: Sequence[int],
     ) -> Tensor:
         if context.request.sampling.num_inference_steps != len(self.fixed_timesteps):
-            raise ValueError(
-                f"this distilled checkpoint requires {len(self.fixed_timesteps)} inference steps"
-            )
+            raise ValueError(f"this distilled checkpoint requires {len(self.fixed_timesteps)} inference steps")
         noisy = block_noise.clone()
         shift = float(context.request.sampling.scheduler_options.get("shift", 5.0))
         for index, timestep in enumerate(timesteps):
@@ -355,10 +349,13 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             # network (approximately [1000, 937.5, 833.33, 625] for shift=5).
             # Keep recipes expressed in the released schedule while matching
             # the exact model-time semantics here.
-            model_timestep = shift_flow_sigmas(
-                torch.tensor(timestep / 1000.0, device=self.device),
-                shift,
-            ) * 1000.0
+            model_timestep = (
+                shift_flow_sigmas(
+                    torch.tensor(timestep / 1000.0, device=self.device),
+                    shift,
+                )
+                * 1000.0
+            )
             next_model_timestep = (
                 shift_flow_sigmas(
                     torch.tensor(next_timestep / 1000.0, device=self.device),
@@ -569,9 +566,7 @@ class AutoregressiveStream:
             shared = dict(context.conditioning.shared)
             shared["kv_prefix_frames"] = prefix_frames
             positive_base = {**shared, **context.conditioning.positive}
-            negative_base = (
-                {**shared, **context.conditioning.negative} if use_negative else None
-            )
+            negative_base = {**shared, **context.conditioning.negative} if use_negative else None
 
             if prefix is not None:
                 context.step = SchedulerStep(

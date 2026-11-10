@@ -246,7 +246,7 @@ print_mapping() {
 from worldfoundry.runtime.conda import load_runtime_conda_env_specs_with_overrides
 from worldfoundry.runtime.cuda_tiers import DEFAULT_CUDA_TIER, unified_env_name
 from worldfoundry.core.io.paths import conda_envs_root_path
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profiles
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profiles
 
 specs = load_runtime_conda_env_specs_with_overrides()
 profiles = load_runtime_profiles(check_conda_env_exists=False)

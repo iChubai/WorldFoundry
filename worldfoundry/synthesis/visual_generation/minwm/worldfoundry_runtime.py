@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
-from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
 from worldfoundry.core.distributed.runtime.multiprocess_launch import find_free_port
+from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
-
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[4]
 _MINWM_CONFIG_ROOT = _PROJECT_ROOT / "worldfoundry" / "data" / "models" / "runtime" / "configs" / "minwm"

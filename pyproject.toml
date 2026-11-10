@@ -167,7 +167,6 @@ distribution_metrics = [
     "peft>=0.2.0",
     "piq>=0.8.0",
     "pillow",
-    "rke-score>=0.1.0",
     "scikit-image",
     "scikit-learn",
     "scipy",
@@ -539,9 +538,9 @@ exclude = [
     "thirdparty/**",
     "worldfoundry/base_models/**",
     "worldfoundry/synthesis/**",
-    "worldfoundry/evaluation/tasks/execution/runners/*/runtime/**",
-    "worldfoundry/evaluation/tasks/execution/runners/*/official/**",
-    "worldfoundry/evaluation/tasks/metrics/*/vendor/**",
+    "worldfoundry/evals/tasks/execution/runners/*/runtime/**",
+    "worldfoundry/evals/tasks/execution/runners/*/official/**",
+    "worldfoundry/evals/tasks/metrics/*/vendor/**",
 ]
 
 [tool.ty.analysis]
@@ -592,25 +591,39 @@ allowed-unresolved-imports = [
 [tool.ruff]
 target-version = "py310"
 line-length = 120
+# Root-level artifact and vendor directories. The ./ prefix anchors each name to the repository
+# root, so same-named source packages such as worldfoundry/core/attention/cache stay linted.
 extend-exclude = [
-    "thirdparty",
-    "cache",
-    "tmp",
-    "outputs",
-    "runs",
-    "benchmark_results",
-    "inspatio_world_output",
+    "./thirdparty",
+    "./cache",
+    "./tmp",
+    "./outputs",
+    "./runs",
+    "./benchmark_results",
+    "./inspatio_world_output",
     "docs/fumadocs/.next",
     "docs/fumadocs/node_modules",
     "docs/fumadocs/out",
-    "apps",
-    "worldfoundry/base_models",
-    "worldfoundry/synthesis",
-    "worldfoundry/evaluation/tasks/execution/runners/*/runtime",
-    "worldfoundry/evaluation/tasks/metrics/*/vendor",
-    "worldfoundry/evaluation/tasks/execution/runners/*/runtime",
-    "worldfoundry/evaluation/tasks/execution/runners/*/official",
-    "worldfoundry/evaluation/tasks/metrics/*/vendor",
+    "./apps",
+    # License-gated runtimes that setup fetches into these Git-ignored directories. They are
+    # not repository sources; every tracked worldfoundry file is linted.
+    "worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime",
+    "worldfoundry/base_models/three_dimensions/depth/unik3d",
+    "worldfoundry/base_models/three_dimensions/general_3d/dust3r",
+    "worldfoundry/base_models/three_dimensions/general_3d/four_d_gaussians",
+    "worldfoundry/base_models/three_dimensions/general_3d/mast3r",
+    "worldfoundry/base_models/three_dimensions/general_3d/monst3r",
+    "worldfoundry/base_models/three_dimensions/general_3d/stable_virtual_camera",
+    "worldfoundry/base_models/three_dimensions/point_clouds/gaussian_splatting",
+    "worldfoundry/base_models/three_dimensions/point_clouds/pi3",
+    "worldfoundry/base_models/three_dimensions/slam/mega_sam_runtime/UniDepth",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_game_craft",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_world_voyager",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime",
+    "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_worldgen_runtime",
+    "worldfoundry/synthesis/visual_generation/krea_realtime/realtime_video_runtime",
+    "worldfoundry/synthesis/visual_generation/vmem/vmem_runtime/extern/CUT3R",
+    "worldfoundry/synthesis/visual_generation/wonderworld/wonderworld_runtime",
 ]
 
 [tool.ruff.lint]
@@ -620,10 +633,30 @@ select = [
     "E9",
     "F",
     "I",
+    "UP",
+    "B",
+    "SIM",
+    "C4",
+    "PIE",
+    "RUF",
 ]
 ignore = [
+    # Line length is left to the formatter.
     "E501",
+    # Deprecated in Ruff.
+    "UP038",
+    # Full-width CJK punctuation in strings, docstrings and comments is intentional.
+    "RUF001",
+    "RUF002",
+    "RUF003",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests, scripts, benchmarks and documentation tooling keep the E4/E7/E9/F/I rule set.
+"tests/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
+"scripts/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
+"benchmarks/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
+"docs/**" = ["UP", "B", "SIM", "C4", "PIE", "RUF"]
 
 [tool.setuptools]
 # Package discovery deliberately uses setuptools namespace semantics: every
@@ -716,7 +749,7 @@ include-package-data = true
     "models/runtime/configs/**/*.py",
     "models/runtime/configs/**/*.md",
 ]
-"worldfoundry.evaluation.tasks.execution.runners" = [
+"worldfoundry.evals.tasks.execution.runners" = [
     "chronomagic_bench/runtime/chronomagic_bench/MTScore/configs/*.json",
     "devil_dynamics/runtime/official/*.sh",
     "ewmbench/runtime/ewmbench/*.yaml",

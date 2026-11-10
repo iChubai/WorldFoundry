@@ -1,7 +1,3 @@
-"""Module for base_models -> three_dimensions -> point_clouds -> cut3r -> utils -> camera.py functionality."""
-
-from typing import Optional
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,21 +9,12 @@ inf = float("inf")
 
 
 class PoseDecoder(nn.Module):
-    """Pose decoder implementation."""
-
     def __init__(
         self,
         hidden_size=768,
         mlp_ratio=4,
         pose_encoding_type="absT_quaR",
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            mlp_ratio: The mlp ratio.
-            pose_encoding_type: The pose encoding type.
-        """
         super().__init__()
 
         self.pose_encoding_type = pose_encoding_type
@@ -55,8 +42,6 @@ class PoseDecoder(nn.Module):
 
 
 class PoseEncoder(nn.Module):
-    """Pose encoder implementation."""
-
     def __init__(
         self,
         hidden_size=768,
@@ -64,14 +49,6 @@ class PoseEncoder(nn.Module):
         pose_mode=("exp", -inf, inf),
         pose_encoding_type="absT_quaR",
     ):
-        """Init.
-
-        Args:
-            hidden_size: The hidden size.
-            mlp_ratio: The mlp ratio.
-            pose_mode: The pose mode.
-            pose_encoding_type: The pose encoding type.
-        """
         super().__init__()
         self.pose_encoding_type = pose_encoding_type
         self.pose_mode = pose_mode
@@ -93,11 +70,6 @@ class PoseEncoder(nn.Module):
         )
 
     def forward(self, camera):
-        """Forward.
-
-        Args:
-            camera: The camera.
-        """
         pose_enc = camera_to_pose_encoding(
             camera,
             pose_encoding_type=self.pose_encoding_type,
@@ -109,8 +81,6 @@ class PoseEncoder(nn.Module):
 
 
 class HarmonicEmbedding(torch.nn.Module):
-    """Harmonic embedding implementation."""
-
     def __init__(
         self,
         n_harmonic_functions: int = 6,
@@ -219,7 +189,7 @@ class HarmonicEmbedding(torch.nn.Module):
         )
         self.append_input = append_input
 
-    def forward(self, x: torch.Tensor, diag_cov: Optional[torch.Tensor] = None, **kwargs) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, diag_cov: torch.Tensor | None = None, **kwargs) -> torch.Tensor:
         """
         Args:
             x: tensor of shape [..., dim]
@@ -274,17 +244,7 @@ class HarmonicEmbedding(torch.nn.Module):
 
 
 class PoseEmbedding(nn.Module):
-    """Pose embedding implementation."""
-
     def __init__(self, target_dim, out_dim, n_harmonic_functions=10, append_input=True):
-        """Init.
-
-        Args:
-            target_dim: The target dim.
-            out_dim: The out dim.
-            n_harmonic_functions: The n harmonic functions.
-            append_input: The append input.
-        """
         super().__init__()
 
         self._emb_pose = HarmonicEmbedding(n_harmonic_functions=n_harmonic_functions, append_input=append_input)
@@ -292,11 +252,6 @@ class PoseEmbedding(nn.Module):
         self.out_dim = self._emb_pose.get_output_dim(target_dim)
 
     def forward(self, pose_encoding):
-        """Forward.
-
-        Args:
-            pose_encoding: The pose encoding.
-        """
         e_pose_encoding = self._emb_pose(pose_encoding)
         return e_pose_encoding
 
@@ -326,7 +281,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
 
     batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)
+    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
     q_abs = _sqrt_positive_part(
         torch.stack(
@@ -353,7 +308,7 @@ def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
     flr = torch.tensor(0.1).to(dtype=q_abs.dtype, device=q_abs.device)
     quat_candidates = quat_by_rijk / (2.0 * q_abs[..., None].max(flr))
 
-    out = quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(batch_dim + (4,))
+    out = quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(batch_dim + (4,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     return standardize_quaternion(out)
 
 
@@ -420,7 +375,7 @@ def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
         ),
         -1,
     )
-    return o.reshape(quaternions.shape[:-1] + (3, 3))
+    return o.reshape(quaternions.shape[:-1] + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def pose_encoding_to_camera(

@@ -17,9 +17,10 @@ from PIL import Image
 
 def filter_kwargs(cls, kwargs):
     sig = inspect.signature(cls.__init__)
-    valid_params = set(sig.parameters.keys()) - {'self', 'cls'}
+    valid_params = set(sig.parameters.keys()) - {"self", "cls"}
     filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_params}
     return filtered_kwargs
+
 
 def get_width_and_height_from_image_and_base_resolution(image, base_resolution):
     target_pixels = int(base_resolution) * int(base_resolution)
@@ -28,6 +29,7 @@ def get_width_and_height_from_image_and_base_resolution(image, base_resolution):
     width_slider = round(original_width * ratio)
     height_slider = round(original_height * ratio)
     return height_slider, width_slider
+
 
 def color_transfer(sc, dc):
     """
@@ -57,7 +59,16 @@ def color_transfer(sc, dc):
     dst = cv2.cvtColor(cv2.convertScaleAbs(img_n), cv2.COLOR_LAB2RGB)
     return dst
 
-def save_videos_grid(videos: torch.Tensor, path: str, rescale=False, n_rows=6, fps=12, imageio_backend=True, color_transfer_post_process=False):
+
+def save_videos_grid(
+    videos: torch.Tensor,
+    path: str,
+    rescale=False,
+    n_rows=6,
+    fps=12,
+    imageio_backend=True,
+    color_transfer_post_process=False,
+):
     videos = rearrange(videos, "b c t h w -> t b c h w")
     outputs = []
     for x in videos:
@@ -77,12 +88,13 @@ def save_videos_grid(videos: torch.Tensor, path: str, rescale=False, n_rows=6, f
         if path.endswith("mp4"):
             imageio.mimsave(path, outputs, fps=fps)
         else:
-            imageio.mimsave(path, outputs, duration=(1000 * 1/fps))
+            imageio.mimsave(path, outputs, duration=(1000 * 1 / fps))
     else:
         if path.endswith("mp4"):
-            path = path.replace('.mp4', '.gif')
-        outputs[0].save(path, format='GIF', append_images=outputs, save_all=True, duration=100, loop=0)
+            path = path.replace(".mp4", ".gif")
+        outputs[0].save(path, format="GIF", append_images=outputs, save_all=True, duration=100, loop=0)
     print(f"Saved video to: {path}")
+
 
 def save_videos_with_audio_grid(
     videos: torch.Tensor,
@@ -91,7 +103,7 @@ def save_videos_with_audio_grid(
     fps: int = 24,
     audio_sample_rate: int = 24000,
     n_rows: int = 6,
-    rescale: bool = False
+    rescale: bool = False,
 ):
     """
     Save video frames with audio to a single mp4 file.
@@ -101,12 +113,12 @@ def save_videos_with_audio_grid(
         audio: Audio tensor
         path: Output file path
         fps: Frames per second
-        audio_sample_rate: Audio sample rate
         n_rows: Number of rows for grid layout
         rescale: Whether to rescale from [-1, 1] to [0, 1]
     """
-    import av
     from fractions import Fraction
+
+    import av
 
     # Convert video frames to numpy arrays
     # Support both [b, c, t, h, w] and [b, t, c, h, w]
@@ -125,7 +137,7 @@ def save_videos_with_audio_grid(
     # Handle single frame case (save as image)
     if len(frame_list) == 1:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        Image.fromarray(frame_list[0]).save(path.replace('.mp4', '.png'))
+        Image.fromarray(frame_list[0]).save(path.replace(".mp4", ".png"))
         print(f"Saved image to: {path.replace('.mp4', '.png')}")
         return
 
@@ -205,6 +217,7 @@ def save_videos_with_audio_grid(
     container.close()
     print(f"Saved video with audio to: {path}")
 
+
 def merge_video_audio(video_path: str, audio_path: str):
     """
     Merge the video and audio into a new video, with the duration set to the shorter of the two,
@@ -226,30 +239,29 @@ def merge_video_audio(video_path: str, audio_path: str):
     try:
         # create ffmpeg command
         command = [
-            'ffmpeg',
-            '-y',  # overwrite
-            '-i',
+            "ffmpeg",
+            "-y",  # overwrite
+            "-i",
             video_path,
-            '-i',
+            "-i",
             audio_path,
-            '-c:v',
-            'copy',  # copy video stream
-            '-c:a',
-            'aac',  # use AAC audio encoder
-            '-b:a',
-            '192k',  # set audio bitrate (optional)
-            '-map',
-            '0:v:0',  # select the first video stream
-            '-map',
-            '1:a:0',  # select the first audio stream
-            '-shortest',  # choose the shortest duration
-            temp_output
+            "-c:v",
+            "copy",  # copy video stream
+            "-c:a",
+            "aac",  # use AAC audio encoder
+            "-b:a",
+            "192k",  # set audio bitrate (optional)
+            "-map",
+            "0:v:0",  # select the first video stream
+            "-map",
+            "1:a:0",  # select the first audio stream
+            "-shortest",  # choose the shortest duration
+            temp_output,
         ]
 
         # execute the command
         print("Start merging video and audio...")
-        result = subprocess.run(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result = subprocess.run(command, capture_output=True, text=True)
 
         # check result
         if result.returncode != 0:
@@ -265,6 +277,7 @@ def merge_video_audio(video_path: str, audio_path: str):
             os.remove(temp_output)
         print(f"merge_video_audio failed with error: {e}")
 
+
 def calculate_dimensions(target_area, ratio):
     width = math.sqrt(target_area * ratio)
     height = width / ratio
@@ -273,6 +286,7 @@ def calculate_dimensions(target_area, ratio):
     height = round(height / 32) * 32
 
     return width, height
+
 
 def get_image_to_video_latent(validation_image_start, validation_image_end, video_length, sample_size):
     if validation_image_start is not None and validation_image_end is not None:
@@ -295,31 +309,40 @@ def get_image_to_video_latent(validation_image_start, validation_image_end, vide
         if type(image_start) is list:
             clip_image = clip_image[0]
             start_video = torch.cat(
-                [torch.from_numpy(np.array(_image_start)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0) for _image_start in image_start],
-                dim=2
+                [
+                    torch.from_numpy(np.array(_image_start)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0)
+                    for _image_start in image_start
+                ],
+                dim=2,
             )
             input_video = torch.tile(start_video[:, :, :1], [1, 1, video_length, 1, 1])
-            input_video[:, :, :len(image_start)] = start_video
+            input_video[:, :, : len(image_start)] = start_video
 
             input_video_mask = torch.zeros_like(input_video[:, :1])
-            input_video_mask[:, :, len(image_start):] = 255
+            input_video_mask[:, :, len(image_start) :] = 255
         else:
             input_video = torch.tile(
                 torch.from_numpy(np.array(image_start)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0),
-                [1, 1, video_length, 1, 1]
+                [1, 1, video_length, 1, 1],
             )
             input_video_mask = torch.zeros_like(input_video[:, :1])
             input_video_mask[:, :, 1:] = 255
 
         if type(image_end) is list:
-            image_end = [_image_end.resize(image_start[0].size if type(image_start) is list else image_start.size) for _image_end in image_end]
+            image_end = [
+                _image_end.resize(image_start[0].size if type(image_start) is list else image_start.size)
+                for _image_end in image_end
+            ]
             end_video = torch.cat(
-                [torch.from_numpy(np.array(_image_end)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0) for _image_end in image_end],
-                dim=2
+                [
+                    torch.from_numpy(np.array(_image_end)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0)
+                    for _image_end in image_end
+                ],
+                dim=2,
             )
-            input_video[:, :, -len(end_video):] = end_video
+            input_video[:, :, -len(end_video) :] = end_video
 
-            input_video_mask[:, :, -len(image_end):] = 0
+            input_video_mask[:, :, -len(image_end) :] = 0
         else:
             image_end = image_end.resize(image_start[0].size if type(image_start) is list else image_start.size)
             input_video[:, :, -1:] = torch.from_numpy(np.array(image_end)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0)
@@ -341,22 +364,32 @@ def get_image_to_video_latent(validation_image_start, validation_image_end, vide
         if type(image_start) is list:
             clip_image = clip_image[0]
             start_video = torch.cat(
-                [torch.from_numpy(np.array(_image_start)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0) for _image_start in image_start],
-                dim=2
+                [
+                    torch.from_numpy(np.array(_image_start)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0)
+                    for _image_start in image_start
+                ],
+                dim=2,
             )
             input_video = torch.tile(start_video[:, :, :1], [1, 1, video_length, 1, 1])
-            input_video[:, :, :len(image_start)] = start_video
+            input_video[:, :, : len(image_start)] = start_video
             input_video = input_video / 255
 
             input_video_mask = torch.zeros_like(input_video[:, :1])
-            input_video_mask[:, :, len(image_start):] = 255
+            input_video_mask[:, :, len(image_start) :] = 255
         else:
-            input_video = torch.tile(
-                torch.from_numpy(np.array(image_start)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0),
-                [1, 1, video_length, 1, 1]
-            ) / 255
+            input_video = (
+                torch.tile(
+                    torch.from_numpy(np.array(image_start)).permute(2, 0, 1).unsqueeze(1).unsqueeze(0),
+                    [1, 1, video_length, 1, 1],
+                )
+                / 255
+            )
             input_video_mask = torch.zeros_like(input_video[:, :1])
-            input_video_mask[:, :, 1:, ] = 255
+            input_video_mask[
+                :,
+                :,
+                1:,
+            ] = 255
     else:
         image_start = None
         image_end = None
@@ -368,16 +401,19 @@ def get_image_to_video_latent(validation_image_start, validation_image_end, vide
     del image_end
     gc.collect()
 
-    return  input_video, input_video_mask, clip_image
+    return input_video, input_video_mask, clip_image
 
-def get_video_to_video_latent(input_video_path, video_length, sample_size, fps=None, validation_video_mask=None, ref_image=None):
+
+def get_video_to_video_latent(
+    input_video_path, video_length, sample_size, fps=None, validation_video_mask=None, ref_image=None
+):
     if input_video_path is not None:
         if isinstance(input_video_path, str):
             cap = cv2.VideoCapture(input_video_path)
             input_video = []
 
             original_fps = cap.get(cv2.CAP_PROP_FPS)
-            frame_skip = 1 if fps is None else max(1,int(original_fps // fps))
+            frame_skip = 1 if fps is None else max(1, int(original_fps // fps))
 
             frame_count = 0
 
@@ -403,10 +439,18 @@ def get_video_to_video_latent(input_video_path, video_length, sample_size, fps=N
         input_video = input_video.permute([3, 0, 1, 2]).unsqueeze(0) / 255
 
         if validation_video_mask is not None:
-            validation_video_mask = Image.open(validation_video_mask).convert('L').resize((sample_size[1], sample_size[0]))
+            validation_video_mask = (
+                Image.open(validation_video_mask).convert("L").resize((sample_size[1], sample_size[0]))
+            )
             input_video_mask = np.where(np.array(validation_video_mask) < 240, 0, 255)
 
-            input_video_mask = torch.from_numpy(np.array(input_video_mask)).unsqueeze(0).unsqueeze(-1).permute([3, 0, 1, 2]).unsqueeze(0)
+            input_video_mask = (
+                torch.from_numpy(np.array(input_video_mask))
+                .unsqueeze(0)
+                .unsqueeze(-1)
+                .permute([3, 0, 1, 2])
+                .unsqueeze(0)
+            )
             input_video_mask = torch.tile(input_video_mask, [1, 1, input_video.size()[2], 1, 1])
             input_video_mask = input_video_mask.to(input_video.device, input_video.dtype)
         else:
@@ -497,8 +541,8 @@ def get_video_to_video_render_latent(
         masked_video = masked_video.permute([3, 0, 1, 2]).unsqueeze(0) / 255
 
         if validation_video_mask is not None:
-            validation_video_mask = Image.open(validation_video_mask).convert("L").resize(
-                (sample_size[1], sample_size[0])
+            validation_video_mask = (
+                Image.open(validation_video_mask).convert("L").resize((sample_size[1], sample_size[0]))
             )
             input_video_mask = np.where(np.array(validation_video_mask) < 240, 0, 255)
             input_video_mask = (
@@ -557,6 +601,7 @@ def get_image_latent(ref_image=None, sample_size=None, padding=False):
 
     return ref_image
 
+
 def get_image(ref_image=None):
     if ref_image is not None:
         if isinstance(ref_image, str):
@@ -566,8 +611,9 @@ def get_image(ref_image=None):
 
     return ref_image
 
+
 def padding_image(images, new_width, new_height):
-    new_image = Image.new('RGB', (new_width, new_height), (255, 255, 255))
+    new_image = Image.new("RGB", (new_width, new_height), (255, 255, 255))
 
     aspect_ratio = images.width / images.height
     if new_width / new_height > 1:
@@ -594,49 +640,56 @@ def padding_image(images, new_width, new_height):
 
     return new_image
 
+
 def timer(func):
     def wrapper(*args, **kwargs):
-        start_time  = time.time()
-        result      = func(*args, **kwargs)
-        end_time    = time.time()
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
         print(f"function {func.__name__} running for {end_time - start_time} seconds")
         return result
+
     return wrapper
+
 
 def timer_record(model_name=""):
     def decorator(func):
         def wrapper(*args, **kwargs):
             torch.cuda.synchronize()
             start_time = time.time()
-            result      = func(*args, **kwargs)
+            result = func(*args, **kwargs)
             torch.cuda.synchronize()
             end_time = time.time()
             import torch.distributed as dist
+
             if dist.is_initialized():
                 if dist.get_rank() == 0:
-                    time_sum  = end_time - start_time
-                    print('# --------------------------------------------------------- #')
-                    print(f'#   {model_name} time: {time_sum}s')
-                    print('# --------------------------------------------------------- #')
+                    time_sum = end_time - start_time
+                    print("# --------------------------------------------------------- #")
+                    print(f"#   {model_name} time: {time_sum}s")
+                    print("# --------------------------------------------------------- #")
                     _write_to_excel(model_name, time_sum)
             else:
-                time_sum  = end_time - start_time
-                print('# --------------------------------------------------------- #')
-                print(f'#   {model_name} time: {time_sum}s')
-                print('# --------------------------------------------------------- #')
+                time_sum = end_time - start_time
+                print("# --------------------------------------------------------- #")
+                print(f"#   {model_name} time: {time_sum}s")
+                print("# --------------------------------------------------------- #")
                 _write_to_excel(model_name, time_sum)
             return result
+
         return wrapper
+
     return decorator
+
 
 def _write_to_excel(model_name, time_sum):
     import os
 
     import pandas as pd
 
-    row_env = os.environ.get(f"{model_name}_EXCEL_ROW", "1")  # 默认第1行
-    col_env = os.environ.get(f"{model_name}_EXCEL_COL", "1")  # 默认第A列
-    file_path = os.environ.get("EXCEL_FILE", "timing_records.xlsx")  # 默认文件名
+    row_env = os.environ.get(f"{model_name}_EXCEL_ROW", "1")  # 0-based DataFrame row index
+    col_env = os.environ.get(f"{model_name}_EXCEL_COL", "1")  # 0-based DataFrame column index
+    file_path = os.environ.get("EXCEL_FILE", "timing_records.xlsx")
 
     try:
         df = pd.read_excel(file_path, sheet_name="Sheet1", header=None)
@@ -647,7 +700,10 @@ def _write_to_excel(model_name, time_sum):
     col_idx = int(col_env)
 
     if row_idx >= len(df):
-        df = pd.concat([df, pd.DataFrame([ [None] * (len(df.columns) if not df.empty else 0) ] * (row_idx - len(df) + 1))], ignore_index=True)
+        df = pd.concat(
+            [df, pd.DataFrame([[None] * (len(df.columns) if not df.empty else 0)] * (row_idx - len(df) + 1))],
+            ignore_index=True,
+        )
 
     if col_idx >= len(df.columns):
         df = pd.concat([df, pd.DataFrame(columns=range(len(df.columns), col_idx + 1))], axis=1)
@@ -655,6 +711,7 @@ def _write_to_excel(model_name, time_sum):
     df.iloc[row_idx, col_idx] = time_sum
 
     df.to_excel(file_path, index=False, header=False, sheet_name="Sheet1")
+
 
 def get_autocast_dtype():
     try:

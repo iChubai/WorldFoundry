@@ -47,7 +47,6 @@ class StreamToLogger:
         Flush method to comply with file-like object interface.
         This method is required but does nothing in this implementation.
         """
-        pass
 
 
 def seed_everything(seed: int = 42):
@@ -106,9 +105,7 @@ def invalid_to_zeros(arr, valid_mask, ndim=999):
         arr[~valid_mask] = 0
         nnz = valid_mask.view(len(valid_mask), -1).sum(1)
     else:
-        nnz = (
-            arr[..., 0].numel() // len(arr) if len(arr) else 0
-        )  # Number of pixels per image
+        nnz = arr[..., 0].numel() // len(arr) if len(arr) else 0  # Number of pixels per image
     if arr.ndim > ndim:
         arr = arr.flatten(-2 - (arr.ndim - ndim), -2)
     return arr, nnz

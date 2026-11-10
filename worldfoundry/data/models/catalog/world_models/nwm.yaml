@@ -52,7 +52,7 @@ runner_parity:
   - The pipeline resolves the official NWM inference entrypoint and returns blocked runtime diagnostics until checkpoints
     and datasets are staged.
 runtime_profile: runtime-profile:nwm
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: nwm
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain

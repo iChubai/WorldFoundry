@@ -9,11 +9,11 @@ from typing import Any
 
 import pytest
 
-from worldfoundry.evaluation.api import GenerationRequest
-from worldfoundry.evaluation.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profiles
-from worldfoundry.evaluation.utils import load_manifest_collection
+from worldfoundry.evals.api import GenerationRequest
+from worldfoundry.evals.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profiles
+from worldfoundry.evals.utils import load_manifest_collection
 from worldfoundry.operators.act_operator import ACTOperator
 from worldfoundry.operators.being_h05_operator import BeingH05Operator
 from worldfoundry.operators.diffusion_policy_operator import DiffusionPolicyOperator
@@ -52,7 +52,7 @@ from worldfoundry.synthesis.action_generation.roboflamingo.runtime import (
 from worldfoundry.synthesis.visual_generation.memory.runtime import RuntimeMemory
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PIPELINE_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+PIPELINE_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 ACQUISITION_REPO_ROOT = REPO_ROOT / "cache" / "generative_taxonomy" / "repos"
 VLA_REPO_ROOT = REPO_ROOT / "cache" / "vla_va_wam" / "repos"
 
@@ -203,8 +203,8 @@ def _is_worldfoundry_pipeline_runner(value) -> bool:
 
 
 def test_runtime_profiles_cover_catalog_entries() -> None:
-    from worldfoundry.evaluation.models.catalog.schema import iter_model_zoo_payloads
-    from worldfoundry.evaluation.utils import load_manifest, manifest_paths
+    from worldfoundry.evals.models.catalog.schema import iter_model_zoo_payloads
+    from worldfoundry.evals.utils import load_manifest, manifest_paths
 
     catalog_root = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
     target_ids: set[str] = set()
@@ -294,8 +294,8 @@ def test_runtime_profiles_cover_catalog_entries() -> None:
         importlib.import_module("worldfoundry.synthesis.action_generation.dreamzero.runtime").run_default_client_demo
         is not None
     )
-    assert not (REPO_ROOT / "worldfoundry" / "evaluation" / "models" / "runtime_profile_runners.py").exists()
-    assert not (REPO_ROOT / "worldfoundry" / "evaluation" / "models" / "official_runtime.py").exists()
+    assert not (REPO_ROOT / "worldfoundry" / "evals" / "models" / "runtime_profile_runners.py").exists()
+    assert not (REPO_ROOT / "worldfoundry" / "evals" / "models" / "official_runtime.py").exists()
     assert not (REPO_ROOT / "worldfoundry" / "operators" / "official_runtime_operator.py").exists()
     assert not (REPO_ROOT / "worldfoundry" / "memories" / "visual_synthesis" / "official_runtime").exists()
     assert not (REPO_ROOT / "worldfoundry" / "synthesis" / "visual_generation" / "official_runtime").exists()

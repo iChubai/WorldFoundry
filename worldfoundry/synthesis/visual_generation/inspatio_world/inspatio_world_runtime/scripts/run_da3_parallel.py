@@ -25,20 +25,24 @@ def process_video(args):
     da3_output = final_output + "_da3_tmp"
     video_name = os.path.basename(video_path)
 
-    print(f"[GPU {gpu_id}] [{idx+1}/{total_videos}] Processing: {video_name}")
+    print(f"[GPU {gpu_id}] [{idx + 1}/{total_videos}] Processing: {video_name}")
 
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
     # --- DA3 depth estimation ---
     if os.path.isdir(da3_output) and os.path.isdir(os.path.join(da3_output, "frames_pcd")):
-        print(f"[GPU {gpu_id}] [{idx+1}/{total_videos}] DA3 output exists, skipping")
+        print(f"[GPU {gpu_id}] [{idx + 1}/{total_videos}] DA3 output exists, skipping")
     else:
         cmd_da3 = [
-            sys.executable, da3_cli,
-            "--input", video_path,
-            "--output", da3_output,
-            "--config-json", da3_config,
+            sys.executable,
+            da3_cli,
+            "--input",
+            video_path,
+            "--output",
+            da3_output,
+            "--config-json",
+            da3_config,
         ]
         result = subprocess.run(cmd_da3, env=env)
         if result.returncode != 0:
@@ -47,17 +51,21 @@ def process_video(args):
 
     # --- Convert DA3 -> Pi3 format ---
     cmd_convert = [
-        sys.executable, convert_script,
-        "--da3_dir", da3_output,
-        "--output_dir", final_output,
-        "--video_path", video_path,
+        sys.executable,
+        convert_script,
+        "--da3_dir",
+        da3_output,
+        "--output_dir",
+        final_output,
+        "--video_path",
+        video_path,
     ]
     result = subprocess.run(cmd_convert, env=env)
     if result.returncode != 0:
         print(f"[GPU {gpu_id}] Convert failed for {video_name}", file=sys.stderr)
         return False
 
-    print(f"[GPU {gpu_id}] [{idx+1}/{total_videos}] Done: {video_name}")
+    print(f"[GPU {gpu_id}] [{idx + 1}/{total_videos}] Done: {video_name}")
     return True
 
 

@@ -9,7 +9,7 @@ This page traces one evaluation run from the CLI through artifact files on disk.
 
 ## Entry points
 
-The console entry is `worldfoundry/cli/main.py:304` `main()`. Most evaluate and model-only runs then enter `run_evaluate()` in `evaluation/tasks/execution/orchestration/evaluate.py` (`:1071`). A model-plus-benchmark run does **not** go through that facade: orchestration calls `execute_prepared_evaluation()` → `run_model_benchmark()` in `model_benchmark.py`. The CLI dispatches into one of four shapes:
+The console entry is `worldfoundry/cli/main.py:304` `main()`. Most evaluate and model-only runs then enter `run_evaluate()` in `evals/tasks/execution/orchestration/evaluate.py` (`:1071`). A model-plus-benchmark run does **not** go through that facade: orchestration calls `execute_prepared_evaluation()` → `run_model_benchmark()` in `model_benchmark.py`. The CLI dispatches into one of four shapes:
 
 - **evaluate** — normalizes inputs, picks a run mode, and returns one `EvaluateRunResult`.
 - **existing outputs** — scores artifacts already on disk through `existing_results.py` without loading a model.
@@ -25,7 +25,7 @@ The happy path looks like this: one `EvaluateRunRequest` enters the facade, a mo
 <ArchDiagram id="workflow" />
 
 ```python
-# worldfoundry/cli/main.py → evaluation/tasks/execution/orchestration/evaluate.py
+# worldfoundry/cli/main.py → evals/tasks/execution/orchestration/evaluate.py
 result = run_evaluate(EvaluateRunRequest(...))
 
 mode = _mode(request)

@@ -35,7 +35,7 @@ integration:
   - WorldFoundry registers an in-tree runtime manifest pipeline for the vendored Ctrl-World source.
   - Official WorldArena-listed source is vendored in-tree under worldfoundry/synthesis/visual_generation/ctrl_world/ctrl_world_runtime.
 runtime_profile: runtime-profile:ctrl-world
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: ctrl-world
 runner_parity:
   status: verified_inference_only

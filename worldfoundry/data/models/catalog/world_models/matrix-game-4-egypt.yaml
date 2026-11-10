@@ -5,7 +5,7 @@ aliases: [matrix-game-4-ancient-egypt]
 provider: Skywork AI
 tasks: [video-to-video, low-poly-rendering]
 output_artifacts: [generated_video]
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: matrix-game-4-egypt
 runtime_profile: runtime-profile:matrix-game-4-egypt
 catalog_category: world_models

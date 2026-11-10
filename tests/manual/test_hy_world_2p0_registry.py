@@ -1,4 +1,4 @@
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.hunyuan_world.pipeline_hy_world_2p0 import (
     HYWorld2PanoPipeline,
     HYWorld2Pipeline,

@@ -32,8 +32,8 @@ use run_eval.py with ground truth camera poses instead.
 """
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
 _THIS_FILE = Path(__file__).resolve()
 for _path in (
@@ -44,18 +44,18 @@ for _path in (
     if _path_str not in sys.path:
         sys.path.insert(0, _path_str)
 
-import torch
-from huggingface_hub import hf_hub_download
-from inference_utils import create_target_camera_path, load_and_preprocess_images_compat, render_chunked, save_video
-from models.encoder_decoder import EncDec_VitB8
+import torch  # noqa: E402 - Follows the sys.path setup.
+from huggingface_hub import hf_hub_download  # noqa: E402 - Follows the sys.path setup.
+from inference_utils import (  # noqa: E402 - Follows the sys.path setup.
+    create_target_camera_path,
+    load_and_preprocess_images_compat,
+    render_chunked,
+    save_video,
+)
+from models.encoder_decoder import EncDec_VitB8  # noqa: E402 - Follows the sys.path setup.
 
 
 def _resolve_checkpoint(model_repo):
-    """Helper function to resolve checkpoint.
-
-    Args:
-        model_repo: The model repo.
-    """
     path = Path(model_repo).expanduser()
     if path.is_file():
         return str(path)
@@ -68,7 +68,6 @@ def _resolve_checkpoint(model_repo):
 
 
 def main():
-    """Main."""
     parser = argparse.ArgumentParser(description="LagerNVS minimal inference")
     parser.add_argument(
         "--images",
@@ -137,11 +136,7 @@ def main():
     # -------------------------------------------------------------------------
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # bfloat16 requires Ampere+ GPUs (Compute Capability 8.0+), fall back to float16
-    dtype = (
-        torch.bfloat16
-        if device == "cuda" and torch.cuda.get_device_capability()[0] >= 8
-        else torch.float16
-    )
+    dtype = torch.bfloat16 if device == "cuda" and torch.cuda.get_device_capability()[0] >= 8 else torch.float16
     print(f"Device: {device}, dtype: {dtype}")
 
     # -------------------------------------------------------------------------
@@ -154,9 +149,7 @@ def main():
     image_names = args.images
     num_cond_views = len(image_names)
 
-    images = load_and_preprocess_images_compat(
-        image_names, mode=args.mode, target_size=args.target_size, patch_size=8
-    )
+    images = load_and_preprocess_images_compat(image_names, mode=args.mode, target_size=args.target_size, patch_size=8)
     # Add batch dimension: (num_views, 3, H, W) -> (1, num_views, 3, H, W)
     images = images.to(device).unsqueeze(0)
     image_size_hw = (images.shape[-2], images.shape[-1])
@@ -225,13 +218,12 @@ def main():
     #
     # Output: (B, video_length, 3, H, W) — rendered RGB frames
     print(f"Rendering {args.video_length} frames...")
-    with torch.no_grad():
-        with torch.amp.autocast(device_type="cuda", dtype=dtype):
-            video_out = render_chunked(
-                model,
-                (images, rays, cam_tokens),
-                num_cond_views=num_cond_views,
-            )
+    with torch.no_grad(), torch.amp.autocast(device_type="cuda", dtype=dtype):
+        video_out = render_chunked(
+            model,
+            (images, rays, cam_tokens),
+            num_cond_views=num_cond_views,
+        )
     print(f"Output video shape: {video_out.shape}")
 
     # -------------------------------------------------------------------------

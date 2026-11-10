@@ -33,7 +33,7 @@ catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry
   runtimes; request-plan entries expose validated planning surfaces without claiming
   generated artifacts.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: mosaicmem
 docs:
   publisher: Open-source research release (institution not recorded)

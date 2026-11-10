@@ -450,8 +450,8 @@ Studio, MCP, and every compatible benchmark at once.
 4. Check it without weights (`wf run <model-id> --model-status`), then on GPU.
 
 **Benchmark steps:** add a catalog entry under `worldfoundry/data/benchmarks/catalog/`, a runner under
-`worldfoundry/evaluation/tasks/execution/runners/`, and any new metrics under
-`worldfoundry/evaluation/tasks/metrics/`.
+`worldfoundry/evals/tasks/execution/runners/`, and any new metrics under
+`worldfoundry/evals/tasks/metrics/`.
 
 Guides: [Add a model](https://openenvision.github.io/WorldFoundry/docs/guides/add-model) ·
 [Add a benchmark](https://openenvision.github.io/WorldFoundry/docs/guides/add-benchmark) ·

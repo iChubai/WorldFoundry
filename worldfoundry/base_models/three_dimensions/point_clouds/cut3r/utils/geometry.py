@@ -4,8 +4,6 @@
 # --------------------------------------------------------
 # modified from DUSt3R
 
-"""Module for base_models -> three_dimensions -> point_clouds -> cut3r -> utils -> geometry.py functionality."""
-
 import numpy as np
 import torch
 
@@ -36,10 +34,10 @@ def xy_grid(
         def ones(*a):
             return torch.ones(*a, device=device)
 
-    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin)]
+    tw, th = [arange(o, o + s, **arange_kw) for s, o in zip((W, H), origin, strict=False)]
     grid = meshgrid(tw, th, indexing="xy")
     if homogeneous:
-        grid = grid + (ones((H, W)),)
+        grid = grid + (ones((H, W)),)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
     if unsqueeze is not None:
         grid = (grid[0].unsqueeze(unsqueeze), grid[1].unsqueeze(unsqueeze))
     if cat_dim is not None:
@@ -120,9 +118,7 @@ def get_med_dist_between_poses(poses):
     from scipy.spatial.distance import pdist
 
     centers = [
-        pose[:3, 3].detach().cpu().numpy()
-        if isinstance(pose, torch.Tensor)
-        else np.asarray(pose[:3, 3])
+        pose[:3, 3].detach().cpu().numpy() if isinstance(pose, torch.Tensor) else np.asarray(pose[:3, 3])
         for pose in poses
     ]
     return np.median(pdist(centers))
@@ -147,10 +143,7 @@ def depthmap_to_pts3d(depth, pseudo_focal, pp=None, **_):
         pseudo_focalx = pseudo_focaly = pseudo_focal
     elif len(pseudo_focal.shape) == 4:  # [B,2,H,W] or [B,1,H,W]
         pseudo_focalx = pseudo_focal[:, 0]
-        if pseudo_focal.shape[1] == 2:
-            pseudo_focaly = pseudo_focal[:, 1]
-        else:
-            pseudo_focaly = pseudo_focalx
+        pseudo_focaly = pseudo_focal[:, 1] if pseudo_focal.shape[1] == 2 else pseudo_focalx
     else:
         raise NotImplementedError("Error, unknown input focal shape format.")
 

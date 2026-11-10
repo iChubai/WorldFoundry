@@ -9,38 +9,63 @@ from transformers import AutoTokenizer
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 current_file_path = os.path.abspath(__file__)
-project_roots = [os.path.dirname(current_file_path), os.path.dirname(os.path.dirname(current_file_path)), os.path.dirname(os.path.dirname(os.path.dirname(current_file_path)))]
+project_roots = [
+    os.path.dirname(current_file_path),
+    os.path.dirname(os.path.dirname(current_file_path)),
+    os.path.dirname(os.path.dirname(os.path.dirname(current_file_path))),
+]
 for project_root in project_roots:
     sys.path.insert(0, project_root) if project_root not in sys.path else None
 
-from videox_fun.data import process_pose_file
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import AutoencoderKLWan
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.dreamx_world.vae import AutoencoderKLWan3_8
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.video_x_fun import CLIPModel
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import WanT5EncoderModel
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.video_x_fun.transformer import Wan2_2Transformer3DModel
-from worldfoundry.base_models.diffusion_model.loaders.wan_variant import load_wan_transformer
-from worldfoundry.base_models.diffusion_model.optimizations.wan.teacache import (
+from videox_fun.data import process_pose_file  # noqa: E402 - Follows the sys.path setup.
+from videox_fun.pipeline import Wan2_2FunControlPipeline  # noqa: E402 - Follows the sys.path setup.
+from videox_fun.utils import (  # noqa: E402 - Follows the sys.path setup.
+    register_auto_device_hook,
+    safe_enable_group_offload,
+)
+from videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the sys.path setup.
+    convert_model_weight_to_float8,
+    convert_weight_dtype_wrapper,
+    replace_parameters_by_name,
+)
+from videox_fun.utils.lora_utils import merge_lora, unmerge_lora  # noqa: E402 - Follows the sys.path setup.
+from videox_fun.utils.output import save_inference_sample  # noqa: E402 - Follows the sys.path setup.
+from videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
+    filter_kwargs,
+    get_image_latent,
+    get_image_to_video_latent,
+    get_video_to_video_latent,
+)
+
+from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (  # noqa: E402 - Follows the sys.path setup.
+    load_wan_transformer,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.dreamx_world.vae import (  # noqa: E402 - Follows the sys.path setup.
+    AutoencoderKLWan3_8,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import (  # noqa: E402 - Follows the sys.path setup.
+    AutoencoderKLWan,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (  # noqa: E402 - Follows the sys.path setup.
+    WanT5EncoderModel,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.video_x_fun.transformer import (  # noqa: E402 - Follows the sys.path setup.
+    Wan2_2Transformer3DModel,
+)
+from worldfoundry.base_models.diffusion_model.optimizations.wan.teacache import (  # noqa: E402 - Follows the sys.path setup.
     get_teacache_coefficients,
 )
-from worldfoundry.core.distributed.sequence_parallel.runtime import (
+from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (  # noqa: E402 - Follows the sys.path setup.
+    FlowDPMSolverMultistepScheduler,
+)
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (  # noqa: E402 - Follows the sys.path setup.
+    FlowUniPCMultistepScheduler,
+)
+from worldfoundry.core.distributed.sequence_parallel.runtime import (  # noqa: E402 - Follows the sys.path setup.
     set_multi_gpus_devices,
 )
-from worldfoundry.core.distributed.sharding.block_fsdp import shard_model
-from videox_fun.pipeline import Wan2_2FunControlPipeline, WanPipeline
-from videox_fun.utils import (register_auto_device_hook,
-                              safe_enable_group_offload)
-from videox_fun.utils.output import save_inference_sample
-from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import FlowDPMSolverMultistepScheduler
-from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import FlowUniPCMultistepScheduler
-from worldfoundry.core.io.paths import resolve_data_path
-from videox_fun.utils.fp8_optimization import (convert_model_weight_to_float8,
-                                               convert_weight_dtype_wrapper,
-                                               replace_parameters_by_name)
-from videox_fun.utils.lora_utils import merge_lora, unmerge_lora
-from videox_fun.utils.utils import (filter_kwargs, get_image_latent,
-                                    get_image_to_video_latent,
-                                    get_video_to_video_latent)
+from worldfoundry.core.distributed.sharding.block_fsdp import shard_model  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.core.io.paths import resolve_data_path  # noqa: E402 - Follows the sys.path setup.
 
 # GPU memory mode, which can be chosen in [model_full_load, model_full_load_and_qfloat8, model_cpu_offload, model_cpu_offload_and_qfloat8, model_group_offload, sequential_cpu_offload].
 # model_full_load means that the entire model will be moved to the GPU.
@@ -58,22 +83,22 @@ from videox_fun.utils.utils import (filter_kwargs, get_image_latent,
 #
 # sequential_cpu_offload means that each layer of the model will be moved to the CPU after use,
 # resulting in slower speeds but saving a large amount of GPU memory.
-GPU_memory_mode     = "sequential_cpu_offload"
+GPU_memory_mode = "sequential_cpu_offload"
 # Multi GPUs config
 # Please ensure that the product of ulysses_degree and ring_degree equals the number of GPUs used.
 # For example, if you are using 8 GPUs, you can set ulysses_degree = 2 and ring_degree = 4.
 # If you are using 1 GPU, you can set ulysses_degree = 1 and ring_degree = 1.
-ulysses_degree      = 1
-ring_degree         = 1
+ulysses_degree = 1
+ring_degree = 1
 # Use FSDP to save more GPU memory in multi gpus.
-fsdp_dit            = False
-fsdp_text_encoder   = True
+fsdp_dit = False
+fsdp_text_encoder = True
 # Compile will give a speedup in fixed resolution and need a little GPU memory.
 # The compile_dit is not compatible with the fsdp_dit and sequential_cpu_offload.
-compile_dit         = False
+compile_dit = False
 
 # Support TeaCache.
-enable_teacache     = True
+enable_teacache = True
 # Recommended to be set between 0.05 and 0.30. A larger threshold can cache more steps, speeding up the inference process,
 # but it may cause slight differences between the generated content and the original content.
 # # --------------------------------------------------------------------------------------------------- #
@@ -81,92 +106,97 @@ enable_teacache     = True
 # | Wan2.2-T2V-A14B     | 0.10~0.15 | Wan2.2-I2V-A14B     | 0.15~0.20 |
 # | Wan2.2-Fun-A14B-*   | 0.15~0.20 |
 # # --------------------------------------------------------------------------------------------------- #
-teacache_threshold  = 0.10
+teacache_threshold = 0.10
 # The number of steps to skip TeaCache at the beginning of the inference process, which can
 # reduce the impact of TeaCache on generated video quality.
 num_skip_start_steps = 5
 # Whether to offload TeaCache tensors to cpu to save a little bit of GPU memory.
-teacache_offload    = False
+teacache_offload = False
 
 # Skip some cfg steps in inference
 # Recommended to be set between 0.00 and 0.25
-cfg_skip_ratio      = 0
+cfg_skip_ratio = 0
 
 # Riflex config
-enable_riflex       = False
+enable_riflex = False
 # Index of intrinsic frequency
-riflex_k            = 6
+riflex_k = 6
 
 # Config and model path
-config_path         = str(resolve_data_path("models", "runtime", "configs", "video_x_fun", "wan2.2", "wan_civitai_5b.yaml"))
+config_path = str(resolve_data_path("models", "runtime", "configs", "video_x_fun", "wan2.2", "wan_civitai_5b.yaml"))
 # model path
-model_name          = "models/Diffusion_Transformer/Wan2.2-Fun-5B-Control/"
+model_name = "models/Diffusion_Transformer/Wan2.2-Fun-5B-Control/"
 
 # Choose the sampler in "Flow", "Flow_Unipc", "Flow_DPM++"
-sampler_name        = "Flow"
+sampler_name = "Flow"
 # [NOTE]: Noise schedule shift parameter. Affects temporal dynamics.
 # Used when the sampler is in "Flow_Unipc", "Flow_DPM++".
-shift               = 5
+shift = 5
 
 # Load pretrained model if need
 # The transformer_path is used for low noise model, the transformer_high_path is used for high noise model.
 # Since Wan2.2-5b consists of only one model, only transformer_path is used.
-transformer_path        = None
-transformer_high_path   = None
-vae_path                = None
+transformer_path = None
+transformer_high_path = None
+vae_path = None
 # Load lora model if need
 # The lora_path is used for low noise model, the lora_high_path is used for high noise model.
 # Since Wan2.2-5b consists of only one model, only lora_path is used.
-lora_path               = None
-lora_high_path          = None
+lora_path = None
+lora_high_path = None
 
 # Other params
-sample_size         = [1280, 704]
-video_length        = 121
-fps                 = 24
+sample_size = [1280, 704]
+video_length = 121
+fps = 24
 
 # Use torch.float16 if GPU does not support torch.bfloat16
 # ome graphics cards, such as v100, 2080ti, do not support torch.bfloat16
-weight_dtype            = torch.bfloat16
-control_video           = "asset/pose.mp4"
-control_camera_txt      = None
-start_image             = None
-end_image               = None
-ref_image               = "asset/8.png"
+weight_dtype = torch.bfloat16
+control_video = "asset/pose.mp4"
+control_camera_txt = None
+start_image = None
+end_image = None
+ref_image = "asset/8.png"
 
-# 使用更长的neg prompt如"模糊，突变，变形，失真，画面暗，文本字幕，画面固定，连环画，漫画，线稿，没有主体。"，可以增加稳定性
-# 在neg prompt中添加"安静，固定"等词语可以增加动态性。
-prompt              = "一位年轻女子站在阳光明媚的海岸线上，身穿深蓝色背心与清爽的白色衬衫，外搭一条简洁的白色围裙，围裙在轻拂的海风中微微飘动。她拥有一头鲜艳的紫色长发，在风中轻盈舞动，发间系着一个精致的黑色蝴蝶结，与身后柔和的蔚蓝天空形成鲜明对比。她面容清秀，眉目精致，透着一股甜美的青春气息；神情柔和，略带羞涩，目光静静地凝望着远方的地平线，双手自然交叠于身前，仿佛沉浸在思绪之中。在她身后，是辽阔无垠、波光粼粼的大海，阳光洒在海面上，映出温暖的金色光晕。"
-negative_prompt     = "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+# A longer negative prompt such as "模糊，突变，变形，失真，画面暗，文本字幕，画面固定，连环画，漫画，线稿，没有主体。" improves stability.
+# Adding words such as "安静，固定" to the negative prompt increases motion.
+prompt = "一位年轻女子站在阳光明媚的海岸线上，身穿深蓝色背心与清爽的白色衬衫，外搭一条简洁的白色围裙，围裙在轻拂的海风中微微飘动。她拥有一头鲜艳的紫色长发，在风中轻盈舞动，发间系着一个精致的黑色蝴蝶结，与身后柔和的蔚蓝天空形成鲜明对比。她面容清秀，眉目精致，透着一股甜美的青春气息；神情柔和，略带羞涩，目光静静地凝望着远方的地平线，双手自然交叠于身前，仿佛沉浸在思绪之中。在她身后，是辽阔无垠、波光粼粼的大海，阳光洒在海面上，映出温暖的金色光晕。"
+negative_prompt = "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
 
 # Using longer neg prompt such as "Blurring, mutation, deformation, distortion, dark and solid, comics, text subtitles, line art." can increase stability
 # Adding words such as "quiet, solid" to the neg prompt can increase dynamism.
 # prompt                  = "A young woman with beautiful, clear eyes and blonde hair stands in the forest, wearing a white dress and a crown. Her expression is serene, reminiscent of a movie star, with fair and youthful skin. Her brown long hair flows in the wind. The video quality is very high, with a clear view. High quality, masterpiece, best quality, high resolution, ultra-fine, fantastical."
 # negative_prompt         = "Twisted body, limb deformities, text captions, comic, static, ugly, error, messy code."
-guidance_scale          = 6.0
-seed                    = 43
-num_inference_steps     = 50
+guidance_scale = 6.0
+seed = 43
+num_inference_steps = 50
 # The lora_weight is used for low noise model, the lora_high_weight is used for high noise model.
-lora_weight             = 0.55
-lora_high_weight        = 0.55
-save_path               = "samples/wan-videos-fun-control"
+lora_weight = 0.55
+lora_high_weight = 0.55
+save_path = "samples/wan-videos-fun-control"
 
 device = set_multi_gpus_devices(ulysses_degree, ring_degree)
 config = OmegaConf.load(config_path)
-boundary = config['transformer_additional_kwargs'].get('boundary', 0.875)
+boundary = config["transformer_additional_kwargs"].get("boundary", 0.875)
 
 transformer = load_wan_transformer(
     Wan2_2Transformer3DModel,
-    os.path.join(model_name, config['transformer_additional_kwargs'].get('transformer_low_noise_model_subpath', 'transformer')),
-    additional_kwargs=OmegaConf.to_container(config['transformer_additional_kwargs']),
+    os.path.join(
+        model_name, config["transformer_additional_kwargs"].get("transformer_low_noise_model_subpath", "transformer")
+    ),
+    additional_kwargs=OmegaConf.to_container(config["transformer_additional_kwargs"]),
     # low_cpu_mem_usage=True,
     torch_dtype=weight_dtype,
 )
-if config['transformer_additional_kwargs'].get('transformer_combination_type', 'single') == "moe":
+if config["transformer_additional_kwargs"].get("transformer_combination_type", "single") == "moe":
     transformer_2 = load_wan_transformer(
         Wan2_2Transformer3DModel,
-        os.path.join(model_name, config['transformer_additional_kwargs'].get('transformer_high_noise_model_subpath', 'transformer')),
-        additional_kwargs=OmegaConf.to_container(config['transformer_additional_kwargs']),
+        os.path.join(
+            model_name,
+            config["transformer_additional_kwargs"].get("transformer_high_noise_model_subpath", "transformer"),
+        ),
+        additional_kwargs=OmegaConf.to_container(config["transformer_additional_kwargs"]),
         # low_cpu_mem_usage=True,
         torch_dtype=weight_dtype,
     )
@@ -176,7 +206,8 @@ else:
 if transformer_path is not None:
     print(f"From checkpoint: {transformer_path}")
     if transformer_path.endswith("safetensors"):
-        from safetensors.torch import load_file, safe_open
+        from safetensors.torch import load_file
+
         state_dict = load_file(transformer_path)
     else:
         state_dict = load_tensor_state_dict(transformer_path)
@@ -184,32 +215,32 @@ if transformer_path is not None:
     m, u = transformer.load_state_dict(state_dict, strict=False)
     print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")
 
-if transformer_2 is not None:
-    if transformer_high_path is not None:
-        print(f"From checkpoint: {transformer_high_path}")
-        if transformer_high_path.endswith("safetensors"):
-            from safetensors.torch import load_file, safe_open
-            state_dict = load_file(transformer_high_path)
-        else:
-            state_dict = load_tensor_state_dict(transformer_high_path)
+if transformer_2 is not None and transformer_high_path is not None:
+    print(f"From checkpoint: {transformer_high_path}")
+    if transformer_high_path.endswith("safetensors"):
+        from safetensors.torch import load_file
 
-        m, u = transformer_2.load_state_dict(state_dict, strict=False)
-        print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")
+        state_dict = load_file(transformer_high_path)
+    else:
+        state_dict = load_tensor_state_dict(transformer_high_path)
+
+    m, u = transformer_2.load_state_dict(state_dict, strict=False)
+    print(f"missing keys: {len(m)}, unexpected keys: {len(u)}")
 
 # Get Vae
-Chosen_AutoencoderKL = {
-    "AutoencoderKLWan": AutoencoderKLWan,
-    "AutoencoderKLWan3_8": AutoencoderKLWan3_8
-}[config['vae_kwargs'].get('vae_type', 'AutoencoderKLWan')]
+Chosen_AutoencoderKL = {"AutoencoderKLWan": AutoencoderKLWan, "AutoencoderKLWan3_8": AutoencoderKLWan3_8}[
+    config["vae_kwargs"].get("vae_type", "AutoencoderKLWan")
+]
 vae = Chosen_AutoencoderKL.from_pretrained(
-    os.path.join(model_name, config['vae_kwargs'].get('vae_subpath', 'vae')),
-    additional_kwargs=OmegaConf.to_container(config['vae_kwargs']),
+    os.path.join(model_name, config["vae_kwargs"].get("vae_subpath", "vae")),
+    additional_kwargs=OmegaConf.to_container(config["vae_kwargs"]),
 ).to(weight_dtype)
 
 if vae_path is not None:
     print(f"From checkpoint: {vae_path}")
     if vae_path.endswith("safetensors"):
-        from safetensors.torch import load_file, safe_open
+        from safetensors.torch import load_file
+
         state_dict = load_file(vae_path)
     else:
         state_dict = load_tensor_state_dict(vae_path)
@@ -219,13 +250,13 @@ if vae_path is not None:
 
 # Get Tokenizer
 tokenizer = AutoTokenizer.from_pretrained(
-    os.path.join(model_name, config['text_encoder_kwargs'].get('tokenizer_subpath', 'tokenizer')),
+    os.path.join(model_name, config["text_encoder_kwargs"].get("tokenizer_subpath", "tokenizer")),
 )
 
 # Get Text encoder
 text_encoder = WanT5EncoderModel.from_pretrained(
-    os.path.join(model_name, config['text_encoder_kwargs'].get('text_encoder_subpath', 'text_encoder')),
-    additional_kwargs=OmegaConf.to_container(config['text_encoder_kwargs']),
+    os.path.join(model_name, config["text_encoder_kwargs"].get("text_encoder_subpath", "text_encoder")),
+    additional_kwargs=OmegaConf.to_container(config["text_encoder_kwargs"]),
     low_cpu_mem_usage=True,
     torch_dtype=weight_dtype,
 )
@@ -238,10 +269,8 @@ Chosen_Scheduler = scheduler_dict = {
     "Flow_DPM++": FlowDPMSolverMultistepScheduler,
 }[sampler_name]
 if sampler_name == "Flow_Unipc" or sampler_name == "Flow_DPM++":
-    config['scheduler_kwargs']['shift'] = 1
-scheduler = Chosen_Scheduler(
-    **filter_kwargs(Chosen_Scheduler, OmegaConf.to_container(config['scheduler_kwargs']))
-)
+    config["scheduler_kwargs"]["shift"] = 1
+scheduler = Chosen_Scheduler(**filter_kwargs(Chosen_Scheduler, OmegaConf.to_container(config["scheduler_kwargs"])))
 
 # Get Pipeline
 pipeline = Wan2_2FunControlPipeline(
@@ -254,6 +283,7 @@ pipeline = Wan2_2FunControlPipeline(
 )
 if ulysses_degree > 1 or ring_degree > 1:
     from functools import partial
+
     transformer.enable_multi_gpus_inference()
     if transformer_2 is not None:
         transformer_2.enable_multi_gpus_inference()
@@ -277,31 +307,69 @@ if compile_dit:
     print("Add Compile")
 
 if GPU_memory_mode == "sequential_cpu_offload":
-    replace_parameters_by_name(transformer, ["modulation",], device=device)
+    replace_parameters_by_name(
+        transformer,
+        [
+            "modulation",
+        ],
+        device=device,
+    )
     transformer.freqs = transformer.freqs.to(device=device)
     if transformer_2 is not None:
-        replace_parameters_by_name(transformer_2, ["modulation",], device=device)
+        replace_parameters_by_name(
+            transformer_2,
+            [
+                "modulation",
+            ],
+            device=device,
+        )
         transformer_2.freqs = transformer_2.freqs.to(device=device)
     pipeline.enable_sequential_cpu_offload(device=device)
 elif GPU_memory_mode == "model_group_offload":
     register_auto_device_hook(pipeline.transformer)
     if transformer_2 is not None:
         register_auto_device_hook(pipeline.transformer_2)
-    safe_enable_group_offload(pipeline, onload_device=device, offload_device="cpu", offload_type="leaf_level", use_stream=True)
+    safe_enable_group_offload(
+        pipeline, onload_device=device, offload_device="cpu", offload_type="leaf_level", use_stream=True
+    )
 elif GPU_memory_mode == "model_cpu_offload_and_qfloat8":
-    convert_model_weight_to_float8(transformer, exclude_module_name=["modulation",], device=device)
+    convert_model_weight_to_float8(
+        transformer,
+        exclude_module_name=[
+            "modulation",
+        ],
+        device=device,
+    )
     convert_weight_dtype_wrapper(transformer, weight_dtype)
     if transformer_2 is not None:
-        convert_model_weight_to_float8(transformer_2, exclude_module_name=["modulation",], device=device)
+        convert_model_weight_to_float8(
+            transformer_2,
+            exclude_module_name=[
+                "modulation",
+            ],
+            device=device,
+        )
         convert_weight_dtype_wrapper(transformer_2, weight_dtype)
     pipeline.enable_model_cpu_offload(device=device)
 elif GPU_memory_mode == "model_cpu_offload":
     pipeline.enable_model_cpu_offload(device=device)
 elif GPU_memory_mode == "model_full_load_and_qfloat8":
-    convert_model_weight_to_float8(transformer, exclude_module_name=["modulation",], device=device)
+    convert_model_weight_to_float8(
+        transformer,
+        exclude_module_name=[
+            "modulation",
+        ],
+        device=device,
+    )
     convert_weight_dtype_wrapper(transformer, weight_dtype)
     if transformer_2 is not None:
-        convert_model_weight_to_float8(transformer_2, exclude_module_name=["modulation",], device=device)
+        convert_model_weight_to_float8(
+            transformer_2,
+            exclude_module_name=[
+                "modulation",
+            ],
+            device=device,
+        )
         convert_weight_dtype_wrapper(transformer_2, weight_dtype)
     pipeline.to(device=device)
 else:
@@ -311,7 +379,11 @@ coefficients = get_teacache_coefficients(model_name) if enable_teacache else Non
 if coefficients is not None:
     print(f"Enable TeaCache with threshold {teacache_threshold} and skip the first {num_skip_start_steps} steps.")
     pipeline.transformer.enable_teacache(
-        coefficients, num_inference_steps, teacache_threshold, num_skip_start_steps=num_skip_start_steps, offload=teacache_offload
+        coefficients,
+        num_inference_steps,
+        teacache_threshold,
+        num_skip_start_steps=num_skip_start_steps,
+        offload=teacache_offload,
     )
     if transformer_2 is not None:
         pipeline.transformer_2.share_teacache(transformer=pipeline.transformer)
@@ -327,18 +399,31 @@ generator = torch.Generator(device=device).manual_seed(seed)
 if lora_path is not None:
     pipeline = merge_lora(pipeline, lora_path, lora_weight, device=device, dtype=weight_dtype)
 if lora_high_path is not None and transformer_2 is not None:
-    pipeline = merge_lora(pipeline, lora_high_path, lora_high_weight, device=device, dtype=weight_dtype, sub_transformer_name="transformer_2")
+    pipeline = merge_lora(
+        pipeline,
+        lora_high_path,
+        lora_high_weight,
+        device=device,
+        dtype=weight_dtype,
+        sub_transformer_name="transformer_2",
+    )
 
 with torch.no_grad():
-    video_length = int((video_length - 1) // vae.config.temporal_compression_ratio * vae.config.temporal_compression_ratio) + 1 if video_length != 1 else 1
+    video_length = (
+        int((video_length - 1) // vae.config.temporal_compression_ratio * vae.config.temporal_compression_ratio) + 1
+        if video_length != 1
+        else 1
+    )
     latent_frames = (video_length - 1) // vae.config.temporal_compression_ratio + 1
 
     if enable_riflex:
-        pipeline.transformer.enable_riflex(k = riflex_k, L_test = latent_frames)
+        pipeline.transformer.enable_riflex(k=riflex_k, L_test=latent_frames)
         if transformer_2 is not None:
-            pipeline.transformer_2.enable_riflex(k = riflex_k, L_test = latent_frames)
+            pipeline.transformer_2.enable_riflex(k=riflex_k, L_test=latent_frames)
 
-    inpaint_video, inpaint_video_mask, clip_image = get_image_to_video_latent(start_image, end_image, video_length=video_length, sample_size=sample_size)
+    inpaint_video, inpaint_video_mask, clip_image = get_image_to_video_latent(
+        start_image, end_image, video_length=video_length, sample_size=sample_size
+    )
 
     if ref_image is not None:
         ref_image = get_image_latent(ref_image, sample_size=sample_size)
@@ -348,34 +433,43 @@ with torch.no_grad():
         control_camera_video = process_pose_file(control_camera_txt, sample_size[1], sample_size[0])
         control_camera_video = control_camera_video[:video_length].permute([3, 0, 1, 2]).unsqueeze(0)
     else:
-        input_video, input_video_mask, _, _ = get_video_to_video_latent(control_video, video_length=video_length, sample_size=sample_size, fps=fps, ref_image=None)
+        input_video, input_video_mask, _, _ = get_video_to_video_latent(
+            control_video, video_length=video_length, sample_size=sample_size, fps=fps, ref_image=None
+        )
         control_camera_video = None
 
     sample = pipeline(
         prompt,
-        num_frames = video_length,
-        negative_prompt = negative_prompt,
-        height      = sample_size[0],
-        width       = sample_size[1],
-        generator   = generator,
-        guidance_scale = guidance_scale,
-        num_inference_steps = num_inference_steps,
-
-        video      = inpaint_video,
-        mask_video   = inpaint_video_mask,
-        control_video = input_video,
-        control_camera_video = control_camera_video,
-        ref_image = ref_image,
-        boundary = boundary,
-        shift = shift,
+        num_frames=video_length,
+        negative_prompt=negative_prompt,
+        height=sample_size[0],
+        width=sample_size[1],
+        generator=generator,
+        guidance_scale=guidance_scale,
+        num_inference_steps=num_inference_steps,
+        video=inpaint_video,
+        mask_video=inpaint_video_mask,
+        control_video=input_video,
+        control_camera_video=control_camera_video,
+        ref_image=ref_image,
+        boundary=boundary,
+        shift=shift,
     ).videos
 
 if lora_path is not None:
     pipeline = unmerge_lora(pipeline, lora_path, lora_weight, device=device, dtype=weight_dtype)
 if lora_high_path is not None and transformer_2 is not None:
-    pipeline = unmerge_lora(pipeline, lora_high_path, lora_high_weight, device=device, dtype=weight_dtype, sub_transformer_name="transformer_2")
+    pipeline = unmerge_lora(
+        pipeline,
+        lora_high_path,
+        lora_high_weight,
+        device=device,
+        dtype=weight_dtype,
+        sub_transformer_name="transformer_2",
+    )
 if ulysses_degree * ring_degree > 1:
     import torch.distributed as dist
+
     if dist.get_rank() == 0:
         save_inference_sample(sample, save_path, video_length=video_length, fps=fps)
 else:

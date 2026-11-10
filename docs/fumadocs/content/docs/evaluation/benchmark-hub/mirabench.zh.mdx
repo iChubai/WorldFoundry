@@ -20,7 +20,7 @@ export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/mirabench/generated_videos
 export WORLDFOUNDRY_MIRABENCH_CKPT_PATH=/path/to/mirabench/data/ckpt
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/mirabench/run_mirabench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/mirabench/run_mirabench_official_runner.py \
   --run-official \
   --meta-csv "${WORLDFOUNDRY_MIRABENCH_META_CSV}" \
   --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
@@ -43,7 +43,7 @@ wf zoo benchmark-run \
 
 视频命名 `1.mp4` … `150.mp4`（来自 `video_idx`）。示例 meta 捆绑在 `worldfoundry/data/benchmarks/assets/mirabench/data/evaluation_example/`。`--strict` 会在缺 prompt 视频时失败。完整打分需要 AMT、ViCLIP、MUSIQ、FVD/FID/KID 与 3D 一致性资产。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/mirabench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/mirabench/runtime/mirabench`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/mirabench.yaml`，`worldfoundry/evals/tasks/execution/runners/mirabench/runtime/mirabench`。
 
 产物包括 `scorecard.json`（主键 `mirabench_average`）与 `mirabench_average_score.json`。
 

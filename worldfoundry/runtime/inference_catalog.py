@@ -22,7 +22,7 @@ import copy
 import os
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
-from functools import lru_cache
+from functools import cache, lru_cache
 from typing import Any
 
 import yaml
@@ -279,7 +279,7 @@ _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
 }
 
 
-@lru_cache(maxsize=None)
+@cache
 def _profile_call_defaults(model_family_id: str) -> Mapping[str, Any]:
     """Generation defaults declared by the model family's runtime profile."""
 

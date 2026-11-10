@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import importlib.util
 import json
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from worldfoundry.core.io.paths import checkpoint_root_path, official_runtime_repo_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
-
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "infer.py"
@@ -144,7 +144,9 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
     if trajectory_path not in (None, ""):
         trajectory = expand_worldfoundry_path(str(trajectory_path))
         if not trajectory.is_file() or trajectory.stat().st_size == 0:
-            missing.append({"kind": "asset", "path": str(trajectory), "reason": "HMA trajectory JSON is missing or empty"})
+            missing.append(
+                {"kind": "asset", "path": str(trajectory), "reason": "HMA trajectory JSON is missing or empty"}
+            )
     image_path = _option(options, "image_path", "input_image")
     if trajectory_path in (None, "") and image_path not in (None, ""):
         image = expand_worldfoundry_path(str(image_path))

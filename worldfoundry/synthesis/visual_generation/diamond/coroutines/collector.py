@@ -1,16 +1,16 @@
 from collections import defaultdict
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Generator, Optional
 
 import torch
 import torch.nn as nn
+from envs import TorchEnv
+from eval_inputs import Dataset, Episode
 from tqdm import tqdm
+from utils import Logs
 
 from . import coroutine
-from eval_inputs import Episode, Dataset
-from envs import TorchEnv
 from .env_loop import make_env_loop
-from utils import Logs
 
 
 @coroutine
@@ -57,7 +57,7 @@ def make_collector(
         num_steps += num_envs
         pbar.update(num_envs if num_to_collect.steps is not None else 0)
 
-        for i, (o, a, r, e, t) in enumerate(zip(all_obs, act, rew, end, trunc)):
+        for i, (o, a, r, e, t) in enumerate(zip(all_obs, act, rew, end, trunc, strict=False)):
             buffer[i].append((o, a, r, e, t))
             dead[i] = (e + t).clip(max=1).item()
 
@@ -71,7 +71,7 @@ def make_collector(
             add_to_dataset = dead[i] or (can_stop and not reset_every_collect)
             if add_to_dataset:
                 info = {"final_observation": infos["final_observation"][count_dead]} if dead[i] else {}
-                ep = Episode(*(torch.cat(x, dim=0) for x in zip(*buffer[i])), info).to("cpu")
+                ep = Episode(*(torch.cat(x, dim=0) for x in zip(*buffer[i], strict=False)), info).to("cpu")
                 if episode_ids[i] is not None:
                     ep = dataset.load_episode(episode_ids[i]) + ep
                 episode_ids[i] = dataset.add_episode(ep, episode_id=episode_ids[i])
@@ -108,8 +108,8 @@ def make_collector(
 
 @dataclass
 class NumToCollect:
-    steps: Optional[int] = None
-    episodes: Optional[int] = None
+    steps: int | None = None
+    episodes: int | None = None
 
     def __post_init__(self) -> None:
         assert (self.steps is None) != (self.episodes is None)

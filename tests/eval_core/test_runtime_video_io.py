@@ -9,7 +9,6 @@ import torchvision.io
 from worldfoundry.core.io import (
     VIDEO_EXTENSIONS,
     coerce_video_frames,
-    extract_frames_from_video_url,
     load_video_frames,
     materialize_video_input,
     save_video_frames,
@@ -18,20 +17,6 @@ from worldfoundry.core.io import (
 from worldfoundry.core.media.codecs import video as video_io
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-
-
-def test_hosted_video_runtimes_share_url_frame_extractor() -> None:
-    assert callable(extract_frames_from_video_url)
-
-    runtime_paths = [
-        REPO_ROOT / "worldfoundry/synthesis/visual_generation/minimax/minimax_runtime.py",
-        REPO_ROOT / "worldfoundry/synthesis/visual_generation/runway/gen3_runtime.py",
-    ]
-    for path in runtime_paths:
-        text = path.read_text(encoding="utf-8")
-        assert "from worldfoundry.core.io import extract_frames_from_video_url" in text
-        assert "def extract_frames_from_url" not in text
-        assert "cv2.VideoCapture(tmp_file.name)" not in text
 
 
 def test_local_video_helpers_are_shared_runtime_api() -> None:

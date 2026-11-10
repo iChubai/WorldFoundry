@@ -11,10 +11,11 @@ import os
 import sys
 from pathlib import Path
 
-SOURCE_ROOT = Path(
-    os.environ.get("WORLDFOUNDRY_PI3_SOURCE_ROOT")
-    or Path(__file__).resolve().parent / "pi3"
-).expanduser().resolve()
+SOURCE_ROOT = (
+    Path(os.environ.get("WORLDFOUNDRY_PI3_SOURCE_ROOT") or Path(__file__).resolve().parent / "pi3")
+    .expanduser()
+    .resolve()
+)
 
 
 def ensure_import_paths() -> tuple[Path, ...]:

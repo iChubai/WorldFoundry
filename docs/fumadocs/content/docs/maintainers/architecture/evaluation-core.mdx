@@ -67,11 +67,10 @@ Disk YAML becomes a runnable model through a single front door: `resolve_model_z
 
 ```python
 # worldfoundry/data/models/catalog/*.yaml
-entry = parse_model_zoo_yaml(path)          # schema.py → ModelZooEntry
-entry = ModelZooRegistry().resolve(alias)   # alias lookup
-manifest = WorldModelManifest.from_entry(entry)
-runner = resolve_model_zoo_runner(manifest) # resolver.py
-# → WorldModelRunner instance
+registry = load_model_zoo_registry()        # zoo_registry.py → ModelZooRegistry
+entry = registry.get(alias)                 # alias or canonical id → ModelZooEntry
+resolved = resolve_model_zoo_runner(entry.model_id, manifest_dir=MODEL_ZOO_DIR)  # resolver.py
+runner = resolved.runner                    # → WorldModelRunner instance
 ```
 
 Built-in runners register through `builtins.py` and `registry.py`; custom targets resolve from catalog `runner_target` strings. Catalog metadata in `manifest.py` and `schema.py` is provenance and readiness—not a substitute for a runnable runner.
@@ -86,12 +85,11 @@ Benchmark metadata follows a parallel catalog path. Task YAML describes per-samp
 
 ```python
 # Benchmark-zoo YAML + task YAML registry
-entry = parse_benchmark_zoo_yaml(path)      # → BenchmarkZooEntry
-entry = BenchmarkZooRegistry().resolve(id)
-spec = BenchmarkSpec.from_catalog(entry, task_registry)
-raw = ManifestBenchmarkRunner(spec).run()   # external evaluator
-metrics = official_normalizers.normalize(raw)
-# → metrics/summary.json + scorecard.json
+registry = load_benchmark_zoo_registry()    # zoo_registry.py → BenchmarkZooRegistry
+entry = registry.get(benchmark_id)          # → BenchmarkZooEntry
+runner = ManifestBenchmarkRunner(entry)     # benchmark_runner.py
+result = runner.evaluate(output_dir=out, mode="official-validation")
+# prepare → run → collect → normalize → metrics/summary.json + scorecard.json
 ```
 
 External benchmarks stay behind the runner boundary: vendor evaluators produce raw output, normalizers convert it into stable metrics, and the shared reporting layer writes `metrics/summary.json` and `scorecard.json`.

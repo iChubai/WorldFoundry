@@ -67,11 +67,10 @@ Generation 开始前，task-driven run 通过 `plan.py` 中的 **`RunPlan`** 固
 
 ```python
 # worldfoundry/data/models/catalog/*.yaml
-entry = parse_model_zoo_yaml(path)          # schema.py → ModelZooEntry
-entry = ModelZooRegistry().resolve(alias)   # alias lookup
-manifest = WorldModelManifest.from_entry(entry)
-runner = resolve_model_zoo_runner(manifest) # resolver.py
-# → WorldModelRunner instance
+registry = load_model_zoo_registry()        # zoo_registry.py → ModelZooRegistry
+entry = registry.get(alias)                 # alias or canonical id → ModelZooEntry
+resolved = resolve_model_zoo_runner(entry.model_id, manifest_dir=MODEL_ZOO_DIR)  # resolver.py
+runner = resolved.runner                    # → WorldModelRunner instance
 ```
 
 Built-in runner 经 `builtins.py` 与 `registry.py` 注册；custom target 从 catalog `runner_target` 字符串解析。`manifest.py` 与 `schema.py` 中的 catalog metadata 是 provenance 与 readiness——不能替代可运行 runner。
@@ -86,12 +85,11 @@ Benchmark metadata 走平行的 catalog 路径。Task YAML 描述 per-sample pro
 
 ```python
 # Benchmark-zoo YAML + task YAML registry
-entry = parse_benchmark_zoo_yaml(path)      # → BenchmarkZooEntry
-entry = BenchmarkZooRegistry().resolve(id)
-spec = BenchmarkSpec.from_catalog(entry, task_registry)
-raw = ManifestBenchmarkRunner(spec).run()   # external evaluator
-metrics = official_normalizers.normalize(raw)
-# → metrics/summary.json + scorecard.json
+registry = load_benchmark_zoo_registry()    # zoo_registry.py → BenchmarkZooRegistry
+entry = registry.get(benchmark_id)          # → BenchmarkZooEntry
+runner = ManifestBenchmarkRunner(entry)     # benchmark_runner.py
+result = runner.evaluate(output_dir=out, mode="official-validation")
+# prepare → run → collect → normalize → metrics/summary.json + scorecard.json
 ```
 
 External benchmark 留在 runner 边界之后：vendor evaluator 产出 raw output，normalizer 转为稳定 metrics，共享 reporting 层写 `metrics/summary.json` 与 `scorecard.json`。

@@ -41,7 +41,7 @@ CLI task profile：`indexed-inference`。绑定的 pipeline 类是 `SolarWMPipel
 
 运行 `wf run solarwm-wan2.2-5b --pipeline.task-profile indexed-inference` 生成世界。
 
-运行环境：独立环境 `solarwm`（Python 3.10，CUDA 12.4，torch==2.5.1）。
+运行环境：独立环境 `worldfoundry-solarwm-wan22-cu124`（Python 3.10，CUDA 12.4，torch==2.5.1+cu124）。
 
 权重仓库：`junchaoh-cs/SolarWM`、`junchaoh-cs/SolarWM-H3-33B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh solarwm-wan2.2-5b`；下载缺失的公开权重时加 `--download`。
 

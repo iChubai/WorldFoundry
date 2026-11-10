@@ -117,3 +117,45 @@ def test_solarwm_binding_rejects_multi_sample_and_absolute_index(tmp_path: Path)
     args.test_index = "/tmp/test-index.jsonl.gz"
     with pytest.raises(ValueError, match="relative POSIX"):
         build_official_command(args, run_root=(tmp_path / "run").resolve())
+
+
+def test_solarwm_public_wan_runtime_uses_official_wan22_environment() -> None:
+    from worldfoundry.cli.model_run import load_model_run_schema
+    from worldfoundry.runtime.conda import load_runtime_conda_env_spec
+    from worldfoundry.zoo.runtime.profiles import load_runtime_profile
+
+    spec = load_runtime_conda_env_spec("solarwm")
+    assert spec is not None
+    assert spec.model_id == "solarwm"
+    assert spec.env_name == "worldfoundry-solarwm-wan22-cu124"
+    assert spec.pip_extra_index_url == "https://download.pytorch.org/whl/cu124"
+    assert "cuda-nvcc=12.4" in spec.conda_packages
+    assert "torch==2.5.1+cu124" in spec.pip_packages
+    assert "einops>=0.8" in spec.pip_packages
+    assert "decord>=0.6" in spec.pip_packages
+    assert "flash-attn==2.8.3" not in spec.pip_packages
+    assert "flash_attn" in spec.validation_imports
+
+    profile = load_runtime_profile("solarwm", check_conda_env_exists=False)
+    assert profile.execution["environment"] == "solarwm"
+    assert profile.conda_env["env_name"] == spec.env_name
+
+    for model_id in ("solarwm-wan2.2-5b", "solarwm-wan22-5b", "solarwm-wan2.2-14b"):
+        schema = load_model_run_schema(model_id)
+        assert schema.model_id == "solarwm"
+        assert load_runtime_conda_env_spec(schema.model_id) == spec
+
+
+@pytest.mark.parametrize("variant", ["ltx", "h3-bidirectional"])
+def test_solarwm_non_wan_routes_keep_explicit_python(tmp_path: Path, variant: str) -> None:
+    from worldfoundry.synthesis.visual_generation.solarwm import SolarWMRuntime
+
+    python = tmp_path / f"{variant}-python"
+    runtime = SolarWMRuntime(
+        source_root=tmp_path,
+        python_executable=python,
+        variant=variant,
+        device="cuda",
+    )
+
+    assert runtime.python_executable == str(python)

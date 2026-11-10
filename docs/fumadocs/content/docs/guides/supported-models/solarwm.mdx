@@ -41,7 +41,7 @@ Only the infer action is exposed. Training, preencoding and data-engine commands
 
 Run `wf run solarwm-wan2.2-5b --pipeline.task-profile indexed-inference` to generate the world.
 
-It runs in the dedicated environment `solarwm` (Python 3.10, CUDA 12.4, torch==2.5.1).
+It runs in the dedicated environment `worldfoundry-solarwm-wan22-cu124` (Python 3.10, CUDA 12.4, torch==2.5.1+cu124).
 
 Weights: `junchaoh-cs/SolarWM` and `junchaoh-cs/SolarWM-H3-33B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh solarwm-wan2.2-5b`. Add `--download` to fetch missing public checkpoints.
 

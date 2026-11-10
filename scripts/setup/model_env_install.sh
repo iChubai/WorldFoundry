@@ -25,6 +25,9 @@ canonical_model_id() {
     cosmos3-nano|cosmos3-super|cosmos-3|cosmos-3-nano|cosmos-3-super)
       printf '%s\n' "cosmos3"
       ;;
+    solarwm-wan22|solarwm-wan22-5b|solarwm-wan2.2-5b|solarwm-wan2.2-14b)
+      printf '%s\n' "solarwm"
+      ;;
     *)
       printf '%s\n' "$1"
       ;;

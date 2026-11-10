@@ -239,8 +239,6 @@ class PlanWorkspace:
 
             # sample random states
             rand_init_state, rand_goal_state = self.env.sample_random_init_goal_states(self.eval_seed)
-            if self.env_name == "deformable_env":  # take rand init state from dset for deformable envs
-                rand_init_state = np.array([x[0] for x in states])
 
             obs_0, state_0 = self.env.prepare(self.eval_seed, rand_init_state)
             obs_g, state_g = self.env.prepare(self.eval_seed, rand_goal_state)
@@ -471,8 +469,8 @@ def planning_main(cfg_dict):
 
         register_point_maze()
 
-    # use dummy vector env for wall and deformable envs
-    if model_cfg.env.name == "wall" or model_cfg.env.name == "deformable_env":
+    # use dummy vector env for wall
+    if model_cfg.env.name == "wall":
         from env.serial_vector_env import SerialVectorEnv
 
         env = SerialVectorEnv(

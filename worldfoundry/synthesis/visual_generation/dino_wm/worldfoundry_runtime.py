@@ -41,7 +41,6 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
         "wall_single": "wall_dset.py",
         "point_maze": "point_maze_dset.py",
         "pusht": "pusht_dset.py",
-        "deformable_env": "deformable_env_dset.py",
     }
     dataset_module = dataset_modules.get(str(model_name), "wall_dset.py")
     if not (RUNTIME_DIR / "datasets" / dataset_module).is_file():

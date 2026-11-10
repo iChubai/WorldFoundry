@@ -108,7 +108,7 @@ runner:
     module: worldfoundry.evals.tasks.execution.runners.camerabench.run_camerabench_official_runner
     generated_arg: null
     dataset_root_arg: --benchmark-data-root
-    supports_run_official: false
+    supports_official_runtime: true
     input_kind: score_dir_or_official_results
   runner_target: worldfoundry.evals.tasks.contracts.external:CameraBenchContract
   validation_command:

@@ -4,7 +4,10 @@ import json
 from pathlib import Path
 
 from worldfoundry.evals.api import ArtifactRef, GenerationRequest, GenerationResult, MetricResult
-from worldfoundry.evals.runner import ExistingResultsRunRequest, execute_existing_results
+from worldfoundry.evals.tasks.execution.orchestration.existing_results import (
+    ExistingResultsRunRequest,
+    execute_existing_results,
+)
 
 
 def _read_jsonl(path: Path) -> list[dict]:

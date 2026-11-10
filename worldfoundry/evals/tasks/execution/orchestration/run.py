@@ -1,4 +1,4 @@
-"""Public entrypoint and dispatch logic for running WorldFoundry benchmarks."""
+"""``wf run`` dispatch: route one run request to the evaluate, model-benchmark, or suite runner."""
 
 from __future__ import annotations
 
@@ -9,14 +9,9 @@ from typing import Any
 
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR
 
-from .runner import (
-    EvaluateRunRequest,
-    ModelBenchmarkRunRequest,
-    ModelBenchmarkSuiteRequest,
-    execute_evaluate_run,
-    run_model_benchmark,
-    run_model_benchmark_suite,
-)
+from .evaluate import EvaluateRunRequest, execute_evaluate_run
+from .model_benchmark import ModelBenchmarkRunRequest, run_model_benchmark
+from .model_benchmark_suite import ModelBenchmarkSuiteRequest, run_model_benchmark_suite
 
 WORLDFOUNDRY_RUN_RESULT_SCHEMA_VERSION = "worldfoundry-run-result"
 

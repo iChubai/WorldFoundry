@@ -22,11 +22,11 @@ Guide: [Evaluation](https://openenvision.github.io/WorldFoundry/docs/evaluation)
 | Path | Purpose |
 | --- | --- |
 | `api/` | Public contracts: `GenerationRequest` / `GenerationResult`, tasks, metrics, models, registries |
-| `public.py`, `framework.py`, `runner.py` | Stable import surface and top-level runner |
+| `public.py` | Programmatic entry point: `run_worldfoundry`, `run_benchmark`, request/result types |
 | `models/catalog/` | Model catalog loading and spec merging |
 | `models/pipelines/bindings.py` | `resolve_pipeline_route()` — catalog ID → pipeline class |
 | `models/runners/` | `resolve_model_zoo_runner()` and runner registry/plugins |
-| `tasks/execution/orchestration/` | Run modes: evaluate, model × benchmark, suites, plans, resume, cache, scoring |
+| `tasks/execution/orchestration/` | Run modes: `run.py` (`wf run` dispatch), `service.py` (surface intents), evaluate, model × benchmark, suites, plans, resume, cache, scoring |
 | `tasks/execution/runners/<benchmark>/` | Per-benchmark official runners (VBench, EvalCrafter, WorldScore, …) |
 | `tasks/metrics/<metric>/` | Executable metrics (FVD, FID, LPIPS, SSIM, CLIP/DINO similarity, …) and `registry.py` |
 | `tasks/embodied/` | Simulator-backed closed-loop evaluation and policy adapters |

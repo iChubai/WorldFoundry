@@ -131,7 +131,7 @@ def test_version_context_does_not_include_python_executable(monkeypatch) -> None
 def test_eval_runner_writes_version_context(tmp_path: Path) -> None:
     output_dir = tmp_path / "run"
 
-    from worldfoundry.evals.runner import EvaluateRunRequest, execute_evaluate_run
+    from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest, execute_evaluate_run
 
     execute_evaluate_run(
         EvaluateRunRequest(

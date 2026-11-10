@@ -126,7 +126,7 @@ def _handle_dataset_materialize(args: argparse.Namespace) -> int:
     Args:
         args: Parsed `dataset materialize` CLI arguments.
     """
-    from worldfoundry.evals.runner import materialize_requests_from_dataset_manifest
+    from worldfoundry.evals.tasks.execution.orchestration.materialize import materialize_requests_from_dataset_manifest
 
     materialized = materialize_requests_from_dataset_manifest(
         args.manifest,

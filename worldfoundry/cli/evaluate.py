@@ -104,7 +104,7 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     """Route evaluate workloads to either cached run-plan replay or runtime eval."""
     if args.plan is None:
         _validate_evaluate_usage(args)
-    from worldfoundry.evals.runner import EvaluateRunRequest, execute_evaluate_run
+    from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest, execute_evaluate_run
 
     if args.plan is not None:
         result = execute_run_plan_file(args)
@@ -184,7 +184,7 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
         }
     if args.task_type and args.benchmark_name and args.data_path:
         from worldfoundry.cli.utils import resolve_cli_benchmark_for_materialize
-        from worldfoundry.evals.runner import materialize_requests_from_benchmark
+        from worldfoundry.evals.tasks.execution.orchestration.materialize import materialize_requests_from_benchmark
 
         benchmark = resolve_cli_benchmark_for_materialize(args.task_type, args.benchmark_name)
         materialized = materialize_requests_from_benchmark(

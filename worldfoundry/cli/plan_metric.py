@@ -44,7 +44,7 @@ def _build_run_plan_from_cli_args(args: argparse.Namespace):
     Returns:
         A fully constructed :class:`RunPlan` instance.
     """
-    from worldfoundry.evals.runner import build_run_plan, build_run_plan_from_task_registry
+    from worldfoundry.evals.tasks.execution.orchestration.plan import build_run_plan, build_run_plan_from_task_registry
 
     plan_kwargs = {
         "mode": args.mode,
@@ -96,7 +96,7 @@ def _plan_result_payload(plan) -> dict:
     """
     validation = None
     try:
-        from worldfoundry.evals.runner import validate_run_plan
+        from worldfoundry.evals.tasks.execution.orchestration.plan import validate_run_plan
 
         validation = validate_run_plan(plan)
     except Exception:  # pragma: no cover - validation is best-effort for summaries.
@@ -123,7 +123,7 @@ def _handle_plan_create(args: argparse.Namespace) -> int:
     Returns:
         ``0`` on success.
     """
-    from worldfoundry.evals.runner import write_run_plan
+    from worldfoundry.evals.tasks.execution.orchestration.plan import write_run_plan
 
     plan = _build_run_plan_from_cli_args(args)
     if args.output_json:
@@ -154,7 +154,7 @@ def _handle_plan_show(args: argparse.Namespace) -> int:
     Returns:
         ``0`` on success.
     """
-    from worldfoundry.evals.runner import load_run_plan
+    from worldfoundry.evals.tasks.execution.orchestration.plan import load_run_plan
 
     plan = load_run_plan(args.plan_path)
     if args.json:
@@ -186,7 +186,7 @@ def _handle_plan_validate(args: argparse.Namespace) -> int:
     Returns:
         ``0`` if the plan is valid, ``1`` if issues were found.
     """
-    from worldfoundry.evals.runner import load_run_plan, validate_run_plan
+    from worldfoundry.evals.tasks.execution.orchestration.plan import load_run_plan, validate_run_plan
 
     plan = load_run_plan(args.plan_path)
     payload = validate_run_plan(plan)

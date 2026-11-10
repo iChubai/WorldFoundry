@@ -71,9 +71,24 @@ SYMBOLS = (
     SymbolSpec("worldfoundry.evals.api", "WorldTaskConfig", "worldfoundry/evals/api/tasks.py", "metrics-tasks"),
     SymbolSpec("worldfoundry.evals.api", "BenchmarkSpec", "worldfoundry/evals/api/tasks.py", "metrics-tasks"),
     # Canonical run and benchmark facade.
-    SymbolSpec("worldfoundry.evals.public", "WorldFoundryRunRequest", "worldfoundry/evals/framework.py", "runs"),
-    SymbolSpec("worldfoundry.evals.public", "WorldFoundryRunResult", "worldfoundry/evals/framework.py", "runs"),
-    SymbolSpec("worldfoundry.evals.public", "run_worldfoundry", "worldfoundry/evals/framework.py", "runs"),
+    SymbolSpec(
+        "worldfoundry.evals.public",
+        "WorldFoundryRunRequest",
+        "worldfoundry/evals/tasks/execution/orchestration/run.py",
+        "runs",
+    ),
+    SymbolSpec(
+        "worldfoundry.evals.public",
+        "WorldFoundryRunResult",
+        "worldfoundry/evals/tasks/execution/orchestration/run.py",
+        "runs",
+    ),
+    SymbolSpec(
+        "worldfoundry.evals.public",
+        "run_worldfoundry",
+        "worldfoundry/evals/tasks/execution/orchestration/run.py",
+        "runs",
+    ),
     SymbolSpec("worldfoundry.evals.public", "list_video_benchmarks", "worldfoundry/evals/public.py", "runs"),
     SymbolSpec("worldfoundry.evals.public", "run_benchmark", "worldfoundry/evals/public.py", "runs"),
     SymbolSpec("worldfoundry.evals.public", "normalize_upstream_results", "worldfoundry/evals/public.py", "runs"),

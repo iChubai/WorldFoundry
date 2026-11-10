@@ -1,4 +1,6 @@
 runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
+aliases:
+- hunyuan-world-voyager
 availability: open_source
 checkpoints:
 - tencent/HunyuanWorld-Voyager

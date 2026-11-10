@@ -57282,7 +57282,9 @@
       "categoryLabelZh": "世界模型",
       "provider": "Tencent (Hunyuan)",
       "summary": "HunyuanWorld-Voyager generates RGB-D video along camera paths. WorldFoundry's public runner has generated the official case1 example through a bridge to the licensed upstream checkout.",
-      "aliases": [],
+      "aliases": [
+        "hunyuan-world-voyager"
+      ],
       "tasks": [
         "world",
         "video",
@@ -57392,12 +57394,23 @@
       "variants": [],
       "inferenceTasks": [
         {
-          "id": "default",
-          "label": "Default",
-          "description": "Run Hunyuanworld Voyager through the public CLI contract.",
+          "id": "official-case1-video",
+          "label": "Official Case1 Video",
+          "description": "Run HunyuanWorld-Voyager through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
+            {
+              "field": "image",
+              "option": "--pipeline.image",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "/workspace/worldfoundry/data/test_cases/hunyuan_world_voyager/case1/ref_image.png",
+              "choices": [],
+              "description": "Reference Image used as the input for direct HunyuanWorld-Voyager inference."
+            },
             {
               "field": "prompt",
               "option": "--pipeline.prompt",
@@ -57405,42 +57418,42 @@
               "kind": "string",
               "target": "input",
               "required": false,
-              "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+              "default": "An old-fashioned European village with thatched roofs on the houses.",
               "choices": [],
-              "description": "Prompt used as the input for direct Hunyuanworld Voyager inference."
-            },
-            {
-              "field": "input-path",
-              "option": "--pipeline.input-path",
-              "detail": "Required",
-              "kind": "path",
-              "target": "input",
-              "required": true,
-              "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
-              "choices": [],
-              "description": "Input Path used as the input for direct Hunyuanworld Voyager inference."
-            },
-            {
-              "field": "actions",
-              "option": "--pipeline.actions",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "call",
-              "required": false,
-              "default": null,
-              "choices": [],
-              "description": "Actions passed to the pipeline for every generated sample."
+              "description": "Prompt used as the input for direct HunyuanWorld-Voyager inference."
             },
             {
               "field": "condition-dir",
               "option": "--pipeline.condition-dir",
-              "detail": "Optional",
+              "detail": "Required",
               "kind": "path",
               "target": "call",
-              "required": false,
-              "default": null,
+              "required": true,
+              "default": "/workspace/worldfoundry/data/test_cases/hunyuan_world_voyager/case1",
               "choices": [],
               "description": "Condition Dir passed to the pipeline for every generated sample."
+            },
+            {
+              "field": "infer-steps",
+              "option": "--pipeline.infer-steps",
+              "detail": "Optional",
+              "kind": "integer",
+              "target": "call",
+              "required": false,
+              "default": 50,
+              "choices": [],
+              "description": "Steps passed to the pipeline for every generated sample."
+            },
+            {
+              "field": "seed",
+              "option": "--pipeline.seed",
+              "detail": "Optional",
+              "kind": "integer",
+              "target": "call",
+              "required": false,
+              "default": 0,
+              "choices": [],
+              "description": "Seed passed to the pipeline for every generated sample."
             }
           ],
           "artifacts": [
@@ -57581,7 +57594,7 @@
         "install": "bash scripts/setup/model_env_install.sh --model hunyuanworld-voyager",
         "inspect": "wf zoo model-show --model-id hunyuanworld-voyager --include-manifest --json",
         "check": "wf zoo model-download --model-id hunyuanworld-voyager --check-local --json",
-        "run": "wf run \\\n  hunyuanworld-voyager \\\n  --pipeline.task-profile default \\\n  --json"
+        "run": "wf run \\\n  hunyuanworld-voyager \\\n  --pipeline.task-profile official-case1-video \\\n  --json"
       },
       "catalogPath": "worldfoundry/data/models/catalog/world_models/hunyuanworld-voyager.yaml"
     },

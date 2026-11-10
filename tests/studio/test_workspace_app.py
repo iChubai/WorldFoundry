@@ -100,7 +100,7 @@ def test_workspace_token_protects_api_routes(transport: str) -> None:
 
 def test_workspace_refuses_remote_bind_without_token(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("WORLDFOUNDRY_STUDIO_AUTH_TOKEN", raising=False)
-    monkeypatch.setattr(workspace_app, "create_app", lambda **kwargs: pytest.fail("server must not start"))
+    monkeypatch.setattr(workspace_app, "create_app", lambda **kwargs: pytest.fail("server must not start"))  # ty: ignore[invalid-argument-type]  # ty 0.0.99 misreads pytest.fail's signature
 
     with pytest.raises(SystemExit, match="non-loopback host .*without authentication"):
         workspace_app.main(["--host", "0.0.0.0", "--port", "9999"])
@@ -173,7 +173,7 @@ def test_workspace_rejects_removed_visualizer(monkeypatch) -> None:
     monkeypatch.setattr(
         workspace_app.subprocess,
         "Popen",
-        lambda *args, **kwargs: pytest.fail("a removed visualizer must not start a process"),
+        lambda *args, **kwargs: pytest.fail("a removed visualizer must not start a process"),  # ty: ignore[invalid-argument-type]  # ty 0.0.99 misreads pytest.fail's signature
     )
 
     with TestClient(create_app()) as client:
@@ -208,7 +208,7 @@ def test_workspace_catalog_models_expose_official_links() -> None:
     assert fantasyworld["project"] == "https://fantasy-amap.github.io/fantasy-world/"
     assert fantasyworld["paper"] == "https://arxiv.org/abs/2509.21657"
 
-    voyager = models["hunyuan-world-voyager"]["links"]
+    voyager = models["hunyuanworld-voyager"]["links"]
     assert voyager["github"] == "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
 
     sana = models["sana"]["links"]
@@ -470,6 +470,7 @@ def test_workspace_routes_inference_artifacts_to_visualizers(tmp_path: Path) -> 
     )
 
     payload = workspace_app._job_result_payload(record)
+    assert payload is not None
     assert "visualizations" not in payload
     actions = workspace_app._result_visualization_actions(record)
     by_mode = {item["mode"]: item for item in actions}
@@ -888,7 +889,7 @@ def test_workspace_api_runs_real_evaluation_job(tmp_path: Path) -> None:
 
 def test_workspace_rejects_unsupported_job_type(monkeypatch: pytest.MonkeyPatch) -> None:
     def launch(*args: object, **kwargs: object) -> object:
-        pytest.fail("unsupported jobs must not start a subprocess")
+        pytest.fail("unsupported jobs must not start a subprocess")  # ty: ignore[invalid-argument-type]  # ty 0.0.99 misreads pytest.fail's signature
 
     monkeypatch.setattr(workspace_app.subprocess, "Popen", launch)
     with TestClient(create_app()) as client:

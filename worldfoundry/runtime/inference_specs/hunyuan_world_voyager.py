@@ -18,25 +18,18 @@ HUNYUAN_WORLD_VOYAGER_OFFICIAL_FIXTURE = str(_TEST_CASES_ROOT / "hunyuan_world_v
 
 
 HUNYUAN_WORLD_VOYAGER_OFFICIAL_CALL_KWARGS = {
-    "num_frames": 49,
     "condition_dir": HUNYUAN_WORLD_VOYAGER_OFFICIAL_CONDITION_DIR,
-    "interactions": "forward",
     "seed": 0,
     "infer_steps": 50,
-    "flow_shift": 7.0,
-    "embedded_cfg_scale": 6.0,
-    "i2v_stability": True,
-    "ulysses_degree": 1,
-    "ring_degree": 1,
 }
 
 
 HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC = ModelInferenceSpec(
-    model_family_id="hunyuan-world-voyager",
+    model_family_id="hunyuanworld-voyager",
     display_name="HunyuanWorld-Voyager",
     default_variant_id="default",
     default_task_id="official-case1-video",
-    aliases=("hunyuan-voyager", "world-voyager", "tencent/HunyuanWorld-Voyager"),
+    aliases=("hunyuan-world-voyager", "hunyuan-voyager", "world-voyager", "tencent/HunyuanWorld-Voyager"),
     variants=(
         InferenceVariantSpec(
             variant_id="default",
@@ -71,18 +64,8 @@ HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC = ModelInferenceSpec(
                     required=True,
                     default=HUNYUAN_WORLD_VOYAGER_OFFICIAL_CONDITION_DIR,
                 ),
-                _field(
-                    "interactions", "Interactions", kind="interaction_tokens", target="params", default=("forward",)
-                ),
-                _field("frames", "Requested Frames", kind="integer", target="params", default=49),
-                _field("fps", "FPS", kind="integer", target="params", default=24),
-                _field("steps", "Steps", kind="integer", target="params", default=50),
+                _field("infer_steps", "Steps", kind="integer", target="call_kwargs", default=50),
                 _field("seed", "Seed", kind="integer", target="call_kwargs", default=0),
-                _field("flow_shift", "Flow Shift", kind="number", target="call_kwargs", default=7.0),
-                _field("embedded_cfg_scale", "Embedded CFG", kind="number", target="call_kwargs", default=6.0),
-                _field("i2v_stability", "I2V Stability", kind="boolean", target="call_kwargs", default=True),
-                _field("ulysses_degree", "Ulysses Degree", kind="integer", target="call_kwargs", default=1),
-                _field("ring_degree", "Ring Degree", kind="integer", target="call_kwargs", default=1),
             ),
             outputs=(
                 _artifact("video", "video", required=True, preview=True),
@@ -91,5 +74,7 @@ HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC = ModelInferenceSpec(
             default_call_kwargs=HUNYUAN_WORLD_VOYAGER_OFFICIAL_CALL_KWARGS,
         ),
     ),
-    notes=("The official case1 requests 49 frames and emits 45 after dropping four I2V conditioning frames.",),
+    notes=(
+        "The camera path comes from the condition directory; the official case1 conditions 49 frames and emits 45.",
+    ),
 )

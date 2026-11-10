@@ -53,7 +53,7 @@ LOCAL_REPO_ALIASES: dict[str, tuple[str, ...]] = {
     "act": ("RoboTwin/policy/ACT", "RoboTwin"),
     "hunyuanworld-mirror": ("HunyuanWorld-Mirror",),
     "hunyuan-mirror": ("HunyuanWorld-Mirror",),
-    "hunyuan-world-voyager": ("HunyuanWorld-Voyager",),
+    "hunyuanworld-voyager": ("HunyuanWorld-Voyager",),
     "hy-world-2p0": ("HY-World-2.0",),
     "inspatio-world": ("inspatio-world",),
     "flash-world": ("FlashWorld",),

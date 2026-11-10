@@ -20,7 +20,6 @@ _EXPORTS = {
     "HunyuanWorld1Synthesis": ".hunyuan_world",
     "HunyuanWorldMirrorSynthesis": ".hunyuan_world",
     "HunyuanWorldPlaySynthesis": ".hunyuan_world",
-    "HunyuanWorldVoyagerSynthesis": ".hunyuan_world",
     "InfiniteWorldSynthesis": ".infinite_world",
     "InspatioWorldSynthesis": ".inspatio_world",
     "Lyra1Synthesis": ".lyra_1",

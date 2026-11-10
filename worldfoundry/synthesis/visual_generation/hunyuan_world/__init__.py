@@ -12,7 +12,6 @@ __all__ = [
     "HunyuanWorldMirrorSynthesis",
     "HunyuanWorldPlanSynthesis",
     "HunyuanWorldPlaySynthesis",
-    "HunyuanWorldVoyagerSynthesis",
     "_HunyuanWorldPlayInternalPipeline",
     "apply_hunyuan_world_argparse_defaults",
     "generate_crop_size_list",
@@ -32,11 +31,6 @@ def __getattr__(name):
         return module
     if name in {"HunyuanWorldPlaySynthesis", "_HunyuanWorldPlayInternalPipeline"}:
         module = import_module(".hunyuan_worldplay_synthesis", __name__)
-        value = getattr(module, name)
-        globals()[name] = value
-        return value
-    if name == "HunyuanWorldVoyagerSynthesis":
-        module = import_module(".hunyuan_world_voyager_synthesis", __name__)
         value = getattr(module, name)
         globals()[name] = value
         return value

@@ -133,8 +133,8 @@ INFER_MODEL_VARIANTS = {
     "hunyuan": (
         "hunyuan-gamecraft",
         "hunyuan-mirror",
-        "hunyuan-world-voyager",
         "hunyuan-worldplay",
+        "hunyuanworld-voyager",
         "hy-world-2.0",
     ),
     "lyra": (
@@ -241,7 +241,7 @@ INFER_VARIANT_LABELS = {
     "astra": "default",
     "hunyuan-gamecraft": "gamecraft",
     "hunyuan-mirror": "mirror",
-    "hunyuan-world-voyager": "world-voyager",
+    "hunyuanworld-voyager": "world-voyager",
     "hunyuan-worldplay": "worldplay",
     "hy-world-2.0": "hy-world-2.0",
     "lyra1": "Lyra 1",
@@ -360,7 +360,7 @@ INFER_VARIANT_GROUPS = {
     "astra": "world-model",
     "hunyuan-gamecraft": "world-model",
     "hunyuan-mirror": "world-model",
-    "hunyuan-world-voyager": "world-model",
+    "hunyuanworld-voyager": "world-model",
     "hunyuan-worldplay": "world-model",
     "hy-world-2.0": "world-model",
     "lyra1": "world-model",

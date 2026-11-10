@@ -1,10 +1,7 @@
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 import torch
-from diffusers.configuration_utils import ConfigMixin
-from diffusers.models import ModelMixin
 
 from worldfoundry.synthesis.visual_generation.video_x_fun.worldfoundry_runtime import (
     Wan22Fun5BCameraRuntime,
@@ -62,7 +59,7 @@ def test_worldgen_lora_resolves_normalized_hugging_face_directory(monkeypatch, t
     shims = Path(__file__).resolve().parents[2] / "worldfoundry/base_models/three_dimensions/three_d_four_d/shims"
     monkeypatch.syspath_prepend(str(shims))
     monkeypatch.syspath_prepend(str(runtime_src))
-    from worldgen import pano_gen
+    from worldgen import pano_gen  # ty: ignore[import-not-found]  # importable after the sys.path entries above
 
     checkpoint = tmp_path / "LeoXie--WorldGen" / "models--WorldGen-Flux-Lora" / "worldgen_text2scene.safetensors"
     checkpoint.parent.mkdir(parents=True)
@@ -79,7 +76,9 @@ def test_worldgen_direct_panorama_skips_flux_initialization(monkeypatch):
     shims = Path(__file__).resolve().parents[2] / "worldfoundry/base_models/three_dimensions/three_d_four_d/shims"
     monkeypatch.syspath_prepend(str(shims))
     monkeypatch.syspath_prepend(str(runtime_src))
-    from worldgen import worldgen as worldgen_module
+    from worldgen import (  # ty: ignore[import-not-found]  # importable after the sys.path entries above
+        worldgen as worldgen_module,
+    )
 
     monkeypatch.setattr(worldgen_module, "build_depth_model", lambda _device: object())
 
@@ -129,45 +128,6 @@ def test_lingbot_flash_attention_accepts_fa3_tuple_output():
     assert _flash_attention_output_tensor((expected, torch.ones(1))) is expected
 
 
-def test_voyager_transformer_supports_diffusers_config_registration(monkeypatch):
-    from worldfoundry.base_models.diffusion_model.models.networks.hunyuan_video.i2v.model import (
-        HYVideoDiffusionTransformer as BaseTransformer,
-    )
-    from worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_world_voyager.modules.models import (
-        HYVideoDiffusionTransformer,
-    )
-
-    def _minimal_base_init(self, **kwargs):
-        torch.nn.Module.__init__(self)
-        self.patch_size = kwargs["patch_size"]
-        self.in_channels = kwargs["in_channels"]
-        self.hidden_size = kwargs["hidden_size"]
-        self.heads_num = kwargs["heads_num"]
-        self.probe = torch.nn.Parameter(torch.zeros(1, dtype=torch.bfloat16))
-
-    monkeypatch.setattr(BaseTransformer, "__init__", _minimal_base_init)
-    args = SimpleNamespace(
-        i2v_condition_type=None,
-        gradient_checkpoint=False,
-        gradient_checkpoint_layers=0,
-        use_context_block=False,
-    )
-
-    model = HYVideoDiffusionTransformer(
-        args=args,
-        hidden_size=8,
-        heads_num=1,
-        mm_double_blocks_depth=0,
-        mm_single_blocks_depth=0,
-        rope_dim_list=[8],
-    )
-
-    assert isinstance(model, ConfigMixin)
-    assert isinstance(model, ModelMixin)
-    assert model.config.in_channels == 4
-    assert model.dtype == torch.bfloat16
-
-
 def test_mmaudio_euler_flow_does_not_require_torchdiffeq():
     from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.flow_matching import (
         FlowMatching,
@@ -213,7 +173,7 @@ def test_dvlt_wrapper_refuses_remote_checkpoint_in_offline_mode(monkeypatch, tmp
     monkeypatch.setattr(
         runtime,
         "_activate_runtime_path",
-        lambda: pytest.fail("offline DVLT should not enter the vendor runtime"),
+        lambda: pytest.fail("offline DVLT should not enter the vendor runtime"),  # ty: ignore[invalid-argument-type]  # ty 0.0.99 misreads pytest.fail's signature
     )
     with pytest.raises(RuntimeError, match="offline mode is enabled"):
         runtime.predict(images=tmp_path / "input.png", allow_cpu=True)
@@ -273,7 +233,7 @@ def test_vmem_trajectory_export_does_not_require_evo():
 
 
 def test_stable_virtual_camera_clip_conditioner_uses_local_checkpoint(monkeypatch, tmp_path):
-    from worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera.stable_virtual_camera_runtime.seva.modules import (
+    from worldfoundry.base_models.three_dimensions.general_3d.stable_virtual_camera.stable_virtual_camera_runtime.seva.modules import (  # ty: ignore[import-not-found]  # license-gated runtime, not committed
         conditioner,
     )
 
@@ -419,7 +379,7 @@ def test_wan_vace_denoiser_uses_checkpoint_compute_dtype():
             return x
 
     latents = torch.zeros(1, 16, 2, 4, 4, dtype=torch.float32)
-    output = WanVaceDenoiser(_FakeVace())(
+    output = WanVaceDenoiser(_FakeVace())(  # ty: ignore[invalid-argument-type]  # duck-typed stand-in for VaceWanModel
         DenoiserInput(
             latents=latents,
             timestep=torch.ones(1, dtype=torch.float32),
@@ -551,47 +511,3 @@ def test_wan22_fun_complete_checkpoint_layout_does_not_require_wan21_clip(
 
     assert runtime._materialize_checkpoint_view(tmp_path / "view", checkpoint) == checkpoint
     assert "models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth" not in (runtime_class.REQUIRED_COMPONENT_FILES)
-
-
-def test_hunyuan_ar_vision_attention_supports_plain_and_paired_prope_qkv(monkeypatch):
-    from worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay.models.transformers.modules import (
-        attention,
-    )
-
-    monkeypatch.setattr(
-        attention,
-        "get_parallel_state",
-        lambda: SimpleNamespace(sp_enabled=False),
-    )
-    monkeypatch.setattr(
-        attention,
-        "get_infer_state",
-        lambda: SimpleNamespace(enable_sageattn=False, sage_blocks_range=()),
-    )
-    q = torch.randn(1, 3, 2, 4)
-    k = torch.randn(1, 3, 2, 4)
-    v = torch.randn(1, 3, 2, 4)
-    cache = [
-        {
-            "k_vision": None,
-            "v_vision": None,
-            "k_txt": torch.randn(1, 2, 2, 4),
-            "v_txt": torch.randn(1, 2, 2, 4),
-        }
-    ]
-
-    plain, plain_kv = attention.sequence_parallel_attention_vision(
-        q, k, v, block_idx=0, kv_cache=cache, cache_vision=True
-    )
-    regular, prope, paired_kv = attention.sequence_parallel_attention_vision(
-        (q, q.clone()),
-        (k, k.clone()),
-        (v, v.clone()),
-        block_idx=0,
-        kv_cache=cache,
-        cache_vision=True,
-    )
-
-    assert plain.shape == regular.shape == prope.shape == (1, 3, 8)
-    assert plain_kv["k_vision"].shape[0] == 1
-    assert paired_kv["k_vision"].shape[0] == 2

@@ -90,7 +90,6 @@ DEFAULT_FORCE_SUBPROCESS_MODELS = frozenset(
         "cameractrl",
         "hunyuan-game-craft",
         "hunyuan-gamecraft",
-        "hunyuan-world-voyager",
         "lingbot-world",
         "lingbot-world-v2",
         "lingbot-world-v2-1.3b",
@@ -123,12 +122,6 @@ TORCHRUN_MODEL_NPROC_KEYS: Mapping[str, tuple[str, ...]] = {
     ),
     "hunyuan-game-craft": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
     "hunyuan-gamecraft": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
-    "hunyuan-world-voyager": (
-        "torchrun_nproc_per_node",
-        "torchrun_nproc",
-        "nproc_per_node",
-        "ulysses_degree",
-    ),
     "hunyuan-worldplay": ("torchrun_nproc_per_node", "torchrun_nproc", "nproc_per_node"),
     "wan2.1-vace": (
         "torchrun_nproc_per_node",

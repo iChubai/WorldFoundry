@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evals import framework
 from worldfoundry.evals.tasks.catalog.dispatch import CLI_RUNNERS, VIDEO_RUNNER_REGISTRY
 from worldfoundry.evals.tasks.catalog.workspace_registry import (
     build_workspace_benchmark_command,
@@ -13,6 +12,7 @@ from worldfoundry.evals.tasks.catalog.workspace_registry import (
 )
 from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 from worldfoundry.evals.tasks.execution.orchestration import model_benchmark
+from worldfoundry.evals.tasks.execution.orchestration import run as unified_run
 from worldfoundry.evals.tasks.execution.orchestration.interfaces import OfficialRunResult
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR
 
@@ -290,9 +290,9 @@ def test_public_run_forwards_custom_benchmark_parameters(tmp_path: Path, monkeyp
         captured["request"] = request
         raise StopAfterDispatch
 
-    monkeypatch.setattr(framework, "run_model_benchmark", capture)
+    monkeypatch.setattr(unified_run, "run_model_benchmark", capture)
     with pytest.raises(StopAfterDispatch):
-        framework.run_worldfoundry(
+        unified_run.run_worldfoundry(
             output_dir=tmp_path,
             model_ids=("bernini",),
             benchmark_ids=("wbench",),
@@ -311,12 +311,12 @@ def test_single_video_vbench_runtime_is_bounded_evidence(tmp_path: Path) -> None
     import argparse
     import json
 
-    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
     from worldfoundry.evals.tasks.execution.runners.vbench.vbench_official_impl import (
         DEFAULT_VBENCH_ROOT,
         normalize_vbench_results,
         validate_prompt_suite_materialization,
     )
+    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
     full_info = bundled_benchmark_asset("vbench", "VBench_full_info.json")
     rows = json.loads(full_info.read_text(encoding="utf-8"))
@@ -465,12 +465,12 @@ def test_single_video_vbench_series_runtime_is_never_full_suite(
     import argparse
     import json
 
-    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
     from worldfoundry.evals.tasks.execution.runners.vbench_2_0.vbench_shared_official_impl import (
         build_vbench2_video_coverage,
         canonical_suite_coverage,
         normalize_results,
     )
+    from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
 
     videos = tmp_path / variant / "videos"
     videos.mkdir(parents=True)

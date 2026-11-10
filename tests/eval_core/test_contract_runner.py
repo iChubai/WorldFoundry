@@ -12,7 +12,7 @@ from worldfoundry.evals.api import (
     GenerationResult,
     MetricResult,
 )
-from worldfoundry.evals.runner import ContractRunRequest, execute_contract_run
+from worldfoundry.evals.tasks.execution.orchestration.contract import ContractRunRequest, execute_contract_run
 
 
 def _read_jsonl(path: Path) -> list[dict]:

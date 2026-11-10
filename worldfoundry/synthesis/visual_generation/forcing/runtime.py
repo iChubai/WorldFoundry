@@ -250,10 +250,6 @@ def _forcing_prompt_root() -> Path:
     return resolve_data_path("test_cases", "forcing", "prompts").resolve()
 
 
-def _ensure_runtime_prompts(runtime_root: Path) -> None:
-    _symlink_dir(_forcing_prompt_root(), runtime_root / "prompts")
-
-
 def _latest_mp4(directory: Path) -> Path:
     candidates = sorted(
         [path for path in directory.rglob("*.mp4") if path.is_file() and path.stat().st_size > 0],
@@ -325,7 +321,6 @@ class _ForcingRuntime:
         }
         if defaults:
             self.defaults.update(dict(defaults))
-        _ensure_runtime_prompts(Path(self.runtime_root))
 
     @classmethod
     def from_pretrained(

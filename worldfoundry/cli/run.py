@@ -29,7 +29,8 @@ _BENCHMARK_RUN_MODE_CHOICES = ("normalizer", "official-run", "official-validatio
 
 def execute_run_plan_file(args: argparse.Namespace):
     """Load and execute a run-plan JSON file through the evaluation runner."""
-    from worldfoundry.evals.runner import evaluate_request_from_run_plan, execute_evaluate_run, load_run_plan
+    from worldfoundry.evals.tasks.execution.orchestration.evaluate import execute_evaluate_run
+    from worldfoundry.evals.tasks.execution.orchestration.plan import evaluate_request_from_run_plan, load_run_plan
 
     plan = load_run_plan(args.plan)
     request = replace(
@@ -122,7 +123,9 @@ def _suite_presets_declare_models(args: argparse.Namespace) -> bool:
     if not suite_ids:
         return False
     try:
-        from worldfoundry.evals.runner import get_model_benchmark_suite_preset
+        from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
+            get_model_benchmark_suite_preset,
+        )
 
         return all(
             bool(get_model_benchmark_suite_preset(suite_id, args.suite_preset_path).get("model_ids"))
@@ -143,7 +146,7 @@ def _run_output_artifact(args: argparse.Namespace) -> str | None:
 
 def _worldfoundry_run_request_from_args(args: argparse.Namespace):
     """Build a ``WorldFoundryRunRequest`` from CLI args for the unified facade."""
-    from worldfoundry.evals.framework import WorldFoundryRunRequest
+    from worldfoundry.evals.tasks.execution.orchestration.run import WorldFoundryRunRequest
 
     return WorldFoundryRunRequest(
         output_dir=args.output_dir,
@@ -202,7 +205,7 @@ def _worldfoundry_run_request_from_args(args: argparse.Namespace):
 
 def _handle_worldfoundry_run(args: argparse.Namespace) -> int:
     """Run the unified worldfoundry facade and return the framework exit code."""
-    from worldfoundry.evals.framework import run_worldfoundry
+    from worldfoundry.evals.tasks.execution.orchestration.run import run_worldfoundry
 
     performance_profile = getattr(args, "performance_profile", "balanced")
     if performance_profile == "throughput":
@@ -308,7 +311,7 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
         raise CliUsageError(f"direct {schema.model_id} inference requires {', '.join(missing)}")
 
     from worldfoundry.evals.api import GenerationRequest
-    from worldfoundry.evals.runner import EvaluateRunRequest, execute_evaluate_run
+    from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest, execute_evaluate_run
 
     requests = None
     if args.requests_path is None:
@@ -439,11 +442,8 @@ def _handle_run(args: argparse.Namespace) -> int:
 
 def _handle_run_in_process(args: argparse.Namespace) -> int:
     from worldfoundry.cli.utils import resolve_cli_benchmark_for_materialize
-    from worldfoundry.evals.runner import (
-        EvaluateRunRequest,
-        execute_evaluate_run,
-        materialize_requests_from_benchmark,
-    )
+    from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest, execute_evaluate_run
+    from worldfoundry.evals.tasks.execution.orchestration.materialize import materialize_requests_from_benchmark
 
     benchmark = resolve_cli_benchmark_for_materialize(args.task_type, args.benchmark_name)
     materialized = materialize_requests_from_benchmark(

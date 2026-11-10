@@ -11,7 +11,7 @@ from typing import Any
 from worldfoundry.evals.utils import write_json
 
 from .presentation import print_details, print_table, terminal_enabled
-from .utils import json_dump
+from .utils import CliUsageError, json_dump
 
 # ── Models list and runtime runners ─────────────────────────────
 
@@ -154,7 +154,10 @@ def _handle_models_assets(args: argparse.Namespace) -> int:
                     print("report:", args.report_path)
         return 0
 
-    plan = base_model_materialization_plan(args.capability)
+    try:
+        plan = base_model_materialization_plan(args.capability)
+    except KeyError as exc:
+        raise CliUsageError(str(exc.args[0])) from exc
     executed: list[dict[str, Any]] = []
     if args.execute_downloads:
         executed = _execute_download_commands(plan.get("download_command_argvs", []))
@@ -371,7 +374,7 @@ def _handle_models_visualize(args: argparse.Namespace) -> int:
 
 
 def register_model_subparsers(subparsers: argparse._SubParsersAction) -> None:
-    from worldfoundry.base_models.capabilities import BASE_MODEL_CAPABILITIES, BASE_MODEL_STACKS
+    from worldfoundry.base_models.capabilities import base_model_stack_ids
 
     models_parser = subparsers.add_parser("models", help="Inspect model runners, environments, and assets")
     models_subparsers = models_parser.add_subparsers(dest="models_command", required=True)
@@ -403,8 +406,10 @@ def register_model_subparsers(subparsers: argparse._SubParsersAction) -> None:
     models_assets_parser.add_argument(
         "--capability",
         action="append",
-        choices=sorted([*BASE_MODEL_CAPABILITIES, *BASE_MODEL_STACKS]),
-        help="Capability or stack id to materialize. May repeat. Defaults to all registered capabilities.",
+        help=(
+            "Capability or stack id to materialize (see --list). May repeat. "
+            f"Defaults to all registered capabilities. Stacks: {', '.join(base_model_stack_ids())}."
+        ),
     )
     models_assets_parser.add_argument(
         "--list", action="store_true", help="List registered base-model capabilities and stacks."

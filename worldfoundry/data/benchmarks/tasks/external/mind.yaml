@@ -78,7 +78,7 @@ metadata:
   integration_evidence: false
   leaderboard_valid: false
   base_model_dependencies:
-  - video_world_perception_stack
+  - mind_metric_stack
   source_provenance:
     official_repo:
       url: https://github.com/CSU-JPG/MIND

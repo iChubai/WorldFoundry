@@ -59,13 +59,12 @@ def test_top_level_import_does_not_eager_import_benchmarks_or_cli() -> None:
             need = {
                 "api",
                 "models",
+                "public",
                 "reporting",
-                "runner",
                 "tasks",
             }
             assert need <= set(ev.__all__)
             assert "runtime" not in ev.__all__
-            assert {"execute_evaluate_run", "load_benchmark_zoo_registry"} <= set(ev.__all__)
             """
         ).strip()
     )
@@ -94,8 +93,8 @@ def test_public_subpackages_import_from_worldfoundry_namespace() -> None:
             for name in (
                 "api",
                 "models",
+                "public",
                 "reporting",
-                "runner",
                 "tasks",
             ):
                 module = getattr(ev, name)
@@ -125,37 +124,7 @@ def test_cli_import_avoids_benchmarks_and_runner() -> None:
             assert "worldfoundry.cli" in sys.modules
             assert "worldfoundry.evals.physics_backend" not in sys.modules
             assert "worldfoundry.evals.tasks" not in sys.modules
-            assert "worldfoundry.evals.runner" not in sys.modules
-            """
-        ).strip()
-    )
-
-
-def test_lazy_benchmark_exports_resolve_through_public_namespace() -> None:
-    _run_isolated_py(
-        dedent(
-            """
-            import importlib
-            import sys
-
-            def _drop_module_tree(prefix):
-                for name in list(sys.modules):
-                    if name == prefix or name.startswith(prefix + "."):
-                        sys.modules.pop(name)
-
-            def _import_fresh_public_namespace():
-                _drop_module_tree("worldfoundry.evals")
-                worldfoundry = importlib.import_module("worldfoundry")
-                if hasattr(worldfoundry, "evals"):
-                    delattr(worldfoundry, "evals")
-                return importlib.import_module("worldfoundry.evals")
-
-            ev = _import_fresh_public_namespace()
-            assert "worldfoundry.evals.tasks" not in sys.modules
-            load = ev.load_benchmark_zoo_registry
-            from worldfoundry.evals.tasks import load_benchmark_zoo_registry as benchmarks_load
-            assert load is benchmarks_load
-            assert "worldfoundry.evals.tasks" in sys.modules
+            assert "worldfoundry.evals.public" not in sys.modules
             """
         ).strip()
     )

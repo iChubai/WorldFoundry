@@ -1,8 +1,8 @@
-"""CLI entry-point and argument parser for the WorldFoundry TUI.
+"""Action dispatch for the WorldFoundry TUI.
 
-Provides the ``wf tui`` command-line interface that can launch the
-full Textual TUI app, a standard-library fallback dashboard, or perform
-one-off actions like printing a command or writing a suite plan.
+Runs the ``wf tui`` command: launches the full Textual TUI app, a
+standard-library fallback dashboard, or performs one-off actions like
+printing a command or writing a suite plan.
 """
 
 from __future__ import annotations
@@ -21,130 +21,12 @@ from ..command_builders import (
     build_suite_command,
     format_shell_command,
 )
-from ..help import WorldFoundryArgumentParser
 from ..inference_variants import INFER_VARIANT_GROUPS, INFER_VARIANT_TO_MODEL, infer_variant_options
 from .brand import render_fallback_header
 from .controls import infer_control_fields
 
 
-def build_parser() -> argparse.ArgumentParser:
-    """Build the ``wf tui`` argument parser with inference, evaluation, and Studio flags."""
-    parser = WorldFoundryArgumentParser(
-        prog="wf tui",
-        description="Launch real WorldFoundry model inference, benchmark evaluation, and Studio commands.",
-    )
-    parser.add_argument("--model-manifest-dir", type=Path)
-    parser.add_argument("--benchmark-manifest-dir", type=Path)
-    parser.add_argument("--runtime-profile-dir", type=Path)
-    parser.add_argument("--suite", action="append", dest="suite_ids", default=None)
-    parser.add_argument("--model-id")
-    parser.add_argument("--benchmark-id")
-    parser.add_argument(
-        "--metric", action="append", default=None, help="Benchmark metric id. Repeatable or comma-separated."
-    )
-    parser.add_argument("--output-dir", type=Path, default=Path("runs/tui"))
-    parser.add_argument("--input", type=Path, help="Optional input image/video passed to model inference scripts.")
-    parser.add_argument(
-        "--input-dir", "--input_dir", dest="input_dir", type=Path, help="FlashWorld JSON input directory/file."
-    )
-    parser.add_argument("--video", type=Path, help="Optional input video passed to model inference scripts.")
-    parser.add_argument("--trajectory-file", type=Path, help="Optional custom camera trajectory JSON file.")
-    parser.add_argument("--prompt", help="Prompt override for text/image/video generation inference.")
-    parser.add_argument("--negative-prompt", dest="negative_prompt", help="Negative prompt override when supported.")
-    parser.add_argument("--task", help="Task override for inference scripts with task modes.")
-    parser.add_argument("--mode", help="Mode override for inference scripts with mode variants.")
-    parser.add_argument("--resize-mode", help="Input resize mode override when supported.")
-    parser.add_argument("--size", help="Resolution override, e.g. 832*480.")
-    parser.add_argument("--frames", help="Frame count override.")
-    parser.add_argument("--steps", help="Sampling/inference step override.")
-    parser.add_argument(
-        "--frames-per-generation", "--chunk-frames", dest="frames_per_generation", help="Astra frame chunk size."
-    )
-    parser.add_argument("--guidance-scale", "--cfg-scale", dest="guidance_scale", help="Guidance/CFG scale override.")
-    parser.add_argument("--seed", help="Seed override.")
-    parser.add_argument("--fps", help="Output FPS override.")
-    parser.add_argument("--dtype", help="Runtime dtype override when supported.")
-    parser.add_argument(
-        "--max-sequence-length", dest="max_sequence_length", help="Text encoder max sequence length override."
-    )
-    parser.add_argument("--cam-type", "--camera-type", dest="cam_type", help="Astra camera preset 1..7.")
-    parser.add_argument(
-        "--interactions", "--actions", dest="interactions", help="Comma-separated interaction/action list."
-    )
-    parser.add_argument(
-        "--output-formats",
-        "--output_formats",
-        dest="output_formats",
-        help="FlashWorld output formats, e.g. video,spz,ply.",
-    )
-    parser.add_argument("--trajectory", "--camera-trajectory", dest="trajectory", help="Camera trajectory override.")
-    parser.add_argument("--angle", help="Camera trajectory angle override when supported.")
-    parser.add_argument("--distance", help="Camera trajectory distance override when supported.")
-    parser.add_argument("--orbit-radius", dest="orbit_radius", help="Camera orbit radius override when supported.")
-    parser.add_argument("--zoom-ratio", dest="zoom_ratio", help="Camera zoom ratio override when supported.")
-    parser.add_argument("--alpha-threshold", dest="alpha_threshold", help="Alpha threshold override when supported.")
-    parser.add_argument(
-        "--static-scene",
-        action="store_true",
-        default=None,
-        help="Treat input as a static scene when supported.",
-    )
-    parser.add_argument("--low-vram", action="store_true", default=None, help="Enable low-VRAM mode when supported.")
-    parser.add_argument(
-        "--disable-lora",
-        action="store_true",
-        default=None,
-        help="Disable LoRA acceleration when supported.",
-    )
-    parser.add_argument(
-        "--vis-rendering",
-        action="store_true",
-        default=None,
-        help="Save rendering visualization artifacts when supported.",
-    )
-    parser.add_argument("--offload-t5", "--offload_t5", dest="offload_t5", action="store_true", default=None)
-    parser.add_argument(
-        "--offload-transformer-during-vae",
-        "--offload_transformer_during_vae",
-        dest="offload_transformer_during_vae",
-        action="store_true",
-        default=None,
-    )
-    parser.add_argument("--offload-vae", "--offload_vae", dest="offload_vae", action="store_true", default=None)
-    parser.add_argument("--output-path", type=Path, help="Exact output artifact path when supported.")
-    parser.add_argument(
-        "--ckpt-type", "--weight-type", dest="ckpt_type", help="Checkpoint type inside the selected model family."
-    )
-    parser.add_argument("--ckpt-root", type=Path, help="Checkpoint root for model inference scripts.")
-    parser.add_argument(
-        "--ckpt-path", type=Path, help="Exact checkpoint/model path override for the selected infer model."
-    )
-    parser.add_argument("--conda-envs-root", type=Path, help="Conda env root for model inference scripts.")
-    parser.add_argument("--gpu", help="CUDA_VISIBLE_DEVICES value for model inference scripts.")
-    parser.add_argument(
-        "--fallback",
-        action="store_true",
-        help="Render the dependency-free terminal dashboard and exit.",
-    )
-    parser.add_argument(
-        "--catalog-json",
-        action="store_true",
-        help="Print the TUI catalog as JSON and exit without importing Textual.",
-    )
-    parser.add_argument(
-        "--print-command",
-        action="store_true",
-        help="Print the model-benchmark command for the selected IDs and exit.",
-    )
-    parser.add_argument(
-        "--write-suite-plan",
-        action="store_true",
-        help="Write a model x benchmark suite plan for the selected IDs and exit.",
-    )
-    return parser
-
-
-def main(argv: Sequence[str] | None = None) -> int:
+def run_tui(args: argparse.Namespace) -> int:
     """Dispatch the TUI action based on CLI flags.
 
     Supports four modes beyond the default Textual TUI:
@@ -157,9 +39,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     Returns:
         Exit code (0 on success).
     """
-    parser = build_parser()
-    args = parser.parse_args(list(argv) if argv is not None else None)
-
     # ── Catalog JSON mode ────────────────────────────────────────────
     if args.catalog_json:
         catalog = load_catalog(
@@ -473,7 +352,10 @@ def _runtime_preflight_command(output_dir: Path, args) -> tuple[str, ...]:
 
 def _write_suite_plan(*, model_id: str, benchmark_id: str, output_dir: Path, args):
     """Execute a model × benchmark suite plan without running cells."""
-    from worldfoundry.evals.runner import ModelBenchmarkSuiteRequest, run_model_benchmark_suite
+    from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
+        ModelBenchmarkSuiteRequest,
+        run_model_benchmark_suite,
+    )
     from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR
 
     return run_model_benchmark_suite(
@@ -615,8 +497,3 @@ def _split_csv_values(values: Sequence[str] | None) -> tuple[str, ...]:
             if item:
                 items.append(item)
     return tuple(items)
-
-
-# ── CLI bootstrap ──────────────────────────────────────────────────
-if __name__ == "__main__":
-    raise SystemExit(main())

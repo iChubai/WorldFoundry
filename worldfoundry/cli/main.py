@@ -119,7 +119,7 @@ def _curate_root_subparser_help(subparsers: argparse._SubParsersAction) -> None:
 
     subparsers.metavar = "{" + ",".join(_PUBLIC_ROOT_COMMANDS) + "}"
     # help.py reads this optional grouping through getattr when rendering terminal help.
-    subparsers.help_groups = {  # ty: ignore[unresolved-attribute]
+    subparsers.help_groups = {  # ty: ignore[missing-attribute]
         "Start here": ("run", "tui", "zoo", "models"),
         "Evaluate": ("evaluate", "score", "generate-score", "reproduce", "embodied"),
         "Catalogs and workflows": ("tasks", "suites", "task", "dataset", "config", "plan", "metric"),
@@ -310,12 +310,6 @@ def main(argv: list[str] | None = None) -> int:
     # or WORLDFOUNDRY_LOG_* environment values keep today's eager behaviour.
     if logging_flags_requested(_log_level, _log_file, _log_json):
         configure_cli_logging(_log_level, _log_file, _log_json)
-    if "--tui" in raw_argv:
-        configure_cli_logging(_log_level, _log_file, _log_json)
-        from worldfoundry.cli.tui.launcher import main as tui_main
-
-        return tui_main([item for item in raw_argv if item != "--tui"])
-
     model_run_schema = None
     if raw_argv and raw_argv[0] == "run":
         from .model_run import (

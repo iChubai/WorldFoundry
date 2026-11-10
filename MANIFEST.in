@@ -8,16 +8,13 @@ include THIRD-PARTY-NOTICES
 include worldfoundry/synthesis/visual_generation/dino_wm/datasets/UPSTREAM.md
 include worldfoundry/synthesis/visual_generation/egowm/nav_25dof_stats.json
 include worldfoundry/synthesis/visual_generation/vid2world/csgo_utils/test_split.txt
-include worldfoundry/base_models/three_dimensions/depth/vigeo/PROVENANCE.md
 recursive-include requirements *.txt *.md
 include worldfoundry/data/benchmarks/*.yaml
-include worldfoundry/data/benchmarks/*.md
 recursive-include worldfoundry/data/benchmarks/catalog *.yaml
 recursive-include worldfoundry/data/benchmarks/tasks *.yaml
 recursive-include worldfoundry/data/benchmarks/runtime_profiles *.yaml
 recursive-include worldfoundry/data/benchmarks/assets *.json *.jsonl *.csv *.txt *.md *.png
 recursive-include worldfoundry/data/benchmarks/assets/larybench *.yaml
-recursive-include worldfoundry/evals/tasks/execution/runners/larybench *.md
 recursive-include worldfoundry/synthesis/visual_generation/moverse/moverse_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/uni3c/uni3c_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/evoke/evoke_runtime *
@@ -41,6 +38,7 @@ recursive-include worldfoundry/base_models/perception_core/video_text/fetv_blip 
 recursive-include worldfoundry/base_models/perception_core/video_quality/fetv_stylegan_v *.py *.cpp *.cu *.h *.json *.yaml *.yml *.txt
 recursive-include worldfoundry/base_models/three_dimensions/general_3d/vipe/csrc *.cpp *.cu *.h *.cuh
 recursive-include worldfoundry/studio/assets/web *.html *.css *.js
+recursive-include worldfoundry/data/base_models *.yaml
 recursive-include worldfoundry/data/models/catalog *.yaml
 recursive-include worldfoundry/data/models/runtime *.yaml
 recursive-include worldfoundry/data/models/runtime *.json
@@ -53,7 +51,6 @@ recursive-include worldfoundry/data/models/runtime/configs *.py *.md
 recursive-include worldfoundry/data/models/runtime/environments *.yaml
 # Keep source distributions reproducible from a dirty development checkout.
 prune tmp
-prune tests
 prune cache
 prune cache*
 prune outputs
@@ -69,7 +66,8 @@ prune docs/fumadocs/out
 prune docs/fumadocs/node_modules
 prune worldfoundry/studio/assets/vendor
 
-# License-gated upstream runtimes are allowed as ignored local checkouts only.
+# License-gated upstream runtimes; LICENSE_GATED_PATHS in
+# scripts/setup/check_packaging_license_gate.py owns this list.
 prune worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime
 prune worldfoundry/base_models/three_dimensions/depth/unik3d
 prune worldfoundry/base_models/three_dimensions/general_3d/dust3r
@@ -132,7 +130,7 @@ include .github/workflows/pr-checks.yml
 recursive-include scripts/dev *.py
 include Makefile scripts/setup/check_packaging_license_gate.py
 global-exclude */__pycache__/* */.pytest_cache/* */.mypy_cache/* */.ruff_cache/*
-global-exclude */tmp/* */temp/* */logs/* */outputs/* .env* *.py[cod]
+global-exclude */tmp/* */temp/* */logs/* */outputs/* .env*
 
 # Required iWorld-Bench camera trajectories (the only NumPy archives in package data).
 recursive-include worldfoundry/data/benchmarks/assets/iworld-bench/camera_trajectories *.npz

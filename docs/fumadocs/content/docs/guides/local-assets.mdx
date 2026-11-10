@@ -210,19 +210,6 @@ These in-tree runtimes keep checkpoint locations in the shared base-model asset 
       <li className="pi-kv-row">
         <div className="pi-kv-head">
           <div className="pi-kv-names">
-            <code>mobile_sam</code>
-          </div>
-          <span className="pi-kv-default">
-            <span>Override</span>
-            <code>WORLDFOUNDRY_MOBILE_SAM_CKPT</code>
-          </span>
-        </div>
-        <p>Official source: GitHub <a href="https://github.com/ChaoningZhang/MobileSAM/tree/master/weights">ChaoningZhang/MobileSAM</a> <code>weights/</code>. Expected file: <code>mobile_sam.pt</code></p>
-        <p className="pi-kv-read"><span>Default location</span> <code>{'${WORLDFOUNDRY_CKPT_DIR}/MobileSAM/'}</code></p>
-      </li>
-      <li className="pi-kv-row">
-        <div className="pi-kv-head">
-          <div className="pi-kv-names">
             <code>repvit_sam</code>
           </div>
           <span className="pi-kv-default">
@@ -283,7 +270,6 @@ Inspect the exact URLs, resolved paths, size checks, and export commands without
 ```bash
 wf models assets \
   --capability sam2 \
-  --capability mobile_sam \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \
@@ -291,13 +277,12 @@ wf models assets \
   --json
 ```
 
-To materialize missing files, add `--execute-downloads`. `HF_ENDPOINT` is honored for the SAM2, UniDepth V2, and UniK3D Hugging Face assets. MobileSAM, RepViT-SAM, and MiDaS are downloaded from their official GitHub repository or release URLs:
+To materialize missing files, add `--execute-downloads`. `HF_ENDPOINT` is honored for the SAM2, UniDepth V2, and UniK3D Hugging Face assets. RepViT-SAM and MiDaS are downloaded from their official GitHub repository or release URLs:
 
 ```bash
 export HF_ENDPOINT=https://hf-mirror.com
 wf models assets \
   --capability sam2 \
-  --capability mobile_sam \
   --capability repvit_sam \
   --capability midas_v21_small_256 \
   --capability unidepth_v2_vitl14 \

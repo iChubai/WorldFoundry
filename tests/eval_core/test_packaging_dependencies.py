@@ -149,7 +149,6 @@ def test_sdist_manifest_excludes_generated_downloaded_and_large_artifacts() -> N
     # data/models/runtime (+ environments/), and the cosmos vendored trees are
     # covered by the global binary/notebook excludes instead of per-path prunes.
     required_snippets = (
-        "include worldfoundry/data/benchmarks/*.md",
         "recursive-include worldfoundry/data/benchmarks/catalog *.yaml",
         "recursive-include worldfoundry/data/benchmarks/runtime_profiles *.yaml",
         "recursive-include worldfoundry/data/models/catalog *.yaml",

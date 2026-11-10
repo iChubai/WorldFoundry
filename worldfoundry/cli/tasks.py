@@ -228,7 +228,9 @@ def _handle_tasks_catalog(args: argparse.Namespace) -> int:
 
 
 def _handle_suites_list(args: argparse.Namespace) -> int:
-    from worldfoundry.evals.runner import list_model_benchmark_suite_presets
+    from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
+        list_model_benchmark_suite_presets,
+    )
 
     suites = [dict(item) for item in list_model_benchmark_suite_presets(args.suite_preset_path)]
     if args.json:
@@ -260,7 +262,7 @@ def _handle_suites_list(args: argparse.Namespace) -> int:
 
 def _handle_suites_show(args: argparse.Namespace) -> int:
     """Show one model-benchmark suite preset with its models and benchmarks."""
-    from worldfoundry.evals.runner import get_model_benchmark_suite_preset
+    from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import get_model_benchmark_suite_preset
 
     try:
         suite = dict(get_model_benchmark_suite_preset(args.suite, args.suite_preset_path))

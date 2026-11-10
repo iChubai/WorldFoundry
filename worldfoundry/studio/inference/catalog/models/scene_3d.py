@@ -1750,7 +1750,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "images",
             "pano_image",
             "viewer",
-            "use_sharp",
             "return_mesh",
             "save_scene",
             "low_vram",

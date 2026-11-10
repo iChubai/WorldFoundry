@@ -17,4 +17,3 @@ from worldfoundry.base_models.perception_core.segment.sam_v1.modeling.transforme
 )
 
 from .repvit import RepViT as RepViT
-from .tiny_vit_sam import TinyViT as TinyViT

@@ -1,91 +1,32 @@
-"""WorldFoundry evaluation: one execution stack, two typed sides.
+"""WorldFoundry evaluation: benchmark catalogs, run orchestration, metrics, and reporting.
 
-Runs always go through :mod:`worldfoundry.evals.runner` — ``execute_evaluate_run`` /
-``run_model_benchmark`` / suites are the programmatic entrypoints. The top-level
-:mod:`worldfoundry.cli` package wraps the same flows for command-line use.
+:mod:`worldfoundry.evals.public` is the programmatic entry point (``run_worldfoundry``,
+``run_benchmark``, and the request/result types). Subpackages:
 
-**Benchmark side** (what to evaluate): task, dataset, catalog, and benchmark-zoo metadata live under
-:mod:`~worldfoundry.evals.tasks`.
+- :mod:`~worldfoundry.evals.api` — JSON-safe contracts shared by runners, CLI, and reports.
+- :mod:`~worldfoundry.evals.tasks` — benchmark catalog, datasets, metrics, and execution.
+- :mod:`~worldfoundry.evals.models` — model catalog, runtime profiles, and pipeline bindings.
+- :mod:`~worldfoundry.evals.reporting` — scorecards, run indexes, and comparisons.
 
-**Model side** (:mod:`~worldfoundry.evals.models`): world-model catalog resolution — turning catalog
-``runner_target`` strings into implementations consumed by :mod:`~worldfoundry.evals.runner`.
-:mod:`~worldfoundry.evals.models.pipelines` resolves data-backed pipeline bindings and hosts the
-runner lifecycle bridge used by formal model-benchmark runs. Runtime environment helpers live under
-:mod:`worldfoundry.runtime`; local open-eval CLI checks live under :mod:`worldfoundry.cli.local_open_eval`;
-low-level evaluation path/manifest/IO helpers live under
-:mod:`~worldfoundry.evals.utils`.
-
-Shortcuts below mirror the main runner and resolver APIs for ``import worldfoundry.evals as ev``.
+Subpackages load lazily so ``import worldfoundry.evals`` stays cheap.
 """
 
 from __future__ import annotations
 
 from importlib import import_module
 
-_PRIMARY_EXPORT_MAP = {
-    "execute_evaluate_run": (".runner", "execute_evaluate_run"),
-    "run_worldfoundry": (".framework", "run_worldfoundry"),
-    "run_model_benchmark": (".runner", "run_model_benchmark"),
-    "resolve_model_zoo_runner": (".models", "resolve_model_zoo_runner"),
-}
-
-_PUBLIC_SUBMODULES = (
-    "api",
-    "framework",
-    "models",
-    "reporting",
-    "runner",
-    "tasks",
-    "utils",
-)
-
-_DEFERRED_EXPORTS = (
-    "ModelDefinition",
-    "ModelRegistry",
-    "TaskRegistry",
-    "discover_model_registry",
-    "load_benchmark_zoo_registry",
-)
-
-__all__ = [
-    *_PUBLIC_SUBMODULES,
-    *_DEFERRED_EXPORTS,
-    *_PRIMARY_EXPORT_MAP,
-]
-
-_DEFERRED_EXPORT_MAP = {
-    "TaskRegistry": (".tasks", "TaskRegistry"),
-    "load_benchmark_zoo_registry": (".tasks", "load_benchmark_zoo_registry"),
-    "ModelDefinition": (".models", "ModelDefinition"),
-    "ModelRegistry": (".models", "ModelRegistry"),
-    "discover_model_registry": (".models", "discover_model_registry"),
-}
+__all__ = ["api", "models", "public", "reporting", "tasks", "utils"]
 
 
 def __getattr__(name: str):
-    """Lazily import and resolve submodules and shortcut exports."""
-    if name in _PUBLIC_SUBMODULES:
-        module = import_module(f"{__name__}.{name}")
-        globals()[name] = module
-        return module
-
-    if name in _PRIMARY_EXPORT_MAP:
-        module_name, attr_name = _PRIMARY_EXPORT_MAP[name]
-        module = import_module(module_name, __name__)
-        value = getattr(module, attr_name)
-        globals()[name] = value
-        return value
-
-    if name not in _DEFERRED_EXPORTS:
+    """Import a public subpackage on first attribute access."""
+    if name not in __all__:
         raise AttributeError(name)
-
-    module_name, attr_name = _DEFERRED_EXPORT_MAP[name]
-    module = import_module(module_name, __name__)
-    value = getattr(module, attr_name)
-    globals()[name] = value
-    return value
+    module = import_module(f"{__name__}.{name}")
+    globals()[name] = module
+    return module
 
 
 def __dir__() -> list[str]:
-    """Return the list of all exported and public attributes."""
+    """Return the public subpackages alongside module globals."""
     return sorted({*globals(), *__all__})

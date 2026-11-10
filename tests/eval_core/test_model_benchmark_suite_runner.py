@@ -7,12 +7,12 @@ import pytest
 
 from tests.eval_core.contract_fixture import CONTRACT_FIXTURE_MODEL_ID
 from worldfoundry.cli import main
-from worldfoundry.evals.runner import (
+from worldfoundry.evals.tasks.execution.orchestration.model_benchmark import CONTRACT_VALIDATION_ID
+from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
     ModelBenchmarkSuiteRequest,
     list_model_benchmark_suite_presets,
     run_model_benchmark_suite,
 )
-from worldfoundry.evals.tasks.execution.orchestration.model_benchmark import CONTRACT_VALIDATION_ID
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BENCHMARK_MANIFEST_DIR = REPO_ROOT / "worldfoundry" / "data" / "benchmarks" / "catalog"

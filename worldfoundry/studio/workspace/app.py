@@ -1217,7 +1217,7 @@ def _prepared_evaluation_from_payload(payload: JobCreateRequest, output_dir: str
 
 
 def _run_evaluation(payload: JobCreateRequest, job: StudioJob | None = None) -> dict[str, Any]:
-    from worldfoundry.evals.runner import EvaluateRunRequest, run_evaluate
+    from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest, run_evaluate
     from worldfoundry.evals.tasks.execution.orchestration.plan import (
         evaluate_request_from_run_plan,
         load_run_plan,

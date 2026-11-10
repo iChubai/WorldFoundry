@@ -9,20 +9,23 @@ tracks, captions, embeddings).
 
 | Path | Models |
 | --- | --- |
-| `general_perception/` | Feature backbones and embeddings: DINO, DINOv2, DINOv3, OpenAI CLIP, OpenCLIP, UniCeption, Qwen3-VL entity features |
-| `detection/` | Open-vocabulary detection: Grounding DINO, YOLO-World |
-| `segment/` | SAM v1, SAM 2, SAM 3, MobileSAM, RepViT-SAM, Grounded-SAM, scene segmentation |
-| `tracking/` | CoTracker, DOT, AOT, Track-Anything |
-| `optical_flow/` | RAFT, SEA-RAFT, FlowFormer++ |
-| `video_quality/` | DOVER, FAST-VQA, LPIPS, DreamSim, HPSv3, TransNetV2, FETV StyleGAN-V |
-| `video_text/` | Video–text alignment: ViCLIP, VQAScore, BLIP-2 features, FETV BLIP, OpenS2V-Nexus |
-| `captioning/` | Tag2Text, GRiT |
-| `action_recognition/` | UMT, latent-action models |
-| `frame_interpolation/` | AMT, VFIMamba |
-| `face/` | ArcFace, RetinaFace |
-| `human_anatomy/` | ViT-based body detector |
-| `safety/` | NudeNet |
-| `visualization/` | Colormaps and rendering helpers for perception outputs |
+| [`general_perception/`](general_perception/README.md) | Feature backbones and embeddings: DINO, DINOv2, DINOv3, OpenAI CLIP, OpenCLIP, UniCeption, Qwen3-VL entity features |
+| [`detection/`](detection/README.md) | Open-vocabulary detection: Grounding DINO, YOLO-World |
+| [`segment/`](segment/README.md) | SAM v1, SAM 2, SAM 3, RepViT-SAM, Grounded-SAM, scene segmentation |
+| [`tracking/`](tracking/README.md) | CoTracker, DOT, AOT, Track-Anything |
+| [`optical_flow/`](optical_flow/README.md) | RAFT, SEA-RAFT, FlowFormer++ |
+| [`video_quality/`](video_quality/README.md) | DOVER, FAST-VQA, LPIPS, DreamSim, HPSv3, TransNetV2, FETV StyleGAN-V |
+| [`video_text/`](video_text/README.md) | Video–text alignment: ViCLIP, VQAScore, BLIP-2 features, FETV BLIP |
+| [`captioning/`](captioning/README.md) | Tag2Text, GRiT |
+| [`action_recognition/`](action_recognition/README.md) | UMT, latent-action models |
+| [`frame_interpolation/`](frame_interpolation/README.md) | AMT, VFIMamba |
+| [`face/`](face/README.md) | ArcFace, RetinaFace |
+| [`human_anatomy/`](human_anatomy/README.md) | ViT-based body detector |
+| [`safety/`](safety/README.md) | NudeNet |
+| [`visualization/`](visualization/README.md) | Colormaps and rendering helpers for perception outputs |
+
+Each folder's README lists its models, the benchmarks and metrics that use them, and how to
+stage their weights.
 
 ## Usage
 

@@ -45,6 +45,7 @@ Everything under `worldfoundry/data/` is declarative metadata; checkpoints, data
 | `models/runtime/environments/` | Dedicated conda environments, only for documented dependency conflicts |
 | `models/runtime/configs/<package>/` | Static presets and example inputs, in a directory named after the synthesis or pipeline package that reads them (snake_case, for example `dino_wm/`, `alayaworld_v11/`); directories shared by several models use the family name (for example `vla_va_wam/`, `video_official/`) |
 | `models/runtime/assets/` | Asset manifests for model checkpoints |
+| `base_models/capabilities/*.yaml`, `base_models/stacks.yaml`, `base_models/benchmark_assets.yaml` | Shared base-model capabilities (imports, checkpoints, datasets and their expected layout), named stacks, and the data assets each benchmark stages; loaded by `worldfoundry/base_models/capabilities.py`, whose docstring documents the fields and templates |
 | `benchmarks/catalog/`, `benchmarks/tasks/`, `benchmarks/runtime_profiles/` | One benchmark per file in each tree, keyed by benchmark id |
 | `benchmarks/assets/`, `benchmarks/eval_configs/`, `benchmarks/requirements/` | Prompt sets, reference files, evaluation presets, and pinned evaluator dependencies |
 | `test_cases/` | Not tracked; the fixture corpus was externalized and is staged locally when needed |

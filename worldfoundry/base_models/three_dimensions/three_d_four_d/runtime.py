@@ -557,8 +557,6 @@ class ThreeDFourDRuntimeSynthesis(BaseSynthesis):
                 command.extend(["--image", expanded_images[0]])
             if not _bool_option(options, self.options, "viewer"):
                 command.append("--no_viewer")
-            if _bool_option(options, self.options, "use_sharp"):
-                command.append("--use_sharp")
             if _bool_option(options, self.options, "return_mesh"):
                 command.append("--return_mesh")
             if _bool_option(options, self.options, "save_scene", default=True):

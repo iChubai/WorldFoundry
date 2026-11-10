@@ -20,18 +20,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.framework import WorldFoundryRunRequest, WorldFoundryRunResult, run_worldfoundry
-from worldfoundry.evals.runner import (
-    EvaluateRunRequest,
-    EvaluateRunResult,
-    ModelBenchmarkRunRequest,
-    ModelBenchmarkRunResult,
-    ModelBenchmarkSuiteRequest,
-    ModelBenchmarkSuiteResult,
-    execute_evaluate_run,
-    run_model_benchmark,
-    run_model_benchmark_suite,
-)
 from worldfoundry.evals.tasks.catalog.dispatch import (
     BENCHMARK_INTEGRATION_REGISTRY,
     VIDEO_RUNNER_REGISTRY,
@@ -44,6 +32,26 @@ from worldfoundry.evals.tasks.catalog.dispatch import (
     video_runner_spec as _video_runner_spec,
 )
 from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import run_benchmark_execution
+from worldfoundry.evals.tasks.execution.orchestration.evaluate import (
+    EvaluateRunRequest,
+    EvaluateRunResult,
+    execute_evaluate_run,
+)
+from worldfoundry.evals.tasks.execution.orchestration.model_benchmark import (
+    ModelBenchmarkRunRequest,
+    ModelBenchmarkRunResult,
+    run_model_benchmark,
+)
+from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
+    ModelBenchmarkSuiteRequest,
+    ModelBenchmarkSuiteResult,
+    run_model_benchmark_suite,
+)
+from worldfoundry.evals.tasks.execution.orchestration.run import (
+    WorldFoundryRunRequest,
+    WorldFoundryRunResult,
+    run_worldfoundry,
+)
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, REPO_ROOT
 
 

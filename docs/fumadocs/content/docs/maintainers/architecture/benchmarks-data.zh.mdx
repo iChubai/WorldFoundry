@@ -45,6 +45,7 @@ Model 与 benchmark catalog 是并行 pipeline。二者仅在 run time 汇合—
 | `models/runtime/environments/` | 专用 conda 环境，仅用于有记录的依赖冲突 |
 | `models/runtime/configs/<package>/` | 静态预设与示例输入，目录以读取它们的 synthesis 或 pipeline 包命名（snake_case，如 `dino_wm/`、`alayaworld_v11/`）；多个模型共用的目录使用家族名（如 `vla_va_wam/`、`video_official/`） |
 | `models/runtime/assets/` | 模型 checkpoint 的资产清单 |
+| `base_models/capabilities/*.yaml`、`base_models/stacks.yaml`、`base_models/benchmark_assets.yaml` | 共享 base-model capability（import、checkpoint、数据集及其目录要求）、命名 stack，以及每个 benchmark 需要准备的数据资产；由 `worldfoundry/base_models/capabilities.py` 加载，字段与模板见其模块 docstring |
 | `benchmarks/catalog/`、`benchmarks/tasks/`、`benchmarks/runtime_profiles/` | 每棵树中每个 benchmark 一个文件，以 benchmark id 为键 |
 | `benchmarks/assets/`、`benchmarks/eval_configs/`、`benchmarks/requirements/` | Prompt 集、参考文件、评测预设与固定版本的评测依赖 |
 | `test_cases/` | 不纳入 Git；fixture 语料已外部化，需要时在本地放置 |

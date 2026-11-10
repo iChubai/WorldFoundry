@@ -369,12 +369,13 @@ commands are in the [Benchmark Hub](https://openenvision.github.io/WorldFoundry/
 
 ```bash
 python -m pip install -e ".[mcp]"
-wf mcp                      # stdio transport
-wf mcp --transport sse
+wf mcp                                          # stdio transport
+wf mcp --transport streamable-http --port 8000  # HTTP at http://127.0.0.1:8000/mcp
 ```
 
 The server exposes catalog discovery, run lifecycle (`preview_run`, `evaluate`, `get_run_result`, …),
-and Studio job tools (`submit_studio_inference`, `wait_for_studio_job`, …). Studio tools talk to
+and Studio job tools (`submit_studio_inference`, `wait_for_studio_job`, …); call `server_info` first
+for the recommended workflow. Studio tools talk to
 the workspace at `WORLDFOUNDRY_STUDIO_WORKSPACE_URL` (default `http://127.0.0.1:7870`).
 
 ## 📦 Outputs

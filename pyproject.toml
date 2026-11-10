@@ -694,7 +694,7 @@ packages = { find = { where = ["."], namespaces = true, include = ["worldfoundry
     "worldfoundry.base_models.*.eastern_journalist.utils3d.*",
     "worldfoundry.base_models.*.*_runtime",
     "worldfoundry.base_models.*.*_runtime.*",
-    # License-gated vendored trees (local checkouts only; see MANIFEST.in).
+    # License-gated vendored trees (LICENSE_GATED_PATHS in scripts/setup/check_packaging_license_gate.py).
     "worldfoundry.base_models.three_dimensions.depth.unik3d",
     "worldfoundry.base_models.three_dimensions.depth.unik3d.*",
     "worldfoundry.base_models.three_dimensions.general_3d.dust3r",
@@ -876,7 +876,7 @@ include-package-data = true
 ]
 # Package excludes do not stop include-package-data from treating files below
 # excluded namespace packages as data of the nearest retained parent. Keep a
-# second, per-parent barrier for every MANIFEST.in license-gated subtree.
+# second, per-parent barrier for every license-gated subtree.
 "worldfoundry.base_models.three_dimensions.depth" = [
     "unik3d/**/*",
 ]

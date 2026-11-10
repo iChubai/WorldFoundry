@@ -12,6 +12,7 @@ from typing import Any
 import pytest
 
 from scripts.setup.check_packaging_license_gate import (
+    LICENSE_GATED_PATHS,
     REQUIRED_RUNTIME_RESOURCES,
     REQUIRED_WHEEL_PACKAGES,
     audit_license_bundle,
@@ -20,11 +21,13 @@ from scripts.setup.check_packaging_license_gate import (
     audit_wheel,
     dead_exclude_patterns,
     discover_packages,
+    gitignore_gate_errors,
     leaked_packages,
     license_bundle_errors,
     license_gated_paths,
     load_find_config,
     main,
+    manifest_gate_errors,
     misplaced_license_files,
     missing_core_sources,
     missing_required_wheel_packages,
@@ -173,6 +176,21 @@ def test_repository_license_gate_uses_narrow_hunyuan_excludes() -> None:
         package = f"worldfoundry.synthesis.visual_generation.hunyuan_world.{subtree}"
         assert selected_packages([package, f"{package}.child"], sorted(excludes)) == []
         assert package.replace(".", "/") in gated_paths
+
+
+def test_gate_list_must_match_manifest_and_gitignore() -> None:
+    manifest = (REPO_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
+    gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    gated = "thirdparty/simple-knn"
+    assert gated in LICENSE_GATED_PATHS
+
+    assert manifest_gate_errors(manifest) == []
+    assert gitignore_gate_errors(gitignore) == []
+    assert manifest_gate_errors(manifest.replace(f"prune {gated}\n", "prune thirdparty/other\n")) == [
+        f"MANIFEST.in lacks 'prune {gated}'",
+        "MANIFEST.in prunes ungated path thirdparty/other",
+    ]
+    assert gitignore_gate_errors(gitignore.replace(f"/{gated}/\n", "")) == [f".gitignore lacks '/{gated}/'"]
 
 
 def test_repository_static_packaging_license_gate() -> None:

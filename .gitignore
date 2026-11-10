@@ -288,7 +288,8 @@ worldfoundry/studio/assets/vendor/
 !worldfoundry/data/benchmarks/assets/**/*.npz
 !docs/fumadocs/public/wechat_qr*.png
 
-# License-gated upstream runtimes stay local checkouts.
+# License-gated upstream runtimes stay local checkouts. LICENSE_GATED_PATHS in
+# scripts/setup/check_packaging_license_gate.py owns this list.
 /worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime/
 /worldfoundry/base_models/three_dimensions/depth/unik3d/
 /worldfoundry/base_models/three_dimensions/general_3d/dust3r/

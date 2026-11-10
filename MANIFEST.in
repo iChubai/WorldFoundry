@@ -66,7 +66,8 @@ prune docs/fumadocs/out
 prune docs/fumadocs/node_modules
 prune worldfoundry/studio/assets/vendor
 
-# License-gated upstream runtimes are allowed as ignored local checkouts only.
+# License-gated upstream runtimes; LICENSE_GATED_PATHS in
+# scripts/setup/check_packaging_license_gate.py owns this list.
 prune worldfoundry/base_models/three_dimensions/depth/dvlt/dvlt_runtime
 prune worldfoundry/base_models/three_dimensions/depth/unik3d
 prune worldfoundry/base_models/three_dimensions/general_3d/dust3r

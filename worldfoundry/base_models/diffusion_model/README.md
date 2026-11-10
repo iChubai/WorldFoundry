@@ -63,6 +63,8 @@ directory or file), `policy` (offload, precision, attention backend), and `exten
 | `optimizations/` | QKV fusion, fused RoPE, static cross-KV, sparse / approximate attention, FP8, sequence parallel, Wan caches (TeaCache, CFG skip) |
 | `extensions/` | Instance-local research hooks (frozen context, depth guidance, …) |
 
+[`models/README.md`](models/README.md) indexes the components by role and by model family.
+
 ## Adding a model
 
 Add a recipe under `recipes/`, put new tensor math under `models/networks/` and its adapter

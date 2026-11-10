@@ -185,7 +185,15 @@ def _make_resnet_backbone(resnet):
 
 
 def _make_pretrained_resnext101_wsl(use_pretrained):
-    resnet = torch.hub.load("facebookresearch/WSL-Images", "resnext101_32x8d_wsl")
+    from torchvision.models import resnext101_32x8d
+
+    resnet = resnext101_32x8d(weights=None)
+    # The MiDaS WSL backbone always initializes from these weights.
+    state_dict = torch.hub.load_state_dict_from_url(
+        "https://download.pytorch.org/models/ig_resnext101_32x8-c38310e5.pth",
+        progress=True,
+    )
+    resnet.load_state_dict(state_dict)
     return _make_resnet_backbone(resnet)
 
 

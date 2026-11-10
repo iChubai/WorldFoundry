@@ -73,8 +73,12 @@ def generate_rank_by_dino(
     # Resize images to the target size
     images = F.interpolate(images, (image_size, image_size), mode="bilinear", align_corners=False)
 
-    # Load DINO model
-    dino_v2_model = torch.hub.load("facebookresearch/dinov2", model_name)
+    from worldfoundry.base_models.perception_core.general_perception.dinov2.hub import backbones
+
+    dino_v2_model = getattr(backbones, model_name)(pretrained=True)
+    # Match the upstream eager fallback; MemEffAttention still uses xFormers when available.
+    for block in dino_v2_model.blocks:
+        block.attn.fused_attn = False
     dino_v2_model.eval()
     dino_v2_model = dino_v2_model.to(device)
 

@@ -67,6 +67,20 @@ Inpainting weights retain CreativeML Open RAIL++-M terms. Component weights
 are not part of the source distribution; their downloaded license bundles
 remain applicable.
 
+MiDaS Next-ViT inference backbone
+--------------------------------
+Source: https://github.com/isl-org/Next-ViT
+Source revision: 45dbdf740e856fa792c7f293f9a0a73203327933
+Original source: https://github.com/bytedance/Next-ViT
+Copyright: ByteDance Inc. All rights reserved.
+License: Apache License 2.0; the complete license text is retained below.
+Files: worldfoundry/base_models/three_dimensions/depth/midas/backbones/next_vit_model.py.
+
+WorldFoundry retains the inference network and MiDaS-compatible checkpoint
+names, reusing timm's DropPath, initialization and channel-rounding primitives.
+The flat features sequence matches MiDaS v3.1's released Next-ViT checkpoint;
+timm's stage-based Next-ViT layout is not checkpoint-interchangeable.
+
 Retained license-text index
 --------------------------
   LICENSE

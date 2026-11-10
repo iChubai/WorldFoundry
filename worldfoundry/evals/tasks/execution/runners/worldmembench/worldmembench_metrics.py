@@ -62,7 +62,7 @@ def load_official_results(
         raise ValueError(f"Missing requested metric summaries: {', '.join(sorted(missing))}")
     if not summaries:
         raise ValueError(f"No selected WorldMemBench metric summaries under {path}")
-    models = {key for _, summary in summaries.values() for key in summary.get("results", {})}
+    models: set[str] = {key for _, summary in summaries.values() for key in summary.get("results", {})}
     if model_id is None:
         if len(models) != 1:
             raise ValueError("Pass --model-id to select one official model group; models: " + ", ".join(sorted(models)))

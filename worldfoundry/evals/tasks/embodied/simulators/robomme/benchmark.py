@@ -219,7 +219,7 @@ class RoboMMEBenchmark(BaseSimulator):
 
         # Internal state for the current environment and episode, initialized to None/empty.
         self._env: Any = None
-        self._task: dict[str, Any] | None = None
+        self._task: dict[str, Any] = {}
         self._task_description: str = ""
         self._video_frames: list[np.ndarray] = []
         self._wrist_video_frames: list[np.ndarray] = []
@@ -657,4 +657,4 @@ class RoboMMEBenchmark(BaseSimulator):
             self._env = None
         self._video_frames = []
         self._wrist_video_frames = []
-        self._task = None
+        self._task = {}

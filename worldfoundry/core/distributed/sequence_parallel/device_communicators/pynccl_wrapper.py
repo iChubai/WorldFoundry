@@ -38,6 +38,7 @@ Public surface: :class:`NCCLLibrary`, :class:`ncclDataTypeEnum`,
 # TODO(will): support TRAINER_NCCL_SO_PATH
 import ctypes
 import platform
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
@@ -64,7 +65,7 @@ ncclComm_t = ctypes.c_void_p
 class ncclUniqueId(ctypes.Structure):
     """128-byte bootstrap id; rank 0 creates it, others receive the bytes."""
 
-    _fields_: ClassVar[list[tuple[str, Any]]] = [("internal", ctypes.c_byte * 128)]
+    _fields_: ClassVar[Sequence[tuple[str, Any] | tuple[str, Any, int]]] = [("internal", ctypes.c_byte * 128)]
 
 
 cudaStream_t = ctypes.c_void_p

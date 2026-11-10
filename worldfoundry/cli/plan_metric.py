@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import Any
 
 from worldfoundry.evals.utils import BENCHMARK_TASK_ROOT, TMP_ROOT
 
@@ -46,7 +47,7 @@ def _build_run_plan_from_cli_args(args: argparse.Namespace):
     """
     from worldfoundry.evals.tasks.execution.orchestration.plan import build_run_plan, build_run_plan_from_task_registry
 
-    plan_kwargs = {
+    plan_kwargs: dict[str, Any] = {
         "mode": args.mode,
         "dataset_root": args.data_path,
         "dataset_manifest": args.dataset_manifest,

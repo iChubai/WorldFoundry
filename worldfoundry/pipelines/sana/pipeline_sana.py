@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import ClassVar
 
 from worldfoundry.base_models.diffusion_model.recipes.sana_variants import get_sana_variant
@@ -20,10 +21,10 @@ class SanaPipeline(NativeVisualDiffusionPipeline):
         "tokenizer",
         "codec",
     )
-    PRIMARY_CHECKPOINT_ROLE: ClassVar[str] = "dit"
+    PRIMARY_CHECKPOINT_ROLE: ClassVar[str | None] = "dit"
     ALLOW_MODEL_ID_OVERRIDE: ClassVar[bool] = True
     NUM_INFERENCE_STEP_ALIASES: ClassVar[tuple[str, ...]] = ("step", "infer_steps")
-    SCHEDULER_OPTION_ALIASES: ClassVar[dict[str, str]] = {"flow_shift": "shift"}
+    SCHEDULER_OPTION_ALIASES: ClassVar[Mapping[str, str]] = {"flow_shift": "shift"}
 
     def __init__(self, *, native_pipeline, device: str, model_id: str | None = None) -> None:
         variant = get_sana_variant(model_id or self.MODEL_ID)

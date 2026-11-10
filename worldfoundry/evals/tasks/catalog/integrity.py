@@ -449,6 +449,8 @@ _FORBIDDEN_TABLE_NAMES = (
 _TABLE_SOURCE_PATHS = (
     "worldfoundry/evals/tasks/catalog/dispatch.py",
     "worldfoundry/evals/tasks/catalog/workspace_registry/dispatch.py",
+    "worldfoundry/evals/tasks/execution/orchestration/benchmark_commands.py",
+    "worldfoundry/evals/tasks/execution/orchestration/benchmark_normalization.py",
     "worldfoundry/evals/tasks/execution/orchestration/benchmark_runner.py",
 )
 

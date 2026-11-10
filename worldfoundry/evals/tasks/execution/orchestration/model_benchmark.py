@@ -30,10 +30,8 @@ from worldfoundry.evals.reporting import (
     write_run_manifest_artifacts,
 )
 from worldfoundry.evals.tasks.catalog.benchmark_catalog import resolve_benchmark_manifest_path
-from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import (
-    SCORECARD_SCHEMA_VERSION,
-    run_benchmark_execution,
-)
+from worldfoundry.evals.tasks.execution.orchestration.benchmark_commands import SCORECARD_SCHEMA_VERSION
+from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import run_benchmark_execution
 from worldfoundry.evals.tasks.execution.orchestration.interfaces import normalize_benchmark_run_mode
 from worldfoundry.evals.utils import (
     BENCHMARK_TASK_ROOT,

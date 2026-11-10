@@ -495,7 +495,7 @@ const EVALUATION_CORE: ArchDiagramSpec = {
     benchmark: {
       role: { en: 'Delegate', zh: '委派' },
       title: 'run_model_benchmark()',
-      file: 'orchestration/model_benchmark.py:825',
+      file: 'orchestration/model_benchmark.py:795',
       detail: {
         en: 'Generate, then official suite via ManifestBenchmarkRunner',
         zh: '先生成，再经 ManifestBenchmarkRunner 跑官方 suite',

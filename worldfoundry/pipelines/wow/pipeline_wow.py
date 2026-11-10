@@ -105,7 +105,7 @@ class WoWArgs:
 class WoWPipeline(PipelineABC):
     """Public WoW pipeline backed by canonical diffusion runtimes."""
 
-    MODEL_ID: ClassVar[str] = "wow"
+    MODEL_ID: ClassVar[str] = "wow"  # ty: ignore[invalid-mutable-override]  # each pipeline binds one model id
 
     def __init__(
         self,

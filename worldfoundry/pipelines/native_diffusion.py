@@ -37,7 +37,7 @@ class NativeVisualDiffusionPipeline(PipelineABC):
     video families do not grow parallel pipeline implementations.
     """
 
-    MODEL_ID: ClassVar[str] = ""
+    MODEL_ID: ClassVar[str] = ""  # ty: ignore[invalid-mutable-override]  # each pipeline binds one model id
     OWNER: ClassVar[str] = "native diffusion"
     CHECKPOINT_ROLES: ClassVar[tuple[str, ...]] = ()
     PRIMARY_CHECKPOINT_ROLE: ClassVar[str | None] = None

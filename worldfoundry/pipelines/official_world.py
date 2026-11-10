@@ -15,7 +15,7 @@ from worldfoundry.pipelines.pipeline_utils import PipelineABC
 
 class OfficialWorldPipeline(PipelineABC):
     RUNTIME_CLS = None
-    MODEL_ID: ClassVar[str] = ""
+    MODEL_ID: ClassVar[str] = ""  # ty: ignore[invalid-mutable-override]  # each pipeline binds one model id
     OPERATOR_CLS = InteractiveWorldOperator
 
     def __init__(self, runtime):

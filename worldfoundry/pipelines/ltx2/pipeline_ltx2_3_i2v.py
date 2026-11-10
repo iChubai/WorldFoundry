@@ -15,7 +15,7 @@ class LTX23I2VPipeline(PipelineABC):
     """Independent WorldFoundry pipeline for LTX23I2V."""
 
     SYNTHESIS_CLS = LTX23I2VSynthesis
-    MODEL_ID: ClassVar[str] = "ltx-2.3-i2v"
+    MODEL_ID: ClassVar[str] = "ltx-2.3-i2v"  # ty: ignore[invalid-mutable-override]  # each pipeline binds one model id
 
     def __init__(
         self,

@@ -142,7 +142,7 @@ class DiTArchConfig(ArchConfig):
 class DiTConfig(ModelConfig):
     """Runtime configuration common to diffusion transformers."""
 
-    arch_config: DiTArchConfig = field(default_factory=DiTArchConfig)
+    arch_config: DiTArchConfig = field(default_factory=DiTArchConfig)  # ty: ignore[invalid-mutable-override]  # DiT configs always carry a DiTArchConfig
     prefix: str = ""
     quant_config: Any | None = None
 

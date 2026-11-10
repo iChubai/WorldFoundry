@@ -16,7 +16,7 @@ class EchoMemoryPipeline(PipelineABC):
     """Common I2V interface; subclasses pin the model and checkpoint recipe."""
 
     ABSTRACT_PIPELINE = True
-    SYNTHESIS_CLS: ClassVar[type[EchoMemorySynthesis]]
+    SYNTHESIS_CLS: ClassVar[type[EchoMemorySynthesis]]  # ty: ignore[invalid-mutable-override]  # each pipeline binds one synthesis class
 
     def __init__(
         self,

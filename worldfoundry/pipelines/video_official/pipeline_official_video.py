@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class OfficialVideoPipeline(PipelineABC):
     """WorldFoundry pipeline for data-backed official video model runtimes."""
 
-    MODEL_ID: ClassVar[str] = ""
+    MODEL_ID: ClassVar[str] = ""  # ty: ignore[invalid-mutable-override]  # each pipeline binds one model id
     GENERATION_TYPE = "t2v"
 
     def __init__(

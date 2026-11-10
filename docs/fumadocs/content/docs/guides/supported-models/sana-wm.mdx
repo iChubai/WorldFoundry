@@ -1,11 +1,11 @@
 ---
 title: "SANA-WM"
-description: "SANA-WM from NVIDIA: world model, camera-controlled video, and 1 more task; Runner parity pending; unified `worldfoundry-unified-cu128`."
+description: "SANA-WM from NVIDIA: native world-model and camera-controlled-video recipes; runner parity pending; unified `worldfoundry-unified-cu128`."
 modelId: "sana-wm"
 pageSource: authored
 ---
 
-SANA-WM is a world model built on NVIDIA's efficient Sana architecture: a two-stage design (interactive stage plus LTX-2 refiner) that generates camera-controlled world video with a resident multi-GPU pipeline. Validated on four A100 GPUs: a short run generates eight decodable 1280x704 frames from a nine-frame native window.
+SANA-WM is a world model built on NVIDIA's efficient Sana architecture. WorldFoundry provides native bidirectional and streaming recipes for camera-controlled video; the streaming recipe includes an LTX-2 refiner.
 
 <ModelPaperFigures modelId="sana-wm" locale="en" />
 
@@ -21,7 +21,7 @@ Project page: [nvlabs.github.io/Sana/WM](https://nvlabs.github.io/Sana/WM/). Cod
 
 Camera actions follow the official SANA-WM controls: `w/s` move forward/back, `a/d` yaw left/right, `j/l` strafe left/right, and `i/k` pitch up/down. Held actions use the official default speeds of 0.025 units and 0.6° per frame, with a gradual stop after release. Pass one action for each transition after the initial image, or provide explicit `camera_to_world` poses.
 
-SANA-WM reuses WorldFoundry's shared Sana network, encoder, autoencoder, scheduler, and recipe components (paper arXiv 2605.15178, apache-2.0). The interactive pipeline keeps its two-stage model resident and advances with native 8k+1 temporal windows; the quality profile keeps the bidirectional stage and LTX-2 refiner enabled.
+SANA-WM reuses WorldFoundry's shared Sana network, encoder, autoencoder, scheduler, and recipe components (paper arXiv 2605.15178, apache-2.0). The resident adapters use native 8k+1 temporal windows. The streaming recipe owns its camera-conditioned stage and LTX-2 refiner; component placement and offload follow the shared `RuntimePolicy`.
 
 Tasks: world model, camera-controlled video, and controllable world generation. Aliases: `sana world model`, `sana-wm-2.6b`, `sana-wm-streaming`, and `Efficient-Large-Model/SANA-WM_streaming`.
 
@@ -31,19 +31,39 @@ SANA-WM is a separate model from [SANA](/docs/guides/supported-models/sana). Sco
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `guidance-scale`, `seed`, `window-frames`, and `step`; artifacts `sana-wm-streaming.mp4`.
+CLI inputs `prompt` and `input-path`; options `fps`, `guidance-scale`, `seed`, `window-frames`, and `step`; artifacts `sana-wm-streaming.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `SanaWMPipeline`.
+CLI task profiles: `interactive-video`. `sana-wm` binds `SanaWMPipeline`;
+`sana-wm-streaming` binds `SanaWMStreamingPipeline`. `from_pretrained` assembles the
+native model and loads its weights; `plan` is the weight-free construction preview.
 
-Family status: **Runner parity pending**.
+The realtime API requires a user-supplied image and prompt. `configure_realtime`
+validates them, snapshots the image,
+and reports the configured FPS and window in `RealtimeSpec`. A window of N output
+frames consumes N−1 action transitions after the reference image. `stream_realtime`
+accepts frame-rate interactions or Studio's `realtime_segments`, which are
+resampled into those transitions before the native request is built.
 
-Component placement across GPUs is configurable. The default quality recipe uses 60 steps.
+A generated prompt update is committed only after native execution succeeds.
+Failures retain the preceding committed prompt, and subsequent requests reuse the
+same model. `reset_realtime` clears the session configuration and requires a new
+configuration before generation; it does not reload the weights.
+
+**Validation:** runner parity is pending. The bidirectional profile records a
+single-H100 stage-one run producing 33 decodable 1280x704 frames at 60 sampling
+steps. Visual review recorded dark, coarse output and initial-frame artifacts;
+the LTX-2 refinement stage was not executed. A separate four-A100 smoke produced
+eight finite, decodable 1280x704 frames from a nine-frame window. These records do
+not establish full refined parity or acceptance of the current realtime changes.
+Weight-free realtime tests replace model execution and cover native loading
+delegation, Studio dispatch, controls, request state and reset; generation
+acceptance still requires checkpoint replay.
 
 ## Running in WorldFoundry
 
 Generate a camera-controlled clip with `wf run sana-wm-streaming --pipeline.task-profile interactive-video`.
 
-It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+Use `scripts/setup/bootstrap_worldfoundry.sh` to prepare the unified `worldfoundry-unified-cu128` environment (Python 3.11, CUDA 12.8).
 
 Weights: `Efficient-Large-Model/SANA-WM_streaming` and `Efficient-Large-Model/SANA-WM_bidirectional`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh sana-wm-streaming`. Add `--download` to fetch missing public checkpoints.
 

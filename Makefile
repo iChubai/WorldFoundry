@@ -100,6 +100,7 @@ STREAMING_CPU_CONTRACTS = \
 	tests/synthesis/test_matrix_game_2_optimizations.py \
 	tests/synthesis/test_matrix_game_2_decode_overlap.py \
 	tests/synthesis/test_matrix_game_2_realtime.py \
+	tests/synthesis/test_sana_wm_realtime.py \
 	tests/studio_visualization/test_realtime_nvenc.py \
 	tests/studio_visualization/test_realtime_presentation.py \
 	tests/studio_visualization/test_realtime_shutdown_ownership.py \
@@ -236,6 +237,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_lingbot_i2v_condition_reuse.py \
 	tests/synthesis/test_lingbot_static_inputs.py \
 	tests/core/attention/test_complex_rotary_preparation.py \
+	tests/core/attention/test_rotary_imports.py \
 	tests/pipelines/test_sana_integration.py \
 	tests/operators/test_worldfm_operator.py \
 	tests/pipelines/test_matrix_game_batch_outputs.py \

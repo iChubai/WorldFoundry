@@ -9,6 +9,8 @@ from typing import Any, ClassVar
 
 from PIL import Image
 
+from worldfoundry.core.execution.realtime.contracts import RealtimeSpec
+
 from ..native_diffusion import NativeVisualDiffusionPipeline
 
 
@@ -91,9 +93,19 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
         super().__init__(native_pipeline=native_pipeline, device=device, model_id=model_id)
         self._realtime_config: dict[str, Any] | None = None
 
-    def prepare_realtime(self) -> dict[str, Any]:
+    def _realtime_status(self, options: Mapping[str, Any]) -> dict[str, Any]:
+        """Describe the native output window and its post-image action transitions."""
+        frames = int(options.get("window_frames", options.get("num_frames", self.DEFAULT_NUM_FRAMES)))
+        spec = RealtimeSpec(
+            fps=int(options.get("fps", self.DEFAULT_FPS)),
+            first_chunk_frames=frames,
+            steady_chunk_frames=frames,
+            first_input_frames=frames - 1,
+            steady_input_frames=frames - 1,
+        )
         return {
             "realtime_spec": {
+                **spec.to_payload(),
                 "supports_prompt_updates": True,
                 "supports_camera_actions": True,
                 "resident": True,
@@ -105,6 +117,9 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
                 "dtype": str(self.native_pipeline.dtype),
             },
         }
+
+    def prepare_realtime(self) -> dict[str, Any]:
+        return self._realtime_status(self._realtime_config or {})
 
     def configure_realtime(
         self,
@@ -124,7 +139,7 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
             raise ValueError("SANA-WM realtime requires a PIL image or image path")
         if not str(prompt).strip():
             raise ValueError("SANA-WM realtime requires a prompt")
-        self._realtime_config = {
+        config = {
             "images": images.copy(),
             "prompt": str(prompt),
             "seed": int(seed),
@@ -134,7 +149,9 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
             "guidance_scale": float(cfg_scale),
             **kwargs,
         }
-        return self.prepare_realtime()
+        status = self._realtime_status(config)
+        self._realtime_config = config
+        return status
 
     def stream_realtime(
         self,
@@ -144,16 +161,31 @@ class SanaWMPipeline(NativeVisualDiffusionPipeline):
         seed: int | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        if realtime_segments:
-            raise ValueError("use frame-rate interactions or explicit camera_to_world poses")
-        if self._realtime_config is None:
+        config = self._realtime_config
+        if config is None:
             raise RuntimeError("SANA-WM realtime session is not configured")
-        options: dict[str, Any] = {**self._realtime_config, **kwargs}
+        options: dict[str, Any] = {**config, **kwargs, "return_dict": True}
         if prompt is not None:
             options["prompt"] = prompt
         if seed is not None:
             options["seed"] = int(seed)
-        return self(interactions=interactions, return_dict=True, **options)
+        status = self._realtime_status(options)
+        if realtime_segments:
+            from worldfoundry.synthesis.visual_generation.sana_wm.realtime import _frames_for_segments
+
+            spec = status["realtime_spec"]
+            frames = _frames_for_segments(
+                realtime_segments,
+                interactions or (),
+                frame_count=spec["first_input_frames"],
+                fps=spec["fps"],
+            )
+            interactions = ["".join(sorted(keys)) or "none" for keys in frames]
+        result = self(interactions=interactions, **options)
+        if prompt is not None:
+            config["prompt"] = prompt
+        result["realtime_spec"] = status["realtime_spec"]
+        return result
 
     def reset_realtime(self) -> None:
         self._realtime_config = None

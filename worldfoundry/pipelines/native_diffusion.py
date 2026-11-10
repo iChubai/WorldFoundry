@@ -7,7 +7,7 @@ import secrets
 import tempfile
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar, TypeVar, cast
 
 import torch
 
@@ -27,6 +27,8 @@ from worldfoundry.operators.runtime_video_operator import RuntimeVideoOperator
 from worldfoundry.synthesis.visual_generation.memory.video import VideoArtifactMemory
 
 from .pipeline_utils import PipelineABC
+
+_NativePipelineT = TypeVar("_NativePipelineT", bound="NativeVisualDiffusionPipeline")
 
 
 class NativeVisualDiffusionPipeline(PipelineABC):
@@ -295,13 +297,13 @@ class NativeVisualDiffusionPipeline(PipelineABC):
 
     @classmethod
     def from_pretrained(
-        cls,
+        cls: type[_NativePipelineT],
         model_path: str | Mapping[str, Any] | None = None,
         required_components: Mapping[str, Any] | None = None,
         device: str = "cuda",
         model_id: str | None = None,
         **kwargs: Any,
-    ) -> NativeVisualDiffusionPipeline:
+    ) -> _NativePipelineT:
         options = cls._options(model_path, required_components, kwargs)
         raw_warmup = options.pop("warmup_requests", None)
         warmup_requests: list[DiffusionRequest | tuple[DiffusionRequest, ...]] | None = None

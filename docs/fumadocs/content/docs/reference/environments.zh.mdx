@@ -442,7 +442,7 @@ WorldFoundry 不支持该完整路径。
 
 ## WorldFoundry 容器
 
-受支持的镜像是仓库根目录的 `docker/Dockerfile`，用 `docker/build_with_docker.sh` 构建。镜像提供 CUDA 12.8 工具链、系统库和 conda；统一环境在容器内用标准 bootstrap 创建。构建、运行和首次安装步骤见 [docker/README.md](https://github.com/OpenEnvision/WorldFoundry/blob/main/docker/README.md)。`worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` 下的 Dockerfile（以及 MMYOLO CircleCI Dockerfile）是上游快照。WorldFoundry 不构建、不发布那些镜像；它们还停在 PyTorch 1.8/1.9 时代的 CUDA 基础，没有对着当前 runtime 维护。若需要 MMYOLO 专用镜像，请从当前上游构建，不要改这份仓内拷贝。
+受支持的镜像是仓库根目录的 `docker/Dockerfile`，用 `docker/build_with_docker.sh` 构建。`worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` 下的 Dockerfile（以及 MMYOLO CircleCI Dockerfile）是上游快照。WorldFoundry 不构建、不发布那些镜像；它们还停在 PyTorch 1.8/1.9 时代的 CUDA 基础，没有对着当前 runtime 维护。若需要 MMYOLO 专用镜像，请从当前上游构建，不要改这份仓内拷贝。
 
 ## Embodied Simulator 环境
 

@@ -112,8 +112,8 @@ PAPER_MEDIA_PATH = DOCS_ROOT / "lib" / "model-paper-media.json"
 
 # Inference specs expose resolved default paths. Pin their path environment so
 # checked-in docs do not depend on the developer's home, cache, or adjacent
-# checkpoint directories. The project root matches the documented container
-# layout (docker/README.md mounts the checkout at /workspace/WorldFoundry).
+# checkpoint directories. The project root is a checkout inside the container
+# working directory (/workspace in docker/Dockerfile).
 CANONICAL_PROJECT_ROOT = "/workspace/WorldFoundry"
 CANONICAL_PACKAGE_ROOT = f"{CANONICAL_PROJECT_ROOT}/worldfoundry"
 CANONICAL_HOME = "/home/ubuntu/.cache/worldfoundry"

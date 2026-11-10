@@ -489,7 +489,7 @@ support that full path.
 
 ## WorldFoundry container
 
-The supported image is the repository-root `docker/Dockerfile`, built through `docker/build_with_docker.sh`. It provides the CUDA 12.8 toolchain, system libraries, and conda; the unified environment is created inside the container with the standard bootstrap. Build, run, and first-run steps are in [docker/README.md](https://github.com/OpenEnvision/WorldFoundry/blob/main/docker/README.md). Dockerfiles under `worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` (and the MMYOLO CircleCI Dockerfile) are upstream snapshot artifacts. WorldFoundry does not build or publish those images; they keep PyTorch 1.8/1.9-era CUDA bases and are not maintained against the current runtime. If you need an MMYOLO-specific image, build it from current upstream rather than this vendored copy.
+The supported image is the repository-root `docker/Dockerfile`, built through `docker/build_with_docker.sh`. Dockerfiles under `worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` (and the MMYOLO CircleCI Dockerfile) are upstream snapshot artifacts. WorldFoundry does not build or publish those images; they keep PyTorch 1.8/1.9-era CUDA bases and are not maintained against the current runtime. If you need an MMYOLO-specific image, build it from current upstream rather than this vendored copy.
 
 ## Embodied simulator environments
 

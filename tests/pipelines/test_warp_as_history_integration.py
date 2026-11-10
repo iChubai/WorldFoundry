@@ -1,10 +1,13 @@
 import csv
 import importlib
 import pkgutil
+import sys
 from pathlib import Path
 
+import pytest
+
 import worldfoundry.pipelines.warp_as_history as wah_pipelines
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import SOURCE_ROOT as PI3_SOURCE_ROOT
+from worldfoundry.base_models.three_dimensions.point_clouds import pi3_inference
 from worldfoundry.pipelines.warp_as_history.pipeline_warp_as_history import WarpAsHistoryPipeline
 from worldfoundry.studio.inference.catalog import discover_catalog
 from worldfoundry.studio.inference.catalog.models.video_generation import (
@@ -26,7 +29,7 @@ def test_warp_as_history_runtime_uses_shared_base_models():
     assert (root / "helios" / "diffusers_version" / "pipeline_helios_diffusers.py").is_file()
     assert not (root / "third_party" / "Pi3").exists()
     assert not (root / "data" / "demo").exists()
-    assert (PI3_SOURCE_ROOT / "pi3" / "models" / "pi3x.py").is_file()
+    assert (Path(pi3_inference.__file__).parent / "models" / "pi3x.py").is_file()
 
 
 def test_warp_as_history_runtime_logic_lives_under_synthesis():
@@ -188,3 +191,21 @@ def test_warp_as_history_filters_evaluator_metadata(tmp_path):
     assert "ref_image_path" not in synthesis.kwargs
     assert "sample_id" not in synthesis.kwargs
     assert "task_name" not in synthesis.kwargs
+
+
+def test_camera_warp_imports_canonical_pi3(monkeypatch: pytest.MonkeyPatch) -> None:
+    from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.pi3x import Pi3X
+    from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
+        recover_intrinsic_from_rays_d,
+    )
+    from worldfoundry.synthesis.visual_generation.warp_as_history.worldfoundry_runtime import WarpAsHistoryRuntime
+
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    WarpAsHistoryRuntime(device="cpu")._ensure_runtime_importable()
+    from worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history.camera_warp import (
+        _import_pi3,
+    )
+
+    paths = list(sys.path)
+    assert _import_pi3() == (Pi3X, recover_intrinsic_from_rays_d)
+    assert sys.path == paths

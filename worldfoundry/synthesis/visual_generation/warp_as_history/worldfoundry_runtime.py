@@ -9,13 +9,6 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
-    SOURCE_ROOT as PI3_SOURCE_ROOT,
-)
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
-    ensure_import_paths as ensure_pi3_import_paths,
-)
-
 from .variants import (
     WARP_AS_HISTORY_VARIANTS,
     get_warp_as_history_variant,
@@ -341,9 +334,6 @@ class WarpAsHistoryRuntime:
         repo_src = str(self._repo_src_root())
         if repo_src not in sys.path:
             sys.path.insert(0, repo_src)
-        pi3_root = str(PI3_SOURCE_ROOT)
-        if pi3_root not in sys.path:
-            sys.path.insert(0, pi3_root)
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
         if self.pi3x_ckpt_path:
             os.environ["WAH_PI3X_CKPT_PATH"] = self.pi3x_ckpt_path
@@ -364,11 +354,7 @@ class WarpAsHistoryRuntime:
         enable_optional_attention: bool,
     ) -> dict[str, Any]:
         self._ensure_runtime_importable()
-        from warp_as_history.infer import infer_plan_kwargs, load_demo_row
-
-        sample = load_demo_row(csv_path)
-        if sample["warp_video_path"] is None and sample["camera_poses_path"] is not None:
-            ensure_pi3_import_paths()
+        from warp_as_history.infer import infer_plan_kwargs
 
         return infer_plan_kwargs(
             csv_path=csv_path,

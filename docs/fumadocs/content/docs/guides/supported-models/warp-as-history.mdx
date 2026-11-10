@@ -21,6 +21,8 @@ The official demo contract pins **33 frames**, **16 fps**, **384×640**, seed **
 
 Stage three external caches: `BestWishYsh/Helios-Distilled` (base), `yyfz233/warp-as-history` (`visible_lora_state_step1000.safetensors`), and `yyfz233/Pi3X` (`model.safetensors`) when you render warps from camera poses. Inject them with `model_path` / `lora_path` / `pi3x_ckpt_path` or `WAH_HELIOS_DISTILLED_PATH` / `WAH_LORA_PATH` / `WAH_PI3X_CKPT_PATH`. Pi3X is optional unless you start from poses instead of a ready warp video.
 
+Camera-pose warping uses WorldFoundry’s in-tree Pi3X model and geometry helpers; only the checkpoint is staged externally.
+
 ## Runtime contract
 
 Dedicated environment only: `warp-as-history` pins **Python 3.10**, **CUDA 12.1**, **torch==2.5.0**. Do not run this in the unified env. Backend stage is `in_tree_official_cli`. Camera paths far from the input viewpoint degrade the warp history and the clip.

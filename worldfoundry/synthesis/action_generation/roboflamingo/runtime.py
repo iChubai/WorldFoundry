@@ -392,9 +392,6 @@ class RoboFlamingoRuntime:
                 f"RoboFlamingo requires the OpenCLIP vision checkpoint as a staged local file: {vision_checkpoint}"
             )
 
-        from .imports import ensure_runtime_import_paths
-
-        ensure_runtime_import_paths()
         from .modeling.factory import create_model_and_transforms
 
         model, image_processor, tokenizer = create_model_and_transforms(

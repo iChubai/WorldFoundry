@@ -101,7 +101,7 @@ def _matrix_game_2_default_call_kwargs() -> dict[str, Any]:
         "size": [352, 640],
         "fps": 12,
         "seed": 42,
-        "official_bench_actions": False,
+        "official_bench_actions": True,
         "visualize_ops": False,
         "visualize_warning": False,
         "config_path": _matrix_game_2_default_config_path(),

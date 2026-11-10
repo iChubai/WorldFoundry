@@ -11113,7 +11113,7 @@
       ],
       "checkpoints": [
         {
-          "id": "thuml/InfiniteWorld",
+          "id": "MeiGen-AI/Infinite-World",
           "role": "infinite_world_checkpoint"
         }
       ],
@@ -71670,22 +71670,10 @@
           "revision": "a95ab856bf29407b6b066ede0abe1846050db56c"
         },
         {
-          "kind": "source",
-          "label": "Source",
-          "url": "https://github.com/Lightricks/LTX-Video",
-          "revision": "d6053703e00195bc668cbd1d5eda9dc0b2e7b74a"
-        },
-        {
           "kind": "docs",
           "label": "Upstream README",
           "url": "https://github.com/Lightricks/LTX-2#readme",
           "revision": "a95ab856bf29407b6b066ede0abe1846050db56c"
-        },
-        {
-          "kind": "docs",
-          "label": "Upstream README",
-          "url": "https://github.com/Lightricks/LTX-Video#readme",
-          "revision": "d6053703e00195bc668cbd1d5eda9dc0b2e7b74a"
         }
       ],
       "checkpoints": [

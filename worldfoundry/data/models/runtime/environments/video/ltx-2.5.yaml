@@ -41,7 +41,7 @@ validation_imports:
 - av
 - PIL
 notes:
-- ltx-core and ltx-pipelines are vendored under worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime and run as package modules.
+- The LTX-2.5 distilled orchestration lives in worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime and its networks in worldfoundry/base_models/diffusion_model; both run in-tree as package modules.
 - PyTorch is pinned to an explicit cu128 build so PyPI cannot silently replace the requested CUDA tier with a newer CUDA 13 wheel.
 - The recorded upstream revision pins its own uv CUDA 13.2 indexes; this manifest retains the repository's broadly deployable CUDA 12.8 environment tier.
 - The optional diffusion VAE natten acceleration and Blackwell ltx-kernels build are deployment-specific and are not required for command-contract validation.

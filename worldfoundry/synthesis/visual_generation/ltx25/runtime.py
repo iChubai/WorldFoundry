@@ -2,10 +2,11 @@
 
 LTX-2.5 uses split component checkpoints and Gemma 4, so it cannot be loaded
 through WorldFoundry's older LTX-2/2.3 native checkpoint recipe.  The pinned
-official ``ltx_core`` and ``ltx_pipelines`` sources live in ``ltx25_runtime``;
-this adapter runs their distilled entrypoint as a package module in the
-dedicated environment and gives WorldFoundry a deterministic preflight, command
-plan, logs, and artifact contract.  Prediction never downloads weights.
+official distilled orchestration lives in ``ltx25_runtime`` and builds the
+canonical LTX networks of ``worldfoundry.base_models.diffusion_model``; this
+adapter runs its distilled entrypoint as a package module in the dedicated
+environment and gives WorldFoundry a deterministic preflight, command plan,
+logs, and artifact contract.  Prediction never downloads weights.
 """
 
 from __future__ import annotations

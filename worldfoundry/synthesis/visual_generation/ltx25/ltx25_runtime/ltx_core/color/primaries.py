@@ -43,12 +43,6 @@ _ACESCG_TO_2020 = torch.tensor(
     dtype=torch.float32,
 )
 
-# Public matrix aliases (tests / advanced callers). Prefer ``Primaries.to``.
-ACESCG_TO_SRGB = _ACESCG_TO_SRGB
-SRGB_TO_ACESCG = _SRGB_TO_ACESCG
-REC709_TO_2020 = _REC709_TO_2020
-ACESCG_TO_2020 = _ACESCG_TO_2020
-
 
 def _apply_primaries_matrix(video: Tensor, mat: Tensor) -> Tensor:
     """Apply a 3x3 primaries matrix. Channel axis: dim 1 for 5D, else ``..., C, H, W``."""
@@ -95,31 +89,3 @@ class Primaries(enum.Enum):
             case (Primaries.ACESCG, Primaries.REC709):
                 return _apply_primaries_matrix(video, _ACESCG_TO_SRGB)
         raise ValueError(f"No primaries conversion from {self!r} to {target!r}.")
-
-    def to_rec2020(self, video: Tensor) -> Tensor:
-        """Linear light in this basis → Rec.2020 (HLG master space)."""
-        return _apply_primaries_matrix(video, self.matrix_to_rec2020)
-
-
-# Back-compat helpers used by older call sites / re-exports.
-def apply_acescg_to_srgb(video: Tensor) -> Tensor:
-    """Linear ACEScg (AP1) → linear sRGB/Rec.709 primaries."""
-    return Primaries.ACESCG.to(Primaries.REC709, video)
-
-
-def apply_srgb_to_acescg(video: Tensor) -> Tensor:
-    """Linear sRGB/Rec.709 → linear ACEScg (AP1) primaries."""
-    return Primaries.REC709.to(Primaries.ACESCG, video)
-
-
-# String-keyed maps for EXR tag lookup / transitional call sites.
-# Prefer ``Primaries.matrix_to_rec2020`` / ``Primaries.exr_chromaticities``.
-PRIMARY_MATRIX_TO_2020 = {
-    Primaries.REC709.value: REC709_TO_2020,
-    Primaries.ACESCG.value: ACESCG_TO_2020,
-}
-
-EXR_CHROMATICITIES = {
-    Primaries.REC709.value: Primaries.REC709.exr_chromaticities,
-    Primaries.ACESCG.value: Primaries.ACESCG.exr_chromaticities,
-}

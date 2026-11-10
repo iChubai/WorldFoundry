@@ -1284,15 +1284,27 @@ Modified by JD.com for academic and research purposes only.
 Not for commercial use. For commercial use, please contact Lightricks Ltd.
 Original copyright, license, and attribution notices are retained.
 
-LTX-2.5 inference runtime
--------------------------
+LTX-2.5 inference runtime and canonical LTX-2.5 components
+----------------------------------------------------------
 Source: https://github.com/Lightricks/LTX-2/tree/a95ab856bf29407b6b066ede0abe1846050db56c
-Files: worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime/**
-License: ltx_core and ltx_pipelines are Derivatives of LTX-2.x and are distributed under the
-LTX-2.x Community License Agreement (August 11, 2026), whose text is reproduced in the SolarWM
-inference runtime block below, including the use-based restrictions of Section 4 and
-Attachment A. Every file in the runtime directory was modified by WorldFoundry; its
-PROVENANCE.md lists the changes.
+Files: worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime/**,
+       worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/diffusion_tiling.py,
+       worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/diffusion_video_decoder.py,
+       worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/keyframes.py,
+       worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/transformer/**,
+       worldfoundry/base_models/diffusion_model/models/encoders/ltx/gemma.py,
+       worldfoundry/base_models/diffusion_model/models/encoders/ltx/prompts/**,
+       worldfoundry/base_models/diffusion_model/models/networks/ltx/duration_head.py,
+       worldfoundry/base_models/diffusion_model/optimizations/ltx/**, and the LTX-2.5 extensions
+       of the canonical LTX transformer, connector, tokenizer, video and audio VAE, upsampler and
+       tiling modules under worldfoundry/base_models/diffusion_model/models/
+License: These files are Derivatives of LTX-2.x and are distributed under the LTX-2.x Community
+License Agreement (August 11, 2026), whose text is reproduced in the SolarWM inference runtime
+block below, including the use-based restrictions of Section 4 and Attachment A. Every file was
+modified by WorldFoundry; the runtime PROVENANCE.md lists the changes. The neighborhood-attention
+fallbacks in models/autoencoders/ltx/video/transformer/fallback_na/eager.py and triton_na.py were
+vendored by LTX-2 from comfy-kitchen (Copyright (c) 2025 Comfy Org, Apache-2.0) and retain their
+SPDX headers.
 
 SolarWM inference runtime
 -------------------------

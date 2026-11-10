@@ -15,74 +15,92 @@ from typing import TypeVar
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import (
+    decode_audio as vae_decode_audio,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.model_configurator import (
+    AudioDecoderConfigurator,
+    VocoderConfigurator,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diffusion_video_decoder import (
+    DiffusionVideoDecoderConfigurator,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.keyframes import DecodeKeyframes
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.model_configurator import (
+    VideoEncoderConfigurator,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer import (
+    DiffVAEMode,
+    NAttentionKind,
+    na_dsl_available,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.video_vae import VideoEncoder
+from worldfoundry.base_models.diffusion_model.models.denoisers.ltx_configurator import LTXModelConfigurator
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import (
+    EmbeddingsProcessor,
+    EmbeddingsProcessorOutput,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.gemma import (
+    gemma_model_type,
+    resolve_gemma_weight_paths,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.ltx import X0Model
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.duration_head import (
+    DurationHead,
+    DurationHeadConfigurator,
+)
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+    AudioPatchifier,
+    VideoLatentPatchifier,
+)
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import DiffusionStepProtocol
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import TilingConfig
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import (
+    VIDEO_SCALE_FACTORS,
+    Audio,
+    AudioLatentShape,
+    SpatioTemporalScaleFactors,
+    VideoLatentShape,
+    VideoPixelShape,
+)
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model import upsample_video
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model_configurator import (
+    LatentUpsamplerConfigurator,
+)
+from worldfoundry.base_models.diffusion_model.optimizations.ltx.compile import CompilationConfig
+from worldfoundry.core.vram.memory import release_module_storage
+
 from ...ltx_core.allocator_trim_strategy import AllocatorTrimStrategy
 from ...ltx_core.batch_split import BatchSplitAdapter
 from ...ltx_core.block_streaming import DISK_CPU_SLOTS, StreamingModelBuilder
 from ...ltx_core.components.diffusion_steps import EulerDiffusionStep
 from ...ltx_core.components.noisers import Noiser
-from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier
-from ...ltx_core.components.protocols import DiffusionStepProtocol
 from ...ltx_core.conditioning import VideoGeneratedKeyframeSlots
-from ...ltx_core.duration_head import DURATION_HEAD_KEY_OPS, DurationHead, DurationHeadConfigurator
 from ...ltx_core.loader import SDOps
-from ...ltx_core.loader.attention_ops import set_attention_module_op
+from ...ltx_core.loader.compile_ops import build_compile_transformer_op, modify_sd_ops_for_compilation
 from ...ltx_core.loader.fuse_loras import bf16_fuse_rule
 from ...ltx_core.loader.module_ops import ModuleOps
 from ...ltx_core.loader.primitives import BuilderProtocol, LoraPathStrengthAndSDOps, ModelBuilderProtocol
 from ...ltx_core.loader.registry import ModelRegistry, Registry
+from ...ltx_core.loader.sd_ops import DURATION_HEAD_KEY_OPS, LTXV_MODEL_COMFY_RENAMING_MAP
 from ...ltx_core.loader.single_gpu_model_builder import SingleGPUModelBuilder as Builder
-from ...ltx_core.model.audio_vae import (
-    AUDIO_VAE_DECODER_COMFY_KEYS_FILTER,
-    AUDIO_VAE_ENCODER_COMFY_KEYS_FILTER,
-    VOCODER_COMFY_KEYS_FILTER,
-    AudioDecoderConfigurator,
-    AudioEncoderConfigurator,
-    VocoderConfigurator,
-)
-from ...ltx_core.model.audio_vae import decode_audio as vae_decode_audio
+from ...ltx_core.model.audio_vae import AUDIO_VAE_DECODER_COMFY_KEYS_FILTER, VOCODER_COMFY_KEYS_FILTER
 from ...ltx_core.model.model_protocol import LTXModelProtocol, ModelConfigurator
-from ...ltx_core.model.transformer import LTXV_MODEL_COMFY_RENAMING_MAP, LTXModelConfigurator, X0Model
-from ...ltx_core.model.transformer.attention import AttentionCallable, AttentionFunction
-from ...ltx_core.model.transformer.compiling import (
-    CompilationConfig,
-    build_compile_transformer_op,
-    modify_sd_ops_for_compilation,
-)
-from ...ltx_core.model.upsampler import LatentUpsamplerConfigurator, upsample_video
 from ...ltx_core.model.video_vae import (
-    CHANNELS_LAST_3D_WEIGHTS,
-    MEMORY_EFFICIENT_DECODE,
-    VAE_DECODER_COMFY_KEYS_FILTER,
     VAE_ENCODER_COMFY_KEYS_FILTER,
-    TilingConfig,
-    VideoDecoderConfigurator,
-    VideoEncoder,
-    VideoEncoderConfigurator,
-    is_diffusion_video_vae,
+    build_diffvae_mode_op,
+    require_diffusion_video_vae,
     video_decoder_sd_ops_for_checkpoint,
 )
-from ...ltx_core.model.video_vae.keyframes import DecodeKeyframes
-from ...ltx_core.model.video_vae.transformer import DiffVAEMode, NAttentionKind, build_diffvae_mode_op, na_dsl_available
 from ...ltx_core.quantization import QuantizationPolicy, fp8_cast_fuse_rule
-from ...ltx_core.text_encoders.gemma import (
+from ...ltx_core.text_encoders.gemma.encoder_configurator import (
     EMBEDDINGS_PROCESSOR_KEY_OPS,
     EmbeddingsProcessorConfigurator,
     GemmaTextEncoderConfigurator,
-    gemma_model_type,
     get_gemma_ops,
-    resolve_gemma_weight_paths,
 )
-from ...ltx_core.text_encoders.gemma.embeddings_processor import EmbeddingsProcessor, EmbeddingsProcessorOutput
 from ...ltx_core.tools import AudioLatentTools, LatentTools, VideoLatentTools
-from ...ltx_core.types import (
-    VIDEO_SCALE_FACTORS,
-    Audio,
-    AudioLatentShape,
-    LatentState,
-    SpatioTemporalScaleFactors,
-    VideoLatentShape,
-    VideoPixelShape,
-)
+from ...ltx_core.types import LatentState
 from .args import ImageConditioningInput
 from .constants import detect_params
 from .gpu_model import gpu_model
@@ -101,7 +119,6 @@ ModelWrapper = Callable[[torch.nn.Module, "LatentTools | None"], torch.nn.Module
 ``(video, audio, perturbations) -> (video, audio)`` forward signature."""
 
 T = TypeVar("T")
-_M = TypeVar("_M", bound=torch.nn.Module)
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +196,7 @@ def _streaming_model(
     The builder's own ``cpu_slots_count`` selects RAM vs disk streaming.
     ``teardown()`` always runs -- it releases non-memory resources (forward
     hooks, the disk I/O worker thread, open file handles) that GC would not
-    reclaim promptly. ``dispose`` always metas parameter storage; ``TRIM``
+    reclaim promptly. Checkpoint storage always moves to meta; ``TRIM``
     also runs ``cleanup_memory()``, while ``DEFER`` leaves the CUDA cache warm.
     """
     wrapped = builder.build(device=target_device, dtype=dtype)
@@ -187,7 +204,7 @@ def _streaming_model(
         yield wrapped
     finally:
         wrapped.teardown()
-        wrapped.dispose()
+        release_module_storage(wrapped)
         if alloc_trim_strategy == AllocatorTrimStrategy.TRIM:
             cleanup_memory()
 
@@ -408,22 +425,6 @@ class DiffusionStage:
         if any(isinstance(item, VideoGeneratedKeyframeSlots) for item in video.conditionings):
             self.assert_generated_keyframes_supported()
 
-    def with_attention(self, attention: AttentionFunction | AttentionCallable | None) -> DiffusionStage:
-        """Return a new ``DiffusionStage`` that pins the transformer build to ``attention``.
-        Functional: never mutates ``self``. The returned stage shares all other
-        configuration with the original; only the underlying builders' ``module_ops``
-        gain a ``set_attention_module_op(attention)`` entry so subsequent transformer
-        builds use that kernel. ``attention=None`` is a no-op (returns ``self``).
-        """
-        if attention is None:
-            return self
-        op = set_attention_module_op(attention)
-        new = copy.copy(self)
-        new._transformer_builder = self._transformer_builder.with_module_ops(
-            (*self._transformer_builder.module_ops, op),
-        )
-        return new
-
     def with_builder(self, builder: ModelBuilderProtocol[LTXModelProtocol]) -> DiffusionStage:
         """Return a new ``DiffusionStage`` that builds its transformer from ``builder``.
         Functional: never mutates ``self``; shares all other configuration (dtype, device,
@@ -431,20 +432,6 @@ class DiffusionStage:
         """
         new = copy.copy(self)
         new._transformer_builder = builder
-        return new
-
-    def with_model_wrapper(self, wrapper: ModelWrapper | None) -> DiffusionStage:
-        """Return a new stage that passes each built transformer through ``wrapper``.
-        Functional: never mutates ``self``. The wrapper is applied inside the transformer
-        context -- after the model is built, before the denoising loop -- on both the standard
-        and block-streaming paths, and it receives the call's video tools. Wrapping *here*
-        rather than around the builder is what lets a wrapper compose with offloading: a
-        wrapping builder would hide a :class:`StreamingModelBuilder` from :attr:`_is_streaming`,
-        so the stage would take the plain ``gpu_model`` path and never tear the stream down.
-        ``wrapper=None`` clears any previously set wrapper.
-        """
-        new = copy.copy(self)
-        new._model_wrapper = wrapper
         return new
 
     def with_loras(self, loras: tuple[LoraPathStrengthAndSDOps, ...]) -> DiffusionStage:
@@ -586,46 +573,6 @@ class DiffusionStage:
                 audio_state = audio_tools.unpatchify(audio_state)
 
             return video_state, audio_state
-
-
-class RecordingDiffusionStage:
-    """Wraps a :class:`DiffusionStage` and records the states each call produced.
-    Diagnostics wrapper for a stage's intermediate ``LatentState``s. Generated keyframes that
-    already sit at final output resolution are on ``PipelineOutput.keyframes``; this wrapper
-    remains the way to inspect per-stage states (including half-res stage-1 slots) without a
-    lifecycle callback. Pipelines hold their stage in a plain attribute, so a caller
-    substitutes this in::
-        pipeline.stage = RecordingDiffusionStage(pipeline.stage)
-        result = pipeline(...)
-        keyframes = pipeline.stage.generated_keyframes
-    Delegates every other attribute to the wrapped stage, so a substituted stage stays usable
-    wherever the original was. Recording holds references to the returned states, which keeps
-    their latents alive -- fine for diagnostics on one run, not something to leave enabled in a
-    long-lived serving process.
-    """
-
-    def __init__(self, stage: DiffusionStage) -> None:
-        self._stage = stage
-        self.video_states: list[LatentState] = []
-        self.audio_states: list[LatentState | None] = []
-
-    def __call__(self, *args: object, **kwargs: object) -> tuple[LatentState | None, LatentState | None]:
-        video_state, audio_state = self._stage(*args, **kwargs)  # type: ignore[arg-type]
-        if video_state is not None:
-            self.video_states.append(video_state)
-            self.audio_states.append(audio_state)
-        return video_state, audio_state
-
-    @property
-    def generated_keyframes(self) -> torch.Tensor | None:
-        """Generated keyframe latents from the first recorded call, if it produced any."""
-        for state in self.video_states:
-            if state.generated_keyframes is not None:
-                return state.generated_keyframes
-        return None
-
-    def __getattr__(self, name: str) -> object:
-        return getattr(self._stage, name)
 
 
 # ---------------------------------------------------------------------------
@@ -1063,7 +1010,6 @@ class VideoDecoder:
         dtype: torch.dtype,
         device: torch.device,
         registry: Registry | None = None,
-        memory_efficient: bool = True,
         decoder_builder: BuilderProtocol | None = None,
         alloc_trim_strategy: AllocatorTrimStrategy = AllocatorTrimStrategy.TRIM,
         diffvae_optimization: DiffVAEMode = DiffVAEMode.CHUNKED_EAGER,
@@ -1072,41 +1018,20 @@ class VideoDecoder:
         self._dtype = dtype
         self._device = device
         self._diffvae_optimization = diffvae_optimization
-        diffusion_vae = is_diffusion_video_vae(self._checkpoint_path)
-        self._diffusion_vae = diffusion_vae
-        cfg = diffvae_optimization.resolve() if diffusion_vae else None
-        use_dsl = cfg is not None and cfg.attention is NAttentionKind.BLACKWELL_DSL
+        require_diffusion_video_vae(self._checkpoint_path)
+        use_dsl = diffvae_optimization.resolve().attention is NAttentionKind.BLACKWELL_DSL
         if decoder_builder is not None:
             self._decoder_builder = decoder_builder
         else:
-            if diffusion_vae and use_dsl and not na_dsl_available():
+            if use_dsl and not na_dsl_available():
                 raise RuntimeError(
-                    "diffvae_optimization=blackwell_dsl needs a datacenter Blackwell GPU and "
-                    "nvidia-cutlass-dsl (uv sync --group kernels)"
+                    "diffvae_optimization=blackwell_dsl needs a datacenter Blackwell GPU and nvidia-cutlass-dsl"
                 )
-            sd_ops = (
-                video_decoder_sd_ops_for_checkpoint(
-                    self._checkpoint_path,
-                    diffusion_vae=True,
-                    na_dsl_kernel=use_dsl,
-                )
-                if diffusion_vae
-                else VAE_DECODER_COMFY_KEYS_FILTER
-            )
-            module_ops: tuple[ModuleOps, ...] = ()
-            # channels-last + memory-efficient decode apply to ConvVideoDecoder only
-            if memory_efficient and not diffusion_vae:
-                sd_ops = SDOps(
-                    name=f"sd_ops_chain_{sd_ops.name}+{CHANNELS_LAST_3D_WEIGHTS.name}",
-                    mapping=(*sd_ops.mapping, *CHANNELS_LAST_3D_WEIGHTS.mapping),
-                )
-                module_ops = (MEMORY_EFFICIENT_DECODE,)
             self._decoder_builder = Builder(
                 model_path=self._checkpoint_path,
-                model_class_configurator=VideoDecoderConfigurator,
-                model_sd_ops=sd_ops,
+                model_class_configurator=DiffusionVideoDecoderConfigurator,
+                model_sd_ops=video_decoder_sd_ops_for_checkpoint(self._checkpoint_path, na_dsl_kernel=use_dsl),
                 registry=registry or ModelRegistry(cache_models=True, cache_weights=False),
-                module_ops=module_ops,
             )
         self._alloc_trim_strategy = alloc_trim_strategy
 
@@ -1135,8 +1060,6 @@ class VideoDecoder:
         every build still installs the configured DiffVAE policy.
         """
         builder = self._decoder_builder
-        if not self._diffusion_vae:
-            return builder
         op = build_diffvae_mode_op(
             self._diffvae_optimization,
             CompilationConfig() if self._diffvae_optimization.resolve().compile_blocks else None,
@@ -1155,11 +1078,8 @@ class VideoDecoder:
         """Decode *latent* to pixel-space video chunks. Decoder freed after exhaustion.
         ``dtype`` overrides the constructor dtype for this call only (e.g. float32 for
         HDR raw-in/raw-out). Omitted → same dtype as on construction (SDR default).
-        ``keyframes`` anchors the decode on already-encoded planes. Every decoder in this repo
-        takes it, so this never branches on which VAE was built: a diffusion VAE uses the planes,
-        a conv VAE logs that it is dropping them, and a distributed decoder splits them across
-        its ranks. The keyword is only passed when there is something to pass, so a decoder
-        written against the older signature still serves plain decodes.
+        ``keyframes`` anchors the decode on already-encoded planes; the keyword is passed
+        only when there is something to pass.
         """
         build_dtype = self._dtype if dtype is None else dtype
         latent = latent.to(dtype=build_dtype)
@@ -1167,31 +1087,6 @@ class VideoDecoder:
         decoder = self._prepared_builder().build(device=self._device, dtype=build_dtype).eval()
         extra = {} if keyframes is None else {"keyframes": keyframes}
         chunks = decoder.decode_video(latent, tiling_config, generator, **extra)
-        return _cleanup_iter(
-            chunks,
-            decoder,
-            alloc_trim_strategy=self._alloc_trim_strategy,
-        )
-
-    def decode_single_frames(
-        self,
-        latents: Sequence[torch.Tensor],
-        generator: torch.Generator | Sequence[torch.Generator | None] | None = None,
-        *,
-        dtype: torch.dtype | None = None,
-    ) -> Iterator[torch.Tensor]:
-        """Decode each latent as its own one-frame clip on one VAE build, then free it.
-        A causal VAE cannot decode stacked independent planes without bleeding neighbours.
-        Dist builds still decode locally on every rank; this does not go through the
-        split/gather ``decode_video`` path whose workers yield nothing.
-        """
-        if not latents:
-            return iter(())
-        build_dtype = self._dtype if dtype is None else dtype
-        moved = [latent.to(dtype=build_dtype) for latent in latents]
-        logger.info("Building video decoder from %s", self._checkpoint_path)
-        decoder = self._prepared_builder().build(device=self._device, dtype=build_dtype).eval()
-        chunks = decoder.decode_single_frames(moved, generator)
         return _cleanup_iter(
             chunks,
             decoder,
@@ -1256,36 +1151,3 @@ class AudioDecoder:
 # ---------------------------------------------------------------------------
 # AudioEncoder
 # ---------------------------------------------------------------------------
-
-
-class AudioConditioner:
-    """Owns audio encoder lifecycle.
-    Builds the encoder, passes it to the user-supplied callable, then frees it.
-    Mirrors :class:`ImageConditioner` for the audio modality.
-    """
-
-    def __init__(
-        self,
-        checkpoint_path: str,
-        dtype: torch.dtype,
-        device: torch.device,
-        registry: Registry | None = None,
-        alloc_trim_strategy: AllocatorTrimStrategy = AllocatorTrimStrategy.TRIM,
-    ) -> None:
-        self._dtype = dtype
-        self._device = device
-        self._alloc_trim_strategy = alloc_trim_strategy
-        self._encoder_builder = Builder(
-            model_path=checkpoint_path,
-            model_class_configurator=AudioEncoderConfigurator,
-            model_sd_ops=AUDIO_VAE_ENCODER_COMFY_KEYS_FILTER,
-            registry=registry or ModelRegistry(cache_models=True, cache_weights=False),
-        )
-
-    def __call__(self, fn: Callable[[torch.nn.Module], T]) -> T:
-        """Build audio encoder → call *fn(encoder)* → free encoder."""
-        with gpu_model(
-            self._encoder_builder.build(device=self._device, dtype=self._dtype).eval(),
-            alloc_trim_strategy=self._alloc_trim_strategy,
-        ) as encoder:
-            return fn(encoder)

@@ -554,6 +554,22 @@ def velocity_to_denoised(
     return (sample.to(calc_dtype) - velocity.to(calc_dtype) * sigma).to(sample.dtype)
 
 
+def denoised_to_velocity(
+    sample: torch.Tensor,
+    sigma: float | torch.Tensor,
+    denoised: torch.Tensor,
+    *,
+    calc_dtype: torch.dtype = torch.float32,
+) -> torch.Tensor:
+    """Recover the flow velocity that maps ``sample`` to ``denoised`` at a nonzero scalar ``sigma``."""
+
+    if isinstance(sigma, torch.Tensor):
+        sigma = sigma.to(calc_dtype).item()
+    if sigma == 0:
+        raise ValueError("Sigma can't be 0.0")
+    return ((sample.to(calc_dtype) - denoised.to(calc_dtype)) / sigma).to(sample.dtype)
+
+
 __all__ = [
     "AdaLayerNorm",
     "ConcatenatedLinear",
@@ -567,6 +583,7 @@ __all__ = [
     "activation_layer",
     "apply_gate",
     "apply_gate_with_prefix",
+    "denoised_to_velocity",
     "modulate_sequence",
     "modulate_sequence_with_prefix",
     "normalization_layer",

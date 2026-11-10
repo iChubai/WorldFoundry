@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import copy
-import logging
 from dataclasses import replace
 from typing import TYPE_CHECKING, Final, Generic
 
@@ -40,7 +39,6 @@ from .wrapper import BlockStreamingWrapper
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-logger = logging.getLogger(__name__)
 
 DISK_CPU_SLOTS = 2
 _DEFAULT_GPU_SLOTS = 2
@@ -147,10 +145,6 @@ class StreamingModelBuilder(Generic[ModelType], ModelBuilderProtocol[ModelType])
         return self._blocks_prefix
 
     @property
-    def cpu_slots_count(self) -> int | None:
-        return self._cpu_slots_count
-
-    @property
     def keeps_gpu_resident_weights(self) -> bool:
         # Block weights live in fixed GPU/CPU slots that are reused across builds.
         return True
@@ -169,15 +163,6 @@ class StreamingModelBuilder(Generic[ModelType], ModelBuilderProtocol[ModelType])
         clone = copy.copy(self)
         clone._loras = loras
         return clone
-
-    def with_registry(self, registry: Registry) -> Self:
-        clone = copy.copy(self)
-        clone._registry = registry
-        return clone
-
-    def with_lora_load_device(self, device: torch.device) -> Self:
-        # Streaming fuses LoRAs into pinned CPU buffers; no other staging device is meaningful.
-        raise NotImplementedError("StreamingModelBuilder loads LoRA weights on CPU only.")
 
     def with_fuse_rule(self, fuse_rule: FuseRule) -> Self:
         clone = copy.copy(self)

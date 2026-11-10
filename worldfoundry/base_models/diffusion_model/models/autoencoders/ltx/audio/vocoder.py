@@ -12,7 +12,9 @@ Snake activations here are LTX-specific; MiniMax H3 has a
 parallel BigVGAN port under :mod:`~...minimax_h3_audio`.
 """
 
+import contextlib
 import math
+from collections.abc import Iterator
 
 import einops
 import torch
@@ -25,6 +27,20 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.resn
 def get_padding(kernel_size: int, dilation: int = 1) -> int:
     """Return symmetric 1-D conv padding for a kernel/dilation pair."""
     return int((kernel_size * dilation - dilation) / 2)
+
+
+@contextlib.contextmanager
+def _module_in_fp32(module: nn.Module, *, enabled: bool) -> Iterator[None]:
+    """Temporarily cast ``module`` to float32 and restore its weight dtype on exit."""
+    if not enabled:
+        yield
+        return
+    module_dtype = next(module.parameters()).dtype
+    module.float()
+    try:
+        yield
+    finally:
+        module.to(module_dtype)
 
 
 # ---------------------------------------------------------------------------
@@ -602,8 +618,17 @@ class VocoderWithBWE(nn.Module):
         #   autocast fp32: +70 MB peak VRAM, 123 ms  (vs 482 MB / 95 ms for bf16)
         #   model.float(): +324 MB peak VRAM, 149 ms
         # Tested: both approaches produce bit-identical output.
+        # MPS autocast supports only lower-precision dtypes, so there the weights are
+        # materialized in fp32 for the pass instead; a vocoder built in fp32 on MPS
+        # needs no cast.
+        device_type = mel_spec.device.type
+        fp32_context = (
+            _module_in_fp32(self, enabled=next(self.parameters()).dtype != torch.float32)
+            if device_type == "mps"
+            else torch.autocast(device_type=device_type, dtype=torch.float32)
+        )
 
-        with torch.autocast(device_type=mel_spec.device.type, dtype=torch.float32):
+        with fp32_context:
             x = self.vocoder(mel_spec.float())
             _, _, length_low_rate = x.shape
             output_length = length_low_rate * self.output_sampling_rate // self.input_sampling_rate

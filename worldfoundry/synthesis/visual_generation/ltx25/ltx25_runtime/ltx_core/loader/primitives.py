@@ -75,10 +75,6 @@ class BuilderProtocol(Protocol[BuiltType]):
     @property
     def registry(self) -> Registry: ...
 
-    def with_registry(self, registry: Registry) -> Self:
-        """Return a copy of this builder using the given weight registry for allocation."""
-        ...
-
 
 class ModelBuilderProtocol(BuilderProtocol[BuiltType], Protocol[BuiltType]):
     """
@@ -116,10 +112,6 @@ class ModelBuilderProtocol(BuilderProtocol[BuiltType], Protocol[BuiltType]):
 
     def with_loras(self, loras: tuple[LoraPathStrengthAndSDOps, ...]) -> Self:
         """Return a copy of this builder with the given LoRAs to fuse at build time."""
-        ...
-
-    def with_lora_load_device(self, device: torch.device) -> Self:
-        """Return a copy of this builder that loads LoRA weights onto the given device."""
         ...
 
     def with_fuse_rule(self, fuse_rule: FuseRule) -> Self:

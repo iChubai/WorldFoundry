@@ -5,10 +5,11 @@ from collections.abc import Callable
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx import LTXModel
+
 from ..loader.fuse_loras import FuseRule, bf16_fuse_rule
 from ..loader.module_ops import ModuleOps
 from ..loader.primitives import StateDict
-from ..model.transformer import LTXModel
 from .policy import QuantizationPolicy
 
 

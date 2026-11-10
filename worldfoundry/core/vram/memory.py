@@ -353,6 +353,25 @@ def _move_model_with_rollback(
 # ──────────────────────────────────────────────────────────────────────────
 
 
+def release_module_storage(model: torch.nn.Module) -> None:
+    """Release checkpoint storage to meta, retaining non-persistent runtime buffers.
+
+    Staged loaders keep the module graph and its operator configuration for
+    the next load. Parameters and persistent buffers are rebuilt from the
+    checkpoint; derived buffers stay resident. Synchronization and allocator
+    trimming belong to the caller.
+    """
+    for module in model.modules():
+        for name, parameter in list(module.named_parameters(recurse=False, remove_duplicate=False)):
+            module.register_parameter(
+                name,
+                torch.nn.Parameter(torch.empty_like(parameter, device="meta"), requires_grad=parameter.requires_grad),
+            )
+        for name, buffer in list(module.named_buffers(recurse=False, remove_duplicate=False)):
+            if name not in module._non_persistent_buffers_set:
+                module.register_buffer(name, torch.empty_like(buffer, device="meta"), persistent=True)
+
+
 def unload_complete_models(*models: torch.nn.Module) -> None:
     """Move the registry and any extra *models* to CPU, then clear the registry."""
     for model in gpu_complete_modules + list(models):
@@ -391,5 +410,6 @@ __all__ = [
     "move_model_to_device_with_memory_preservation",
     "offload_model_from_device_for_memory_preservation",
     "patched_diffusers_current_device",
+    "release_module_storage",
     "unload_complete_models",
 ]

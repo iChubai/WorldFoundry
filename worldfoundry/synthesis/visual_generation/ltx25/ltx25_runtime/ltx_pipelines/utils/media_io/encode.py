@@ -7,7 +7,6 @@ import threading
 from collections import deque
 from collections.abc import Generator, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
-from fractions import Fraction
 from pathlib import Path
 from queue import Queue
 
@@ -16,13 +15,14 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import Audio
+
 from ....ltx_core.color.audio_mux import prepare_audio_stream as _prepare_audio_stream
 from ....ltx_core.color.audio_mux import validate_audio_waveform as _validate_audio_waveform
 from ....ltx_core.color.audio_mux import write_audio as _write_audio
 from ....ltx_core.color.hlg import encode_linear_hdr_frames_to_hlg_mp4
 from ....ltx_core.color.primaries import Primaries
 from ....ltx_core.color.yuv import FrameConverter, PixelFormat, yuv420p_bt709_converter_
-from ....ltx_core.types import Audio
 from .color_config import HDRColorSpace, decode_hdr_video
 from .exr import save_exr_tensor
 
@@ -227,26 +227,6 @@ def encode_video(
             Path(output_path).unlink(missing_ok=True)
     logger.info(f"Video saved to {output_path}")
     return None
-
-
-def encode_audio(audio: Audio, output_path: str) -> None:
-    """Save an audio waveform as a 16-bit PCM ``.wav`` file at the source sampling rate.
-    Reuses :func:`_write_audio` (the same muxing path used by :func:`encode_video`);
-    the only difference is a PCM (``pcm_s16le``) stream in a WAV container instead of
-    the AAC stream used for muxed video.
-    """
-    _validate_audio_waveform(audio)
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    container = av.open(output_path, mode="w")
-    audio_stream = container.add_stream("pcm_s16le", rate=audio.sampling_rate)
-    audio_stream.codec_context.sample_rate = audio.sampling_rate
-    audio_stream.codec_context.layout = "stereo"
-    audio_stream.codec_context.time_base = Fraction(1, audio.sampling_rate)
-    try:
-        _write_audio(container, audio_stream, audio)
-    finally:
-        container.close()
-    logger.info(f"Audio saved to {output_path}")
 
 
 def _encode_chunks_threaded(

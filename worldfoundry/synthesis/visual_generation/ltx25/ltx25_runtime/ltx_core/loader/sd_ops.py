@@ -79,13 +79,6 @@ class SDOps:
         new_mapping = (*self.mapping, ContentMatching(prefix, suffix, contains))
         return replace(self, mapping=new_mapping)
 
-    def with_additional_allowed_keys(self, keys: frozenset[str]) -> "SDOps":
-        """Create a new SDOps instance that only passes keys present in *keys* (post-replacement).
-        If allowed_keys already exists, the sets are merged via union.
-        """
-        merged = frozenset(keys) | self.allowed_keys if self.allowed_keys is not None else frozenset(keys)
-        return replace(self, allowed_keys=merged)
-
     def with_kv_operation(
         self,
         operation: KeyValueOperation,
@@ -136,10 +129,15 @@ LTXV_LORA_COMFY_RENAMING_MAP = (
     SDOps("LTXV_LORA_COMFY_PREFIX_MAP").with_matching().with_replacement("diffusion_model.", "")
 )
 
-LTXV_LORA_COMFY_TARGET_MAP = (
-    SDOps("LTXV_LORA_COMFY_TARGET_MAP")
-    .with_matching()
-    .with_replacement("diffusion_model.", "")
-    .with_replacement(".lora_A.weight", ".weight")
-    .with_replacement(".lora_B.weight", ".weight")
+
+LTXV_MODEL_COMFY_RENAMING_MAP = (
+    SDOps("LTXV_MODEL_COMFY_PREFIX_MAP")
+    .with_matching(prefix="model.diffusion_model.")
+    .with_replacement("model.diffusion_model.", "")
+)
+
+# DurationHead tensors live under a "duration_head." prefix in the PyTorch
+# nn.MultiheadAttention layout, whether stored alone or alongside other weights.
+DURATION_HEAD_KEY_OPS = (
+    SDOps("DURATION_HEAD_KEY_OPS").with_matching(prefix="duration_head.").with_replacement("duration_head.", "")
 )

@@ -12,9 +12,10 @@ import torch
 from ltx_kernels import nvfp4
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx import LTXModel
+
 from ...loader.module_ops import ModuleOps
 from ...loader.sd_ops import KeyValueOperationResult, SDOps
-from ...model.transformer import LTXModel
 from .linear import NVFP4Linear
 from .types import ActScale
 

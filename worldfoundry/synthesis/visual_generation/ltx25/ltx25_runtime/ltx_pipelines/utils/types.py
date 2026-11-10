@@ -7,13 +7,13 @@ from typing import NamedTuple, Protocol
 
 import torch
 
-from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.keyframes import DecodeKeyframes
+from worldfoundry.base_models.diffusion_model.models.networks.ltx import X0Model
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import TilingConfig
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import Audio
+
 from ...ltx_core.conditioning import ConditioningItem
-from ...ltx_core.model.transformer import X0Model
-from ...ltx_core.model.video_vae import TilingConfig
-from ...ltx_core.model.video_vae.keyframes import DecodeKeyframes
-from ...ltx_core.types import Audio, LatentState
-from .constants import VIDEO_LATENT_CHANNELS, VIDEO_SCALE_FACTORS
+from ...ltx_core.types import LatentState
 
 
 class PipelineOutput(NamedTuple):
@@ -42,33 +42,6 @@ class PipelineOutput(NamedTuple):
     #: ``decode_video(keyframes=)`` needs this together with ``keyframes``; re-encoding decoded
     #: pixels would not reproduce it. ``None`` when the pipeline does not keep the latent.
     video_latent: torch.Tensor | None
-
-
-class PipelineComponents:
-    """
-    Container class for pipeline components used throughout the LTX pipelines.
-    Attributes:
-        dtype (torch.dtype): Default torch dtype for tensors in the pipeline.
-        device (torch.device): Target device to place tensors and modules on.
-        video_scale_factors (SpatioTemporalScaleFactors): Scale factors (T, H, W) for VAE latent space.
-        video_latent_channels (int): Number of channels in the video latent representation.
-        video_patchifier (VideoLatentPatchifier): Patchifier instance for video latents.
-        audio_patchifier (AudioPatchifier): Patchifier instance for audio latents.
-    """
-
-    def __init__(
-        self,
-        dtype: torch.dtype,
-        device: torch.device,
-    ):
-        self.dtype = dtype
-        self.device = device
-
-        self.video_scale_factors = VIDEO_SCALE_FACTORS
-        self.video_latent_channels = VIDEO_LATENT_CHANNELS
-
-        self.video_patchifier = VideoLatentPatchifier(patch_size=1)
-        self.audio_patchifier = AudioPatchifier(patch_size=1)
 
 
 @dataclass(frozen=True)

@@ -73,36 +73,6 @@ def resize_and_center_crop(tensor: torch.Tensor, height: int, width: int) -> tor
     return tensor
 
 
-def align_resolution(
-    width: int,
-    height: int,
-    resize_mode: ResizeMode,
-    divisor: int = 64,
-) -> tuple[int, int, int, int]:
-    """Compute aligned generation dimensions and crop-back size.
-    Args:
-        width: Source video width (need not be aligned).
-        height: Source video height (need not be aligned).
-        resize_mode: CENTER_CROP rounds down; REFLECT_PAD rounds up.
-        divisor: Alignment divisor (default 64 for two-stage pipelines).
-    Returns:
-        ``(gen_width, gen_height, crop_width, crop_height)`` where
-        ``gen_*`` are multiples of *divisor* and ``crop_*`` are the
-        original dimensions to trim back to after decoding.  When no
-        cropping is needed ``crop_*`` equals ``gen_*``.
-    """
-    if resize_mode is ResizeMode.REFLECT_PAD:
-        gen_w = ((width + divisor - 1) // divisor) * divisor
-        gen_h = ((height + divisor - 1) // divisor) * divisor
-    else:
-        gen_w = (width // divisor) * divisor
-        gen_h = (height // divisor) * divisor
-
-    crop_w = width if gen_w != width else gen_w
-    crop_h = height if gen_h != height else gen_h
-    return gen_w, gen_h, crop_w, crop_h
-
-
 def resize_and_reflect_pad(tensor: torch.Tensor, height: int, width: int) -> torch.Tensor:
     """Resize tensor to fit within target, then reflect-pad to exact dimensions.
     Unlike resize_and_center_crop which stretches and crops, this preserves the

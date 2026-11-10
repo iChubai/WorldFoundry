@@ -35,7 +35,7 @@ from worldfoundry.core.attention.backends.model_backends import (
     MaskedAttentionCallable,
     MaskedAttentionFunction,
 )
-from worldfoundry.core.kernels import residual_gate_add, rms_norm_scale_shift
+from worldfoundry.core.kernels import rms_norm_scale_shift
 from worldfoundry.core.nn.blocks.normalization import rms_norm
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -143,7 +143,13 @@ class PytorchPreAttention:
 
 
 class PytorchAdaZeroFunction:
-    """Portable AdaLN-zero implemented with :func:`rms_norm_scale_shift`."""
+    """Portable AdaLN-zero implemented with :func:`rms_norm_scale_shift`.
+
+    ``backend`` pins kernel dispatch; ``"torch"`` keeps eager PyTorch rounding.
+    """
+
+    def __init__(self, backend: str | None = None) -> None:
+        self.backend = backend
 
     def __call__(
         self,
@@ -154,11 +160,11 @@ class PytorchAdaZeroFunction:
     ) -> torch.Tensor:
         """Same math as fused AdaLN-zero; last-dim RMS then ``x*(1+scale)+shift``."""
 
-        return rms_norm_scale_shift(value, scale, shift, eps=eps)
+        return rms_norm_scale_shift(value, scale, shift, eps=eps, backend=self.backend)
 
 
 class PytorchPostSAFunction:
-    """Portable residual-gate add plus RMSNorm after self-attention."""
+    """Residual-gate add plus RMSNorm after self-attention in eager PyTorch arithmetic."""
 
     def __call__(
         self,
@@ -170,7 +176,7 @@ class PytorchPostSAFunction:
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """``residual + value * gate``, then RMSNorm for the following FFN."""
 
-        output = residual_gate_add(residual, value, gate)
+        output = residual + value * gate
         return output, rms_norm(output, norm_weights, eps=eps)
 
 

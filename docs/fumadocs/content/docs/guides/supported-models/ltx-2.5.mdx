@@ -17,7 +17,7 @@ Code: [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2).
 
 `ltx-2.5` is the recorded text/image-to-video line. Use it when you want both prompt and still conditioning on the same catalog card.
 
-The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry vendors that source from Lightricks/LTX-2 at a95ab856 instead of adapting the incompatible LTX-2.3 monolithic loader. It is published by Lightricks.
+The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry runs the distilled orchestration of Lightricks/LTX-2 at a95ab856 in-tree on its canonical LTX networks, which carry the LTX-2.5 Gemma 4 text encoder, diffusion video decoder and duration head, instead of adapting the incompatible LTX-2.3 monolithic loader. It is published by Lightricks.
 
 Catalog tasks include text-to-video, image-to-video, and audio-video-generation. Catalog aliases include `ltx2.5`, `ltx25`, and `ltx-2.5-distilled`. Documented modalities: text and image in, video out.
 

@@ -19,8 +19,8 @@ from typing import Any
 import torch
 from torch import nn
 
-from .guidance.perturbations import BatchedPerturbationConfig
-from .model.transformer.modality import Modality
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import BatchedPerturbationConfig
 
 
 def _split_perturbations(config: BatchedPerturbationConfig, sizes: list[int]) -> list[BatchedPerturbationConfig]:

@@ -994,10 +994,11 @@ def rms_norm_scale_shift(
     eps: float = 1e-6,
     *,
     weight: torch.Tensor | None = None,
+    backend: str | None = None,
 ) -> torch.Tensor:
     """Fuse RMSNorm with broadcast scale/shift modulation."""
 
-    requested = _requested_kernel_backend()
+    requested = _requested_kernel_backend() if backend is None else backend
     if (
         torch.compiler.is_compiling()
         or requested in _TORCH_BACKENDS
@@ -1018,6 +1019,7 @@ def rms_norm_scale_shift(
         shift,
         eps,
         signature=_workload_signature(*tensors, extra=(float(eps), weight is not None)),
+        backend=backend,
     )
 
 

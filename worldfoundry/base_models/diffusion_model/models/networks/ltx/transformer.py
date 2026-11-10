@@ -18,7 +18,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.feed_forward i
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.transformer_args import TransformerArgs
 from worldfoundry.core.attention.backends.model_backends import AttentionCallable
-from worldfoundry.core.nn import TransformerOpsConfig, rms_norm
+from worldfoundry.core.nn import TransformerOpsConfig
 
 
 @dataclass
@@ -31,6 +31,7 @@ class TransformerConfig:
     context_dim: int
     apply_gated_attention: bool = False
     cross_attention_adaln: bool = False
+    ff_bias: bool = True
 
 
 class BasicAVTransformerBlock(torch.nn.Module):
@@ -73,7 +74,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 ops=ops.attention_ops,
                 apply_gated_attention=video.apply_gated_attention,
             )
-            self.ff = FeedForward(video.dim, dim_out=video.dim)
+            self.ff = FeedForward(video.dim, dim_out=video.dim, bias=video.ff_bias)
             video_sst_size = adaln_embedding_coefficient(video.cross_attention_adaln)
             self.scale_shift_table = torch.nn.Parameter(torch.empty(video_sst_size, video.dim))
 
@@ -98,7 +99,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 ops=ops.attention_ops,
                 apply_gated_attention=audio.apply_gated_attention,
             )
-            self.audio_ff = FeedForward(audio.dim, dim_out=audio.dim)
+            self.audio_ff = FeedForward(audio.dim, dim_out=audio.dim, bias=audio.ff_bias)
             audio_sst_size = adaln_embedding_coefficient(audio.cross_attention_adaln)
             self.audio_scale_shift_table = torch.nn.Parameter(torch.empty(audio_sst_size, audio.dim))
 
@@ -187,7 +188,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
         context_mask: torch.Tensor | None,
         cross_attention_adaln: bool = False,
     ) -> torch.Tensor:
-        """Apply text cross-attention, with optional AdaLN modulation."""
+        """Apply text cross-attention to normalized post-self-attention tokens."""
         if cross_attention_adaln:
             shift_q, scale_q, gate = self.get_ada_values(scale_shift_table, x.shape[0], timestep, slice(6, 9))
             return apply_cross_attention_adaln(
@@ -200,9 +201,8 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 prompt_scale_shift_table,
                 prompt_timestep,
                 context_mask,
-                self.norm_eps,
             )
-        return attn(rms_norm(x, eps=self.norm_eps), context=context, mask=context_mask)
+        return attn(x, context=context, mask=context_mask)
 
     def forward(
         self,
@@ -238,10 +238,10 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 camera_control=video.video_control,
                 cache=video.attention_cache,
             )
-            vx = vx + vx_msa_out * vgate_msa
+            vx, vx_normed = self.post_sa_function(vx, vx_msa_out, None, self.norm_eps, vgate_msa)
             del vgate_msa, norm_vx, vx_msa_out
             vx = vx + self._apply_text_cross_attention(
-                vx,
+                vx_normed,
                 video.context,
                 self.attn2,
                 self.scale_shift_table,
@@ -251,6 +251,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 video.context_mask,
                 cross_attention_adaln=self.cross_attention_adaln,
             )
+            del vx_normed
 
         if run_ax:
             ashift_msa, ascale_msa, agate_msa = self.get_ada_values(
@@ -267,10 +268,10 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 all_perturbed=audio.self_attn_all_perturbed,
                 cache=audio.attention_cache,
             )
-            ax = ax + ax_msa_out * agate_msa
+            ax, ax_normed = self.post_sa_function(ax, ax_msa_out, None, self.norm_eps, agate_msa)
             del agate_msa, norm_ax, ax_msa_out
             ax = ax + self._apply_text_cross_attention(
-                ax,
+                ax_normed,
                 audio.context,
                 self.audio_attn2,
                 self.audio_scale_shift_table,
@@ -280,6 +281,7 @@ class BasicAVTransformerBlock(torch.nn.Module):
                 audio.context_mask,
                 cross_attention_adaln=self.cross_attention_adaln,
             )
+            del ax_normed
 
         # Audio - Video cross attention.
         if run_a2v or run_v2a:
@@ -382,16 +384,15 @@ def apply_cross_attention_adaln(
     q_scale: torch.Tensor,
     q_gate: torch.Tensor,
     prompt_scale_shift_table: torch.Tensor,
-    prompt_timestep: torch.Tensor,
+    prompt_timestep: torch.Tensor | None,
     context_mask: torch.Tensor | None = None,
-    norm_eps: float = 1e-6,
 ) -> torch.Tensor:
-    """Text CA with AdaLN on queries and a separate prompt scale/shift on keys/values."""
+    """Modulate normalized queries and context with static or timestep-conditioned AdaLN."""
     batch_size = x.shape[0]
-    shift_kv, scale_kv = (
-        prompt_scale_shift_table[None, None].to(device=x.device, dtype=x.dtype)
-        + prompt_timestep.reshape(batch_size, prompt_timestep.shape[1], 2, -1)
-    ).unbind(dim=2)
-    attn_input = rms_norm(x, eps=norm_eps) * (1 + q_scale) + q_shift
+    kv_modulation = prompt_scale_shift_table[None, None].to(device=x.device, dtype=x.dtype)
+    if prompt_timestep is not None:
+        kv_modulation = kv_modulation + prompt_timestep.reshape(batch_size, prompt_timestep.shape[1], 2, -1)
+    shift_kv, scale_kv = kv_modulation.unbind(dim=2)
+    attn_input = x * (1 + q_scale) + q_shift
     encoder_hidden_states = context * (1 + scale_kv) + shift_kv
     return attn(attn_input, context=encoder_hidden_states, mask=context_mask) * q_gate

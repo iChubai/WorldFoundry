@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterator
-from fractions import Fraction
 from pathlib import Path
 
-import av
 import numpy as np
 import OpenImageIO
 import torch
@@ -110,31 +108,6 @@ def load_exr_conditioning_hdr(
         )
 
 
-def load_exr_folder_conditioning_hdr(
-    exr_dir: str | Path,
-    height: int,
-    width: int,
-    frame_cap: int,
-    dtype: torch.dtype,
-    device: torch.device,
-    color_space: HDRColorSpace,
-    resize_mode: ResizeMode = ResizeMode.REFLECT_PAD,
-    frame_start: int = 0,
-) -> Iterator[torch.Tensor]:
-    """Load a folder of EXR frames as HDR conditioning. See :func:`load_exr_conditioning_hdr`."""
-    return load_exr_conditioning_hdr(
-        exr_dir,
-        height,
-        width,
-        dtype,
-        device,
-        frame_cap=frame_cap,
-        frame_start=frame_start,
-        color_space=color_space,
-        resize_mode=resize_mode,
-    )
-
-
 def load_exr_image_conditioning_hdr(
     exr_path: str | Path,
     height: int,
@@ -206,50 +179,3 @@ def save_exr_tensor(
             raise RuntimeError(f"Failed to write EXR image '{file_path}': {out.geterror()}")
     finally:
         out.close()
-
-
-def _linear_to_srgb(x: np.ndarray) -> np.ndarray:
-    """Linear -> sRGB OETF per IEC 61966-2-1. Input assumed in [0, 1]."""
-    x = np.clip(x, 0.0, 1.0)
-    return np.where(x <= 0.0031308, x * 12.92, 1.055 * np.power(x, 1.0 / 2.4) - 0.055)
-
-
-def encode_exr_sequence_to_mp4(exr_dir: Path, output_mp4: Path, frame_rate: float) -> None:
-    """Convert a linear EXR frame sequence to sRGB and encode to H.264 .mp4 via PyAV.
-    Exposure is fixed at EV=0 (no gain). Each EXR frame is clamped to [0, 1],
-    passed through the sRGB OETF, quantised to 8-bit BGR, and fed to a libx264
-    stream (crf 18, yuv420p). ``frame_rate`` is the original source video's
-    frame rate so playback matches the input timing.
-    """
-    import os
-
-    os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
-    import cv2
-
-    exr_files = sorted(exr_dir.glob("frame_*.exr"))
-    if not exr_files:
-        raise FileNotFoundError(f"No EXR frames found in {exr_dir}")
-
-    container = av.open(str(output_mp4), mode="w")
-    stream = container.add_stream("libx264", rate=Fraction(frame_rate).limit_denominator(1000))
-    stream.pix_fmt = "yuv420p"
-    stream.options = {"crf": "18", "movflags": "+faststart"}
-
-    try:
-        for i, exr_path in enumerate(exr_files):
-            hdr = cv2.imread(str(exr_path), cv2.IMREAD_UNCHANGED).astype(np.float32)
-            sdr = _linear_to_srgb(np.maximum(hdr, 0.0))
-            bgr8 = (sdr * 255.0 + 0.5).astype(np.uint8)
-
-            if i == 0:
-                stream.height = bgr8.shape[0]
-                stream.width = bgr8.shape[1]
-
-            frame = av.VideoFrame.from_ndarray(bgr8, format="bgr24")
-            for packet in stream.encode(frame):
-                container.mux(packet)
-
-        for packet in stream.encode():
-            container.mux(packet)
-    finally:
-        container.close()

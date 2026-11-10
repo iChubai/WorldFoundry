@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import LTXModel
+
 from ..loader.fuse_loras import FuseRule, bf16_fuse_rule
 from ..loader.module_ops import ModuleOps
 from ..loader.sd_ops import SDOps
 from ..model.model_protocol import ModelConfigurator
-from ..model.transformer.model import LTXModel
 
 
 @dataclass(frozen=True)

@@ -17,7 +17,8 @@ from collections.abc import Sequence
 
 import torch
 
-from ...components.patchifiers import get_pixel_coords
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import get_pixel_coords
+
 from ...tools import VideoLatentTools
 from ...types import GeneratedKeyframeLayout, LatentState
 from ..item import ConditioningItem

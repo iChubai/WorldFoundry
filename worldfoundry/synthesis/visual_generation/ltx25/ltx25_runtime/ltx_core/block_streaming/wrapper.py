@@ -8,12 +8,11 @@ from typing import Any
 import torch
 from torch import nn
 
-from ..model.disposable import Disposable
 from .provider import WeightsProvider
 from .utils import assign_tensor_to_module
 
 
-class BlockStreamingWrapper(nn.Module, Disposable):
+class BlockStreamingWrapper(nn.Module):
     """Streams sequential model blocks through GPU buffer caches.
     The wrapper delegates all weight management to a :class:`WeightsProvider`
     which handles CPU-to-GPU copies, caching, LoRA fusion, and stream

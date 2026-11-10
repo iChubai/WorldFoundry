@@ -22,10 +22,8 @@ def _import_impl():
         from ltx_kernels import nvfp4 as nvfp4_mod
     except ImportError as e:
         raise RuntimeError(
-            "ltx-kernels not built; NVFP4 quantization requires the nvfp4 extension. "
-            "Build on a CUDA host: TORCH_CUDA_ARCH_LIST='10.0' "
-            "uv sync --group kernels (or "
-            "`uv pip install -e packages/ltx-kernels --no-build-isolation`)."
+            "NVFP4 quantization requires the optional ltx-kernels package built with its nvfp4 "
+            "extension (TORCH_CUDA_ARCH_LIST='10.0')."
         ) from e
     if reason := nvfp4_mod.unavailable_reason():
         raise RuntimeError(reason)

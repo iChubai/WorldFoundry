@@ -44,39 +44,6 @@ class Registry(Protocol):
 
     def add_model(self, key: str, model: nn.Module) -> nn.Module: ...
 
-    def pop_model(self, key: str) -> nn.Module | None: ...
-
-
-class DummyRegistry(Registry):
-    """Registry that stores neither state dictionaries nor model instances."""
-
-    def add(self, paths: list[str], sd_ops: SDOps | None, state_dict: StateDict) -> StateDict:
-        _ = paths, sd_ops
-        return state_dict
-
-    def pop(self, paths: list[str], sd_ops: SDOps | None) -> StateDict | None:
-        _ = paths, sd_ops
-        return None
-
-    def get(self, paths: list[str], sd_ops: SDOps | None) -> StateDict | None:
-        _ = paths, sd_ops
-        return None
-
-    def clear(self) -> None:
-        pass
-
-    def get_model(self, key: str) -> nn.Module | None:
-        _ = key
-        return None
-
-    def add_model(self, key: str, model: nn.Module) -> nn.Module:
-        _ = key
-        return model
-
-    def pop_model(self, key: str) -> nn.Module | None:
-        _ = key
-        return None
-
 
 class ModelRegistry(Registry):
     """In-process cache of state dictionaries and/or model shells.
@@ -141,7 +108,3 @@ class ModelRegistry(Registry):
                 raise ValueError(f"Model for {key} already added, check with get_model first")
             self._models[key] = model
         return model
-
-    def pop_model(self, key: str) -> nn.Module | None:
-        with self._lock:
-            return self._models.pop(key, None)

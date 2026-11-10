@@ -46,22 +46,6 @@ def resolve_device(device: DeviceSpec = None, *, local_rank: int | None = None) 
     return device
 
 
-def supports_float64(device: DeviceSpec) -> bool:
-    """Return whether *device* can represent ``torch.float64``.
-    MPS has no double-precision support; CUDA and CPU do.
-    """
-    return resolve_device(device).type != "mps"
-
-
-def highest_precision_float(device: DeviceSpec) -> torch.dtype:
-    """Return the widest float the backend supports: ``float64`` on CUDA/CPU,
-    ``float32`` on MPS.
-    Use for numerically sensitive accumulators (e.g. sampler ODE math) that
-    request double precision but must degrade gracefully on MPS.
-    """
-    return torch.float64 if supports_float64(device) else torch.float32
-
-
 def synchronize_device(device: DeviceSpec = None) -> None:
     """Synchronize CUDA or MPS work if the selected backend supports it."""
     resolved = resolve_device(device)

@@ -11,7 +11,7 @@ from .primitives import (
     StateDict,
     StateDictLoader,
 )
-from .registry import DummyRegistry, ModelRegistry, Registry, module_registry_key
+from .registry import ModelRegistry, Registry, module_registry_key
 from .sd_ops import (
     LTXV_LORA_COMFY_RENAMING_MAP,
     ContentMatching,
@@ -28,7 +28,6 @@ __all__ = [
     "LTXV_LORA_COMFY_RENAMING_MAP",
     "ContentMatching",
     "ContentReplacement",
-    "DummyRegistry",
     "KeyValueOperation",
     "KeyValueOperationResult",
     "LoRAAdaptableProtocol",

@@ -18,10 +18,6 @@ from typing_extensions import assert_never
 
 from .types import ActScale
 
-E4M3_MAX = 448.0
-E2M1_MAX = 6.0
-GLOBAL_RANGE = E4M3_MAX * E2M1_MAX
-
 
 class NVFP4Linear(nn.Module):
     """Drop-in ``nn.Linear`` replacement using NVFP4 quantize + cuBLASLt GEMM.

@@ -6,7 +6,6 @@ from safetensors import safe_open
 
 from ...ltx_core.components.guiders import MultiModalGuiderParams
 from ...ltx_core.loader import parse_model_version
-from ...ltx_core.types import SpatioTemporalScaleFactors
 
 # =============================================================================
 # Diffusion Schedule
@@ -21,8 +20,6 @@ STAGE_2_DISTILLED_SIGMA_VALUES = [0.909375, 0.725, 0.421875, 0.0]
 
 DISTILLED_SIGMAS = torch.tensor(DISTILLED_SIGMA_VALUES)
 STAGE_2_DISTILLED_SIGMAS = torch.tensor(STAGE_2_DISTILLED_SIGMA_VALUES)
-# Stage 2 schedule for the tiled-data-parallel multi-GPU runner.
-TDP_DISTILLED_SIGMAS = torch.tensor([0.625, 0.4, 0.0])
 
 
 # =============================================================================
@@ -88,35 +85,7 @@ LTX_2_3_PARAMS = replace(
 )
 
 
-# HQ preset: Res2s sampler, fewer steps, STG off. A plain constant on purpose -- it overrides
-# every knob that varies between generations, so there is nothing for it to inherit from a
-# detected checkpoint. The one generation-dependent value, ``default_image_crf``, is resolved from
-# checkpoint by the pipeline's ``ImageConditioner``, not read off this object.
-LTX_2_3_HQ_PARAMS = PipelineParams(
-    num_inference_steps=15,
-    stage_1_height=1088 // 2,
-    stage_1_width=1920 // 2,
-    video_guider_params=MultiModalGuiderParams(
-        cfg_scale=3.0,
-        stg_scale=0.0,
-        rescale_scale=0.45,
-        modality_scale=3.0,
-        skip_step=0,
-        stg_blocks=[],
-    ),
-    audio_guider_params=MultiModalGuiderParams(
-        cfg_scale=7.0,
-        stg_scale=0.0,
-        rescale_scale=1.0,
-        modality_scale=3.0,
-        skip_step=0,
-        stg_blocks=[],
-    ),
-)
-
 DEFAULT_LORA_STRENGTH = 1.0
-VIDEO_SCALE_FACTORS = SpatioTemporalScaleFactors.default()
-VIDEO_LATENT_CHANNELS = 128
 
 # 2.4 continues the 2.3 lineage, so it inherits 2.3's knobs (30 steps, STG on block 28) and
 # only moves the image CRF. Deriving it from LTX_2_PARAMS instead would silently hand a 2.4
@@ -182,18 +151,3 @@ def detect_params(checkpoint_path: str) -> PipelineParams:
 # =============================================================================
 # Prompts
 # =============================================================================
-
-DEFAULT_NEGATIVE_PROMPT = (
-    "has_subtitles, has_blurbox, transition from black, transition to black, speech_ending_short, "
-    "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
-    "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
-    "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
-    "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
-    "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
-    "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
-    "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
-    "mismatched lip sync, silent or muted audio, distorted voice, robotic voice, echo, background noise, "
-    "off-sync audio, incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward "
-    "pauses, incorrect timing, unnatural transitions, inconsistent framing, tilted camera, flat lighting, "
-    "inconsistent tone, cinematic oversaturation, stylized filters, or AI artifacts."
-)

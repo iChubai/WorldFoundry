@@ -17,19 +17,7 @@ from torch import Tensor
 
 from .color.primaries import Primaries
 
-__all__ = [
-    "HDRTransfer",
-    "TransferEncoding",
-    "to_acescct_working_space",
-    "to_hdr_linear",
-]
-
-
-class TransferEncoding(enum.Enum):
-    """Transfer encoding of an HDR tensor (scene-linear vs already-compressed log)."""
-
-    LINEAR = "linear"
-    LOG = "log"
+__all__ = ["HDRTransfer"]
 
 
 # --- curve helpers ----------------------------------------------------------------
@@ -86,15 +74,6 @@ class HDRTransfer(enum.Enum):
     ACESCCT = "acescct"
 
     @property
-    def display_name(self) -> str:
-        """Human / EXR ``colorSpace`` tag name (e.g. ``ACEScct``, ``LogC3``)."""
-        match self:
-            case HDRTransfer.LOGC3:
-                return "LogC3"
-            case HDRTransfer.ACESCCT:
-                return "ACEScct"
-
-    @property
     def native_primaries(self) -> Primaries:
         """Linear primaries the curve is defined on (decompress lands here)."""
         match self:
@@ -118,10 +97,6 @@ class HDRTransfer(enum.Enum):
                 return _decompress_logc3(compressed)
             case HDRTransfer.ACESCCT:
                 return _decompress_acescct(compressed)
-
-    def compress_ldr(self, ldr: Tensor) -> Tensor:
-        """LDR [0, 1] → [0, 1] (identity clamp; transfer-agnostic)."""
-        return torch.clamp(ldr, 0.0, 1.0)
 
     def to_working_space(
         self,
@@ -153,20 +128,3 @@ class HDRTransfer(enum.Enum):
 
 
 # --- thin wrappers for transitional call sites ------------------------------------
-
-
-def to_acescct_working_space(
-    video: Tensor,
-    source_primaries: Primaries = Primaries.REC709,
-) -> Tensor:
-    """Compress scene-linear HDR into the ACEScct [0, 1] working space."""
-    return HDRTransfer.ACESCCT.to_working_space(video, source_primaries=source_primaries)
-
-
-def to_hdr_linear(
-    working: Tensor,
-    transfer: HDRTransfer = HDRTransfer.LOGC3,
-    out_primaries: Primaries = Primaries.REC709,
-) -> Tensor:
-    """Decompress a [0, 1] working-space signal to scene-linear HDR."""
-    return transfer.to_linear(working, out_primaries=out_primaries)

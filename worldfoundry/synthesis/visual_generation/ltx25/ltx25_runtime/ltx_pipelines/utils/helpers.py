@@ -3,6 +3,26 @@ from collections.abc import Sequence
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diffusion_tiling import (
+    recommended_decode_tiling_config,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diffusion_video_decoder import (
+    diffvae_tiling_geometry_from_vae_config,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import DiffVAEMode
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.fallback_na import (
+    joint_sdpa_materializes_scores,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.video_vae import VideoEncoder
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.gemma import LTXGemmaTextEncoder
+from worldfoundry.base_models.diffusion_model.models.networks.ltx import Modality
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import AutoTiling, TilingConfig
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import (
+    VIDEO_SCALE_FACTORS,
+    SpatioTemporalScaleFactors,
+    VideoPixelShape,
+)
+
 from ...ltx_core.components.noisers import Noiser
 from ...ltx_core.conditioning import (
     ConditioningItem,
@@ -12,46 +32,12 @@ from ...ltx_core.conditioning import (
 )
 from ...ltx_core.devices import activation_budget_bytes, cleanup_accelerator_memory, get_preferred_device
 from ...ltx_core.loader.sft_loader import SafetensorsModelStateDictLoader
-from ...ltx_core.model.audio_vae import encode_audio
-from ...ltx_core.model.transformer import Modality
-from ...ltx_core.model.video_vae import AutoTiling, TileSizeConfig, TilingConfig, VideoEncoder
-from ...ltx_core.model.video_vae.diffusion_tiling import recommended_decode_tiling_config
-from ...ltx_core.model.video_vae.keyframes import DecodeKeyframes
-from ...ltx_core.model.video_vae.model_configurator import (
-    diffvae_tiling_geometry_from_vae_config,
-    estimate_diffusion_decoder_weight_bytes,
-    is_diffusion_video_vae,
-)
-from ...ltx_core.model.video_vae.transformer.config import DiffVAEMode
-from ...ltx_core.model.video_vae.transformer.fallback_na import joint_sdpa_materializes_scores
-from ...ltx_core.text_encoders.gemma import LTXGemmaTextEncoder
-from ...ltx_core.tiling import DimensionSizeConfig
+from ...ltx_core.model.video_vae import estimate_diffusion_decoder_weight_bytes, require_diffusion_video_vae
 from ...ltx_core.tools import LatentTools
-from ...ltx_core.types import (
-    VIDEO_SCALE_FACTORS,
-    Audio,
-    AudioLatentShape,
-    LatentState,
-    SpatioTemporalScaleFactors,
-    VideoLatentShape,
-    VideoPixelShape,
-)
+from ...ltx_core.types import LatentState
 from .args import ImageConditioningInput
-from .media_io import (
-    ResizeMode,
-    decode_audio_from_file,
-    decode_image,
-    decode_video_from_file,
-    get_videostream_fps,
-    is_exr_dir,
-    load_exr_folder_conditioning_hdr,
-    load_image_and_preprocess,
-    resize_aspect_ratio_preserving,
-    video_preprocess,
-)
+from .media_io import decode_image, load_image_and_preprocess, resize_aspect_ratio_preserving
 from .media_io.color_config import HDRColorSpace
-
-logger = logging.getLogger(__name__)
 
 
 def get_device() -> torch.device:
@@ -62,16 +48,9 @@ def cleanup_memory() -> None:
     cleanup_accelerator_memory()
 
 
-# Historical Conv VAE ``TilingConfig.default()`` spatial long-side + temporal chunk
-# (main ``latent_tile_splitters`` aspect-coupled a single 768px tile to H/W).
-_CONV_AUTO_LONG_SIDE = DimensionSizeConfig(tile_size=768, overlap=64)
-_CONV_AUTO_FRAMES = DimensionSizeConfig(tile_size=80, overlap=24)
-
-
 def tiling_scale_factors_for_vae(vae_checkpoint_path: str) -> SpatioTemporalScaleFactors:
     """Scale factors decode will pass to ``to_splitters`` for this checkpoint."""
-    if not is_diffusion_video_vae(vae_checkpoint_path):
-        return VIDEO_SCALE_FACTORS
+    require_diffusion_video_vae(vae_checkpoint_path)
     metadata = SafetensorsModelStateDictLoader().metadata(vae_checkpoint_path)
     vae_config = metadata.get("config", {}).get("vae", {})
     return diffvae_tiling_geometry_from_vae_config(vae_config)["pixel_scale"]
@@ -88,22 +67,11 @@ def tiling_config_for_vae(
     free_bytes: int | None = None,
     keyframes: bool = False,
 ) -> TilingConfig:
-    """Decode tiling for pipelines.
-    Conv VAE: aspect-coupled long-side 768/64 + temporal 80/24.
-    DiffVAE: halo/memory-aware :func:`recommended_decode_tiling_config`.
+    """Halo- and memory-aware diffusion-VAE decode tiling (:func:`recommended_decode_tiling_config`).
     Pass ``keyframes=True`` for a keyframe-aware ``decode_video(keyframes=)`` decode: joint attention runs
     eager blocks, which changes both the stage-5 coefficient and the withheld reserve.
     """
-    if not is_diffusion_video_vae(vae_checkpoint_path):
-        _ = num_frames  # API parity with DiffVAE; Conv auto layout is aspect-only.
-        return TileSizeConfig.from_long_side(
-            long_side=_CONV_AUTO_LONG_SIDE,
-            height=height,
-            width=width,
-            scale_factors=VIDEO_SCALE_FACTORS,
-            frames=_CONV_AUTO_FRAMES,
-        )
-
+    require_diffusion_video_vae(vae_checkpoint_path)
     metadata = SafetensorsModelStateDictLoader().metadata(vae_checkpoint_path)
     vae_config = metadata.get("config", {}).get("vae", {})
     geometry = diffvae_tiling_geometry_from_vae_config(vae_config)
@@ -159,129 +127,6 @@ def ensure_tiling_config(
     return tiling_config
 
 
-def _conform_latent_length(latent: torch.Tensor, expected_frames_count: int) -> torch.Tensor:
-    actual_frames = latent.shape[2]
-    if actual_frames > expected_frames_count:
-        latent = latent[:, :, :expected_frames_count]
-    elif actual_frames < expected_frames_count:
-        shape_as_list = list(latent.shape)
-        shape_as_list[2] = expected_frames_count - actual_frames
-        pad = torch.zeros(
-            shape_as_list,
-            device=latent.device,
-            dtype=latent.dtype,
-        )
-        latent = torch.cat([latent, pad], dim=2)
-    return latent
-
-
-def video_latent_from_file(
-    video_encoder: VideoEncoder,
-    file_path: str,
-    output_shape: VideoPixelShape,
-    device: torch.device,
-    dtype: torch.dtype,
-    start_time: float = 0.0,
-    max_duration: float | None = None,
-    tiling_config: TilingConfig | None = None,
-    color_space: HDRColorSpace | None = None,
-) -> torch.Tensor | None:
-    """Load video from a file or EXR-frame folder, and encode to latents.
-    Args:
-        video_encoder: Model used to encode pixel frames to latent space.
-        file_path: Path to a video file, or a directory of ``*.exr`` frames
-            (HDR; requires ``color_space`` from ``--hdr``).
-        output_shape: Target pixel shape (height, width, frames, fps) for the conditioning.
-        device: Device to run the encoder and hold tensors on.
-        dtype: Dtype for the output latents.
-        start_time: Start time in seconds to begin reading the video (default 0.0).
-        max_duration: Maximum duration in seconds. If None, uses output_shape.frames at
-            output_shape.fps (default None).
-        tiling_config: Tiling configuration for the encoder. Defaults to
-            ``TileSizeConfig.default()`` (independent H=W=768).
-        color_space: HDR colour space when *file_path* is an EXR folder.
-            Ignored for regular video files.
-    Returns:
-        Encoded video latents of shape (1, C, T, H, W) with T = required_latent_frames, or
-        None (currently this function always returns a tensor).
-    """
-    fps = output_shape.fps
-    max_duration = max_duration or output_shape.frames / fps
-    if is_exr_dir(file_path):
-        if color_space is None:
-            raise ValueError(
-                "EXR input requires --hdr {SRGB_LINEAR,ACESCG,ACESCCT} to declare the source colour space."
-            )
-        # Center-crop matches the SDR video_preprocess path used for mp4 inputs.
-        frame_start = round(start_time * fps)
-        frame_cap = max(1, round(max_duration * fps))
-        frames = torch.cat(
-            list(
-                load_exr_folder_conditioning_hdr(
-                    exr_dir=file_path,
-                    height=output_shape.height,
-                    width=output_shape.width,
-                    frame_cap=frame_cap,
-                    dtype=dtype,
-                    device=device,
-                    color_space=color_space,
-                    resize_mode=ResizeMode.CENTER_CROP,
-                    frame_start=frame_start,
-                )
-            ),
-            dim=2,
-        )
-    else:
-        src_fps = get_videostream_fps(file_path)
-        if src_fps != output_shape.fps:
-            raise ValueError(f"Input video FPS {src_fps} does not match output FPS {output_shape.fps}, not supported")
-        frame_gen = decode_video_from_file(
-            path=file_path, device=device, start_time=start_time, max_duration=max_duration
-        )
-        frames = video_preprocess(frame_gen, output_shape.height, output_shape.width, dtype, device)
-    latents = video_encoder.tiled_encode(frames, tiling_config or TileSizeConfig.default())
-    required_latent_frames = VideoLatentShape.from_pixel_shape(
-        output_shape, scale_factors=video_encoder.video_scale_factors
-    ).frames
-    return _conform_latent_length(latents, required_latent_frames)
-
-
-def audio_latent_from_file(
-    audio_encoder: torch.nn.Module,
-    file_path: str,
-    output_shape: VideoPixelShape,
-    device: torch.device,
-    dtype: torch.dtype,
-    start_time: float = 0.0,
-    max_duration: float | None = None,
-) -> torch.Tensor | None:
-    """Load audio from a file, and construct the audio latent conforming to video output shape.
-    Args:
-        audio_encoder: Model used to encode audio to latent space.
-        file_path: Path to the audio or video file containing an audio stream.
-            EXR-frame folders have no audio and return ``None``.
-        output_shape: Target video pixel shape; used to derive required latent frames
-            and, when max_duration is None, the audio duration (output_shape.frames / fps).
-        device: Device to run the encoder and hold tensors on.
-        dtype: Dtype for the output latents.
-        start_time: Start time in seconds to begin reading the audio (default 0.0).
-        max_duration: Maximum duration in seconds. If None, uses the full span implied
-            by output_shape (default None).
-    Returns:
-        Encoded audio latents of shape (1, C, T, ...) with T = required_latent_frames, or
-        None if the file has no audio stream.
-    """
-    if is_exr_dir(file_path):
-        return None
-    max_duration = max_duration or output_shape.frames / output_shape.fps
-    audio_in = decode_audio_from_file(file_path, device, start_time, max_duration)
-    if audio_in is None:
-        return None
-    latents = encode_audio(audio_in, audio_encoder, None).to(device, dtype)
-    required_latent_frames = AudioLatentShape.from_video_pixel_shape(output_shape).frames
-    return _conform_latent_length(latents, required_latent_frames)
-
-
 def combined_image_conditionings(
     images: list[ImageConditioningInput],
     height: int,
@@ -318,65 +163,6 @@ def combined_image_conditionings(
                 frame_idx=img.frame_idx,
             )
         conditionings.append(conditioning)
-    return conditionings
-
-
-def image_conditionings_by_replacing_latent(
-    images: list[ImageConditioningInput],
-    height: int,
-    width: int,
-    video_encoder: VideoEncoder,
-    dtype: torch.dtype,
-    device: torch.device,
-    color_space: HDRColorSpace | None = None,
-) -> list[ConditioningItem]:
-    conditionings = []
-    for img in images:
-        image = load_image_and_preprocess(
-            image_path=img.path,
-            height=height,
-            width=width,
-            dtype=dtype,
-            device=device,
-            crf=img.crf,
-            color_space=color_space,
-        )
-        encoded_image = video_encoder(image)
-        conditionings.append(
-            VideoConditionByLatentIndex(
-                latent=encoded_image,
-                strength=img.strength,
-                latent_idx=img.frame_idx,
-            )
-        )
-
-    return conditionings
-
-
-def image_conditionings_by_adding_guiding_latent(
-    images: list[ImageConditioningInput],
-    height: int,
-    width: int,
-    video_encoder: VideoEncoder,
-    dtype: torch.dtype,
-    device: torch.device,
-    color_space: HDRColorSpace | None = None,
-) -> list[ConditioningItem]:
-    conditionings = []
-    for img in images:
-        image = load_image_and_preprocess(
-            image_path=img.path,
-            height=height,
-            width=width,
-            dtype=dtype,
-            device=device,
-            crf=img.crf,
-            color_space=color_space,
-        )
-        encoded_image = video_encoder(image)
-        conditionings.append(
-            VideoConditionByKeyframeIndex(keyframes=encoded_image, frame_idx=img.frame_idx, strength=img.strength)
-        )
     return conditionings
 
 
@@ -436,29 +222,6 @@ def generated_keyframe_conditionings(
     if not positions:
         return []
     return [VideoGeneratedKeyframeSlots(pixel_frame_indices=positions)]
-
-
-def decode_keyframes_from_slots(
-    latents: torch.Tensor | None,
-    positions: Sequence[int],
-    num_frames: int,
-) -> DecodeKeyframes | None:
-    """Build ``DecodeKeyframes`` for slots that still land inside a ``num_frames`` canvas.
-    The canvas may pad its tail and be trimmed back to the caller's frame count, so a
-    carried keyframe can sit past the end. Those must be dropped rather than handed on: a
-    decode indexes keyframes by pixel frame and would otherwise anchor off-canvas.
-    """
-    if latents is None or not positions:
-        return None
-    kept = [(index, int(position)) for index, position in enumerate(positions) if 0 <= int(position) < num_frames]
-    if not kept:
-        return None
-    if len(kept) != len(positions):
-        logger.info("Dropping %d keyframe(s) past the trimmed %d-frame canvas.", len(positions) - len(kept), num_frames)
-    return DecodeKeyframes(
-        latents=torch.cat([latents[:, :, index : index + 1] for index, _ in kept], dim=2),
-        pixel_frame_indices=torch.tensor([position for _, position in kept], dtype=torch.long),
-    )
 
 
 def create_noised_state(
@@ -621,22 +384,3 @@ def seconds_to_clamped_num_frames(
         time_scale = scale_factors.time
         frames = min(-(-(min_frames - 1) // time_scale) * time_scale + 1, max_frames)
     return frames
-
-
-def audio_duration_seconds(audio: Audio) -> float:
-    """Wall-clock duration of ``audio`` from its last waveform axis and sample rate."""
-    return audio.waveform.shape[-1] / float(audio.sampling_rate)
-
-
-def num_frames_from_audio_duration(audio: Audio, *, frame_rate: float) -> int:
-    """Convert decoded audio length to a VAE-grid frame count at ``frame_rate``.
-    ``decode_audio_from_file`` already applies ``audio_max_duration`` and stops at
-    EOF, so this uses the *effective* clip duration: ``min(requested max, remaining
-    audio after start time)``.
-    The raw frame count is floored (not rounded) before snapping so a leftover
-    half-frame cannot jump onto the next ``8k+1`` grid point and request more
-    video than the clip can cover.
-    """
-    raw_frames = int(audio_duration_seconds(audio) * frame_rate)
-    raw_frames = max(1, min(raw_frames, 1024))
-    return snap_frames_to_grid(raw_frames)

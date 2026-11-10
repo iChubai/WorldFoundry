@@ -16,7 +16,6 @@ from .primitives import (
     LoraPathStrengthAndSDOps,
     LoraStateDictWithStrength,
     ModelBuilderProtocol,
-    StateDict,
     StateDictLoader,
 )
 from .registry import ModelRegistry, Registry, module_registry_key
@@ -193,10 +192,6 @@ class SingleGPUModelBuilder(Generic[ModelType], ModelBuilderProtocol[ModelType],
         return self._model_loader
 
     @property
-    def lora_load_device(self) -> torch.device:
-        return self._lora_load_device
-
-    @property
     def fuse_rule(self) -> FuseRule:
         return self._fuse_rule
 
@@ -218,16 +213,6 @@ class SingleGPUModelBuilder(Generic[ModelType], ModelBuilderProtocol[ModelType],
     def with_loras(self, loras: tuple[LoraPathStrengthAndSDOps, ...]) -> Self:
         clone = copy.copy(self)
         clone._loras = loras
-        return clone
-
-    def with_registry(self, registry: Registry) -> Self:
-        clone = copy.copy(self)
-        clone._registry = registry
-        return clone
-
-    def with_lora_load_device(self, device: torch.device) -> Self:
-        clone = copy.copy(self)
-        clone._lora_load_device = device
         return clone
 
     def with_fuse_rule(self, fuse_rule: FuseRule) -> Self:
@@ -252,11 +237,6 @@ class SingleGPUModelBuilder(Generic[ModelType], ModelBuilderProtocol[ModelType],
             return cached  # type: ignore[return-value]
         model = create_meta_model(self._model_class_configurator, metadata, module_ops)
         return self._registry.add_model(struct_key, model)  # type: ignore[return-value]
-
-    def load_sd(
-        self, paths: list[str], registry: Registry, device: torch.device | None, sd_ops: SDOps | None = None
-    ) -> StateDict:
-        return load_state_dict(paths, self._model_loader, registry, device, sd_ops)
 
     def build(
         self,

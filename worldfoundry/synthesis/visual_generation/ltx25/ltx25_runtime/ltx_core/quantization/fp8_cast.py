@@ -3,12 +3,13 @@ from pathlib import Path
 import safetensors
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import LTXModel
+
 from ..loader.fuse_loras import FuseRule, bf16_fuse_rule
 from ..loader.kernels import TRITON_AVAILABLE
 from ..loader.module_ops import ModuleOps
 from ..loader.primitives import StateDict
 from ..loader.sd_ops import KeyValueOperationResult, SDOps
-from ..model.transformer.model import LTXModel
 from .policy import QuantizationPolicy
 
 BLOCK_SIZE = 1024
@@ -206,21 +207,6 @@ UPCAST_DURING_INFERENCE = ModuleOps(
     matcher=lambda model: isinstance(model, LTXModel),
     mutator=lambda model: _amend_forward_with_upcast(model, False),
 )
-
-
-class UpcastWithStochasticRounding(ModuleOps):
-    """
-    ModuleOps for upcasting the model's float8_e4m3fn weights and biases to the bfloat16 dtype
-    and applying stochastic rounding during linear forward.
-    """
-
-    def __new__(cls, seed: int = 0):
-        return super().__new__(
-            cls,
-            name="upcast_fp8_during_linear_forward_with_stochastic_rounding",
-            matcher=lambda model: isinstance(model, LTXModel),
-            mutator=lambda model: _amend_forward_with_upcast(model, True, seed),
-        )
 
 
 def fuse_cast_fp8_weight(

@@ -21,7 +21,6 @@ from ...loaders import (
 )
 from ..networks.ltx.modality import Modality
 from ..networks.ltx.model import LTXModel
-from ..networks.ltx.perturbations import BatchedPerturbationConfig
 from ..networks.ltx.transformer import BasicAVTransformerBlock
 from .ltx_configurator import LTXModelConfigurator, LTXVideoOnlyModelConfigurator
 
@@ -153,13 +152,12 @@ class LTXJointDenoiser:
             context_mask=audio_context_mask,
             attention_cache=model_input.conditioning.get("attention_cache"),
         )
-        perturbations = BatchedPerturbationConfig.empty(video_state.latent.shape[0])
         with torch.autocast(
             device_type=video_state.latent.device.type,
             dtype=self.compute_dtype,
             enabled=self.compute_dtype in {torch.float16, torch.bfloat16},
         ):
-            video_velocity, audio_velocity = self.model(video, audio, perturbations)
+            video_velocity, audio_velocity = self.model(video, audio, None)
         if video_velocity is None or audio_velocity is None:
             raise RuntimeError("LTX audio-video transformer returned an absent modality")
         return MultiModalDenoiserOutput(
@@ -223,13 +221,12 @@ class LTXVideoDenoiser:
             context=context,
             context_mask=context_mask,
         )
-        perturbations = BatchedPerturbationConfig.empty(state.latent.shape[0])
         with torch.autocast(
             device_type=state.latent.device.type,
             dtype=self.compute_dtype,
             enabled=self.compute_dtype in {torch.float16, torch.bfloat16},
         ):
-            velocity, audio_velocity = self.model(video, None, perturbations)
+            velocity, audio_velocity = self.model(video, None, None)
         if velocity is None or audio_velocity is not None:
             raise RuntimeError("LTX-Video transformer returned an unexpected modality set")
         return MultiModalDenoiserOutput(samples={"video": video.latent - video.timesteps * velocity})

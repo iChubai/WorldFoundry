@@ -18,8 +18,3 @@ def to_vae_range(x: torch.Tensor) -> torch.Tensor:
     if bool((x < 0).any() or (x > 1).any()):
         raise ValueError(f"to_vae_range expects values in [0, 1]; got min={float(x.min())}, max={float(x.max())}")
     return x * 2.0 - 1.0
-
-
-def from_vae_range(z: torch.Tensor) -> torch.Tensor:
-    """Map [-1, 1] (VAE output convention) to [0, 1]."""
-    return torch.clamp((z + 1.0) / 2.0, 0.0, 1.0)

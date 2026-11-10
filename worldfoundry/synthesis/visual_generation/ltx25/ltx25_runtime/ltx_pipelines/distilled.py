@@ -5,16 +5,21 @@ from typing import Any
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import DiffVAEMode
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import (
+    AUTO_TILING,
+    AutoTiling,
+    TilingConfig,
+)
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoPixelShape
+from worldfoundry.base_models.diffusion_model.optimizations.ltx.compile import CompilationConfig
+
 from ..ltx_core.allocator_trim_strategy import AllocatorTrimStrategy
 from ..ltx_core.components.diffusion_steps import EulerAncestralDiffusionStep
 from ..ltx_core.components.noisers import GaussianNoiser
 from ..ltx_core.loader import LoraPathStrengthAndSDOps
 from ..ltx_core.loader.registry import Registry
-from ..ltx_core.model.transformer.compiling import CompilationConfig
-from ..ltx_core.model.video_vae import AUTO_TILING, AutoTiling, TilingConfig, get_video_chunks_number
-from ..ltx_core.model.video_vae.transformer import DiffVAEMode
 from ..ltx_core.quantization import QuantizationPolicy
-from ..ltx_core.types import VideoPixelShape
 from .utils.args import (
     ImageConditioningInput,
     add_generated_keyframes_arg,
@@ -349,7 +354,9 @@ def main() -> None:
         fps=args.frame_rate,
         audio=result.audio,
         output_path=args.output_path,
-        video_chunks_number=get_video_chunks_number(result.num_frames, result.tiling_config),
+        video_chunks_number=(
+            1 if result.tiling_config is None else result.tiling_config.video_chunks_number(result.num_frames)
+        ),
         color_space=hdr,
     )
 

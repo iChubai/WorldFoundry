@@ -7,6 +7,7 @@ Multimodal prep adds A↔V RoPE and cross-attn AdaLN from the other
 stream's sigma.
 """
 
+from collections.abc import Callable, Hashable
 from dataclasses import dataclass, replace
 
 import torch
@@ -24,6 +25,24 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
     precompute_freqs_cis,
 )
 from worldfoundry.core.attention.cache.context import ContextAttentionCache
+
+
+KeyframesEmbeddingProvider = Callable[[], torch.Tensor | None]
+
+
+def apply_keyframes_absolute_embedding(
+    hidden_states: torch.Tensor,
+    keyframes_mask: torch.Tensor | None,
+    embedding_provider: KeyframesEmbeddingProvider | None,
+) -> torch.Tensor:
+    """Add the learned ``(1, D)`` marker to projected ``(B, T, D)`` keyframe tokens."""
+    if embedding_provider is None or keyframes_mask is None:
+        return hidden_states
+    embedding = embedding_provider()
+    if embedding is None:
+        return hidden_states
+    mask = (keyframes_mask > 0).to(dtype=hidden_states.dtype)
+    return hidden_states + mask * embedding.to(dtype=hidden_states.dtype)
 
 
 @dataclass(frozen=True)
@@ -75,6 +94,19 @@ class BlockPerturbationsProcessor:
     is None when every sample skips the cross-attention entirely.
     """
 
+    def _block_guards(
+        self,
+        perturbations: BatchedPerturbationConfig,
+        block_idx: int,
+        self_type: PerturbationType,
+        cross_type: PerturbationType,
+    ) -> tuple[bool, bool, bool]:
+        """Return the partial-self, skip-self and skip-cross branch decisions."""
+        all_self = perturbations.all_in_batch(self_type, block_idx)
+        any_self = perturbations.any_in_batch(self_type, block_idx)
+        all_cross = perturbations.all_in_batch(cross_type, block_idx)
+        return (any_self and not all_self), all_self, all_cross
+
     def __call__(
         self,
         args: "TransformerArgs",
@@ -83,25 +115,28 @@ class BlockPerturbationsProcessor:
         self_attn_type: PerturbationType,
         cross_attn_type: PerturbationType,
     ) -> "TransformerArgs":
-        device, dtype = args.x.device, args.x.dtype
-
-        all_self = perturbations.all_in_batch(self_attn_type, block_idx)
-        any_self = perturbations.any_in_batch(self_attn_type, block_idx)
-        self_mask: torch.Tensor | None = None
-        if any_self and not all_self:
-            self_mask = perturbations.mask(self_attn_type, block_idx, device, dtype).view(-1, 1, 1)
-
-        all_cross = perturbations.all_in_batch(cross_attn_type, block_idx)
-        cross_mask: torch.Tensor | None = None
-        if not all_cross:
-            cross_mask = perturbations.mask(cross_attn_type, block_idx, device, dtype).view(-1, 1, 1)
-
+        self_mask_present, all_self, all_cross = self._block_guards(
+            perturbations, block_idx, self_attn_type, cross_attn_type
+        )
         return replace(
             args,
-            self_attn_perturbation_mask=self_mask,
+            self_attn_perturbation_mask=perturbations.mask(self_attn_type, block_idx) if self_mask_present else None,
             self_attn_all_perturbed=all_self,
-            cross_attn_perturbation_mask=cross_mask,
+            cross_attn_perturbation_mask=None if all_cross else perturbations.mask(cross_attn_type, block_idx),
             cross_attn_skip_all=all_cross,
+        )
+
+    def graph_signature(self, perturbations: BatchedPerturbationConfig) -> Hashable:
+        """Key a captured block graph by branch decisions, not runtime mask values."""
+        assert perturbations.block_masks_cpu is not None, "graph signatures require the CPU mask mirror"
+        modality_types = (
+            (PerturbationType.SKIP_VIDEO_SELF_ATTN, PerturbationType.SKIP_A2V_CROSS_ATTN),
+            (PerturbationType.SKIP_AUDIO_SELF_ATTN, PerturbationType.SKIP_V2A_CROSS_ATTN),
+        )
+        return tuple(
+            self._block_guards(perturbations, block_idx, self_type, cross_type)
+            for block_idx in range(perturbations.block_masks_cpu.shape[1])
+            for self_type, cross_type in modality_types
         )
 
 
@@ -123,6 +158,7 @@ class TransformerArgsPreprocessor:
         caption_projection: torch.nn.Module | None = None,
         prompt_adaln: AdaLayerNormSingle | None = None,
         action_embedder: torch.nn.Module | None = None,
+        keyframes_embedding_provider: KeyframesEmbeddingProvider | None = None,
     ) -> None:
         self.patchify_proj = patchify_proj
         self.adaln = adaln
@@ -137,6 +173,7 @@ class TransformerArgsPreprocessor:
         self.caption_projection = caption_projection
         self.prompt_adaln = prompt_adaln
         self.action_embedder = action_embedder
+        self.keyframes_embedding_provider = keyframes_embedding_provider
 
     def _prepare_timestep(
         self,
@@ -245,6 +282,7 @@ class TransformerArgsPreprocessor:
     ) -> TransformerArgs:
         """Lift a :class:`Modality` into block-ready :class:`TransformerArgs`."""
         x = self.patchify_proj(modality.latent)
+        x = apply_keyframes_absolute_embedding(x, modality.keyframes_mask, self.keyframes_embedding_provider)
         batch_size = x.shape[0]
         timestep, embedded_timestep = self._prepare_timestep(
             modality.timesteps, self.adaln, batch_size, modality.latent.dtype, modality.video_control
@@ -306,6 +344,7 @@ class MultiModalTransformerArgsPreprocessor:
         caption_projection: torch.nn.Module | None = None,
         prompt_adaln: AdaLayerNormSingle | None = None,
         action_embedder: torch.nn.Module | None = None,
+        keyframes_embedding_provider: KeyframesEmbeddingProvider | None = None,
     ) -> None:
         self.simple_preprocessor = TransformerArgsPreprocessor(
             patchify_proj=patchify_proj,
@@ -321,6 +360,7 @@ class MultiModalTransformerArgsPreprocessor:
             caption_projection=caption_projection,
             prompt_adaln=prompt_adaln,
             action_embedder=action_embedder,
+            keyframes_embedding_provider=keyframes_embedding_provider,
         )
         self.cross_scale_shift_adaln = cross_scale_shift_adaln
         self.cross_gate_adaln = cross_gate_adaln

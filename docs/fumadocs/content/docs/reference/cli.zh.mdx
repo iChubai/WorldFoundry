@@ -3,7 +3,7 @@ title: CLI 参考
 description: wf 的完整命令地图、执行模式、输出契约与自动化约定。
 ---
 
-`wf` 是 WorldFoundry 的标准命令行入口，覆盖 catalog 发现、readiness 检查、强类型模型推理、benchmark 执行、结果归一化、报告和验证。第一次从 clone 跑通流程请看[快速开始](/zh/docs/quickstart)；选择命令或核对命令契约时查本页。
+`wf` 是 WorldFoundry 的标准命令行入口，覆盖 catalog 发现、readiness 检查、强类型模型推理、benchmark 执行、结果归一化、报告和验证。首次从 clone 开始跑通流程，请看[快速开始](/zh/docs/quickstart)；选择命令或核对命令契约时查本页。
 
 <Callout type="info" title="可以安全检查">
   Help、catalog discovery、`--model-status`、`--print-config`、`--plan-only` 和本地资产检查都不会加载模型权重。CPU-only 机器或提交 GPU job 前，应先从这些命令开始。
@@ -120,7 +120,7 @@ wf run self-forcing --print-config --json
 - **执行已经物化的 run plan，或直接使用 eval-core 字段** — 优先使用 `evaluate`（别名 `eval`）。面向 requests/results ledger 与 model-mode evaluation 的底层确定性路径。
 - **从 dataset manifest 生成再评分** — 优先使用 `generate-score`。一个 intent 统一负责 dataset 物化、生成、cache 与 metric。
 - **导入或执行某个 benchmark 的官方界面** — 优先使用 `zoo benchmark-run`。暴露 benchmark 专属 mode 与参数；应配合对应 Benchmark Hub 页面。
-- **复现钉死的 model × benchmark 配方** — 优先使用 `reproduce`。解析 recipe YAML。
+- **复现固定版本的 model × benchmark 配方** — 优先使用 `reproduce`。解析 recipe YAML。
 - **创建索引、比较或做契约检查** — 优先使用 `index-runs`、`compare-runs`、`validate-artifact`。对持久化 run 输出操作，不重新运行模型。
 
 ## 完整命令地图

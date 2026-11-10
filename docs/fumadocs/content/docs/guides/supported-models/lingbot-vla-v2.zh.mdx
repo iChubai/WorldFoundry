@@ -5,7 +5,7 @@ modelId: "lingbot-vla-v2"
 pageSource: authored
 ---
 
-LingBot-VLA 2.0 是蚂蚁灵波科技（Robbyant）的 6B 第二代 VLA，基于 Qwen3-VL 专家混合策略，以 robbyant/lingbot-vla-v2-6b 发布，Apache-2.0 许可。WorldFoundry 运行官方策略推理，包括批处理、特征变换、机器人映射与归一化。
+LingBot-VLA 2.0 是蚂蚁灵波科技（Robbyant）的第二代 6B VLA，采用基于 Qwen3-VL 的专家混合策略，以 robbyant/lingbot-vla-v2-6b 发布，遵循 Apache-2.0 许可。WorldFoundry 运行官方策略推理，包括批处理、特征变换、机器人映射与归一化。
 
 <ModelPaperFigures modelId="lingbot-vla-v2" locale="zh" />
 
@@ -19,7 +19,7 @@ LingBot-VLA 2.0 是蚂蚁灵波科技（Robbyant）的 6B 第二代 VLA，基于
 
 `lingbot-vla-v2-6b` 是视觉-语言-动作（VLA）策略：输入指令和观测，输出动作。
 
-Qwen3-VL/MoE 策略，55 维内部表征、去噪动作解码、image_grid_thw 处理与可选 torch.compile 路径。仅训练用的感知教师被排除；推理消费其蒸馏进权重的表征。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
+Qwen3-VL/MoE 策略，55 维内部表征、去噪动作解码、image_grid_thw 处理与可选 torch.compile 路径。仅训练用的感知教师被排除；推理使用已蒸馏到权重中的表征。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
 任务：视觉-语言-动作（VLA）、VLA 动作预测、VLA 策略执行、机器人策略。别名：`lingbot-vla2`、`lingbot-vla-v2-6b`、`lingbotvla2`。
 
@@ -33,7 +33,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `LingBotVLAV2Pipeline`�
 
 系列状态：**仅静态加载**。
 
-公开 6B checkpoint 使用捆绑的官方派生推理配置；机器人专用下游 checkpoint 可用自己的 lingbotvla_cli.yaml 覆盖。
+公开 6B checkpoint 使用随附的官方衍生推理配置；机器人专用下游 checkpoint 可用自己的 lingbotvla_cli.yaml 覆盖。
 
 ## 在 WorldFoundry 中运行
 

@@ -3,7 +3,7 @@ title: ChronoMagic-Bench
 description: "NeurIPS 2024 D&B 延时 T2V 评测：1,649 条闭集 prompt，CHScore 连贯与 MTScore 变化幅度。WorldFoundry 内置官方 runtime。"
 ---
 
-ChronoMagic-Bench（北大 Yuan Group，联合罗切斯特大学）问的是文生视频模型会不会做**形态变化延时摄影**：大幅物理、生物或化学状态变化（冰融化、花开、施工），同时保持时序连贯。官方 **close** 划分有 **1,649 条 prompt**。两个核心分族：
+ChronoMagic-Bench（北大 Yuan Group，联合罗切斯特大学）问的是文生视频模型会不会做**形态变化延时摄影**：大幅物理、生物或化学状态变化（冰融化、花开、施工），同时保持时序连贯。官方 **close** 划分有 **1,649 条 prompt**。两类核心指标：
 
 - **CHScore** — 用 CoTracker 看跟踪点是否连贯。
 - **MTScore / GPT-4o-MTScore** — 形态变化幅度（InternVideo2 或 GPT-4o）。
@@ -18,7 +18,7 @@ WorldFoundry **内置官方 runtime**，按所选分量脚本执行（`chscore`�
 
 ## 如何运行
 
-对 close 划分生成视频跑 CHScore：
+对为 close 划分生成的视频运行 CHScore：
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \

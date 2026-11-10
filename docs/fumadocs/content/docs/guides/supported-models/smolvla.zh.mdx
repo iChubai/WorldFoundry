@@ -5,7 +5,7 @@ modelId: "smolvla"
 pageSource: authored
 ---
 
-SmolVLA 是 Hugging Face / LeRobot 的紧凑社区 VLA：**SmolVLM2-500M** 视觉-语言骨干加 flow-matching 动作专家，按消费级硬件设计。论文是 LeRobot 库论文 [LeRobot: An Open-Source Library for End-to-End Robot Learning](https://arxiv.org/abs/2602.22818)（arXiv 2602.22818）。代码在 [huggingface/lerobot](https://github.com/huggingface/lerobot)。也可使用别名 `smolvla-libero`、`HuggingFaceVLA/smolvla_libero`、`smolvla-base`、`lerobot/smolvla_base`。
+SmolVLA 是 Hugging Face / LeRobot 的紧凑社区 VLA：**SmolVLM2-500M** 视觉-语言骨干加 flow-matching 动作专家，面向消费级硬件设计。论文是 LeRobot 库论文 [LeRobot: An Open-Source Library for End-to-End Robot Learning](https://arxiv.org/abs/2602.22818)（arXiv 2602.22818）。代码在 [huggingface/lerobot](https://github.com/huggingface/lerobot)。也可使用别名 `smolvla-libero`、`HuggingFaceVLA/smolvla_libero`、`smolvla-base`、`lerobot/smolvla_base`。
 
 <ModelPaperFigures modelId="smolvla" locale="zh" />
 
@@ -15,18 +15,18 @@ SmolVLA 是 Hugging Face / LeRobot 的紧凑社区 VLA：**SmolVLM2-500M** 视�
 
 ## 用来做什么
 
-滚动 LIBERO 专家线：必填 `image`、`prompt`、`state` 进，经 `SmolVLAPipeline` 写出 `action_trace` / `smolvla_action_trace.json`。两路官方相机（`observation.images.image`、`observation.images.image2`）。动作契约是形状 **50×7** 的连续块。默认启动 `wf run smolvla-libero`。
+运行 LIBERO 专家路径时，必填 `image`、`prompt`、`state`，经 `SmolVLAPipeline` 写出 `action_trace` / `smolvla_action_trace.json`。支持两路官方相机（`observation.images.image`、`observation.images.image2`）。动作契约要求连续块的形状为 **50×7**。默认启动 `wf run smolvla-libero`。
 
 LIBERO 专家线的评测看 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero)。不要把 `smolvla-base` 送进同一条 rollout。
 
-已在 GPU 上用 LIBERO checkpoint 验证：使用扁平 8 维状态和两路相机，**10** 步去噪返回有限的 **1×50×7** 块。`smolvla-base` 尚未验证。
+已在 GPU 上用 LIBERO checkpoint 验证：使用扁平 8 维状态和两路相机，**10** 步去噪返回数值有限的 **1×50×7** 块。`smolvla-base` 尚未验证。
 
 ## 运行时契约
 
-仅本地加载，不引入外部源码 checkout。锁定骨干是 `HuggingFaceTB/SmolVLM2-500M-Video-Instruct`（checkpoint 里的 `SmolVLM2-500M-Instruct` id 解析到同一发布仓库）。自动精度在 Ampere / Ada / Hopper / Blackwell 上为 **bf16**，更旧的 CUDA 为 **fp16**。带掩码注意力走共享 SDPA 选择器。
+仅本地加载，不引入外部源码 checkout。锁定的骨干为 `HuggingFaceTB/SmolVLM2-500M-Video-Instruct`（checkpoint 里的 `SmolVLM2-500M-Instruct` id 解析到同一发布仓库）。自动精度在 Ampere / Ada / Hopper / Blackwell 上为 **bf16**，更旧的 CUDA 为 **fp16**。带掩码注意力走共享 SDPA 选择器。
 
 ## 在 WorldFoundry 中运行
 
-使用独立环境 `worldfoundry-vla-smolvla`（Python 3.11，CUDA 12.8，`torch>=2.8`）。期望 `get_action` 产物前，先就位 `HuggingFaceVLA/smolvla_libero`。
+使用独立环境 `worldfoundry-vla-smolvla`（Python 3.11，CUDA 12.8，`torch>=2.8`）。要获得 `get_action` 产物，需先准备好 `HuggingFaceVLA/smolvla_libero`。
 
 <ModelRelatedRecipes modelId="smolvla" locale="zh" />

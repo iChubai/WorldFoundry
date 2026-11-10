@@ -5,7 +5,7 @@ modelId: "cosmos-predict-2"
 pageSource: authored
 ---
 
-Cosmos Predict 2 是英伟达**上一代**世界基础模型，做 **image/video-to-world**：文本加上首帧或视频前缀进，未来世界视频出。更新的 Cosmos 版本有 [Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5)、[Transfer 2.5](/zh/docs/guides/supported-models/cosmos-transfer-2.5) 与 [Cosmos 3](/zh/docs/guides/supported-models/cosmos3)。
+Cosmos Predict 2 是英伟达**上一代**世界基础模型，做 **image/video-to-world**：输入文本以及首帧或视频前缀，输出未来世界视频。更新的 Cosmos 版本有 [Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5)、[Transfer 2.5](/zh/docs/guides/supported-models/cosmos-transfer-2.5) 与 [Cosmos 3](/zh/docs/guides/supported-models/cosmos3)。
 
 WorldFoundry **原生组装**：框架自有去噪器、**T5-11B** 条件器、Rectified Flow **AB2** 调度器、Wan 编解码器、共享加载器。**不走 Diffusers pipeline**，也不调用英伟达运行时包。配方默认是 **1280×704、93 帧、16 fps、35 步**。variant 只有 `cosmos-predict2-2b-video2world` 与 `cosmos-predict2-14b-video2world`。别名 `cosmos-predict2`、`cosmos2` 解析到这里。
 
@@ -19,14 +19,14 @@ WorldFoundry **原生组装**：框架自有去噪器、**T5-11B** 条件器、R
 
 ## 用来做什么
 
-只有需要 **T5 条件的 v2** 配方时才停在本页。新的世界视频工作应从 [Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5) 开始：Reason1 条件器、flow-UniPC，以及已验证的 **2B 文生世界** 路径（同样是 1280×704 / 93 帧 / 35 步）。
+仅在需要 **T5 条件的 v2** 配方时使用本页模型。新的世界视频工作应从 [Predict 2.5](/zh/docs/guides/supported-models/cosmos-predict-2.5) 开始：Reason1 条件器、flow-UniPC，以及已验证的 **2B 文生世界** 路径（同样是 1280×704 / 93 帧 / 35 步）。
 
-启动 `wf run cosmos-predict2-2b-video2world`，任务为 `image/video-to-world`。必填输入：`prompt`、`image`、`video`。产物：`cosmos-predict2-2b-video2world.mp4`（14B 写 `cosmos-predict2-14b-video2world.mp4`）。需要 control-video / VACE 条件时用 Transfer 2.5；需要联合声音或 policy 头时用 Cosmos 3。
+启动 `wf run cosmos-predict2-2b-video2world`，任务为 `image/video-to-world`。必填输入：`prompt`、`image`、`video`。产物：`cosmos-predict2-2b-video2world.mp4`（14B 写 `cosmos-predict2-14b-video2world.mp4`）。需要 control-video / VACE 条件时，请使用 Transfer 2.5；需要联合声音或 policy 头时，请使用 Cosmos 3。
 
 预测世界视频的评测入口是 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) 与 [Physics-IQ](/zh/docs/evaluation/benchmark-hub/physics-iq)。
 
 ## 在 WorldFoundry 中运行
 
-`CosmosPredict2Pipeline` 跑在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。按 NVIDIA gated 条款就位 `nvidia/Cosmos-Predict2-2B-Video2World` 或 14B 对应仓库，外加 `google-t5/t5-11b`。
+`CosmosPredict2Pipeline` 跑在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。按 NVIDIA gated 条款准备好 `nvidia/Cosmos-Predict2-2B-Video2World` 或 14B 对应仓库，外加 `google-t5/t5-11b`。
 
 <ModelRelatedRecipes modelId="cosmos-predict-2" locale="zh" />

@@ -7,7 +7,7 @@ pageSource: authored
 
 GO-1 是 **AgiBot World**（智元联合 OpenDriveLab）的旗舰策略：通用机器人策略，发布为 `agibot-world/GO-1`。WorldFoundry 把 InternVision、InternLM2、**隐式规划器**、动作专家、扩散采样器、tokenizer 和预处理都放在**树内**，对外是 `GO1Pipeline`。运行时只执行已就位的 safetensors，从不导入 checkpoint 自带的 Python。数据集、训练、部署服务、评测器和机器人控制代码均被排除。
 
-设计是 ViLLA 式：InternVision + InternLM2 组成 VLM，隐式规划器预测中间隐式动作，扩散动作专家解码可执行控制。参数名保持官方 checkpoint 契约。发布物是**预训练基础**；上游建议下游完整微调。任何微调必须与那次训练产出的精确 `dataset_stats.json` 配对。
+该模型采用 ViLLA 式设计：InternVision + InternLM2 组成 VLM，隐式规划器预测中间隐式动作，扩散动作专家解码可执行控制。参数名保持官方 checkpoint 契约。发布的是**预训练基础模型**；上游建议下游完整微调。任何微调都必须与对应训练生成的 `dataset_stats.json` 精确配对。
 
 <ModelPaperFigures modelId="go1" locale="zh" />
 
@@ -29,7 +29,7 @@ GO-1 是 **AgiBot World**（智元联合 OpenDriveLab）的旗舰策略：通用
 | `agilex_example` | 3 | 14 / 14 | 30 | 30 |
 | `libero_example` | 2 | 8 / 7 | 10 | 10 |
 
-独立环境：`worldfoundry-vla-go1`（Python 3.10，CUDA 12.4 或更新，torch 2.6.x，Transformers 4.46.3）。Flash Attention 2 只在本地已安装且硬件是兼容 Ampere / Ada / Hopper 时启用；Turing 和 Blackwell 走可移植的共享 SDPA。运行时不下载 kernel 或 checkpoint。
+独立环境：`worldfoundry-vla-go1`（Python 3.10，CUDA 12.4 或更新，torch 2.6.x，Transformers 4.46.3）。Flash Attention 2 仅在本地已安装且硬件兼容 Ampere / Ada / Hopper 时启用；Turing 和 Blackwell 走可移植的共享 SDPA。运行时不下载 kernel 或 checkpoint。
 
 ## 在 WorldFoundry 中运行
 
@@ -37,6 +37,6 @@ GO-1 是 **AgiBot World**（智元联合 OpenDriveLab）的旗舰策略：通用
 
 ## 评测
 
-GO-1 没有推荐的基准。运行会写出 `go1_action_trace.json`；WorldFoundry 不会生成 GO-1 的基准 `scorecard.json`。不要把这条策略配到 EWMBench 或 LIBERO。
+GO-1 没有推荐的基准。运行会写出 `go1_action_trace.json`；WorldFoundry 不会生成 GO-1 的基准 `scorecard.json`。不要将这条策略接入 EWMBench 或 LIBERO。
 
 <ModelRelatedRecipes modelId="go1" locale="zh" />

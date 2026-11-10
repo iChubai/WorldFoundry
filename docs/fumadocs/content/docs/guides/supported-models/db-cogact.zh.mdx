@@ -5,7 +5,7 @@ modelId: "db-cogact"
 pageSource: authored
 ---
 
-DB-CogACT 是在 Dexmal 的 Dexbotic 框架内重建的 CogACT 配方，发布的 checkpoint 阵容相当完整：单臂与双臂基础模型，外加 LIBERO、CALVIN、SimplerEnv 任务 checkpoint，全部 Apache-2.0。WorldFoundry 在进程内构建官方 Dexbotic 策略，输出 LIBERO 动作轨迹。
+DB-CogACT 是在 Dexmal 的 Dexbotic 框架内重建的 CogACT 配方，发布的 checkpoint 包括单臂与双臂基础模型，以及 LIBERO、CALVIN、SimplerEnv 任务 checkpoint，全部采用 Apache-2.0 许可。WorldFoundry 在进程内构建官方 Dexbotic 策略，输出 LIBERO 动作轨迹。
 
 <ModelPaperFigures modelId="db-cogact" locale="zh" />
 
@@ -41,7 +41,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `DBCogACTPipeline`。
 
 WorldFoundry 通过独立的 DB-CogACT 合成入口实现 Dexbotic v1 推理契约。
 
-已用 `Dexmal/libero-db-cogact` 验证：LIBERO 路径写出形状为 **`[1, 16, 7]`** 的有限动作轨迹。CALVIN 与 SimplerEnv checkpoint 已接入，但没有单独验证的轨迹。
+已使用 `Dexmal/libero-db-cogact` 验证：LIBERO 路径写出形状为 **`[1, 16, 7]`** 的有限动作轨迹。CALVIN 与 SimplerEnv checkpoint 已接入，但尚未单独验证其动作轨迹。
 
 ## 在 WorldFoundry 中运行
 

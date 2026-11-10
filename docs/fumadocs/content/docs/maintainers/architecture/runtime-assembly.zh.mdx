@@ -71,7 +71,7 @@ description: pipeline、operator、synthesis、representation、base_models 的�
 ## 目录职责
 
 ### `worldfoundry/pipelines/`
-每个 model family 一个薄 public wrapper（`pipelines/<family>/pipeline_*.py`）。`from_pretrained()` staging checkpoint 或初始化 API client；`process()`/`__call__()` 把用户输入变成 artifact；`stream()` 仅在 Studio 实时控制或增量输出需要时实现。共 107 个 family 目录。Hosted provider wrapper（Wan hosted、Kling、Runway、Luma、Hailuo、Sora/Veo、World Labs）与本地 checkpoint runtime 分开存放。
+每个 model family 一个薄 public wrapper（`pipelines/<family>/pipeline_*.py`）。`from_pretrained()` 负责 staging checkpoint 或初始化 API client；`process()`/`__call__()` 把用户输入变成 artifact；`stream()` 仅在 Studio 实时控制或增量输出需要时实现。共 107 个 family 目录。Hosted provider wrapper（Wan hosted、Kling、Runway、Luma、Hailuo、Sora/Veo、World Labs）与本地 checkpoint runtime 分开存放。
 
 ### `worldfoundry/operators/`
 各 family 的 `*_operator.py`，负责校验、图像/视频加载、camera/action 解析、interaction 整形、perception 预处理。输入在模型执行前就出错时先看这里。共享媒体助手在 `operators/_media.py`。

@@ -9,7 +9,7 @@ AdaWorld 从视频中提取潜在动作，用它们驱动可适配的世界模�
 
 <ModelPaperFigures modelId="adaworld" locale="zh" />
 
-项目论文为 [arXiv 2503.18938](https://arxiv.org/abs/2503.18938)。另见[项目主页](https://adaptable-world-model.github.io/)和[官方代码](https://github.com/Little-Podi/AdaWorld)。
+项目论文为 [arXiv 2503.18938](https://arxiv.org/abs/2503.18938)。另见 [项目主页](https://adaptable-world-model.github.io/) 和 [官方代码](https://github.com/Little-Podi/AdaWorld)。
 
 <ModelCommandBuilder modelId="adaworld" locale="zh" />
 
@@ -21,7 +21,7 @@ AdaWorld 的潜在动作自编码器从视频中提取运动表示，用于条�
 
 提供可读取的源 `video`。此推理路径不使用 `prompt` 或 `image`；直接输入动作 token 尚未验证。输出文件是 `adaworld.mp4`。
 
-将发布的 `Little-Podi/AdaWorld` 权重放在 `${WORLDFOUNDRY_CKPT_DIR}/Little-Podi--AdaWorld/adaworld.safetensors`，也可以像下面这样显式传入路径。主权重已经包含此推理路径使用的 CLIP 和 LAM 编码器参数，不需要额外的 `lam.ckpt`。
+将发布的 `Little-Podi/AdaWorld` 权重放在 `${WORLDFOUNDRY_CKPT_DIR}/Little-Podi--AdaWorld/adaworld.safetensors`，也可按下方示例显式传入路径。主权重已经包含此推理路径使用的 CLIP 和 LAM 编码器参数，不需要额外的 `lam.ckpt`。
 
 ```python
 from worldfoundry.pipelines.world_model.pipeline_runtime_manifest import AdaWorldPipeline

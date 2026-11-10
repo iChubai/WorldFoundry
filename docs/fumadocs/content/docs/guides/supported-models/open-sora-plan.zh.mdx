@@ -5,7 +5,7 @@ modelId: "open-sora-plan"
 pageSource: authored
 ---
 
-Open-Sora-Plan 是北京大学袁粒课题组的开源文生视频项目——虽与潞晨的 [Open-Sora](/zh/docs/guides/supported-models/open-sora) 名字相近，但是独立工作。Hugging Face 权重在 **LanguageBind** 下；GitHub 是 **PKU-YuanGroup**。WorldFoundry 通过官方采样器（`OpenSoraPlanPipeline`）运行 **v1.3.0 GPU** 版本。
+Open-Sora-Plan 是北京大学袁粒课题组的开源文生视频项目——虽然与潞晨的 [Open-Sora](/zh/docs/guides/supported-models/open-sora) 名称相近，但两者是独立项目。Hugging Face 权重在 **LanguageBind** 下；GitHub 是 **PKU-YuanGroup**。WorldFoundry 通过官方采样器（`OpenSoraPlanPipeline`）运行 **v1.3.0 GPU** 版本。
 
 <ModelPaperFigures modelId="open-sora-plan" locale="zh" />
 
@@ -15,13 +15,13 @@ Open-Sora-Plan 是北京大学袁粒课题组的开源文生视频项目——�
 
 ## 用来做什么
 
-只接受 prompt 的文生视频：必填 `prompt`，产物 `open-sora-plan.mp4`。该路径**不接受图像或视频输入**，尽管论文讨论过条件控制器。GPU 请用 v1.3.0。LanguageBind 还发布了 v1.0.0–v1.2.0，以及面向昇腾 / MindSpeed 的 **v1.5.0**；WorldFoundry 的 GPU 路径使用 v1.3.0。开源文生视频质量可对照 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 比较。
+该文生视频路径只接受 prompt：必填 `prompt`，产物 `open-sora-plan.mp4`。该路径**不接受图像或视频输入**，尽管论文讨论过条件控制器。GPU 请用 v1.3.0。LanguageBind 还发布了 v1.0.0–v1.2.0，以及面向昇腾 / MindSpeed 的 **v1.5.0**；WorldFoundry 的 GPU 路径使用 v1.3.0。开源文生视频质量可使用 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 进行对比。
 
 ## 推理
 
-已用官方 v1.3 GPU 脚本（`sample_t2v_v1_3.sh`，东京街道 prompt）验证：pipeline 生成 93 帧非空的 640×352 画面，并通过视觉检查。设置如下：
+已使用官方 v1.3 GPU 脚本（`sample_t2v_v1_3.sh`，东京街道 prompt）验证：pipeline 生成 93 帧非空的 640×352 画面，并通过视觉检查。设置如下：
 
-| 旋钮 | 取值 |
+| 参数 | 取值 |
 | --- | --- |
 | 分辨率 | **640×352**（`any93x640x640`；解码为 93 帧非空 640×352） |
 | 帧数 | **93** |
@@ -37,6 +37,6 @@ Open-Sora-Plan 是北京大学袁粒课题组的开源文生视频项目——�
 
 ## 在 WorldFoundry 中运行
 
-在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行 `wf run open-sora-plan`。就位 `LanguageBind/Open-Sora-Plan-v1.3.0` 与 `google/mt5-xxl`。`scripts/inference/prepare_model_infer.sh` 会把约 50 GB 的文本编码器只放一份，避免同时复制进 `WORLDFOUNDRY_CKPT_DIR` 和 `WORLDFOUNDRY_HFD_ROOT`。v1.3.0 权重采用 **MIT** 许可。
+在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行 `wf run open-sora-plan`。准备好 `LanguageBind/Open-Sora-Plan-v1.3.0` 与 `google/mt5-xxl`。`scripts/inference/prepare_model_infer.sh` 只会保留一份约 50 GB 的文本编码器，避免同时复制到 `WORLDFOUNDRY_CKPT_DIR` 和 `WORLDFOUNDRY_HFD_ROOT`。v1.3.0 权重采用 **MIT** 许可。
 
 <ModelRelatedRecipes modelId="open-sora-plan" locale="zh" />

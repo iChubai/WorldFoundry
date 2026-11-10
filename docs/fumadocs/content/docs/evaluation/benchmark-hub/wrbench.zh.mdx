@@ -3,7 +3,7 @@ title: WRBench
 description: "中科大 / X-Humanoid 持久状态评测：Natural-25，D1–D6 相机转开链。WorldFoundry 内置整包与 Natural-25 资产。"
 ---
 
-WRBench（“Current World Models Lack a Persistent State Core”；中科大与 X-Humanoid / 北京人形机器人创新中心）把相机运动当成**可观测性干预**：事件开始，相机转开，回来时问目标是**推进到终点还是冻在离开时的状态**。**Natural-25** 交叉 25 个场景族与四级事件设计（空间变化 × 状态变化）。标准相机轨把 **100 个语义变体 × 五种相机控制**展开成 **500 条请求**。
+WRBench（“Current World Models Lack a Persistent State Core”；中科大与 X-Humanoid / 北京人形机器人创新中心）把相机运动当成**可观测性干预**：事件开始后相机转开，返回时判断目标是**推进到终点，还是停留在离开时的状态**。**Natural-25** 交叉 25 个场景族与四级事件设计（空间变化 × 状态变化）。标准相机轨把 **100 个语义变体 × 五种相机控制**展开成 **500 条请求**。
 
 分层 **D1–D6**：
 
@@ -30,7 +30,7 @@ wf zoo benchmark-run \
   --json
 ```
 
-`--run-official` 对照 Natural-25 给生成视频加相机 sidecar 打分（`--scorer-profile`、`--sidecar-profile-gate`）。没有再观察支持的行从 D5/D6 **排除**，不记失败。环境变量：`WORLDFOUNDRY_WRBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WRBENCH_ROOT`。共享栈：`vggt_omega`、`dinov2`、`qwen3_5_vl`、`qwen3_vl`。
+`--run-official` 对照 Natural-25 给生成视频加相机 sidecar 打分（`--scorer-profile`、`--sidecar-profile-gate`）。不支持再观察的数据行将从 D5/D6 **排除**，不记为失败。环境变量：`WORLDFOUNDRY_WRBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WRBENCH_ROOT`。共享栈：`vggt_omega`、`dinov2`、`qwen3_5_vl`、`qwen3_vl`。
 
 仓内指针：`worldfoundry/data/benchmarks/tasks/external/wrbench.yaml`、`worldfoundry/data/benchmarks/assets/wrbench`、`worldfoundry/evals/tasks/execution/runners/wrbench/runtime/wrbench`。
 

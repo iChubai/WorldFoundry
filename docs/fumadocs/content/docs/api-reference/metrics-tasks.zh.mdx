@@ -90,7 +90,7 @@ task = WorldTaskConfig(
 
 ## `BenchmarkSpec`
 
-`BenchmarkSpec` 把 task、metric、split 和 dataset metadata 组成进程内 benchmark 描述。仓库中的 benchmark catalog 条目可能更丰富；这个公开 DTO 是面向执行的形态。
+`BenchmarkSpec` 把 task、metric、split 和 dataset metadata 组成进程内 benchmark 描述。仓库中的 benchmark catalog 条目可能更丰富；这个公开 DTO 采用面向执行的结构。
 
 ```python
 from worldfoundry.evals.api import BenchmarkSpec, MetricSpec

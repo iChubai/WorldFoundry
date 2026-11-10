@@ -5,7 +5,7 @@ modelId: "xiaomi-robotics-0"
 pageSource: authored
 ---
 
-Xiaomi-Robotics-0 是小米的开放 VLA 策略线，Apache-2.0 基准阵容非常完整：提供 LIBERO、CALVIN ABCD-D、CALVIN ABC-D、SimplerEnv Google Robot 与 SimplerEnv WidowX 的 checkpoint，以及一个预训练基座 checkpoint。默认使用 LIBERO checkpoint。
+Xiaomi-Robotics-0 是小米的开放 VLA 策略线，提供尤为完整的 Apache-2.0 基准模型阵容：LIBERO、CALVIN ABCD-D、CALVIN ABC-D、SimplerEnv Google Robot 与 SimplerEnv WidowX 的 checkpoint，以及一个预训练基座 checkpoint。默认使用 LIBERO checkpoint。
 
 <ModelPaperFigures modelId="xiaomi-robotics-0" locale="zh" />
 
@@ -17,7 +17,7 @@ Xiaomi-Robotics-0 是小米的开放 VLA 策略线，Apache-2.0 基准阵容非�
 
 ## 用来做什么
 
-把 Xiaomi-Robotics-0 当视觉-语言-动作策略滚动起来。先跑 `xiaomi-robotics-0-libero`；还有 `xiaomi-robotics-0-calvin-abcd`、`xiaomi-robotics-0-calvin-abc`、`xiaomi-robotics-0-simplerenv-google` 等。启动 `wf run xiaomi-robotics-0-libero`——必填 `instruction`、`prompt`、`image`、`state`；产物 `action_trace`、`xiaomi_robotics_0_action_trace.json`。
+将 Xiaomi-Robotics-0 作为视觉-语言-动作策略运行。先跑 `xiaomi-robotics-0-libero`；还有 `xiaomi-robotics-0-calvin-abcd`、`xiaomi-robotics-0-calvin-abc`、`xiaomi-robotics-0-simplerenv-google` 等。启动 `wf run xiaomi-robotics-0-libero`——必填 `instruction`、`prompt`、`image`、`state`；产物 `action_trace`、`xiaomi_robotics_0_action_trace.json`。
 
 不是 [Xiaomi Robotics 1](/zh/docs/guides/supported-models/xiaomi-robotics-1)。评测看 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero)、[CALVIN](/zh/docs/evaluation/benchmark-hub/calvin)。
 
@@ -27,6 +27,6 @@ Xiaomi-Robotics-0 是小米的开放 VLA 策略线，Apache-2.0 基准阵容非�
 
 ## 在 WorldFoundry 中运行
 
-跑在独立环境 `worldfoundry-xiaomi-robotics-0-cu128`（Python 3.12，CUDA 12.8）。把 `XiaomiRobotics/Xiaomi-Robotics-0-LIBERO`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABCD_D`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABC_D` 等就位到本地。启动 `wf run xiaomi-robotics-0-libero`。许可：Apache-2.0。
+使用独立环境 `worldfoundry-xiaomi-robotics-0-cu128`（Python 3.12，CUDA 12.8）。将 `XiaomiRobotics/Xiaomi-Robotics-0-LIBERO`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABCD_D`、`XiaomiRobotics/Xiaomi-Robotics-0-Calvin-ABC_D` 等准备到本地。启动 `wf run xiaomi-robotics-0-libero`。许可：Apache-2.0。
 
 <ModelRelatedRecipes modelId="xiaomi-robotics-0" locale="zh" />

@@ -5,7 +5,7 @@ modelId: "dexora-1b"
 pageSource: authored
 ---
 
-Dexora 1B 是灵巧双臂操作 VLA，基于 1B RDT 策略骨干（论文：arXiv 2605.18722，MIT 许可）。WorldFoundry 提供完整推理栈——SigLIP/T5 编码器、严格 checkpoint 加载器、扩散采样器与 36 自由度动作契约——但作者只发布了数据与训练代码，无官方策略权重，因此需要使用你自己训练的 checkpoint 运行。
+Dexora 1B 是灵巧双臂操作 VLA，基于 1B RDT 策略骨干（论文：arXiv 2605.18722，MIT 许可）。WorldFoundry 提供完整推理栈——SigLIP/T5 编码器、严格 checkpoint 加载器、扩散采样器与 36 自由度动作契约——但作者只发布了数据与训练代码，未发布官方策略权重，因此需要使用你自己训练的 checkpoint 运行。
 
 <ModelPaperFigures modelId="dexora-1b" locale="zh" />
 
@@ -21,7 +21,7 @@ Dexora 1B 是灵巧双臂操作 VLA，基于 1B RDT 策略骨干（论文：arXi
 
 用 `dexora-1b` 根据观测和语言指令预测机器人动作。
 
-1B 参数的 RDT（机器人扩散 transformer）策略，SigLIP 视觉与 T5 语言编码，经扩散采样器输出 36 自由度双臂灵巧动作。checkpoint 格式与推理契约与官方 1B 配置一致。
+1B 参数的 RDT（机器人扩散 transformer）策略，SigLIP 视觉与 T5 语言编码，经扩散采样器输出 36 自由度双臂灵巧动作。checkpoint 格式和推理契约与官方 1B 配置一致。
 
 任务：视觉-语言-动作（VLA）、dexterous_manipulation、bimanual_robot_policy、VLA 策略执行。别名：`dexora`、`dexora_vla`。
 

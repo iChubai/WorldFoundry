@@ -5,7 +5,7 @@ modelId: "lingbot-world-act"
 pageSource: authored
 ---
 
-LingBot-World Base Act 是 LingBot-World 的动作条件同门：它消费动作矩阵而非相机位姿，是该家族的交互控制档案。它加载官方 Base-Act 预览 checkpoint，而不是 Base-Cam。
+LingBot-World Base Act 是 LingBot-World 的动作条件版本：它以动作矩阵而非相机位姿为输入，是该家族中用于交互控制的模型。它加载官方 Base-Act 预览 checkpoint，而不是 Base-Cam。
 
 <ModelPaperFigures modelId="lingbot-world-act" locale="zh" />
 
@@ -31,13 +31,13 @@ LingBot-World Base Act 是 LingBot-World 的动作条件同门：它消费动作
 
 CLI task profile：`interactive-world-model`、`action-conditioned-video`、`world_model`。绑定的 pipeline 类是 `LingBotPipeline`。
 
-已用 Base-Act 预览权重验证：公开 runner 在专属 LingBot 环境中，使用官方猫图和前进 WASD 动作生成 17 帧、8 步片段（544 × 720，16 fps）。动作贴合度尚未测量。
+已使用 Base-Act 预览权重验证：公开 runner 在专属 LingBot 环境中，使用官方猫图和前进 WASD 动作生成 17 帧、8 步片段（544 × 720，16 fps）。动作贴合度尚未测量。
 
-官方完整长度的品质与动作贴合度仍待评测。
+官方完整长度配置下的画质与动作贴合度仍待评测。
 
 ## 在 WorldFoundry 中运行
 
-运行 `wf run lingbot-world-act --pipeline.task-profile interactive-world-model` 推演世界模型。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
+运行 `wf run lingbot-world-act --pipeline.task-profile interactive-world-model` 执行世界模型推理。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
 
 使用专属 `lingbot-world` 环境（Python 3.10、CUDA 12.1）；统一环境下 act2cam 输出近黑画面。
 

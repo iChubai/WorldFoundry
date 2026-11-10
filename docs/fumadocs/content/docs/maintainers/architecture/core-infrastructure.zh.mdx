@@ -7,7 +7,7 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
 
 `worldfoundry/core` 是每个 model family 都复用、但都不拥有的共享推理基础设施。checkpoint 加载、state-dict remap、attention 后端、分布式 collectives、VRAM 放置与 offload、kernel、配置、媒体 IO、memory 契约、安全 guardrails 都只在此实现一次。family 包（`worldfoundry/base_models/*`、`worldfoundry/synthesis/*`、`worldfoundry/pipelines/*`）组合这些原语，但不得重新实现它们。
 
-当你打算把某个工具复制进某个模型目录时，本层就是你要先读的。规则很明确：多个 family 已实际复用的原语放进 `core`；绑定特定模型的适配器放回对应模型。扩散如何消费本层见 [原生扩散](/zh/docs/maintainers/architecture/native-diffusion)，pipeline/operator 如何消费见 [模型运行时](/zh/docs/maintainers/architecture/model-runtime)。
+当你打算把某个工具复制进某个模型目录时，应先阅读本层。规则很明确：多个 family 已实际复用的原语放进 `core`；绑定特定模型的适配器放回对应模型。扩散如何消费本层见 [原生扩散](/zh/docs/maintainers/architecture/native-diffusion)，pipeline/operator 如何消费见 [模型运行时](/zh/docs/maintainers/architecture/model-runtime)。
 
 ## 子包职责
 
@@ -106,7 +106,7 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
 
 ## 依赖规则
 
-`core` 可依赖 PyTorch、`diffusers` 的 model/operator 原语与窄范围第三方库。它不得 import `worldfoundry.pipelines`、`worldfoundry.synthesis`、`worldfoundry.operators`、`worldfoundry.base_models` 的 family 包，或 `worldfoundry.evals` 或 `worldfoundry.studio`。依赖边是从 family 包指向 `core`，绝不反向。
+`core` 可依赖 PyTorch、`diffusers` 的 model/operator 原语与窄范围第三方库。它不得 import `worldfoundry.pipelines`、`worldfoundry.synthesis`、`worldfoundry.operators`、`worldfoundry.base_models` 的 family 包，也不得 import `worldfoundry.evals` 或 `worldfoundry.studio`。依赖边是从 family 包指向 `core`，绝不反向。
 
 这让 family 包保持精简：一个模型目录只含 checkpoint 兼容的张量算子与契约适配器，而不是第二份 offload manager、分布式 bootstrap、kernel registry 或量化系统。当你发现自己要在 family 包里加这些东西时，先把它移到 `core` 再 import。
 

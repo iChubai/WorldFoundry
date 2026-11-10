@@ -5,7 +5,7 @@ modelId: "xiaomi-robotics-1"
 pageSource: authored
 ---
 
-Xiaomi-Robotics-1 是小米的下一代 VLA（Apache-2.0）：Qwen3-VL 策略 token 图配 rectified flow DiT 动作解码器，输出相对动作。checkpoint 需在本地就位于 WORLDFOUNDRY_CKPT_DIR。
+Xiaomi-Robotics-1 是小米的下一代 VLA（Apache-2.0）：采用 Qwen3-VL 策略 token 图，搭配 rectified flow DiT 动作解码器，输出相对动作。checkpoint 需准备到本地 WORLDFOUNDRY_CKPT_DIR。
 
 <ModelPaperFigures modelId="xiaomi-robotics-1" locale="zh" />
 
@@ -19,7 +19,7 @@ Xiaomi-Robotics-1 是小米的下一代 VLA（Apache-2.0）：Qwen3-VL 策略 to
 
 `xiaomi-robotics-1` 把相机观测和指令映射为动作轨迹。
 
-Qwen3-VL 骨干产生策略 token，由 rectified-flow DiT 消费并解码相对动作。checkpoint 侧 Python 文件中的归一化元数据仅按字面量解析，绝不执行。该模型由小米机器人（Xiaomi Robotics）发布。
+Qwen3-VL 骨干产生策略 token，rectified-flow DiT 接收这些 token 并解码相对动作。checkpoint 侧 Python 文件中的归一化元数据仅按字面量解析，绝不执行。该模型由小米机器人（Xiaomi Robotics）发布。
 
 任务：视觉-语言-动作（VLA）、VLA 动作预测、VLA 策略执行、机器人策略。别名：`xr1`、`xiaomi-robotics-one`。
 
@@ -33,7 +33,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `XiaomiRobotics1Pipelin
 
 系列状态：**Runner 一致性待确认**。
 
-checkpoint 就位于 $\{WORLDFOUNDRY_CKPT_DIR\}/embodied_action/xiaomi-robotics-1。模型、processor 与 checkpoint 只从本地文件加载。
+checkpoint 需准备到 $\{WORLDFOUNDRY_CKPT_DIR\}/embodied_action/xiaomi-robotics-1。模型、processor 与 checkpoint 只从本地文件加载。
 
 公开仓库为预发布项目页，推理快照未在其中发布。
 
@@ -43,6 +43,6 @@ checkpoint 就位于 $\{WORLDFOUNDRY_CKPT_DIR\}/embodied_action/xiaomi-robotics-
 
 运行环境：独立环境 `worldfoundry-xiaomi-robotics-1-cu128`（Python 3.12，CUDA 12.8，torch==2.8.0）。
 
-该模型没有登记公开 checkpoint；按使用说明就位权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh xiaomi-robotics-1`；下载缺失的公开权重时加 `--download`。
+该模型未登记公开 checkpoint；请按使用说明准备权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh xiaomi-robotics-1`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="xiaomi-robotics-1" locale="zh" />

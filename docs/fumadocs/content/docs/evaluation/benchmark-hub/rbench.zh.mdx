@@ -8,11 +8,11 @@ RBench（ReVidgen；北大 DAGroup 与字节 Seed；ICML 2026）评的是**面�
 - **任务赛道** — 250 条：常见操作、长程规划、多实体协作、空间关系、视觉推理。
 - **本体赛道** — 400 条：双臂、人形、单臂、四足。
 
-视频由 VLM judge（GPT 或 Qwen3-VL）打物理合理性、任务遵守与稳定性，外加 GroundingDINO / SAM2 / CoTracker / Q-Align 的算子指标（运动平滑 / 幅度）。论文报告与人类 **0.96 Spearman**。配套训练数据：RoVid-X（400 万条标注机器人片段）。许可证：CC-BY-4.0。
+VLM judge（GPT 或 Qwen3-VL）对视频的物理合理性、任务遵守情况与稳定性评分，另有 GroundingDINO / SAM2 / CoTracker / Q-Align 的算子指标（运动平滑 / 幅度）。论文报告其与人类评分的 **Spearman 相关系数为 0.96**。配套训练数据：RoVid-X（400 万条标注机器人片段）。许可证：CC-BY-4.0。
 
 论文：[RBench](https://arxiv.org/abs/2601.15282)。代码：[DAGroup-PKU/ReVidgen](https://github.com/DAGroup-PKU/ReVidgen)。数据：[`DAGroup-PKU/RBench`](https://huggingface.co/datasets/DAGroup-PKU/RBench)。
 
-WorldFoundry **复现官方 `eval/4_embodiments` 与 `eval/5_tasks` 聚合**（选项到分数映射、min-max、PAS 与一致性惩罚、幅度过滤）。不跑 VLM 或算子栈。`rbench_overall` 是两条赛道分的 **WorldFoundry 合成值**，不是已发表的 RBench 数字。GPT 与 Qwen 裁判输出分开计分。
+WorldFoundry **复现官方 `eval/4_embodiments` 与 `eval/5_tasks` 聚合**（选项到分数映射、min-max、PAS 与一致性惩罚、幅度过滤）。不跑 VLM 或算子栈。`rbench_overall` 是两条赛道分数的 **WorldFoundry 合成值**，不是已发表的 RBench 数字。GPT 与 Qwen 裁判输出分开计分。
 
 <BenchmarkPageSections id="rbench" locale="zh" />
 

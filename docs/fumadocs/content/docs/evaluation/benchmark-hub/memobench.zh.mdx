@@ -5,7 +5,7 @@ description: "哈佛 / MIT 视觉记忆评测：360 条 V-D-R 片段，自动指
 
 MemoBench（哈佛，联合 MIT 与 MIT-IBM Watson AI Lab）用 Visible → Disappeared → Reappear 范式诊断世界生成器的**视觉记忆**：目标可见且物理过程在进行（V），相机转开而过程在画外继续（D），相机回来后模型必须把物体生成在**已更新**的状态（R）。套件是 **360 条真值片段**（196 合成 + 164 真实），带相机轨迹与深度。
 
-打分分三层：
+评分分为三层：
 
 - **Step 1 自动**：CLIP-IQA+ / LAION 美学、光流平滑、DINOv2 身份、几何一致性、相机可控、ImageReward、真值 PSNR/SSIM/LPIPS。
 - **ORS**：SAM-3 Object Revisit Score。
@@ -13,7 +13,7 @@ MemoBench（哈佛，联合 MIT 与 MIT-IBM Watson AI Lab）用 Visible → Disa
 
 `memobench_average` 是已有归一化组件的均值。代码：[MemoBench-Team/MemoBench](https://github.com/MemoBench-Team/MemoBench)。
 
-WorldFoundry **仓内内置 runtime**，可对 `--generated-synthetic-dir` / `--generated-real-dir` 跑 Step 1。ORS 与 VQA 仍是显式外部阶段。可导入官方 CSV（`eval_csv`、`ors_scores.csv`、VQA、`leaderboard.csv`）。
+WorldFoundry **内置 runtime**，可对 `--generated-synthetic-dir` / `--generated-real-dir` 跑 Step 1。ORS 与 VQA 仍是显式外部阶段。可导入官方 CSV（`eval_csv`、`ors_scores.csv`、VQA、`leaderboard.csv`）。
 
 <BenchmarkPageSections id="memobench" locale="zh" />
 
@@ -33,6 +33,6 @@ wf zoo benchmark-run \
 
 清单与内置 runtime：`worldfoundry/data/benchmarks/tasks/external/memobench.yaml`、`worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench`。
 
-产物包括 `scorecard.json`（主键 `memobench_average`），以及存在时的 `eval_csv`、`ors_scores.csv`、`leaderboard.csv`。
+产物包括 `scorecard.json`（主键 `memobench_average`）；如存在，还包括 `eval_csv`、`ors_scores.csv`、`leaderboard.csv`。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

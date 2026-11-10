@@ -9,7 +9,7 @@ VBench++（S-Lab、南洋理工与上海人工智能实验室）为 [VBench](/zh
 - **长视频**：时间窗口打分；下面的命令以 `long_custom_input` 模式运行 `temporal_flickering`。
 - **可信度**：公平、偏见、安全探针（部分需要额外人脸 / 属性模型）。
 
-`--variant` 选择 `i2v`、`long` 或 `trustworthiness`。各变体平均分再加 `vbench_plus_plus_average`（WorldFoundry 对已有维度的均值）。
+`--variant` 选择 `i2v`、`long` 或 `trustworthiness`。除各变体平均分外，还会写入 `vbench_plus_plus_average`（WorldFoundry 对已有维度计算的均值）。
 
 论文：[VBench++](https://arxiv.org/abs/2411.13503)。项目：[vchitect.github.io/VBench-project](https://vchitect.github.io/VBench-project/)。
 

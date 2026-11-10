@@ -5,7 +5,7 @@ modelId: "abot-world-0-5b-lf"
 pageSource: authored
 ---
 
-ABot-World-0-5B-LF 是高德的交互式世界模型：输入一张图加动作序列，它逐块滚动生成世界视频，并在动作块之间保持因果 KV 状态常驻。已在 A100 上用公开的 0.5B-LF checkpoint 验证：在官方 1280×704 分辨率下，一个动作块生成可正常解码的九帧 H.264 视频。
+ABot-World-0-5B-LF 是高德的交互式世界模型：输入一张图像和动作序列，逐块生成世界视频，并在动作块之间保持因果 KV 状态常驻。已在 A100 上使用公开的 0.5B-LF checkpoint 验证：在官方 1280×704 分辨率下，一个动作块生成可正常解码的九帧 H.264 视频。
 
 <ModelPaperFigures modelId="abot-world-0-5b-lf" locale="zh" />
 
@@ -15,7 +15,7 @@ ABot-World-0-5B-LF 是高德的交互式世界模型：输入一张图加动作�
 
 公开 checkpoint：`acvlab/ABot-World-0-5B-LF`。模型未声明许可证；生产使用前请核对上游仓库。
 
-已在 **A100** 上验证：首个动作块在官方 **1280×704** 下生成可正常解码的 **9 帧** H.264 视频，**16 fps**。
+已在 **A100** 上验证：首个动作块在官方 **1280×704** 分辨率下生成可正常解码的 **9 帧** H.264 视频，**16 fps**。
 
 <ModelCommandBuilder modelId="abot-world-0-5b-lf" locale="zh" />
 
@@ -37,7 +37,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `ABotWorldPip
 
 系列状态：**已验证**。
 
-运行前需把 checkpoint 放到本地目录；运行时离线工作。常驻 API 在动作块之间保持因果 KV 状态；首个块返回 9 帧 RGB，后续块返回 12 帧——客户端缓冲请按此规划。
+运行前需将 checkpoint 放到本地目录；运行时无需联网。常驻 API 在动作块之间保持因果 KV 状态；首个块返回 9 帧 RGB，后续块返回 12 帧——客户端缓冲请按此规划。
 
 ## 在 WorldFoundry 中运行
 

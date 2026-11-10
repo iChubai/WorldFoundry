@@ -17,7 +17,7 @@ Sana 是英伟达的高效生成系列，共二十个 variant，覆盖文生图�
 
 ## 用来做什么
 
-`sana-600m-512px` 把文本提示词变成一张静态图。
+`sana-600m-512px` 根据文本提示词生成一张静态图。
 
 Sana 的高效来自深压缩自编码器（32x）、线性注意力 DiT 块与小型 LLM 文本编码器，见论文（arXiv 2410.10629）。SANA-Streaming 路径使用官方 BF16 CLI，包含混合 DiT 块、融合 GDN 核与因果 LTX-2 VAE。该模型由英伟达（NVIDIA）发布。
 
@@ -35,11 +35,11 @@ CLI task profile：`interactive-video`、`video-to-video`。绑定的 pipeline �
 
 建议从 `sana-600m-512px` 开始。该系列共有 20 个 variant，可在上方命令构建器中切换：`sana-600m-512px`（`text-to-image`）：Runner 一致性待确认、`sana-600m-1024px`（`text-to-image`）：Runner 一致性待确认、`sana-1600m-512px`（`text-to-image`）：Runner 一致性待确认、`sana-1600m-512px-multiling`（`text-to-image`）：Runner 一致性待确认、`sana-1600m-1024px`（`text-to-image`）：Runner 一致性待确认等。系列状态：**Runner 一致性待确认**。
 
-已用 long-streaming checkpoint 验证：在 A100 上的运行解码出 81 帧 1280x704、16 FPS 视频。SANA-Streaming 接受源视频路径或 hf:// URI。
+已使用 long-streaming checkpoint 验证：在 A100 上的运行解码出 81 帧 1280x704、16 FPS 视频。SANA-Streaming 接受源视频路径或 hf:// URI。
 
 与官方完整 50 步、更长帧数配置的质量一致性尚未验证。
 
-已用 long-streaming checkpoint 验证：在 A100 上的运行解码出 81 帧 1280x704、16 FPS 视频。
+已使用 long-streaming checkpoint 验证：在 A100 上的运行解码出 81 帧 1280x704、16 FPS 视频。
 
 ## 在 WorldFoundry 中运行
 

@@ -5,7 +5,7 @@ modelId: "causal-forcing"
 pageSource: authored
 ---
 
-Causal-Forcing 把双向 Wan2.1 教师蒸馏成**因果自回归**学生，让视频可以**按 chunk**或**按帧**生成，而不是一次双向出完整段。Causal-Forcing++ 是同一张卡片上的少步线（别名 `Causal Forcing++`、`causal-forcing-plus-plus`）。WorldFoundry 通过 `NativeCausalForcingPipeline` 以原生扩散 recipe 运行全部已发布的学生，支持离线生成与实时流式。这不是 [Self-Forcing](/zh/docs/guides/supported-models/self-forcing)，也不是 [Rolling-Forcing](/zh/docs/guides/supported-models/rolling-forcing)。
+Causal-Forcing 把双向 Wan2.1 教师蒸馏成**因果自回归**学生，让视频可以**按 chunk**或**按帧**生成，而不是一次性以双向方式生成完整视频。Causal-Forcing++ 是同一模型卡中的少步采样版本（别名 `Causal Forcing++`、`causal-forcing-plus-plus`）。WorldFoundry 通过 `NativeCausalForcingPipeline` 以原生扩散 recipe 运行全部已发布的学生，支持离线生成与实时流式。这不是 [Self-Forcing](/zh/docs/guides/supported-models/self-forcing)，也不是 [Rolling-Forcing](/zh/docs/guides/supported-models/rolling-forcing)。
 
 <ModelPaperFigures modelId="causal-forcing" locale="zh" />
 
@@ -19,9 +19,9 @@ Causal-Forcing 把双向 Wan2.1 教师蒸馏成**因果自回归**学生，让�
 
 **图生视频只支持 frame-wise。** 用 `variant: causal-forcing-framewise` 加载 frame-wise 学生并传入一张图像；chunk-wise 与 ++ 学生会拒绝图像输入。
 
-只有你明确要 **1 或 2 步**采样时才用 ++。这两个学生对**第一帧仍走 4 步**（`[1000, 750, 500, 250]`，即 ++ 发布记录的首帧步数表）。
+仅在明确需要 **1 或 2 步**采样时使用 ++。这两个学生对**第一帧仍走 4 步**（`[1000, 750, 500, 250]`，即 ++ 发布记录的首帧步数表）。
 
-片源质量看 [VBench](/zh/docs/evaluation/benchmark-hub/vbench)。通过 `--pipeline.prompt` 提供提示词。
+使用 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 评估视频质量。通过 `--pipeline.prompt` 提供提示词。
 
 ## 变体
 
@@ -64,7 +64,7 @@ frame-wise 学生在步间重加噪时用 bf16 计算，与官方调度器对单
 
 `wf run causal-forcing` 在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行，与 Self-Forcing 相同。用 `--pipeline.load.variant causal-forcing-framewise` 选择变体。generator 从 `zhuhz22/Causal-Forcing` 解析，可就位在 `$WORLDFOUNDRY_CKPT_DIR/zhuhz22--Causal-Forcing`（或 `Causal-Forcing`）或 Hugging Face 缓存中；文本编码器、tokenizer 与 VAE 来自 `Wan-AI/Wan2.1-T2V-1.3B`。Studio 传入已就位的发布目录，每个变体从中读取自己的文件。本地未就位的 checkpoint 会按固定 revision 获取。未声明许可证——生产使用前请核对 GitHub / Hugging Face 卡片。
 
-需要固定每个文件时，传入 `checkpoint_overrides`：
+需要固定各个文件的路径时，传入 `checkpoint_overrides`：
 
 ```python
 from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeCausalForcingPipeline
@@ -92,6 +92,6 @@ i2v = pipeline(prompt="An abandoned room.", images="testcase/012_abandoned-room.
 
 ## 最小评测
 
-chunk-wise 文生视频，再跑 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`。
+对 chunk-wise 文生视频结果运行 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`。
 
 <ModelRelatedRecipes modelId="causal-forcing" locale="zh" />

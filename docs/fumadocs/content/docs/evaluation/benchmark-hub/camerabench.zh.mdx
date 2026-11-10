@@ -6,7 +6,7 @@ description: "CMU 镜头运动评测：二分类、VQA、检索与描述。World
 CameraBench（卡内基梅隆）问的是视频模型会不会**理解镜头运动**——推、摇、移以及一套与摄影师共同设计、再经专家标注的分类法。四个指标族：
 
 - **二分类**：`camera_motion_average_precision` 与 `camera_motion_roc_auc`。
-- **VQA**：关于镜头的是 / 否与问题准确率。
+- **VQA**：镜头相关是 / 否问题的准确率，以及问题准确率。
 - **检索**：按文本、图像与组检索匹配的运动。
 - **描述**：caption 质量。GPT 评判为可选（`OPENAI_API_KEY`，`--no-gpt` 关闭）。
 
@@ -53,7 +53,7 @@ hf download syCen/CameraBench --repo-type dataset \
 
 清单：`worldfoundry/data/benchmarks/tasks/external/camerabench.yaml`。
 
-产物包括 `scorecard.json`（主键 `camerabench_average`）、存在时的 `camera_predictions.jsonl`、以及 `raw_metric_table.jsonl`。
+产物包括 `scorecard.json`（主键 `camerabench_average`）、`camera_predictions.jsonl`（如存在）以及 `raw_metric_table.jsonl`。
 
 ## 官方两阶段协议
 
@@ -170,6 +170,6 @@ CameraBench 把**方法相关打分**和**方法无关指标**拆开。WorldFoun
 }
 ```
 
-第一阶段失败应捕获并写成 `error` 字符串。样本计数（总数 / 成功 / 失败）由文件推导，不要手写。唯一 id 由 `model_name`、`checkpoint`、`split_name` 生成。
+应捕获第一阶段的失败，并将其写为 `error` 字符串。样本计数（总数 / 成功 / 失败）由文件推导，不要手写。唯一 id 由 `model_name`、`checkpoint`、`split_name` 生成。
 
 [← 返回 Benchmark Hub](/zh/docs/evaluation/benchmark-hub)

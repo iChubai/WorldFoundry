@@ -5,7 +5,7 @@ modelId: "dino-wm"
 pageSource: authored
 ---
 
-DINO-WM 在动作条件下预测未来的 DINOv2 视觉特征，并在特征空间中规划到达目标。WorldFoundry 包含官方规划路径及 wall 任务仿真器代码。
+DINO-WM 在动作条件下预测未来的 DINOv2 视觉特征，并在特征空间中进行目标导向规划。WorldFoundry 包含官方规划路径及 wall 任务仿真器代码。
 
 <ModelPaperFigures modelId="dino-wm" locale="zh" />
 
@@ -19,7 +19,7 @@ DINO-WM 在动作条件下预测未来的 DINOv2 视觉特征，并在特征空�
 
 ## 输入与输出
 
-已验证的 wall 路径需要包含 `outputs/wall_single/hydra.yaml` 与 `outputs/wall_single/checkpoints/model_latest.pth` 的权重目录、DINOv2 编码器及完整官方 wall 轨迹。将 `DATASET_DIR` 指向含有 `wall_single/` 的父目录；wall 配置从 `${DATASET_DIR}/wall_single` 读取轨迹。公开 synthesis 路径接收 `ckpt_base_path`、`model_name="wall_single"` 和 `config`，输出 `dino-wm.mp4` 与规划指标。文本 prompt 或独立的图像/视频输入不是已验证 wall 规划的运行契约。
+已验证的 wall 路径需要包含 `outputs/wall_single/hydra.yaml` 与 `outputs/wall_single/checkpoints/model_latest.pth` 的权重目录、DINOv2 编码器及完整官方 wall 轨迹。将 `DATASET_DIR` 指向含有 `wall_single/` 的父目录；wall 配置从 `${DATASET_DIR}/wall_single` 读取轨迹。公开 synthesis 路径接收 `ckpt_base_path`、`model_name="wall_single"` 和 `config`，输出 `dino-wm.mp4` 与规划指标。文本 prompt 或独立的图像/视频输入不属于已验证的 wall 规划运行契约。
 
 MP4 展示仿真与规划过程。DINO-WM 在特征空间中预测，不是像素视频生成器。运行前应先检查解析后的计划：仅有模型权重还不足以提供所需轨迹。
 

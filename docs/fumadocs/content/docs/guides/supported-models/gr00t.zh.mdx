@@ -5,23 +5,23 @@ modelId: "gr00t"
 pageSource: authored
 ---
 
-英伟达 GR00T 是 Isaac GR00T 人形 / 操作策略：推理 VLM 加动作头，一次输出未来动作块。官方论文是 [GR00T N1: An Open Foundation Model for Generalist Humanoid Robots](https://arxiv.org/abs/2503.14734)（arXiv 2503.14734）。实验室说明见 [NVIDIA Research](https://research.nvidia.com/labs/lpr/publication/gr00tn1_2025/)。代码在 [NVIDIA/Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T)。
+英伟达 GR00T 是 Isaac GR00T 人形 / 操作策略：由推理 VLM 和动作头组成，一次输出未来动作块。官方论文是 [GR00T N1: An Open Foundation Model for Generalist Humanoid Robots](https://arxiv.org/abs/2503.14734)（arXiv 2503.14734）。实验室说明见 [NVIDIA Research](https://research.nvidia.com/labs/lpr/publication/gr00tn1_2025/)。代码在 [NVIDIA/Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T)。
 
 <ModelPaperFigures modelId="gr00t" locale="zh" />
 
-WorldFoundry 用自有的模型、processor、变换与策略代码运行 GR00T 推理，不执行 checkpoint 内附带的 Python。提供两个 variant：`gr00t-n1-2b` 与 `gr00t-n1.7-libero`。N1.7 LIBERO 线已验证 CUDA `predict`：本地 Cosmos-Reason2-2B 加 `nvidia/GR00T-N1.7-LIBERO/libero_10`，CUDA 11.8，SDPA。该验证不覆盖仿真器 rollout。
+WorldFoundry 用自有的模型、processor、变换与策略代码运行 GR00T 推理，不执行 checkpoint 内附带的 Python。提供两个 variant：`gr00t-n1-2b` 与 `gr00t-n1.7-libero`。N1.7 LIBERO 路径的 CUDA `predict` 已验证：本地 Cosmos-Reason2-2B 加 `nvidia/GR00T-N1.7-LIBERO/libero_10`，CUDA 11.8，SDPA。该验证不覆盖仿真器 rollout。
 
 <ModelCommandBuilder modelId="gr00t" locale="zh" />
 
 ## 用来做什么
 
-要跑已验证的路径，从 `gr00t-n1.7-libero` 开始。必填输入是 RGB（`image`）、语言 `instruction` 和 `prompt`。runner 经 `GR00TPipeline` 写出 `gr00t_action_trace.json`。N1.7 checkpoint 路径使用官方 `libero_10` 子集。
+要运行已验证的路径，从 `gr00t-n1.7-libero` 开始。必填输入是 RGB（`image`）、语言 `instruction` 和 `prompt`。runner 经 `GR00TPipeline` 写出 `gr00t_action_trace.json`。N1.7 checkpoint 路径使用官方 `libero_10` 子集。
 
 需要初代 N1-2B checkpoint 时用 `gr00t-n1-2b`，它走下文的原版 N1 路线。已验证的 N1.7 线对应的评测页是 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero)。
 
 ## 运行时契约
 
-树内 processor 把图像缩到 **256×256**。模型配置默认 **动作视野 40**（填充上限 **50**）。输入是单帧 RGB 加语言——`video` 可选，此路由不用。`actions` 字段包括 `robot_action`、`humanoid_state`、`action_space`。
+树内 processor 把图像缩到 **256×256**。模型配置默认 **动作视野 40**（填充上限 **50**）。输入是单帧 RGB 加语言——`video` 可选，此路径不使用。`actions` 字段包括 `robot_action`、`humanoid_state`、`action_space`。
 
 锁定且 gated 的 Hugging Face revision：
 
@@ -37,7 +37,7 @@ WorldFoundry 用自有的模型、processor、变换与策略代码运行 GR00T 
 wf run gr00t-n1.7-libero
 ```
 
-命令构建器的默认启动使用 `gr00t-n1-2b`，任务 profile 相同；要跑已验证的 CUDA predict，换成 `gr00t-n1.7-libero`。权重必须本地就位——运行时不会拉取。
+命令构建器默认启动 `gr00t-n1-2b`，任务 profile 相同；要跑已验证的 CUDA predict，换成 `gr00t-n1.7-libero`。权重必须本地就位——运行时不会拉取。
 
 权重许可是 **NVIDIA Open Model License**。商用前请审阅条款。
 

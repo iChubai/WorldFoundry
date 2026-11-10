@@ -5,7 +5,7 @@ modelId: "longvie-2"
 pageSource: authored
 ---
 
-LongVie 2 是 Vchitect 团队第二代可控长视频框架。它以排队的 81 帧控制视频分段生成，每次续写复用上一段末帧、八帧历史与噪声状态。已使用发布权重验证：Studio 默认的四卡路径可生成并解码全部 81 帧（640x352）。
+LongVie 2 是 Vchitect 团队第二代可控长视频框架。它按 81 帧控制视频分段依次生成，每次续写复用上一段末帧、八帧历史与噪声状态。已使用发布权重验证：Studio 默认的四卡路径可生成并解码全部 81 帧（640x352）。
 
 <ModelPaperFigures modelId="longvie-2" locale="zh" />
 
@@ -19,7 +19,7 @@ LongVie 2 是 Vchitect 团队第二代可控长视频框架。它以排队的 81
 
 `longvie-2` 是图生视频模型：输入静态图，输出视频。
 
-基于 Wan2.1-I2V-14B-480P，叠加 LongVie 专属权重：适配器同时加载 control.safetensors 与 dit.safetensors，后者即区别于 LongVie-1 的 LongVie 2 DiT 注意力覆盖。execute=True 时支持官方 USP ring/ulysses 分布式推理。该模型由上海人工智能实验室（Vchitect 团队）发布。
+基于 Wan2.1-I2V-14B-480P，叠加 LongVie 专属权重：适配器同时加载 control.safetensors 与 dit.safetensors，后者是 LongVie 2 区别于 LongVie-1 的 DiT 注意力覆盖权重。execute=True 时支持官方 USP ring/ulysses 分布式推理。该模型由上海人工智能实验室（Vchitect 团队）发布。
 
 任务：图生视频、长视频生成、depth-controlled-video、trajectory-controlled-video。别名：`longvie2`、`longvie-v2`。模态上，它接受图像，输出视频、深度。
 
@@ -33,7 +33,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LongVie2Pipe
 
 系列状态：**已验证**。
 
-每个排队分段都需要非空提示词加稠密深度与稀疏点图/轨迹控制视频；首段还需要一张图像。质量默认值：81 帧、16 FPS、50 步。Studio profile 使用四 rank USP，每张 80GB GPU 常驻完整模型，只有 rank 0 写出产物。
+每个排队分段都需要非空提示词，以及稠密深度与稀疏点图/轨迹控制视频；首段还需要一张图像。质量默认值：81 帧、16 FPS、50 步。Studio profile 使用四 rank USP，每张 80GB GPU 常驻完整模型，只有 rank 0 写出产物。
 
 每个分段都需要预先准备深度与点图/轨迹控制视频，输入准备成本高。
 

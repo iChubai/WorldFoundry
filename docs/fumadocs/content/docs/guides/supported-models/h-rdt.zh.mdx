@@ -5,7 +5,7 @@ modelId: "h-rdt"
 pageSource: authored
 ---
 
-H-RDT（Human-to-Robotics Diffusion Transformer）先在大规模人类操作数据上预训练扩散 transformer 策略，再做机器人微调（论文：arXiv 2507.23523，MPL-2.0）。官方发布为 48 维人体动作预训练 checkpoint（embodiedfoundation/H-RDT）。
+H-RDT（Human-to-Robotics Diffusion Transformer）先在大规模人类操作数据上预训练扩散 transformer 策略，再做机器人微调（论文：arXiv 2507.23523，MPL-2.0）。官方发布的是 48 维人体动作预训练 checkpoint（embodiedfoundation/H-RDT）。
 
 <ModelPaperFigures modelId="h-rdt" locale="zh" />
 
@@ -19,7 +19,7 @@ H-RDT（Human-to-Robotics Diffusion Transformer）先在大规模人类操作数
 
 `h-rdt` 把相机观测和指令映射为动作轨迹。
 
-扩散 transformer 配 flow-matching 采样；视觉用 DINOv2 加 SigLIP，语言可选 T5。官方 checkpoint 按参数名严格匹配加载。
+采用扩散 transformer 和 flow-matching 采样；视觉编码使用 DINOv2 加 SigLIP，语言编码可选 T5。官方 checkpoint 按参数名严格匹配加载。
 
 任务：视觉-语言-动作（VLA）、human_motion_policy、VLA 策略执行、robot_policy_finetune。别名：`h_rdt`、`embodiedfoundation/h-rdt`。
 

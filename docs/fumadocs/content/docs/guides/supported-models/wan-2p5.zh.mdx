@@ -15,7 +15,7 @@ Wan 2.5 API 是阿里巴巴通义万相 Wan 2.5 视频生成模型的 DashScope 
 
 ## 用来做什么
 
-要阿里云 DashScope 托管成片、而不是本地 [Wan2.1](/zh/docs/guides/supported-models/wan2.1) 权重时，用 Wan 2.5。文生视频走 prompt，图生视频走起始图；成片以 WorldFoundry 产物返回。
+需要通过阿里云 DashScope 托管生成视频，而不是使用本地 [Wan2.1](/zh/docs/guides/supported-models/wan2.1) 权重时，请使用 Wan 2.5。文生视频使用 prompt，图生视频使用起始图；成片以 WorldFoundry 产物返回。
 
 启动 `wf run wan-2p5`。别名 `wan2.5`、`wan-2.5` 解析到该模型。后续托管版本：[Wan 2.6 API](/zh/docs/guides/supported-models/wan-2p6)、[Wan 2.7 API](/zh/docs/guides/supported-models/wan-2p7)。
 
@@ -23,7 +23,7 @@ Wan 2.5 API 是阿里巴巴通义万相 Wan 2.5 视频生成模型的 DashScope 
 
 ## 运行时契约
 
-没有本地 checkpoint、分辨率、帧数或步数表——这些设置在 DashScope 请求里。任务：文生视频、图生视频。自备服务方密钥。
+没有本地 checkpoint，也没有本地分辨率、帧数或步数表——这些设置在 DashScope 请求里。任务：文生视频、图生视频。自备服务方密钥。
 
 模型版本由服务方控制，即使 WorldFoundry 侧没有任何改动，输出也可能随时间变化。
 

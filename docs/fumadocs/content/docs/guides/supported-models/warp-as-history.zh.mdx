@@ -9,23 +9,23 @@ Warp-as-History（WAH）是相机可控的**图生视频**方法。论文是 [Wa
 
 <ModelPaperFigures modelId="warp-as-history" locale="zh" />
 
-推理时沿请求的相机轨迹对静帧做几何 warp，把这些 warp 当作**伪历史**，送进冻结的 **Helios-Distilled** 视频模型加任务 LoRA。可见 token 选择会丢掉没有有效源的 warp 区域。WorldFoundry 内置官方运行时。已用 Helios-Distilled 与 LoRA 权重在 GPU 上验证：复现了官方 BMX / 涂鸦 warp 视频 demo。
+推理时沿请求的相机轨迹对静帧做几何 warp，将这些 warp 作为**伪历史**，输入加载了任务 LoRA 的冻结 **Helios-Distilled** 视频模型。可见 token 选择会丢掉没有有效源的 warp 区域。WorldFoundry 内置官方运行时。已用 Helios-Distilled 与 LoRA 权重在 GPU 上验证：复现了官方 BMX / 涂鸦 warp 视频 demo。
 
 <ModelCommandBuilder modelId="warp-as-history" locale="zh" />
 
 ## 用来做什么
 
-用一张图做相机运动。必填 `prompt` 与 `image`；可选 `video`；`actions` 记录为 `warp_video`、`camera_path`。产物：经 `WarpAsHistoryPipeline` 写出的 `warp-as-history.mp4`。已验证配方是 `--pipeline.task-profile official-demo-video`。
+根据一张图生成相机运动视频。必填 `prompt` 与 `image`；可选 `video`；`actions` 记录为 `warp_video`、`camera_path`。产物：经 `WarpAsHistoryPipeline` 写出的 `warp-as-history.mp4`。已验证配方是 `--pipeline.task-profile official-demo-video`。
 
 官方 demo 契约固定 **33 帧**、**16 fps**、**384×640**、seed **42**。相机跟随评测看 [CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)。
 
-就位三份外部缓存：`BestWishYsh/Helios-Distilled`（基座）、`yyfz233/warp-as-history`（`visible_lora_state_step1000.safetensors`），以及从相机位姿渲染 warp 时需要的 `yyfz233/Pi3X`（`model.safetensors`）。用 `model_path` / `lora_path` / `pi3x_ckpt_path` 或 `WAH_HELIOS_DISTILLED_PATH` / `WAH_LORA_PATH` / `WAH_PI3X_CKPT_PATH` 注入。除非从位姿而不是现成 warp 视频起步，否则 Pi3X 可选。
+准备三份外部缓存：`BestWishYsh/Helios-Distilled`（基座）、`yyfz233/warp-as-history`（`visible_lora_state_step1000.safetensors`），以及从相机位姿渲染 warp 时需要的 `yyfz233/Pi3X`（`model.safetensors`）。用 `model_path` / `lora_path` / `pi3x_ckpt_path` 或 `WAH_HELIOS_DISTILLED_PATH` / `WAH_LORA_PATH` / `WAH_PI3X_CKPT_PATH` 注入。只有从相机位姿而非现成 warp 视频开始时，才需要 Pi3X；其他情况下可选。
 
 ## 运行时契约
-只用独立环境：`warp-as-history` 固定 **Python 3.10**、**CUDA 12.1**、**torch==2.5.0**。不要放进统一环境。相机轨迹偏离输入视角过远时，warp 历史和成片都会变差。
+仅使用独立环境：`warp-as-history` 固定 **Python 3.10**、**CUDA 12.1**、**torch==2.5.0**。不要放进统一环境。相机轨迹偏离输入视角过远时，warp 历史和成片都会变差。
 
 ## 在 WorldFoundry 中运行
 
-先 `bash scripts/setup/model_env_install.sh --model warp-as-history`，再跑 `wf run warp-as-history --pipeline.task-profile official-demo-video`。
+先运行 `bash scripts/setup/model_env_install.sh --model warp-as-history`，再运行 `wf run warp-as-history --pipeline.task-profile official-demo-video`。
 
 <ModelRelatedRecipes modelId="warp-as-history" locale="zh" />

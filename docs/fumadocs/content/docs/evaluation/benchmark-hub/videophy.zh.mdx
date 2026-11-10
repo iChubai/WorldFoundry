@@ -6,14 +6,14 @@ description: "UCLA / Google 的 T2V 物理常识评测：VideoCon-Physics 打 SA
 VideoPhy（UCLA 与 Google Research）检验文本生成视频模型在材料交互（固-固、固-流、流-流）上是否遵守**物理常识**。每条 prompt 描述一种物理交互。官方裁判是微调的视频语言模型 **VideoCon-Physics**。三个分数：
 
 - **语义遵守**：片段是否匹配 prompt？
-- **物理常识**：运动是否服从物理？
+- **物理常识**：运动是否符合物理规律？
 - **联合分**：两者同时成立。
 
 `videophy_average` 是 WorldFoundry 对已有分面的均值。完整 688 条 prompt 的复现尚未在 WorldFoundry 中验证。
 
 论文：[VideoPhy](https://arxiv.org/abs/2406.03520)。项目：[videophy.github.io](https://videophy.github.io/)。代码：[Hritikbansal/videophy](https://github.com/Hritikbansal/videophy)。
 
-WorldFoundry **捆绑 prompt 列表**，可跑仓内 VideoCon-Physics AutoEvaluator（`--videocon-checkpoint`、`--sa-threshold` / `--pc-threshold`），或导入官方 JSON。权重要调用方提供，不内置。
+WorldFoundry **捆绑 prompt 列表**，可跑仓内 VideoCon-Physics AutoEvaluator（`--videocon-checkpoint`、`--sa-threshold` / `--pc-threshold`），或导入官方 JSON。权重需由调用方提供，不内置。
 
 <BenchmarkPageSections id="videophy" locale="zh" />
 

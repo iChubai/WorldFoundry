@@ -5,7 +5,7 @@ modelId: "lingbot-va"
 pageSource: authored
 ---
 
-LingBot-VA 是蚂蚁灵波科技（Robbyant）的视频-动作模型，经内置的 server/client 运行时提供服务，提供 base 以及 RoboTwin、LIBERO-Long 后训练 checkpoint（Apache-2.0）。在 80GB GPU 上，base transformer 可完成 CUDA 前向，LIBERO-Long 服务可启动并监听 websocket；端到端客户端 rollout 尚未验证。
+LingBot-VA 是蚂蚁灵波科技（Robbyant）的视频-动作模型，通过内置的 server/client 运行时提供服务，包含 base 以及 RoboTwin、LIBERO-Long 后训练 checkpoint（Apache-2.0）。在 80GB GPU 上，base transformer 可完成 CUDA 前向，LIBERO-Long 服务可启动并监听 websocket；端到端客户端 rollout 尚未验证。
 
 <ModelPaperFigures modelId="lingbot-va" locale="zh" />
 
@@ -19,7 +19,7 @@ LingBot-VA 是蚂蚁灵波科技（Robbyant）的视频-动作模型，经内置
 
 `lingbot-va-base` 是视觉-语言-动作（VLA）策略：输入指令和观测，输出动作。
 
-transformer 视频-动作骨干。随附配置设 attn_mode=torch，内置服务启动时通过 --checkpoint-dir 指向所选 checkpoint。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
+采用 transformer 视频-动作骨干。随附配置设置 attn_mode=torch，内置服务启动时通过 --checkpoint-dir 指向所选 checkpoint。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
 任务：视觉-语言-动作（VLA）、va、vam、wam。别名：`lingbot_va`、`lingbot-va-base`、`lingbot-va-posttrain-robotwin`、`lingbot-va-posttrain-libero-long`。同系列还有 `lingbot-va-posttrain-robotwin`、`lingbot-va-posttrain-libero-long`。
 

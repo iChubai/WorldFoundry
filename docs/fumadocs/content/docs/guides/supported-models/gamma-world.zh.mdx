@@ -5,7 +5,7 @@ modelId: "gamma-world"
 pageSource: authored
 ---
 
-Gamma-World 是英伟达的多智能体世界模型：给定每个玩家的起始图像与各自的动作流，为每个玩家生成共享世界中的视角画面。它以原生扩散配方运行，含双向、因果与四步因果三个 variant；四步因果模型是默认的流式选择。
+Gamma-World 是英伟达的多智能体世界模型：给定各玩家的起始图像和动作流，生成每个玩家在共享世界中的视角画面。它以原生扩散配方运行，含双向、因果与四步因果三个 variant；四步因果模型是默认的流式选择。
 
 三个 variant 共用同一绑定：**`gamma-world-causal-few-step`**（默认**四步**流式）、`gamma-world-causal`、`gamma-world-bidirectional`。别名 `gammaworld`、`gamma-world-causal` 解析到这里。
 

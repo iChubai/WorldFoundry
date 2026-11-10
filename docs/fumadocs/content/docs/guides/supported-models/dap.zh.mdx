@@ -13,7 +13,7 @@ Depth Any Panoramas（DAP）是影石 Insta360 面向全景图像的米制深度
 
 项目页：[insta360-research-team.github.io/DAP_website](https://insta360-research-team.github.io/DAP_website/)。代码：[Insta360-Research-Team/DAP](https://github.com/Insta360-Research-Team/DAP)。
 
-骨干是 **DINOv3-Large**，解码器是 DPT 风格。稠密米制深度头配一个即插即用的 **range-mask** 头，用来标出超出可信距离的像素（上游模型卡讨论 10 / 20 / 50 / 100 m 等阈值）。论文的零样本数字报告在 Stanford2D3D、Matterport3D 与 Deep360 上，是上游数字，不是 WorldFoundry scorecard。
+骨干是 **DINOv3-Large**，解码器是 DPT 风格。稠密米制深度头配一个即插即用的 **range-mask** 头，用来标出超出可信距离的像素（上游模型卡讨论 10 / 20 / 50 / 100 m 等阈值）。论文报告了在 Stanford2D3D、Matterport3D 与 Deep360 上的零样本结果；这些是上游数据，不是 WorldFoundry scorecard。
 
 <ModelCommandBuilder modelId="dap" locale="zh" />
 
@@ -35,7 +35,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `DAPPipeline`。
 
 系列状态：**已验证**。
 
-输入一张等距柱状投影图，pipeline 将米制深度写入 dap-depth.npz。ViPE 将 DAP 作为共享几何先验使用。runner parity 已通过共享 geometry-prior pipeline 验证。
+输入一张等距柱状投影图，pipeline 将米制深度写入 dap-depth.npz。ViPE 将 DAP 作为共享几何先验使用。已通过共享 geometry-prior pipeline 验证 runner parity。
 
 专为全景设计：普通针孔图像请改用 Depth Anything V2/V3 先验。
 

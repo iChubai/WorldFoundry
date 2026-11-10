@@ -5,7 +5,7 @@ modelId: "vggt-world"
 pageSource: authored
 ---
 
-VGGT-World 在 VGGT 式 3D 场景理解之上构建世界模型：将几何锚定的场景感知与视频生成耦合，使滚动生成与底层 3D 结构保持一致。WorldFoundry 接入官方源码（论文：arXiv 2603.12655）；生成前需在本地就位 checkpoint 与资产。
+VGGT-World 在 VGGT 式 3D 场景理解之上构建世界模型：将几何锚定的场景感知与视频生成耦合，使滚动生成与底层 3D 结构保持一致。WorldFoundry 接入官方源码（论文：arXiv 2603.12655）；生成前需在本地准备好 checkpoint 与资产。
 
 <ModelPaperFigures modelId="vggt-world" locale="zh" />
 
@@ -19,7 +19,7 @@ VGGT-World 在 VGGT 式 3D 场景理解之上构建世界模型：将几何锚�
 
 `vggt-world` 是世界生成模型。
 
-按论文（arXiv 2603.12655），VGGT 被改造为自回归几何世界模型。
+根据论文（arXiv 2603.12655），该模型将 VGGT 改造为自回归几何世界模型。
 
 任务：世界模型、3d-scene-understanding、视频生成。输出模态为视频。
 
@@ -35,7 +35,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `VGGTWorldPipeline`。
 
 系列状态：**Runner 一致性待确认**。
 
-先就位所需 checkpoint 与资产。资产就位前，运行只写出列出缺失资产的 `vggt_world_runtime_plan.json`，不会生成世界。
+先准备好所需 checkpoint 与资产。资产准备完成前，运行只写出列出缺失资产的 `vggt_world_runtime_plan.json`，不会生成世界。
 
 上游仓库缺少根许可文件：使用前需要法律审查。
 
@@ -45,6 +45,6 @@ CLI task profile：`default`。绑定的 pipeline 类是 `VGGTWorldPipeline`。
 
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
-该模型没有登记公开 checkpoint；按使用说明就位权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh vggt-world`；下载缺失的公开权重时加 `--download`。
+该模型未登记公开 checkpoint；请按使用说明准备权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh vggt-world`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="vggt-world" locale="zh" />

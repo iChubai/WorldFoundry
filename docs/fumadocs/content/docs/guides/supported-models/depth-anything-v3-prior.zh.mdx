@@ -5,7 +5,7 @@ modelId: "depth-anything-v3-prior"
 pageSource: authored
 ---
 
-Depth Anything 3 Metric Prior 是字节 Seed 团队 Depth Anything 3 的米制深度头，以独立几何先验的形式提供。它使用 depth-anything/DA3METRIC-LARGE checkpoint，Prior-Depth-Anything 细化器即以它的输出为条件完成验证。
+Depth Anything 3 Metric Prior 是字节 Seed 团队 Depth Anything 3 的米制深度头，以独立几何先验的形式提供。它使用 depth-anything/DA3METRIC-LARGE checkpoint；验证 Prior-Depth-Anything 细化器时，即以其输出为条件。
 
 <ModelPaperFigures modelId="depth-anything-v3-prior" locale="zh" />
 
@@ -33,7 +33,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `DepthAnythingV3PriorPi
 
 系列状态：**已验证**。
 
-将它作为米制深度先验，通过共享的几何先验接口供其他管线（如 ViPE）使用。官方 SOH 导出路径请使用 depth-anything-v3。
+它作为米制深度先验，通过共享的几何先验接口供其他管线（如 ViPE）使用。官方 SOH 导出路径请使用 depth-anything-v3。
 
 仅提供深度先验：完整的 DA3 重建请使用 depth-anything-v3。
 

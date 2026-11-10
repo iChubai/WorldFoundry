@@ -12,7 +12,7 @@ description: 配置环境、准备资产、使用 TUI 或 CLI，然后运行推�
 - [推理](#5-推理)
 - [评测](#6-评测)
 
-换了模型或 benchmark，大多数 run 的形状仍然一样：先让 Python 环境可 import，再发现稳定 ID，只准备必要的 checkpoint 与 benchmark 资产，生成并检查 artifact，最后才对 artifact 打分。
+更换模型或 benchmark 后，大多数 run 的流程仍然相同：先确保 Python 环境可以导入所需包，再发现稳定 ID，只准备必要的 checkpoint 与 benchmark 资产，生成并检查 artifact，最后才对 artifact 打分。
 
 <Callout type="idea" title="提示">
   下载模型权重前，先检查环境和 catalog，阅读报告中的 blocker，只准备第一次 GPU 运行需要的资产。
@@ -31,7 +31,7 @@ description: 配置环境、准备资产、使用 TUI 或 CLI，然后运行推�
     想交互式选模型和 benchmark 就用 TUI；脚本化运行就用下面的 CLI 命令。
   </Step>
   <Step>
-    先跑推理生成产物。只有产物目录符合 benchmark layout 后，再启动评测。
+    先跑推理生成产物。只有产物目录符合 benchmark layout 后，才启动评测。
   </Step>
 </Steps>
 

@@ -5,7 +5,7 @@ modelId: "lingbot-world-v2"
 pageSource: authored
 ---
 
-LingBot-World-V2（别名 lingbot-world-infinity）是蚂蚁灵波世界模型的第二代：14B 的 causal-fast 模型，做带相机控制的图到世界视频。已用发布权重验证：causal-fast 路径可在单张 80 GB GPU 上生成可解码的 9 帧 848x464、16 FPS 视频。
+LingBot-World-V2（别名 lingbot-world-infinity）是蚂蚁灵波世界模型的第二代：14B 的 causal-fast 模型，可根据图像生成带相机控制的世界视频。已使用公开发布的权重验证：causal-fast 路径可在单张 80 GB GPU 上生成可解码的 9 帧 848x464、16 FPS 视频。
 
 <ModelPaperFigures modelId="lingbot-world-v2" locale="zh" />
 
@@ -19,7 +19,7 @@ LingBot-World-V2（别名 lingbot-world-infinity）是蚂蚁灵波世界模型�
 
 视角需要沿指定相机路径运动时，用 `lingbot-world-v2`。
 
-使用 WorldFoundry 共享的 Wan、T5、VAE、调度器、FSDP 与媒体组件。仅包含已发布的 causal-fast 路径；不包含训练与未发布的 causal-pretrain、双向路径。checkpoint 为 robbyant/lingbot-world-v2-14b-causal-fast。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
+复用 WorldFoundry 共享的 Wan、T5、VAE、调度器、FSDP 与媒体组件。仅包含已发布的 causal-fast 路径；不包含训练与未发布的 causal-pretrain、双向路径。checkpoint 为 robbyant/lingbot-world-v2-14b-causal-fast。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
 任务：image-to-world-video、相机可控视频、交互式世界模型。别名：`lingbot-world-infinity`、`lingbot-v2`。模态上，它接受图像，输出世界状态、视频。
 

@@ -3,7 +3,7 @@ title: 运行推理
 description: 运行模型 demo、检查生成产物；评分请见评测章节。
 ---
 
-WorldFoundry 推理覆盖环境安装、checkpoint 准备、模型启动和产物检查。Benchmark 评分与 scorecard 见[评测](/zh/docs/evaluation)。要挑 model ID、看 readiness 标签，先看[模型](/zh/docs/guides/supported-models)。
+WorldFoundry 推理覆盖环境安装、checkpoint 准备、模型启动和产物检查。Benchmark 评分与 scorecard 见[评测](/zh/docs/evaluation)。如需选择 model ID 或查看 readiness 标签，请先参阅[模型](/zh/docs/guides/supported-models)。
 
 ## 快速路径
 
@@ -94,7 +94,7 @@ Checkpoint 路径使用 Hugging Face repo ID、原生 HF cache 位置，或文�
 
 ## CLI 推理
 
-日常可复现、写进文档的标准命令是 `wf run`，与模型页上的命令同一形状：
+日常可复现、写进文档的标准命令是 `wf run`，格式与模型页上的命令一致：
 
 ```bash
 wf run <model-id> \
@@ -142,7 +142,7 @@ python -m worldfoundry.studio.workspace_job infer \
 WorldFoundry 集成 `echo-memory-context-k1`，固定模型 recipe、checkpoint 文件和采样布局。已发布的 DiT 可按完整 key 与 shape 加载；CUDA 生成、官方样例对齐和
 benchmark 评分尚未验证。未发布或已撤回权重的 Echo-Memory 变体不受支持。
 
-Runtime 直接扩展 WorldFoundry 的 canonical Wan 2.1，不调用 DiffSynth。架构从不会由 checkpoint header 隐式决定：先按固定 model recipe 构造模型，再要求完整的 key 与 shape coverage。当前公开的 K=1 模型使用正常 pipeline 接口：
+Runtime 直接扩展 WorldFoundry 的 canonical Wan 2.1，不调用 DiffSynth。架构不会由 checkpoint header 隐式决定：先按固定 model recipe 构造模型，再要求完整的 key 与 shape coverage。当前公开的 K=1 模型使用正常 pipeline 接口：
 
 ```python
 from worldfoundry.pipelines.echo_memory.pipeline_echo_memory import (
@@ -272,7 +272,7 @@ print(result["artifact_path"])
 
 ### HunyuanVideo 原生模型
 
-原版与 1.5 的 T2V/I2V 是同一套 native pipeline 上四个独立 recipe。选择 model 只会切换 checkpoint-compatible component，不会切换 runner
+原版与 1.5 的 T2V/I2V 是同一套 native pipeline 中的四个独立 recipe。选择 model 只会切换 checkpoint-compatible component，不会切换 runner
 architecture：
 
 ```python

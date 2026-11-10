@@ -5,7 +5,7 @@ modelId: "videocrafter1-t2v"
 pageSource: authored
 ---
 
-VideoCrafter1 T2V 是 VideoCrafter1 发布中的文生视频成员，按提示词生成最高 1024x576 的视频。WorldFoundry 以仅推理方式运行官方 1024 文生视频路径，提供本地 checkpoint、fps、帧数与 seed 控制。
+VideoCrafter1 T2V 是 VideoCrafter1 中的文生视频模型，按提示词生成最高 1024x576 的视频。WorldFoundry 以仅推理方式运行官方 1024 文生视频路径，提供本地 checkpoint、fps、帧数与 seed 控制。
 
 <ModelPaperFigures modelId="videocrafter1-t2v" locale="zh" />
 
@@ -19,7 +19,7 @@ VideoCrafter1 T2V 是 VideoCrafter1 发布中的文生视频成员，按提示�
 
 `videocrafter1-t2v` 根据文本提示词生成视频。
 
-U-Net 潜空间视频扩散，最高 1024x576（见上游发布）。该模型由腾讯 AI Lab 发布。
+该模型采用 U-Net 潜空间视频扩散，分辨率最高为 1024x576（见上游发布）。该模型由腾讯 AI Lab 发布。
 
 任务：文生视频、视频生成。别名：`videocrafter1_t2v`。模态上，它接受文本，输出视频。
 
@@ -35,7 +35,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `VideoCrafter
 
 系列状态：**Runner 一致性待确认**。
 
-要更好的画质，改用同系列的 VideoCrafter2 T2V 或当前一代的 DiT 模型。
+如需更好的画质，改用同系列的 VideoCrafter2 T2V 或当前一代的 DiT 模型。
 
 ## 在 WorldFoundry 中运行
 

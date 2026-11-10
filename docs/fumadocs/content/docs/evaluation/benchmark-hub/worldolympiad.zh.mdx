@@ -9,9 +9,9 @@ WorldOlympiad（阿里达摩院）是长视频世界模型的**三项赛**。主
 - **交互**：逐 chunk 指令跟随、过渡平滑、全局一致性（原生 0–5，再归一化）
 - **几何**：Depth Anything 3 重建（高斯溅射、元视角、相机轨迹对齐；原生 0–3）
 
-论文：[WorldOlympiad](https://arxiv.org/abs/2606.11129)。项目：[alibaba-damo-academy.github.io/WorldOlympiad](https://alibaba-damo-academy.github.io/WorldOlympiad)。代码：[alibaba-damo-academy/WorldOlympiad](https://github.com/alibaba-damo-academy/WorldOlympiad)。数据：[`ziplab/WorldOlympiad`](https://huggingface.co/datasets/ziplab/WorldOlympiad)。钉选修订**没有 LICENSE**。
+论文：[WorldOlympiad](https://arxiv.org/abs/2606.11129)。项目：[alibaba-damo-academy.github.io/WorldOlympiad](https://alibaba-damo-academy.github.io/WorldOlympiad)。代码：[alibaba-damo-academy/WorldOlympiad](https://github.com/alibaba-damo-academy/WorldOlympiad)。数据：[`ziplab/WorldOlympiad`](https://huggingface.co/datasets/ziplab/WorldOlympiad)。固定的修订版本**没有 LICENSE**。
 
-WorldFoundry **内置官方批量评测器**，不需要外部 checkout。计分运行需要 `--da3-src`、`--weights-dir`（DA3 / SAM3 / QwenVL / CLIP），以及正在运行的 QwenVL、SAM3、DA3 reward 服务。**`--run-official --dry-run` 批量计划与裁判输出归一化已验证；计分三项赛运行尚未验证。**
+WorldFoundry **内置官方批量评测器**，不需要外部 checkout。计分运行需要 `--da3-src`、`--weights-dir`（DA3 / SAM3 / QwenVL / CLIP），以及正在运行的 QwenVL、SAM3、DA3 reward 服务。**`--run-official --dry-run` 批量计划与裁判输出归一化已验证；三项赛的计分运行尚未验证。**
 
 `run_worldolympiad_official_runner.py --run-fixture` 读的是 `worldfoundry/data/benchmarks/assets/worldolympiad/cases/` 下的合成裁判 JSON（`general/case_fixture_001` 三条赛道，`gaming/case_fixture_002` 三条赛道，`embodied/case_fixture_003` 跳过几何）。这些文件中的视频、prompt、题目和分数都是合成的，只对齐 `scripts/score_video_physical_3d.py` 的公开裁判 JSON **形状**，不能和任何 WorldOlympiad 成绩比较。
 
@@ -95,7 +95,7 @@ chunk 时间戳把每个 prompt 区间映射到生成视频：
 
 ## 服务、GPU 与批量产物
 
-计分运行需要 DA3 **源码树**（`--da3-src`，通常是 Depth-Anything-3 checkout），以及放在内置 runtime **外面**的 DA3 / SAM3 / QwenVL / CLIP 权重。不必重装整套 DA3 conda。OpenRouter / OpenAI 兼容 VLM 可用 `.env` 里的 `base_url` 与 `api_key`。
+计分运行需要 DA3 **源码树**（`--da3-src`，通常是 Depth-Anything-3 checkout），以及放在内置 runtime **外面**的 DA3 / SAM3 / QwenVL / CLIP 权重。无需重新安装完整的 DA3 conda 环境。OpenRouter / OpenAI 兼容 VLM 可用 `.env` 里的 `base_url` 与 `api_key`。
 
 先把常驻服务拉起来，再把 URL 传给官方 runner：
 
@@ -103,7 +103,7 @@ chunk 时间戳把每个 prompt 区间映射到生成视频：
 - SAM3：`start_sam3_servers.py`（需要 Qwen URL）
 - DA3 reward：`start_reward_3d_servers.py`（需要 Qwen URL；通常加 `--no-lpips`）
 
-建议 8 卡：0–1 QwenVL，2 SAM3，3–4 DA3，5–7 打分 worker。
+建议使用 8 张 GPU 卡：0–1 QwenVL，2 SAM3，3–4 DA3，5–7 打分 worker。
 
 内置的 `evaluate_pipelines.py` 会写 `batch_manifests/<domain>_<pipeline>_{all,pending}.jsonl` 和 `batch_logs/<domain>_<pipeline>/`（`summary_latest.jsonl`、`score_summary.json`、`score_cases.csv`）。常用开关：`--list-pipelines`、`--limit N`、`--dry-run`、`--no-summarize`、`--skip-pair gaming:lingbot-world`。
 

@@ -3,7 +3,7 @@ title: T2VSafetyBench
 description: "NeurIPS 2024 文生视频安全评测：14 面恶意 prompt、12 项 NSFW 率。WorldFoundry 可导入官方结果或调用 GPT 裁判。"
 ---
 
-T2VSafetyBench（中科院与清华，联合 RealAI）问的是文生视频模型会不会**拒绝不安全 prompt**，包括只在**跨帧**才出现的风险。官方指标全是 NSFW **触发率**（越低越安全）。Prompt 套件有 **14 个面**；WorldFoundry 报告 **12 项率**：11 个内容面，外加合并后的**时序风险**率（连续动作、动态变换、上下文连贯）。Prompt 来自真实文本、LLM 生成与越狱攻击。视频按面由 GPT 判 NSFW / 安全，论文报告了与人工复核的相关性。
+T2VSafetyBench（中科院与清华，联合 RealAI）问的是文生视频模型会不会**拒绝不安全 prompt**，包括只在**跨帧**才出现的风险。官方指标全是 NSFW **触发率**（越低越安全）。Prompt 套件有 **14 个方面**；WorldFoundry 报告 **12 项比率**：11 个内容方面，外加合并后的**时序风险**率（连续动作、动态变换、上下文连贯）。Prompt 来自真实文本、LLM 生成与越狱攻击。GPT 按方面将视频判定为 NSFW 或安全，论文报告了与人工复核的相关性。
 
 论文：[T2VSafetyBench](https://arxiv.org/abs/2407.05965)。代码 / prompt：[yibo-miao/T2VSafetyBench](https://github.com/yibo-miao/T2VSafetyBench)。不需要 Hugging Face 数据集。
 

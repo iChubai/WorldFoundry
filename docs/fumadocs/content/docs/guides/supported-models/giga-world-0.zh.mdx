@@ -7,7 +7,7 @@ pageSource: authored
 
 GigaWorld-0 是极佳科技开源的机器人世界模型系列：面向机器人数据生成的视频生成模型，包含 pretrain 与 GR1 专用两个 2B checkpoint。WorldFoundry 的 GR1 入口根据首帧图像和文本提示生成视频，不消费结构化机器人动作。
 
-pipeline 还需要 `google-t5/t5-11b` 和 `Wan-AI/Wan2.1-T2V-1.3B-Diffusers`。旧的 T5-11B PyTorch pickle 必须**转换一次**（仅权重加载）到仅编码器的 safetensors 目录（在隔离的 Torch 2.6+ 环境跑 `scripts/inference/convert_t5_11b_encoder_to_safetensors.py`）。正常推理只读 safetensors。
+pipeline 还需要 `google-t5/t5-11b` 和 `Wan-AI/Wan2.1-T2V-1.3B-Diffusers`。旧的 T5-11B PyTorch pickle 必须**转换一次**（仅加载权重），生成仅含编码器的 safetensors 目录（在隔离的 Torch 2.6+ 环境中运行 `scripts/inference/convert_t5_11b_encoder_to_safetensors.py`）。正常推理只读取 safetensors。
 
 <ModelPaperFigures modelId="giga-world-0" locale="zh" />
 
@@ -15,7 +15,7 @@ pipeline 还需要 `google-t5/t5-11b` 和 `Wan-AI/Wan2.1-T2V-1.3B-Diffusers`。�
 
 项目页：[giga-world-0.github.io](https://giga-world-0.github.io/)。代码：[open-gigaai/giga-world-0](https://github.com/open-gigaai/giga-world-0)。代码：[open-gigaai/giga-models](https://github.com/open-gigaai/giga-models)。
 
-单图低步数运行只确认 checkpoint 能执行，**不代表**与官方 GR1 数据或全质量采样一致。统一环境使用 Torch SDPA 注意力；官方 NATTEN 质量需要暴露 `neighborhood_attention_generic` 的轮子（Torch 2.5 的 NATTEN 0.17.5 **没有**）。
+单图低步数运行只确认 checkpoint 能执行，**不代表**与官方 GR1 数据或全质量采样一致。统一环境使用 Torch SDPA 注意力；要达到官方 NATTEN 质量，需要提供 `neighborhood_attention_generic` 的 wheel 包（Torch 2.5 的 NATTEN 0.17.5 **没有**）。
 
 <ModelCommandBuilder modelId="giga-world-0" locale="zh" />
 

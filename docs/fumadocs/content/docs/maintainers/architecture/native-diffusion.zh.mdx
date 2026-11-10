@@ -51,7 +51,7 @@ Diffusion 不重复实现通用基础设施。Checkpoint file、safetensors inde
 
 Attention 与可复用 transformer mechanics 也遵守同一规则。Capability probing、backend normalization、dense SDPA、任意 padding mask attention、packed variable-length attention、sparse 3D attention、multimodal sequence-parallel composition、n-D/complex/projective RoPE 与 backend callable 都统一位于 `worldfoundry/core/attention`。RMSNorm、共享 transformer MLP 与 conditioning projection、timestep projection、AdaLN/final-layer modulation、prefix gating、可插拔 transformer-op policy 和 gradient checkpoint execution 分别位于 `worldfoundry/core/nn`。HunyuanVideo、LTX、Matrix 衍生产品、Wan 和其他 model layer 只 import 这些 primitive，不再保留 family 私有的 backend probing、private-kernel dispatch、offload、checkpoint execution 或通用 transformer-op config。
 
-如果一项能力也能服务非 diffusion model，应先实现到 `worldfoundry/core`。任何 family package 都不能再自带 offload manager、checkpoint framework、distributed bootstrap、kernel registry 或通用 quantization system。`core` 拥有什么的完整地图见 [核心基础设施](/zh/docs/maintainers/architecture/core-infrastructure)。
+如果一项能力也能服务非 diffusion model，应先添加到 `worldfoundry/core`。任何 family package 都不能再自带 offload manager、checkpoint framework、distributed bootstrap、kernel registry 或通用 quantization system。`core` 拥有什么的完整地图见 [核心基础设施](/zh/docs/maintainers/architecture/core-infrastructure)。
 
 ## 依赖规则
 

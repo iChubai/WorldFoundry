@@ -5,7 +5,7 @@ description: 代码、文档、runner 和 benchmark facade 的发布门禁。
 
 ## 介绍
 
-验证证据应和改动 surface 成比例：足够小，可以本地运行；足够具体，可以抓到回归；对跳过的重型阶段要明确说明。
+验证证据的规模应与改动 surface 相匹配：足够小，可以本地运行；足够具体，可以抓到回归；对跳过的重型阶段要明确说明。
 
 ## 按变更类型选择证据
 
@@ -19,7 +19,7 @@ description: 代码、文档、runner 和 benchmark facade 的发布门禁。
 
 ## 公开测试
 
-一方测试源码统一存放在 `tests/`，随仓库和 sdist 发布，采用仓库的 Apache-2.0 许可证。wheel 只包含运行时包。
+第一方测试源码统一存放在 `tests/`，随仓库和 sdist 发布，采用仓库的 Apache-2.0 许可证。wheel 只包含运行时包。
 
 在统一 GPU 环境中，从仓库根目录运行不加载权重的快速门禁：
 
@@ -241,7 +241,7 @@ guidance、精度与 attention backend。先比较初始噪声和条件，再比
 - Mock 契约验证 dispatch 与请求转发。
 - 小型真实组件验证实际执行的计算与状态处理。
 - CUDA 检查验证选定设备上的 kernel、stream 和精度路径。
-- 已发布 checkpoint 的抽样验证实际权重和请求；数值回归仍需与已验收参考比较。
+- 已发布 checkpoint 的抽样验证实际权重加载和请求处理；数值回归仍需与已验收参考比较。
 - 服务验收还需运行真实取消、worker 复用、同时会话及声明的 rank 拓扑。
 
 注入取消与确定性交错只证明有界清理和隔离，不证明真实服务或 CUDA 并发。功能、数值与性能结果分开报告：独立测量加载、冷编译、warmup、稳态采样、decode、transfer
@@ -278,7 +278,7 @@ CI 即使选例失败也会上传 `geometry-impact`，其中是必须执行的�
 
 ### 在模型主机上定时执行 GPU 回归
 
-使用与参考结果相同的模型 Python、已验收 assets 和环境。先将明确验收过的结果复制到持久化的私有目录：
+使用与参考结果相同的模型 Python、已验收 assets 和运行环境。先将明确验收过的结果复制到持久化的私有目录：
 
 ```bash
 python3 tests/manual/geometry_regression_schedule.py import-reference \

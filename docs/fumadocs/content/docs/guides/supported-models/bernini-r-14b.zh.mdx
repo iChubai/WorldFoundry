@@ -23,7 +23,7 @@ Bernini-R 14B 是字节 Bernini 系列的「仅渲染器」发布：14B 渲染�
 
 `bernini-r-14b` 同时覆盖图像与视频的生成和编辑任务。
 
-即 Bernini 两段式设计中的 14B 渲染网络，单独运行。图像配方单卡可跑，视频配方可显式启用 Ulysses 序列并行加速。
+即 Bernini 两段式设计中的 14B 渲染网络，单独运行。图像配方可在单卡上运行，视频配方可显式启用 Ulysses 序列并行加速。
 
 任务：文生图、图像编辑、文生视频、视频到视频。别名：`bernini-r`、`bernini-r-diffusers`。模态上，它接受文本、图像、视频，输出图像、视频。
 
@@ -37,7 +37,7 @@ CLI task profile：`t2v`、`t2i`、`i2i`、`v2v`、`r2v`、`rv2v`。绑定的 pi
 
 系列状态：**Runner 一致性待确认**。
 
-用 task_type 选择任务；先在本地就位 Bernini-R-Diffusers checkpoint（apache-2.0）。快速实验建议用 1.3B 版本；需要规划器+渲染器全流程时用旗舰 bernini 模型。
+通过 task_type 选择任务；先在本地准备好 Bernini-R-Diffusers checkpoint（apache-2.0）。快速实验建议使用 1.3B 版本；需要规划器与渲染器完整流程时，请使用旗舰 bernini 模型。
 
 ## 在 WorldFoundry 中运行
 

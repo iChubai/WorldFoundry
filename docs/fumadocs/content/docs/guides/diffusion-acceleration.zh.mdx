@@ -3,7 +3,7 @@ title: 可插拔 diffusion 加速
 description: 对照 Sol-Engine 与 FlashDreams，说明原生插件、正确性边界和 H100 实测。
 ---
 
-原生精度 Wan MHA 融合在 H100 的两个种子测试中保持最终 latent/RGB 逐位一致：17 帧加速 **1.19%–1.42%**，41 帧加速 **0.60%–0.66%**。插件按模型配置，支持卸载恢复；默认关闭。
+在 H100 上使用两个种子测试原生精度 Wan MHA 融合时，最终 latent/RGB 保持逐位一致：17 帧加速 **1.19%–1.42%**，41 帧加速 **0.60%–0.66%**。插件按模型配置，支持卸载恢复；默认关闭。
 
 ## 上游对照
 
@@ -47,7 +47,7 @@ HyperFlow 向上游转发 `--sol-attn`，WorldGen 有可选 Flux/Nunchaku 路径
 
 EasyCache 按显式 `request_id` 和 CFG 分支隔离，正常结束和异常退出均释放张量，只留下有界 JSON 回执。条件快照能够检测 inference tensor 的原地修改，并使旧 residual 失效。阈值 `0.0` 执行全部原始块并直接返回 dense 输出。
 
-模型加载器只在声明 `supports_acceleration_plugins` 的 DiT 上应用共享配置。assembler 检查 denoiser 的安装回执，拒绝接收了插件选项却没有安装的路径。安装回执始终标为 `execution_verified=False`；实际 kernel 和跳过块数另行验证。
+模型加载器只在声明 `supports_acceleration_plugins` 的 DiT 上应用共享配置。assembler 检查 denoiser 的安装回执，拒绝接收了插件选项却未实际安装的路径。安装回执始终标为 `execution_verified=False`；实际 kernel 和跳过块数另行验证。
 
 ## 使用方式
 
@@ -97,7 +97,7 @@ registry = diffusion_acceleration_registry()
 | `selective_fp8` | 必须显式指定 `include` module-path glob，可选 `exclude`。默认 `min_features=1024`、`scaling=rowwise`、`use_fast_accum=False`；仅符合条件的原生 Wan/SANA block Linear。执行回执区分实际 scaled FP8 GEMM 与 dense fallback。 |
 | `wan_cross_kv_fusion` | 原生 Wan 文本 K/V packing。默认 `min_tokens=256`、`include_image=False`；小 context 使用原始独立投影。保留 canonical 参数，数值契约允许原生 GEMM reduction 的舍入差异。 |
 
-EasyCache 拒绝 streaming、camera/control 子图、offload、compile、CUDA Graph、SP、其他 feature cache、近似 processor 和 inplace residual。Resident 原生 Wan2.2 双 expert 使用下文的受限 schedule 契约。条件必须由 tensor、mapping、list/tuple 和标量组成。cache 的 block callback 必须不修改输入。Scoped attention 同样拒绝未经验证的 Graph/SP/近似 processor 组合，Wan Sol 路径还拒绝 compile。
+EasyCache 拒绝 streaming、camera/control 子图、offload、compile、CUDA Graph、SP、其他 feature cache、近似 processor 和 inplace residual。Resident 原生 Wan2.2 双 expert 使用下文的受限 schedule 契约。条件必须由 tensor、mapping、list/tuple 和标量组成。cache 的 block callback 不得修改输入。Scoped attention 同样拒绝未经验证的 Graph/SP/近似 processor 组合，Wan Sol 路径还拒绝 compile。
 
 Wan Sol 配置示例，先在隔离环境安装上游 provider：
 
@@ -238,9 +238,9 @@ PYTHONPATH=. python benchmarks/inference/lightvae_fp8.py \
 
 `native_plugins.py` 对原生 SANA/Wan 评估 candidate JSON；`lightvae.py` 比较 teacher/student decoder；`lightvae_encoder.py` 用公共 teacher decoder 比较两个 encoder；`lightvae_fp8.py` 比较相同 student 的 FP32/FP8 encoder。
 
-诊断分别记录质量、实际执行和配对耗时。默认比较预算为 latent relative L2 ≤0.03、PSNR ≥33 dB、最低帧 SSIM ≥0.98。有效且输出有限的候选即使未达到这个预算，也会测量速度并标记 `measured_quality_tradeoff`；自动推荐仍要求质量达标与稳定收益。`--quality-only` 只测质量。
+诊断分别记录质量、实际执行和配对耗时。默认比较预算为 latent relative L2 ≤0.03、PSNR ≥33 dB、最低帧 SSIM ≥0.98。对于有效且输出有限的候选，即使未达到该预算，也会测量其速度并标记 `measured_quality_tradeoff`；自动推荐仍要求质量达标与稳定收益。`--quality-only` 只测质量。
 
-非有限输出、未实际执行的优化和共享 GPU 不产生有效速度结论。计时采用至少三轮交错配对，排除加载、安装和 JIT，并检查计时路径及输出与 pilot 一致。FP8 clipping 单独记录，不作为“内核未执行”的判据。
+非有限输出、未实际执行的优化，以及共享 GPU 上的测量，都不能产生有效的速度结论。计时采用至少三轮交错配对，排除加载、安装和 JIT，并检查计时路径及输出与 pilot 一致。FP8 clipping 单独记录，不作为“内核未执行”的判据。
 
 从已提交的工作树运行可复现实验。运行记录包含 Git revision、环境、配置及输入文件的大小和修改时间。输入文件变化仍会使实验失效；校准插件仍校验参数摘要。诊断不扫描其他模型的源码，也不重复读取整个 checkpoint 计算哈希。
 

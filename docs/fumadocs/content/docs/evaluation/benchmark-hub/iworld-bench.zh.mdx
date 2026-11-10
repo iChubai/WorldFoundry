@@ -3,7 +3,7 @@ title: iWorld-Bench
 description: "ICML 2026 交互式世界模型评测：4.9k 任务覆盖视觉质量、轨迹跟随与记忆。WorldFoundry 封装官方指标。"
 ---
 
-iWorld-Bench（清华，联合东北大学与华南理工；ICML 2026）评测**交互式**世界模型，即能响应外部动作序列的生成器。统一的 Action Generation Framework 桥接文本动作、相机矩阵与轨迹。发布从 **330k** 片段筛到 **2.1k** 高质量样本，再定义**六类任务 / 4.9k 测试样本**，覆盖视觉生成、轨迹跟随与记忆（例如内容离镜再入镜的 `memory_symmetry`）。
+iWorld-Bench（清华，联合东北大学与华南理工；ICML 2026）评测**交互式**世界模型，即能响应外部动作序列的生成器。统一的 Action Generation Framework 桥接文本动作、相机矩阵与轨迹。该基准先从 **330k** 个片段中筛选出 **2.1k** 个高质量样本，再定义**六类任务 / 4.9k 测试样本**，覆盖视觉生成、轨迹跟随与记忆（例如内容离镜再入镜的 `memory_symmetry`）。
 
 `iworldbench_average` 是已有分面的均值。许可证：Apache-2.0。
 
@@ -29,7 +29,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
   --json
 ```
 
-`--split` 选择任务划分。`--official-results-path` 导入已有报告。环境变量：`WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT`、`WORLDFOUNDRY_IWORLD_BENCH_RESULTS_PATH`、`WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND`。`WORLDFOUNDRY_IWORLD_BENCH_PYTHON` 是可选的兼容 Python 覆盖，不是单独环境要求。
+`--split` 选择任务划分。`--official-results-path` 导入已有报告。环境变量：`WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT`、`WORLDFOUNDRY_IWORLD_BENCH_RESULTS_PATH`、`WORLDFOUNDRY_IWORLD_BENCH_RUNTIME_BACKEND`。`WORLDFOUNDRY_IWORLD_BENCH_PYTHON` 是可选的兼容 Python 解释器覆盖配置，不代表需要单独的环境。
 
 清单：`worldfoundry/data/benchmarks/tasks/external/iworld-bench.yaml`。数据布局：`dataset/all_pack/metadata.csv`、`camera_following_metadata.csv`、`assets/`。
 

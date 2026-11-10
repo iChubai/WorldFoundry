@@ -21,7 +21,7 @@ pageSource: authored
 
 用 `cogact-base` 根据观测和语言指令预测机器人动作。
 
-认知与动作分离：VLM 编码图像+指令，DiT（扩散 transformer）动作模型预测 16x7 动作块。官方 demo 契约为 load_vla(...).predict_action(image, prompt, unnorm_key, cfg_scale, use_ddim, num_ddim_steps)。该模型由微软（Microsoft）发布。
+认知与动作分离：VLM 编码图像和指令，DiT（扩散 transformer）动作模型预测 16x7 动作块。官方 demo 契约为 load_vla(...).predict_action(image, prompt, unnorm_key, cfg_scale, use_ddim, num_ddim_steps)。该模型由微软（Microsoft）发布。
 
 任务：视觉-语言-动作（VLA）、VLA 动作预测、VLA 策略执行。别名：`cogact-base`、`cogact-small`、`cogact-large`。
 
@@ -37,7 +37,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `CogACTPipeline`。
 
 默认 SimplerEnv 配置使用 bridge_orig 或 fractal20220817_data 归一化键。当门控的 Llama 2 镜像不可用时，推理加载器复用已安装的 OpenVLA Llama tokenizer。不包含 FSDP 训练、RLDS 加载器、部署服务与 SimplerEnv 适配器。
 
-Llama-2 tokenizer 依赖可能需要门控镜像或 OpenVLA 回退。
+Llama-2 tokenizer 的依赖可能需要使用门控镜像，或回退到 OpenVLA。
 
 ## 在 WorldFoundry 中运行
 

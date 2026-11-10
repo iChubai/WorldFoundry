@@ -19,7 +19,7 @@ LingBot-Video 是蚂蚁灵波（Robbyant）的视频生成系列，支持文生�
 
 `lingbot-video` 是面向图像与视频生成、编辑的多任务模型。
 
-稠密 1.3B 与 MoE 30B-A3B（激活 3B）两个 checkpoint 共享同一推理面；MoE 线增加了细化阶段。支持的执行路径包括直连 Diffusers、可选 SGLang、FSDP、上下文并行与 CFG 并行。上游推荐栈要求专用的 Transformers 5 / Diffusers 0.39 环境。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
+稠密 1.3B 与 MoE 30B-A3B（激活 3B）两个 checkpoint 共用同一套推理接口；MoE 线增加了细化阶段。支持的执行路径包括直连 Diffusers、可选 SGLang、FSDP、上下文并行与 CFG 并行。上游推荐栈要求专用的 Transformers 5 / Diffusers 0.39 环境。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
 任务：文生图、文生视频、text-image-to-video、video-refinement。别名：`lingbot-video-dense`、`lingbot-video-moe`。模态上，它接受文本、图像，输出图像、视频。
 
@@ -37,7 +37,7 @@ CLI task profile：`t2v`、`ti2v`、`t2i`。绑定的 pipeline 类是 `LingBotVi
 
 结构化 `prompt_json` 若包含 `duration`，运行器会按 `duration × fps` 推导帧数并向上取到 `4n+1`。要使用该时长，请省略 `num_frames`，或将其设为相同的推导值；显式冲突会在加载权重前报错。Studio 预设含 `num_frames=121`，若提供不同时长的提示 JSON，需要删掉或改成对应帧数。
 
-已用发布的 checkpoint 验证：稠密 1.3B 模型可生成 121 帧、832x480 视频；MoE 30B-A3B 在官方 T2V 示例 1（时长缩短为 1 秒、40 步）上与固定版本的官方脚本生成的 25 帧 832x480 视频视觉一致，但并非逐像素相同。即使默认产物类型是 T2V 视频路径，T2I 也会产出图像。稠密与 MoE 权重（apache-2.0）为外部资产，运行前需先就位。
+已使用公开发布的 checkpoint 验证：稠密 1.3B 模型可生成 121 帧、832x480 视频；MoE 30B-A3B 在官方 T2V 示例 1（时长缩短为 1 秒、40 步）上与固定版本的官方脚本生成的 25 帧 832x480 视频视觉一致，但并非逐像素相同。即使默认产物类型是 T2V 视频路径，T2I 也会产出图像。稠密与 MoE 权重（apache-2.0）为外部资产，运行前需先准备好。
 
 ## 在 WorldFoundry 中运行
 

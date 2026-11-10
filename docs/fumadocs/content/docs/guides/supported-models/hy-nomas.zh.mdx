@@ -46,7 +46,7 @@ result = pipeline(
 )
 ```
 
-prompt 列表表示有序 rollout，而不是独立 batch。`segment_latent_lengths` 需要为每个 prompt 提供一个正整数，总和为 `ceil(num_frames / 4)`；省略时将总长度分配到各段。空间尺寸向上取整压缩 32 倍，解码后裁剪回请求尺寸。结构化动作 JSON 保留逐动作的文本可见范围与时间戳窗口。
+prompt 列表表示有序 rollout，而不是独立 batch。`segment_latent_lengths` 需要为每个 prompt 提供一个正整数，总和为 `ceil(num_frames / 4)`；省略时将总长度分配到各段。空间尺寸先向上取整，再压缩 32 倍，解码后裁剪回请求尺寸。结构化动作 JSON 保留逐动作的文本可见范围与时间戳窗口。
 
 `camera_extrinsics` 接受归一化 OpenCV camera-to-world 矩阵，形状为
 `(num_frames, 4, 4)` 或 `(1, num_frames, 4, 4)`。只为最后一个 latent 补齐姿态；这些矩阵不是 world-to-camera view matrix。
@@ -61,7 +61,7 @@ wf run hy-nomas --print-config --json
 
 ## 低显存推理
 
-加载时传入 `low_memory=True`，或选择 `hy-nomas-low-memory`。原生预设对 DiT 使用 weight-only INT8，对 KV 使用 INT8 存储，对 PixelUMM 线性层使用 FP8，并按阶段进行 CPU offload。Qwen、去噪和解码分开就位。预设在加载时量化上述浮点 checkpoint，无需单独的量化 checkpoint。FP8 执行需要符合要求的 CUDA 硬件与 BF16/FP16 输入。
+加载时传入 `low_memory=True`，或选择 `hy-nomas-low-memory`。原生预设对 DiT 使用 weight-only INT8，对 KV 使用 INT8 存储，对 PixelUMM 线性层使用 FP8，并按阶段进行 CPU offload。Qwen、去噪和解码分阶段加载。预设在加载时量化上述浮点 checkpoint，无需单独的量化 checkpoint。FP8 执行需要符合要求的 CUDA 硬件与 BF16/FP16 输入。
 
 `max_cache_segments` 可限制保留的片段 KV 历史。淘汰历史会减少时间上下文；位置偏移仍单调递增。
 
@@ -69,7 +69,7 @@ wf run hy-nomas --print-config --json
 
 Studio 可发现 `Hy-Nomas`，使用文本初始化及 WASD/视角控制。公开的 `configure_realtime`、`stream_realtime`、`reset_realtime` 复用现有常驻 worker 和内存 RGB 传输。更新文本时保留世界历史；重置释放该会话的 KV、相机与解码历史，不重新加载权重。
 
-默认 PixelUMM 窗口与重叠设置下，首块消费 40 帧输入并输出 4 帧稳定前缀，后续每块消费、输出各 20 帧。剩余前缀缓冲到后续窗口或最终收尾后再输出，已通过 WebRTC 发送的帧无需回写。片段失败会使所属会话失效；需要重新开始 rollout，不能继续使用已部分推进的历史。
+默认 PixelUMM 窗口与重叠设置下，首块消费 40 帧输入并输出 4 帧稳定前缀，后续每块消费、输出各 20 帧。剩余前缀会缓冲到后续窗口或最终收尾阶段，然后再输出，已通过 WebRTC 发送的帧无需回写。片段失败会使所属会话失效；需要重新开始 rollout，不能继续使用已部分推进的历史。
 
 ## 验证与限制
 

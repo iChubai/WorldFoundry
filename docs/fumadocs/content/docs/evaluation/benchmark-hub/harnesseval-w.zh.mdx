@@ -4,9 +4,9 @@ description: 六类世界状态评测，复用官方 Python 评分与 WorldFound
 ---
 
 [HarnessEval-W](https://github.com/MirroS-Lab/HarnessEval-W) 覆盖探索、意图、物理三类状态变化，以及漂移抵抗、返回重访一致性和画外演化。
-[公开数据集](https://huggingface.co/datasets/MirroS-Lab/HarnessEval-W) 宣布包含 100 个 case。集成固定在上游版本 `ed4ccc6486b8271723ee8baea60d89b32d0a7518`。
+[公开数据集](https://huggingface.co/datasets/MirroS-Lab/HarnessEval-W) 说明其包含 100 个 case。集成固定在上游版本 `ed4ccc6486b8271723ee8baea60d89b32d0a7518`。
 
-每个 case 的公开分数由核心能力和观察质量各占 50%；`overall_macro` 对六类任务等权平均。多模型使用各类任务的共同 case；缺少任一类时不会生成总分。导入多模型结果时用 `--result-model-id` 选择模型，保留原有共同 case 范围。
+每个 case 的公开分数由核心能力和观察质量各占 50%；`overall_macro` 对六类任务等权平均。多模型评测使用各类任务共有的 case；缺少任一类时不会生成总分。导入多模型结果时用 `--result-model-id` 选择模型，保留原有共同 case 范围。
 
 <BenchmarkPageSections id="harnesseval-w" locale="zh" />
 
@@ -51,9 +51,9 @@ python -m worldfoundry.evals.tasks.execution.runners.harnesseval_w.run_harnessev
   --output-dir tmp/harnesseval-run --strict --json
 ```
 
-加 `--dry-run` 只检查输入、规划任务。`--limit N` 在检查完整 manifest 后选择 N 个 case，并保留每个 case 的全部 skill。已有官方 metric bundles 时，使用 `--score-cached --metric-cache-root /path/to/metric_cache`，可执行官方缓存评分而不加载模型。每个 skill 和分阶段 drift 组件分别在 Python 子进程运行，`--timeout` 限制每个 worker 的时间，日志与审计写入输出目录。
+添加 `--dry-run` 时只检查输入并规划任务。`--limit N` 在检查完整 manifest 后选择 N 个 case，并保留每个 case 的全部 skill。已有官方 metric bundles 时，使用 `--score-cached --metric-cache-root /path/to/metric_cache`，可执行官方缓存评分而不加载模型。每个 skill 及各阶段 drift 组件均在独立的 Python 子进程中运行，`--timeout` 限制每个 worker 的时间，日志与审计写入输出目录。
 
 完整推理需要 CUDA、ffmpeg/ffprobe、依赖与权重，以及 VLM judge。CLIP、RAFT、AMT、HPSv3、Depth Anything v1、DINOv2、MegaSAM 和 UniDepth 复用 `worldfoundry/base_models`。
 UniDepth 从 `WORLDFOUNDRY_UNIDEPTH_V2_VITL14_MODEL_DIR`（包含 `config.json`、`model.safetensors`）加载权重，已使用固定的 HF 快照验证 GPU 深度、点云与内参推理。Nyström 注意力依赖 `xformers.components.attention`（验证版本为 `xformers==0.0.28.post3`）。在 `worldfoundry/base_models/three_dimensions/slam/mega_sam_runtime/base` 下使用与 PyTorch 兼容的编译器运行 `python -m pip install --no-build-isolation -e .`，构建两个 CUDA 扩展。完整 100-case GPU/API 评测尚未与官方模型分数对齐验证。
 
-统一 `official-run` 入口的额外输入可通过 `WORLDFOUNDRY_HARNESSEVAL_MANIFEST`、`WORLDFOUNDRY_HARNESSEVAL_PLAN_ROOT`、`WORLDFOUNDRY_HARNESSEVAL_MODEL_ID`、`WORLDFOUNDRY_HARNESSEVAL_BACKEND_CONFIG` 指定。需要不同已配置 Python 环境时，使用 `WORLDFOUNDRY_HARNESSEVAL_PYTHON` 指定 skill worker 解释器。上游 README 声明 Apache-2.0，但固定版本没有独立 LICENSE 文件。
+统一 `official-run` 入口的额外输入可通过 `WORLDFOUNDRY_HARNESSEVAL_MANIFEST`、`WORLDFOUNDRY_HARNESSEVAL_PLAN_ROOT`、`WORLDFOUNDRY_HARNESSEVAL_MODEL_ID`、`WORLDFOUNDRY_HARNESSEVAL_BACKEND_CONFIG` 指定。需要使用另一个已配置的 Python 环境时，使用 `WORLDFOUNDRY_HARNESSEVAL_PYTHON` 指定 skill worker 解释器。上游 README 声明 Apache-2.0，但固定版本没有独立 LICENSE 文件。

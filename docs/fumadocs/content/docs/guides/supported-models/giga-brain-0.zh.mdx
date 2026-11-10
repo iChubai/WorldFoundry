@@ -5,7 +5,7 @@ modelId: "giga-brain-0"
 pageSource: authored
 ---
 
-GigaBrain-0 是极佳科技（GigaAI）的 3.5B VLA 基础策略，支持子任务预测，发布 GigaBrain-0-3.5B-Base 与 0.1 更新版，Apache-2.0 许可。已使用 GigaBrain-0.1 权重验证：树内运行时使用转换的 LeRobot RoboTwin 统计输出 CUDA action_trace。
+GigaBrain-0 是极佳科技（GigaAI）的 3.5B VLA 基础策略，支持子任务预测，已发布 GigaBrain-0-3.5B-Base 与 0.1 更新版，采用 Apache-2.0 许可。已使用 GigaBrain-0.1 权重验证：树内运行时利用转换后的 LeRobot RoboTwin 统计输出 CUDA action_trace。
 
 已在 **0.1** 变体上验证：公开 pipeline 在 80 GB GPU 上用转换后的 LeRobot RoboTwin 统计写出 checkpoint 驱动的 CUDA `action_trace`（约占用 20.8 GB）。3.5B-base 权重仅通过 GPU 张量检查。官方任务分数还需要门控的官方任务数据和任务专用 `norm_stats` / `delta_mask`。
 
@@ -23,7 +23,7 @@ GigaBrain-0 是极佳科技（GigaAI）的 3.5B VLA 基础策略，支持子任�
 
 `giga-brain-0-3.5b-base` 把相机观测和指令映射为动作轨迹。
 
-3.5B 策略，PaliGemma tokenizer 基座，用 FAST 动作 tokenizer 做离散动作编码，另有子任务预测头。
+该 3.5B 策略以 PaliGemma tokenizer 为基座，用 FAST 动作 tokenizer 进行离散动作编码，并配有子任务预测头。
 
 任务：视觉-语言-动作（VLA）、VLA 动作预测、VLA 策略执行、机器人策略。别名：`giga_brain_0`、`gigabrain0`、`giga-brain-0.1`、`GigaBrain-0-3.5B-Base` 等。同系列还有 `giga-brain-0.1-3.5b-base`。
 

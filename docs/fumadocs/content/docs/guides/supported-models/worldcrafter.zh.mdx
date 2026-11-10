@@ -31,6 +31,6 @@ Base 默认 50 步、CFG 5。Fast 按官方三阶段 2/2/2 时间表运行，CFG
 
 Base 常规输出会按上游规则裁剪到 `33 × num_chunks - 1` 帧；Fast 保留 `33 × num_chunks` 帧。Base 断点续推拼接完整分段，因此也是 `33 × num_chunks` 帧。
 
-运行需要 CUDA、PyTorch 2.10、支持 Helios 的 Diffusers、Transformers 5.3、Accelerate、PEFT、Einops 和 safetensors。编译默认关闭。已在 H100 上用 Base 与 Fast 发布权重验证：两段 I2V/T2V 运行可严格加载、完整解码视频并通过画面审核；Base 断点续推与连续运行的输出逐值一致。长程记忆与相机控制质量尚未验证。
+运行需要 CUDA、PyTorch 2.10、支持 Helios 的 Diffusers、Transformers 5.3、Accelerate、PEFT、Einops 和 safetensors。编译默认关闭。已在 H100 上用 Base 与 Fast 发布权重验证：两段 I2V/T2V 运行均可严格加载权重、完整解码视频并通过画面审核；Base 断点续推与连续运行的输出逐值一致。长程记忆与相机控制质量尚未验证。
 
 [官方源码](https://github.com/TencentARC/WorldCrafter) 固定版本为 `7e57e4d0448e8661eb6ae078f53e19638bd07102`。官方许可证仅允许**学术用途**；完整许可和第三方声明统一保留在仓库根目录的 `THIRD-PARTY-NOTICES`。

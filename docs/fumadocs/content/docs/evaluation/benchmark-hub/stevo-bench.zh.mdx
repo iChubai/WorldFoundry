@@ -3,7 +3,7 @@ title: STEVO-Bench
 description: "Caltech 的画外状态演化评测：225 个任务，VLM 裁判。WorldFoundry 内置官方评测器。"
 ---
 
-STEVO-Bench（Caltech GLab）问的是视频世界模型在**观察被切断时是否仍在模拟状态演化**。每个任务施加一种观察控制（场内遮挡、相机转开或光照变暗）再加一个触发动作。VLM 裁判检查隐藏过程是否继续推进且物理上合理。官方规模：**6 类世界变化、225 个任务**。许可证：MIT。
+STEVO-Bench（Caltech GLab）考察视频世界模型在**观察中断时是否仍在模拟状态演化**。每个任务施加一种观察控制（场内遮挡、相机转开或光照变暗）再加一个触发动作。VLM 裁判检查隐藏过程是否继续推进且物理上合理。官方规模：**6 类世界变化、225 个任务**。许可证：MIT。
 
 三个可执行判据（官方 `eval/eval_cli.py`）：`control`（`occlusion_done`、`trigger_applied`）、`physics`（`physical_inaccuracy`）、`state`（`state_evol`）。聚合对齐 `eval/summarize_results.py`：`control_success = occlusion_done AND trigger_applied`，`task_success = state_evol AND NOT physical_inaccuracy`（主键）。
 
@@ -93,7 +93,7 @@ runs/<output_map_stem>/
 
 `runtime/stevo_bench/eval/eval_se/` 是另一套 Gemini 两步探测（用首帧 + 动作预测隐藏过程，再核验视频）。**不是**官方三条判据 CLI。
 
-- 标准 / evidence / ensemble prompt（`gemini_evaluator.py`、`gemini_evaluator_evidence.py`、`gemini_evaluator_ensemble.py`）。他们的测试里 evidence 是最好的单裁判；`--ensemble` 每题 3 次调用（大约 3 倍费用）。
+- 标准 / evidence / ensemble prompt（`gemini_evaluator.py`、`gemini_evaluator_evidence.py`、`gemini_evaluator_ensemble.py`）。其测试中，evidence 是效果最好的单裁判方案；`--ensemble` 每题 3 次调用（大约 3 倍费用）。
 - Gemini+GPT 一致通过：`gemini_gpt_evaluator.py`（依赖 `worldfoundry/data/benchmarks/requirements/stevo-bench-eval-se.txt`）。
 - 这些脚本默认过滤：level-4、id 不以 `_00` 结尾，且首帧图 + 视频 + YAML 都在。
 

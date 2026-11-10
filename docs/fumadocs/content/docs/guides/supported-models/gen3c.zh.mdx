@@ -9,7 +9,7 @@ GEN3C 用显式 **3D 缓存**生成**相机可控**视频：先从输入图（�
 
 <ModelPaperFigures modelId="gen3c" locale="zh" />
 
-命名相机轨迹、**MoGe** 深度和 RGBD 前向扭曲在潜变量初始化角色内。调用方也可以直接提供预渲染的 3D 缓存张量。
+命名相机轨迹、**MoGe** 深度和 RGBD 前向扭曲均由潜变量初始化阶段处理。调用方也可以直接提供预渲染的 3D 缓存张量。
 
 论文：[arXiv 2503.03751](https://arxiv.org/abs/2503.03751)。项目页：[research.nvidia.com/labs/toronto-ai/GEN3C](https://research.nvidia.com/labs/toronto-ai/GEN3C/)。代码：[nv-tlabs/GEN3C](https://github.com/nv-tlabs/GEN3C)（**nvidia-source-code**）。权重：`nvidia/GEN3C-Cosmos-7B` 加 `Ruicheng/moge-vitl`。
 
@@ -17,7 +17,7 @@ GEN3C 用显式 **3D 缓存**生成**相机可控**视频：先从输入图（�
 
 ## 用来做什么
 
-NVIDIA GEN3C 相机条件世界视频。权重有门控。
+NVIDIA GEN3C 用于生成相机条件世界视频。权重有门控。
 
 启动 `wf run gen3c --pipeline.task-profile official-single-image`。
 

@@ -36,7 +36,7 @@ csgo(execute=True, spawn_id=0, action="forward", headless_steps=24,
 
 也可使用 `DIAMONDPipeline.from_pretrained(variant="csgo", ...)`。`diamond-csgo` binding 直接选择 `DIAMONDCsgoPipeline`。无需传入 `prompt`、`image`、`video`：Atari 从真实环境采集初始化观测，CS:GO 从指定 spawn 的历史帧开始。
 
-CS:GO 支持 `idle`、`forward`、`backward`、`left`、`right`、`jump`、`turn-left`、`turn-right`。也可用 `actions_path` 传入形状为 `[headless_steps, 51]` 的 JSON/NPY 动作数组，按官方多热编码排列：11 个键盘位、2 个鼠标点击位、23 个水平鼠标分箱、15 个垂直鼠标分箱。每个鼠标轴必须恰有一个有效分箱。提供动作文件时优先采用文件；`spawn_dir` 优先于 `spawn_id`。
+CS:GO 支持 `idle`、`forward`、`backward`、`left`、`right`、`jump`、`turn-left`、`turn-right`。也可用 `actions_path` 传入形状为 `[headless_steps, 51]` 的 JSON/NPY 动作数组，按官方多热编码排列：11 个键盘位、2 个鼠标点击位、23 个水平鼠标分箱、15 个垂直鼠标分箱。每个鼠标轴必须恰有一个有效分箱。提供动作文件时，优先使用文件中的动作；`spawn_dir` 优先于 `spawn_id`。
 
 官方 `higher_quality` 预设每帧运行 3 步去噪、10 步超分辨率；`fast` 各运行 1 步。两者均按指定播放帧率写出 H.264。N 步滚动输出 N+1 帧，包含初始观测。Atari 在 horizon=50 或预测终止时重置，因此视频可能包含上下文重启；CS:GO 执行连续的有限步滚动。
 

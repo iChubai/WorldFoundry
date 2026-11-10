@@ -7,11 +7,11 @@ description: WorldFoundry 推理加速哪些可以开、哪些组合会被拒绝
 这些优化仍是实验性质。它们可能变更，未必适用于每个模型，也不应被当作已支持的生产契约。
 </Callout>
 
-WorldFoundry 只把「有公开开关、且主链会消费」的技术算作可用。参数被接受不等于加速。forward 之后读 `runtime_optimization_report()` 里的 `requested / effective / fallbacks`。
+WorldFoundry 只把「有公开开关、且主链会消费」的技术算作可用。参数被接受不等于加速。forward 之后，应读取 `runtime_optimization_report()` 里的 `requested / effective / fallbacks`。
 
 [可插拔 diffusion 加速](/zh/docs/guides/diffusion-acceleration)补充 Sol-Engine / FlashDreams 对照、原生 SANA/Wan 插件、撤销与请求隔离，以及完整视频测试通过和淘汰的配置。
 
-下面点名的开关，主要针对 **原生 Wan 2.1 / Wan 2.2** 管线（`Wan2p1*`、`Wan2p2*`，含 VACE）。Wan 2.5 / 2.6 / 2.7 是托管 API，没有本地 kernel 开关。其他原生 recipe 只共享一部分（dtype、offload，有的还有 attention 或 VAE tiling）。家族 runtime（LTX、CogVideoX 等）用自己的参数，不要把 Wan 的 key 抄过去。
+下面点名的开关，主要针对 **原生 Wan 2.1 / Wan 2.2** 管线（`Wan2p1*`、`Wan2p2*`，含 VACE）。Wan 2.5 / 2.6 / 2.7 是托管 API，没有本地 kernel 开关。其他原生 recipe 只支持其中一部分（dtype、offload，有的还有 attention 或 VAE tiling）。家族 runtime（LTX、CogVideoX 等）用自己的参数，不要把 Wan 的 key 抄过去。
 
 <Callout type="info" title="接受 ≠ 生效">
 缺 kernel、校准、进程组或 checkpoint 权重时，构建期失败，或明确走 dense / SDPA fallback。只有 wrapper（`*-wrapper-installed (runtime-pending)`）不算加速。
@@ -91,7 +91,7 @@ Studio 常驻 worker 可通过 `from_pretrained` 或 `--load-json` 的加载选�
 }
 ```
 
-预热应匹配部署的 geometry、batch size、条件长度、输入、sampler、autocast 和 inference mode 配置；上面的小尺寸只是准备示例，不是生产 benchmark。预热支持原生 standard、masked-latent
+预热配置应与部署时的 geometry、batch size、条件长度、输入、sampler、autocast 和 inference mode 配置一致；上述小尺寸仅是配置示例，不是生产 benchmark。预热支持原生 standard、masked-latent
 和 Wan dual-expert CFG 策略，包括内置 frozen-latent mask extension；自定义
 runner/extension 需要自己的生命周期。static-KV 与 Graph/regional compile 的组合要求常驻、未分片的
 canonical Wan 权重和 canonical cross-attention processor，拒绝 memory adapter
@@ -145,7 +145,7 @@ output_a, output_b = pipeline.run_batch((request_a, request_b))
 `metadata["request_batching"]` 记录行范围、共享 batch ID、请求/样本数量与实际
 denoiser 调用次数。优化回执属于整个批次，不是各请求的独立耗时。
 
-在 `benchmarks.inference.wan_execution_preparation` 加 `--request-batching`，可将
+为 `benchmarks.inference.wan_execution_preparation` 添加 `--request-batching`，可将
 Wan1.3B、5B TI2V 或 A14B T2V/I2V 的 A/B、B/A、A/B 批次与独立 dense 请求比较。图像条件回放需加 `--images IMAGE_A IMAGE_B`。批处理仍使用已有 latent/RGB 质量预算；报告保留逐输出质量、执行回执、预热耗时、allocated/reserved 显存峰值及诊断性批次耗时。`batch_comparison` 以各请求单独运行的中位耗时之和，对比同两个请求合批的中位耗时；共享 GPU 上的结果不认证性能收益。
 
 使用产品参数时，`pipeline.batch_call([call_a, call_b])` 接受关键字参数字典，应用与 `pipeline(...)` 相同的默认值和别名。每个字典可指定独立的 `output_dir`
@@ -271,7 +271,7 @@ STA / VSA / VMoBA 的 symbol 来自仓内 `thirdparty/fastvideo-kernel`（或已
 
 ### Self-Forcing
 
-原生 Self-Forcing 管线（`self-forcing`）默认与官方 runtime 逐位一致：eager PyTorch SDPA 加 BF16 Wan2.1 VAE。下面的选项都要显式打开，且都是近似路径。数据用 torch 2.5.1、默认的 81 帧 480×832 请求测得。所有时间都来自一张被另一个进程占用部分算力的 H100；GPU 空闲时，精确路径的 rollout 为 3.97 s。时间取最后一列所示次数的热态中位数。FA3 和 regional compile 两行来自同一条件下更早的一组测量，那组测量中默认 rollout 为 4.89 s。
+原生 Self-Forcing 管线（`self-forcing`）默认与官方 runtime 逐位一致：eager PyTorch SDPA 加 BF16 Wan2.1 VAE。下面的选项都要显式打开，且都是近似路径。数据用 torch 2.5.1、默认的 81 帧 480×832 请求测得。所有时间都来自一张被另一个进程占用部分算力的 H100；GPU 空闲时，精确路径的 rollout 为 3.97 s。时间取热态中位数，测量次数见最后一列。FA3 和 regional compile 两行来自同一条件下更早的一组测量，那组测量中默认 rollout 为 4.89 s。
 
 | 选项 | 加载参数 | Rollout（7 块） | 第 6 块 | 解码 81 帧 | 热态次数 |
 | --- | --- | --- | --- | --- | --- |
@@ -325,7 +325,7 @@ pipeline = NativeSelfForcingPipeline.from_pretrained(
 ]} />
 
 <Callout type="warn" title="OOM 与首次编译成本">
-显存不够用 block offload。常驻 + INT8 且未开 expandable CUDA segments 时，额外 BF16 副本可能导致 VAE 阶段 OOM。`torch.compile` 和 CUDA Graph 会让第一次请求慢很多，不要拿那次计时。
+显存不够用 block offload。常驻 + INT8 且未开 expandable CUDA segments 时，额外 BF16 副本可能导致 VAE 阶段 OOM。`torch.compile` 和 CUDA Graph 会让第一次请求慢很多，不应将那次计时作为性能依据。
 </Callout>
 
 ## 怎么打开
@@ -417,7 +417,7 @@ print(dit["requested"], dit["effective"], dit["fallbacks"])
 print(vae["requested"], vae["effective"], vae["fallbacks"])
 ```
 
-至少 forward 一次之后：
+至少执行一次 forward 后：
 
 - **Attention** — `attempts == successes > 0`，目标 fallback 为空。compile：`compiled_graph_traces > 0`。
 - **QKV / RoPE / static-KV** — 本请求有真实调用。static-KV：有 hits，且 `bypasses=0`。

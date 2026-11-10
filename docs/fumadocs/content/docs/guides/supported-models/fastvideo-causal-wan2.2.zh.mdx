@@ -5,7 +5,7 @@ modelId: "fastvideo-causal-wan2.2"
 pageSource: authored
 ---
 
-FastVideo CausalWan2.2 是 **8 步因果** Wan2.2 滚动：视频按**三潜帧**块出来，栈在高噪/低噪专家之间切换。WorldFoundry 让专家 KV / 交叉注意力缓存彼此独立，并在固定的 shifted flow 日程上执行 **self-forcing 再加噪**。Pipeline：`FastVideoCausalWanPipeline`。别名 `fastvideo-causal-wan` 解析到这里。相关 HF id：`FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers`。
+FastVideo CausalWan2.2 采用 **8 步因果** Wan2.2 滚动生成：视频以**三潜帧**为一块生成，模型栈在高噪/低噪专家之间切换。WorldFoundry 让专家 KV / 交叉注意力缓存彼此独立，并在固定的 shifted flow 日程上执行 **self-forcing 再加噪**。Pipeline：`FastVideoCausalWanPipeline`。别名 `fastvideo-causal-wan` 解析到这里。相关 HF id：`FastVideo/CausalWan2.2-I2V-A14B-Preview-Diffusers`。
 
 <ModelPaperFigures modelId="fastvideo-causal-wan2.2" locale="zh" />
 
@@ -34,6 +34,6 @@ FastVideo CausalWan2.2 是 **8 步因果** Wan2.2 滚动：视频按**三潜帧*
 
 ## 在 WorldFoundry 中运行
 
-提供图像运行 `wf run fastvideo-causal-wan2.2-i2v-14b`。已用预览 checkpoint 在 H100 上验证 848×464、81 帧推理。同参数的 FastVideo 官方入口实际输出 73 帧，因为其去噪器舍弃最后两个潜帧；两者公共帧的构图和前进运动一致，但随机数生成器和潜变量精度不同，逐像素一致性未确立。许可证：Apache-2.0。
+提供图像后运行 `wf run fastvideo-causal-wan2.2-i2v-14b`。已用预览 checkpoint 在 H100 上验证 848×464、81 帧推理。同参数的 FastVideo 官方入口实际输出 73 帧，因为其去噪器舍弃最后两个潜帧；两者公共帧的构图和前进运动一致，但随机数生成器和潜变量精度不同，逐像素一致性未确立。许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="fastvideo-causal-wan2.2" locale="zh" />

@@ -7,7 +7,7 @@ AI2-THOR（艾伦人工智能研究所，Ai2）是面向具身 AI 的 **Unity** 
 
 论文：[AI2-THOR: An Interactive 3D Environment for Visual AI](https://arxiv.org/abs/1712.05474)。项目：[ai2thor.allenai.org](https://ai2thor.allenai.org/)。代码：[allenai/ai2thor](https://github.com/allenai/ai2thor)（Apache-2.0）。
 
-WorldFoundry **评测**原生闭环：`wf embodied run` 启动 Unity 构建，逐步执行已经输出模拟器 token 的策略。附带的配置（`FloorPlan1`–`FloorPlan3`）是**闭环冒烟检查**，不是 ALFRED/TEACh 任务。也可以通过 `WORLDFOUNDRY_AI2THOR_RESULTS_PATH` **导入**已有 rollout 导出。WorldFoundry 在该基准上**不跑** VLA 推理，策略或策略服务需由你提供。
+WorldFoundry 原生支持**闭环评测**：`wf embodied run` 启动 Unity 构建，逐步执行输出模拟器 token 的策略。附带的配置（`FloorPlan1`–`FloorPlan3`）用于**闭环冒烟检查**，不是 ALFRED/TEACh 任务。也可以通过 `WORLDFOUNDRY_AI2THOR_RESULTS_PATH` **导入**已有 rollout 导出结果。WorldFoundry 在该基准上**不跑** VLA 推理，策略或策略服务需由你提供。
 
 <BenchmarkPageSections id="ai2thor" locale="zh" />
 

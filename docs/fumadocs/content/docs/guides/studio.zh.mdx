@@ -35,7 +35,7 @@ python -m worldfoundry.studio.visualization.vendor_assets --check
 
 ## Workspace 模式
 
-多模型验证和发布 QA 推荐启动 workspace app，而不是单模型 Studio 进程：
+进行多模型验证和发布 QA 时，推荐启动 workspace app，而不是单模型 Studio 进程：
 
 ```bash
 source tmp/worldfoundry_unified_env.sh
@@ -65,8 +65,8 @@ launcher 不依赖任何机器专有路径。资产解析顺序是：命令行�
 Workspace 必须从模型推理使用的统一 runtime 环境启动，不能从只装了 UI
 依赖的轻量环境启动。CUDA 12.8 机器通常对应
 `worldfoundry-unified-cu128`，先执行 `source tmp/worldfoundry_unified_env.sh`
-再启动 `7870`。如果 **LOAD** 或 **START** 报 `cv2` 等模块缺失，说明当前
-`7870` 进程不是统一 runtime 环境，先重启 workspace，再排查模型代码。
+再启动 `7870` 服务。如果 **LOAD** 或 **START** 报 `cv2` 等模块缺失，说明当前
+`7870` 进程未在统一 runtime 环境中运行，先重启 workspace，再排查模型代码。
 
 不要在机器之间复制或搬迁已经创建好的 conda 环境。Python、OpenSSL 等原生
 链接可能仍指向旧 prefix，导致浏览器服务能启动，但 resident inference worker
@@ -262,7 +262,7 @@ curl -sS -X POST http://127.0.0.1:7870/api/settings \
 ### 快速 job 与 preflight 检查
 
 Workspace inference 默认走快速 job 路径：默认认为 conda 环境、checkpoint
-根目录和 viewer 依赖已经在启动 server 前配置好。正常反复推理时建议保持默认。
+根目录和 viewer 依赖已经在启动 server 前配置好。日常重复推理时，建议保持默认设置。
 
 只有在环境排障或发布前 preflight 时，再显式打开检查：
 
@@ -403,9 +403,7 @@ Resident worker 会让 conda 子进程在多个 job 之间保持存活，因此�
 `StudioManager` 可以复用 pipeline cache。排查进程启动问题，或希望每个 job
 结束后立刻释放 GPU 显存时，设置 `WORLDFOUNDRY_STUDIO_RESIDENT_WORKERS=0`。
 
-**Visualizers**、**Gallery** 和 **Artifacts** 适合快速视觉 QA。
-这些视图会展示最近生成的视频、图片、manifest 和直接 artifact 链接。
-真正对外声明验证通过前，还需要把对应 run 记录到模型推理验证页。
+**Visualizers**、**Gallery** 和 **Artifacts** 适合快速视觉 QA。这些视图会展示最近生成的视频、图片、manifest 和直接 artifact 链接。在正式对外声明验证通过前，还需要把对应 run 记录到模型推理验证页。
 
 ## Workspace 可视化入口
 
@@ -475,11 +473,7 @@ transport 像素量和 `postprocess_ms`，因此应按下方门禁做 A/B trace�
 
 ### 浏览器呈现计时与编码器反馈
 
-WebRTC 状态栏中的 **E2E** 是浏览器提交控制，到呈现消费该控制的 chunk 中某一帧
-之间的延迟中位数。悬停可查看 p90、服务端控制到入队时间、RTT、抖动缓冲延迟与
-解码时间。分布保留最近 256 个已测控制，并排除配置的 warmup chunk。
-键盘/摇杆边沿、STEP 和实时文本更新携带控制 ID；合并的输入以及从未呈现对应帧的
-控制不会产生虚假的延迟样本。
+WebRTC 状态栏中的 **E2E** 是从浏览器提交控制，到浏览器呈现消费该控制的 chunk 中某一帧为止的延迟中位数。悬停可查看 p90、服务端控制到入队时间、RTT、抖动缓冲延迟与解码时间。分布保留最近 256 个已测控制，并排除配置的 warmup chunk。键盘/摇杆边沿、STEP 和实时文本更新携带控制 ID；合并的输入以及从未呈现对应帧的控制不会产生虚假的延迟样本。
 
 帧回执通过现有 DataChannel 传输实际 RTP 时间戳、chunk 索引和帧索引。浏览器与
 `requestVideoFrameCallback().rtpTimestamp` 匹配，即使视频先于回执到达也能关联。
@@ -499,9 +493,8 @@ DataChannel 拥塞时，计时回执让位于控制消息。
 约束，下限为 100 kbit/s（显式上限更低时服从该上限）。降码率在下一次编码生效；
 不足 10% 的升码率更新会合并。模型生成节奏、推理分辨率和帧队列策略保持不变。
 
-**限制：** E2E 表示关联 chunk 帧到达浏览器呈现回调，不是像素响应检测或物理屏幕
-扫描时间。浏览器帧回调不提供 RTP 时间戳、使用 WebSocket 播放或会话没有匹配回执时，E2E
-显示不可用，不以服务端耗时代替。NVENC 反馈需要 PyNvVideoCodec 和具有 NVENC
+**限制：** E2E 表示关联 chunk 帧到达浏览器呈现回调，不是像素响应检测或物理屏幕扫描时间。浏览器帧回调不提供 RTP 时间戳、使用 WebSocket 播放或会话没有匹配回执时，E2E
+会显示为不可用，不以服务端耗时代替。NVENC 反馈需要 PyNvVideoCodec 和具有 NVENC
 引擎的 GPU；仅有 CUDA 不够。动态码率改变传输压缩质量，不改变模型生成像素。
 
 ### 无权重浏览器界面检查
@@ -557,9 +550,7 @@ PYTHONPATH=. "$WORLDFOUNDRY_UNIFIED_ENV_PREFIX/bin/python" \
 浏览器与服务器进程位于同一 Linux 主机，Studio 和 UDP 中继均绑定 loopback；
 不需要 root，也不修改宿主机网卡或网络配置。
 
-干净链路、限速丢包和短时中断三种情况均经过同一个隔离 UDP 中继。两端 SDP 的候选
-地址都被替换，并检查实际选中的远端 ICE 候选确实指向中继。因此延迟、抖动、串行
-发送速率和固定随机种子的丢包会作用于 WebRTC 媒体、反馈与 DataChannel，而不只是
+正常链路、限速丢包和短时中断三种情况均经过同一个隔离 UDP 中继。两端 SDP 的候选地址都被替换，并检查实际选中的远端 ICE 候选确实指向中继。因此延迟、抖动、串行发送速率和固定随机种子的丢包会作用于 WebRTC 媒体、反馈与 DataChannel，而不只是
 HTTP 信令。`delay_ms` 为单向延迟，`rate_bps: 0` 表示不限速。超过有限
 `queue_ms` 排队预算的数据报会丢弃。中断场景在测量 STEP 请求期间双向断流
 1.5 秒；链路计数分别记录随机丢包、队列丢包和中断丢包。
@@ -571,8 +562,7 @@ E2E p50/p90、缺失控制、已呈现的唯一生成帧、呈现间隔和 WebRT
 CPU 百分比只覆盖 Studio 进程，100% 表示一个 CPU 核；显存是采样的进程占用，
 不是 CUDA allocator 的精确峰值。
 
-漏跑、浏览器/服务器回执无法关联、浏览器错误、chunk 不完整以及重置或退出清理
-失败都会使回放失败。服务端阈值复用 `RealtimeRegressionThresholds`；私有
+缺少运行结果、浏览器/服务器回执无法关联、浏览器错误、chunk 不完整以及重置或退出清理失败都会使回放失败。服务端阈值复用 `RealtimeRegressionThresholds`；私有
 profile 的 `delivery_thresholds` 还可设置 `max_e2e_p90_ms`、
 `max_stall_fraction` 和 `max_reset_ms`。延迟阈值应来自已接受的同栈基线；示例
 检查完整性与生命周期，不预设性能目标。对比时保留 profile 和所有逐次结果。
@@ -830,7 +820,7 @@ pipeline。即使短按在生成期间已经释放，其有效状态仍会保留
 worker 会继续处理待消费输入，排空后恢复正常 idle 行为。
 
 模型可以在 `RealtimeSpec.keys` 中声明自己的按键。页面只接受这些按键，在控制
-提示中列出它们，并隐藏模型不使用其按键的虚拟摇杆。未声明按键的模型保留
+提示中列出它们，并隐藏其按键均未被模型使用的虚拟摇杆。未声明按键的模型保留
 W/A/S/D 与 I/J/K/L。Prompt-scheduled 与 queued-segment 页面不接受键盘动作。
 
 #### 鼠标与手柄
@@ -854,9 +844,8 @@ WebRTC 下鼠标位移走无序的 `axes` DataChannel；手柄摇杆值走可靠
 
 #### 输入采样限制
 
-输入保留保证控制被采样，不保证同一个生成 chunk 立即出现可见运动。
-MatrixGame2 的 stride-4 action encoder 可能在后续 chunk 才消费最后一行输入。
-仅落在最后一行的动作仍需该后续 chunk；输入保留本身不会排空模型的动作历史。
+输入保留机制可保证控制得到采样，但不能保证同一个生成 chunk 立即出现可见运动。
+MatrixGame2 的 stride-4 action encoder 可能在后续 chunk 才消费最后一行输入。仅落在最后一行的动作仍需该后续 chunk；输入保留本身不会排空模型的动作历史。
 
 ### 实时文本事件、Idle step 与输出分辨率
 
@@ -947,11 +936,7 @@ Event ID 由 1–64 个字母、数字或 `_.:-` 组成；标签最长 64 字符
 队列深度 (`queue`) 和丢弃的旧帧数 (`dropped`)。这些内容用于当前交互会话排障；
 它们不是持久化 run artifact，也不是服务端完整 stdout/stderr 的副本。
 
-实时日志复用现有实时连接。浏览器按 animation frame 批量更新 DOM，并且最多
-保留最近 120 条记录，因此长时间游玩不会无限扩大日志树，也不会在帧传输热路径
-增加轮询。浏览器允许 Fullscreen API 时，点击按钮或使用快捷键会进入原生全屏；
-如果原生全屏不可用或被浏览器策略阻止，Studio 会保持当前会话，并回退到铺满
-浏览器视口的布局。
+实时日志复用现有实时连接。浏览器按 animation frame 批量更新 DOM，并且最多保留最近 120 条记录，因此长时间运行不会无限扩大日志树，也不会在帧传输热路径增加轮询。浏览器允许 Fullscreen API 时，点击按钮或使用快捷键会进入原生全屏；如果原生全屏不可用或被浏览器策略阻止，Studio 会保持当前会话，并回退到铺满浏览器视口的布局。
 Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
 
 ## 启动 flags

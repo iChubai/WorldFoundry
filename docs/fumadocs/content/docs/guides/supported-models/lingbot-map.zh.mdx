@@ -5,7 +5,7 @@ modelId: "lingbot-map"
 pageSource: authored
 ---
 
-LingBot-Map 是蚂蚁灵波的流式 3D 重建模型：通过 GCTStream 运行时消费图像流，产出相机位姿、深度与点云，LingBotMapPipeline 同时支持流式与窗口式重建。
+LingBot-Map 是蚂蚁灵波的流式 3D 重建模型：通过 GCTStream 运行时处理图像流，产出相机位姿、深度与点云，LingBotMapPipeline 同时支持流式与窗口式重建。
 
 <ModelPaperFigures modelId="lingbot-map" locale="zh" />
 
@@ -19,7 +19,7 @@ LingBot-Map 是蚂蚁灵波的流式 3D 重建模型：通过 GCTStream 运行�
 
 用 `lingbot-map` 从输入视图做前馈 3D 重建。
 
-内置的 GCTStream 运行时实现了上游发布所述的流式 Transformer（论文 arXiv 2604.14141）；封装默认使用 SDPA 注意力，基线运行不需要 FlashInfer（FlashInfer 可用时可传 use_sdpa=false）。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
+内置的 GCTStream 运行时实现了上游发布所述的流式 Transformer（论文 arXiv 2604.14141）；封装默认使用 SDPA 注意力，基线运行不需要 FlashInfer（FlashInfer 可用时，可传 use_sdpa=false）。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
 任务：3D 重建、streaming-3d-reconstruction、camera-pose-estimation、depth-estimation。别名：`lingbot_map`、`robbyant/lingbot-map`。模态上，它接受图像，输出深度。
 

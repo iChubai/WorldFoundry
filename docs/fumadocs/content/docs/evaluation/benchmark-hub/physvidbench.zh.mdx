@@ -3,7 +3,7 @@ title: PhysVidBench
 description: "字幕中介的 T2V QA：383 条 prompt，针对 AuroraCap 字幕问物理是/否。WorldFoundry 导入 output.csv，或对你提供的字幕跑 Gemini。"
 ---
 
-PhysVidBench（Koç University / Cyberiada）是**字幕中介 QA**，不是像素对齐，也不是 PhyGenEval。T2V 模型先生成视频；上游 **AuroraCap** 出字幕；LLM 针对字幕回答物理**是/否**（可供性、工具使用、材料、时序动力学）。套件包含 **383 条 prompt** 与 **4123 道问题**（`cc-by-4.0`）。
+PhysVidBench（Koç University / Cyberiada）是**字幕中介 QA**，不是像素对齐，也不是 PhyGenEval。T2V 模型先生成视频；上游 **AuroraCap** 生成字幕；LLM 针对字幕回答物理**是/否**（可供性、工具使用、材料、时序动力学）。套件包含 **383 条 prompt** 与 **4123 道问题**（`cc-by-4.0`）。
 
 [PhyGenBench](/zh/docs/evaluation/benchmark-hub/phygenbench) 用 VQAScore/VLM 阶段直接评视频。[PhyGround](/zh/docs/evaluation/benchmark-hub/phyground) 套 1–5 定律准则。PhysVidBench 只看字幕与问题，不看像素。
 
@@ -27,7 +27,7 @@ wf zoo benchmark-run \
   --json
 ```
 
-对所供（或捆绑）字幕跑 Gemini QA，结果不能与官方全流水线直接比较：
+对所提供（或捆绑）的字幕跑 Gemini QA，结果不能与官方全流水线直接比较：
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \

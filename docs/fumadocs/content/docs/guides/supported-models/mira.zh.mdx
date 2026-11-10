@@ -5,7 +5,7 @@ modelId: "mira"
 pageSource: authored
 ---
 
-MIRA 是多人交互世界模型：多名玩家在同一个动作条件生成世界中行动（论文 arXiv 2607.05352）。WorldFoundry 仅支持推理，需要兼容的本地 checkpoint 与包含 index.json 的本地 Rocket Science 数据集切分。
+MIRA 是多人交互世界模型：多名玩家在同一个由动作条件生成的世界中行动（论文 arXiv 2607.05352）。WorldFoundry 仅支持推理，需要兼容的本地 checkpoint 与包含 index.json 的本地 Rocket Science 数据集切分。
 
 <ModelPaperFigures modelId="mira" locale="zh" />
 
@@ -35,7 +35,7 @@ CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPip
 
 `rocket-science-rollout` 默认值：seed=42。
 
-公开的 Rocket Science 数据集约 29.24 TB，不会自动下载；请在本地就位所需切分。TorchCodec ABI 不兼容时视频解码回退到 PyAV。
+公开的 Rocket Science 数据集约 29.24 TB，不会自动下载；请在本地准备好所需切分。TorchCodec ABI 不兼容时视频解码回退到 PyAV。
 
 ## 在 WorldFoundry 中运行
 

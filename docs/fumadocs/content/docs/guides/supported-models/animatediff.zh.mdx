@@ -5,7 +5,7 @@ modelId: "animatediff"
 pageSource: authored
 ---
 
-AnimateDiff 是经典的运动模块式文生视频：在现成的 Stable Diffusion 1.5 U-Net 上插入时序模块，而不是从头训练视频骨干。WorldFoundry 的输出与官方 RealisticVision `scripts.animate` demo 完全一致。也可使用别名 `animate-diff`、`animate_diff`。
+AnimateDiff 是经典的运动模块式文生视频模型：在现成的 Stable Diffusion 1.5 U-Net 上插入时序模块，而不是从头训练视频骨干。WorldFoundry 的输出与官方 RealisticVision `scripts.animate` demo 完全一致。也可使用别名 `animate-diff`、`animate_diff`。
 
 <ModelPaperFigures modelId="animatediff" locale="zh" />
 
@@ -15,7 +15,7 @@ AnimateDiff 是经典的运动模块式文生视频：在现成的 Stable Diffus
 
 ## 用来做什么
 
-只接受 prompt 的文生视频，走 `AnimateDiffPipeline`：必填 `prompt`；输出写为 **MP4**。传入 `image` 或 `video` 会报错——本集成不是图生视频，也不是视频到视频。不支持上游的 SparseCtrl 配置。
+这是只接受 prompt 的文生视频路径，使用 `AnimateDiffPipeline`：必填 `prompt`；输出为 **MP4**。传入 `image` 或 `video` 会报错——本集成不是图生视频，也不是视频到视频。不支持上游的 SparseCtrl 配置。
 
 可以换 T2I 基座（已验证 demo 用的是 Realistic Vision），运动模块保持不变。画质与时序一致性可对照 [VBench](/zh/docs/evaluation/benchmark-hub/vbench)。
 
@@ -36,6 +36,6 @@ AnimateDiff 是经典的运动模块式文生视频：在现成的 Stable Diffus
 
 ## 在 WorldFoundry 中运行
 
-在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行 `wf run animatediff`。官方模块会调用 `.cuda()`——CPU 会被拒绝。请就位 `guoyww/animatediff`、`guoyww/animatediff_t2i_backups`、`stable-diffusion-v1-5/stable-diffusion-v1-5` 和 `openai/clip-vit-large-patch14`。运动模块许可是 **Apache-2.0**。Studio/API 走同一套统一环境。
+在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行 `wf run animatediff`。官方模块会调用 `.cuda()`，因此不支持 CPU。请准备好 `guoyww/animatediff`、`guoyww/animatediff_t2i_backups`、`stable-diffusion-v1-5/stable-diffusion-v1-5` 和 `openai/clip-vit-large-patch14`。运动模块许可是 **Apache-2.0**。Studio/API 走同一套统一环境。
 
 <ModelRelatedRecipes modelId="animatediff" locale="zh" />

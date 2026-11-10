@@ -5,9 +5,9 @@ modelId: "genie-envisioner"
 pageSource: authored
 ---
 
-Genie Envisioner 是智元机器人的机器人世界模型平台：以视频生成为骨干，预测动作条件下的机器人操作未来，可用于策略学习与评估。WorldFoundry 内置其官方（WorldArena 收录的）源码；运行需要 Genie-Envisioner 与 LTX-Video checkpoint 及机器人任务资产。
+Genie Envisioner 是智元机器人的机器人世界模型平台：以视频生成为骨干，预测动作条件下机器人操作的未来画面，可用于策略学习与评估。WorldFoundry 内置其官方（WorldArena 收录的）源码；运行需要 Genie-Envisioner 与 LTX-Video checkpoint 及机器人任务资产。
 
-启动器运行发布的 **GE-base** 多视角 transformer，配本地 LTX tokenizer、T5 和 VAE。官方历史输入要求 `input_views` 按 `head` / `left-wrist` / `right-wrist` 顺序传入三个相机目录组成的 JSON 列表，每个目录必须包含 `0.png` 到 `3.png`。默认的三张 ALOHA 单图会各自复制到四个历史槽位，只适合冒烟测试；合成三视角路径也只适合冒烟测试。
+启动器运行发布的 **GE-base** 多视角 transformer，配本地 LTX tokenizer、T5 和 VAE。官方历史输入要求 `input_views` 接收由三个相机目录组成的 JSON 列表，顺序为 `head` / `left-wrist` / `right-wrist`，每个目录必须包含 `0.png` 到 `3.png`。默认的三张 ALOHA 单图会各自复制到四个历史槽位，只适合冒烟测试；合成三视角路径也只适合冒烟测试。
 
 <ModelPaperFigures modelId="genie-envisioner" locale="zh" />
 
@@ -29,7 +29,7 @@ Genie Envisioner 是智元机器人的机器人世界模型平台：以视频生
 
 ## 运行时契约
 
-按官方历史输入推理时必填 `prompt`、`input_views`，其中三路目录各有四张编号 PNG 帧。`input_mode` 设为 `explicit-three-view`（默认值）。三张独立单图或 `synthetic-three-view` 的单图只验证冒烟路径。产物为 `genie-envisioner.mp4`。
+按官方历史输入推理时必填 `prompt`、`input_views`，其中三路目录各有四张编号 PNG 帧。`input_mode` 设为 `explicit-three-view`（默认值）。三张独立单图或 `synthetic-three-view` 单图仅用于验证冒烟路径。产物为 `genie-envisioner.mp4`。
 
 CLI task profile：`robot-multiview-video`。绑定的 pipeline 类是 `GenieEnvisionerPipeline`。
 

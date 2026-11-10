@@ -71,7 +71,7 @@ Wrapper 提供共同的 status、exit code、输出目录与 mode-specific deleg
 
 ## `list_video_benchmarks`
 
-这个发现 helper 返回仓库 video benchmark catalog 中的 ID。返回列表并不表示所有 benchmark 都已在本机可运行；readiness 与资产需要单独检查。
+这个发现 helper 返回仓库 video benchmark catalog 中的 ID。返回列表并不表示所有 benchmark 都能在本机运行；readiness 与资产需要单独检查。
 
 <PythonApiReference symbol="worldfoundry.evals.public.list_video_benchmarks" locale="zh" />
 
@@ -100,7 +100,7 @@ result = run_benchmark(
 
 ## `benchmark_integration_spec`
 
-当 in-tree integration specification 存在时，这个 lookup 会返回它。Catalog 条目可以先于 integration spec 存在，所以返回 `None` 是正常的发现结果。
+当 in-tree integration specification 存在时，这个 lookup 会返回它。Catalog 条目存在时，integration spec 可能尚未存在，因此返回 `None` 是正常的查询结果。
 
 <PythonApiReference symbol="worldfoundry.evals.public.benchmark_integration_spec" locale="zh" />
 

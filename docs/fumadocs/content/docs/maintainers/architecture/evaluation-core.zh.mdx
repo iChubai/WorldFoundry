@@ -5,7 +5,7 @@ description: evaluation 包内 requests、runners、metrics、catalog 与 report
 
 ## 简介
 
-本文从内部看 evaluation 包：哪些类型要保持稳定、一次运行由哪个函数接手、reviewer 可以信哪些文件。如果只想从 CLI 追到磁盘，先读 [工作流](/zh/docs/maintainers/architecture/workflow)。
+本文从内部看 evaluation 包：哪些类型要保持稳定、一次运行由哪个函数接手、reviewer 应以哪些文件为准。如果只想从 CLI 追到磁盘，先读 [工作流](/zh/docs/maintainers/architecture/workflow)。
 
 包内数据流是单向的：**公开契约**定义 JSON-safe 形状，**执行 runner** 产生副作用与 artifact，**catalog loader** 把 YAML 转为契约，**reporting** 把 metrics 变成 scorecard。API 模块应保持 import-light；重型 runtime 不应反向泄漏进 `evals/api/`。
 
@@ -17,7 +17,7 @@ Evaluate 与仅模型运行进入 `evaluate.py` 的 `run_evaluate()`。Model mod
 
 <ArchDiagram id="evaluation-core" locale="zh" />
 
-面向用户的 CLI、TUI 与 Workspace 通过 `execution/orchestration/service.py` 编译成上述 request 类型。五种 intent dataclass、三个规划边界（`PreparedEvaluation`、`RunPlan`、`EvaluateRunRequest` / `ModelBenchmarkRunRequest`）以及编译入口见 [使用界面与编排](/zh/docs/maintainers/architecture/surfaces-orchestration)。前端不能重复实现 generation、artifact materialization、benchmark dispatch 或 metric execution；新增 UX 应增加 intent→request 映射，而非新增 runner。不要再包第四种 recipe executor。
+面向用户的 CLI、TUI 与 Workspace 通过 `execution/orchestration/service.py` 编译成上述 request 类型。五种 intent dataclass、三个规划边界（`PreparedEvaluation`、`RunPlan`、`EvaluateRunRequest` / `ModelBenchmarkRunRequest`）以及编译入口见 [使用界面与编排](/zh/docs/maintainers/architecture/surfaces-orchestration)。前端不能重复实现 generation、artifact materialization、benchmark dispatch 或 metric execution；新增 UX 应增加 intent→request 映射，而非新增 runner。不要再封装第四种 recipe executor。
 
 Prepared evaluation 分别记录 generation、data、evaluation、runtime 与 reference fidelity，再由这些字段推导 claim：完全锁定的官方运行才可能是 `exact_reproduction`；官方 data 与 evaluation 未修改时可为 `benchmark_comparable`；custom-data 或 metric-only 运行只能是 `diagnostic`。对于 model × benchmark 计划，仓内 benchmark evidence 还会继续限制 claim 上限：只验证过 bounded component 的 runner 仍然允许执行，但在 catalog 建立完整 official-suite evidence 前，计划必须降级为 `diagnostic`。调用方布尔参数只能收紧策略，不能把 diagnostic run 提升为榜单候选。`score_valid` 表示 evaluator 是否产出可用分数；`leaderboard_valid` 还必须满足可比 provenance 与 benchmark runner evidence。
 
@@ -33,7 +33,7 @@ Prepared evaluation 分别记录 generation、data、evaluation、runtime 与 re
 
 ## 执行路径
 
-三条执行路径覆盖常见形态。匹配任务选路径——不要在分发处堆条件分支，新增一条路径即可。
+三条执行路径覆盖常见形态。应根据任务选择路径——不要在分发处堆条件分支，新增一条路径即可。
 
 **ContractRunner**（`contract.py`）负责请求归一化、生成和可选的生成缓存复用；评分与报告输出统一委托给 `ExistingResultsRunner`。自定义指标在线、离线均使用相同的计算和聚合逻辑。
 

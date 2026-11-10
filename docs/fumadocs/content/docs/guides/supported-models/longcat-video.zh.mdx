@@ -19,7 +19,7 @@ LongCat-Video 是美团开源的视频生成模型，主打长视频：文生视
 
 用 `longcat-video` 同时完成文生视频和图生视频。
 
-上游将 LongCat-Video 定位为统一的 DiT 系生成器，视频续写是一等任务，可生成分钟级视频。该模型由美团（LongCat 团队）发布。
+上游将 LongCat-Video 定位为统一的 DiT 系生成器，视频续写与其他任务同等受支持，可生成分钟级视频。该模型由美团（LongCat 团队）发布。
 
 任务：文生视频、图生视频、video-continuation、长视频生成。模态上，它接受文本、图像，输出视频。
 
@@ -35,7 +35,7 @@ CLI task profile：`official-t2v`。绑定的 pipeline 类是 `LongCatVideoPipel
 
 `official-t2v` 默认值：negative_prompt=Bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, many people in the background, walking backwards, num_frames=93, fps=15, height=480, width=832, num_inference_steps=50。
 
-记住 execute=True 这道门：默认调用会按设计快速失败。运行前先在本地就位 LongCat checkpoint。
+只有设置 execute=True 才会执行，默认调用会按设计快速失败。运行前请先在本地准备好 LongCat checkpoint。
 
 ## 在 WorldFoundry 中运行
 

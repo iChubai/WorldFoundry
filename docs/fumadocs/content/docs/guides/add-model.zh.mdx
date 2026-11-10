@@ -3,15 +3,15 @@ title: 添加模型
 description: 如何把一个模型接到 WorldFoundry：pipeline、operator、runtime、catalog，以及第一份 PR 需要准备的证据。
 ---
 
-WorldFoundry 的模型集成由五部分组成。Catalog 记录身份与出处；pipeline 负责加载权重并推理；operator 把 `GenerationRequest` 转成 pipeline 能理解的输入；binding 告诉评测 runner 该 import 哪个类；runtime profile 描述环境和资产。只要你希望这个方法能在仓库里被稳定复现，这几层缺一不可。
+WorldFoundry 的模型集成由五部分组成。Catalog 记录身份与出处；pipeline 负责加载权重并推理；operator 把 `GenerationRequest` 转成 pipeline 能理解的输入；binding 告诉评测 runner 该 import 哪个类；runtime profile 描述环境和资产。如果希望这个方法能在仓库里稳定复现，这几层缺一不可。
 
 下面按 reviewer 通常阅读 PR 的顺序写。已有模型 ID 见 [模型目录](/zh/docs/guides/supported-models)，跑 demo 见 [推理](/zh/docs/guides/inference)，checkpoint 落盘见 [本地资产](/zh/docs/guides/local-assets)，生成与打分为何必须隔开见 [设计](/zh/docs/overview/design)。
 
 ## 第一份 PR 要窄
 
-第一份 pull request 只需要证明一条 route 能端到端跑通：一个模型族、一个 operator、一个 pipeline、必要时一个 runtime profile、一条已解析的 runner path，以及一份聚焦的 run-evidence report。这样就足以说明 catalog → binding → operator → pipeline → artifact 在一台别人也能复原的机器上成立。
+第一份 pull request 只需要证明一条 route 能端到端跑通：一个模型族、一个 operator、一个 pipeline、必要时一个 runtime profile、一条已解析的 runner path，以及一份聚焦的 run-evidence report。这样就足以证明 catalog → binding → operator → pipeline → artifact 能在其他人可复现的环境中跑通。
 
-不必等所有 checkpoint variant、所有 task 别名、所有 benchmark cell 都绿了再合入。骨架先落地，其余可以跟着加。若第一份 PR 同时还改公共 loader、再写一套 binding parser、或把训练树一并 vendoring 进来，review 成本高，也更容易回退。
+不必等所有 checkpoint variant、所有 task 别名、所有 benchmark cell 都通过后再合入。骨架先落地，其余可以跟着加。若第一份 PR 同时还改公共 loader、再写一套 binding parser、或把训练树一并 vendoring 进来，review 成本高，也更容易回退。
 
 ## 原生 Diffusion 集成
 
@@ -21,11 +21,11 @@ WorldFoundry 的模型集成由五部分组成。Catalog 记录身份与出处�
 
 ## 一次集成会改到哪里
 
-WorldFoundry 里的模型是五层叠在一起的。Pipeline 是公开入口：放在 `worldfoundry/pipelines/<family>/` 下的类，必须暴露 `from_pretrained()`，以及确定性的 `process()` 或 `__call__()`。这个类拥有 checkpoint 构造和原生 generate 调用。它不应该解析 prompt、解码 camera 轨迹、或自行判断哪张图是「第一帧」。那些事属于 operator。
+WorldFoundry 里的模型是五层叠在一起的。Pipeline 是公开入口：对应类放在 `worldfoundry/pipelines/<family>/` 下，必须暴露 `from_pretrained()`，以及确定性的 `process()` 或 `__call__()`。这个类拥有 checkpoint 构造和原生 generate 调用。它不应该解析 prompt、解码 camera 轨迹、或自行判断哪张图是「第一帧」。那些事属于 operator。
 
-Operator 放在 `worldfoundry/operators/`。每个 runnable method 都要有，哪怕第一版很薄。它负责校验请求、加载媒体、解析 camera / action、整理 interaction state，让 pipeline 只看见稳定、有类型的输入。若跳过 operator、把这些逻辑塞进 pipeline，后面的 benchmark 或 Studio 表单就没有干净的挂载点。
+Operator 放在 `worldfoundry/operators/`。每个 runnable method 都要有，哪怕第一版很薄。它负责校验请求、加载媒体、解析 camera / action、整理 interaction state，让 pipeline 只看见稳定、有类型的输入。若跳过 operator、把这些逻辑塞进 pipeline，后面的 benchmark 或 Studio 表单就没有清晰的挂载点。
 
-Checkpoint-shaped network math、tokenizer 封装与 component adapter 放在 `worldfoundry/base_models/`。不属于原生 diffusion 框架的仅推理 orchestration 放在 `worldfoundry/synthesis/`，并消费这些 component。这些包不是训练循环、dataset builder、dataloader、augmentation pipeline 或 Lightning callback 的落点。
+Checkpoint-shaped network math、tokenizer 封装与 component adapter 放在 `worldfoundry/base_models/`。不属于原生 diffusion 框架的仅推理 orchestration 放在 `worldfoundry/synthesis/`，并消费这些 component。这些包不应用于存放训练循环、dataset builder、dataloader、augmentation pipeline 或 Lightning callback。
 
 Evaluation binding 决定 CLI、TUI 和通用 benchmark runner 如何找到该方法。解析路径永远是 catalog 上的 `pipeline_target` 或 `pipeline_binding`，再经过 `worldfoundry/zoo/bindings.py`。Route 字符串的归一化只应出现在这个文件里，不要在 catalog 加载、resolver 或 check helper 里再写一套 parser。
 
@@ -35,21 +35,21 @@ Evaluation binding 决定 CLI、TUI 和通用 benchmark runner 如何找到该�
 
 WorldFoundry 用同一套公开 contract 解析每个 runnable method。只有能 import 到具体 pipeline class，这个方法才算 runnable。你用 `pipeline_target`（`module:Class`）或 bindings.py 已认识的 `pipeline_binding` id 来命名它。两者都缺时，`wf run <model-id>` 会在动 GPU 之前失败。
 
-Runtime profile 不能替代这条 route。Profile 描述 conda / Docker 环境、checkpoint 角色、启动命令和 execution metadata，帮助机器*准备好*去跑；它本身不等于「模型已接入」。Catalog 里只有 profile、没有 pipeline 的条目，会一直停在 planned 或 blocked。
+Runtime profile 不能替代这条 route。Profile 描述 conda / Docker 环境、checkpoint 角色、启动命令和 execution metadata，帮助完成运行前的机器准备；它本身不等于「模型已接入」。Catalog 里只有 profile、没有 pipeline 的条目，会一直停在 planned 或 blocked。
 
-`base_models/perception_core` 与 `base_models/three_dimensions` 更严：只放推理和 runtime helper。若官方仓库把训练脚本和 `inference.py` 放在一起，训练侧不要进树内包。移植 infer 路径，不要 import trainer。
+`base_models/perception_core` 与 `base_models/three_dimensions` 更严：只放推理和 runtime helper。若官方仓库把训练脚本和 `inference.py` 放在一起，训练代码不应进入树内包。移植 infer 路径，不要 import trainer。
 
 ## 按这条 route 实现
 
 先写 pipeline，放在 `worldfoundry/pipelines/<family>/`，方便按族浏览。`from_pretrained()` 应接受 loader 已经会传的参数——model path 或 options dict、device、model id——并在缺 checkpoint 时明确失败。`process()` / `__call__()` 的返回值要能被 WorldFoundry runner 包成 `GenerationResult`：status、耗时、错误、以及落盘后的 artifact 路径。不要只返回内存里的 tensor。评测和 Studio 需要进程退出后仍能打开的文件。
 
-Operator 和 pipeline 放在同一次改动里。哪怕第一版只检查「prompt 是字符串」「图像路径存在」，也比 pipeline 默默吃下一个未知 key 的 dict 要好。模型以后变复杂——多视角、action chunk、camera rig——把增长留在 operator，pipeline 继续只做 checkpoint runner。
+Operator 和 pipeline 放在同一次改动里。哪怕第一版只检查「prompt 是字符串」「图像路径存在」，也比 pipeline 静默接受包含未知 key 的 dict 要好。模型以后变复杂——多视角、action chunk、camera rig——后续扩展放在 operator，pipeline 继续只做 checkpoint runner。
 
 推理实现按 ownership 放置。原生 diffusion component、recipe 与 sampling strategy 进入 `base_models/diffusion_model/` 对应 canonical role，产品 orchestration 进入 `synthesis/visual_generation/`，感知与 3D helper 进入对应 `base_models/` family。不要在 `cache/` 再放一份架构代码再从那里 import。Runner 需要的 Python 模块必须在 `worldfoundry/` 下，并和这次集成一起被 review。
 
 然后注册 route。最简单的是在 catalog YAML 上写 `pipeline_target`。若多个 alias 或某个 runtime profile 要共用一个类，在 `worldfoundry/data/models/bindings/pipelines/` 增加或更新 binding，交给 `bindings.py` 解析。通用 benchmark runner 的 pipeline 调用契约在 `worldfoundry/evals/models/pipelines/invocation.py`。多数第一份 PR 只需接入现有调用契约；能跑通 `wf run <model-id>` 就是里程碑。
 
-Catalog 条目放在类名已经存在之后再写，避免 YAML 指向一个 import 不了的 target。记录 source URL、license、Hugging Face `repo_id`、本地 `checkpoint` 角色、tasks、`runtime_profile`，以及诚实的 `integration.status`。在用 WorldFoundry route 跑过真实请求、并与官方输出对比之前用 `planned`；license、checkpoint、API key 或 GPU 类型缺了、跑不起来时用 `blocked`；只有该对比和聚焦测试都对要提升的 variant 通过后，才标 `integrated`。
+应在类名存在后再编写 Catalog 条目，避免 YAML 指向一个 import 不了的 target。记录 source URL、license、Hugging Face `repo_id`、本地 `checkpoint` 角色、tasks、`runtime_profile`，以及诚实的 `integration.status`。在用 WorldFoundry route 跑过真实请求、并与官方输出对比之前，应使用 `planned`；license、checkpoint、API key 或 GPU 类型等条件不满足而无法运行时，应使用 `blocked`；只有待提升的 variant 通过该对比和聚焦测试后，才标记为 `integrated`。
 
 若官方 demo 有可对照的命令行，加一个小型 model-zoo check helper。在 `tests/`（手动流式 demo 放在 `tests/stream/`）里为确定性部分写聚焦回归：请求整形、路径解析、「缺 checkpoint 就抛错」。不要把数小时的视频长跑当成合入门槛，除非那是展示这条 route 的唯一办法。
 
@@ -77,7 +77,7 @@ wf zoo model-specs --model-id <model-id> --json
 wf zoo model-download --check-local --model-id <model-id> --json
 ```
 
-在允许拉权重的机器上再加 `--execute`；若要钉目标位置，加上 `--repo-id` 和 `--cache-dir`。用 `--report-path tmp/model_zoo/download/<model-id>.json` 写下下载报告，reviewer 不用把 blob 拷进 git 也能看到落了什么。`--disable-xet`、`--disable-hf-transfer`、`--timeout`、`--retries` 只属于那台拉取机器。
+在允许拉权重的机器上再加 `--execute`；若要固定目标位置，加上 `--repo-id` 和 `--cache-dir`。用 `--report-path tmp/model_zoo/download/<model-id>.json` 写下下载报告，reviewer 不用把 blob 拷进 git 也能看到落了什么。`--disable-xet`、`--disable-hf-transfer`、`--timeout`、`--retries` 只属于那台拉取机器。
 
 第一次端到端推理用模型 runner，不要上 benchmark：
 
@@ -92,7 +92,7 @@ wf evaluate \
   --json
 ```
 
-`artifact_count` 只问「有没有出现文件」，足以证明 route。带完整 benchmark protocol 的打分是后续 PR，而且必须消费 `GenerationResult` 里的 artifact，不能从 metric 里直接调 pipeline。环境还没选好时，从 [推理](/zh/docs/guides/inference) 和 unified bootstrap 开始；模型若需要独立 conda profile，用 `bash scripts/setup/model_env_install.sh --model <model-id>` 安装，不要猜 prefix。
+`artifact_count` 只检查是否生成文件，但足以证明 route 已跑通。带完整 benchmark protocol 的打分是后续 PR，而且必须消费 `GenerationResult` 里的 artifact，不能从 metric 里直接调 pipeline。环境还没选好时，从 [推理](/zh/docs/guides/inference) 和 unified bootstrap 开始；模型若需要独立 conda profile，用 `bash scripts/setup/model_env_install.sh --model <model-id>` 安装，不要猜 prefix。
 
 ## 证据必须包含什么
 
@@ -110,7 +110,7 @@ Reviewer 应能复现你的路径，而不必问你用了哪台 GPU、靠哪条�
 
 Cache 目录只放临时下载、checkpoint 副本、数据集镜像、official-runtime clone cache、生成预览和日志，不是第二棵 `worldfoundry/`。树内 runner 不得从 cache path import Python 模块。若克隆官方仓只是为了取出 `inference.py`，把仅推理切片 vendoring 进对应 package，删掉训练侧。
 
-推理时真正会跑到的 transform 可以留在 runtime package，例如 GroundingDINO `util.transforms`、DUST3R crop helper、DROID-SLAM RGB-D geometry。Training dataset、dataloader、loss、callback、只用于增强的模块和实验脚本不应进来。`pixelsplat` 是 3D base model 下的例外：它的推理入口仍通过 dataset 形态的 loader 准备输入。不要把它当成你正在加的这个模型的样板。
+推理时真正会跑到的 transform 可以留在 runtime package，例如 GroundingDINO `util.transforms`、DUST3R crop helper、DROID-SLAM RGB-D geometry。Training dataset、dataloader、loss、callback、只用于增强的模块和实验脚本不应进来。`pixelsplat` 是 3D base model 下的例外：它的推理入口仍通过 dataset 形态的 loader 准备输入。不要将其作为当前新增模型的范例。
 
 ## 模型主页
 

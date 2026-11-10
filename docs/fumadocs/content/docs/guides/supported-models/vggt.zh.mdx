@@ -19,7 +19,7 @@ VGGT（Visual Geometry Grounded Transformer，CVPR 2025）是前馈网络：单�
 
 `vggt` 根据输入视图估计场景几何。
 
-按 CVPR 2025 论文，大型 Transformer 在图像 token 上交替执行帧内与全局注意力，任务头分别输出相机、深度、点图与跟踪。权重为 apache-2.0（facebookresearch/vggt）；WorldFoundry 路径分两段从 VGGT 几何构建 3DGS。该模型由 Meta AI（FAIR）/ 牛津大学 VGG 组发布。
+按 CVPR 2025 论文，大型 Transformer 在图像 token 上交替执行帧内与全局注意力，任务头分别输出相机、深度、点图与跟踪。权重采用 apache-2.0 许可（facebookresearch/vggt）；WorldFoundry 路径分两段从 VGGT 几何构建 3DGS。该模型由 Meta AI（FAIR）/ 牛津大学 VGG 组发布。
 
 任务：3D 重建、3dgs、点云。输出模态为点云。
 
@@ -33,7 +33,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `VGGTPipeline
 
 系列状态：**Runner 一致性待确认**。
 
-需要已验证的场景导出路径请用 vggt-omega；需要基于基础 VGGT 几何的两段式 3DGS pipeline 时用 vggt。
+需要已验证的场景导出路径时，请使用 vggt-omega；需要基于基础 VGGT 几何的两段式 3DGS pipeline 时，请使用 vggt。
 
 ## 在 WorldFoundry 中运行
 

@@ -5,7 +5,7 @@ modelId: "videocrafter2-t2v"
 pageSource: authored
 ---
 
-VideoCrafter2 T2V 是 VideoCrafter 系列中改进版的文生视频模型，通过将低质量视频数据与高质量图像数据结合训练来突破数据瓶颈。它以 Apache-2.0 许可发布，是系列中许可最宽松的成员。WorldFoundry 仅支持推理，提供本地 checkpoint、fps、帧数与 seed 控制。
+VideoCrafter2 T2V 是 VideoCrafter 系列中改进版的文生视频模型，结合低质量视频数据与高质量图像数据进行训练，以突破数据瓶颈。它以 Apache-2.0 许可发布，是系列中许可最宽松的成员。WorldFoundry 仅支持推理，提供本地 checkpoint、fps、帧数与 seed 控制。
 
 <ModelPaperFigures modelId="videocrafter2-t2v" locale="zh" />
 
@@ -19,7 +19,7 @@ VideoCrafter2 T2V 是 VideoCrafter 系列中改进版的文生视频模型，通
 
 用 `videocrafter2-t2v` 把一段文本提示词变成短视频。
 
-U-Net 潜空间视频扩散模型，训练时将运动（来自视频）与外观（来自图像）解耦学习，见上游论文。该模型由腾讯 AI Lab 发布。
+该模型采用 U-Net 潜空间视频扩散，训练时将运动（来自视频）与外观（来自图像）解耦学习，见上游论文。该模型由腾讯 AI Lab 发布。
 
 任务：文生视频、视频生成。别名：`videocrafter2_t2v`。模态上，它接受文本，输出视频。
 
@@ -35,7 +35,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `VideoCrafter
 
 系列状态：**Runner 一致性待确认**。
 
-这是推荐的 VideoCrafter variant：质量优于 V1，许可为干净的 Apache-2.0。
+这是推荐的 VideoCrafter variant：质量优于 V1，许可明确为 Apache-2.0。
 
 ## 在 WorldFoundry 中运行
 

@@ -7,7 +7,7 @@ description: Benchmark manifest、task YAML、dataset、model-zoo metadata 和 r
 
 Catalog YAML 是可读支持状态与可运行 evaluation 代码之间的桥梁。本文说明 `worldfoundry/data/` 下的文件如何变为 `WorldModelConfig`、`BenchmarkSpec` 以及物化后的 `GenerationRequest` 行。添加 benchmark entry、排查 `zoo benchmark-show` 列出的 metric 为何 runner 未计算、或从 manifest 追到 sample loader 时读这里。
 
-执行侧同一故事见 [Workflow](/zh/docs/maintainers/architecture/workflow#task-materialization)。
+执行侧的对应流程见 [Workflow](/zh/docs/maintainers/architecture/workflow#task-materialization)。
 
 ## Catalog 到 Scorecard
 
@@ -54,7 +54,7 @@ Catalog 条目与变体通过 `runtime_profile` 与 `pipeline_binding` 引用 pr
 
 ## 解析 Pipeline
 
-Python 不会随意直读 raw YAML。每个 catalog 领域遵循相同三步：**schema 解析** 把较松的作者输入归一化为 typed entry；**registry 构建** 创建 CLI 查询用的 alias 索引；**spec 转换** 产出 evaluation API 导入的公开契约。
+Python 不会直接读取未经处理的 raw YAML。每个 catalog 领域遵循相同三步：**schema 解析** 把较松的作者输入归一化为 typed entry；**registry 构建** 创建 CLI 查询用的 alias 索引；**spec 转换** 产出 evaluation API 导入的公开契约。
 
 Model 侧：`schema.py` 产出 `ModelZooEntry`；`zoo_registry.py` 按 id、alias、task、integration status 索引；`manifest.py` 转为 `WorldModelManifest`。Benchmark 侧：`evals/tasks/catalog/` 中的平行链路产出 `BenchmarkZooEntry` → `BenchmarkZooRegistry` → `BenchmarkSpec`。
 
@@ -66,7 +66,7 @@ Task YAML 比 benchmark-zoo catalog entry 更细：定义 sample 列、expected 
 
 <ArchDiagram id="task-materialize" locale="zh" />
 
-在 generation 耗 GPU 前用 `wf task materialize` 证明此步。跳过 materialization 是“文档里 benchmark 可用、CI 却失败”最常见原因——runner 从未见到 task YAML 承诺的 sample ID。
+在 generation 消耗 GPU 资源前，用 `wf task materialize` 验证此步。跳过 materialization 是“文档里 benchmark 可用、CI 却失败”最常见原因——runner 从未见到 task YAML 承诺的 sample ID。
 
 ## External Benchmark 执行
 

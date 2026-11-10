@@ -5,7 +5,7 @@ modelId: "lyra"
 pageSource: authored
 ---
 
-Lyra 是英伟达面向探索的生成式世界模型家族：Lyra-1 从图像或视频、Lyra-2 从动作输入生成可探索的世界视频。已用本地资产验证：Lyra-1 跑通官方静态单图 SDG demo，Lyra-2 跑通官方 ZoomGS 单图前向导航 demo。默认 runner 使用 Lyra-2。
+Lyra 是英伟达面向探索的生成式世界模型家族：Lyra-1 根据图像或视频生成可探索的世界视频，Lyra-2 则根据动作输入生成。已使用本地资产验证：Lyra-1 跑通官方静态单图 SDG demo，Lyra-2 跑通官方 ZoomGS 单图前向导航 demo。默认 runner 使用 Lyra-2。
 
 <ModelPaperFigures modelId="lyra" locale="zh" />
 
@@ -19,7 +19,7 @@ Lyra 是英伟达面向探索的生成式世界模型家族：Lyra-1 从图像�
 
 `lyra-1` 是世界生成模型。
 
-Lyra 有两代模型：Lyra-1 做图像/视频到世界视频，Lyra-2 做动作条件世界视频（论文见 OpenReview，项目页在 NVIDIA Research）。运行任一代都需要本地 Lyra checkpoint、文本编码器资产、DA3（Depth Anything 3）资产与 CUDA 依赖。该模型由英伟达（NVIDIA）发布。
+Lyra 有两代模型：Lyra-1 用于图像/视频到世界视频生成，Lyra-2 用于动作条件世界视频生成（论文见 OpenReview，项目页在 NVIDIA Research）。运行任一代都需要本地 Lyra checkpoint、文本编码器资产、DA3（Depth Anything 3）资产与 CUDA 依赖。该模型由英伟达（NVIDIA）发布。
 
 任务：open generative 3D and 4D world models。别名：`Project Lyra`、`Lyra 1.0`、`Lyra 2.0`。同系列还有 `lyra-2`。
 
@@ -35,7 +35,7 @@ CLI task profile：`official-static-sdg`、`official-zoomgs`。绑定的 pipelin
 
 `official-zoomgs` 的默认值：fps=16，seed=1。
 
-按输入选 variant：从图像或视频出发用 lyra-1，用动作驱动世界用 lyra-2。默认 runner 解析到 Lyra-2。提交 Studio 任务前请就位所有所需资产。
+根据输入选择 variant：以图像或视频为输入时使用 lyra-1，以动作驱动世界时使用 lyra-2。默认 runner 解析到 Lyra-2。提交 Studio 任务前请准备好所有必需资产。
 
 ## 在 WorldFoundry 中运行
 

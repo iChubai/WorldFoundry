@@ -17,7 +17,7 @@ AHA-WAM 是面向操作的**世界-动作模型**：视频专家和动作专家�
 
 ## 用来做什么
 
-用三个 ALOHA 视角加状态跑 AHA-WAM 的 RoboTwin 动作块。
+使用三个 ALOHA 视角和状态运行 AHA-WAM，生成 RoboTwin 动作块。
 
 启动 `wf run ahawam`。
 
@@ -34,10 +34,10 @@ AHA-WAM 是面向操作的**世界-动作模型**：视频专家和动作专家�
 | 块大小 | **16** |
 | 视频 prefill 块数 | **2**（随后刷新 KV；最多保留六条更早的 prefill） |
 
-VAE 与 UMT5 编码器可以放在策略 GPU、CPU 或另一张 GPU 上；自动放置按显存阈值决定。
+VAE 与 UMT5 编码器可以放在策略 GPU、CPU 或另一张 GPU 上；自动放置由显存阈值决定。
 
 ## 在 WorldFoundry 中运行
 
-统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `SereneC/AHA-WAM-RoboTwin2.0`、`DiffSynth-Studio/Wan-Series-Converted-Safetensors`、`Wan-AI/Wan2.1-T2V-1.3B` 就位到本地；所有资产从本地加载，严格键匹配。在该环境执行 `wf run ahawam`。
+统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先在本地准备好 `SereneC/AHA-WAM-RoboTwin2.0`、`DiffSynth-Studio/Wan-Series-Converted-Safetensors`、`Wan-AI/Wan2.1-T2V-1.3B`；所有资产从本地加载，严格键匹配。在该环境执行 `wf run ahawam`。
 
 <ModelRelatedRecipes modelId="ahawam" locale="zh" />

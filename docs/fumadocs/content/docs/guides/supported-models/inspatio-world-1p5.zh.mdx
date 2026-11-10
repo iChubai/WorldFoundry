@@ -51,6 +51,6 @@ for mode in prepare prepare-depth native upstream compare; do
 done
 ```
 
-再给 `native`、`upstream`、`compare` 加上 `--direct`，即可检查原始 RGB 输入和 DA3 路径。`--cases` 可选择单例并在不同 GPU 上并行运行。标准回归矩阵包含 `inspatio-world-1p5-{image,multiview,video}-short`；将 `WORLDFOUNDRY_REGRESSION_INSPATIO_SCENE_ROOT` 设为验证目录下的 `fixtures`。对照会拒绝不同版本的发布权重。
+再给 `native`、`upstream`、`compare` 加上 `--direct`，即可检查原始 RGB 输入和 DA3 路径。`--cases` 可选择单个用例并在不同 GPU 上并行运行。标准回归矩阵包含 `inspatio-world-1p5-{image,multiview,video}-short`；将 `WORLDFOUNDRY_REGRESSION_INSPATIO_SCENE_ROOT` 设为验证目录下的 `fixtures`。对照会拒绝不同版本的发布权重。
 
 代码归属和 Apache-2.0 正文统一保留在根目录 `THIRD-PARTY-NOTICES`，各组件权重继续遵循上游条款。

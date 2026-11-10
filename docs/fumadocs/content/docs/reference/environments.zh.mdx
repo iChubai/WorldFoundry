@@ -80,7 +80,7 @@ WorldFoundry 采用 GPU-first 的运行和开发路径，统一使用 conda。�
 - **`scripts/inference/prepare_model_infer.sh`** — 逐模型准备 checkpoint/Hugging Face 资产。默认是 plan/check-local；确认 license、gated access 和存储后才加 `--download`。
 - **`scripts/workspace/run_workspace.sh`** — 从已激活 runtime 启动浏览器 Workspace。显式设置 `PYTHONPATH=.`、`WORLDFOUNDRY_WORKSPACE_MAX_JOBS` 和 `WORLDFOUNDRY_CKPT_DIR`。
 
-统一安装器使用 cu128，以及 2.7 起且不超过仓库上界的 Torch。
+统一安装器使用 cu128，Torch 版本从 2.7 起，且不超过仓库上界。
 GPU 运行需要支持 CUDA 12.8+ 的 NVIDIA 驱动；旧驱动以及 cu121/cu124 请求会在安装开始前报错。模型专用环境保留各自文档中的旧 CUDA/Torch 栈。从 CUDA index 安装后，精确的 Torch/Torchvision/Torchaudio 版本会约束后续
 PyPI 安装，避免间接依赖替换已经选定的 CUDA build。主机没有 `nvidia-smi` 时，
 bootstrap 会显式使用 cu128 wheel index，同时启用 `--allow-no-cuda` 并跳过
@@ -320,7 +320,7 @@ runtime 需要固定目录布局的情况，或用软链保持官方路径而不
 Hugging Face cache snapshot。Direct root 支持 `org/name`、`org--name` 和嵌套
 `hfd_datasets` 布局；hub cache 使用标准的
 `datasets--org--name/snapshots/<revision>` 布局。可用
-`wf dataset plan <org/name> [...]` 输出去重后的下载命令，但不会执行。
+`wf dataset plan <org/name> [...]` 输出去重后的下载命令，但不会执行下载。
 
 ## 编译器缓存
 
@@ -442,7 +442,7 @@ WorldFoundry 不支持该完整路径。
 
 ## WorldFoundry 容器
 
-受支持的镜像是仓库根目录的 `docker/Dockerfile`，用 `docker/build_with_docker.sh` 构建。`worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` 下的 Dockerfile（以及 MMYOLO CircleCI Dockerfile）是上游快照。WorldFoundry 不构建、不发布那些镜像；它们还停在 PyTorch 1.8/1.9 时代的 CUDA 基础，没有对着当前 runtime 维护。若需要 MMYOLO 专用镜像，请从当前上游构建，不要改这份仓内拷贝。
+受支持的镜像是仓库根目录的 `docker/Dockerfile`，用 `docker/build_with_docker.sh` 构建。`worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` 下的 Dockerfile（以及 MMYOLO CircleCI Dockerfile）是上游快照。WorldFoundry 不构建、不发布那些镜像；它们仍使用 PyTorch 1.8/1.9 时代的 CUDA 基础环境，未针对当前 runtime 维护。若需要 MMYOLO 专用镜像，请从当前上游构建，不要改这份仓内拷贝。
 
 ## Embodied Simulator 环境
 
@@ -465,7 +465,7 @@ server endpoint。
 
 ## 常见问题排除 (Troubleshooting)
 
-在处理涉及 CUDA、物理模拟器或外部评估器的复杂环境时，您可能会遇到以下问题：
+处理涉及 CUDA、物理模拟器或外部评估器的复杂环境时，可能会遇到以下问题：
 
 ### 1. CUDA 版本不匹配
 **现象**：遇到 `CUDA error: no kernel image is available for execution on the device` 或者 PyTorch 找不到 GPU。
@@ -483,4 +483,4 @@ sudo apt-get update && sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 
 ### 3. Flash Attention 安装失败
 **现象**：在统一安装脚本编译 `flash-attn` 时卡住或报错。
-**解决办法**：`flash-attn` 对 CUDA 编译器（`nvcc`）的版本匹配要求极其严格。请确保本机的 `nvcc --version` 和 PyTorch 携带的 CUDA 版本一致。也可以给 `unified_install.sh` 传入 `--skip-flash-attn` 跳过安装，或去官方 Release 页面下载对应的 pre-compiled wheel 手动安装。
+**解决办法**：`flash-attn` 对 CUDA 编译器（`nvcc`）的版本匹配要求严格。请确保本机的 `nvcc --version` 和 PyTorch 携带的 CUDA 版本一致。也可以给 `unified_install.sh` 传入 `--skip-flash-attn` 跳过安装，或从官方 Release 页面下载对应的 pre-compiled wheel 手动安装。

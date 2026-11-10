@@ -117,7 +117,7 @@ catalog 包按层组织，下层不导入上层：`entry.py`（数据模型）�
 
 ## Execution core
 
-`StudioManager` 是编排中枢。典型的 `run` / `stream` / `init` / `reset` 路径会准备 request、把输入落到 run 目录、按 `entry.runtime_kind` 选择 driver、加载 pipeline（LRU 缓存）、调用 driver，再物化为 `RunRecord`。Driver 存在是因为并非每个家族都是一次 `__call__`：two-stage 3DGS 先重建再 orbit，point-cloud nav 先重建再渲染视角。WorldFM 走 `BaseRuntimeDriver`；相机控制与标定由 operator 负责，场景重建与 streaming state 由 pipeline 持有。
+`StudioManager` 是编排中枢。典型的 `run` / `stream` / `init` / `reset` 路径会准备 request、把输入落到 run 目录、按 `entry.runtime_kind` 选择 driver、加载 pipeline（LRU 缓存）、调用 driver，再物化为 `RunRecord`。设置 Driver 是因为并非每个家族都只需调用一次 `__call__`：two-stage 3DGS 先重建再 orbit，point-cloud nav 先重建再渲染视角。WorldFM 走 `BaseRuntimeDriver`；相机控制与标定由 operator 负责，场景重建与 streaming state 由 pipeline 持有。
 
 `PreparedInputs` 是 staging 后的归一化载荷（prompt、图像、视频、interactions、runtime kwargs）。`PipelineContext` 保存已加载类、device、variant 与 output root。`RunRecord` 是 UI 可重载的持久单元：ids、inputs、outputs、artifact 路径、preview 选择、status 与 manifest JSON。Workspace 推理还可传入 `infer_metadata` 契约，让物化阶段校验必需的输出类型（video、image、splat 等）。
 
@@ -133,7 +133,7 @@ catalog 包按层组织，下层不导入上层：`entry.py`（数据模型）�
 
 提供 `stream_state_ready()` 的 pipeline 持有自己的交互状态。共享 driver 直接转发输入，不向其 memory 填入原始图像，也不以生成帧替换模型 context。可选的 `init_stream(...)` 沿 pipeline 的输入契约初始化状态，不生成 chunk。未提供这些方法、使用 frame memory 的 pipeline 仍走共享图像初始化路径。Native visual adapter 保存的是产物历史，不是可复用的 rollout 状态：`stream_state_ready()` 始终为 false，每次 stream 请求保留自己的显式 conditioning。内存 keyframe 使用与传输相同的声明 layout 和像素值域。
 
-普通 action、实时 fallback 与 torchrun 各 rank 共用 `BaseRuntimeDriver.initialize_stream()` 和 `continue_stream()`。实时与 worker 初始化不物化 preview；分布式产物导出由 rank zero 负责。原生实时 pipeline 保留 `prepare_realtime()` / `configure_realtime()` / `stream_realtime()`。会话 reset 和缓存模型 reset 都优先调用 `reset_realtime()`，其次 `reset_memory()`，最后才是 frame-memory reset。几何 driver 保留重建/渲染状态转换，无状态/API 调用不获得 streaming state。
+普通 action、实时 fallback 与 torchrun 各 rank 共用 `BaseRuntimeDriver.initialize_stream()` 和 `continue_stream()`。实时与 worker 初始化不物化 preview；分布式产物导出由 rank zero 负责。原生实时 pipeline 保留 `prepare_realtime()` / `configure_realtime()` / `stream_realtime()`。会话 reset 和缓存模型 reset 都优先调用 `reset_realtime()`，其次 `reset_memory()`，最后才是 frame-memory reset。几何 driver 保留重建/渲染状态转换，无状态/API 调用不会获得 streaming state。
 
 `WorldFMPipeline.init_stream()` 重建并记录场景，随后 `stream()` 复用它。重建失败时保留原场景；reset 清除当前实例的 scene memory。`WorldFMOperator` 接受显式 pose 或 navigation token，采用世界坐标平移与局部 Rx/Rz 旋转，并按显式 `K`、meta 文件 `K`、源图像默认值的顺序解析标定。Studio 负责 staging，不实现这些模型数学。
 
@@ -206,13 +206,13 @@ p50/p90、吞吐、队列深度和掉帧做门禁。
 
 ## 调试路径
 
-多数 Studio bug 来自 catalog、输入、runtime 或 artifact 契约错位。缺模型几乎总是 catalog discovery、aliases 或隐藏 id。device / variant 错通常来自 launch config 与 `PipelineContext` overrides。输入到不了模型，问题在 `prepare_inputs()` 或 driver kwargs 绑定。Streaming 失败常见于没有 memory state 就调用 `init`/`stream`，或 two-stage driver 尚无先验重建。Recent run 无法 reload，说明 `materialize_run()` 之后 manifest 或 artifact 路径漂移了。
+多数 Studio bug 来自 catalog、输入、runtime 或 artifact 契约错位。缺模型几乎总是 catalog discovery、aliases 或隐藏 id。device / variant 错通常来自 launch config 与 `PipelineContext` overrides。输入到不了模型，问题在 `prepare_inputs()` 或 driver kwargs 绑定。Streaming 失败常见于没有 memory state 就调用 `init`/`stream`，或 two-stage driver 尚未完成先验重建。Recent run 无法 reload，说明 `materialize_run()` 之后 manifest 或 artifact 路径漂移了。
 
 - **UI 里缺模型** — `discover_catalog()` output、`CatalogEntry.aliases`、category filter、pipeline file naming。
 - **Variant/device 错** — `StudioLaunchConfig`、`resolve_cli_variant_id()`、`PipelineContext`。
 - **输入没到模型** — `prepare_inputs()`、`PreparedInputs`、driver `run_fresh()` kwargs。
 - **Preview 空白** — `collect_artifact_paths()`、`pick_preview_assets()`、conversion helpers、generated file extension。
-- **Streaming 坏了** — `BaseRuntimeDriver.run_init()`、`BaseRuntimeDriver.run_continue()`、pipeline `stream()`、memory state。
+- **Streaming 失败** — `BaseRuntimeDriver.run_init()`、`BaseRuntimeDriver.run_continue()`、pipeline `stream()`、memory state。
 - **Recent run 无法 reload** — `RunRecord.to_manifest()`、`materialize_run()`、`load_run()`、artifact paths。
 
 面向用户的启动与 frontend 路由见 [Studio](/zh/docs/guides/studio)。Studio 作为使用界面如何把用户意图编译为与 CLI、MCP 相同的 request，见 [使用界面与编排](/zh/docs/maintainers/architecture/surfaces-orchestration)。Studio 所依赖的 pipeline / operator / `GenerationResult` 契约见 [模型运行时](/zh/docs/maintainers/architecture/model-runtime)。

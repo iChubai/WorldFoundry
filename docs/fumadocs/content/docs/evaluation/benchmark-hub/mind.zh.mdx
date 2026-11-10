@@ -22,7 +22,7 @@ python worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.
   --json
 ```
 
-对已就位真值与模型输出打分（DINOv3 用 `--dino-path`；需要动作指标时用 `--vipe-repo`）：
+对已准备好的真值与模型输出打分（DINOv3 用 `--dino-path`；需要动作指标时用 `--vipe-repo`）：
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
@@ -46,15 +46,15 @@ wf zoo benchmark-run \
   --json
 ```
 
-`--metrics` 是逗号列表（`lcm,visual,dino,action,gsc`；默认全开）。`--video-max-time` 限制除动作外所有指标的帧数。DINOv3 权重默认 `./dinov3_vitb16`，也可用 `--dino-path` / `WORLDFOUNDRY_MIND_DINO_PATH`。指标栈额外的 pip 版本约束见 `worldfoundry/data/benchmarks/requirements/mind.txt`。动作打分还要 ViPE checkout（`--vipe-repo`）。
+`--metrics` 是逗号列表（`lcm,visual,dino,action,gsc`；默认全开）。`--video-max-time` 限制除动作外所有指标的帧数。DINOv3 权重默认 `./dinov3_vitb16`，也可用 `--dino-path` / `WORLDFOUNDRY_MIND_DINO_PATH`。指标栈所需的额外 pip 版本约束见 `worldfoundry/data/benchmarks/requirements/mind.txt`。动作打分还要 ViPE checkout（`--vipe-repo`）。
 
-仓内 `src/process.py` 可按 GPU 分发：视频进队列，空闲 GPU 取任务，失败回队，每完成一条就重写结果 JSON，便于读中间结果。支持的入口是 WorldFoundry `--run-official`，不要把 `src/process.py` 当成第二套公开 CLI。
+仓内 `src/process.py` 可按 GPU 分发：视频进入队列后，由空闲 GPU 获取任务；失败任务重新入队。每完成一条视频就重写结果 JSON，便于读取中间结果。应使用 WorldFoundry `--run-official` 入口，不要将 `src/process.py` 当作第二套公开 CLI。
 
 可变状态（工作目录、`MIND_CACHE_DIR`、日志）都写在 `--output-dir` 下。环境变量：`WORLDFOUNDRY_MIND_ROOT`、`WORLDFOUNDRY_MIND_RESULTS_PATH`、`WORLDFOUNDRY_GENERATED_ARTIFACT_DIR`。清单：`worldfoundry/data/benchmarks/tasks/external/mind.yaml`。产物：`scorecard.json`（主键 `mind_average`）、`raw_metric_table.jsonl`、`per_sample_scores.jsonl`、`benchmark_contract.json`。
 
 ## 生成视频与真值布局
 
-`--generated-artifact-dir` 必须对齐视角与测试类型。`{corresponding data name}` 是真值文件夹名。镜像测试是十条 path 视频，不是单个 `video.mp4`：
+`--generated-artifact-dir` 必须与视角和测试类型对应。`{corresponding data name}` 是真值文件夹名。镜像测试是十条 path 视频，不是单个 `video.mp4`：
 
 ```text
 {model_name}/

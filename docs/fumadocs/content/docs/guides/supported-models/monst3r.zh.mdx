@@ -5,7 +5,7 @@ modelId: "monst3r"
 pageSource: authored
 ---
 
-MonST3R 把 DUSt3R 的点图方法扩展到动态场景：直接从视频逐时刻估计几何，在不假设静态场景的前提下同时恢复形状与运动。已通过 Studio 在 CUDA 上验证：pipeline 产出含 51 个几何体、点数据有限的合法 GLB 场景。
+MonST3R 把 DUSt3R 的点图方法扩展到动态场景：直接从视频逐时刻估计几何，在不假设静态场景的前提下同时恢复形状与运动。已通过 Studio 在 CUDA 上验证：pipeline 产出含 51 个几何体、点数据均为有限值的有效 GLB 场景。
 
 <ModelPaperFigures modelId="monst3r" locale="zh" />
 
@@ -39,6 +39,6 @@ Studio 默认关闭可选的光流损失，因此 RAFT2/SAM2 资产缺失不会�
 
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
-该模型没有登记公开 checkpoint；按使用说明就位权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh monst3r`；下载缺失的公开权重时加 `--download`。
+该模型没有登记公开 checkpoint；按使用说明准备权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh monst3r`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="monst3r" locale="zh" />

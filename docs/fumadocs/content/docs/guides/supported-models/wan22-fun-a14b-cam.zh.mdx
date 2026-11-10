@@ -5,7 +5,7 @@ modelId: "wan22-fun-a14b-cam"
 pageSource: authored
 ---
 
-Wan2.2-Fun A14B Control Camera 是 VideoX-Fun 家族中 Wan2.2 世代最大的相机控制 checkpoint：A14B（专家混合式）扩散骨干，由显式相机位姿序列操控图生视频。使用 alibaba-pai/Wan2.2-Fun-A14B-Control-Camera checkpoint（Apache-2.0 许可）。
+Wan2.2-Fun A14B Control Camera 是 VideoX-Fun 家族中 Wan2.2 世代最大的相机控制 checkpoint：采用 A14B（专家混合式）扩散骨干，可根据显式相机位姿序列控制图生视频。使用 alibaba-pai/Wan2.2-Fun-A14B-Control-Camera checkpoint（Apache-2.0 许可）。
 
 <ModelPaperFigures modelId="wan22-fun-a14b-cam" locale="zh" />
 
@@ -33,7 +33,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `Wan22FunA14BCameraPipe
 
 系列状态：**Runner 一致性待确认**。
 
-建议在 GPU 已验证的 1.3B 同门版本上跑通流程后，再用此变体追求最高质量的相机控制生成；A14B checkpoint 是家族中显存需求最大的。
+建议先在已通过 GPU 验证的 1.3B 同系列版本上成功运行流程，再使用此变体追求最高质量的相机控制生成效果；A14B checkpoint 是家族中显存需求最大的。
 
 ## 在 WorldFoundry 中运行
 

@@ -5,7 +5,7 @@ modelId: "scope"
 pageSource: authored
 ---
 
-SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步动作，输出游戏世界视频（论文 arXiv 2605.23345）。已用 zizhaotong/SCOPE 权重验证：图像+动作到视频的 demo 可基于示例图与动作 parquet 端到端运行。
+SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步动作，输出游戏世界视频（论文 arXiv 2605.23345）。已使用 zizhaotong/SCOPE 权重完成验证：基于示例图与动作 parquet，图像+动作到视频的 demo 可端到端运行。
 
 <ModelPaperFigures modelId="scope" locale="zh" />
 
@@ -17,7 +17,7 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 ## 用来做什么
 
-把 SCOPE 当动作条件世界路径来跑。启动 `wf run scope`——必填 `image`、`prompt`；产物 `generated_video`、`scope.mp4`。
+将 SCOPE 作为动作条件世界路径运行。启动 `wf run scope`——必填 `image`、`prompt`；产物 `generated_video`、`scope.mp4`。
 
 评测看 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)。
 
@@ -27,6 +27,6 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 ## 在 WorldFoundry 中运行
 
-跑在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `zizhaotong/SCOPE` 放到本地，再启动 `wf run scope`。
+使用统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先将 `zizhaotong/SCOPE` 准备到本地，再启动 `wf run scope`。
 
 <ModelRelatedRecipes modelId="scope" locale="zh" />

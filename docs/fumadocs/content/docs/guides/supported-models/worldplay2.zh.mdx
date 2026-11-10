@@ -33,7 +33,7 @@ result = pipeline(
 
 `result["sample"]` 是取值为 [0, 1] 的 BCTHW 视频张量；`result["artifact_path"]` 指向导出的 MP4。默认请求以 `actions="w-32"` 生成 125 帧、832×448、16 FPS 视频。宽高都须为 64 的倍数。
 
-所选 WorldPlay2 仓库中的 `high_noise_model/diffusion_pytorch_model.safetensors` 与 `low_noise_model/diffusion_pytorch_model.safetensors` 须同时就位。[Wan2.2-I2V-A14B](https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B) 支持目录提供 `models_t5_umt5-xxl-enc-bf16.pth`、`google/umt5-xxl/`、`Wan2.1_VAE.pth` 及两个专家的 `config.json`。
+所选 WorldPlay2 仓库中的 `high_noise_model/diffusion_pytorch_model.safetensors` 与 `low_noise_model/diffusion_pytorch_model.safetensors` 须同时准备到位。[Wan2.2-I2V-A14B](https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B) 支持目录需提供 `models_t5_umt5-xxl-enc-bf16.pth`、`google/umt5-xxl/`、`Wan2.1_VAE.pth` 及两个专家的 `config.json`。
 
 ## 采样模式
 
@@ -43,7 +43,7 @@ result = pipeline(
 | `worldplay2-ar` | `ar` | 40 | 4 | 3.5 |
 | `worldplay2-bi` | `bi` | 40 | 32 | 3.5 |
 
-加载 AR 或 BI 专家目录时向 `from_pretrained` 传入 `mode="ar"` 或 `mode="bi"`。各模式使用各自公开的权重。AR 与 Fast 按每块四个 latent 帧向前滚动；BI 在 32 个 latent 帧的块内双向采样。
+加载 AR 或 BI 专家目录时，向 `from_pretrained` 传入 `mode="ar"` 或 `mode="bi"`。各模式使用各自公开的权重。AR 与 Fast 按每块四个 latent 帧向前滚动；BI 在 32 个 latent 帧的块内双向采样。
 
 动作采用逗号分隔的 `action-duration` 段。移动键为 `w`、`s`、`a`、`d`、`wa`、`wd`、`sa`、`sd`，视角旋转为 `left`、`right`、`up`、`down`；`space` 为特殊动作，`none` 为静止。不同类别可用 `+` 组合，例如 `w+right-4`。
 

@@ -5,7 +5,7 @@ description: 42 个 Video Generation 与 World Model benchmark 的环境、服�
 
 ## Artifact 是模型与 benchmark 的边界
 
-生成模型和 evaluator 是两个独立 runtime。模型可以在自己的 conda 环境里生成视频并退出，然后把普通文件交给另一个环境中的 benchmark。Benchmark 不应 import 待测模型，也不应把 evaluator 的依赖强塞进模型环境。
+生成模型和 evaluator 是两个独立 runtime。模型可以在自己的 conda 环境里生成视频并退出，然后把普通文件交给另一个环境中的 benchmark。Benchmark 不应 import 待测模型，也不应把 evaluator 的依赖强行加入模型环境。
 
 下面 42 个 Video Generation / World Model 条目中，`needs_new_env: false` 只表示 WorldFoundry wrapper 或结果 importer 默认从统一环境启动；它**不表示**所有 official metric checkpoint、API credential、native extension 和完整数据都已经安装。`environment_id` 表示真正执行所用的 base environment；只有同时写明 `needs_new_env: true` 和公开 setup 命令时，才是仓库管理的独立环境。
 
@@ -35,7 +35,7 @@ python scripts/setup/prepare_benchmark_assets.py \
 
 这条命令只输出 **asset plan**，不会运行 evaluator。各 benchmark 的已验证范围见下表。
 
-真实 scoring 前，运行 runtime profile 声明的 fail-closed dependency check：
+实际评分前，运行 runtime profile 声明的 fail-closed dependency check：
 
 ```bash
 PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" -m \
@@ -128,7 +128,7 @@ test -x "$EVALCRAFTER_PYTHON"
 1. 可复现的公开 setup 命令与 Python executable。
 2. CUDA/Torch/Python compatibility 边界。
 3. 必需数据、checkpoint、native build 与 service 变量。
-4. 真实 verified scope 和明确剩余 blocker。
+4. 实际验证范围和明确的剩余 blocker。
 
 缺少这些条件时，对应 metric 必须保持 blocked；不能静默退回 fixture、mock judge、zero-match score 或 imported aggregate，却把结果标成 official run。
 

@@ -5,7 +5,7 @@ modelId: "matrix-game-3"
 pageSource: authored
 ---
 
-Matrix-Game 3.0 是昆仑万维的第三代，以少步推理把交互式世界视频推到更高分辨率。已在官方 cityscape 图像条件 demo 上验证：「forward + camera_r」动作、12 次迭代、3 步推理、704x1280，使用 int8 量化、编译 VAE 与 mg_lightvae 解码器。
+Matrix-Game 3.0 是昆仑万维的第三代模型，以少步推理将交互式世界视频提升至更高分辨率。已在官方 cityscape 图像条件 demo 上验证：「forward + camera_r」动作、12 次迭代、3 步推理、704x1280，使用 int8 量化、编译 VAE 与 mg_lightvae 解码器。
 
 <ModelPaperFigures modelId="matrix-game-3" locale="zh" />
 
@@ -29,6 +29,6 @@ Matrix-Game 3.0 是昆仑万维的第三代，以少步推理把交互式世界�
 
 ## 在 WorldFoundry 中运行
 
-统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。运行前先把 `Skywork/Matrix-Game-3.0` 就位到本地。在该环境执行 `wf run matrix-game-3 --pipeline.task-profile official-cityscape-image`。
+统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。运行前先在本地准备好 `Skywork/Matrix-Game-3.0`。在该环境执行 `wf run matrix-game-3 --pipeline.task-profile official-cityscape-image`。
 
 <ModelRelatedRecipes modelId="matrix-game-3" locale="zh" />

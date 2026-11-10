@@ -5,10 +5,10 @@ description: "NUS Show Lab 的不可能视频评测：生成并识别物理上�
 
 IPV-Bench（Impossible Videos；新加坡国立大学 Show Lab）把常见物理问题反过来问：模型能否**描绘**反事实、物理上不可能的事件，以及视频理解模型能否**识别**它们。分类覆盖物理、生物、地理与社会不可能性。两条赛道：
 
-- **生成（IPV-Txt）** — 视觉质量与 prompt 跟随；`impossible_video_score` 是同时高质量且忠实 prompt 的片段比例。
+- **生成（IPV-Txt）** — 视觉质量与 prompt 跟随；`impossible_video_score` 是高质量且忠实于 prompt 的片段比例。
 - **理解（IPV-Vid）** — 判断、多选 QA、开放 QA，对照官方标签。
 
-`ipv_bench_average` 汇总你提供的官方分面。
+`ipv_bench_average` 汇总所提供的官方分面。
 
 论文：[Impossible Videos](https://arxiv.org/abs/2503.14378)。代码：[showlab/Impossible-Videos](https://github.com/showlab/Impossible-Videos)。
 
@@ -28,7 +28,7 @@ wf zoo benchmark-run \
   --json
 ```
 
-默认导入：`WORLDFOUNDRY_IPV_BENCH_RESULTS_PATH`。可选根 / 后端：`WORLDFOUNDRY_IPV_BENCH_ROOT`、`WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND`。不需要 Hugging Face 数据集。
+默认导入路径：`WORLDFOUNDRY_IPV_BENCH_RESULTS_PATH`。可选根 / 后端：`WORLDFOUNDRY_IPV_BENCH_ROOT`、`WORLDFOUNDRY_IPV_BENCH_RUNTIME_BACKEND`。不需要 Hugging Face 数据集。
 
 仓内指针：`worldfoundry/data/benchmarks/tasks/external/ipv-bench.yaml`、`worldfoundry/evals/tasks/execution/runners/ipv_bench`。
 

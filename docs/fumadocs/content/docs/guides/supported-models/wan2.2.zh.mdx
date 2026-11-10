@@ -17,7 +17,7 @@ Wan2.2 是阿里巴巴通义实验室的下一代 Wan，因上游代码与 check
 
 需要已验证的片段时，从 `wan2.2-ti2v-5b` 入手。默认设置是 **1280×704**（或 **704×1280**）、**121 帧**、**24 fps**、**50 步 UniPC**、guidance **5.0**、flow-shift **5.0**，写出 `wan2.2-ti2v-5b-1280x704-121f.mp4`。必填 prompt；加上 image 时，同一套 5B 权重从文生视频切到图生视频。该 variant 至少需要 **24 GB** 显存。
 
-要跑双专家文生视频用 `wan2.2-t2v-a14b`，以静帧为条件用 `wan2.2-i2v-a14b`。两条 A14B variant 可以运行，但输出尚未与官方实现对照验证。
+如需运行双专家文生视频，请使用 `wan2.2-t2v-a14b`；如需以静帧为条件，请使用 `wan2.2-i2v-a14b`。两条 A14B variant 可以运行，但输出尚未与官方实现对照验证。
 
 **没有 V2V** 路径。上游的 Speech-to-Video（`Wan2.2-S2V-14B`）和 Animate（`Wan2.2-Animate-14B`）在 GitHub / Hugging Face 上存在，但不受支持。通用片段质量可对照 [VBench](/zh/docs/evaluation/benchmark-hub/vbench)。
 
@@ -27,15 +27,15 @@ Wan2.2 是阿里巴巴通义实验室的下一代 Wan，因上游代码与 check
 
 | Variant | 任务 | 分辨率 / 帧数 / fps | 步数 · guidance · shift | 显存 | 已验证 |
 | --- | --- | --- | --- | --- | --- |
-| `wan2.2-ti2v-5b` | 同一 5B 卡上文生或图生 | 1280×704，121 帧，24 fps | 50 · 5.0 · 5.0 | 24 GB | 是 |
+| `wan2.2-ti2v-5b` | 同一 5B 模型卡支持文生或图生 | 1280×704，121 帧，24 fps | 50 · 5.0 · 5.0 | 24 GB | 是 |
 | `wan2.2-t2v-a14b` | T2V MoE | 832×480，81 帧，16 fps | 40 · 高噪 4.0 / 低噪 3.0 · 12.0 | 80 GB | 否 |
 | `wan2.2-i2v-a14b` | I2V MoE | 832×480，81 帧，16 fps | 40 · 3.5 / 3.5 · 5.0 | 80 GB | 否 |
 
-A14B 推理在时间步上切换高噪专家与低噪专家（边界：T2V **0.875**，I2V **0.900**）。官方 A14B 脚本还宣传 480p / 720p（`1280×720`），单卡需 ≥80 GB 并配合 `--offload_model`；那些尺寸是上游选项，不是 WorldFoundry 已验证的默认设置。TI2V 5B 使用高压缩 Wan2.2-VAE（**16×16×4**）。seed 通过 `actions` 字段传入（命令构建器里 `base_seed` 默认 42）。prompt extension 默认关闭。
+A14B 推理在时间步上切换高噪专家与低噪专家（边界：T2V **0.875**，I2V **0.900**）。官方 A14B 脚本还宣传 480p / 720p（`1280×720`），单卡需 ≥80 GB 并配合 `--offload_model`；这些尺寸是上游选项，不是 WorldFoundry 已验证的默认设置。TI2V 5B 使用高压缩 Wan2.2-VAE（**16×16×4**）。seed 通过 `actions` 字段传入（命令构建器里 `base_seed` 默认 42）。prompt extension 默认关闭。
 
 ## 在 WorldFoundry 中运行
 
-用 `bash scripts/setup/unified_install.sh` 安装统一环境（Python 3.11，CUDA 12.8），并在本地就位权重——运行时不会下载。启动命令是 `wf run wan2.2-ti2v-5b`。Pipeline 分别为 `Wan2p2Pipeline`（5B）、`Wan2p2T2VA14BPipeline`、`Wan2p2I2VA14BPipeline`。
+用 `bash scripts/setup/unified_install.sh` 安装统一环境（Python 3.11，CUDA 12.8），并在本地准备好权重——运行时不会下载。启动命令是 `wf run wan2.2-ti2v-5b`。Pipeline 分别为 `Wan2p2Pipeline`（5B）、`Wan2p2T2VA14BPipeline`、`Wan2p2I2VA14BPipeline`。
 
 Checkpoint：`Wan-AI/Wan2.2-TI2V-5B`、`Wan-AI/Wan2.2-T2V-A14B`、`Wan-AI/Wan2.2-I2V-A14B`（均为 `apache-2.0`，公开、非 gated）。A14B variant 需要 **80 GB** 显存；5B variant 需要 24 GB。
 

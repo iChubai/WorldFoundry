@@ -19,7 +19,7 @@ pageSource: authored
 
 `dreamzero-droid` 是世界-动作模型：以世界观测为条件预测动作。
 
-14B 模型基于 Wan2.1-I2V-14B-480P，文本编码器为 UMT5-XXL。默认 14B 服务使用两个 CUDA rank，Wan2.2 5B 入口可单 rank 运行。checkpoint 控制的 Hydra target 被重写并限定在树内推理模块白名单内，绝不执行 checkpoint Python。该模型由英伟达（GEAR 实验室）发布。
+14B 模型基于 Wan2.1-I2V-14B-480P，文本编码器为 UMT5-XXL。默认 14B 服务使用两个 CUDA rank，Wan2.2 5B 入口可单 rank 运行。系统会重写 checkpoint 控制的 Hydra target，并将其限定在树内推理模块白名单内，绝不执行 checkpoint Python。该模型由英伟达（GEAR 实验室）发布。
 
 任务：wam、world_action_model、wam.world_action_modeling、机器人策略。别名：`dreamzero-droid`、`dreamzero-agibot`、`DreamZero-DROID`。同系列还有 `dreamzero-agibot`。
 
@@ -33,7 +33,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `DreamZeroPip
 
 建议从 `dreamzero-droid` 开始。该系列共有 2 个 variant，可在上方命令构建器中切换：`dreamzero-droid`（`wam.world_action_modeling`）：Runner 一致性待确认、`dreamzero-agibot`（`wam.post_training_base`）：Runner 一致性待确认。系列状态：**Runner 一致性待确认**。
 
-将 DreamZero-DROID 或 DreamZero-AgiBot 就位于 WORLDFOUNDRY_HFD_ROOT；需要 CUDA 12.9 运行时。DROID 面向真实机械臂数据分布，AgiBot 面向 AgiBot 本体。
+将 DreamZero-DROID 或 DreamZero-AgiBot 放置在 WORLDFOUNDRY_HFD_ROOT 下；需要 CUDA 12.9 运行时。DROID 面向真实机械臂数据分布，AgiBot 面向 AgiBot 本体。
 
 需要 CUDA 12.9；14B 默认配置需两个 GPU rank。
 

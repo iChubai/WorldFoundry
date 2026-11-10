@@ -5,13 +5,13 @@ modelId: "galaxea-vla"
 pageSource: authored
 ---
 
-Galaxea G0Plus 是星海图（Galaxea AI）的开放 VLA：RGB、语言和状态进，动作轨迹出。发布的 checkpoint 架在 **PaliGemma-3B** 上，配 **flow-matching** 动作采样器和 KV 缓存解码。WorldFoundry 把架构、KV cache、flow 采样器、严格 checkpoint 加载器、tokenizer 适配器、预处理和归一化都放在**树内**。恢复按官方参数名严格对齐。运行时只接受本地就位资产，从不执行 checkpoint 自带的 Python。
+Galaxea G0Plus 是星海图（Galaxea AI）的开放 VLA：输入 RGB、语言和状态，输出动作轨迹。发布的 checkpoint 基于 **PaliGemma-3B**，配备 **flow-matching** 动作采样器和 KV 缓存解码。WorldFoundry 把架构、KV cache、flow 采样器、严格 checkpoint 加载器、tokenizer 适配器、预处理和归一化都放在**树内**。checkpoint 恢复严格按照官方参数名对齐。运行时只接受本地就位资产，从不执行 checkpoint 自带的 Python。
 
 <ModelPaperFigures modelId="galaxea-vla" locale="zh" />
 
 论文：[arXiv 2608.11739](https://arxiv.org/abs/2608.11739)。项目页：[opengalaxea.github.io/G05](https://opengalaxea.github.io/G05/)。代码：[OpenGalaxea/GalaxeaVLA](https://github.com/OpenGalaxea/GalaxeaVLA)。权重：`OpenGalaxea/G0-VLA` 加 `google/paligemma-3b-pt-224`。别名：`g0plus`、`open-galaxea/g0-vla`。许可：**`g0-plus-community-license-non-commercial`**。
 
-发布的 G0Plus 基座面向**下游微调**，不声称是任务就绪策略。必须配对精确的 `dataset_stats.json`——归一化从不编造数值。
+发布的 G0Plus 基座面向**下游微调**，不声称是任务就绪策略。必须使用精确匹配的 `dataset_stats.json`——归一化过程不会虚构数值。
 
 <ModelCommandBuilder modelId="galaxea-vla" locale="zh" />
 

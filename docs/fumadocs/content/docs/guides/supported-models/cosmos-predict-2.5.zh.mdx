@@ -5,11 +5,11 @@ modelId: "cosmos-predict-2.5"
 pageSource: authored
 ---
 
-Cosmos Predict 2.5 是英伟达面向物理 AI 的**世界基础模型**：文本、图像或视频进，世界视频出。论文是 [Cosmos Predict 2.5](https://arxiv.org/abs/2511.00062)（另见 [research.nvidia.com/labs/dir/cosmos-predict2.5](https://research.nvidia.com/labs/dir/cosmos-predict2.5)）。WorldFoundry 用共享的去噪器、条件器、调度器、解码器与加载器角色**原生组装**该模型，不走 Diffusers。
+Cosmos Predict 2.5 是英伟达面向物理 AI 的**世界基础模型**：输入文本、图像或视频，输出世界视频。论文是 [Cosmos Predict 2.5](https://arxiv.org/abs/2511.00062)（另见 [research.nvidia.com/labs/dir/cosmos-predict2.5](https://research.nvidia.com/labs/dir/cosmos-predict2.5)）。WorldFoundry 用共享的去噪器、条件器、调度器、解码器与加载器角色**原生组装**该模型，不走 Diffusers。
 
 <ModelPaperFigures modelId="cosmos-predict-2.5" locale="zh" />
 
-提供两个规模：**2B** 与 **14B**。NVIDIA 访问是 **gated**；许可为 NVIDIA Open Model License。
+提供两个规模：**2B** 与 **14B**。NVIDIA 权重采用 **gated** 访问；许可为 NVIDIA Open Model License。
 
 已验证的配方是 **2B 文生世界**：**1280×704、93 帧、35 步、16 fps**，flow-UniPC 调度。14B 尚未完成端到端 GPU 验证。别名 `cosmos-predict2p5`、`cosmos-predict-2p5` 解析到这里。
 
@@ -24,12 +24,12 @@ Cosmos Predict 2.5 是英伟达面向物理 AI 的**世界基础模型**：文�
 
 ## 在 WorldFoundry 中运行
 
-pipeline 在 `worldfoundry-unified-cu128` 中运行。启动 `wf run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation`。按 NVIDIA 访问规则就位 `nvidia/Cosmos-Predict2.5-2B`（测 14B 线再就位 14B）。
+pipeline 在 `worldfoundry-unified-cu128` 中运行。启动 `wf run cosmos-predict-2.5-2b --pipeline.task-profile text-to-world-validation`。按 NVIDIA 访问规则准备好 `nvidia/Cosmos-Predict2.5-2B`（测试 14B 版本时再准备 14B 权重）。
 
 网络是仅推理的 PyTorch `MinimalV1LVGDiT`，对照 `nvidia-cosmos/cosmos-predict2.5` 的 `a2c298b0a3df3778b973fe65e9e58877b292d8a7` 实现，加载 NVIDIA EMA 权重。
 
 ## 最小评测
 
-导入 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) 官方形态结果，读 `world_model_average`。`official-run` 需要 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`；完整 judge 执行尚未验证。
+导入 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench) 官方格式的结果，读取 `world_model_average`。`official-run` 需要 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`；完整 judge 执行尚未验证。
 
 <ModelRelatedRecipes modelId="cosmos-predict-2.5" locale="zh" />

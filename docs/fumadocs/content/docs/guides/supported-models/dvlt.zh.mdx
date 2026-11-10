@@ -5,7 +5,7 @@ modelId: "dvlt"
 pageSource: authored
 ---
 
-Déjà View Looping Transformer（DVLT）是英伟达的多视图重建模型，覆盖 3D 重建、相机位姿估计与深度估计，输出 GLB 场景。WorldFoundry 的封装是惰性的：仅当 CUDA、依赖、源码、输入与权重全部本地就位时，才运行外部 DVLT 的 GLB 导出路径。
+Déjà View Looping Transformer（DVLT）是英伟达的多视图重建模型，覆盖 3D 重建、相机位姿估计与深度估计，输出 GLB 场景。WorldFoundry 的封装采用惰性执行：仅当 CUDA、依赖、源码、输入与权重全部本地就位时，才运行外部 DVLT 的 GLB 导出路径。
 
 <ModelPaperFigures modelId="dvlt" locale="zh" />
 

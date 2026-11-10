@@ -9,7 +9,7 @@ description: 连接模型执行与评测的可序列化 request、result 和 art
 
 ## `ArtifactRef`
 
-`ArtifactRef` 指向输出，但不把文件字节塞进记录。`kind` 表示 artifact 的语义角色，`sha256`、`size_bytes`、MIME 与媒体 metadata 则让本地输出可以检查和审计。
+`ArtifactRef` 指向输出，但不把文件字节塞进记录。`kind` 表示 artifact 的语义角色，`sha256`、`size_bytes`、MIME 与媒体 metadata 则便于检查和审计本地输出。
 
 ```python
 artifact = ArtifactRef.from_uri(
@@ -43,7 +43,7 @@ artifact = ArtifactRef.from_uri(
 
 ## `GenerationResult`
 
-Result 记录对应 sample 实际发生了什么。成功输出写入 `artifacts`，执行信息进入 `timings` 与 `metadata`；失败则保留 `status` 和 `error`，不创建占位 artifact。
+Result 记录对应 sample 的实际执行情况。成功输出写入 `artifacts`，执行信息进入 `timings` 与 `metadata`；失败则保留 `status` 和 `error`，不创建占位 artifact。
 
 ```python
 result = GenerationResult(
@@ -64,7 +64,7 @@ result = GenerationResult(
 
 ## `is_generation_result_successful`
 
-当归一化状态属于成功集合且 `error` 为空时，result 被视为执行成功。Artifact 是否存在、是否具备 benchmark 资格是独立检查。
+当归一化状态属于成功集合且 `error` 为空时，result 被视为执行成功。Artifact 是否存在、是否具备 benchmark 资格，需要另行检查。
 
 <PythonApiReference symbol="worldfoundry.evals.api.is_generation_result_successful" locale="zh" />
 

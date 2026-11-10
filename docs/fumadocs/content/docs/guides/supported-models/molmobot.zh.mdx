@@ -13,7 +13,7 @@ MolmoBot 是 AI2 的机器人策略家族。WorldFoundry 通过仓内推理 Pipe
 
 ## 已验证变体
 
-发布的 `MolmoBot-DROID` 和 `MolmoBot-Img-DROID` 权重可在含双相机与机器人状态的真实 DROID 观测上完成离线 GPU 动作推理。对于 `MolmoBot-Pi0-DROID`，`MolmoBotPipeline` 准备的相机、状态与任务提示输入与官方 `PiJointPosPolicy` 一致，并输出有限的 7 维手臂与 1 维夹爪动作；采样具有随机性，每次运行的动作数值会不同。
+发布的 `MolmoBot-DROID` 和 `MolmoBot-Img-DROID` 权重可在含双相机与机器人状态的真实 DROID 观测上完成离线 GPU 动作推理。对于 `MolmoBot-Pi0-DROID`，`MolmoBotPipeline` 准备的相机、状态与任务提示输入与官方 `PiJointPosPolicy` 一致，并输出数值有限的 7 维手臂与 1 维夹爪动作；采样具有随机性，每次运行的动作数值会不同。
 
 基于 OLMo 的 DROID 权重采用 Apache-2.0；Pi0-DROID 权重标注为 [Gemma 许可](https://huggingface.co/allenai/MolmoBot-Pi0-DROID)。`MolmoBot-RBY1Multitask` 可用，但尚未验证。
 
@@ -23,6 +23,6 @@ MolmoBot 是 AI2 的机器人策略家族。WorldFoundry 通过仓内推理 Pipe
 
 ## 限制
 
-验证只覆盖离线的权重加载、观测预处理和动作推理。对仿真训练的 Pi0 策略而言，真实 DROID 观测属于训练分布外。尚未测量闭环机器人执行、任务成功率或动作语义质量。
+验证仅覆盖离线权重加载、观测预处理和动作推理。对仿真训练的 Pi0 策略而言，真实 DROID 观测属于训练分布外。尚未测量闭环机器人执行、任务成功率或动作语义质量。
 
 <ModelRelatedRecipes modelId="molmobot" locale="zh" />

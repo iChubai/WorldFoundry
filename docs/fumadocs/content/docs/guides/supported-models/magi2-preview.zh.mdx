@@ -17,7 +17,7 @@ Refiner 按 8×4×4 潜变量块打包视频，使用发布配置中的半径二
 
 ## 在 WorldFoundry 中运行
 
-准备 `sand-ai/MAGI-2-preview` 的权重布局：`preview/`、`refiner/`、`turbo_vae/`、`stable-audio-open-1.0/` 与 `text_encoder/`。组件按需加载；Preview 层使用顺序 GPU 驻留。
+准备 `sand-ai/MAGI-2-preview` 的权重布局：`preview/`、`refiner/`、`turbo_vae/`、`stable-audio-open-1.0/` 与 `text_encoder/`。组件按需加载；Preview 层按顺序驻留 GPU。
 
 ```python
 from worldfoundry.pipelines.magi2 import NativeMagi2Pipeline
@@ -40,7 +40,7 @@ pipeline(
 
 ## 验证
 
-已在 H100 上用发布的 Qwen3.5、Refiner 与 Turbo 权重验证：Refiner 阶段以五步采样（seed 42）细化已保存的 Preview 潜变量，输出 128×128、25 fps 的 249 帧视频，并保留立体声 44.1 kHz Preview 音频。回放命令见 `python tests/manual/magi2_refinement.py --help`。
+已在 H100 上使用公开发布的 Qwen3.5、Refiner 与 Turbo 权重验证：Refiner 阶段以五步采样（seed 42）细化已保存的 Preview 潜变量，输出 128×128、25 fps 的 249 帧视频，并保留立体声 44.1 kHz Preview 音频。回放命令见 `python tests/manual/magi2_refinement.py --help`。
 
 ## 限制
 

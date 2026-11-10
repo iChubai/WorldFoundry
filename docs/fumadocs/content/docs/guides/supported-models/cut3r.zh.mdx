@@ -13,7 +13,7 @@ CUT3R 是带持久状态的连续 3D 感知模型：接收图像流并持续更�
 
 项目页：[cut3r.github.io](https://cut3r.github.io/)。代码：[CUT3R/CUT3R](https://github.com/CUT3R/CUT3R)。
 
-checkpoint 推理需要先在本地或从 Hugging Face 就位 `liguang0115/cut3r` 权重。就位后可用 `wf zoo model-show --model-id cut3r` 查看模型信息。
+进行 checkpoint 推理前，需先在本地准备好 `liguang0115/cut3r` 权重，或从 Hugging Face 获取。准备就绪后可用 `wf zoo model-show --model-id cut3r` 查看模型信息。
 
 <ModelCommandBuilder modelId="cut3r" locale="zh" />
 
@@ -35,7 +35,7 @@ CLI task profile：`official-export`、`two-stage-3dgs`。绑定的 pipeline 类
 
 `official-export` 的默认值：size=512；`two-stage-3dgs` 的默认值：size=512, width=704, height=480。
 
-提交 Studio 任务前，先在本地或从 Hugging Face 就位 `liguang0115/cut3r` 权重。
+提交 Studio 任务前，先在本地准备好 `liguang0115/cut3r` 权重，或从 Hugging Face 获取。
 
 ## 在 WorldFoundry 中运行
 

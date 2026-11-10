@@ -9,7 +9,7 @@ description: 面向维护者的范围、验证、文档和发布证据 checklist
 统一定义代码和 PR 规范。开发、推理、Studio 与评测使用同一个 GPU 环境。每个贡献 commit 都需要 [Developer Certificate of Origin](https://developercertificate.org/)
 签名确认，即 `git commit --signoff`。Commit subject 和 PR 标题统一使用 `[type]Description`，右括号后不加空格，描述使用英文祈使句，例如 `[test]Cover session cleanup`。
 
-参与者遵守[行为准则](https://github.com/OpenEnvision/WorldFoundry/blob/main/CODE_OF_CONDUCT.md)。潜在漏洞通过[安全政策](https://github.com/OpenEnvision/WorldFoundry/blob/main/SECURITY.md)中的私密渠道报告。一方贡献采用 [Apache License 2.0](https://github.com/OpenEnvision/WorldFoundry/blob/main/LICENSE)，保留的上游许可条款记录在[第三方许可与来源](/zh/docs/reference/vendored-licenses)。
+参与者遵守[行为准则](https://github.com/OpenEnvision/WorldFoundry/blob/main/CODE_OF_CONDUCT.md)。潜在漏洞通过[安全政策](https://github.com/OpenEnvision/WorldFoundry/blob/main/SECURITY.md)中的私密渠道报告。第一方贡献采用 [Apache License 2.0](https://github.com/OpenEnvision/WorldFoundry/blob/main/LICENSE)，保留的上游许可条款记录在[第三方许可与来源](/zh/docs/reference/vendored-licenses)。
 
 新增 Python 函数和公开契约必须有类型注解。Ruff 统一格式和 import 顺序，ty 检查类型。
 pre-commit 检查 staged 文件，PR 的 `Python quality` 检查变更 Python 文件。保留上游署名及导入代码的检查排除规则。无权重的单元测试标记为 `unit`，CUDA 测试标记为

@@ -5,7 +5,7 @@ modelId: "sana-wm"
 pageSource: authored
 ---
 
-SANA-WM 是基于英伟达高效 Sana 架构的世界模型：两阶段设计（交互阶段加 LTX-2 精修器），以常驻多卡 pipeline 生成相机可控的世界视频。已在四张 A100 上验证：一次短运行从九帧原生窗口生成八帧可解码的 1280x704 画面。
+SANA-WM 是基于英伟达高效 Sana 架构的世界模型：两阶段设计（交互阶段加 LTX-2 精修器），通过常驻多卡的 pipeline 生成相机可控的世界视频。已在四张 A100 上验证：一次短运行从九帧原生窗口生成八帧可解码的 1280x704 画面。
 
 <ModelPaperFigures modelId="sana-wm" locale="zh" />
 
@@ -21,13 +21,13 @@ SANA-WM 是基于英伟达高效 Sana 架构的世界模型：两阶段设计（
 
 相机动作遵循官方 SANA-WM 控制约定：`w/s` 前进/后退，`a/d` 向左/右转头，`j/l` 向左/右平移，`i/k` 向上/下俯仰。持续按键的默认速度为每帧 0.025 个单位和 0.6°，松键后逐渐减速。首图之后的每个过渡帧提供一个动作，也可直接传入 `camera_to_world` 位姿。
 
-SANA-WM 复用 WorldFoundry 共享的 Sana 网络、编码器、自编码器、调度器与配方组件（论文 arXiv 2605.15178，apache-2.0）。交互 pipeline 保持两阶段模型常驻，以原生 8k+1 时间窗口推进；质量档案保持双向阶段与 LTX-2 精修器开启。该模型由英伟达（NVIDIA）发布。
+SANA-WM 复用 WorldFoundry 共享的 Sana 网络、编码器、自编码器、调度器与配方组件（论文 arXiv 2605.15178，apache-2.0）。交互 pipeline 保持两阶段模型常驻，以原生 8k+1 时间窗口推进；质量配置保持双向阶段与 LTX-2 精修器开启。该模型由英伟达（NVIDIA）发布。
 
 任务：世界模型、相机可控视频、controllable-world-generation。别名：`sana world model`、`sana-wm-2.6b`、`sana-wm-streaming`、`Efficient-Large-Model/SANA-WM_streaming`。
 
 推荐评测：[SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench)（SANA-WM 专用的 80 场景评测）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（世界滚动生成的相机控制贴合度）。
 
-SANA-WM 与 [SANA](/zh/docs/guides/supported-models/sana) 是不同的模型。评测看 [SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench)、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)。
+SANA-WM 与 [SANA](/zh/docs/guides/supported-models/sana) 是不同的模型。评测请参见 [SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench)、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)。
 
 ## 运行时契约
 

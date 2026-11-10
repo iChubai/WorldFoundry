@@ -5,7 +5,7 @@ description: 从哪里查来源、下载到哪里、用什么命令准备 checkp
 
 ## 0. 前置条件
 
-当命令提示缺 checkpoint、dataset、metric 权重、生成输出或官方结果文件时，优先看这一页。WorldFoundry 把这些大型或带 license 的文件放在 git 外；仓库内保存代码和 manifest，本机或共享存储保存 manifest 引用的资产。
+当命令提示缺少 checkpoint、dataset、metric 权重、生成输出或官方结果文件时，优先看这一页。WorldFoundry 把这些大型或带 license 的文件放在 git 外；仓库内保存代码和 manifest，本机或共享存储保存 manifest 引用的资产。
 
 典型路径：用 `wf zoo ... --json` 查看模型或 benchmark ID；评测时再生成单个 benchmark 的 asset plan；只补齐本次运行需要的路径。使用框架不需要提前准备所有 benchmark 资产。统一 conda 环境见 [环境配置](/zh/docs/reference/environments)。
 
@@ -290,7 +290,7 @@ wf models assets \
   --execute-downloads
 ```
 
-先 plan，确认存储与 license 后再 execute：
+先生成 plan，确认存储与 license 后再 execute：
 
 ```bash
 wf zoo model-download \
@@ -322,7 +322,7 @@ hf download Skywork/Matrix-Game-2.0 \
 
 Echo recipes 共用 Wan2.1 T2V 1.3B backbone，但分别要求
 `Echo-Team/Echo-Memory` 下的不同文件。官方 HF `main` 只发布了
-`context_k1/epoch-0.safetensors`。其他 Echo model ID 在上游未发布或已撤回，不能用 K=1 权重代替它们。
+`context_k1/epoch-0.safetensors`。其他 Echo model ID 的权重在上游未发布或已撤回，不能用 K=1 权重替代。
 
 将公开 recipe 与钉定的 backbone 放入 runtime layout，再创建正常 HFD
 alias，全程不复制 tensor：
@@ -344,7 +344,7 @@ bash scripts/setup/link_hf_checkpoints.sh \
   --repo Wan-AI/Wan2.1-T2V-1.3B=Wan2.1-T2V-1.3B
 ```
 
-标准 checker 现在同时检查 recipe-specific filename 与仓库，因此只有 K=1
+标准 checker 会同时检查 recipe-specific filename 和仓库，因此只有 K=1
 的 cache 不会把 K=20 或 SSM 模型误报为 ready：
 
 ```bash
@@ -354,7 +354,7 @@ wf zoo model-download \
   --json
 ```
 
-研究者若有未公开 checkpoint，可放到对应 runtime profile 声明的精确
+研究者若有未公开 checkpoint，可将其放在对应 runtime profile 指定的
 `checkpoint_path`，再建立相同 HFD alias。在严格 checkpoint 加载与 CUDA
 artifact validation 通过前，catalog entry 应继续保持 blocked。
 
@@ -438,7 +438,7 @@ GEN3C 还需按 runtime profile 下载 `nvidia/Cosmos-Tokenize1-CV8x8x8-720p`
 
 Cosmos Predict 与 Transfer 共用 Predict 2B 的 `tokenizer.pth` Wan codec 和
 Reason1 language model，只需要下载所选 transformer 与这两组共享资产。
-Transfer 固定使用官方 `general/edge` 精确 revision；目录存在但缺少该文件不能算 ready。需要镜像时先设置 `HF_ENDPOINT=https://hf-mirror.com`。
+Transfer 固定使用官方 `general/edge` 的精确 revision；目录存在但缺少该文件不能算 ready。需要镜像时先设置 `HF_ENDPOINT=https://hf-mirror.com`。
 
 ```bash
 hf download nvidia/Cosmos-Predict2.5-2B \

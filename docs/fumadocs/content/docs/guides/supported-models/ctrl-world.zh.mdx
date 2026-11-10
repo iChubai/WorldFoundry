@@ -5,7 +5,7 @@ modelId: "ctrl-world"
 pageSource: authored
 ---
 
-Ctrl-World 是面向机器人操作的可控生成式世界模型：以机器人动作为条件预测未来观测视频，使策略可以在模型内被评估或改进。已用发布权重验证：按官方默认 25 步采样的五帧合成三视角推理在三个视角中都保留了场景细节。
+Ctrl-World 是面向机器人操作的可控生成式世界模型：以机器人动作为条件预测未来观测视频，可用于在模型内评估或改进策略。已使用发布权重验证：按官方默认的 25 步采样，五帧合成三视角推理的三个视角均保留了场景细节。
 
 <ModelPaperFigures modelId="ctrl-world" locale="zh" />
 
@@ -13,7 +13,7 @@ Ctrl-World 是面向机器人操作的可控生成式世界模型：以机器人
 
 权重：`yjguo/Ctrl-World`，外加 `stabilityai/stable-video-diffusion-img2vid` 和 `openai/clip-vit-base-patch32`。发布方：清华 / 斯坦福。未标明许可证。
 
-pipeline 使用本地 SVD 和 CLIP 组件运行发布的 checkpoint。默认输入是同步的 **ALOHA** 高位 / 左腕 / 右腕演示图像——运行时**不会**合成相机。要得到有物理意义的动作条件，需要与 checkpoint 匹配的 **DROID** 视角以及初始的七维 DROID 笛卡尔位姿。
+pipeline 使用本地 SVD 和 CLIP 组件运行发布的 checkpoint。默认输入是同步的 **ALOHA** 高位 / 左腕 / 右腕演示图像——运行时**不会**进行相机合成。要得到有物理意义的动作条件，需要与 checkpoint 匹配的 **DROID** 视角以及初始的七维 DROID 笛卡尔位姿。
 
 <ModelCommandBuilder modelId="ctrl-world" locale="zh" />
 

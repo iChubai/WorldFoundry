@@ -3,7 +3,7 @@ title: TUI 指南
 description: 如何使用终端界面（TUI）进行发现、配置和命令生成。
 ---
 
-终端界面（TUI）是一个跑在终端里的交互式文本面板。它是浏览模型与 benchmark catalog、检查 readiness、生成 CLI 命令最省事的方式，不必记住各种参数。
+终端界面（TUI）是一个跑在终端里的交互式文本面板。它是浏览模型与 benchmark catalog、检查 readiness、生成 CLI 命令的便捷方式，不必记住各种参数。
 
 ## 启动 TUI
 
@@ -27,7 +27,7 @@ python -m pip install -e ".[tui]"
 wf tui
 ```
 
-TUI 读取的 model-zoo 与 benchmark-zoo manifest 和 CLI 发现命令完全相同。它不会绕过 manifest readiness、runtime profile 或 runner 验证。
+TUI 与 CLI 发现命令使用完全相同的 model-zoo 和 benchmark-zoo manifest。它不会绕过 manifest readiness、runtime profile 或 runner 验证。
 
 ### 启动选项
 

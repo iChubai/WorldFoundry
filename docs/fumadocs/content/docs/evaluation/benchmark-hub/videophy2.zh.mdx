@@ -3,11 +3,11 @@ title: VideoPhy2
 description: "VideoPhy 的动作向后继：200 条更难 prompt，加规则级 AutoEval。WorldFoundry 提供 AutoEval 裁判路径。"
 ---
 
-VideoPhy2（UCLA 与 Google DeepMind）是 [VideoPhy](/zh/docs/evaluation/benchmark-hub/videophy) 的**动作向**后继。Prompt 套件聚焦更难的物理活动与物体交互（**宣称 200 个动作**）。AutoEval 增加**规则级**判断：哪些物理规则适用、每条是遵守还是违反（`rule_followed_rate`），同时报语义遵守、物理常识，以及主键**联合分**。
+VideoPhy2（UCLA 与 Google DeepMind）是 [VideoPhy](/zh/docs/evaluation/benchmark-hub/videophy) 的**动作向**后继。Prompt 套件聚焦更难的物理活动与物体交互（**宣称 200 个动作**）。AutoEval 增加**规则级**判断：哪些物理规则适用、每条规则是否得到遵守（`rule_followed_rate`），同时报语义遵守、物理常识，以及主键**联合分**。
 
 论文：[VideoPhy-2](https://arxiv.org/abs/2503.06800)。项目：[videophy2.github.io](https://videophy2.github.io/)。代码：[Hritikbansal/videophy](https://github.com/Hritikbansal/videophy)。
 
-WorldFoundry **捆绑 prompt 列表**并驱动仓内 AutoEval 裁判（`--autoeval-checkpoint`，可选 `--autoeval-lora-checkpoint`）。权重要调用方提供。
+WorldFoundry **捆绑 prompt 列表**并驱动仓内 AutoEval 裁判（`--autoeval-checkpoint`，可选 `--autoeval-lora-checkpoint`）。权重需由调用方提供。
 
 <BenchmarkPageSections id="videophy2" locale="zh" />
 

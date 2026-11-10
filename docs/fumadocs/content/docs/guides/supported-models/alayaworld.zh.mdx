@@ -5,7 +5,7 @@ modelId: "alayaworld"
 pageSource: authored
 ---
 
-AlayaWorld 是面向长视频的相机可控交互式世界模型：从一张图出发，带动作控制与 DA3 空间记忆自回归滚动生成世界视频。已用发布的 33.6 GB 合并 checkpoint 验证：pipeline 在 A100 上开启空间记忆，生成官方 case1 的首个 chunk（32 帧 H.264，544×960，24 fps）。
+AlayaWorld 是面向长视频的相机可控交互式世界模型：以一张图像为起点，结合动作控制与 DA3 空间记忆，自回归滚动生成世界视频。已使用发布的 33.6 GB 合并 checkpoint 验证：pipeline 在 A100 上开启空间记忆，生成官方 case1 的首个 chunk（32 帧 H.264，544×960，24 fps）。
 
 <ModelPaperFigures modelId="alayaworld" locale="zh" />
 
@@ -21,7 +21,7 @@ AlayaWorld 是面向长视频的相机可控交互式世界模型：从一张图
 
 视角需要沿指定相机路径运动时，用 `alayaworld`。
 
-AlayaWorld 在 WorldFoundry 树内 LTX-2.3 模型上扩展，复用其 Transformer、VAE、Gemma 连接器、RoPE、patchifier、注意力分发器与分布式辅助；Alaya 专属权重新增动作 AdaLN 与时间历史编码器。空间记忆使用树内 Depth Anything 3 模型。该模型由 AlayaLab 发布。
+AlayaWorld 基于 WorldFoundry 树内的 LTX-2.3 模型扩展，复用其 Transformer、VAE、Gemma 连接器、RoPE、patchifier、注意力分发器与分布式辅助；Alaya 专属权重新增动作 AdaLN 与时间历史编码器。空间记忆使用树内 Depth Anything 3 模型。该模型由 AlayaLab 发布。
 
 任务：图生视频、相机可控视频、交互式世界模型、长视频生成。别名：`alaya-world`、`alaya_world`。模态上，它接受图像，输出视频。
 

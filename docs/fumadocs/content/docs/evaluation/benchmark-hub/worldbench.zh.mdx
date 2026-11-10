@@ -3,7 +3,7 @@ title: WorldBench
 description: "UCLA 诊断物理评测：425 个 Kubric 场景，SAM2 对照真值物理，外加文本 QA。WorldFoundry 提供仓内打分器。"
 ---
 
-WorldBench（UCLA，联合 Sony AI、耶鲁与 DEVCOM ARL）诊断世界模型离**物理**有多近。**Kubric**（PyBullet + Blender）渲染 **425** 个物理准确场景，覆盖运动物理、物体恒存、支撑关系、尺度 / 透视，并带真值深度、法线、分割与光流。模型从初始帧生成续写；**SAM2** 跟踪首帧框，掩码与仿真比较（前景 mIoU、背景 RMSE）。文本子集另有多选与是否 QA。
+WorldBench（UCLA，联合 Sony AI、耶鲁与 DEVCOM ARL）诊断世界模型的**物理**建模能力。**Kubric**（PyBullet + Blender）渲染 **425** 个物理准确场景，覆盖运动物理、物体恒存、支撑关系、尺度 / 透视，并带真值深度、法线、分割与光流。模型从初始帧生成续写；**SAM2** 跟踪首帧框，掩码与仿真比较（前景 mIoU、背景 RMSE）。文本子集另有多选与是非 QA。
 
 公开评测器把 Dice 叫做 “mIoU”。WorldFoundry 分开报告**常规 `foreground_miou`** 与发布版的 **`foreground_dice` 兼容值**。公开 HF 数据集有 **375** 个场景目录（15 情景 × 25），论文为 425 个。
 

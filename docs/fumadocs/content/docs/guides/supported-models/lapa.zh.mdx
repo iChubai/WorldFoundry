@@ -5,7 +5,7 @@ modelId: "lapa"
 pageSource: authored
 ---
 
-LAPA（Latent Action Pretraining）无需动作标签学习动作：在无标注视频上通过发现隐式动作预训练视频-动作模型，再迁移到真实机器人控制。WorldFoundry 使用 MIT 许可的 LAPA-7B-openx checkpoint 运行隐式动作推理。
+LAPA（Latent Action Pretraining）无需动作标签即可学习动作：在无标注视频上通过发现隐式动作预训练视频-动作模型，再迁移到真实机器人控制。WorldFoundry 使用 MIT 许可的 LAPA-7B-openx checkpoint 运行隐式动作推理。
 
 <ModelPaperFigures modelId="lapa" locale="zh" />
 
@@ -19,7 +19,7 @@ LAPA（Latent Action Pretraining）无需动作标签学习动作：在无标注
 
 `lapa-7b-openx` 是视觉-语言-动作（VLA）策略：输入指令和观测，输出动作。
 
-7B 视频-动作模型，在 Open X-Embodiment 规模数据上以隐式动作量化训练。
+7B 视频-动作模型，在 Open X-Embodiment 规模的数据上以隐式动作量化训练。
 
 任务：va、vam、latent_action、video_action_modeling。别名：`LAPA`、`LAPA-7B-openx`。
 

@@ -7,7 +7,7 @@ description: 视觉记忆与相机控制评测；12 项官方指标协议均在 
 
 ## 范围
 
-[WorldMemBench](https://github.com/ZJU-REAL/WorldMemBench) 评测人物、物体、环境和动态记忆，以及相机控制和视频质量。WorldFoundry 的 12 项官方指标协议均在仓内执行，基于 MIT 许可的上游版本 `1b79840143a98e017891e893b5d3ef75b93078a3` 适配，不需要额外检出或安装 WorldMemBench。
+[WorldMemBench](https://github.com/ZJU-REAL/WorldMemBench) 评测人物、物体、环境和动态记忆，以及相机控制和视频质量。WorldFoundry 的 12 项官方指标协议均在仓内执行，适配自采用 MIT 许可证的上游版本 `1b79840143a98e017891e893b5d3ef75b93078a3`，不需要额外检出或安装 WorldMemBench。
 
 | 指标 ID | 官方分数字段 | 方向 |
 | --- | --- | --- |
@@ -50,8 +50,8 @@ python -m worldfoundry.evals.tasks.execution.runners.worldmembench.run_worldmemb
   --output-dir <fresh-out> --json
 ```
 
-重复 `--metric` 可选择指标，`--gpus 0,1` 按视频划分到可见 GPU。
-`--expected-revisits 1|2|3` 选择官方固定重访协议；否则使用清单中的值或官方返回检测。
+重复指定 `--metric` 可选择指标，`--gpus 0,1` 按视频划分到可见 GPU。
+`--expected-revisits 1|2|3` 选择官方固定重访协议；否则使用清单中的值或官方重访检测。
 
 DA3-Streaming 和 ViPE 预处理复用已有的 `da3/results.npz`、
 `da3/scene_geometry.npz` 和 `vipe/results.npz`。如需生成缺失资产，配置
@@ -70,5 +70,5 @@ wf zoo benchmark-run --benchmark-id worldmembench \
 
 ## 限制
 
-GPU/真实权重和完整数据集回放尚未完成；仓内执行与免权重测试不代表全套验证或排行榜有效性。没有预计算资产时，DA3-Streaming 和完整配置 ViPE 推理仍需要配置对应模型运行时。`model_failure` 保留官方赋分，`not_applicable` 不填零。
+基于 GPU、真实权重和完整数据集的回放尚未完成；仓内执行与免权重测试不代表全套验证或排行榜有效性。没有预计算资产时，DA3-Streaming 和完整配置 ViPE 推理仍需要配置对应模型运行时。`model_failure` 保留官方赋分，`not_applicable` 不填零。
 `eval_failed` 和 `data_invalid` 保留覆盖率，并使运行器返回非零，即使已有部分分数。

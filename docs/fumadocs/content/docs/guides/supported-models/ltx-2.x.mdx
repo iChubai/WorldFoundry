@@ -21,7 +21,7 @@ Start with `ltx-2-i2v` or `ltx-2.3-i2v` for image-to-video; use `ltx-2-v2v` or `
 
 The I2V route is a two-stage denoise with the official Spatial Upscaler as the boundary, loaded automatically from spatial_upsampler_path (not a separate Studio refiner toggle). The native distilled schedule runs 8 first-stage plus 3 second-stage steps.
 
-Catalog tasks include text-to-video, image-to-video, video-to-video, and audio-video-generation. Documented modalities: text, image, and video in, video out. Also recorded: `ltx-2-t2v`, `ltx-2-v2v`, `ltx-2.3-t2v`.
+Tasks: text-to-video, image-to-video, video-to-video, and audio-video-generation. Modalities: text, image, and video in, video out. Other variants: `ltx-2-t2v`, `ltx-2-v2v`, `ltx-2.3-t2v`.
 
 Suggested benchmarks: [AIGCBench](/docs/evaluation/benchmark-hub/aigcbench) (I2V-focused benchmark for the runnable routes).
 
@@ -45,7 +45,7 @@ It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CU
 
 The transformer is adapted from [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2) at `d6053703e00195bc668cbd1d5eda9dc0b2e7b74a`. Checkpoints and adapted source remain under the upstream LTX license.
 
-Recorded weight repositories include `Lightricks/LTX-2` and `Lightricks/LTX-2.3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh ltx-2-t2v`. Add `--download` to fetch missing public checkpoints.
+Weights: `Lightricks/LTX-2` and `Lightricks/LTX-2.3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh ltx-2-t2v`. Add `--download` to fetch missing public checkpoints.
 
 License: a custom license (see the model card).
 

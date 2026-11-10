@@ -59,7 +59,7 @@ HunyuanVideo-I2V keeps this stack and inserts the reference image by token repla
 
 Official inference covers text-to-video and image-to-video at 540p and 720p (recommended), 129 frames, and 9:16, 16:9, 4:3, 3:4, and 1:1. At batch size 1 the peak memory is 60GB for 720×1280×129 and 45GB for 544×960×129; I2V at 720p is also listed at 60GB. The authors tested on a single 80GB GPU and recommend 80GB for quality. For I2V, `--i2v-stability` with flow-shift 7.0 gives more stable motion; turning stability off and using flow-shift 17.0 gives more dynamic motion. FP8 T2V weights save about 10GB of GPU memory.
 
-WorldFoundry's native T2V recipe (`HunyuanVideoT2VPipeline`) defaults to **720×1280, 129 frames, 50 steps, 24 fps, guidance 6.0**. I2V (`HunyuanVideoI2VPipeline`) uses the same geometry unless you pass height / width / frames. Required input is `prompt`; I2V also needs the reference `image`; `actions` is seed. Artifacts: `hunyuanvideo-t2v.mp4` / `hunyuanvideo-i2v.mp4`.
+WorldFoundry's native T2V recipe (`HunyuanVideoT2VPipeline`) defaults to **720×1280, 129 frames, 50 steps, 24 fps, guidance 6.0**. I2V (`HunyuanVideoI2VPipeline`) uses the same geometry unless you pass height / width / frames. Required input is `prompt`; I2V also needs the reference `image`. Artifacts: `hunyuanvideo-t2v.mp4` / `hunyuanvideo-i2v.mp4`.
 
 ## In WorldFoundry
 

@@ -25,7 +25,7 @@ A single-image, low-step run confirms that the checkpoint executes; it is **not*
 
 Two 2B video checkpoints are available under open-gigaai: GigaWorld-0-Video-Pretrain-2b and GigaWorld-0-Video-GR1-2b. The GR1 route also uses a T5-11B text encoder and the Wan VAE.
 
-Catalog tasks include robotics-world-model, video-generation, action-conditioned-generation, and robot-image-to-video. Catalog aliases include `giga_world_0`, `gigaworld-0`, and `gigaworld0`. Documented outputs include video.
+Tasks: robotics-world-model, video-generation, action-conditioned-generation, and robot-image-to-video. Aliases: `giga_world_0`, `gigaworld-0`, and `gigaworld0`. Output modalities: video.
 
 Suggested benchmarks: [WorldArena](/docs/evaluation/benchmark-hub/worldarena) (WorldArena lists GigaWorld-0 for robot world-model evaluation), [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Embodied world-model video prediction quality).
 
@@ -39,7 +39,7 @@ Recorded task profiles: `robotics-world-model`, `video-generation`, `action-cond
 
 Family status: **Runner parity pending**.
 
-Recorded `robot-image-to-video` defaults: height=480, width=640, num_frames=61, num_inference_steps=30, guidance_scale=1.0, fps=16.
+Defaults for `robot-image-to-video`: height=480, width=640, num_frames=61, num_inference_steps=30, guidance_scale=1.0, fps=16.
 
 Until the checkpoints and task assets are staged, the pipeline returns **blocked** diagnostics instead of a video.
 

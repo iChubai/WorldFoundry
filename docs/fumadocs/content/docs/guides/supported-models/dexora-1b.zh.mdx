@@ -41,7 +41,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `DexoraPipeline`。
 
 运行 `wf run dexora-1b --pipeline.task-profile default` 预测动作。
 
-运行环境是独立 profile `worldfoundry-vla-dexora`（Python 3.10，CUDA 12.1 或更新，torch>=2.2）。
+运行环境：独立环境 `worldfoundry-vla-dexora`（Python 3.10，CUDA 12.1 或更新，torch>=2.2）。
 
 权重仓库：`google/siglip-so400m-patch14-384`、`google/t5-v1_1-xxl`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh dexora-1b`；下载缺失的公开权重时加 `--download`。
 

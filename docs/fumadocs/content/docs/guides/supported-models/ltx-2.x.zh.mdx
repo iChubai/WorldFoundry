@@ -21,7 +21,7 @@ LTX-2.x 是 Lightricks 当前一代视频模型系列。WorldFoundry 原生运�
 
 I2V 路径为两段去噪，以官方 Spatial Upscaler 为分界，从 spatial_upsampler_path 自动加载（不是独立的 Studio 细化开关）。原生蒸馏调度为第一段 8 步加第二段 3 步。
 
-catalog 记录的任务包括文生视频、图生视频、视频到视频、音视频联合生成。模态上，它接受文本、图像、视频，输出视频。同系列还有 `ltx-2-t2v`、`ltx-2-v2v`、`ltx-2.3-t2v`。
+任务：文生视频、图生视频、视频到视频、音视频联合生成。模态上，它接受文本、图像、视频，输出视频。同系列还有 `ltx-2-t2v`、`ltx-2-v2v`、`ltx-2.3-t2v`。
 
 推荐评测：[AIGCBench](/zh/docs/evaluation/benchmark-hub/aigcbench)（针对可运行 I2V 路径的图生视频评测）。
 
@@ -45,7 +45,7 @@ CLI task profile：`default`、`interactive-video`、`control-video-to-video`。
 
 transformer 改编自 [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2) 的 `d6053703e00195bc668cbd1d5eda9dc0b2e7b74a`。checkpoint 与改编源码仍受上游 LTX 许可约束。
 
-记录的权重仓库包括 `Lightricks/LTX-2`、`Lightricks/LTX-2.3`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh ltx-2-t2v`；下载缺失的公开权重时加 `--download`。
+权重仓库：`Lightricks/LTX-2`、`Lightricks/LTX-2.3`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh ltx-2-t2v`；下载缺失的公开权重时加 `--download`。
 
 许可证：自定义许可（见模型卡）。
 

@@ -15,7 +15,7 @@ Project page: [bernini-ai.github.io](https://bernini-ai.github.io/). Code: [byte
 
 For the full planner+renderer pipeline use [Bernini](/docs/guides/supported-models/bernini); for the larger renderer use [Bernini-R 14B](/docs/guides/supported-models/bernini-r-14b).
 
-Weights: `ByteDance/Bernini-R-1.3B-Diffusers` (**apache-2.0**).
+Weights: `ByteDance/Bernini-R-1.3B-Diffusers` (**Apache-2.0**).
 
 <ModelCommandBuilder modelId="bernini-r-1.3b" locale="en" />
 
@@ -47,7 +47,7 @@ Run `wf run bernini-r-1.3b --pipeline.task-profile t2v` for the default task. Sw
 
 It runs in the dedicated environment `worldfoundry-bernini-cu124` (Python 3.11, CUDA 12.4, torch==2.5.1+cu124).
 
-Recorded weight repositories include `ByteDance/Bernini-R-1.3B-Diffusers`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh bernini-r-1.3b`. Add `--download` to fetch missing public checkpoints.
+Weights: `ByteDance/Bernini-R-1.3B-Diffusers`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh bernini-r-1.3b`. Add `--download` to fetch missing public checkpoints.
 
 License: Apache-2.0.
 

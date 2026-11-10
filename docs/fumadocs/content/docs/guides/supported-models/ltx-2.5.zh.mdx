@@ -35,8 +35,6 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LTX25Pipelin
 
 已在无 GPU 条件下验证：WorldFoundry 能正确构建官方命令并映射拆分组件。
 
-必填 `prompt`；可选 `image`、`video`；`actions`：seed, height, width, num_frames, fps, offload_mode, quantization；产物 `generated_video`、`ltx-2.5.mp4`。
-
 ## 在 WorldFoundry 中运行
 
 用 `wf run ltx-2.5 --pipeline.task-profile interactive-video` 生成视频。

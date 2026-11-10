@@ -25,7 +25,7 @@ pipeline 还需要 `google-t5/t5-11b` 和 `Wan-AI/Wan2.1-T2V-1.3B-Diffusers`。�
 
 open-gigaai 提供两个 2B 视频 checkpoint：GigaWorld-0-Video-Pretrain-2b 与 GigaWorld-0-Video-GR1-2b。GR1 入口还使用 T5-11B 文本编码器和 Wan VAE。该模型由极佳科技（GigaAI）发布。
 
-catalog 记录的任务包括机器人世界模型、视频生成、action-conditioned-generation、robot-image-to-video。别名包括 `giga_world_0`、`gigaworld-0`、`gigaworld0`。输出模态为视频。
+任务：机器人世界模型、视频生成、action-conditioned-generation、robot-image-to-video。别名：`giga_world_0`、`gigaworld-0`、`gigaworld0`。输出模态为视频。
 
 推荐评测：[WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena)（WorldArena 收录 GigaWorld-0 用于机器人世界模型评测）、[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身世界模型视频预测质量）。
 
@@ -39,7 +39,7 @@ catalog 记录的任务包括机器人世界模型、视频生成、action-condi
 
 系列状态：**Runner 一致性待确认**。
 
-`robot-image-to-video` 记录默认值：height=480, width=640, num_frames=61, num_inference_steps=30, guidance_scale=1.0, fps=16。
+`robot-image-to-video` 的默认值：height=480, width=640, num_frames=61, num_inference_steps=30, guidance_scale=1.0, fps=16。
 
 checkpoint 与任务资产就位前，pipeline 返回 **blocked** 诊断而不是视频。
 

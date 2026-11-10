@@ -33,8 +33,6 @@ CLI task profile：`default`。绑定的 pipeline 类是 `LingBotMapPipeline`。
 
 请先就位 robbyant/lingbot-map checkpoint（apache-2.0）。pipeline 接受 checkpoint 文件或本地 HF snapshot 目录。
 
-必填 `image`、`video`；可选 `prompt`；`actions`：streaming_reconstruction, windowed_reconstruction；产物 `lingbot_map_predictions.npz`。
-
 ## 在 WorldFoundry 中运行
 
 用 `wf run lingbot-map --pipeline.task-profile default` 重建场景。

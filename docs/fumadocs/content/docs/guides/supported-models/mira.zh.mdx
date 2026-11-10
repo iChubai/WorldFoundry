@@ -37,8 +37,6 @@ CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPip
 
 公开的 Rocket Science 数据集约 29.24 TB，不会自动下载；请在本地就位所需切分。TorchCodec ABI 不兼容时视频解码回退到 PyAV。
 
-必填 `checkpoint_path`、`dataset_path`；可选 `prompt`、`image`、`video`、`seed`、`clip_index`、`n_context_frames`、`num_unrolled_frames`、`n_diffusion_steps`、`schedule_type`、`noise_level`、`compile`、`overlay_actions`、`generated_only`、`plan_only`、`timeout_seconds`；`actions`：rocket_league_keyboard、game_action；产物 `generated_video`、`mira.mp4`。
-
 ## 在 WorldFoundry 中运行
 
 运行 `wf run local-checkpoint --pipeline.task-profile rocket-science-rollout` 生成世界。

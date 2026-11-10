@@ -39,8 +39,6 @@ CLI task profile：`default`。绑定的 pipeline 类是 `CogACTPipeline`。
 
 Llama-2 tokenizer 依赖可能需要门控镜像或 OpenVLA 回退。
 
-必填 `image`、`prompt`；可选 `model_id`、`state`、`policy_setup`、`policy_family`、`action_representation`；产物 `action_trace`、`cogact_action_trace.json`。
-
 ## 在 WorldFoundry 中运行
 
 运行 `wf run cogact-base --pipeline.task-profile default` 预测动作。

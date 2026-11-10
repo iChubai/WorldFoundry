@@ -11,13 +11,13 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 论文是 [SCOPE: Simulating Cross-game Operations in Playable Environments for FPS World Models](https://arxiv.org/abs/2605.23345)。项目页：[z2tong.github.io/SCOPE](https://z2tong.github.io/SCOPE)。代码：[z2tong/SCOPE](https://github.com/z2tong/SCOPE)。
 
-别名包括 `scope-world-model`、`zizhaotong/SCOPE`。
+别名：`scope-world-model`、`zizhaotong/SCOPE`。
 
 <ModelCommandBuilder modelId="scope" locale="zh" />
 
 ## 用来做什么
 
-把 SCOPE 当动作条件世界路径来跑。启动 `wf run scope`，任务 profile 为 `interactive-world-model`——必填 `image`、`prompt`；产物 `generated_video`、`scope.mp4`。
+把 SCOPE 当动作条件世界路径来跑。启动 `wf run scope`——必填 `image`、`prompt`；产物 `generated_video`、`scope.mp4`。
 
 评测看 [WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)。
 
@@ -27,6 +27,6 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 ## 在 WorldFoundry 中运行
 
-跑在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `zizhaotong/SCOPE` 放到本地，再启动 `wf run scope`，任务 profile 为 `interactive-world-model`。
+跑在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `zizhaotong/SCOPE` 放到本地，再启动 `wf run scope`。
 
 <ModelRelatedRecipes modelId="scope" locale="zh" />

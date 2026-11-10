@@ -59,7 +59,7 @@ HunyuanVideo-I2V 沿用上述结构，并用 token replace 写入参考图：MLL
 
 官方推理覆盖文生视频与图生视频，分辨率 540p 与 720p（推荐），129 帧，画幅 9:16、16:9、4:3、3:4 与 1:1。batch size 为 1 时，720×1280×129 峰值显存 60GB，544×960×129 为 45GB；I2V 720p 同样记为 60GB。官方在单张 80GB GPU 上测试，并建议用 80GB 以获得更好质量。I2V 若追求更稳，可打开 `--i2v-stability` 并将 flow-shift 设为 7.0；若追求更强动态，则关闭 stability、flow-shift 设为 17.0。FP8 T2V 权重大约节省 10GB 显存。
 
-WorldFoundry 原生文生视频配方（`HunyuanVideoT2VPipeline`）默认为 **720×1280、129 帧、50 步、24 fps、guidance 6.0**。图生视频（`HunyuanVideoI2VPipeline`）沿用同一几何，除非你覆盖 height / width / frames。必填输入是 `prompt`；图生视频还需要参考 `image`；`actions` 是 seed。产物：`hunyuanvideo-t2v.mp4` / `hunyuanvideo-i2v.mp4`。
+WorldFoundry 原生文生视频配方（`HunyuanVideoT2VPipeline`）默认为 **720×1280、129 帧、50 步、24 fps、guidance 6.0**。图生视频（`HunyuanVideoI2VPipeline`）沿用同一几何，除非你覆盖 height / width / frames。必填输入是 `prompt`；图生视频还需要参考 `image`。产物：`hunyuanvideo-t2v.mp4` / `hunyuanvideo-i2v.mp4`。
 
 ## 在 WorldFoundry 中
 

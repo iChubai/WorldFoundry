@@ -17,7 +17,7 @@ Validated on **Nano**: the released transformer, VAE38, and AVAE weights load co
 
 ## What it is for
 
-Use Cosmos 3 when one stack must cover image, video, optional sound, and structured action heads. Default launch is `wf run cosmos3-nano` with `--pipeline.task-profile t2i`. Required inputs: `prompt`, `image`, `video`. The `actions` field accepts `policy`, `forward_dynamics`, `inverse_dynamics`. Artifact: `cosmos3-nano.mp4` (family default `cosmos3.mp4`).
+Use Cosmos 3 when one stack must cover image, video, optional sound, and structured action heads. Default launch is `wf run cosmos3-nano` with `--pipeline.task-profile t2v`. The `actions` field accepts `policy`, `forward_dynamics`, `inverse_dynamics`. Artifact: `cosmos3-nano.mp4` (family default `cosmos3.mp4`).
 
 Pick `cosmos3-super` only when you intend the Super checkpoint. This infer-only recipe **excludes** Reasoner, training, guardrails, and vLLM / vLLM-Omni serving. For gated T5 video2world use Predict 2. For verified text-to-world at 1280×704 / 93 frames use Predict 2.5. For edge-controlled sim-to-real use Transfer 2.5.
 

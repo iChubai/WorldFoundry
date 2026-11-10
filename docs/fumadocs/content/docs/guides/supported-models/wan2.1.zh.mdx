@@ -21,7 +21,7 @@ Wan2.1 是阿里通义实验室的开源视频基础系列，也是 WorldFoundry
 
 ## 运行时契约
 
-必填 `prompt`；可选 `image` / `video`；`actions` 是 seed。已验证 1.3B T2V：**832×480、81 帧、50 步、guidance 6.0、16 fps、shift 8.0**，走 `Wan2p1T2VPipeline`（`wan2.1-t2v-1.3b-832x480-81f`）。产物：`wan2.1-t2v-1.3b-832x480-81f.mp4`。14B T2V 默认 **1280×720**、shift **5.0**；I2V 480p 为 **832×480 / 81 帧 / 40 步 / guidance 5.0 / shift 3.0**；I2V 720p 为 **1280×720**、shift **5.0**。catalog 任务只有 `text-to-video` 与 `image-to-video`。
+必填 `prompt`；可选 `image` / `video`。已验证 1.3B T2V：**832×480、81 帧、50 步、guidance 6.0、16 fps、shift 8.0**，走 `Wan2p1T2VPipeline`（`wan2.1-t2v-1.3b-832x480-81f`）。产物：`wan2.1-t2v-1.3b-832x480-81f.mp4`。14B T2V 默认 **1280×720**、shift **5.0**；I2V 480p 为 **832×480 / 81 帧 / 40 步 / guidance 5.0 / shift 3.0**；I2V 720p 为 **1280×720**、shift **5.0**。catalog 任务只有 `text-to-video` 与 `image-to-video`。
 
 Wan-VAE 编解码**任意长度的 1080p**，DiT 在潜空间去噪。文本是 UMT5。I2V 需要 image-encoder 权重角色。
 

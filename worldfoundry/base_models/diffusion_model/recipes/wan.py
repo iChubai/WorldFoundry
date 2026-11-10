@@ -99,7 +99,7 @@ WAN21_VACE_14B_REVISION = "539c162b1387eac9dc4c20bd3f74671309e76a4c"
 FASTVIDEO_CAUSAL_WAN22_REVISION = "0977572ccf137da5e577d62e3231ca840151af38"
 SELF_FORCING_REVISION = "2f8b779212da279d212c22a509b66ad6552f350e"
 CAUSAL_FORCING_REVISION = "2f8eb8bb6eeb1238da9d13e5420d342a74d634a6"
-# thu-ml/Causal-Forcing source the vendored runtime and these recipes follow.
+# thu-ml/Causal-Forcing source revision these recipes follow.
 CAUSAL_FORCING_UPSTREAM_SOURCE_REVISION = "da3ddf1a590f30c9edc568e11c2f77170995c31c"
 
 # Architecture/training semantics were audited against the official Wan
@@ -779,6 +779,7 @@ def self_forcing_wan21_t2v_1p3b_recipe() -> NativeDiffusionRecipe:
 def _causal_forcing_recipe(
     *,
     model_id: str,
+    aliases: tuple[str, ...] = (),
     checkpoint_file: str,
     block_size: int,
     fixed_timesteps: tuple[int, ...],
@@ -794,7 +795,7 @@ def _causal_forcing_recipe(
 
     return _forcing_wan21_t2v_1p3b_recipe(
         model_id=model_id,
-        aliases=(),
+        aliases=aliases,
         dit=CheckpointSpec(
             repo_id=CAUSAL_FORCING_REPO_ID,
             revision=CAUSAL_FORCING_REVISION,
@@ -816,10 +817,14 @@ def _causal_forcing_recipe(
 
 
 def causal_forcing_chunkwise_recipe() -> NativeDiffusionRecipe:
-    """Return Causal-Forcing's chunk-wise four-step student: three-latent-frame blocks, T2V."""
+    """Return Causal-Forcing's chunk-wise four-step student: three-latent-frame blocks, T2V.
+
+    It is the default variant, so the public ``causal-forcing`` model ID resolves to it.
+    """
 
     return _causal_forcing_recipe(
         model_id=CAUSAL_FORCING_CHUNKWISE_MODEL_ID,
+        aliases=("causal-forcing",),
         checkpoint_file="chunkwise/causal_forcing.pt",
         block_size=3,
         fixed_timesteps=(1000, 750, 500, 250),

@@ -204,7 +204,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/diffusion_model/test_hy_nomas.py \
 	tests/pipelines/test_hy_nomas.py \
 	tests/pipelines/test_forcing_runtime.py \
-	tests/pipelines/test_causal_forcing_dispatch.py \
+	tests/studio/test_forcing_catalog_defaults.py \
 	tests/pipelines/test_native_product_batching.py \
 	tests/studio/test_native_request_batching.py \
 	tests/studio/test_inference_requests_attention.py \

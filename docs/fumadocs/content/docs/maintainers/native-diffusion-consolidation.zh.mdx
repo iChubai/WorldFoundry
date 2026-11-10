@@ -47,6 +47,12 @@ Cosmos Predict1 与 Predict2 复用上述架构，而没有恢复各自的上游
 
 HunyuanVideo 同样遵守这一组合边界。`hunyuanvideo-t2v`、`hunyuanvideo-i2v`、`hunyuanvideo-1.5-t2v` 与 `hunyuanvideo-1.5-i2v` 是默认 registry 中四个不可变 recipe，全部使用 standard framework runner。原版与 1.5 只拥有 checkpoint-compatible denoiser、prompt conditioning 和 latent codec；scheduler、loader、offload、execution、media IO 与公开 pipeline 行为继续复用共享 infra。此前重复的 MLP、text/timestep projection、AdaLN/final layer、prefix modulation、attention 与 RoPE helper 现在统一解析到同一组 core primitive，同时保持 checkpoint 可见的 submodule name 不变。本地精确 checkpoint 检查覆盖转换后的原版 T2V DiT（856 个源 key 转为 976 个原生 key）、原版 I2V DiT（856 keys）、原版 causal VAE（248 keys）、1.5 DiT（1,793 keys）、1.5 VAE（218 keys）与仅 I2V 使用的 SigLIP vision encoder（448 keys），missing、unexpected 与 shape mismatch 全部为 0。受限访问的 FLUX.1-Redux-dev vision asset 是显式 I2V component dependency，不再通过 sibling directory 猜测。原版 causal 3D VAE 是 encode/decode 共用的单一原生 PyTorch module。旧 `video/hunyuan_video` package、上游 CLI config 与一次性 validation/demo script 已删除。此前 official-runtime artifact 只保留为历史 source evidence；四个 recipe 在 native 切换后都仍需重新完成 checkpoint-backed CUDA artifact parity。Hunyuan GameCraft 与 HunyuanWorld-Voyager 当前仍使用 synthesis 层的过渡兼容层，不能据此视为这两个衍生产品已经完成迁移。
 
+## Self-Forcing 与 Causal-Forcing
+
+`self-forcing` 与四个 Causal-Forcing 学生（公开 ID `causal-forcing` 解析到的 `causal-forcing-chunkwise`，以及 `causal-forcing-framewise`、`causal-forcing-framewise-1step`、`causal-forcing-framewise-2step`）是运行在框架自有 `autoregressive-window` runner 上的不可变 recipe。它们共用一个 recipe 构造函数：带 21 个 latent 帧 KV cache、做蒸馏 x0 预测的因果 Wan2.1 1.3B denoiser，canonical Wan2.1 umT5 conditioner，shift 5 时间表上的 Wan flow-match scheduler，以及 bf16 的 Wan2.1 codec。各发布版本只在 generator 文件、latent 块大小、固定步数表（Causal Forcing++ 首块为四步）以及是否用图像作为首个 latent 帧上不同。`NativeSelfForcingPipeline` 与 `NativeCausalForcingPipeline` 是 catalog binding 与 Studio 共用的公开 pipeline，并提供同一套常驻实时会话。
+
+内置的 `self_forcing_runtime/` 与 Causal-Forcing 推理树，连同它们的 operator、synthesis facade 与运行时配置均已删除；共享子进程桥接中对应的分支在 RollingForcing 迁移时一并删除。RollingForcing 保留共享的 forcing 桥接（`synthesis/visual_generation/forcing/runtime.py`、`shared/`）以及它从 `forcing/causal_forcing_runtime/long_video/` 导入的滚动窗口推理 pipeline，直到它完成迁移。每个发布版本的已验收参考一致性均为逐位一致：严格 checkpoint 加载、提示词嵌入、每次 generator 调用、rollout 最终 latent 以及参考 latent 的解码都与官方推理脚本的录制运行一致（`tests/manual/self_forcing_parity.py`），回放案例 `self-forcing-t2v-short`、`causal-forcing-chunkwise-t2v-short` 与 `causal-forcing-framewise-short` 覆盖公开路线。
+
 ## LVDM
 
 LVDM 不再拥有第二套 runtime tree，其 checkpoint-shaped 实现按 role 拆分：

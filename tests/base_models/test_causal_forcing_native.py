@@ -144,7 +144,7 @@ def test_causal_forcing_recipe_declares_released_variant(model_id: str) -> None:
     recipe = factory()
     assert default_native_diffusion_registry().resolve(model_id).model_id == model_id
     assert recipe.model_id == model_id
-    assert recipe.aliases == ()
+    assert recipe.aliases == (("causal-forcing",) if model_id == CAUSAL_FORCING_CHUNKWISE_MODEL_ID else ())
 
     expected_options: dict[str, object] = {"prediction_mode": "distilled-x0", "fixed_timesteps": steps}
     if first_steps:
@@ -185,13 +185,14 @@ def test_causal_forcing_recipe_declares_released_variant(model_id: str) -> None:
     assert recipe.metadata["latent_block_size"] == block_size
 
 
-def test_causal_forcing_ids_stay_apart_from_the_official_catalog_binding() -> None:
+def test_public_causal_forcing_id_resolves_to_the_chunkwise_recipe() -> None:
     from worldfoundry.base_models.diffusion_model.recipes.registry import UnknownNativeDiffusionRecipeError
 
     registry = default_native_diffusion_registry()
-    for name in ("causal-forcing", "Causal-Forcing", "causal_forcing", "zhuhz22/Causal-Forcing"):
-        with pytest.raises(UnknownNativeDiffusionRecipeError):
-            registry.resolve(name)
+    for name in ("causal-forcing", "Causal-Forcing", "causal_forcing"):
+        assert registry.resolve(name).model_id == CAUSAL_FORCING_CHUNKWISE_MODEL_ID
+    with pytest.raises(UnknownNativeDiffusionRecipeError):
+        registry.resolve("zhuhz22/Causal-Forcing")
 
 
 @pytest.mark.parametrize(
@@ -606,7 +607,7 @@ def test_native_causal_forcing_pipeline_selects_variant_defaults(monkeypatch: py
 
     def load(model_id: str, **kwargs: Any) -> Any:
         captured.update(model_id=model_id, **kwargs)
-        return SimpleNamespace(model_id=model_id)
+        return SimpleNamespace(model_id=default_native_diffusion_registry().resolve(model_id).model_id)
 
     monkeypatch.setattr(native_diffusion.NativeDiffusionPipeline, "from_pretrained", load)
     loaded = NativeCausalForcingPipeline.from_pretrained(
@@ -617,5 +618,8 @@ def test_native_causal_forcing_pipeline_selects_variant_defaults(monkeypatch: py
     assert captured["model_id"] == CAUSAL_FORCING_FRAMEWISE_2STEP_MODEL_ID
     assert captured["checkpoint_overrides"] == {"dit": "/ckpt/framewise-2step.pt"}
     assert loaded.DEFAULT_NUM_INFERENCE_STEPS == 2
-    NativeCausalForcingPipeline.from_pretrained(device="cpu")
-    assert captured["model_id"] == CAUSAL_FORCING_CHUNKWISE_MODEL_ID
+    NativeCausalForcingPipeline.from_pretrained(device="cpu", variant=CAUSAL_FORCING_FRAMEWISE_MODEL_ID)
+    assert captured["model_id"] == CAUSAL_FORCING_FRAMEWISE_MODEL_ID
+    default = NativeCausalForcingPipeline.from_pretrained(device="cpu")
+    assert captured["model_id"] == "causal-forcing"
+    assert default.model_id == CAUSAL_FORCING_CHUNKWISE_MODEL_ID

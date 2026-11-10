@@ -620,22 +620,10 @@ class _ForcingRuntime:
         }
 
 
-class SelfForcingRuntime(_ForcingRuntime):
-    """In-tree runtime bridge for the official Self-Forcing runner."""
-
-    MODEL_ID = "self-forcing"
-
-
-class CausalForcingRuntime(_ForcingRuntime):
-    """In-tree runtime bridge for the official Causal-Forcing runner."""
-
-    MODEL_ID = "causal-forcing"
-
-
 class RollingForcingRuntime(_ForcingRuntime):
     """In-tree runtime bridge for the official RollingForcing runner."""
 
     MODEL_ID = "rolling-forcing"
 
 
-__all__ = ["CausalForcingRuntime", "RollingForcingRuntime", "SelfForcingRuntime"]
+__all__ = ["RollingForcingRuntime"]

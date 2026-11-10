@@ -85,7 +85,9 @@ def _matrix_game_2_default_ref() -> str:
 
 def _matrix_game_2_default_config_path() -> str:
     return resolve._first_existing_path(
-        resolve._data_path("models", "runtime", "configs", "matrix_game_2", "inference_yaml", "inference_universal.yaml"),
+        resolve._data_path(
+            "models", "runtime", "configs", "matrix_game_2", "inference_yaml", "inference_universal.yaml"
+        ),
     )
 
 
@@ -610,88 +612,46 @@ def _hunyuan_worldplay_default_call_kwargs() -> dict[str, Any]:
     }
 
 
-def _forcing_unified_python_executable() -> str:
-    candidate = resolve._project_root().parent / "conda" / "envs" / "worldfoundry-unified-cu128" / "bin" / "python"
-    return str(candidate) if candidate.is_file() else resolve._worldfoundry_unified_python_executable()
+def _forcing_release_ref(*repo_dir_names: str) -> str:
+    """Return the staged forcing release directory, or ``""`` so the native recipe resolves its checkpoint.
 
+    The pipeline maps this directory to the generator role and reads the selected
+    variant's file from it, so every Causal-Forcing variant shares one reference.
+    """
 
-def _forcing_in_tree_runtime_root(model_id: str) -> Path:
-    runtime_name = "causal_forcing_runtime" if model_id == "causal-forcing" else "self_forcing_runtime"
-    return resolve._package_root() / "synthesis" / "visual_generation" / "forcing" / runtime_name
+    staged = resolve._checkpoint_model_ref(*repo_dir_names)
+    return staged if staged and Path(staged).is_dir() else ""
 
 
 def _self_forcing_default_ref() -> str:
-    return resolve._checkpoint_model_ref(
-        "gdhe17--Self-Forcing/checkpoints/self_forcing_dmd.pt",
-        "Self-Forcing/checkpoints/self_forcing_dmd.pt",
-        "LongSANA_2B_480p_self_forcing/checkpoints/LongSANA_2B_480p_self_forcing.pt",
-        fallback="gdhe17/Self-Forcing",
-    )
+    return _forcing_release_ref("gdhe17--Self-Forcing", "Self-Forcing")
 
 
 def _causal_forcing_default_ref() -> str:
-    return resolve._checkpoint_model_ref(
-        "zhuhz22--Causal-Forcing/chunkwise/causal_forcing.pt",
-        "Causal-Forcing/chunkwise/causal_forcing.pt",
-        fallback="zhuhz22/Causal-Forcing",
-    )
+    return _forcing_release_ref("zhuhz22--Causal-Forcing", "Causal-Forcing")
 
 
-def _forcing_wan_default_ref() -> str:
-    return resolve._checkpoint_model_ref(
-        "Wan-AI--Wan2.1-T2V-1.3B",
-        "Wan2.1-T2V-1.3B",
-        fallback="Wan-AI/Wan2.1-T2V-1.3B",
-    )
-
-
-def _self_forcing_default_load_kwargs() -> dict[str, Any]:
-    runtime_root = _forcing_in_tree_runtime_root("self-forcing")
-    config_path = resolve._data_path("models", "runtime", "configs", "self_forcing", "self_forcing_dmd.yaml")
-    return {
-        "required_components": {
-            "runtime_root": str(runtime_root),
-            "config_path": str(config_path),
-            "checkpoint_path": _self_forcing_default_ref(),
-            "wan_models_root": _forcing_wan_default_ref(),
-            "python_executable": _forcing_unified_python_executable(),
-            "use_ema": True,
-            "save_with_index": True,
-        }
-    }
-
-
-def _causal_forcing_default_load_kwargs() -> dict[str, Any]:
-    runtime_root = _forcing_in_tree_runtime_root("causal-forcing")
-    config_path = resolve._data_path("models", "runtime", "configs", "causal_forcing", "causal_forcing_dmd_chunkwise.yaml")
-    return {
-        "required_components": {
-            "runtime_root": str(runtime_root),
-            "config_path": str(config_path),
-            "checkpoint_path": _causal_forcing_default_ref(),
-            "wan_models_root": _forcing_wan_default_ref(),
-            "python_executable": _forcing_unified_python_executable(),
-        }
-    }
-
-
-def _self_forcing_default_call_kwargs() -> dict[str, Any]:
-    return {
-        "num_output_frames": 21,
-        "seed": 0,
-        "num_samples": 1,
-        "use_ema": True,
-        "save_with_index": True,
-        "return_dict": True,
-    }
-
-
-def _causal_forcing_default_call_kwargs() -> dict[str, Any]:
-    return {
-        "num_output_frames": 21,
-        "seed": 0,
-        "return_dict": True,
-    }
+_FORCING_DEFAULT_CALL_KWARGS: dict[str, Any] = {
+    "height": 480,
+    "width": 832,
+    "num_frames": 81,
+    "fps": 16,
+    "seed": 0,
+    "return_dict": True,
+}
+_FORCING_T2V_CALL_PARAMS: tuple[str, ...] = (
+    "prompt",
+    "output_path",
+    "output_dir",
+    "num_frames",
+    "height",
+    "width",
+    "num_inference_steps",
+    "seed",
+    "fps",
+    "output_type",
+    "return_dict",
+)
 
 
 def _oasis_500m_default_ref() -> str:
@@ -1236,7 +1196,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "category": "Video Generation",
         "summary": "Released GR1 robot-world image-to-video generation with local T5 and Wan components.",
         "default_model_ref": lambda: str(checkpoint_root_path("open-gigaai--GigaWorld-0-Video-GR1-2b", "transformer")),
-        "default_input_path": str(resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")),
+        "default_input_path": str(
+            resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")
+        ),
         "default_prompt": "A robot arm moves toward the objects on the workbench.",
         "default_task_type": "robot-image-to-video",
         "default_load_kwargs": _giga_world_0_default_load_kwargs,
@@ -1491,7 +1453,9 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "category": "Video Generation",
         "summary": "Official RGB-depth-normal robot world-video generation with local CogVideoX components.",
         "default_model_ref": lambda: str(checkpoint_root_path("anyeZHY--tesseract", "tesseract_v01e_rgbdn_sft")),
-        "default_input_path": str(resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")),
+        "default_input_path": str(
+            resolve._data_path("test_cases", "test_vla_case1", "droid", "exterior_image_1_left.png")
+        ),
         "default_prompt": "The robot moves its gripper toward the object on the table.",
         "default_task_type": "robot-action-video",
         "default_load_kwargs": _tesseract_default_load_kwargs,
@@ -2000,103 +1964,48 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "category": "Video Generation",
         "default_model_ref": _self_forcing_default_ref,
         "supports_from_pretrained": True,
+        "supports_stream": True,
         "default_backend": "from_pretrained",
         "default_prompt": (
             "A cinematic shot of a red sports car driving along a coastal highway at sunset, "
             "with realistic motion, rich detail, and stable lighting."
         ),
-        "default_load_kwargs": _self_forcing_default_load_kwargs,
-        "default_call_kwargs": _self_forcing_default_call_kwargs,
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "return_dict",
-            "num_output_frames",
-            "seed",
-            "num_samples",
-            "use_ema",
-            "save_with_index",
-            "extended_prompt",
-            "i2v",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "runtime_root",
-            "repo_root",
-            "checkpoint_path",
-            "ckpt_path",
-            "config_path",
-            "wan_models_root",
-            "wan_root",
-            "python_executable",
-            "num_output_frames",
-            "seed",
-            "num_samples",
-            "fps",
-            "use_ema",
-            "save_with_index",
-            "report_timing",
-            "extended_prompt",
-        ),
+        "default_call_kwargs": _FORCING_DEFAULT_CALL_KWARGS,
+        "call_params": _FORCING_T2V_CALL_PARAMS,
+        "stream_params": ("prompt",),
+        "load_params": (*_native_diffusion_video_load_params(), "kv_window"),
         "aliases": ("selfforcing", "gdhe17/self-forcing"),
-        "tags": ("autoregressive-video", "official-runtime", "wan2.1", "world-model"),
-        "notes": "Studio defaults mirror the official Self-Forcing CLI: configs/self_forcing_dmd.yaml, --use_ema, and the staged DMD checkpoint when available.",
+        "tags": ("autoregressive-video", "native", "prompt-scheduled", "wan2.1", "world-model"),
+        "notes": (
+            "Native four-step Self-Forcing DMD rollout on the autoregressive-window runner: 480x832, 81 frames "
+            "at 16 fps in three-latent-frame blocks. The generator loads from the staged gdhe17/Self-Forcing "
+            "release; the Wan2.1 T2V 1.3B text encoder, tokenizer and VAE resolve from their recipe sources. "
+            "Realtime commits and decodes one block per chunk and reopens the rollout on a new prompt."
+        ),
     },
     "causal-forcing": {
         "display_name": "Causal-Forcing",
         "category": "Video Generation",
         "default_model_ref": _causal_forcing_default_ref,
         "supports_from_pretrained": True,
+        "supports_stream": True,
         "default_backend": "from_pretrained",
         "default_prompt": (
             "A cinematic shot of a futuristic train crossing a mountain valley under dramatic clouds, "
             "with coherent motion and high visual detail."
         ),
-        "default_load_kwargs": _causal_forcing_default_load_kwargs,
-        "default_call_kwargs": _causal_forcing_default_call_kwargs,
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "return_dict",
-            "num_output_frames",
-            "seed",
-            "use_ema",
-            "report_timing",
-            "i2v",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "runtime_root",
-            "repo_root",
-            "checkpoint_path",
-            "ckpt_path",
-            "config_path",
-            "wan_models_root",
-            "wan_root",
-            "python_executable",
-            "num_output_frames",
-            "seed",
-            "fps",
-            "use_ema",
-            "report_timing",
-        ),
+        "default_call_kwargs": _FORCING_DEFAULT_CALL_KWARGS,
+        "call_params": (*_FORCING_T2V_CALL_PARAMS, "images", "image_path"),
+        "stream_params": ("prompt",),
+        "load_params": (*_native_diffusion_video_load_params(), "variant"),
         "aliases": ("causalforcing", "thu-ml/causal-forcing"),
-        "tags": ("autoregressive-video", "official-runtime", "wan2.1", "world-model"),
-        "notes": "Studio defaults mirror the official Causal-Forcing chunk-wise CLI: configs/causal_forcing_dmd_chunkwise.yaml and chunkwise/causal_forcing.pt.",
+        "tags": ("autoregressive-video", "native", "prompt-scheduled", "wan2.1", "world-model"),
+        "notes": (
+            "Native Causal-Forcing rollout on the autoregressive-window runner: 480x832, 81 frames at 16 fps. "
+            "The default is the chunk-wise student; variant selects causal-forcing-framewise, which also takes "
+            "one image as its first frame, or the Causal Forcing++ causal-forcing-framewise-1step and -2step "
+            "students. Each variant loads its generator from the staged zhuhz22/Causal-Forcing release."
+        ),
     },
     "gen3c": {
         "display_name": "GEN3C",

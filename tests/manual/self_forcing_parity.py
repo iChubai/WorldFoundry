@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Compare native Self-Forcing or Causal-Forcing with a recorded official reference run.
 
-The reference directory is produced by the vendored official runtime
-(``self_forcing_runtime/inference.py`` or ``causal_forcing_runtime/inference.py``)
-for one request and contains ``prompt.txt``, ``initial_noise.pt``,
+The reference directory records one request run through the official
+Self-Forcing or Causal-Forcing ``inference.py`` and contains ``prompt.txt``, ``initial_noise.pt``,
 ``renoise_draws.pt``, ``prompt_embeds.pt``, ``step_trace.pt`` (every generator
 call), ``latents.pt`` and ``video.pt``; an image-to-video record adds
 ``i2v_image_input.pt`` and ``initial_latent.pt``. See ``meta.json`` in that

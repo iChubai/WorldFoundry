@@ -291,7 +291,7 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
             "self_forcing_wan21_t2v_1p3b_recipe",
             ("gdhe17/Self-Forcing", "self-forcing-dmd"),
         ),
-        ("causal-forcing-chunkwise", ".wan", "causal_forcing_chunkwise_recipe", ()),
+        ("causal-forcing-chunkwise", ".wan", "causal_forcing_chunkwise_recipe", ("causal-forcing",)),
         ("causal-forcing-framewise", ".wan", "causal_forcing_framewise_recipe", ()),
         ("causal-forcing-framewise-1step", ".wan", "causal_forcing_framewise_1step_recipe", ()),
         ("causal-forcing-framewise-2step", ".wan", "causal_forcing_framewise_2step_recipe", ()),

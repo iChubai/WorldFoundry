@@ -212,13 +212,13 @@
       "worldfoundry/base_models/diffusion_model/models/encoders/minimax_h3_qwen3vl.py",
       "worldfoundry/base_models/diffusion_model/schedulers/minimax_h3.py"
     ],
-    "self-forcing-native": [
+    "self-forcing": [
       "worldfoundry/pipelines/forcing/__init__.py",
       "worldfoundry/pipelines/forcing/pipeline_native_forcing.py",
       "worldfoundry/pipelines/native_diffusion*.py",
       "worldfoundry/base_models/diffusion_model/**"
     ],
-    "causal-forcing-native": [
+    "causal-forcing": [
       "worldfoundry/pipelines/forcing/__init__.py",
       "worldfoundry/pipelines/forcing/pipeline_native_forcing.py",
       "worldfoundry/pipelines/native_diffusion*.py",
@@ -568,13 +568,13 @@
       "wonderworld"
     ],
     "self-forcing-t2v-short": [
-      "self-forcing-native"
+      "self-forcing"
     ],
     "causal-forcing-chunkwise-t2v-short": [
-      "causal-forcing-native"
+      "causal-forcing"
     ],
     "causal-forcing-framewise-short": [
-      "causal-forcing-native"
+      "causal-forcing"
     ]
   },
   "coverage_scope": "Declared short 3D, video generation and world-model cases; variants and unlisted integrations are not implied covered.",

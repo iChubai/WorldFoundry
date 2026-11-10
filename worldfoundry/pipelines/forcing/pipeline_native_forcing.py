@@ -236,16 +236,16 @@ class NativeSelfForcingPipeline(NativeVisualDiffusionPipeline):
 class NativeCausalForcingPipeline(NativeSelfForcingPipeline):
     """Released Causal-Forcing generators on the native forcing rollout, offline and in realtime.
 
-    ``model_id`` (or ``variant``) selects ``causal-forcing-chunkwise`` (the
-    default, three-latent-frame blocks), ``causal-forcing-framewise`` (one-frame
-    blocks) or the Causal Forcing++ frame-wise ``causal-forcing-framewise-1step``
+    ``model_id`` (or ``variant``) selects ``causal-forcing-chunkwise`` (three-latent-frame
+    blocks; the public ``causal-forcing`` ID resolves to it), ``causal-forcing-framewise``
+    (one-frame blocks) or the Causal Forcing++ frame-wise ``causal-forcing-framewise-1step``
     and ``-2step`` students, which spend four steps on the first frame. The
     frame-wise student also accepts one image, as the official ``--i2v`` route
     does: the image becomes the clean first latent frame and the rollout produces
     the remaining frames.
     """
 
-    MODEL_ID = "causal-forcing-chunkwise"
+    MODEL_ID = "causal-forcing"
     OWNER = "Causal-Forcing"
     ALLOW_MODEL_ID_OVERRIDE = True
     DEFAULT_STEPS_BY_MODEL_ID: ClassVar[Mapping[str, int]] = {

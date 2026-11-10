@@ -2340,7 +2340,7 @@
       "notes": [
         "NativeCausalForcingPipeline runs every released Causal-Forcing generator as a native diffusion recipe on the autoregressive-window runner, offline and as a resident realtime session.",
         "The public causal-forcing ID loads the chunk-wise student; variant (or model_id) selects causal-forcing-framewise, causal-forcing-framewise-1step or causal-forcing-framewise-2step. Each variant reads its own file from zhuhz22/Causal-Forcing, and the Wan2.1 text encoder, tokenizer and VAE resolve from Wan-AI/Wan2.1-T2V-1.3B.",
-        "All four text-to-video variants and frame-wise image-to-video are bitwise equal to recorded runs of the official inference script for one request each (first MovieGenVideoBench prompt, seed 42, 480x832, 21 latent frames, bf16, H100) at every stage, from strict checkpoint loading to the decoded video.",
+        "All four text-to-video variants and frame-wise image-to-video are bitwise equal to recorded runs of the official inference script for one request each (first MovieGenVideoBench prompt, seed 42, 480x832, 21 latent frames, bf16, H100), given the recorded initial noise and re-noise draws, at every stage from strict checkpoint loading to the decoded video.",
         "Per-run visual QA and artifact checks are tracked outside the model catalog.",
         "NativeCausalForcingPipeline loads the chunk-wise native recipe by default; variant selects causal-forcing-framewise (the image-to-video student), causal-forcing-framewise-1step or causal-forcing-framewise-2step.",
         "Each variant reads its generator file from zhuhz22/Causal-Forcing under ${WORLDFOUNDRY_CKPT_DIR} or the Hub cache; checkpoint_path or checkpoint_overrides selects other local files."
@@ -21314,7 +21314,7 @@
       "notes": [
         "NativeSelfForcingPipeline runs the released DMD generator as a native diffusion recipe on the autoregressive-window runner, offline and as a resident realtime session.",
         "The generator resolves from gdhe17/Self-Forcing (checkpoints/self_forcing_dmd.pt) and the text encoder, tokenizer and VAE from Wan-AI/Wan2.1-T2V-1.3B, staged under ${WORLDFOUNDRY_CKPT_DIR} or the Hugging Face cache. Pass checkpoint_path or checkpoint_overrides for checkpoints staged elsewhere.",
-        "The native route is bitwise equal to a recorded run of the official inference script for one request (first MovieGenVideoBench prompt, seed 42, 480x832, 21 latent frames, bf16, H100) at every stage, from strict checkpoint loading to the decoded video.",
+        "The native route is bitwise equal to a recorded run of the official inference script for one request (first MovieGenVideoBench prompt, seed 42, 480x832, 21 latent frames, bf16, H100), given the recorded initial noise and re-noise draws, at every stage from strict checkpoint loading to the decoded video.",
         "Per-run visual QA and artifact checks are tracked outside the model catalog.",
         "NativeSelfForcingPipeline loads the self-forcing native diffusion recipe and serves it offline and as a resident realtime session.",
         "The generator, Wan2.1 text encoder, tokenizer and VAE resolve from their Hugging Face repositories under ${WORLDFOUNDRY_CKPT_DIR} or the Hub cache; checkpoint_path or checkpoint_overrides selects other local files."
@@ -21327,10 +21327,10 @@
           "kind": "company"
         },
         "overview": [
-          "Self-Forcing bridges the train-test gap in autoregressive video diffusion: by simulating the inference process during training — conditioning each frame on its own previously generated frames — it enables real-time streaming text-to-video on a single GPU (arXiv 2506.08009). WorldFoundry serves it as a native diffusion recipe, offline and as a realtime stream, bitwise equal to the official inference script."
+          "Self-Forcing bridges the train-test gap in autoregressive video diffusion: by simulating the inference process during training — conditioning each frame on its own previously generated frames — it enables real-time streaming text-to-video on a single GPU (arXiv 2506.08009). WorldFoundry serves it as a native diffusion recipe, offline and as a realtime stream, bitwise equal to the official inference script given the official noise draws."
         ],
         "overviewZh": [
-          "Self-Forcing 弥合了自回归视频扩散的训练-推理差距：在训练时模拟推理过程——让每帧以自己先前生成的帧为条件——从而在单卡上实现实时流式文生视频（arXiv 2506.08009）。WorldFoundry 以原生扩散 recipe 提供离线生成与实时流式，结果与官方推理脚本逐位一致。"
+          "Self-Forcing 弥合了自回归视频扩散的训练-推理差距：在训练时模拟推理过程——让每帧以自己先前生成的帧为条件——从而在单卡上实现实时流式文生视频（arXiv 2506.08009）。WorldFoundry 以原生扩散 recipe 提供离线生成与实时流式，在注入官方噪声的条件下与官方推理脚本逐位一致。"
         ],
         "architecture": [
           "The causal Wan2.1 T2V 1.3B generator (gdhe17/Self-Forcing, self_forcing_dmd.pt) denoises three-latent-frame blocks in four distilled x0 steps at timesteps 1000, 750, 500 and 250 on the shift-5 flow calendar, then commits each clean block to a 21-latent-frame KV cache at timestep 0. The autoregressive-window runner owns the rollout; the Wan2.1 umT5 encoder conditions it and the bf16 Wan2.1 VAE decodes the result, as one clip or chunk by chunk."

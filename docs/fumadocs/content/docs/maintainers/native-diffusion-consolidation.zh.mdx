@@ -51,7 +51,7 @@ HunyuanVideo 同样遵守这一组合边界。`hunyuanvideo-t2v`、`hunyuanvideo
 
 `self-forcing` 与四个 Causal-Forcing 学生（公开 ID `causal-forcing` 解析到的 `causal-forcing-chunkwise`，以及 `causal-forcing-framewise`、`causal-forcing-framewise-1step`、`causal-forcing-framewise-2step`）是运行在框架自有 `autoregressive-window` runner 上的不可变 recipe。它们共用一个 recipe 构造函数：带 21 个 latent 帧 KV cache、做蒸馏 x0 预测的因果 Wan2.1 1.3B denoiser，canonical Wan2.1 umT5 conditioner，shift 5 时间表上的 Wan flow-match scheduler，以及 bf16 的 Wan2.1 codec。各发布版本只在 generator 文件、latent 块大小、固定步数表（Causal Forcing++ 首块为四步）以及是否用图像作为首个 latent 帧上不同。`NativeSelfForcingPipeline` 与 `NativeCausalForcingPipeline` 是 catalog binding 与 Studio 共用的公开 pipeline，并提供同一套常驻实时会话。
 
-内置的 `self_forcing_runtime/` 与 Causal-Forcing 推理树，连同它们的子进程桥接、operator、synthesis facade 与运行时配置均已删除。RollingForcing 保留共享的 forcing 桥接（`synthesis/visual_generation/forcing/runtime.py`、`shared/`）以及它从 `forcing/causal_forcing_runtime/long_video/` 导入的滚动窗口推理 pipeline，直到它完成迁移。每个发布版本的已验收参考一致性均为逐位一致：严格 checkpoint 加载、提示词嵌入、每次 generator 调用、rollout 最终 latent 以及参考 latent 的解码都与官方推理脚本的录制运行一致（`tests/manual/self_forcing_parity.py`），回放案例 `self-forcing-t2v-short`、`causal-forcing-chunkwise-t2v-short` 与 `causal-forcing-framewise-short` 覆盖公开路线。
+内置的 `self_forcing_runtime/` 与 Causal-Forcing 推理树，连同它们的 operator、synthesis facade 与运行时配置均已删除；共享子进程桥接中对应的分支在 RollingForcing 迁移时一并删除。RollingForcing 保留共享的 forcing 桥接（`synthesis/visual_generation/forcing/runtime.py`、`shared/`）以及它从 `forcing/causal_forcing_runtime/long_video/` 导入的滚动窗口推理 pipeline，直到它完成迁移。每个发布版本的已验收参考一致性均为逐位一致：严格 checkpoint 加载、提示词嵌入、每次 generator 调用、rollout 最终 latent 以及参考 latent 的解码都与官方推理脚本的录制运行一致（`tests/manual/self_forcing_parity.py`），回放案例 `self-forcing-t2v-short`、`causal-forcing-chunkwise-t2v-short` 与 `causal-forcing-framewise-short` 覆盖公开路线。
 
 ## LVDM
 

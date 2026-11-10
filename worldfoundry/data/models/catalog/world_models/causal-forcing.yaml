@@ -59,7 +59,8 @@ runner_parity:
   notes:
   - All four text-to-video variants and frame-wise image-to-video are bitwise equal to recorded runs of the official
     inference script for one request each (first MovieGenVideoBench prompt, seed 42, 480x832, 21 latent frames, bf16,
-    H100) at every stage, from strict checkpoint loading to the decoded video.
+    H100), given the recorded initial noise and re-noise draws, at every stage from strict checkpoint loading to the
+    decoded video.
   - Per-run visual QA and artifact checks are tracked outside the model catalog.
   status: verified
 catalog_category: world_models

@@ -45,8 +45,8 @@ starred: true
 runner_parity:
   notes:
   - The native route is bitwise equal to a recorded run of the official inference script for one request (first
-    MovieGenVideoBench prompt, seed 42, 480x832, 21 latent frames, bf16, H100) at every stage, from strict checkpoint
-    loading to the decoded video.
+    MovieGenVideoBench prompt, seed 42, 480x832, 21 latent frames, bf16, H100), given the recorded initial noise and
+    re-noise draws, at every stage from strict checkpoint loading to the decoded video.
   - Per-run visual QA and artifact checks are tracked outside the model catalog.
   status: verified
 catalog_category: world_models
@@ -59,8 +59,8 @@ docs:
   publisher: Adobe Research / The University of Texas at Austin
   publisher_kind: company
   publisher_zh: Adobe 研究院 / 得克萨斯大学奥斯汀分校
-  overview: 'Self-Forcing bridges the train-test gap in autoregressive video diffusion: by simulating the inference process during training — conditioning each frame on its own previously generated frames — it enables real-time streaming text-to-video on a single GPU (arXiv 2506.08009). WorldFoundry serves it as a native diffusion recipe, offline and as a realtime stream, bitwise equal to the official inference script.'
-  overview_zh: Self-Forcing 弥合了自回归视频扩散的训练-推理差距：在训练时模拟推理过程——让每帧以自己先前生成的帧为条件——从而在单卡上实现实时流式文生视频（arXiv 2506.08009）。WorldFoundry 以原生扩散 recipe 提供离线生成与实时流式，结果与官方推理脚本逐位一致。
+  overview: 'Self-Forcing bridges the train-test gap in autoregressive video diffusion: by simulating the inference process during training — conditioning each frame on its own previously generated frames — it enables real-time streaming text-to-video on a single GPU (arXiv 2506.08009). WorldFoundry serves it as a native diffusion recipe, offline and as a realtime stream, bitwise equal to the official inference script given the official noise draws.'
+  overview_zh: Self-Forcing 弥合了自回归视频扩散的训练-推理差距：在训练时模拟推理过程——让每帧以自己先前生成的帧为条件——从而在单卡上实现实时流式文生视频（arXiv 2506.08009）。WorldFoundry 以原生扩散 recipe 提供离线生成与实时流式，在注入官方噪声的条件下与官方推理脚本逐位一致。
   architecture: 'The causal Wan2.1 T2V 1.3B generator (gdhe17/Self-Forcing, self_forcing_dmd.pt) denoises three-latent-frame blocks in four distilled x0 steps at timesteps 1000, 750, 500 and 250 on the shift-5 flow calendar, then commits each clean block to a 21-latent-frame KV cache at timestep 0. The autoregressive-window runner owns the rollout; the Wan2.1 umT5 encoder conditions it and the bf16 Wan2.1 VAE decodes the result, as one clip or chunk by chunk.'
   architecture_zh: 因果 Wan2.1 T2V 1.3B generator（gdhe17/Self-Forcing 的 self_forcing_dmd.pt）在 shift 5 的 flow 时间表上，以 1000、750、500、250 四个蒸馏 x0 步去噪每个三潜帧块，再在时间步 0 把干净的块写入 21 个潜帧的 KV 缓存。rollout 由 autoregressive-window runner 负责；Wan2.1 umT5 编码器提供条件，bf16 的 Wan2.1 VAE 整段或逐块解码。
   usage_notes: 'Defaults follow the official CLI: 480x832, 81 frames (21 latent frames), four steps, guidance 1.0, 16 fps; num_frames must give a multiple of three latent frames up to 21. The realtime session emits 9 frames for the first block and 12 for each later block, 7 chunks for 81 frames. Loading with kv_window="sink5-window7-rerope" selects the approximate long-rollout cache for longer videos and unbounded streams.'

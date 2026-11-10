@@ -212,6 +212,28 @@ button:disabled,
   border-color: rgba(51, 209, 122, 0.42);
 }
 
+.pointer-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.85rem;
+  z-index: 5;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 0.32rem 0.7rem;
+  background: rgba(4, 7, 11, 0.62);
+  color: #e8ecf2;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}
+
+.pointer-hint.is-locked {
+  color: #dfffe9;
+  border-color: rgba(51, 209, 122, 0.42);
+}
+
 .start-overlay {
   display: none;
 }

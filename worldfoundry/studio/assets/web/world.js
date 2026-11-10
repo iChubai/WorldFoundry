@@ -1,5 +1,18 @@
 const studioAuthToken = new URLSearchParams(window.location.search).get("token") || "";
 
+// Mirrors DEFAULT_REALTIME_KEYS in core/execution/realtime/contracts.py; a spec
+// without a "keys" field uses these bindings.
+const DEFAULT_REALTIME_KEYS = [
+  { key: "w", action: "forward", group: "forward_backward", label: "" },
+  { key: "s", action: "backward", group: "forward_backward", label: "" },
+  { key: "a", action: "left", group: "left_right", label: "" },
+  { key: "d", action: "right", group: "left_right", label: "" },
+  { key: "i", action: "camera_up", group: "camera_up_down", label: "" },
+  { key: "k", action: "camera_down", group: "camera_up_down", label: "" },
+  { key: "j", action: "camera_l", group: "camera_left_right", label: "" },
+  { key: "l", action: "camera_r", group: "camera_left_right", label: "" },
+];
+
 // Correlate the DataChannel receipt with the exact frame presented by WebRTC.
 // Both control submission and presentation times come from this browser clock.
 class PresentationMetrics {
@@ -94,6 +107,20 @@ const state = {
   pendingChunkDone: null,
   keySources: new Map(),
   stickKeys: { move: new Set(), look: new Set() },
+  realtimeKeys: DEFAULT_REALTIME_KEYS,
+  declaredKeys: false,
+  mouseAxes: false,
+  gamepadAxes: false,
+  axisChannel: null,
+  pointerLocked: false,
+  mouseDelta: { dx: 0, dy: 0 },
+  mouseRaf: 0,
+  gamepadRaf: 0,
+  gamepadSent: { lx: 0, ly: 0, rx: 0, ry: 0 },
+  continuous: false,
+  rolloutChunks: 0,
+  maxChunks: null,
+  paused: false,
   immersive: false,
   nativeFullscreen: false,
   logOpen: false,
@@ -111,6 +138,7 @@ const state = {
   pendingCatalogRequestId: "",
   pendingOutputRequestId: "",
   pendingStepRequestId: "",
+  pendingPauseRequestId: "",
   requestTimers: new Map(),
   outputResolution: { mode: "native" },
   outputResolutionOptions: [],
@@ -124,13 +152,20 @@ const state = {
 
 const emptyFrame =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-const allowedKeys = new Set(["w", "a", "s", "d", "i", "j", "k", "l"]);
+const allowedKeys = new Set(DEFAULT_REALTIME_KEYS.map((binding) => binding.key));
 const keyAliases = new Map([
   ["arrowup", "i"],
   ["arrowdown", "k"],
   ["arrowleft", "j"],
   ["arrowright", "l"],
 ]);
+const MOVE_STICK_KEYS = ["w", "a", "s", "d"];
+const LOOK_STICK_KEYS = ["i", "j", "k", "l"];
+// Smallest stick change that produces a new gamepad axis message.
+const GAMEPAD_EPSILON = 0.02;
+// Axis samples wait for the next animation frame while this many bytes are
+// still queued on their channel; mouse deltas keep accumulating meanwhile.
+const AXIS_BUFFERED_LIMIT_BYTES = 16 * 1024;
 const SOCKET_SETUP_TIMEOUT_MS = 120000;
 
 function authenticatedUrl(raw) {
@@ -184,6 +219,9 @@ const el = {
   runtimeLogList: document.getElementById("runtimeLogList"),
   logCount: document.getElementById("logCount"),
   stepButton: document.getElementById("stepButton"),
+  pauseButton: document.getElementById("pauseButton"),
+  pointerHint: document.getElementById("pointerHint"),
+  interactionHint: document.getElementById("interactionHint"),
   resolutionSelect: document.getElementById("resolutionSelect"),
   controlAck: document.getElementById("controlAck"),
   eventTriggerBar: document.getElementById("eventTriggerBar"),
@@ -286,6 +324,7 @@ const pendingFieldByKind = {
   catalog: "pendingCatalogRequestId",
   output: "pendingOutputRequestId",
   step: "pendingStepRequestId",
+  pause: "pendingPauseRequestId",
 };
 
 function clearPending(kind) {
@@ -401,11 +440,20 @@ function replaceEventRows(events) {
 
 function updateControlAvailability() {
   const connected = state.connected && Boolean(state.channel);
+  // A running continuous rollout already advances every chunk; STEP applies
+  // while it is paused, and after it completes the server explains why not.
+  const autoAdvancing = state.continuous && !state.paused && !rolloutComplete();
   if (el.stepButton) {
-    el.stepButton.disabled = !connected || !state.capabilities.no_action_step || Boolean(state.pendingStepRequestId);
-    el.stepButton.title = state.capabilities.no_action_step
-      ? "Generate exactly one chunk without a keyboard action"
-      : "This model requires explicit segment controls";
+    el.stepButton.disabled = !connected || !state.capabilities.no_action_step
+      || Boolean(state.pendingStepRequestId) || autoAdvancing;
+    el.stepButton.title = !state.capabilities.no_action_step
+      ? "This model requires explicit segment controls"
+      : autoAdvancing
+        ? "Pause the rollout to generate one chunk at a time"
+        : "Generate exactly one chunk without a keyboard action";
+  }
+  if (el.pauseButton) {
+    el.pauseButton.disabled = !connected || Boolean(state.pendingPauseRequestId) || rolloutComplete();
   }
   el.eventTriggerBar?.querySelectorAll("button").forEach((button) => {
     button.disabled = !connected || !state.capabilities.text_events || Boolean(state.pendingEventRequestId);
@@ -877,6 +925,8 @@ function finishSegmentPlayback(message) {
     el.startButton.textContent = "EXTEND";
     clearQueuedControlSelection();
     setStatus(`SEGMENT ${state.segmentIndex} READY`, true);
+  } else if (state.continuous) {
+    setStatus(continuousStatus(), true);
   } else {
     setStatus(`SEGMENT ${state.segmentIndex} READY · EDIT PROMPT + ENTER`, true);
   }
@@ -1035,9 +1085,11 @@ function renderStats() {
   const resolution = resolutionValue(state.outputResolution) === "native"
     ? "NATIVE"
     : resolutionValue(state.outputResolution).replace("x", "×");
-  el.streamStats.textContent = state.queuedSegments || state.promptScheduled
-    ? `${transport} / ${fps} / ${gen} / SEG ${state.segmentIndex} / ${resolution}`
-    : `${transport} / ${fps} / ${gen} / ${latency} / ${resolution}`;
+  el.streamStats.textContent = state.continuous
+    ? `${transport} / ${fps} / ${gen} / CHUNK ${rolloutProgress()} / ${resolution}`
+    : state.queuedSegments || state.promptScheduled
+      ? `${transport} / ${fps} / ${gen} / SEG ${state.segmentIndex} / ${resolution}`
+      : `${transport} / ${fps} / ${gen} / ${latency} / ${resolution}`;
   const p90 = state.presentationSummary ? `${Math.round(state.presentationSummary.p90_ms)}ms` : "unavailable";
   const net = state.transportStats;
   el.streamStats.title = `control→present p90=${p90} · server control→queue=${Math.round(state.stats.latencyMs)}ms · output=${resolution} · enqueue=${Math.round(state.stats.enqueueMs)}ms queue=${state.stats.queueDepth} dropped=${state.stats.dropped} · RTT=${net.rtt_ms?.toFixed(1) ?? "--"}ms jitter-buffer=${net.jitter_buffer_ms?.toFixed(1) ?? "--"}ms decode=${net.decode_ms?.toFixed(1) ?? "--"}ms`;
@@ -1190,7 +1242,235 @@ function bindKeyboard() {
     event.preventDefault();
     setKeyHeld(key, `keyboard:${key}`, false);
   });
-  window.addEventListener("blur", releaseAllKeys);
+  window.addEventListener("blur", releaseAllInputs);
+}
+
+// Adopt the keys, axes and advance mode that the session's RealtimeSpec declares.
+function applyRealtimeSpec(spec) {
+  if (!spec || typeof spec !== "object") return;
+  state.declaredKeys = Array.isArray(spec.keys);
+  state.realtimeKeys = state.declaredKeys ? spec.keys : DEFAULT_REALTIME_KEYS;
+  allowedKeys.clear();
+  // Prompt-scheduled and queued-segment sessions take no keyboard actions.
+  if (!state.promptScheduled && !state.queuedSegments) {
+    for (const binding of state.realtimeKeys) allowedKeys.add(binding.key);
+  }
+  const sources = Array.isArray(spec.axes) ? spec.axes.map((axis) => String(axis.source)) : [];
+  state.mouseAxes = sources.some((source) => source.startsWith("mouse_"));
+  state.gamepadAxes = sources.some((source) => source.startsWith("gamepad_"));
+  state.continuous = spec.advance === "continuous";
+  if (!state.connected) state.maxChunks = Number.isInteger(spec.max_chunks) ? spec.max_chunks : null;
+  el.moveStick.classList.toggle("is-hidden", !MOVE_STICK_KEYS.some((key) => allowedKeys.has(key)));
+  el.lookStick.classList.toggle("is-hidden", !LOOK_STICK_KEYS.some((key) => allowedKeys.has(key)));
+  renderRollout();
+  renderPointerHint();
+  if (state.connected) startGamepadPolling();
+}
+
+// Empty when the server-rendered hint already describes the session.
+function controlLegend() {
+  if (state.queuedSegments) return "";
+  if (state.promptScheduled) {
+    return state.continuous ? "OPTIONAL IMAGE · ENTER A NEW PROMPT TO START A NEW ROLLOUT" : "";
+  }
+  const parts = [];
+  if (!state.declaredKeys) {
+    parts.push("HOLD WASD / DRAG STICKS");
+  } else if (state.realtimeKeys.length) {
+    const sticks = !el.moveStick.classList.contains("is-hidden") || !el.lookStick.classList.contains("is-hidden");
+    const keys = state.realtimeKeys.map((binding) => binding.key.toUpperCase()).join(" ");
+    parts.push(`HOLD ${keys}${sticks ? " / DRAG STICKS" : ""}`);
+  }
+  if (state.mouseAxes) parts.push("CLICK VIEW FOR MOUSE");
+  // Browsers expose gamepads only on secure origins and after a button press.
+  if (state.gamepadAxes && connectedGamepads().length) parts.push("GAMEPAD");
+  if (state.continuous) parts.push("NEW PROMPT STARTS A NEW ROLLOUT");
+  return parts.join(" · ");
+}
+
+function renderControlLegend() {
+  if (!el.interactionHint) return;
+  const legend = controlLegend();
+  if (legend) el.interactionHint.textContent = legend;
+  if (!state.promptScheduled && !state.queuedSegments) {
+    el.interactionHint.title = state.realtimeKeys
+      .map((binding) => `${binding.key.toUpperCase()} ${binding.label || binding.action}`)
+      .join(" · ");
+  }
+}
+
+function pointerLockAvailable() {
+  return state.mouseAxes && typeof el.viewport.requestPointerLock === "function";
+}
+
+function renderPointerHint() {
+  if (!el.pointerHint) return;
+  el.pointerHint.classList.toggle("is-hidden", !state.connected || !pointerLockAvailable());
+  el.pointerHint.classList.toggle("is-locked", state.pointerLocked);
+  el.pointerHint.textContent = state.pointerLocked ? "MOUSE LOOK · ESC TO RELEASE" : "CLICK VIEW FOR MOUSE LOOK";
+}
+
+function requestMouseLook(event) {
+  if (!state.connected || state.pointerLocked || !pointerLockAvailable()) return;
+  if (event.target instanceof Element && event.target.closest("button,select,input,label,.runtime-log,#sensorControls")) return;
+  const request = el.viewport.requestPointerLock();
+  request?.catch?.((error) => appendRuntimeLog("Pointer lock unavailable", "warn", error.message || String(error)));
+}
+
+function onPointerLockChange() {
+  state.pointerLocked = document.pointerLockElement === el.viewport;
+  // Releasing the lock (Esc) ends mouse look; motion after it is not sent.
+  if (!state.pointerLocked) state.mouseDelta = { dx: 0, dy: 0 };
+  renderPointerHint();
+}
+
+// Mouse deltas ride the unordered "axes" DataChannel on WebRTC and the socket
+// otherwise. A congested channel defers the delta to a later animation frame.
+function sendMouseDelta(payload) {
+  const axisChannel = state.axisChannel?.readyState === "open" ? state.axisChannel : null;
+  const channel = axisChannel || state.channel;
+  if (!channel || channel.bufferedAmount > AXIS_BUFFERED_LIMIT_BYTES) return false;
+  if (!axisChannel) return send(payload);
+  try {
+    axisChannel.send(JSON.stringify(payload));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Mouse motion is summed and sent at most once per animation frame.
+function onMouseMove(event) {
+  if (!state.pointerLocked) return;
+  state.mouseDelta.dx += event.movementX || 0;
+  state.mouseDelta.dy += event.movementY || 0;
+  if (!state.mouseRaf) state.mouseRaf = requestAnimationFrame(flushMouseDelta);
+}
+
+function flushMouseDelta() {
+  state.mouseRaf = 0;
+  const { dx, dy } = state.mouseDelta;
+  if (!state.pointerLocked || (!dx && !dy)) return;
+  if (sendMouseDelta({ type: "axis", source: "mouse", dx, dy })) state.mouseDelta = { dx: 0, dy: 0 };
+  else if (state.connected) state.mouseRaf = requestAnimationFrame(flushMouseDelta);
+}
+
+// The server holds a gamepad level until the next sample, so stick samples use
+// the reliable control channel; a congested channel defers them to a later frame.
+function sendGamepadSample(sample) {
+  if (!state.channel || state.channel.bufferedAmount > AXIS_BUFFERED_LIMIT_BYTES) return false;
+  return send({ type: "axis", source: "gamepad", ...sample });
+}
+
+function connectedGamepads() {
+  if (typeof navigator.getGamepads !== "function") return [];
+  return Array.from(navigator.getGamepads()).filter((item) => item?.connected);
+}
+
+function pollGamepad() {
+  state.gamepadRaf = 0;
+  if (!state.connected || !state.gamepadAxes) return;
+  state.gamepadRaf = requestAnimationFrame(pollGamepad);
+  // Focus loss already sent the neutral sample; the stick resumes on return.
+  if (document.visibilityState !== "visible" || !document.hasFocus()) return;
+  const [pad] = connectedGamepads();
+  if (!pad) return;
+  const level = (index) => Number(pad.axes[index]) || 0;
+  const sample = { lx: level(0), ly: level(1), rx: level(2), ry: level(3) };
+  const moved = Object.keys(sample).some((name) => Math.abs(sample[name] - state.gamepadSent[name]) > GAMEPAD_EPSILON);
+  if (moved && sendGamepadSample(sample)) state.gamepadSent = sample;
+}
+
+function startGamepadPolling() {
+  if (!state.gamepadAxes || state.gamepadRaf || typeof navigator.getGamepads !== "function") return;
+  state.gamepadRaf = requestAnimationFrame(pollGamepad);
+}
+
+// The server holds gamepad levels until reset, so focus loss and disconnects
+// send one neutral sample.
+function sendNeutralGamepad() {
+  if (!state.connected || !state.gamepadAxes) return;
+  state.gamepadSent = { lx: 0, ly: 0, rx: 0, ry: 0 };
+  send({ type: "axis", source: "gamepad", ...state.gamepadSent });
+}
+
+function releaseAllInputs() {
+  releaseAllKeys();
+  sendNeutralGamepad();
+}
+
+function stopAxisInputs() {
+  if (state.gamepadRaf) cancelAnimationFrame(state.gamepadRaf);
+  state.gamepadRaf = 0;
+  state.gamepadSent = { lx: 0, ly: 0, rx: 0, ry: 0 };
+  if (state.mouseRaf) cancelAnimationFrame(state.mouseRaf);
+  state.mouseRaf = 0;
+  state.mouseDelta = { dx: 0, dy: 0 };
+  if (state.pointerLocked) document.exitPointerLock();
+  renderPointerHint();
+}
+
+function bindAxisInputs() {
+  el.viewport.addEventListener("click", requestMouseLook);
+  document.addEventListener("pointerlockchange", onPointerLockChange);
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") sendNeutralGamepad();
+  });
+  window.addEventListener("gamepadconnected", renderControlLegend);
+  window.addEventListener("gamepaddisconnected", () => {
+    sendNeutralGamepad();
+    renderControlLegend();
+  });
+}
+
+function rolloutComplete() {
+  return state.continuous && state.maxChunks !== null && state.rolloutChunks >= state.maxChunks;
+}
+
+// "3/7" for a bounded rollout, a running count for an unbounded one.
+function rolloutProgress() {
+  return state.maxChunks === null ? String(state.rolloutChunks) : `${state.rolloutChunks}/${state.maxChunks}`;
+}
+
+function continuousStatus() {
+  if (rolloutComplete()) return `ROLLOUT COMPLETE · ${rolloutProgress()} · ENTER A NEW PROMPT`;
+  return `${state.paused ? "PAUSED" : "GENERATING"} · CHUNK ${rolloutProgress()}`;
+}
+
+// Continuous sessions report progress in ready, chunk_done and pause/resume acks.
+function applyContinuousState(message) {
+  state.continuous = message.advance === "continuous";
+  state.rolloutChunks = Number(message.rollout_chunks || 0);
+  state.maxChunks = Number.isInteger(message.max_chunks) ? message.max_chunks : null;
+  state.paused = Boolean(message.paused);
+  renderRollout();
+}
+
+function renderRollout() {
+  if (el.pauseButton) {
+    el.pauseButton.classList.toggle("is-hidden", !state.continuous);
+    el.pauseButton.textContent = state.paused ? "RESUME" : "PAUSE";
+    el.pauseButton.setAttribute("aria-pressed", String(state.paused));
+  }
+  if (state.continuous && state.promptScheduled) {
+    el.promptInput.title = "Enter a new prompt to start a new rollout";
+  }
+  renderControlLegend();
+  updateControlAvailability();
+  renderStats();
+}
+
+function togglePause() {
+  const type = state.paused ? "resume" : "pause";
+  const requestId = nextRequestId("pause");
+  setPending("pause", requestId);
+  if (send({ type, request_id: requestId })) {
+    setControlAck(`${type.toUpperCase()} QUEUED`);
+  } else {
+    clearPending("pause");
+    setControlAck("NOT CONNECTED", "error");
+  }
 }
 
 async function waitForIce(pc) {
@@ -1284,6 +1564,8 @@ function markConnected(transport) {
   renderStats();
   updateControlAvailability();
   replayHeldKeys();
+  renderPointerHint();
+  startGamepadPolling();
   window.clearInterval(state.heartbeatTimer);
   state.heartbeatTimer = window.setInterval(
     () => send({ type: "heartbeat", t: Date.now() }),
@@ -1309,6 +1591,10 @@ function markDisconnected(message = "DISCONNECTED · START A NEW SESSION") {
   for (const keys of Object.values(state.stickKeys)) keys.clear();
   updateStickVisual(el.moveStick, 0, 0);
   updateStickVisual(el.lookStick, 0, 0);
+  stopAxisInputs();
+  state.rolloutChunks = 0;
+  state.paused = false;
+  renderRollout();
   el.startButton.classList.remove("is-hidden");
   el.startButton.disabled = false;
   el.startButton.textContent = state.queuedSegments ? "RUN" : "START";
@@ -1344,8 +1630,10 @@ function handleServerMessage(raw) {
     if (message.resolution) state.outputResolution = message.resolution;
     renderEventTriggers();
     renderResolutionOptions(state.outputResolutionOptions);
+    applyContinuousState(message);
     if (state.transport === "WS") markConnected("WS");
-    if (!state.queuedSegments && !state.promptScheduled) setStatus("LIVE", true);
+    if (state.continuous && !state.queuedSegments && !state.promptScheduled) setStatus(continuousStatus(), true);
+    else if (!state.queuedSegments && !state.promptScheduled) setStatus("LIVE", true);
   } else if (message.type === "event_catalog_ack") {
     if (!acceptAck("catalog", message)) return;
     if (!message.ok) {
@@ -1387,12 +1675,23 @@ function handleServerMessage(raw) {
   } else if (message.type === "step_ack") {
     if (!acceptAck("step", message)) return;
     if (!message.ok) {
-      setControlAck("STEP REJECTED", "error");
+      setControlAck(message.message || "STEP REJECTED", "error");
       appendRuntimeLog("Idle step rejected", "error", message.message || "Unsupported");
     } else {
       setControlAck("STEP ACK", "ok");
       appendRuntimeLog("Idle step queued", "live", `Queue depth ${Number(message.queued_steps || 1)}`);
     }
+  } else if (message.type === "pause_ack" || message.type === "resume_ack") {
+    if (!acceptAck("pause", message)) return;
+    if (!message.ok) {
+      setControlAck(message.message || "PAUSE REJECTED", "error");
+      appendRuntimeLog("Pause/resume rejected", "error", message.message || "Unsupported");
+      return;
+    }
+    applyContinuousState(message);
+    setControlAck(state.paused ? "PAUSED" : "RESUMED", "ok");
+    appendRuntimeLog(state.paused ? "Rollout paused" : "Rollout resumed", "live", `Chunk ${rolloutProgress()}`);
+    setStatus(continuousStatus(), true);
   } else if (message.type === "output_config_ack") {
     if (!acceptAck("output", message)) return;
     if (!message.ok) {
@@ -1427,15 +1726,17 @@ function handleServerMessage(raw) {
       el.startButton.disabled = true;
       el.startButton.textContent = "RUNNING";
     }
-    setStatus(`GENERATING SEGMENT ${message.segment_index || state.segmentIndex + 1}`, true);
-  } else if (message.type === "segment_progress") {
-    const seconds = Math.max(Number(message.elapsed_ms || 0) / 1000, 0);
     setStatus(
-      `GENERATING SEGMENT ${message.segment_index || state.segmentIndex + 1} · ${seconds.toFixed(0)}s`,
+      state.continuous ? "GENERATING NEXT CHUNK" : `GENERATING SEGMENT ${message.segment_index || state.segmentIndex + 1}`,
       true,
     );
+  } else if (message.type === "segment_progress") {
+    const seconds = Math.max(Number(message.elapsed_ms || 0) / 1000, 0);
+    const label = state.continuous ? "NEXT CHUNK" : `SEGMENT ${message.segment_index || state.segmentIndex + 1}`;
+    setStatus(`GENERATING ${label} · ${seconds.toFixed(0)}s`, true);
   } else if (message.type === "chunk_done") {
     setSensorLayout(message.sensor_layout);
+    applyContinuousState(message);
     state.stats.generationMs = Number(message.generation_ms || 0);
     state.stats.enqueueMs = Number(message.enqueue_ms || 0);
     state.stats.latencyMs = Number(message.control_latency_ms || 0);
@@ -1462,6 +1763,8 @@ function handleServerMessage(raw) {
           true,
         );
       }
+    } else if (state.continuous) {
+      setStatus(continuousStatus(), true);
     } else {
       setStatus("LIVE", true);
     }
@@ -1668,6 +1971,8 @@ async function connectSession() {
   setStatus("CONNECTING", true);
   try {
     await loadModel();
+    // Preloading resolves the model's RealtimeSpec (keys, axes, advance).
+    await syncRuntimeStatus().catch(() => false);
     let session;
     if (state.queuedSegments) {
       const paths = await uploadQueuedInitialInputs();
@@ -1698,6 +2003,9 @@ async function connectSession() {
     const channel = pc.createDataChannel("controls", { ordered: true });
     state.peer = pc;
     state.channel = channel;
+    if (state.mouseAxes) {
+      state.axisChannel = pc.createDataChannel("axes", { ordered: false, maxRetransmits: 0 });
+    }
     pc.addTransceiver("video", { direction: "recvonly" });
 
     channel.addEventListener("open", () => {
@@ -1797,13 +2105,19 @@ async function closePeer(notify = true) {
   window.clearTimeout(state.connectionTimer);
   state.connectionTimer = null;
   if (notify) send({ type: "disconnect" });
+  if (state.axisChannel && state.axisChannel.readyState !== "closed") state.axisChannel.close();
   if (state.channel && state.channel.readyState !== "closed") state.channel.close();
   if (state.peer && state.peer.connectionState !== "closed") state.peer.close();
   state.peer = null;
   state.socket = null;
   state.channel = null;
+  state.axisChannel = null;
   state.connected = false;
   state.connecting = false;
+  stopAxisInputs();
+  state.rolloutChunks = 0;
+  state.paused = false;
+  renderRollout();
   resetPresentationMetrics();
   resetSocketPlayback();
   clearAllPending();
@@ -1971,6 +2285,7 @@ function bindEvents() {
       setControlAck("NOT CONNECTED", "error");
     }
   });
+  el.pauseButton?.addEventListener("click", togglePause);
   el.resolutionSelect?.addEventListener("change", () => {
     state.outputResolution = resolutionPayload(el.resolutionSelect.value);
     renderStats();
@@ -2020,9 +2335,10 @@ function bindEvents() {
     }
   });
   el.promptInput.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" || !state.promptScheduled || !state.connected) return;
+    if (event.key !== "Enter" || !(state.promptScheduled || state.continuous) || !state.connected) return;
     event.preventDefault();
-    if (state.segmentBusy) {
+    // A continuous rollout accepts a new prompt at any chunk boundary.
+    if (state.segmentBusy && !state.continuous) {
       setStatus("WAIT FOR THE CURRENT SEGMENT", true);
       return;
     }
@@ -2034,13 +2350,14 @@ function bindEvents() {
     if (send({ type: "prompt_update", prompt })) {
       el.promptInput.blur();
       el.viewport.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
-      setStatus("PROMPT QUEUED", true);
+      setStatus(state.continuous ? "PROMPT QUEUED · STARTS A NEW ROLLOUT" : "PROMPT QUEUED", true);
     }
   });
   bindInputPickers();
   bindJoystick(el.moveStick, "move");
   bindJoystick(el.lookStick, "look");
   bindKeyboard();
+  bindAxisInputs();
   window.addEventListener("beforeunload", () => {
     releaseAllKeys();
     send({ type: "disconnect" });
@@ -2069,6 +2386,7 @@ async function syncRuntimeStatus() {
     if (state.runtimePhase !== "ready") appendRuntimeLog("Model runtime ready", "live");
     state.runtimePhase = "ready";
     state.modelLoaded = true;
+    applyRealtimeSpec(status.realtime_spec);
     el.loadModelButton.textContent = "READY";
     if (!state.connected && !state.connecting && (state.seedPath || state.selectedFile)) setStatus("READY");
     return true;
@@ -2099,13 +2417,11 @@ async function boot() {
   state.outputResolutionOptions = Array.isArray(data.output_resolutions) ? data.output_resolutions : [];
   if (data.transport === "websocket") state.transport = "WS";
   if (state.promptScheduled || state.queuedSegments) {
-    allowedKeys.clear();
-    el.moveStick.classList.add("is-hidden");
-    el.lookStick.classList.add("is-hidden");
     el.promptInput.title = state.queuedSegments
       ? "Prompt for the next full-quality queued segment"
       : "Edit the prompt and press Enter to generate the next native segment";
   }
+  applyRealtimeSpec(data.realtime_spec);
   if (state.queuedSegments) {
     el.startButton.textContent = "RUN";
     setStatus("ADD IMAGE + DENSE + SPARSE CONTROLS");

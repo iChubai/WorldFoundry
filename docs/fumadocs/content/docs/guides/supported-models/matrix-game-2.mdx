@@ -33,7 +33,7 @@ The loader accepts opt-in `fuse_qkv` with `qkv_strategy="packed"`, `"split"` or 
 
 These switches are disabled by default. Small CPU/CUDA regressions verify numerical output, cache progression, stream ordering, and cleanup. Their full-checkpoint latency benefit and full-length parity remain unmeasured; a compile wrapper or queued side-stream work is reported separately from runtime execution.
 
-The realtime session's universal mode keeps the W/S/A/D movement and I/K/J/L camera keys and also declares mouse and right-stick camera axes, which a client drives with realtime `axis` messages; each frame's axis values add to the key camera step and are clamped to the official ±0.1. gta_drive uses W/S for forward/back and A/D for steering, and templerun uses W jump, S slide, A/D side steps and Z/C turns, with idle frames encoded as `nomove`.
+The realtime session's universal mode keeps the W/S/A/D movement and I/K/J/L camera keys and also declares mouse and right-stick camera axes, which the Studio `world` page drives from the captured mouse pointer and a gamepad's right stick; each frame's axis values add to the key camera step and are clamped to the official ±0.1. The mouse scale is an initial calibration: about 40 pixels of motion in one frame reach that limit. gta_drive uses W/S for forward/back and A/D for steering, and templerun uses W jump, S slide, A/D side steps and Z/C turns, with idle frames encoded as `nomove`.
 
 ## Run in WorldFoundry
 

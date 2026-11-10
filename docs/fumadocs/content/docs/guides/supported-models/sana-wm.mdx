@@ -1,6 +1,6 @@
 ---
 title: "SANA-WM"
-description: "SANA-WM from NVIDIA: world model, camera-controlled video, and 1 more task; Runner parity pending; dedicated `sana`."
+description: "SANA-WM from NVIDIA: world model, camera-controlled video, and 1 more task; Runner parity pending; unified `worldfoundry-unified-cu128`."
 modelId: "sana-wm"
 pageSource: authored
 ---
@@ -43,7 +43,7 @@ Component placement across GPUs is configurable. The default quality recipe uses
 
 Generate a camera-controlled clip with `wf run sana-wm-streaming --pipeline.task-profile interactive-video`.
 
-It runs in the dedicated environment `sana` (Python 3.11, CUDA 12.8).
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `Efficient-Large-Model/SANA-WM_streaming` and `Efficient-Large-Model/SANA-WM_bidirectional`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh sana-wm-streaming`. Add `--download` to fetch missing public checkpoints.
 

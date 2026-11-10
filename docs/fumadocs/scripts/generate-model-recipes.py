@@ -1662,11 +1662,13 @@ def main() -> int:
                 profile_id, profile = select_manifest(profiles, candidates)
 
                 variants = [variant for variant in as_list(item.get("variants")) if isinstance(variant, dict)]
+                # Family runtime describes the base profile; variant_data resolves
+                # variant-specific environments separately below.
                 env_candidates = unique_strings(
                     [
+                        *candidates,
                         *(variant.get("runtime_profile") for variant in variants),
                         *(variant.get("id") for variant in variants),
-                        *candidates,
                     ]
                 )
                 env_candidates = [

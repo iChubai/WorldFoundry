@@ -84008,9 +84008,9 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "in_tree_inference_only_checkpoint_runtime",
         "runtimeStatus": "checkpoint_backed_offline_gpu_inference_verified",
-        "environmentId": "molmobot-pi0-droid",
-        "environmentName": "worldfoundry-molmobot-pi0-cu128",
-        "environmentKind": "dedicated",
+        "environmentId": "molmobot",
+        "environmentName": "worldfoundry-unified-cu128",
+        "environmentKind": "unified",
         "python": "3.11",
         "cudaProfile": "cu128",
         "cudaLabel": "CUDA 12.8",
@@ -84020,32 +84020,48 @@
           "pip"
         ],
         "pipPackages": [
-          "torch==2.7.1",
-          "transformers==4.53.2",
-          "jax[cuda12]==0.5.3",
-          "numpy>2.0,<2.4",
-          "molmobot-pi0 @ git+https://github.com/allenai/MolmoBot.git@33c0ca77bf6062a23d60ffd4a6859334c4a46d30#subdirectory=MolmoBot-Pi0"
+          "torch>=2.3.1",
+          "torchvision>=0.18.1",
+          "transformers>=4.37.1",
+          "accelerate",
+          "huggingface-hub",
+          "tokenizers",
+          "sentencepiece",
+          "numpy",
+          "Pillow",
+          "einops",
+          "einops-exts",
+          "omegaconf",
+          "rich",
+          "cached_path>=1.6.4",
+          "datasets",
+          "requests",
+          "imageio",
+          "decord",
+          "av"
         ],
         "packageVersions": {
-          "torch": "torch==2.7.1",
-          "transformers": "transformers==4.53.2"
+          "torch": "torch>=2.3.1",
+          "torchvision": "torchvision>=0.18.1",
+          "transformers": "transformers>=4.37.1",
+          "accelerate": "accelerate"
         },
         "validationImports": [
           "numpy",
+          "PIL",
           "torch",
+          "torchvision",
           "transformers",
-          "openpi",
-          "molmobot_pi0"
+          "omegaconf",
+          "requests"
         ],
         "notes": [
           "Official MolmoBot-DROID serves with launch_scripts/serve_molmo.py; MolmoBot-Pi0 demo uses PiJointPosPolicy.get_action.",
           "WorldFoundry directly imports its flattened inference-only SynthManipMolmoInferenceWrapper; no external MolmoBot checkout is used at runtime. The Pi0 route uses pinned isolated OpenPI dependencies.",
           "MolmoBot-DROID, MolmoBot-Img-DROID, and Pi0-DROID completed checkpoint-backed offline GPU action inference. No closed-loop success is claimed.",
           "Minimal runtime excludes MolmoSpaces, real robot clients, training, W&B/SPoC paths, and benchmark assets.",
-          "Use a dedicated Python 3.11 environment; OpenPI pins Torch and Transformers independently of MolmoBot's OLMo runtime.",
-          "After installation run python -m worldfoundry.synthesis.action_generation.molmobot.openpi_setup inside this environment.",
-          "Stage the validated PaliGemma tokenizer under OPENPI_DATA_HOME/big_vision before inference; the runtime does not fetch it implicitly.",
-          "The WorldFoundry Pi0 adapter does not import MolmoSpaces or its simulator resources."
+          "MolmoBot main package targets Python 3.11 and torch>=2.3.1; MolmoBot-Pi0 uses OpenPI extras for the PiJointPosPolicy route.",
+          "MolmoSpaces simulator, real robot infrastructure, and W&B training dependencies are excluded from lightweight runtime checks."
         ]
       },
       "sources": [
@@ -84755,7 +84771,7 @@
           "Vla.Action Prediction",
           "Vla.Policy Rollout",
           "2 runnable WorldFoundry variants",
-          "Dedicated env · Python 3.11 · CUDA 12.8",
+          "Unified env · Python 3.11 · CUDA 12.8",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
@@ -84763,7 +84779,7 @@
           "VLA 动作预测",
           "VLA 策略执行",
           "2 个可运行的 WorldFoundry variant",
-          "独立环境 · Python 3.11 · CUDA 12.8",
+          "统一环境 · Python 3.11 · CUDA 12.8",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -96428,8 +96444,8 @@
         "backendStage": "in_tree_resident_runtime",
         "runtimeStatus": "native_stage1_single_gpu_validated_h100",
         "environmentId": "sana-wm",
-        "environmentName": "sana",
-        "environmentKind": "dedicated",
+        "environmentName": "worldfoundry-unified-cu128",
+        "environmentKind": "unified",
         "python": "3.11",
         "cudaProfile": "cu128",
         "cudaLabel": "CUDA 12.8",
@@ -96493,7 +96509,7 @@
           "SANA-WM reuses the canonical Sana network, encoder, autoencoder, scheduler, and recipe roles; no modality-owned Sana runtime remains.",
           "The current bidirectional native recipe runs stage-one sampling and direct LTX-2 VAE decoding with native 8k+1 temporal windows; it does not load the LTX-2 refiner.",
           "A single H100 run generated 33 decodable 1280x704 frames at 60 sampling steps. Visual review found dark, coarse output with initial-frame artifacts. This validates stage-one execution only, not parity with the official refined quality path.",
-          "SANA-WM uses the dedicated CUDA 12.8 runtime because its LTX-2 refiner requires current diffusers and Gemma 3 support.",
+          "SANA-WM uses the shared unified CUDA 12.8 runtime, which provides current diffusers and Gemma 3 support.",
           "The interactive runtime keeps stage 1, refiner, refiner text encoder, and VAE resident on configurable CUDA devices."
         ]
       },
@@ -96545,8 +96561,8 @@
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
-          "environmentName": "sana",
-          "environmentKind": "dedicated",
+          "environmentName": "worldfoundry-unified-cu128",
+          "environmentKind": "unified",
           "python": "3.11",
           "cudaLabel": "CUDA 12.8",
           "backendStage": "native_diffusion",
@@ -96745,7 +96761,7 @@
           "Camera Controlled Video",
           "Controllable World Generation",
           "1 runnable WorldFoundry variant",
-          "Dedicated env · Python 3.11 · CUDA 12.8",
+          "Unified env · Python 3.11 · CUDA 12.8",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
@@ -96753,7 +96769,7 @@
           "相机可控视频生成",
           "controllable-world-generation",
           "1 个可运行的 WorldFoundry variant",
-          "独立环境 · Python 3.11 · CUDA 12.8",
+          "统一环境 · Python 3.11 · CUDA 12.8",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -97928,58 +97944,52 @@
         "backendStage": "official_external_runtime",
         "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
         "environmentId": "solarwm",
-        "environmentName": "worldfoundry-solarwm-wan22-cu124",
+        "environmentName": "solarwm",
         "environmentKind": "dedicated",
         "python": "3.10",
         "cudaProfile": "cu124",
         "cudaLabel": "CUDA 12.4",
-        "driverStatus": "compatible",
+        "driverStatus": null,
         "condaPackages": [
-          "python=3.10",
+          "python",
           "pip",
-          "ffmpeg",
-          "ninja",
-          "cuda-nvcc=12.4"
+          "ffmpeg"
         ],
         "pipPackages": [
-          "torch==2.5.1+cu124",
+          "torch==2.5.1",
+          "torchvision==0.20.1",
           "diffusers==0.38.0",
           "transformers==5.12.1",
           "peft==0.20.0",
-          "safetensors>=0.4",
-          "einops>=0.8",
-          "decord>=0.6",
-          "PyYAML>=6.0",
-          "numpy>=1.24",
-          "ftfy>=6.2",
-          "omegaconf>=2.3",
-          "regex>=2024.0"
+          "flash-attn==2.8.3",
+          "ftfy",
+          "omegaconf",
+          "regex",
+          "pyyaml",
+          "safetensors",
+          "numpy",
+          "Pillow",
+          "imageio",
+          "imageio-ffmpeg"
         ],
         "packageVersions": {
-          "torch": "torch==2.5.1+cu124",
+          "torch": "torch==2.5.1",
+          "torchvision": "torchvision==0.20.1",
           "diffusers": "diffusers==0.38.0",
-          "transformers": "transformers==5.12.1"
+          "transformers": "transformers==5.12.1",
+          "flash-attn": "flash-attn==2.8.3"
         },
         "validationImports": [
           "torch",
-          "diffusers",
-          "transformers",
-          "peft",
-          "flash_attn",
-          "safetensors",
-          "einops",
-          "decord",
           "yaml",
-          "numpy"
+          "worldfoundry.synthesis.visual_generation.solarwm"
         ],
         "notes": [
           "Only the infer action is exposed. Training, preencoding and data-engine commands are excluded.",
           "Code is Apache-2.0; LTX and H3 base/adapter weights retain their respective community licenses and restrictions.",
           "Checkpoint-backed GPU generation is pending.",
-          "Pins the official SolarWM Wan2.2 release-tested Python 3.10, PyTorch 2.5.1/CUDA 12.4, Diffusers 0.38.0, Transformers 5.12.1, PEFT 0.20.0, and FlashAttention 2.8.3 stack.",
-          "FlashAttention is installed after PyTorch with build isolation disabled by the model-environment installer, matching the official Wan setup order.",
-          "SolarWM source is intentionally not installed into this environment; the runtime adapter adds the pinned user-staged checkout's src directory to PYTHONPATH.",
-          "LTX-2.5 and MiniMax-H3 require different Python/CUDA/model stacks and are not routed through this environment."
+          "Default environment is the Wan route only. LTX and H3 require separate official environments; pass python_executable explicitly.",
+          "CUDA inference dependencies are optional and separate from the CPU catalog installation."
         ]
       },
       "sources": [
@@ -98043,7 +98053,7 @@
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
-          "environmentName": "worldfoundry-solarwm-wan22-cu124",
+          "environmentName": "solarwm",
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",
@@ -98089,7 +98099,7 @@
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
-          "environmentName": "worldfoundry-solarwm-wan22-cu124",
+          "environmentName": "solarwm",
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",
@@ -98135,7 +98145,7 @@
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
-          "environmentName": "worldfoundry-solarwm-wan22-cu124",
+          "environmentName": "solarwm",
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",
@@ -98181,7 +98191,7 @@
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
-          "environmentName": "worldfoundry-solarwm-wan22-cu124",
+          "environmentName": "solarwm",
           "environmentKind": "dedicated",
           "python": "3.10",
           "cudaLabel": "CUDA 12.4",

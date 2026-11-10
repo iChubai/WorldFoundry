@@ -1,6 +1,6 @@
 schema_version: 2
-environment_id: solarwm
-model_id: solarwm
+environment_id: solarwm-wan22
+model_id: solarwm-wan22
 env_name: worldfoundry-solarwm-wan22-cu124
 env_root: ${WORLDFOUNDRY_CONDA_ENVS_ROOT}
 python: '3.10'

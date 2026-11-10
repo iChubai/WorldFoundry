@@ -117,6 +117,9 @@ PAPER_MEDIA_PATH = DOCS_ROOT / "lib" / "model-paper-media.json"
 CANONICAL_PROJECT_ROOT = "/workspace/WorldFoundry"
 CANONICAL_PACKAGE_ROOT = f"{CANONICAL_PROJECT_ROOT}/worldfoundry"
 CANONICAL_HOME = "/home/ubuntu/.cache/worldfoundry"
+# Defaults resolved through realpath map back to the canonical home; on macOS
+# /home is a firmlink that realpath expands.
+CANONICAL_HOME_RESOLVED = str(Path(CANONICAL_HOME).resolve())
 os.environ.update(
     {
         "WORLDFOUNDRY_HOME": CANONICAL_HOME,
@@ -288,6 +291,7 @@ def portable_doc_value(value: Any) -> Any:
         if value == sys.executable:
             return "python3"
         replacements = (
+            (CANONICAL_HOME_RESOLVED, CANONICAL_HOME),
             (str(ROOT.parent / "ckpts") + "/", f"{CANONICAL_HOME}/checkpoints/"),
             (str(ROOT.parent / "ckpt") + "/", f"{CANONICAL_HOME}/checkpoints/"),
             (str(ROOT / "worldfoundry"), CANONICAL_PACKAGE_ROOT),

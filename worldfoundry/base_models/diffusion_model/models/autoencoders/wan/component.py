@@ -251,7 +251,7 @@ class Wan21TAEPreviewDecoder:
         *,
         device: torch.device,
         dtype: torch.dtype,
-    ) -> "Wan21TAEPreviewDecoder":
+    ) -> Wan21TAEPreviewDecoder:
         """Load a TAEHV Wan2.1 checkpoint (``taew2_1.pth``)."""
         from .variants.taehv import TAEHV
 

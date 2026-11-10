@@ -685,9 +685,7 @@ def _forcing_wan21_t2v_1p3b_recipe(
             ),
             ComponentSpec(
                 initializer,
-                build_wan_causal_forcing_latent_initializer
-                if image_to_video
-                else build_wan_t2v_latent_initializer,
+                build_wan_causal_forcing_latent_initializer if image_to_video else build_wan_t2v_latent_initializer,
             ),
             ComponentSpec(
                 scheduler,

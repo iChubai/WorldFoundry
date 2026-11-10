@@ -383,9 +383,9 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
                     shift,
                 )
                 if self.renoise_dtype is None:
-                    noisy = add_flow_noise(
-                        clean, self._noise_like(clean, context.generator), sigma
-                    ).to(block_noise.dtype)
+                    noisy = add_flow_noise(clean, self._noise_like(clean, context.generator), sigma).to(
+                        block_noise.dtype
+                    )
                 else:
                     reference = clean.to(self.renoise_dtype)
                     noise = self._noise_like(reference, context.generator)
@@ -446,7 +446,7 @@ class AutoregressiveWindowRunner(NativeDiffusionRunner):
             if output_frames is not None and not request.inputs.get("return_latent", False):
                 if sample.ndim != 5 or not 0 < int(output_frames) <= sample.shape[2]:
                     raise ValueError("output_num_frames must fit the decoded BCTHW video")
-                sample = sample[:, :, :int(output_frames)]
+                sample = sample[:, :, : int(output_frames)]
             for extension in self.extensions:
                 sample = extension.after_decode(context, sample)
             result = DiffusionOutput(
@@ -581,14 +581,23 @@ class AutoregressiveStream:
                     if base is None:
                         continue
                     conditioning = runner._window_conditioning(
-                        base, n_views=1, frames_per_view=frames_per_view,
-                        start=0, end=prefix_frames, cache=cache,
-                        frame_sequence_length=frame_sequence_length, block_noise=prefix,
+                        base,
+                        n_views=1,
+                        frames_per_view=frames_per_view,
+                        start=0,
+                        end=prefix_frames,
+                        cache=cache,
+                        frame_sequence_length=frame_sequence_length,
+                        block_noise=prefix,
                     )
-                    conditioning.update(current_start=0, current_end=prefix_frames * frame_sequence_length,
-                                        start_frame_for_rope=0)
+                    conditioning.update(
+                        current_start=0, current_end=prefix_frames * frame_sequence_length, start_frame_for_rope=0
+                    )
                     runner._call_denoiser_with_conditioning(
-                        context, latents=prefix, branch=branch, conditioning=conditioning,
+                        context,
+                        latents=prefix,
+                        branch=branch,
+                        conditioning=conditioning,
                     )
 
             start_frame = 0
@@ -792,9 +801,7 @@ class AutoregressiveStream:
                     ),
                 )
             if buffered:
-                state.output_by_view[:, :, :, start:end] = rearrange(
-                    block, "B C (V T) H W -> B C V T H W", V=n_views
-                )
+                state.output_by_view[:, :, :, start:end] = rearrange(block, "B C (V T) H W -> B C V T H W", V=n_views)
 
             commit = block
             commit_timestep = runner.context_timestep if runner.prediction_mode == "distilled-x0" else 0

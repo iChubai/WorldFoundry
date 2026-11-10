@@ -2353,8 +2353,7 @@ class SelfForcingWanDenoiser:
             raise ValueError("Self-Forcing cache_frames must be divisible by block_size")
         if kv_window not in (None, SELF_FORCING_LONG_ROLLOUT_KV_WINDOW):
             raise ValueError(
-                f"unsupported Self-Forcing kv_window {kv_window!r}; "
-                f"expected {SELF_FORCING_LONG_ROLLOUT_KV_WINDOW!r}"
+                f"unsupported Self-Forcing kv_window {kv_window!r}; expected {SELF_FORCING_LONG_ROLLOUT_KV_WINDOW!r}"
             )
         self.model = model
         self.block_size = int(block_size)
@@ -2392,7 +2391,7 @@ class SelfForcingWanDenoiser:
                 f"got {latent_frames_per_view}. Longer rollouts need "
                 f"kv_window={SELF_FORCING_LONG_ROLLOUT_KV_WINDOW!r}"
             )
-        num_heads = int(getattr(self.model, "num_heads"))
+        num_heads = int(self.model.num_heads)
         if self.kv_window is None:
             cache_frames = self.cache_frames
             window = {}
@@ -2410,9 +2409,9 @@ class SelfForcingWanDenoiser:
                 total_frames=cache_frames,
                 frame_tokens=frame_sequence_length,
                 frames_per_block=self.block_size,
-                num_layers=int(getattr(self.model, "num_layers")),
+                num_layers=int(self.model.num_layers),
                 num_heads=num_heads,
-                head_dim=int(getattr(self.model, "dim")) // num_heads,
+                head_dim=int(self.model.dim) // num_heads,
                 **window,
             ),
             device=device,

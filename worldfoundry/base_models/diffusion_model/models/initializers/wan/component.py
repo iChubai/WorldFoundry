@@ -395,9 +395,9 @@ class WanCausalForcingLatentInitializer(WanTextToVideoLatentInitializer):
         )
         pixels = transform(load_pil_image(image, first_sequence_item=False))
         pixels = pixels.unsqueeze(0).unsqueeze(2).repeat(request.batch_size, 1, 1, 1, 1)
-        first = latent_encoder.encode(
-            pixels.to(device=device, dtype=self._codec_dtype(latent_encoder))
-        ).to(device=device, dtype=noise.dtype)
+        first = latent_encoder.encode(pixels.to(device=device, dtype=self._codec_dtype(latent_encoder))).to(
+            device=device, dtype=noise.dtype
+        )
         if first.shape != noise[:, :, :1].shape:
             raise ValueError(
                 "Causal-Forcing first-frame latent geometry must match generated noise: "
@@ -853,8 +853,8 @@ __all__ = [
     "WanTextImageToVideoLatentInitializer",
     "WanTextToVideoLatentInitializer",
     "WanVaceLatentInitializer",
-    "build_wan_causal_i2v_latent_initializer",
     "build_wan_causal_forcing_latent_initializer",
+    "build_wan_causal_i2v_latent_initializer",
     "build_wan_i2v_latent_initializer",
     "build_wan_reference_latent_initializer",
     "build_wan_t2v_latent_initializer",

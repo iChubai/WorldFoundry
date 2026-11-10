@@ -15,8 +15,10 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 const { expect } = require('playwright/test');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const [output] = process.argv.slice(2);
-assert.ok(output, 'Usage: node tests/manual/realtime_browser_ui.mjs <new-output-directory>');
+const [output, mode, ...extra] = process.argv.slice(2);
+assert.ok(output && (!mode || mode === '--physical-escape') && !extra.length,
+  'Usage: node tests/manual/realtime_browser_ui.mjs <new-output-directory> [--physical-escape]');
+const physicalEscape = mode === '--physical-escape';
 await mkdir(dirname(resolve(output)), {recursive: true});
 await mkdir(output);
 
@@ -78,7 +80,9 @@ const url = `http://127.0.0.1:${server.address().port}`;
 const report = {
   source_revision: execFileSync('git', ['rev-parse', 'HEAD'], {cwd: root, encoding: 'utf8'}).trim(),
   worktree_changes: execFileSync('git', ['status', '--porcelain'], {cwd: root, encoding: 'utf8'}).trim(),
-  evidence_scope: 'Chromium UI with fixture HTTP/WebSocket responses and simulated gamepads; no model inference or WebRTC replay',
+  evidence_scope: physicalEscape
+    ? 'Operator-assisted physical Escape with fixture model responses; no gamepad hardware, model inference or WebRTC replay'
+    : 'Chromium UI with fixture HTTP/WebSocket responses and simulated gamepads; no model inference or WebRTC replay',
   sessions: [],
 };
 let browser;
@@ -109,6 +113,15 @@ async function launchBrowser() {
   // Use the default context without Playwright's forced-focus emulation, so a
   // background tab really loses focus. The profile belongs only to this run.
   return chromium.connectOverCDP(endpoint, {noDefaults: true});
+}
+
+async function foreground(page) {
+  if (process.platform === 'darwin') {
+    execFileSync('/usr/bin/osascript', ['-l', 'JavaScript', '-e',
+      `ObjC.import('AppKit'); $.NSRunningApplication.runningApplicationWithProcessIdentifier(${browserProcess.pid}).activateWithOptions(2);`]);
+  }
+  await page.bringToFront();
+  await expect.poll(() => page.evaluate(() => document.hasFocus())).toBe(true);
 }
 
 // Flush the client's animation-frame input batching without a fixed sleep.
@@ -179,8 +192,8 @@ async function fixturePage(name, mode) {
       }
     });
   });
+  await foreground(page);
   await page.goto(`${url}/?model=${model}`, {waitUntil: 'domcontentloaded'});
-  await page.bringToFront();
   await expect(page.locator('#loadModelButton')).toHaveText('READY');
   await expect(page.locator('#stepButton')).toBeDisabled();
   return {page, context, result, send,
@@ -192,7 +205,7 @@ async function fixturePage(name, mode) {
       assert.equal(await page.evaluate(() => state.transport), 'WS');
     },
     async chunk() {
-      await page.bringToFront();
+      await foreground(page);
       await expect.poll(() => page.evaluate(() => document.visibilityState)).toBe('visible');
       const frames = chunks ? spec.steady_chunk_frames : spec.first_chunk_frames;
       chunks += 1;
@@ -207,7 +220,8 @@ async function fixturePage(name, mode) {
       await expect(page.locator('#startButton')).toBeVisible();
       await expect(page.locator('#stepButton')).toBeDisabled();
       assert.equal(await page.evaluate(() => !state.connected && !state.channel && !state.pointerLocked
-        && !state.gamepadRaf && !state.mouseRaf && state.requestTimers.size === 0), true);
+        && !state.gamepadRaf && !state.mouseRaf && state.requestTimers.size === 0
+        && Object.values(state.stickPointers).every(id => id === null)), true);
       result.checks.push('reset clears input polling, pointer lock and pending requests');
     },
   };
@@ -266,7 +280,7 @@ async function checkInputs(fixture) {
   await expect.poll(() => page.evaluate(() => document.hasFocus())).toBe(false);
   await expect.poll(() => gamepadMessages().at(-1)?.rx).toBe(0);
   await other.close();
-  await page.bringToFront();
+  await foreground(page);
   await expect.poll(() => gamepadMessages().at(-1)?.rx).toBe(-0.75);
   await page.evaluate(() => {
     window.fixtureGamepads = [];
@@ -275,6 +289,111 @@ async function checkInputs(fixture) {
   await expect(legend).not.toContainText('GAMEPAD');
   await expect.poll(() => gamepadMessages().at(-1)?.rx).toBe(0);
   result.checks.push('simulated gamepad legend, movement, rest, focus loss and disconnect');
+  await fixture.finish();
+}
+
+async function checkVirtualSticks(fixture) {
+  const {page, result} = fixture;
+  await fixture.start();
+  const axes = () => result.received.filter(m => m.type === 'axis' && m.source === 'gamepad');
+  const actions = () => result.received.filter(m => m.type === 'action').map(m => m.action);
+  const drag = async (kind, dx, dy) => {
+    await foreground(page);
+    const stick = page.locator(`#${kind}Stick`);
+    await stick.scrollIntoViewIfNeeded();
+    const box = await stick.boundingBox();
+    const x = box.x + box.width / 2, y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + dx * box.width / 2, y + dy * box.height / 2, {steps: 3});
+    await nextFrames(page);
+    return {x, y};
+  };
+  await drag('move', 0, -0.6);
+  await expect.poll(() => actions().some(m => m.event === 'keydown' && m.key === 'w')).toBe(true);
+  await page.mouse.up();
+  await expect.poll(() => actions().at(-1)).toEqual({event: 'keyup', key: 'w'});
+  assert.equal(axes().length, 0, 'MG2 movement keeps its declared keyboard mapping');
+  result.checks.push('movement stick retains key edges when no left-stick axes are declared');
+
+  await drag('look', 0.6, -0.4);
+  await expect.poll(() => axes().some(m => m.rx > 0.4 && m.ry < -0.2)).toBe(true);
+  assert.ok(actions().every(m => m.key === 'w'), 'the camera stick does not also send look keys');
+  assert.equal(await page.evaluate(() => state.pointerLocked), false);
+  await page.screenshot({path: join(output, `${result.name}-dragging.png`), fullPage: true});
+  await page.mouse.up();
+  await expect.poll(() => axes().at(-1)?.rx).toBe(0);
+  assert.equal(axes().at(-1).ry, 0);
+  result.checks.push('camera stick sends declared continuous axes and a reliable return to rest');
+
+  const origin = await drag('look', 0.6, 0);
+  await expect.poll(() => axes().at(-1)?.rx > 0.4).toBe(true);
+  const other = await page.context().newPage();
+  await other.bringToFront();
+  await expect.poll(() => page.evaluate(() => document.hasFocus())).toBe(false);
+  await expect.poll(() => axes().at(-1)?.rx).toBe(0);
+  await other.close();
+  await foreground(page);
+  await page.mouse.move(origin.x + 10, origin.y);
+  await page.mouse.up();
+  await nextFrames(page);
+  assert.equal(axes().at(-1).rx, 0);
+  assert.equal(await page.evaluate(() => state.stickPointers.look), null);
+  result.checks.push('tab focus loss releases virtual axes and cancels the captured drag');
+  await fixture.finish();
+}
+
+async function checkPhysicalEscape(fixture) {
+  const {page, result} = fixture;
+  await fixture.start();
+  await page.evaluate(() => {
+    const observation = window.fixturePhysicalEscape = {armed: false, completed: false, release: null, events: []};
+    const notice = document.createElement('div');
+    notice.id = 'physicalEscapeCheck';
+    notice.setAttribute('role', 'status');
+    notice.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;padding:14px 22px;background:#122c40;color:white;border:2px solid #74c4ee;border-radius:10px;pointer-events:none;font:16px sans-serif;max-width:90vw';
+    notice.textContent = 'PHYSICAL ESCAPE CHECK: Click the video, press your keyboard’s Esc, then wait for PASS.';
+    document.body.appendChild(notice);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') observation.events.push({type: 'keydown', key: event.key, trusted: event.isTrusted});
+    }, true);
+    document.addEventListener('pointerlockchange', event => {
+      const locked = document.pointerLockElement?.id === 'viewport';
+      const entry = {type: 'pointerlockchange', locked, focused: document.hasFocus(),
+        visibility: document.visibilityState, trusted: event.isTrusted};
+      observation.events.push(entry);
+      if (locked) {
+        observation.armed = true;
+        notice.textContent = 'POINTER LOCKED — press the physical Esc key now.';
+      } else if (observation.armed && entry.focused && entry.visibility === 'visible' && entry.trusted) {
+        observation.release = entry;
+        observation.armed = false;
+        notice.textContent = 'Native release received — checking that mouse input stopped…';
+      }
+    });
+    window.addEventListener('blur', () => {
+      observation.armed = false;
+      if (!observation.completed) observation.release = null;
+      observation.events.push({type: 'blur'});
+    });
+  });
+  console.log('PHYSICAL_ESCAPE_READY: In the test Chrome window, click the video and press your physical Esc key.');
+  await page.waitForFunction(() => window.fixturePhysicalEscape.release !== null, null, {timeout: 600000});
+  await expect(page.locator('#pointerHint')).toHaveText('CLICK VIEW FOR MOUSE LOOK');
+  const count = result.received.filter(m => m.type === 'axis' && m.source === 'mouse').length;
+  await page.mouse.move(500, 300);
+  await nextFrames(page);
+  assert.equal(result.received.filter(m => m.type === 'axis' && m.source === 'mouse').length, count);
+  result.physical_escape = await page.evaluate(() => {
+    const observation = window.fixturePhysicalEscape;
+    if (!document.hasFocus() || !observation.release || document.pointerLockElement || state.pointerLocked) {
+      throw new Error('Physical Escape must release the pointer while the test page stays focused.');
+    }
+    observation.completed = true;
+    document.getElementById('physicalEscapeCheck').textContent = 'PASS — physical Escape released the pointer and mouse look stopped.';
+    return observation;
+  });
+  result.checks.push('operator-triggered native pointer release while focused; subsequent mouse movement sends no axes');
   await fixture.finish();
 }
 
@@ -334,11 +453,13 @@ async function checkContinuous(fixture) {
 try {
   browser = await launchBrowser();
   report.browser_version = browser.version();
-  for (const [name, mode, check] of [
+  const sessions = physicalEscape ? [['physical-escape', 'universal', checkPhysicalEscape]] : [
     ['mouse-gamepad', 'universal', checkInputs],
+    ['virtual-sticks', 'universal', checkVirtualSticks],
     ['templerun-keys', 'templerun', checkTemplerun],
     ['continuous-rollout', 'continuous', checkContinuous],
-  ]) {
+  ];
+  for (const [name, mode, check] of sessions) {
     let fixture;
     try {
       fixture = await fixturePage(name, mode);

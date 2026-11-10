@@ -112,6 +112,14 @@ class FakeElement {
     };
   }
   get options() { return this.children; }
+  getBoundingClientRect() { return {left: 0, top: 0, width: 100, height: 100}; }
+  setPointerCapture(id) { this.capturedPointer = id; }
+  hasPointerCapture(id) { return this.capturedPointer === id; }
+  releasePointerCapture(id) {
+    if (!this.hasPointerCapture(id)) return;
+    this.capturedPointer = null;
+    this.dispatch('lostpointercapture', {pointerId: id});
+  }
   addEventListener(name, listener) { (this.listeners[name] ||= []).push(listener); }
   dispatch(name, event = {}) { for (const listener of this.listeners[name] || []) listener({target: this, ...event}); }
   setAttribute(name, value) { this.attributes[name] = String(value); }
@@ -227,6 +235,11 @@ async function loadClient({spec = {}, interactionMode = 'controls', status, game
   return {
     ...client, context, document, window, pads, peers, responses,
     tick() { for (const callback of frames.splice(0)) callback(performance.now()); },
+    stick(kind, type, dx = 0, dy = 0, pointerId = 1) {
+      client.el[`${kind}Stick`].dispatch(type, {
+        pointerId, clientX: 50 + dx * 50, clientY: 50 + dy * 50, preventDefault() {},
+      });
+    },
     connect(channel = fakeDataChannel('controls'), axisChannel = null) {
       client.state.channel = channel;
       client.state.axisChannel = axisChannel;
@@ -243,6 +256,169 @@ async function loadClient({spec = {}, interactionMode = 'controls', status, game
 
 const MOUSE_AXES = [{name: 'camera_yaw', source: 'mouse_x'}, {name: 'camera_pitch', source: 'mouse_y'}];
 const GAMEPAD_AXES = [{name: 'camera_yaw_stick', source: 'gamepad_rx', mode: 'level'}];
+
+function axisPayloads(channel) {
+  return channel.sent.filter(message => message.type === 'axis').map(({control_id, ...payload}) => payload);
+}
+
+test('virtual sticks use declared axes per direction and retain undeclared-direction keys', async () => {
+  const client = await loadClient({spec: {axes: GAMEPAD_AXES}, gamepadApi: false});
+  const controls = fakeDataChannel('controls');
+  const axes = fakeDataChannel('axes');
+  client.connect(controls, axes);
+  client.stick('look', 'pointerdown', 0.5, -0.5);
+  client.tick();
+  assert.deepEqual(axisPayloads(controls), [{type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0.5, ry: 0}]);
+  assert.deepEqual(controls.sent.filter(m => m.type === 'action').map(m => m.action), [{event: 'keydown', key: 'i'}]);
+  client.stick('look', 'pointerup');
+  client.tick();
+  assert.equal(axisPayloads(controls).at(-1).rx, 0);
+  assert.deepEqual(controls.sent.filter(m => m.type === 'action').map(m => m.action),
+    [{event: 'keydown', key: 'i'}, {event: 'keyup', key: 'i'}]);
+  assert.equal(axes.sent.length, 0, 'virtual stick levels stay on the reliable channel');
+});
+
+test('axis-only sessions expose both virtual sticks without needing the Gamepad API', async () => {
+  const axes = ['lx', 'ly', 'rx', 'ry'].map(name => ({name, source: `gamepad_${name}`, mode: 'level'}));
+  const client = await loadClient({spec: {keys: [], axes}, gamepadApi: false});
+  assert.equal(client.el.moveStick.classList.contains('is-hidden'), false);
+  assert.equal(client.el.lookStick.classList.contains('is-hidden'), false);
+  assert.equal(client.el.interactionHint.textContent, 'DRAG STICKS');
+  const controls = client.connect();
+  client.stick('move', 'pointerdown', 0.25, -0.5, 1);
+  client.stick('look', 'pointerdown', 0.5, -0.25, 2);
+  client.tick();
+  assert.deepEqual(axisPayloads(controls).at(-1), {type: 'axis', source: 'gamepad', lx: 0.25, ly: -0.5, rx: 0.5, ry: -0.25});
+  client.stick('move', 'pointercancel', 0, 0, 1);
+  client.tick();
+  assert.deepEqual(axisPayloads(controls).at(-1), {type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0.5, ry: -0.25});
+  client.stick('look', 'lostpointercapture', 0, 0, 2);
+  client.tick();
+  assert.deepEqual(axisPayloads(controls).at(-1), {type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0, ry: 0});
+  assert.equal(controls.sent.filter(m => m.type === 'action').length, 0);
+});
+
+test('captured virtual axes override the physical stick and restore it on release', async () => {
+  const client = await loadClient({spec: {axes: GAMEPAD_AXES}});
+  const pad = {connected: true, axes: [0, 0, -0.75, 0]};
+  client.pads.push(pad);
+  const controls = client.connect();
+  client.tick();
+  assert.equal(axisPayloads(controls).at(-1).rx, -0.75);
+  client.stick('look', 'pointerdown', 0.5, 0);
+  client.tick();
+  assert.equal(axisPayloads(controls).at(-1).rx, 0.5);
+  pad.axes[2] = -0.5;
+  client.tick();
+  assert.equal(axisPayloads(controls).length, 2, 'the physical stick cannot overwrite a captured virtual axis');
+  client.stick('look', 'pointerup');
+  client.tick();
+  assert.equal(axisPayloads(controls).at(-1).rx, -0.5);
+  client.stick('look', 'pointerdown', 0.75, 0);
+  client.tick();
+  pad.connected = false;
+  client.window.dispatch('gamepaddisconnected');
+  assert.equal(axisPayloads(controls).at(-1).rx, 0.75, 'disconnecting hardware does not release a captured virtual axis');
+  client.stick('look', 'pointerup');
+  client.tick();
+  assert.equal(axisPayloads(controls).at(-1).rx, 0);
+});
+
+test('a physical gamepad disconnect cannot activate another controller in a background tab', async () => {
+  const client = await loadClient({spec: {axes: GAMEPAD_AXES}});
+  const first = {connected: true, axes: [0, 0, 0.5, 0]};
+  client.pads.push(first, {connected: true, axes: [0, 0, -0.75, 0]});
+  const controls = client.connect();
+  client.tick();
+  client.document.focused = false;
+  client.window.dispatch('blur');
+  first.connected = false;
+  client.window.dispatch('gamepaddisconnected');
+  assert.equal(axisPayloads(controls).at(-1).rx, 0);
+  client.document.focused = true;
+  client.tick();
+  assert.equal(axisPayloads(controls).at(-1).rx, -0.75);
+});
+
+for (const source of ['virtual', 'physical']) {
+  test(`${source} stick neutral samples are not suppressed by the movement epsilon`, async () => {
+    const client = await loadClient({spec: {axes: GAMEPAD_AXES}});
+    const pad = {connected: true, axes: [0, 0, 0, 0]};
+    if (source === 'physical') client.pads.push(pad);
+    const controls = client.connect();
+    if (source === 'virtual') client.stick('look', 'pointerdown', 0.05, 0);
+    else pad.axes[2] = 0.05;
+    client.tick();
+    if (source === 'virtual') client.stick('look', 'pointermove', 0.01, 0);
+    else pad.axes[2] = 0.01;
+    client.tick();
+    if (source === 'virtual') client.stick('look', 'pointerup');
+    else pad.axes[2] = 0;
+    client.tick();
+    assert.deepEqual(axisPayloads(controls).map(m => m.rx), [0.05, 0.01, 0]);
+  });
+}
+
+for (const loss of ['blur', 'hidden']) {
+  test(`${loss} releases virtual axes and does not revive the old pointer on focus return`, async () => {
+    const client = await loadClient({spec: {axes: GAMEPAD_AXES}});
+    const controls = client.connect();
+    client.stick('look', 'pointerdown', 0.5, 0);
+    client.stick('move', 'pointerdown', 0, -0.5, 2);
+    client.tick();
+    if (loss === 'blur') {
+      client.document.focused = false;
+      client.window.dispatch('blur');
+    } else {
+      client.document.visibilityState = 'hidden';
+      client.document.dispatch('visibilitychange');
+    }
+    assert.equal(axisPayloads(controls).at(-1).rx, 0);
+    assert.deepEqual(controls.sent.filter(m => m.type === 'action').map(m => m.action),
+      [{event: 'keydown', key: 'w'}, {event: 'keyup', key: 'w'}]);
+    const count = controls.sent.length;
+    client.document.focused = true;
+    client.document.visibilityState = 'visible';
+    client.stick('look', 'pointermove', 0.75, 0);
+    client.stick('move', 'pointermove', 0, -0.75, 2);
+    client.tick();
+    assert.equal(controls.sent.length, count);
+    assert.equal(client.el.lookStick.classList.contains('is-active'), false);
+    assert.equal(client.el.moveStick.classList.contains('is-active'), false);
+  });
+}
+
+test('mouse and virtual axis IDs report latency only after a matching frame presentation', async () => {
+  const client = await loadClient({spec: {axes: [...MOUSE_AXES, ...GAMEPAD_AXES]}});
+  const controls = fakeDataChannel('controls');
+  const axes = fakeDataChannel('axes');
+  client.connect(controls, axes);
+  client.state.pointerLocked = true;
+  client.document.dispatch('mousemove', {movementX: 2, movementY: -1});
+  client.stick('look', 'pointerdown', 0.5, 0);
+  client.tick();
+  const mouse = axes.sent.find(m => m.source === 'mouse');
+  const stick = controls.sent.find(m => m.source === 'gamepad');
+  assert.match(mouse.control_id, /^axis-mouse-/);
+  assert.match(stick.control_id, /^axis-gamepad-/);
+  assert.notEqual(mouse.control_id, stick.control_id);
+  const ids = [mouse.control_id, stick.control_id];
+  assert.equal(client.state.presentation.controls.size, 2);
+  client.receive({type: 'frame_sent', rtp_timestamp: 41, control_ids: ids});
+  const reports = () => controls.sent.filter(m => m.type === 'frame_presented');
+  assert.equal(reports().length, 0, 'a server receipt alone is not a presentation');
+  client.state.presentation.presented(40, 60);
+  assert.equal(reports().length, 0, 'an unrelated displayed frame is not a match');
+  client.state.presentation.presented(41, 80);
+  assert.deepEqual(reports().map(m => [m.control_id, m.control_to_display_ms]), ids.map(id => [id, 80]));
+  client.receive({type: 'frame_sent', rtp_timestamp: 42, control_ids: ids});
+  client.state.presentation.presented(42, 100);
+  assert.equal(reports().length, 2, 'held or repeated frames do not count the same inputs twice');
+  axes.bufferedAmount = 1 << 20;
+  client.document.dispatch('mousemove', {movementX: 3, movementY: 0});
+  client.tick();
+  assert.equal(client.state.presentation.controls.size, 0, 'a deferred delta is not marked as submitted');
+});
 
 test('sessions without declared keys keep the default eight keys and legend', async () => {
   const client = await loadClient();
@@ -305,7 +481,7 @@ test('locked mouse motion is coalesced to one axis message per animation frame',
     client.document.dispatch('mousemove', {movementX, movementY});
   }
   client.tick();
-  assert.deepEqual(axes.sent, [{type: 'axis', source: 'mouse', dx: 4, dy: 3}]);
+  assert.deepEqual(axisPayloads(axes), [{type: 'axis', source: 'mouse', dx: 4, dy: 3}]);
 
   axes.bufferedAmount = 1 << 20;
   client.document.dispatch('mousemove', {movementX: 5, movementY: 0});
@@ -314,7 +490,7 @@ test('locked mouse motion is coalesced to one axis message per animation frame',
   client.document.dispatch('mousemove', {movementX: 1, movementY: 1});
   axes.bufferedAmount = 0;
   client.tick();
-  assert.deepEqual(axes.sent.at(-1), {type: 'axis', source: 'mouse', dx: 6, dy: 1});
+  assert.deepEqual(axisPayloads(axes).at(-1), {type: 'axis', source: 'mouse', dx: 6, dy: 1});
 
   client.document.pointerLockElement = null;
   client.document.dispatch('pointerlockchange');
@@ -353,7 +529,7 @@ test('gamepad levels use the reliable controls channel; mouse deltas use axes', 
   const axes = fakeDataChannel('axes');
   client.connect(controls, axes);
   const neutral = {type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0, ry: 0};
-  const gamepad = () => controls.sent.filter((m) => m.type === 'axis' && m.source === 'gamepad');
+  const gamepad = () => axisPayloads(controls).filter((m) => m.source === 'gamepad');
 
   client.tick();
   pad.axes = [0.01, 0, -0.015, 0];
@@ -386,6 +562,7 @@ test('gamepad levels use the reliable controls channel; mouse deltas use axes', 
   client.tick();
   assert.deepEqual(gamepad().at(-1), {type: 'axis', source: 'gamepad', lx: 0, ly: 0, rx: 0.8, ry: 0});
 
+  pad.connected = false;
   client.window.dispatch('gamepaddisconnected');
   client.document.visibilityState = 'hidden';
   client.document.dispatch('visibilitychange');
@@ -394,7 +571,7 @@ test('gamepad levels use the reliable controls channel; mouse deltas use axes', 
   client.state.pointerLocked = true;
   client.document.dispatch('mousemove', {movementX: 4, movementY: 1});
   client.tick();
-  assert.deepEqual(axes.sent, [{type: 'axis', source: 'mouse', dx: 4, dy: 1}]);
+  assert.deepEqual(axisPayloads(axes), [{type: 'axis', source: 'mouse', dx: 4, dy: 1}]);
   assert.equal(controls.sent.filter((m) => m.source === 'mouse').length, 0);
 });
 

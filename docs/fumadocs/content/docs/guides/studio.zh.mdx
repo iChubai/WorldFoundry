@@ -473,7 +473,13 @@ transport 像素量和 `postprocess_ms`，因此应按下方门禁做 A/B trace�
 
 ### 浏览器呈现计时与编码器反馈
 
-WebRTC 状态栏中的 **E2E** 是从浏览器提交控制，到浏览器呈现消费该控制的 chunk 中某一帧为止的延迟中位数。悬停可查看 p90、服务端控制到入队时间、RTT、抖动缓冲延迟与解码时间。分布保留最近 256 个已测控制，并排除配置的 warmup chunk。键盘/摇杆边沿、STEP 和实时文本更新携带控制 ID；合并的输入以及从未呈现对应帧的控制不会产生虚假的延迟样本。
+WebRTC 状态栏中的 **E2E** 是从浏览器提交控制，到浏览器呈现消费该控制的 chunk
+中某一帧为止的延迟中位数。悬停可查看 p90、服务端控制到入队时间、RTT、抖动
+缓冲延迟与解码时间。分布保留最近 256 个已测控制，并排除配置的 warmup chunk。
+键盘/摇杆边沿、鼠标增量、实体与虚拟摇杆值、STEP 和实时文本更新均携带控制 ID。
+轴 ID 跟随重采样结果：增量消息归属实际采样的 chunk；同一输入帧内被后值覆盖的
+level 消息不计入。持续的非零摇杆值会跨 chunk 保留 ID，但中性采样不会归入后续
+空闲帧。STEP 不消费排队的轴 ID。没有匹配呈现帧的控制不产生延迟样本。
 
 帧回执通过现有 DataChannel 传输实际 RTP 时间戳、chunk 索引和帧索引。浏览器与
 `requestVideoFrameCallback().rtpTimestamp` 匹配，即使视频先于回执到达也能关联。
@@ -501,9 +507,9 @@ DataChannel 拥塞时，计时回执让位于控制消息。
 
 `tests/manual/realtime_browser_ui.mjs` 使用临时配置打开独立 Chromium 窗口，
 通过回环地址提供生产 HTML、CSS 和 JavaScript。检查覆盖模型声明的按键、
-Pointer Lock 和鼠标位移、手柄回中与失焦处理、连续生成进度、暂停/恢复、
-STEP 拒绝提示、新提示词重启和重置。模型的 HTTP/WebSocket 响应及手柄读数使用
-测试替身。
+虚拟摇杆轴与按键回退、Pointer Lock 和鼠标位移、摇杆回中与失焦处理、连续生成
+进度、暂停/恢复、STEP 拒绝提示、新提示词重启和重置。模型的 HTTP/WebSocket
+响应及手柄读数使用测试替身。
 
 准备桌面会话、Studio Python 环境、Node.js 和 Playwright 1.65：
 
@@ -518,9 +524,21 @@ NODE_PATH=/private/replay-browser/node_modules PYTHON=python \
 测试切换标签页时，请保持测试窗口在前台。结果保存在 `browser.json`、
 `chromium.log` 和截图中；脚本退出时删除临时浏览器配置。
 
+验证物理 Escape 时，单独运行需要操作者参与的会话：
+
+```bash
+NODE_PATH=/private/replay-browser/node_modules PYTHON=python \
+  node tests/manual/realtime_browser_ui.mjs outputs/realtime-physical-escape --physical-escape
+```
+
+在测试窗口中点击画面，按键盘上的 **Esc**，并保持窗口在前台直到检查结束。脚本
+最多等待十分钟，记录保持焦点时的原生指针释放，并验证之后的鼠标移动不再发送
+轴消息；切换到其他窗口不会算作通过。
+
 **证据范围：** 真实 DOM、键盘、鼠标、标签页焦点及浏览器 Pointer Lock API，
-模型响应由测试替身提供。指针通过 `exitPointerLock()` 释放，不覆盖物理 Escape
-按键或手柄硬件。这不是 checkpoint、WebRTC 传输或推理性能证据。
+模型响应由测试替身提供。自动测试通过 `exitPointerLock()` 释放指针；独立的
+`--physical-escape` 模式需要操作者参与。手柄读数仍为模拟数据。两种模式都不是
+checkpoint、WebRTC 传输或推理性能证据。
 
 ### 真实 checkpoint 网络回放
 
@@ -820,25 +838,34 @@ pipeline。即使短按在生成期间已经释放，其有效状态仍会保留
 worker 会继续处理待消费输入，排空后恢复正常 idle 行为。
 
 模型可以在 `RealtimeSpec.keys` 中声明自己的按键。页面只接受这些按键，在控制
-提示中列出它们，并隐藏其按键均未被模型使用的虚拟摇杆。未声明按键的模型保留
-W/A/S/D 与 I/J/K/L。Prompt-scheduled 与 queued-segment 页面不接受键盘动作。
+提示中列出它们。虚拟摇杆只有在模型既不使用其按键、也不声明其轴时才隐藏。
+省略 `keys` 字段会保留 W/A/S/D 与 I/J/K/L；`keys: []` 禁用按键输入。
+Prompt-scheduled 与 queued-segment 页面不接受键盘动作。
 
-#### 鼠标与手柄
+#### 鼠标、手柄与虚拟摇杆
 
-声明了 `RealtimeSpec.axes` 的模型还可以用鼠标或手柄驱动，控制提示会列出模型
+声明了 `RealtimeSpec.axes` 的模型还接受鼠标或摇杆输入，控制提示会列出模型
 接受的输入：
 
 - **鼠标**（`mouse_x`/`mouse_y` 轴）：会话开始后，页面提示点击画面。点击会锁定
   指针，鼠标位移累加后每个 animation frame 最多发送一次。按 `Esc` 释放指针并
   停止发送。
 - **手柄**（`gamepad_*` 轴）：Studio 每个 animation frame 读取第一个已连接的
-  手柄，任一摇杆分量变化超过 0.02 时发送四个摇杆值。窗口失焦、标签页隐藏和
-  手柄断开时各发送一次中性采样，因此页面失去焦点期间摇杆归零。浏览器只在
-  安全源（HTTPS 或 `localhost`）上、且按下手柄按键后才提供手柄，因此报告了
-  手柄之后控制提示才会列出 **GAMEPAD**。
+  手柄，任一摇杆分量变化超过 0.02 或回到零时发送四个摇杆值。浏览器只在安全源
+  （HTTPS 或 `localhost`）上、且按下手柄按键后才提供手柄，因此报告了手柄之后
+  控制提示才会列出 **GAMEPAD**。
+- **虚拟摇杆：** 现有移动与镜头摇杆分别映射到 `gamepad_lx`/`gamepad_ly` 和
+  `gamepad_rx`/`gamepad_ry`。声明了轴的方向发送 `[-1, 1]` 连续值，其余方向
+  保留已声明的按键映射。模型的 deadzone、scale 和 limit 仍由服务端应用。拖动
+  期间，虚拟摇杆优先控制对应的已声明方向；松手后恢复实体手柄当前值，没有手柄
+  时回零。浏览器不提供 Gamepad API 时，虚拟轴仍可使用。
 
-WebRTC 下鼠标位移走无序的 `axes` DataChannel；手柄摇杆值走可靠的 `controls`
-通道，因为服务端会保持每个摇杆值直到下一次采样，丢失回中采样会让摇杆一直
+窗口失焦或标签页隐藏会清除虚拟拖动并发送中性摇杆值；恢复焦点后，原来的指针
+不能重新激活该次拖动。实体手柄在恢复焦点后继续采样；断开手柄时重新采样剩余
+输入，不清除仍在进行的虚拟拖动。
+
+WebRTC 下鼠标位移走无序的 `axes` DataChannel；实体与虚拟摇杆值走可靠的
+`controls` 通道，因为服务端会保持每个摇杆值直到下一次采样，丢失回中采样会让摇杆一直
 处于按住状态。通道拥塞时，采样推迟到之后的帧，鼠标位移继续累加。WebSocket
 传输在同一个 socket 上发送相同的消息。
 

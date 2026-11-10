@@ -3288,7 +3288,10 @@ class RealtimePeerManager:
             return
         if message_type == "axis":
             arrival = asyncio.get_running_loop().time()
-            if active.resampler.on_axis(arrival_time=arrival, samples=axis_samples_from_message(payload)):
+            control_id = active.telemetry.control_id(payload) if active.telemetry is not None else None
+            if active.resampler.on_axis(
+                arrival_time=arrival, samples=axis_samples_from_message(payload), control_id=control_id
+            ):
                 active.action_arrivals.append(arrival)
                 active.first_action.set()
             return
@@ -3358,6 +3361,7 @@ class RealtimePeerManager:
                 segments = None
                 axes = None
                 axis_input = False
+                input_chunk = None
                 if active.prompt_scheduled:
                     active.first_action.clear()
                     if active.initial_segment_pending:
@@ -3428,6 +3432,7 @@ class RealtimePeerManager:
                         keys=segments is not None,
                         prompt=prompt_changed,
                         step=forced_step,
+                        axis_control_ids=input_chunk.axis_control_ids if input_chunk is not None else (),
                     )
                 )
                 generation_started = loop.time()

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any, NoReturn, cast
 
 import numpy as np
 import pytest
@@ -231,7 +232,7 @@ def test_realtime_input_workers_keep_inflight_tap_and_isolate_step(
                 while len(calls) < expected or active.first_action.is_set():
                     if worker.done():
                         await worker
-                        pytest.fail(f"worker stopped: {sink.messages}")
+                        cast(Callable[[str], NoReturn], pytest.fail)(f"worker stopped: {sink.messages}")
                     await asyncio.sleep(0.001)
 
             await asyncio.wait_for(finished(), timeout=2)
@@ -451,15 +452,17 @@ def test_realtime_input_axis_samples_stay_behind_a_postponed_key_tap() -> None:
     resampler = _axis_spec_resampler(RealtimeAxis("yaw", "mouse_x"))
     _edge(resampler, 100.19, "keydown", "d")
     _edge(resampler, 100.191, "keyup", "d")
-    resampler.on_axis(arrival_time=100.195, samples={"mouse_x": 1.0})
+    resampler.on_axis(arrival_time=100.195, samples={"mouse_x": 1.0}, control_id="after-tap")
     first = resampler.sample_input_chunk(4, wall_time=100)
     assert _states(first.segments) == [frozenset()]
     assert first.axes == {"yaw": [0.0] * 4}
+    assert first.axis_control_ids == ()
     assert not first.has_axis_input
     # The tap moves to the next chunk and holds a full frame; the delta follows its release.
     second = resampler.sample_input_chunk(4, wall_time=100.25)
     assert _states(second.segments) == [frozenset({"d"}), frozenset()]
     assert second.axes == {"yaw": [0.0, 1.0, 0.0, 0.0]}
+    assert second.axis_control_ids == ("after-tap",)
 
 
 def test_realtime_input_level_axis_holds_until_a_neutral_sample() -> None:
@@ -503,3 +506,60 @@ def test_realtime_input_pending_axis_input_and_reset() -> None:
     resampler.reset(start_time=200)
     assert not resampler.has_pending_input
     assert resampler.sample_input_chunk(4, wall_time=200).axes == {"yaw": [0.0] * 4, "move": [0.0] * 4}
+
+
+@pytest.mark.unit
+def test_axis_control_ids_follow_consumed_deltas_without_changing_samples() -> None:
+    axes = (RealtimeAxis("yaw", "mouse_x"), RealtimeAxis("pitch", "mouse_y"))
+    tracked = _axis_spec_resampler(*axes)
+    plain = _axis_spec_resampler(*axes)
+    for stamp, samples, control_id in (
+        (100.01, {"mouse_x": 1.0, "mouse_y": 2.0}, "mouse-1"),
+        (100.025, {"mouse_x": 3.0}, "mouse-2"),
+        (100.25, {"mouse_x": 5.0}, "future"),
+    ):
+        assert tracked.on_axis(arrival_time=stamp, samples=samples, control_id=control_id)
+        assert plain.on_axis(arrival_time=stamp, samples=samples)
+    assert not tracked.on_axis(arrival_time=100.3, samples={"gamepad_rx": 0.5}, control_id="undeclared")
+    for wall_time, expected in ((100, ("mouse-1", "mouse-2")), (100.2, ("future",)), (100.4, ())):
+        chunk = tracked.sample_input_chunk(4, wall_time=wall_time)
+        untracked = plain.sample_input_chunk(4, wall_time=wall_time)
+        assert chunk.axes == untracked.axes
+        assert chunk.segments == untracked.segments
+        assert chunk.axis_control_ids == expected
+        assert untracked.axis_control_ids == ()
+
+
+@pytest.mark.unit
+def test_axis_control_ids_exclude_overwritten_levels_and_keep_consumed_holds() -> None:
+    resampler = _axis_spec_resampler(RealtimeAxis("yaw", "gamepad_rx", mode="level"))
+    resampler.on_axis(arrival_time=100.001, samples={"gamepad_rx": 0.5}, control_id="overwritten")
+    resampler.on_axis(arrival_time=100.011, samples={"gamepad_rx": 0.8}, control_id="held")
+    first = resampler.sample_input_chunk(1, wall_time=100)
+    assert first.axes == {"yaw": [0.8]}
+    assert first.axis_control_ids == ("held",)
+    held = resampler.sample_input_chunk(1, wall_time=100.05)
+    assert held.axes == first.axes
+    assert held.axis_control_ids == ("held",)
+
+    resampler.on_axis(arrival_time=100.11, samples={"gamepad_rx": 0.6})
+    untracked = resampler.sample_input_chunk(1, wall_time=100.1)
+    assert untracked.axes == {"yaw": [0.6]}
+    assert untracked.axis_control_ids == ()
+    resampler.on_axis(arrival_time=100.151, samples={"gamepad_rx": 0.0}, control_id="neutral")
+    neutral = resampler.sample_input_chunk(1, wall_time=100.15)
+    assert neutral.axes == {"yaw": [0.0]}
+    assert neutral.axis_control_ids == ("neutral",)
+    assert resampler.sample_input_chunk(1, wall_time=100.2).axis_control_ids == ()
+
+
+@pytest.mark.unit
+def test_axis_control_ids_reset_with_queued_samples_and_held_state() -> None:
+    resampler = _axis_spec_resampler(RealtimeAxis("yaw", "gamepad_rx", mode="level"))
+    resampler.on_axis(arrival_time=100.01, samples={"gamepad_rx": 0.5}, control_id="held")
+    assert resampler.sample_input_chunk(1, wall_time=100).axis_control_ids == ("held",)
+    resampler.on_axis(arrival_time=100.3, samples={"gamepad_rx": -0.5}, control_id="queued")
+    resampler.reset(start_time=200)
+    chunk = resampler.sample_input_chunk(4, wall_time=200)
+    assert chunk.axes == {"yaw": [0.0] * 4}
+    assert chunk.axis_control_ids == ()

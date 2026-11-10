@@ -103,10 +103,11 @@ def _axis_value(axis: RealtimeAxis, raw: float) -> float:
 
 @dataclass(frozen=True, slots=True)
 class RealtimeInputChunk:
-    """Key segments and per-frame axis values sampled over the same chunk."""
+    """Key segments, per-frame axes, and the IDs of axis inputs used by this chunk."""
 
     segments: list[ControlSegment]
     axes: dict[str, list[float]]
+    axis_control_ids: tuple[str, ...] = ()
 
     @property
     def has_axis_input(self) -> bool:
@@ -138,7 +139,8 @@ class RealtimeControlResampler:
         self._accepted_keys = frozenset(binding.key for binding in realtime_keys)
         self._axis_sources = frozenset(axis.source for axis in axes)
         self._events: deque[tuple[float, str, str]] = deque()
-        self._axis_events: deque[tuple[float, str, float]] = deque()
+        self._axis_events: deque[tuple[float, str, float, str | None]] = deque()
+        self._source_control_ids: dict[str, str | None] = dict.fromkeys(self._axis_sources)
         self._state = RealtimeControlState(realtime_keys)
         self._live_state = RealtimeControlState(realtime_keys)
         self._source_levels = dict.fromkeys(self._axis_sources, 0.0)
@@ -154,7 +156,7 @@ class RealtimeControlResampler:
         self._events.append((float(arrival_time) + self._event_delay, event, normalized))
         return True
 
-    def on_axis(self, *, arrival_time: float, samples: Mapping[str, float]) -> bool:
+    def on_axis(self, *, arrival_time: float, samples: Mapping[str, float], control_id: str | None = None) -> bool:
         """Queue source samples for declared axes; return whether any was accepted.
 
         Each sample is a delta for ``delta`` axes and the current level for
@@ -167,7 +169,7 @@ class RealtimeControlResampler:
             if source not in self._axis_sources:
                 continue
             self._live_source_levels[source] = float(value)
-            self._axis_events.append((stamp, source, float(value)))
+            self._axis_events.append((stamp, source, float(value), control_id))
             accepted = True
         return accepted
 
@@ -176,8 +178,8 @@ class RealtimeControlResampler:
         self._events = deque((stamp + delay, event, key) for stamp, event, key in self._events)
         # Axis samples received after the postponed key edge keep their order behind it.
         self._axis_events = deque(
-            (stamp + delay if stamp >= first_delayed else stamp, source, value)
-            for stamp, source, value in self._axis_events
+            (stamp + delay if stamp >= first_delayed else stamp, source, value, control_id)
+            for stamp, source, value, control_id in self._axis_events
         )
         self._event_delay += delay
 
@@ -239,44 +241,71 @@ class RealtimeControlResampler:
             effective = next_effective
         if cursor < end:
             segments.append((cursor, end, effective))
-        axes = self._sample_axes(num_frames, start=start, end=end)
+        axes, control_ids = self._sample_axes(num_frames, start=start, end=end)
         self.next_chunk_start = end
         if not self._events and not self._axis_events:
             self._event_delay = 0.0
-        return RealtimeInputChunk(segments=segments, axes=axes)
+        return RealtimeInputChunk(segments=segments, axes=axes, axis_control_ids=control_ids)
 
-    def _sample_axes(self, num_frames: int, *, start: float, end: float) -> dict[str, list[float]]:
-        """Bin queued axis samples stamped before ``end`` into the chunk's frames."""
+    def _sample_axes(
+        self, num_frames: int, *, start: float, end: float
+    ) -> tuple[dict[str, list[float]], tuple[str, ...]]:
+        """Bin axis samples and retain only IDs used by the sampled frame values."""
 
         if not self.axes:
-            return {}
+            return {}, ()
         deltas = {source: [0.0] * num_frames for source in self._axis_sources}
+        delta_controls: dict[str, list[str]] = {source: [] for source in self._axis_sources}
         last_levels: dict[str, list[float | None]] = {source: [None] * num_frames for source in self._axis_sources}
+        last_controls: dict[str, list[str | None]] = {source: [None] * num_frames for source in self._axis_sources}
         while self._axis_events and self._axis_events[0][0] < end:
-            stamp, source, value = self._axis_events.popleft()
+            stamp, source, value, control_id = self._axis_events.popleft()
             # The small offset keeps a sample stamped on a frame boundary in
             # the frame that starts there despite float rounding.
             index = min(max(int((stamp - start) * self.fps + 1e-6), 0), num_frames - 1)
             deltas[source][index] += value
+            if control_id is not None:
+                delta_controls[source].append(control_id)
             last_levels[source][index] = value
+            last_controls[source][index] = control_id
         levels: dict[str, list[float]] = {}
+        level_controls: dict[str, list[str | None]] = {}
         for source, samples in last_levels.items():
             held = self._source_levels[source]
+            held_control = self._source_control_ids[source]
             frames: list[float] = []
-            for sample in samples:
+            controls: list[str | None] = []
+            for index, sample in enumerate(samples):
                 if sample is not None:
                     held = sample
+                    held_control = last_controls[source][index]
                 frames.append(held)
+                controls.append(held_control)
             self._source_levels[source] = held
+            self._source_control_ids[source] = held_control
             levels[source] = frames
-        return {
-            axis.name: [_axis_value(axis, raw) for raw in (deltas if axis.mode == "delta" else levels)[axis.source]]
-            for axis in self.axes
-        }
+            level_controls[source] = controls
+        axes: dict[str, list[float]] = {}
+        control_ids: list[str | None] = []
+        for axis in self.axes:
+            values = [_axis_value(axis, raw) for raw in (deltas if axis.mode == "delta" else levels)[axis.source]]
+            axes[axis.name] = values
+            if axis.mode == "delta":
+                control_ids.extend(delta_controls[axis.source])
+            else:
+                # A held nonzero level still conditions later chunks. Neutral
+                # samples belong to their own chunk, not every later idle frame.
+                control_ids.extend(
+                    control_id
+                    for index, control_id in enumerate(level_controls[axis.source])
+                    if last_levels[axis.source][index] is not None or values[index] != 0.0
+                )
+        return axes, tuple(dict.fromkeys(value for value in control_ids if value is not None))
 
     def reset(self, *, start_time: float) -> None:
         self._events.clear()
         self._axis_events.clear()
+        self._source_control_ids = dict.fromkeys(self._axis_sources)
         self._state = RealtimeControlState(self.realtime_keys)
         self._live_state = RealtimeControlState(self.realtime_keys)
         self._source_levels = dict.fromkeys(self._axis_sources, 0.0)

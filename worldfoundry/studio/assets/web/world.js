@@ -107,10 +107,13 @@ const state = {
   pendingChunkDone: null,
   keySources: new Map(),
   stickKeys: { move: new Set(), look: new Set() },
+  stickPointers: { move: null, look: null },
+  stickPositions: { move: { x: 0, y: 0 }, look: { x: 0, y: 0 } },
   realtimeKeys: DEFAULT_REALTIME_KEYS,
   declaredKeys: false,
   mouseAxes: false,
   gamepadAxes: false,
+  gamepadSources: [],
   axisChannel: null,
   pointerLocked: false,
   mouseDelta: { dx: 0, dy: 0 },
@@ -161,7 +164,11 @@ const keyAliases = new Map([
 ]);
 const MOVE_STICK_KEYS = ["w", "a", "s", "d"];
 const LOOK_STICK_KEYS = ["i", "j", "k", "l"];
-// Smallest stick change that produces a new gamepad axis message.
+const STICK_AXIS_SOURCES = {
+  move: { x: "gamepad_lx", y: "gamepad_ly" },
+  look: { x: "gamepad_rx", y: "gamepad_ry" },
+};
+// Smallest non-neutral stick change that produces a new axis message.
 const GAMEPAD_EPSILON = 0.02;
 // Axis samples wait for the next animation frame while this many bytes are
 // still queued on their channel; mouse deltas keep accumulating meanwhile.
@@ -1101,17 +1108,21 @@ function normalizeKey(key) {
   return keyAliases.get(normalized) || normalized;
 }
 
+function withPresentationControlId(payload) {
+  if (state.transport !== "RTC" || !["action", "step", "event", "prompt_update", "axis"].includes(payload.type)) return payload;
+  const prefix = payload.type === "axis" ? `axis-${payload.source}` : "control";
+  const control_id = nextRequestId(prefix);
+  state.presentation.submitted(control_id, performance.now());
+  return {...payload, control_id};
+}
+
 function send(payload) {
   if (!state.channel) return false;
   const isOpen = state.channel instanceof WebSocket
     ? state.channel.readyState === WebSocket.OPEN
     : state.channel.readyState === "open";
   if (!isOpen) return false;
-  const measured = state.transport === "RTC" && ["action", "step", "event", "prompt_update"].includes(payload.type);
-  if (measured) {
-    payload = {...payload, control_id: nextRequestId("control")};
-    state.presentation.submitted(payload.control_id, performance.now());
-  }
+  payload = withPresentationControlId(payload);
   try {
     state.channel.send(JSON.stringify(payload));
     return true;
@@ -1148,9 +1159,8 @@ function releaseAllKeys() {
     sources.clear();
     send({ type: "action", action: { event: "keyup", key } });
   }
-  for (const keys of Object.values(state.stickKeys)) keys.clear();
-  updateStickVisual(el.moveStick, 0, 0);
-  updateStickVisual(el.lookStick, 0, 0);
+  releaseJoystick("move");
+  releaseJoystick("look");
 }
 
 function replayHeldKeys() {
@@ -1176,8 +1186,21 @@ function updateStickKeys(kind, desired) {
   state.stickKeys[kind] = desired;
 }
 
+function stickUsesAxis(kind, dimension) {
+  return state.gamepadSources.includes(STICK_AXIS_SOURCES[kind][dimension]);
+}
+
+function releaseJoystick(kind) {
+  const stick = kind === "move" ? el.moveStick : el.lookStick;
+  const pointerId = state.stickPointers[kind];
+  state.stickPointers[kind] = null;
+  state.stickPositions[kind] = { x: 0, y: 0 };
+  updateStickKeys(kind, new Set());
+  updateStickVisual(stick, 0, 0);
+  if (pointerId !== null && stick.hasPointerCapture(pointerId)) stick.releasePointerCapture(pointerId);
+}
+
 function bindJoystick(stick, kind) {
-  let pointerId = null;
   const update = (event) => {
     const rect = stick.getBoundingClientRect();
     const radius = Math.max(Math.min(rect.width, rect.height) / 2, 1);
@@ -1189,38 +1212,35 @@ function bindJoystick(stick, kind) {
       dy /= magnitude;
     }
     updateStickVisual(stick, dx, dy);
+    state.stickPositions[kind] = { x: dx, y: dy };
     const desired = new Set();
-    if (kind === "move") {
-      if (dy < -0.22) desired.add("w");
-      if (dy > 0.22) desired.add("s");
-      if (dx < -0.22) desired.add("a");
-      if (dx > 0.22) desired.add("d");
-    } else {
-      if (dy < -0.16) desired.add("i");
-      if (dy > 0.16) desired.add("k");
-      if (dx < -0.16) desired.add("j");
-      if (dx > 0.16) desired.add("l");
+    const threshold = kind === "move" ? 0.22 : 0.16;
+    if (!stickUsesAxis(kind, "y")) {
+      if (dy < -threshold) desired.add(kind === "move" ? "w" : "i");
+      if (dy > threshold) desired.add(kind === "move" ? "s" : "k");
+    }
+    if (!stickUsesAxis(kind, "x")) {
+      if (dx < -threshold) desired.add(kind === "move" ? "a" : "j");
+      if (dx > threshold) desired.add(kind === "move" ? "d" : "l");
     }
     updateStickKeys(kind, desired);
   };
-  const release = () => {
-    pointerId = null;
-    updateStickKeys(kind, new Set());
-    updateStickVisual(stick, 0, 0);
-  };
   stick.addEventListener("pointerdown", (event) => {
+    if (state.stickPointers[kind] !== null) return;
     event.preventDefault();
-    pointerId = event.pointerId;
-    stick.setPointerCapture(pointerId);
+    state.stickPointers[kind] = event.pointerId;
+    stick.setPointerCapture(event.pointerId);
     update(event);
   });
   stick.addEventListener("pointermove", (event) => {
-    if (event.pointerId !== pointerId) return;
+    if (event.pointerId !== state.stickPointers[kind]) return;
     event.preventDefault();
     update(event);
   });
   for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) {
-    stick.addEventListener(name, release);
+    stick.addEventListener(name, (event) => {
+      if (event.pointerId === state.stickPointers[kind]) releaseJoystick(kind);
+    });
   }
 }
 
@@ -1257,11 +1277,15 @@ function applyRealtimeSpec(spec) {
   }
   const sources = Array.isArray(spec.axes) ? spec.axes.map((axis) => String(axis.source)) : [];
   state.mouseAxes = sources.some((source) => source.startsWith("mouse_"));
-  state.gamepadAxes = sources.some((source) => source.startsWith("gamepad_"));
+  state.gamepadSources = sources.filter((source) => source.startsWith("gamepad_"));
+  state.gamepadAxes = state.gamepadSources.length > 0;
   state.continuous = spec.advance === "continuous";
   if (!state.connected) state.maxChunks = Number.isInteger(spec.max_chunks) ? spec.max_chunks : null;
-  el.moveStick.classList.toggle("is-hidden", !MOVE_STICK_KEYS.some((key) => allowedKeys.has(key)));
-  el.lookStick.classList.toggle("is-hidden", !LOOK_STICK_KEYS.some((key) => allowedKeys.has(key)));
+  const sticksEnabled = !state.promptScheduled && !state.queuedSegments;
+  el.moveStick.classList.toggle("is-hidden", !sticksEnabled || !(MOVE_STICK_KEYS.some((key) => allowedKeys.has(key))
+    || stickUsesAxis("move", "x") || stickUsesAxis("move", "y")));
+  el.lookStick.classList.toggle("is-hidden", !sticksEnabled || !(LOOK_STICK_KEYS.some((key) => allowedKeys.has(key))
+    || stickUsesAxis("look", "x") || stickUsesAxis("look", "y")));
   renderRollout();
   renderPointerHint();
   if (state.connected) startGamepadPolling();
@@ -1280,6 +1304,8 @@ function controlLegend() {
     const sticks = !el.moveStick.classList.contains("is-hidden") || !el.lookStick.classList.contains("is-hidden");
     const keys = state.realtimeKeys.map((binding) => binding.key.toUpperCase()).join(" ");
     parts.push(`HOLD ${keys}${sticks ? " / DRAG STICKS" : ""}`);
+  } else if (state.gamepadAxes) {
+    parts.push("DRAG STICKS");
   }
   if (state.mouseAxes) parts.push("CLICK VIEW FOR MOUSE");
   // Browsers expose gamepads only on secure origins and after a button press.
@@ -1332,7 +1358,7 @@ function sendMouseDelta(payload) {
   if (!channel || channel.bufferedAmount > AXIS_BUFFERED_LIMIT_BYTES) return false;
   if (!axisChannel) return send(payload);
   try {
-    axisChannel.send(JSON.stringify(payload));
+    axisChannel.send(JSON.stringify(withPresentationControlId(payload)));
     return true;
   } catch {
     return false;
@@ -1367,27 +1393,39 @@ function connectedGamepads() {
   return Array.from(navigator.getGamepads()).filter((item) => item?.connected);
 }
 
+function currentGamepadSample() {
+  const [pad] = connectedGamepads();
+  const level = (index) => Number(pad?.axes[index]) || 0;
+  const sample = { lx: level(0), ly: level(1), rx: level(2), ry: level(3) };
+  // A captured virtual stick owns its declared directions until release;
+  // other directions continue to use the physical gamepad.
+  for (const [kind, sources] of Object.entries(STICK_AXIS_SOURCES)) {
+    if (state.stickPointers[kind] === null) continue;
+    for (const [dimension, source] of Object.entries(sources)) {
+      if (stickUsesAxis(kind, dimension)) sample[source.slice("gamepad_".length)] = state.stickPositions[kind][dimension];
+    }
+  }
+  return sample;
+}
+
 function pollGamepad() {
   state.gamepadRaf = 0;
   if (!state.connected || !state.gamepadAxes) return;
   state.gamepadRaf = requestAnimationFrame(pollGamepad);
-  // Focus loss already sent the neutral sample; the stick resumes on return.
+  // Focus loss already sent the neutral sample; the physical stick resumes on return.
   if (document.visibilityState !== "visible" || !document.hasFocus()) return;
-  const [pad] = connectedGamepads();
-  if (!pad) return;
-  const level = (index) => Number(pad.axes[index]) || 0;
-  const sample = { lx: level(0), ly: level(1), rx: level(2), ry: level(3) };
-  const moved = Object.keys(sample).some((name) => Math.abs(sample[name] - state.gamepadSent[name]) > GAMEPAD_EPSILON);
+  const sample = currentGamepadSample();
+  const moved = Object.keys(sample).some((name) => Math.abs(sample[name] - state.gamepadSent[name]) > GAMEPAD_EPSILON
+    || (sample[name] === 0 && state.gamepadSent[name] !== 0));
   if (moved && sendGamepadSample(sample)) state.gamepadSent = sample;
 }
 
 function startGamepadPolling() {
-  if (!state.gamepadAxes || state.gamepadRaf || typeof navigator.getGamepads !== "function") return;
+  if (!state.gamepadAxes || state.gamepadRaf) return;
   state.gamepadRaf = requestAnimationFrame(pollGamepad);
 }
 
-// The server holds gamepad levels until reset, so focus loss and disconnects
-// send one neutral sample.
+// The server holds stick levels until reset, so focus loss sends a neutral sample.
 function sendNeutralGamepad() {
   if (!state.connected || !state.gamepadAxes) return;
   state.gamepadSent = { lx: 0, ly: 0, rx: 0, ry: 0 };
@@ -1400,6 +1438,8 @@ function releaseAllInputs() {
 }
 
 function stopAxisInputs() {
+  releaseJoystick("move");
+  releaseJoystick("look");
   if (state.gamepadRaf) cancelAnimationFrame(state.gamepadRaf);
   state.gamepadRaf = 0;
   state.gamepadSent = { lx: 0, ly: 0, rx: 0, ry: 0 };
@@ -1415,11 +1455,16 @@ function bindAxisInputs() {
   document.addEventListener("pointerlockchange", onPointerLockChange);
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") sendNeutralGamepad();
+    if (document.visibilityState === "hidden") releaseAllInputs();
   });
   window.addEventListener("gamepadconnected", renderControlLegend);
   window.addEventListener("gamepaddisconnected", () => {
-    sendNeutralGamepad();
+    if (document.visibilityState !== "visible" || !document.hasFocus()) {
+      sendNeutralGamepad();
+    } else if (state.connected && state.gamepadAxes) {
+      const sample = currentGamepadSample();
+      if (send({ type: "axis", source: "gamepad", ...sample })) state.gamepadSent = sample;
+    }
     renderControlLegend();
   });
 }
@@ -1588,9 +1633,6 @@ function markDisconnected(message = "DISCONNECTED · START A NEW SESSION") {
   resetSocketPlayback();
   clearAllPending();
   for (const sources of state.keySources.values()) sources.clear();
-  for (const keys of Object.values(state.stickKeys)) keys.clear();
-  updateStickVisual(el.moveStick, 0, 0);
-  updateStickVisual(el.lookStick, 0, 0);
   stopAxisInputs();
   state.rolloutChunks = 0;
   state.paused = false;

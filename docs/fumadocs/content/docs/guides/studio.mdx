@@ -502,9 +502,13 @@ The WebRTC status strip shows **E2E**, the median time from submitting a control
 in the browser to presenting a frame from the chunk that consumed it. Hover over
 the strip for p90, server control-to-queue time, RTT, jitter-buffer delay, and
 decode time. The distribution contains the latest 256 measured controls and
-excludes configured warmup chunks. Keyboard/joystick edges, STEP, and live text
-updates carry control IDs. Coalesced inputs and controls whose frames never
-present do not create synthetic latency samples.
+excludes configured warmup chunks. Keyboard/joystick edges, mouse deltas,
+physical and virtual stick levels, STEP, and live text updates carry control IDs.
+Axis IDs follow the resampler: delta messages contribute to their sampled chunk;
+level messages overwritten within one input frame are excluded. Held nonzero
+levels retain their IDs across chunks, but neutral samples are not attributed to
+later idle frames. STEP does not consume queued axis IDs. Controls without a
+matching presented frame do not create latency samples.
 
 Frame receipts carry the actual RTP timestamp, chunk index, and frame index over
 the existing DataChannel. The browser matches them to
@@ -542,9 +546,10 @@ transport compression quality, not generated model pixels.
 
 `tests/manual/realtime_browser_ui.mjs` opens an isolated Chromium window with a
 temporary profile and serves the production HTML, CSS and JavaScript on loopback.
-It checks model-declared keys, Pointer Lock and mouse movement, gamepad rest and
-focus-loss handling, continuous progress, pause/resume, STEP rejection, prompt
-restart and reset. HTTP/WebSocket model responses and gamepad readings are fixtures.
+It checks model-declared keys, virtual stick axes and key fallback, Pointer Lock
+and mouse movement, stick rest and focus-loss handling, continuous progress,
+pause/resume, STEP rejection, prompt restart and reset. HTTP/WebSocket model
+responses and gamepad readings are fixtures.
 
 Use a desktop session, the Studio Python environment, Node.js, and Playwright 1.65:
 
@@ -560,9 +565,22 @@ Chromium binary. Keep the test window in the foreground while the runner exercis
 its tabs. `browser.json`, `chromium.log` and screenshots retain the results; the
 temporary browser profile is removed when the runner exits.
 
+For an operator-assisted physical Escape check, run a separate session:
+
+```bash
+NODE_PATH=/private/replay-browser/node_modules PYTHON=python \
+  node tests/manual/realtime_browser_ui.mjs outputs/realtime-physical-escape --physical-escape
+```
+
+Click the video in the test window, press the keyboard's **Esc** key, and keep the
+window focused until the check finishes. The runner waits up to ten minutes. It
+records native pointer release while focused and verifies that subsequent mouse
+movement sends no axes; switching away from the window does not pass the check.
+
 **Evidence scope:** real DOM, keyboard, mouse, tab focus and browser Pointer Lock
-APIs with substituted model responses. Pointer release uses `exitPointerLock()`;
-physical Escape and gamepad hardware are not covered. This is not checkpoint,
+APIs with substituted model responses. The automatic suite releases the pointer
+through `exitPointerLock()`; the separate `--physical-escape` mode requires an
+operator. Gamepad readings remain simulated. Neither mode is checkpoint,
 WebRTC transport or inference-performance evidence.
 
 ### Checkpoint-backed network replay
@@ -903,29 +921,40 @@ observing current held keys does not consume queued transitions. The worker stay
 awake until pending input is drained, then resumes its normal idle behavior.
 
 Models can declare their own key bindings in `RealtimeSpec.keys`. The page then
-accepts exactly those keys, lists them in the control legend, and hides a
-virtual stick whose keys the model does not use. Models that declare no keys
-keep W/A/S/D and I/J/K/L. Prompt-scheduled and queued-segment pages take no
-keyboard actions.
+accepts exactly those keys and lists them in the control legend. A virtual stick
+is hidden only when the model declares neither its keys nor its axes. Omitting
+`keys` keeps W/A/S/D and I/J/K/L; `keys: []` disables key input. Prompt-scheduled
+and queued-segment pages take no keyboard actions.
 
-#### Mouse and gamepad
+#### Mouse, gamepad, and virtual sticks
 
-Models that declare `RealtimeSpec.axes` are also driven by the mouse or a
-gamepad, and the control legend names the inputs the model accepts:
+Models that declare `RealtimeSpec.axes` also accept mouse or stick input. The
+control legend names the inputs the model accepts:
 
 - **Mouse** (`mouse_x`/`mouse_y` axes): once the session is live, a hint asks
   you to click the video. The click captures the pointer, and mouse motion is
   summed and sent at most once per animation frame. `Esc` releases the pointer
   and stops sending.
 - **Gamepad** (`gamepad_*` axes): Studio reads the first connected gamepad every
-  animation frame and sends the four stick levels when any of them moves by more
-  than 0.02. Window blur, a hidden tab, and a gamepad disconnect each send one
-  neutral sample, so the sticks rest while the page is not focused. Browsers
-  expose gamepads only on a secure origin (HTTPS or `localhost`) and after a
-  button press, so the legend lists **GAMEPAD** once a gamepad is reported.
+  animation frame and sends the four stick levels when a component changes by
+  more than 0.02 or returns to zero. Browsers expose gamepads only on a secure
+  origin (HTTPS or `localhost`) and after a button press, so the legend lists
+  **GAMEPAD** once a gamepad is reported.
+- **Virtual sticks:** the existing movement and camera sticks map to
+  `gamepad_lx`/`gamepad_ly` and `gamepad_rx`/`gamepad_ry`. Each declared direction
+  sends a continuous value in `[-1, 1]`; directions without an axis retain their
+  declared-key mapping. The model's deadzone, scale and limit still apply on the
+  server. A captured drag takes priority over the physical stick for its declared
+  directions. Releasing it restores the physical stick's current values, or zero
+  when no gamepad is connected. Virtual axes also work without the Gamepad API.
 
-Over WebRTC, mouse deltas use the unordered `axes` DataChannel. Gamepad levels
-use the reliable `controls` channel, because the server holds each level until
+Window blur or a hidden tab clears virtual drags and sends neutral levels. An old
+pointer cannot reactivate the drag when focus returns. Physical stick input
+resumes on focus return; disconnecting a gamepad resamples the remaining inputs
+without clearing an active virtual drag.
+
+Over WebRTC, mouse deltas use the unordered `axes` DataChannel. Physical and
+virtual stick levels use the reliable `controls` channel, because the server holds each level until
 the next sample and a lost return-to-rest sample would keep the stick held.
 While a channel is congested, samples wait for a later frame and mouse motion
 keeps accumulating. The WebSocket transport sends the same messages on its

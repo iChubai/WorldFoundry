@@ -56,7 +56,7 @@ directory or file), `policy` (offload, precision, attention backend), and `exten
 | `models/networks/` | Family-specific DiT / UNet tensor math |
 | `models/denoisers/` | State-dict conversion and the shared `Denoiser` adapter per family |
 | `models/autoencoders/`, `models/encoders/` | VAEs and text / image / condition encoders |
-| `models/initializers/`, `models/upsamplers/`, `models/representations/`, `models/guardrails/` | Latent initialization, upsamplers, intermediate representations, safety guardrails |
+| `models/initializers/`, `models/upsamplers/`, `models/representations/` | Latent initialization, upsamplers, intermediate representations |
 | `loaders/` | Checkpoint description and materialization with full key/shape coverage |
 | `runners/` | Sampling loops and execution strategies: standard, chunked, autoregressive, staged, segmented, prefix recompute, … |
 | `schedulers/` | Flow-matching, UniPC, DPM, Karras, TrigFlow, and family-specific samplers |

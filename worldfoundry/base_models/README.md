@@ -19,7 +19,7 @@ losses, or experiment scripts live here.
 | --- | --- |
 | `contracts.py`, `pipeline.py`, `assembly.py`, `components.py`, `registry.py` | Request/output contracts, `NativeDiffusionPipeline`, component assembly, registry |
 | `recipes/` | One immutable recipe per model (`wan.py`, `cosmos2p5.py`, `matrix_game.py`, `hunyuan_video.py`, `ltx.py`, …) |
-| `models/` | Networks, denoisers, autoencoders (VAEs), text/image encoders, upsamplers, guardrails |
+| `models/` | Networks, denoisers, autoencoders (VAEs), text/image encoders, initializers, upsamplers |
 | `loaders/` | Checkpoint loading with full key/shape coverage |
 | `runners/`, `schedulers/` | Denoising loops and samplers |
 | `optimizations/` | QKV fusion, static cross-KV, caching, and other inference speedups |

@@ -314,7 +314,7 @@ dev = [
     "pytest>=8",
     "ruff==0.12.7",
     "tomli>=2",
-    "ty>=0.0.39,<0.1",
+    "ty==0.0.99",
 ]
 test = [
     "fastapi",
@@ -436,7 +436,7 @@ lint = [
     "ruff==0.12.7",
     "setuptools>=77",
     "tomli>=2",
-    "ty>=0.0.39,<0.1",
+    "ty==0.0.99",
 ]
 flash_attn_fa25 = [
     "flash-attn",

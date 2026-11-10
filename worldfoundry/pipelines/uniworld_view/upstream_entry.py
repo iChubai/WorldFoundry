@@ -20,10 +20,10 @@ def main() -> None:
     # `configs` and `demo` come from the upstream checkout added above. Match
     # inference.py's import order: vendored dependencies imported by demo also
     # expose a top-level `configs` package.
-    from configs.infer_config import get_parser as _get_parser  # noqa: F401  # ty: ignore[unresolved-import]
+    from configs.infer_config import get_parser as _get_parser  # noqa: F401  # ty: ignore[import-not-found]
 
     # isort: split
-    import demo  # ty: ignore[unresolved-import]
+    import demo  # ty: ignore[import-not-found]
 
     STream3R = demo.STream3R
     UniScene = demo.UniScene

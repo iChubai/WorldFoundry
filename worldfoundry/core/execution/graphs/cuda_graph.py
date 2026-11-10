@@ -70,11 +70,11 @@ def _tree_unflatten(values, spec):
 
 # Transformer Engine is optional; the ImportError fallback also covers releases without these helpers.
 try:
-    from transformer_engine.pytorch.distributed import (  # ty: ignore[unresolved-import]  # Optional Transformer Engine dependency.
+    from transformer_engine.pytorch.distributed import (  # ty: ignore[import-not-found]  # Optional Transformer Engine dependency.
         get_all_rng_states,
         graph_safe_rng_available,
     )
-    from transformer_engine.pytorch.module.base import (  # ty: ignore[unresolved-import]  # Optional Transformer Engine dependency.
+    from transformer_engine.pytorch.module.base import (  # ty: ignore[import-not-found]  # Optional Transformer Engine dependency.
         TransformerEngineBaseModule,
     )
 except ImportError:

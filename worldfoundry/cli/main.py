@@ -119,7 +119,7 @@ def _curate_root_subparser_help(subparsers: argparse._SubParsersAction) -> None:
 
     subparsers.metavar = "{" + ",".join(_PUBLIC_ROOT_COMMANDS) + "}"
     # help.py reads this optional grouping through getattr when rendering terminal help.
-    subparsers.help_groups = {  # ty: ignore[missing-attribute]
+    subparsers.help_groups = {  # ty: ignore[unresolved-attribute]
         "Start here": ("run", "tui", "zoo", "models"),
         "Evaluate": ("evaluate", "score", "generate-score", "reproduce", "embodied"),
         "Catalogs and workflows": ("tasks", "suites", "task", "dataset", "config", "plan", "metric"),

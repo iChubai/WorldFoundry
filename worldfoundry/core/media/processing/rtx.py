@@ -771,7 +771,7 @@ def _load_video_super_res_class() -> Any:
     """Import ``VideoSuperRes`` only when a session or probe actually needs it."""
 
     try:
-        from nvvfx import VideoSuperRes  # ty: ignore[unresolved-import]  # Optional NVIDIA Video Effects SDK.
+        from nvvfx import VideoSuperRes  # ty: ignore[import-not-found]  # Optional NVIDIA Video Effects SDK.
     except Exception as exc:
         raise RuntimeError(
             "RTX video post-processing requires the optional proprietary `nvidia-vfx` package. "
@@ -802,7 +802,7 @@ def _load_quality_level_enum() -> Any:
     """
 
     try:
-        from nvvfx.effects.video_super_res import (  # ty: ignore[unresolved-import]  # Optional NVIDIA Video Effects SDK.
+        from nvvfx.effects.video_super_res import (  # ty: ignore[import-not-found]  # Optional NVIDIA Video Effects SDK.
             QualityLevel,
         )
     except Exception as exc:

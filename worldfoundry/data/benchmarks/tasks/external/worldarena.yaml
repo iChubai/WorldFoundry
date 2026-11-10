@@ -38,7 +38,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: worldarena
   contract_validation_command: wf zoo benchmark-run --benchmark-id worldarena --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/worldarena --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldArenaContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:worldarena
   official_runner_command: wf zoo benchmark-run
   name: WorldArena
   domain:
@@ -94,7 +94,7 @@ metadata:
   official_runner_script: worldfoundry/evals/tasks/execution/runners/worldarena/run_worldarena_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldArenaContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:worldarena
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -259,7 +259,7 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldArenaContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldarena
       runner_script: worldfoundry/evals/tasks/execution/runners/worldarena/run_worldarena_official_runner.py
       metric_ids:
       - visual_quality

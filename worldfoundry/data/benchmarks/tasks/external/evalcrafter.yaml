@@ -61,7 +61,7 @@ metadata:
   base_model_dependency_preflight:
     status: integrated
     missing: []
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:EvalCrafterContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:evalcrafter
   official_runner_script: worldfoundry/evals/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
   prompt_suite:
     manifest: worldfoundry/data/benchmarks/assets/evalcrafter/prompt700.txt
@@ -108,7 +108,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/evalcrafter.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:EvalCrafterContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:evalcrafter
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -216,7 +216,7 @@ tasks:
       - count_score
       - ocr_error
       - celebrity_id_error
-      runner_target: worldfoundry.evals.tasks.contracts.external:EvalCrafterContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:evalcrafter
       runner_script: worldfoundry/evals/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py
       official_validation_command: ${WORLDFOUNDRY_UNIFIED_PYTHON}
         worldfoundry/evals/tasks/execution/runners/evalcrafter/run_evalcrafter_official_runner.py

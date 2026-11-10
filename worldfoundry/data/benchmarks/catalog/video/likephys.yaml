@@ -111,7 +111,7 @@ runner:
     supports_official_runtime: true
     default_metrics: [likephys_misrank_rate]
     input_kind: likephys_results_root_or_probe_dataset
-  runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:likephys
   official_runner_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
   validation_command:
   - wf
@@ -178,7 +178,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:likephys
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -205,3 +205,21 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - likephys_dataset_root
+  - likephys_evaluator_root
+  - probe_model
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  - misrank_breakdown
+  notes:
+  - Contract covers LikePhys likelihood-preference probing of video diffusion models over paired physically
+    valid and impossible clips.
+  - 'LikePhys scores a model, not generated videos: the probe reads the denoiser, VAE, and scheduler directly,
+    so it needs the upstream evaluator checkout, CUDA, and the probed checkpoints.'
+  - Every metric is a mis-rank error rate where lower is better.

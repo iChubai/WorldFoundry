@@ -149,7 +149,7 @@ runner:
     limit_arg: --limit
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:T2VSafetyBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:t2v-safety-bench
   validation_command:
   - wf
   - zoo
@@ -212,7 +212,7 @@ official_runner_script:
   worldfoundry/evals/tasks/execution/runners/t2v_safety_bench/run_t2v_safety_bench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:T2VSafetyBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:t2v-safety-bench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -244,3 +244,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - safety_prompt_manifest
+  - generated_video_dir
+  - judge_config
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract exposes T2VSafetyBench as a safety-critical text-to-video evaluation surface.
+  - Full scoring requires the upstream safety judge configuration and generated videos.

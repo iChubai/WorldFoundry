@@ -25,7 +25,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: maniskill2
   status: integrated
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:ManiSkill2Contract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:maniskill2
   runtime:
     kind: external_official_results_runner
     root_env: WORLDFOUNDRY_MANISKILL2_ROOT
@@ -52,7 +52,7 @@ metadata:
   - Full leaderboard parity is not claimed until official rollouts are executed and imported.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:ManiSkill2Contract
+    runner_target: worldfoundry.evals.tasks.contracts.external:maniskill2
     task_yaml_available: true
     runtime_verified: false
     normalizer_verified: true
@@ -122,4 +122,4 @@ tasks:
       - task_success
       - episode_success
       - reward
-      runner_target: worldfoundry.evals.tasks.contracts.external:ManiSkill2Contract
+      runner_target: worldfoundry.evals.tasks.contracts.external:maniskill2

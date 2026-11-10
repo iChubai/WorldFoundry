@@ -26,7 +26,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: physics-iq
   contract_validation_command: wf zoo benchmark-run --benchmark-id physics-iq --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/physics-iq --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:PhysicsIQContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:physics-iq
   official_runner_script: worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
   release_status: experimental
   maturity: verified_runner
@@ -46,7 +46,7 @@ metadata:
   validation_command: [wf, zoo, benchmark-run, --benchmark-id, physics-iq, --mode, official-validation, --official-results-path, <raw_metrics.csv>, --output-dir, <out>, --json]
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:PhysicsIQContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:physics-iq
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -104,5 +104,5 @@ tasks:
     evaluation_protocol:
     - name: in_tree_official_runtime
       metric_ids: [physics_iq_score, physics_iq_stable_score, physics_iq_spatiotemporal, physics_iq_spatial, physics_iq_weighted_spatial, physics_iq_mse_penalty]
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhysicsIQContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:physics-iq
       runner_script: worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py

@@ -67,7 +67,7 @@ runner:
     limit_arg: --limit
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicsIQContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:physics-iq
   official_runner_script: worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
   run_command: >-
     PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}"
@@ -108,7 +108,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicsIQContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:physics-iq
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -126,3 +126,18 @@ artifact_layout:
   dataset_root_env: WORLDFOUNDRY_PHYSICS_IQ_ORIGINAL_ROOT
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - reference_video_or_frames
+  - generated_video_dir
+  - physics_iq_metadata
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  requires_upstream_runtime: false
+  notes:
+  - Contract maps the original Physics-IQ protocol to the in-tree raw-video evaluator.
+  - Official dataset media remain external assets; no upstream source checkout is used at runtime.

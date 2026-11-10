@@ -263,7 +263,7 @@ runner:
     accepts_generated_artifacts: true
     supports_fixture: true
     default_metrics: [clip_score, clip_temp_score, face_consistency_score]
-  runner_target: worldfoundry.evals.tasks.contracts.external:EvalCrafterContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:evalcrafter
   run_command:
   - wf
   - zoo
@@ -361,7 +361,7 @@ runner_availability:
   - clip_score
   - clip_temp_score
   - face_consistency_score
-  runner_target: worldfoundry.evals.tasks.contracts.external:EvalCrafterContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:evalcrafter
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -388,3 +388,16 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - prompt700_txt
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_metrics
+  - benchmark_contract
+  notes:
+  - Contract maps EvalCrafter's 700-prompt T2V evaluation and 17 objective metrics to WorldFoundry scorecard.
+  - Official Docker/conda runtime and checkpoint-heavy metric execution remain a separate validation stage.

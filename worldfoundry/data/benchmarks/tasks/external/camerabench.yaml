@@ -26,7 +26,7 @@ metadata:
   benchmark_id: camerabench
   contract_validation_command: wf zoo benchmark-run --benchmark-id camerabench --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/camerabench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:CameraBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:camerabench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/camerabench/run_camerabench_official_runner.py
   prompt_suite:
     hf_dataset_id: syCen/CameraBench
@@ -96,7 +96,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/camerabench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:CameraBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:camerabench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -220,7 +220,7 @@ tasks:
       - camera_retrieval_accuracy
       - camera_caption_score
       - camerabench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:CameraBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:camerabench
       runner_script: worldfoundry/evals/tasks/execution/runners/camerabench/run_camerabench_official_runner.py
       required_inputs:
       - official_results_path or WORLDFOUNDRY_CAMERABENCH_RESULTS_PATH

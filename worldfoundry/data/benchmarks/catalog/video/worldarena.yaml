@@ -133,7 +133,7 @@ runner:
     module: worldfoundry.evals.tasks.execution.runners.worldarena.run_worldarena_official_runner
     generated_arg: null
     dimension_arg: --dimension
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldArenaContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldarena
   validation_command:
   - wf
   - zoo
@@ -201,7 +201,7 @@ data_refs:
   - worldfoundry/evals/tasks/execution/runners/worldarena
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldArenaContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldarena
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -231,3 +231,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - worldarena_task_manifest
+  - embodied_results_path
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract records WorldArena perceptual and functional embodied-world-model evaluation outputs.
+  - Full validation requires WorldArena/RoboTwin assets and official task execution.

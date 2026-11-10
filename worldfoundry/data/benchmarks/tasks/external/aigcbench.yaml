@@ -221,7 +221,7 @@ metadata:
   base_model_dependency_preflight:
     status: ready
     missing: []
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:AIGCBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:aigcbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/aigcbench/run_aigcbench_official_runner.py
   local_evaluator:
     target: worldfoundry.evals.tasks.execution.framework.video_quality_contract:evaluate_aigcbench_video_quality_contract_file
@@ -287,7 +287,7 @@ metadata:
     official_repo: provenance only; runtime uses WorldFoundry-integrated generation and in-tree metric normalization
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:AIGCBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:aigcbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -401,7 +401,7 @@ tasks:
       - dover
       - genvideo_refvideo_ssim
       - aigcbench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:AIGCBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:aigcbench
       runner_script: worldfoundry/evals/tasks/execution/runners/aigcbench/run_aigcbench_official_runner.py
       official_validation_command: wf zoo benchmark-run --benchmark-id aigcbench --mode 
         official-validation --official-results-path <official_results.csv> --generated-artifact-dir <generated_videos> 

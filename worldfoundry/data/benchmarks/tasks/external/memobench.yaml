@@ -49,7 +49,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: memobench
   contract_validation_command: wf zoo benchmark-run --benchmark-id memobench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/memobench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:memobench
   official_runner_command: wf zoo benchmark-run
   name: MemoBench
   domain:
@@ -112,7 +112,7 @@ metadata:
   official_runner_script: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:memobench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false

@@ -46,10 +46,10 @@ metadata:
   blockers:
   - Official SimplerEnv simulator rollouts, policy wrappers, and result import mapping must be validated before 
     integrated status.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:simpler-env
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:simpler-env
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -175,4 +175,4 @@ tasks:
       - task_success
       - episode_success
       - reward
-      runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:simpler-env

@@ -61,7 +61,7 @@ metadata:
   benchmark_id: videophy
   contract_validation_command: wf zoo benchmark-run --benchmark-id videophy --mode contract --output-dir
     tmp/benchmark_zoo/benchmark_contract/videophy --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VideoPhyContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:videophy
   official_runner_script: worldfoundry/evals/tasks/execution/runners/videophy/run_videophy_official_runner.py
   metric_evaluator_target: worldfoundry.evals.tasks.execution.runners.videophy.videophy_contract_evaluator:write_videophy_evaluation
   metric_protocol:
@@ -125,7 +125,7 @@ metadata:
     - worldfoundry/data/benchmarks/assets/videophy/prompts.json
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VideoPhyContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:videophy
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -224,7 +224,7 @@ tasks:
       - physical_commonsense
       - joint_score
       - videophy_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:VideoPhyContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:videophy
       evaluator_target: worldfoundry.evals.tasks.execution.runners.videophy.videophy_contract_evaluator:write_videophy_evaluation
       runner_script: worldfoundry/evals/tasks/execution/runners/videophy/run_videophy_official_runner.py
       official_validation_command: wf zoo benchmark-run --benchmark-id videophy --mode

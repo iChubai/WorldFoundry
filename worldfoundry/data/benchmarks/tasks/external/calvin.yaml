@@ -46,10 +46,10 @@ metadata:
   blockers:
   - Official CALVIN dataset split, sequence evaluator, and policy checkpoint validation must be completed before 
     integrated status.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:CALVINContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:calvin
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:CALVINContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:calvin
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -176,4 +176,4 @@ tasks:
       - sequence_success
       - task_success
       - completion
-      runner_target: worldfoundry.evals.tasks.contracts.external:CALVINContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:calvin

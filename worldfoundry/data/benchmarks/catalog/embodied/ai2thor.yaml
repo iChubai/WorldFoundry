@@ -119,3 +119,19 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_AI2THOR_RESULTS_PATH
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - scene
+  - language_instruction
+  - observation_image
+  - policy_action
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_results
+  - per_sample_metrics
+  - rollout_logs
+  notes:
+  - Contract covers AI2-THOR native embodied closed-loop scene rollouts.
+  - Unity simulator assets, display/CloudRendering backend, and policy server remain explicit runtime
+    inputs.

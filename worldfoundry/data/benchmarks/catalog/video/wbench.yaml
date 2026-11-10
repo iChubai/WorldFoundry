@@ -277,7 +277,7 @@ runner:
     model_arg: --model-name
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:wbench
   validation_command:
   - wf
   - zoo
@@ -342,7 +342,7 @@ data_refs:
   - meituan-longcat/WBench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:wbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -377,3 +377,18 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - wbench_case_dir
+  - official_results_path
+  - wbench_weights_dir
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - report_json
+  notes:
+  - Contract covers WBench multi-turn interactive video world model evaluation across 22 official metrics.
+  - WorldFoundry keeps the official metric runtime in-tree and can also normalize existing WBench report.json
+    outputs.

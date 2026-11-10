@@ -32,7 +32,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: world-in-world
   contract_validation_command: wf zoo benchmark-run --benchmark-id world-in-world --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/world-in-world --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:world-in-world
   official_runner_command: wf zoo benchmark-run
   name: World-in-World
   domain:
@@ -84,7 +84,7 @@ metadata:
   official_runner_script: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:world-in-world
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -240,7 +240,7 @@ tasks:
           kind: structured_trace
     evaluation_protocol:
     - name: result_importer
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:world-in-world
       runner_script: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
       metric_ids:
       - active_recognition_success_rate
@@ -266,7 +266,7 @@ tasks:
       - robotic_manipulation_success_rate
       - interaction_trace_consistency
       - world_in_world_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:world-in-world
       runner_script: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
     runtime_requirements:
       bundled_prompt_assets: worldfoundry/data/benchmarks/assets/world-in-world

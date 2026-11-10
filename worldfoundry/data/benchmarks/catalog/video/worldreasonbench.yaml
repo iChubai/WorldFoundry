@@ -159,7 +159,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     supports_fixture: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldReasonBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldreasonbench
   validation_command:
   - wf
   - zoo
@@ -208,7 +208,7 @@ data_refs:
   fixture: worldfoundry/data/benchmarks/assets/worldreasonbench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldReasonBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldreasonbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -234,3 +234,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - qa_manifest
+  - generated_video_dir
+  - reward_pairs
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - protocol_results
+  - benchmark_contract
+  notes:
+  - All three official protocol families are normalized by an in-tree runner.
+  - Official restricted data and judge prompts remain caller-provided external assets.

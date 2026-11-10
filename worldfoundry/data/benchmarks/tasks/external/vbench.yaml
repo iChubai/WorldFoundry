@@ -86,7 +86,7 @@ metadata:
     scope: bounded_official_gpu_validation
     scorecard: 
       tmp/local_open_eval/vbench_zeroscope_aesthetic_official_gpu_validation_after_prompt_file_fix_20260525/scorecard.json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:vbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/vbench/run_vbench_official_runner.py
   prompt_suite:
     mode: vbench_standard
@@ -115,7 +115,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/vbench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:vbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -195,7 +195,7 @@ tasks:
       metric_groups:
       - vbench_dimensions
       - vbench_aggregates
-      runner_target: worldfoundry.evals.tasks.contracts.external:VBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:vbench
       runner_script: worldfoundry/evals/tasks/execution/runners/vbench/run_vbench_official_runner.py
       default_mode: vbench_standard
       dimension_preset: full_16

@@ -49,9 +49,8 @@ def test_benchmark_contract_package_exports_canonical_contracts() -> None:
 
     assert canonical_contracts.ExternalBenchmarkContract is canonical_registry.ExternalBenchmarkContract
     assert canonical_contracts.ExternalBenchmarkContractRegistry is canonical_registry.ExternalBenchmarkContractRegistry
-    assert canonical_contracts.VBenchContract is canonical_external.VBenchContract
     assert canonical_contracts.get_external_benchmark_contract is canonical_external.get_external_benchmark_contract
-    assert canonical_contracts.get_external_benchmark_contract("vbench") is canonical_external.VBenchContract
+    assert canonical_contracts.get_external_benchmark_contract("vbench") is getattr(canonical_external, "vbench")
 
 
 def test_external_metric_entries_report_blocked_runtime_for_non_local_metrics() -> None:

@@ -129,7 +129,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     input_kind: worldscore_output_dir_or_official_results
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldScoreContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldscore
   repo_url: https://github.com/haoyi-duan/WorldScore
   repo_revision: 344983c1be7d515c1e4ecb167d40d622adf502bc
   validation_command:
@@ -227,7 +227,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/worldscore.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldScoreContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldscore
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -282,3 +282,15 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - world_outputs_dir
+  - camera_trajectory_json
+  - worldscore_dataset_root
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_metrics
+  notes:
+  - Contract supports video, 3D, and 4D generation outputs through one artifact schema.
+  - Dataset download and upstream metric execution remain explicit validation stages.

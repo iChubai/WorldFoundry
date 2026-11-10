@@ -26,7 +26,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: ewmbench
   contract_validation_command: wf zoo benchmark-run --benchmark-id ewmbench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/ewmbench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:EWMBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:ewmbench
   official_runner_command: wf zoo benchmark-run
   name: EWMBench
   domain:
@@ -87,7 +87,7 @@ metadata:
   official_runner_script: worldfoundry/evals/tasks/execution/runners/ewmbench/run_ewmbench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:EWMBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:ewmbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -238,7 +238,7 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evals.tasks.contracts.external:EWMBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:ewmbench
       runner_script: worldfoundry/evals/tasks/execution/runners/ewmbench/run_ewmbench_official_runner.py
       metric_ids:
       - scene_consistency

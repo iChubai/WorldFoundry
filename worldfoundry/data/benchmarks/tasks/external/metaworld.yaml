@@ -48,10 +48,10 @@ metadata:
   blockers:
   - Meta-World task-suite mapping and official-style policy result validation must be validated before integrated 
     status.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:metaworld
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:metaworld
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -173,4 +173,4 @@ tasks:
       - task_success
       - reward
       - normalized_return
-      runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:metaworld

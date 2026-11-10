@@ -144,7 +144,7 @@ runner:
     module: worldfoundry.evals.tasks.execution.runners.aigcbench.run_aigcbench_official_runner
     generated_arg: null
     limit_arg: --limit
-  runner_target: worldfoundry.evals.tasks.contracts.external:AIGCBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:aigcbench
   validation_command:
   - wf
   - zoo
@@ -206,7 +206,7 @@ data_refs:
   official_repo: provenance only; runtime uses WorldFoundry-integrated generation and in-tree metric normalization
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:AIGCBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:aigcbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -240,3 +240,18 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - reference_image_dir
+  - prompt_suite_json
+  - generated_video_dir
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract maps AIGCBench's 11 paper metrics for image-to-video evaluation to WorldFoundry scorecard.
+  - Official metric execution requires reference assets, CLIP/DOVER/optical-flow dependencies, and upstream
+    scorer outputs.

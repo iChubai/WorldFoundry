@@ -37,7 +37,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:simpler-env
   verification_status: normalizer_only
   validation_command:
   - wf
@@ -104,7 +104,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/simpler-env.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:simpler-env
   runner_script_available: false
   task_yaml_available: true
   runtime_verified: false
@@ -130,3 +130,19 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_SIMPLERENV_RESULTS_PATH
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - simulator_root
+  - episode_manifest
+  - policy_results_path
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_results
+  - per_sample_metrics
+  - rollout_logs
+  - videos
+  notes:
+  - Contract covers ManiSkill2/Google-Robot style SimplerEnv VLA evaluation.
+  - Official simulator execution and policy wrappers are handled by the upstream runtime or subprocess
+    runner.

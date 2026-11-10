@@ -137,7 +137,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     supports_fixture: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WRBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:wrbench
   validation_command:
   - wf
   - zoo
@@ -208,7 +208,7 @@ data_refs:
   - worldfoundry/evals/tasks/execution/runners/wrbench/runtime/wrbench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WRBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:wrbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -238,3 +238,22 @@ artifact_layout:
   results_path_env: WORLDFOUNDRY_WRBENCH_RESULTS_PATH
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - natural25_manifest
+  - generated_video_dir
+  - video_manifest
+  - camera_sidecars
+  - official_results_path
+  output_keys:
+  - scorecard
+  - benchmark_contract
+  - raw_metric_table
+  - per_sample_scores
+  - main_table
+  requires_upstream_runtime: false
+  notes:
+  - The complete WRBench Python package and Natural-25 assets are vendored in-tree at revision 629595dc60ec08a29711af0377280c4ac9dd40bc.
+  - D1-CamPrec and D1-CamAlign are separate metrics; D5/D6 use the official re-observation applicability
+    gate.
+  - Full scoring requires explicitly configured VGGT-Omega, DINOv2, Qwen3.5, and Qwen3-VL model assets.

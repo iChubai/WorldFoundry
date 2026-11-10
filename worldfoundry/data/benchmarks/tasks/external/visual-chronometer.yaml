@@ -22,7 +22,7 @@ metadata:
   benchmark_id: visual-chronometer
   contract_validation_command: wf zoo benchmark-run --benchmark-id visual-chronometer --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/visual-chronometer --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VisualChronometerContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:visual-chronometer
   official_runner_command: wf zoo benchmark-run
   artifact_layout:
     generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
@@ -54,7 +54,7 @@ metadata:
     - worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VisualChronometerContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:visual-chronometer
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -137,7 +137,7 @@ tasks:
       - inter_video_cv
       - intra_video_cv
       - visual_chronometer_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:VisualChronometerContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:visual-chronometer
       runner_script: 
         worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/run_visual_chronometer_official_runner.py
       required_inputs:

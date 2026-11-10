@@ -96,13 +96,13 @@ metadata:
     - <phyground_data_root>/videos/<model_id>/
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:phyground
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
     surface: in_tree_result_importer
     normalizer_verified: false
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:phyground
   official_runner_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
   metric_evaluator_target: worldfoundry.evals.tasks.execution.runners.phyground.phyground_contract_evaluator:write_phyground_evaluation
   metric_protocol:
@@ -245,7 +245,7 @@ tasks:
       - fluid_dynamics_score
       - optics_score
       - phyground_overall
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:phyground
       evaluator_target: worldfoundry.evals.tasks.execution.runners.phyground.phyground_contract_evaluator:write_phyground_evaluation
       runner_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
       official_validation_command: wf zoo benchmark-run --benchmark-id phyground --mode official-validation --benchmark-data-root <phyground_data_root> --generated-artifact-dir <phyground_data_root>/videos/<model_id> --result-model-id <model_id> --output-dir <out> --json
@@ -258,7 +258,7 @@ tasks:
       - fluid_dynamics_score
       - optics_score
       - phyground_overall
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:phyground
       runner_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
     runtime_requirements:
       benchmark_data_root_env: WORLDFOUNDRY_PHYGROUND_DATA_ROOT

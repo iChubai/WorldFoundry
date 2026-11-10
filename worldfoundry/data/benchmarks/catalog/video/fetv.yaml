@@ -148,7 +148,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     default_metrics: [clip_score]
-  runner_target: worldfoundry.evals.tasks.contracts.external:FETVContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:fetv
   validation_command:
   - wf
   - zoo
@@ -218,7 +218,7 @@ data_refs:
   - worldfoundry/base_models/perception_core/video_text/fetv_blip/models/blip_retrieval.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:FETVContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:fetv
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -244,3 +244,16 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - fetv_prompt_manifest
+  - generated_video_dir
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract covers FETV fine-grained text-to-video prompts and human/automatic score families.
+  - Official FETV-EVAL runtime and UMT metric dependencies are not executed by the contract fixture.

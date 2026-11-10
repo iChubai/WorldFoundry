@@ -26,7 +26,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: behavior1k
   status: integrated
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:Behavior1KContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:behavior1k
   prompt_suite:
     split: eval
   runtime:
@@ -56,7 +56,7 @@ metadata:
   - Full leaderboard parity is not claimed until official rollouts are executed and imported.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:Behavior1KContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:behavior1k
     task_yaml_available: true
     runtime_verified: false
     normalizer_verified: true
@@ -131,4 +131,4 @@ tasks:
       - task_success
       - episode_success
       - subgoal_success
-      runner_target: worldfoundry.evals.tasks.contracts.external:Behavior1KContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:behavior1k

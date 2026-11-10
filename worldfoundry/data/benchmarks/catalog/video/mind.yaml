@@ -233,7 +233,7 @@ runner:
     supports_fixture: true
     default_metrics: [mind_average]
     input_kind: mind_results_or_generated_videos
-  runner_target: worldfoundry.evals.tasks.contracts.external:MINDContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:mind
   validation_command:
   - wf
   - zoo
@@ -296,7 +296,7 @@ data_refs:
   - CSU-JPG/MIND
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:MINDContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:mind
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -322,3 +322,20 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video
+  - mind_gt_root
+  - action_json
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - mind_result_json
+  - benchmark_contract
+  notes:
+  - Contract covers MIND memory-consistency and action-control metrics for interactive world models.
+  - The in-tree runtime can either execute the vendored official metric stack with --run-official or normalize
+    an existing MIND result JSON.
+  - mind_average is a WorldFoundry-derived aggregate; MIND publishes no official composite score.

@@ -40,7 +40,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: harnesseval-w
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:HarnessEvalWContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:harnesseval-w
   official_runner_script: worldfoundry/evals/tasks/execution/runners/harnesseval_w/run_harnesseval_w.py
   runtime: &id002
     kind: in_tree_official_runtime
@@ -72,7 +72,7 @@ metadata:
     - MirroS-Lab/HarnessEval-W
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:HarnessEvalWContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:harnesseval-w
     runner_script_available: true
     task_yaml_available: true
     normalizer_verified: true
@@ -152,7 +152,7 @@ tasks:
     evaluation_protocol:
     - name: in_tree_official_runtime
       metric_ids: *id001
-      runner_target: worldfoundry.evals.tasks.contracts.external:HarnessEvalWContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:harnesseval-w
       runner_script: worldfoundry/evals/tasks/execution/runners/harnesseval_w/run_harnesseval_w.py
     runtime_requirements: *id002
     metadata:

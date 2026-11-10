@@ -150,7 +150,7 @@ def test_iworld_bench_tracks_released_public_assets_without_leaderboard_claim() 
     # is catalog-integrated now; it still must not claim official-benchmark
     # verification or leaderboard validity.
     assert entry.integration_status == "integrated"
-    assert entry.runner_target == "worldfoundry.evals.tasks.contracts.external:IWorldBenchContract"
+    assert entry.runner_target == "worldfoundry.evals.tasks.contracts.external:iworld-bench"
     assert entry.open_source_status == "experimental"
     assert entry.official_benchmark_verified is False
     assert entry.integration_evidence is True

@@ -45,10 +45,10 @@ metadata:
   blockers:
   - Official ManiSkill task suite, simulator assets, and policy rollout result mapping must be validated before 
     integrated status.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:ManiSkillContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:maniskill
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:ManiSkillContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:maniskill
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -174,4 +174,4 @@ tasks:
       - task_success
       - reward
       - normalized_return
-      runner_target: worldfoundry.evals.tasks.contracts.external:ManiSkillContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:maniskill

@@ -77,7 +77,7 @@ metadata:
     profile_blockers:
     - Full suite requires 1,400 generated videos and the LLaVA, depth/SAM, and DOT evaluator assets.
     missing: []
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:T2VCompBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:t2v-compbench
   official_runner_script: 
     worldfoundry/evals/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py
   prompt_suite:
@@ -110,7 +110,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:T2VCompBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:t2v-compbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -215,7 +215,7 @@ tasks:
       - object_interactions
       - generative_numeracy
       - t2v_compbench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:T2VCompBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:t2v-compbench
       runner_script: worldfoundry/evals/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py
       official_validation_command: ${WORLDFOUNDRY_UNIFIED_PYTHON} 
         worldfoundry/evals/tasks/execution/runners/t2v_compbench/run_t2v_compbench_official_runner.py

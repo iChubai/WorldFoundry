@@ -101,13 +101,13 @@ metadata:
     - <likephys_results_root>/<scenario>/results_<probe_model>.json
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:likephys
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
     surface: in_tree_misrank_scorer_with_external_probe
     normalizer_verified: true
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:likephys
   official_runner_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
   metric_evaluator_target: worldfoundry.evals.tasks.execution.runners.likephys.likephys_contract_evaluator:write_likephys_evaluation
   metric_protocol:
@@ -237,7 +237,7 @@ tasks:
       - deformable_misrank_rate
       - optics_misrank_rate
       - temporal_disorder_misrank_rate
-      runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:likephys
       evaluator_target: worldfoundry.evals.tasks.execution.runners.likephys.likephys_contract_evaluator:write_likephys_evaluation
       runner_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
       status: requires_external_checkout_and_cuda
@@ -251,7 +251,7 @@ tasks:
       - deformable_misrank_rate
       - optics_misrank_rate
       - temporal_disorder_misrank_rate
-      runner_target: worldfoundry.evals.tasks.contracts.external:LikePhysContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:likephys
       runner_script: worldfoundry/evals/tasks/execution/runners/likephys/run_likephys_official_runner.py
     runtime_requirements:
       benchmark_data_root_env: WORLDFOUNDRY_LIKEPHYS_DATA_ROOT

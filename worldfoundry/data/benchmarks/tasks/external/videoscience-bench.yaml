@@ -29,7 +29,7 @@ metadata:
   benchmark_id: videoscience-bench
   contract_validation_command: wf zoo benchmark-run --benchmark-id videoscience-bench --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/videoscience-bench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:videoscience-bench
   official_runner_command: wf zoo benchmark-run
   name: VideoScience-Bench
   domain:
@@ -84,7 +84,7 @@ metadata:
     worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:videoscience-bench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -240,7 +240,7 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:videoscience-bench
       runner_script: 
         worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
       metric_ids:

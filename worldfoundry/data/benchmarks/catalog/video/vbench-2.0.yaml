@@ -135,7 +135,7 @@ runner:
   workspace:
     dispatch: vbench_series
   official_script: worldfoundry/evals/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py
-  runner_target: worldfoundry.evals.tasks.contracts.external:VBench2Contract
+  runner_target: worldfoundry.evals.tasks.contracts.external:vbench-2.0
   validation_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" 
     worldfoundry/evals/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py --benchmark-id 
     vbench-2.0 --variant vbench2 --videos-path "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" --vbench2-dataset-root 
@@ -220,7 +220,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VBench2Contract
+  runner_target: worldfoundry.evals.tasks.contracts.external:vbench-2.0
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -244,3 +244,15 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - prompt_suite_json
+  - official_results_path
+  output_keys:
+  - scorecard
+  - dimension_scores
+  - raw_metric_table
+  notes:
+  - Contract maps official VBench-2.0 dimension outputs into the five published category groups.
+  - Full runtime validation requires the upstream VBench-2.0 environment and checkpoint cache.

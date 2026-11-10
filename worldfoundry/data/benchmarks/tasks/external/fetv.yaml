@@ -102,7 +102,7 @@ metadata:
     notes:
     - CLIP ViT-B/32 and RAFT reusable video-quality assets are tracked through the WorldFoundry base-model registry.
     - FETV-specific BLIP, FID/FVD, and official scorer assets are metric assets, not external checkout requirements.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:FETVContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:fetv
   official_runner_script: worldfoundry/evals/tasks/execution/runners/fetv/run_fetv_official_runner.py
   prompt_suite:
     hf_dataset_id: lyx97/FETV
@@ -147,7 +147,7 @@ metadata:
     - worldfoundry/base_models/perception_core/video_text/fetv_blip/models/blip_retrieval.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:FETVContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:fetv
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -290,7 +290,7 @@ tasks:
       - fid
       - fvd
       - fetv_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:FETVContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:fetv
       runner_script: worldfoundry/evals/tasks/execution/runners/fetv/run_fetv_official_runner.py
       official_validation_command: wf zoo benchmark-run --benchmark-id fetv --mode official-validation
         --official-results-path <official_results.csv-or-FETV-EVAL-dir> --generated-artifact-dir <generated_videos>

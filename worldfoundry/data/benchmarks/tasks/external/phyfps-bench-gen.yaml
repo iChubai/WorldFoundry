@@ -24,7 +24,7 @@ metadata:
   benchmark_id: phyfps-bench-gen
   contract_validation_command: wf zoo benchmark-run --benchmark-id phyfps-bench-gen --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/phyfps-bench-gen --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:PhyFPSBenchGenContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:phyfps-bench-gen
   official_runner_command: wf zoo benchmark-run
   prompt_suite:
     source: official_github_repo
@@ -68,7 +68,7 @@ metadata:
     - worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:PhyFPSBenchGenContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:phyfps-bench-gen
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -159,7 +159,7 @@ tasks:
       - inter_video_cv
       - intra_video_cv
       - phyfps_bench_gen_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhyFPSBenchGenContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:phyfps-bench-gen
       runner_script: 
         worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/run_phyfps_bench_gen_official_runner.py
       required_inputs:

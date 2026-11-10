@@ -49,7 +49,7 @@ metadata:
     350-instance manifest, and upstream submission evidence.
   - Leaderboard answers are withheld, so local regression must use public outputs or caller-provided official-shaped
     result files.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:worldmodelbench
   official_runner_script:
     worldfoundry/evals/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
   prompt_suite:
@@ -80,7 +80,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:worldmodelbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -169,7 +169,7 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldmodelbench
       runner_script:
         worldfoundry/evals/tasks/execution/runners/worldmodelbench/run_worldmodelbench_official_runner.py
       required_judge: true

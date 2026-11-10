@@ -170,7 +170,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     supports_fixture: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:memobench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
   validation_command:
   - wf
@@ -255,7 +255,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:memobench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -286,3 +286,26 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_synthetic_dir
+  - generated_real_dir
+  - memobench_data_root
+  - official_results_path
+  - ors_results_path
+  - vqa_results_dir
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - eval_csv
+  - ors_scores
+  - vqa_scores
+  - leaderboard_csv
+  notes:
+  - Contract maps MemoBench visual-memory metrics across automated, object revisit, pixel fidelity, and
+    VQA stages.
+  - WorldFoundry normalizes caller-provided MemoBench CSV/JSON outputs and can execute the vendored Step
+    1 automated metric runner.
+  - Full leaderboard parity requires generated frame artifacts, official dataset assets, SAM-3 for ORS,
+    and Gemini/VLM credentials for VQA.

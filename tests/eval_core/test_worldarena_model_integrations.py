@@ -74,7 +74,7 @@ def test_worldarena_official_lives_in_benchmark_zoo_registry() -> None:
     entry = registry.get("worldarena")
 
     assert entry.benchmark_id == "worldarena"
-    assert entry.runner_target == "worldfoundry.evals.tasks.contracts.external:WorldArenaContract"
+    assert entry.runner_target == "worldfoundry.evals.tasks.contracts.external:worldarena"
     assert entry.runner_availability["surface"] == "official_runner"
     assert entry.data_refs["task_yaml"].endswith("worldarena.yaml")
 

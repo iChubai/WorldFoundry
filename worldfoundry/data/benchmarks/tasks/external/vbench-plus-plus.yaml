@@ -22,7 +22,7 @@ metadata:
   benchmark_id: vbench-plus-plus
   contract_validation_command: wf zoo benchmark-run --benchmark-id vbench-plus-plus --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/vbench-plus-plus --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VBenchPlusPlusContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:vbench-plus-plus
   official_runner_script: 
     worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py
   prompt_suite:
@@ -91,7 +91,7 @@ metadata:
     - ${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VBenchPlusPlusContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:vbench-plus-plus
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -172,6 +172,6 @@ tasks:
       - vbench_plus_plus_long_average
       - vbench_plus_plus_trustworthiness_average
       - vbench_plus_plus_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:VBenchPlusPlusContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:vbench-plus-plus
       runner_script: worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py
       default_mode: vbench_plus_plus

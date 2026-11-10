@@ -40,7 +40,7 @@ metadata:
   - worldmembench_dataset_assets
   source_kind: benchmark_zoo
   benchmark_id: worldmembench
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldMemBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:worldmembench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py
   official_runner_command: wf zoo benchmark-run
   contract_validation_command: wf zoo benchmark-run --benchmark-id worldmembench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/worldmembench --json
@@ -101,7 +101,7 @@ metadata:
     - rescuerz/WorldMemBench
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldMemBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:worldmembench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -171,5 +171,5 @@ tasks:
     evaluation_protocol:
     - name: external_official_runner
       metric_ids: *worldmembench_metric_ids
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldMemBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldmembench
       runner_script: worldfoundry/evals/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py

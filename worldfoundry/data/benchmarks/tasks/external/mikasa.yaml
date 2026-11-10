@@ -25,7 +25,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: mikasa
   status: integrated
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:MIKASAContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:mikasa
   runtime:
     kind: external_official_results_runner
     root_env: WORLDFOUNDRY_MIKASA_ROOT
@@ -52,7 +52,7 @@ metadata:
   - Full leaderboard parity is not claimed until official rollouts are executed and imported.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:MIKASAContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:mikasa
     task_yaml_available: true
     runtime_verified: false
     normalizer_verified: true
@@ -123,4 +123,4 @@ tasks:
       - task_success
       - episode_success
       - reward
-      runner_target: worldfoundry.evals.tasks.contracts.external:MIKASAContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:mikasa

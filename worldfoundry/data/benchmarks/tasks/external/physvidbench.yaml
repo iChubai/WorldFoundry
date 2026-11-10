@@ -25,7 +25,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: physvidbench
   contract_validation_command: wf zoo benchmark-run --benchmark-id physvidbench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/physvidbench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:physvidbench
   official_runner_command: wf zoo benchmark-run
   prompt_suite:
     source: bundled_official_assets
@@ -76,7 +76,7 @@ metadata:
   official_runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:physvidbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -160,7 +160,7 @@ tasks:
       - material_property_consistency
       - temporal_dynamics_consistency
       - physvidbench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:physvidbench
       runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
     - name: external_official_runner
       metric_ids:
@@ -170,5 +170,5 @@ tasks:
       - material_property_consistency
       - temporal_dynamics_consistency
       - physvidbench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:physvidbench
       runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py

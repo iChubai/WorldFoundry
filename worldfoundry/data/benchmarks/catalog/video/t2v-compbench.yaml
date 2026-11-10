@@ -149,7 +149,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     input_kind: generated_video_root_or_official_results
-  runner_target: worldfoundry.evals.tasks.contracts.external:T2VCompBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:t2v-compbench
   validation_command:
   - wf
   - zoo
@@ -217,7 +217,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/t2v-compbench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:T2VCompBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:t2v-compbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -258,3 +258,16 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_root
+  - prompt_metadata_dir
+  - official_csv_dir
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - leaderboard_csv_manifest
+  notes:
+  - Contract maps the seven official compositional T2V categories to WorldFoundry scorecard.
+  - MLLM, detection, and tracking metrics require separate upstream environments and checkpoints.

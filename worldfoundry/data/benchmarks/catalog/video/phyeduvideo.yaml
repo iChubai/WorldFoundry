@@ -97,7 +97,7 @@ runner:
     module: worldfoundry.evals.tasks.execution.runners.phyeduvideo.run_phyeduvideo_official_runner
     generated_arg: null
     limit_arg: --limit
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:phyeduvideo
   official_runner_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
   validation_command:
   - wf
@@ -173,7 +173,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:phyeduvideo
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -204,3 +204,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - physics_education_prompt_manifest
+  - generated_video_dir
+  - judge_results_path
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract covers PhyEduVideo physics-education text-to-video evaluation.
+  - Official evaluation requires the upstream codebase and any judge/runtime assets.

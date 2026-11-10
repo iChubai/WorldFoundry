@@ -68,7 +68,7 @@ runner:
     module: worldfoundry.evals.tasks.execution.runners.devil_dynamics.run_devil_dynamics_official_runner
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:DevilDynamicsContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:devil-dynamics
   validation_command:
   - wf
   - zoo
@@ -128,7 +128,7 @@ official_runner_script:
   worldfoundry/evals/tasks/execution/runners/devil_dynamics/run_devil_dynamics_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:DevilDynamicsContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:devil-dynamics
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -160,3 +160,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - prompt_suite_json
+  - judge_api_config
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract maps DEVIL dynamics-focused T2V metrics to WorldFoundry scorecard.
+  - Naturalness judging can require Gemini/API configuration in the upstream runtime.

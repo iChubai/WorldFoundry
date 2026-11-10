@@ -59,7 +59,7 @@ metadata:
     leaderboard_valid: false
     leaderboard_reason: UMT-FVD, UMTScore, full prompt coverage, and official submission protocol are required before 
       leaderboard parity can be claimed.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:ChronoMagicBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:chronomagic-bench
   official_runner_script: 
     worldfoundry/evals/tasks/execution/runners/chronomagic_bench/run_chronomagic_bench_official_runner.py
   prompt_suite:
@@ -95,7 +95,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/chronomagic-bench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:ChronoMagicBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:chronomagic-bench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -202,7 +202,7 @@ tasks:
       metric_ids:
       - chronomagic_score
       - temporal_transformation
-      runner_target: worldfoundry.evals.tasks.contracts.external:ChronoMagicBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:chronomagic-bench
       runner_script: 
         worldfoundry/evals/tasks/execution/runners/chronomagic_bench/run_chronomagic_bench_official_runner.py
       official_validation_command: ${WORLDFOUNDRY_UNIFIED_PYTHON} 

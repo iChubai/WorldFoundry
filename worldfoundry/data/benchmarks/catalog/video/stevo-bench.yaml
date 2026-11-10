@@ -112,7 +112,7 @@ runner:
     supports_fixture: true
     default_metrics: [task_success]
     input_kind: stevo_bench_run_dir_or_official_results
-  runner_target: worldfoundry.evals.tasks.contracts.external:StevoBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:stevo-bench
   validation_command:
   - wf
   - zoo
@@ -196,7 +196,7 @@ data_refs:
   dataset_repo: JhanLiufu/StEvo-Bench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:StevoBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:stevo-bench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -212,3 +212,20 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - stevo_output_map
+  - stevo_task_root
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - The official evaluator is vendored in-tree; --run-official executes it without an external checkout.
+  - Official judging is performed by hosted VLM APIs (Gemini default, OpenAI supported), so real runs
+    need GOOGLE_API_KEY or OPENAI_API_KEY plus network access; result normalization is pure-local.
+  - The 225-task YAML suite is a separate Hugging Face dataset (JhanLiufu/StEvo-Bench) supplied by the
+    caller.

@@ -184,7 +184,7 @@ runner:
     model_arg: --result-model-id
     default_metrics: [rbench_overall]
     input_kind: rbench_official_results_tree
-  runner_target: worldfoundry.evals.tasks.contracts.external:RBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:rbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/rbench/run_rbench_official_runner.py
   validation_command:
   - wf
@@ -256,7 +256,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/rbench/run_rbench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:RBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:rbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -285,3 +285,22 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - rbench_prompt_manifest
+  - conditioning_image_dir
+  - generated_video_dir
+  - vlm_judge_results_dir
+  - motion_operator_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  - track_breakdown
+  notes:
+  - Contract covers RBench robotics image-to-video evaluation across four embodiments and five task categories.
+  - Scoring needs an external VLM judge (GPT or Qwen3-VL) plus the GroundingDINO/SAM2/CoTracker/Q-Align
+    operator stack; WorldFoundry reproduces the official aggregation over their per-video outputs.
+  - rbench_overall is a WorldFoundry composite of the two official track scores, not a published RBench
+    number.

@@ -101,7 +101,7 @@ runner:
     generated_arg: null
     limit_arg: --limit
     supports_fixture: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:IPVBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:ipv-bench
   validation_command:
   - wf
   - zoo
@@ -164,7 +164,7 @@ data_refs:
   - worldfoundry/evals/tasks/execution/runners/ipv_bench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:IPVBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:ipv-bench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -196,3 +196,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - impossible_prompt_manifest
+  - generated_video_dir
+  - understanding_results_path
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract records IPV-Bench impossible-video generation and understanding metrics.
+  - Human annotation or official judge outputs remain required for leaderboard-grade scores.

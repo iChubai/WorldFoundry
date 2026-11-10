@@ -49,10 +49,10 @@ metadata:
   blockers:
   - Dataset materialization, split definition, and policy-result import validation must be validated before integrated 
     status.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:BridgeDataV2Contract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:bridgedata-v2
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:BridgeDataV2Contract
+    runner_target: worldfoundry.evals.tasks.contracts.external:bridgedata-v2
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -187,4 +187,4 @@ tasks:
       - goal_success
       - action_accuracy
       - rollout_success
-      runner_target: worldfoundry.evals.tasks.contracts.external:BridgeDataV2Contract
+      runner_target: worldfoundry.evals.tasks.contracts.external:bridgedata-v2

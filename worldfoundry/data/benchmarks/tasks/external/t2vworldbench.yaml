@@ -24,7 +24,7 @@ metadata:
   benchmark_id: t2vworldbench
   contract_validation_command: wf zoo benchmark-run --benchmark-id t2vworldbench --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/t2vworldbench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:T2VWorldBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:t2vworldbench
   official_runner_command: wf zoo benchmark-run
   prompt_suite:
     repo_path: worldfoundry/data/benchmarks/assets/t2vworldbench/prompt/prompt.csv
@@ -65,7 +65,7 @@ metadata:
     worldfoundry/evals/tasks/execution/runners/t2vworldbench/run_t2vworldbench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:T2VWorldBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:t2vworldbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -177,5 +177,5 @@ tasks:
       - relevance
       - consistency
       - final
-      runner_target: worldfoundry.evals.tasks.contracts.external:T2VWorldBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:t2vworldbench
       runner_script: worldfoundry/evals/tasks/execution/runners/t2vworldbench/run_t2vworldbench_official_runner.py

@@ -86,7 +86,7 @@ runner:
     limit_arg: --limit
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhyFPSBenchGenContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:phyfps-bench-gen
   official_runner_script: 
     worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/run_phyfps_bench_gen_official_runner.py
   run_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" 
@@ -164,7 +164,7 @@ framework_acceptance:
   generated videos, and Meta FPS inputs pass strict coverage checks and all declared metrics are normalized.
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhyFPSBenchGenContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:phyfps-bench-gen
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -201,3 +201,21 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - phyfps_prompt_manifest
+  - generated_video_dir
+  - visual_chronometer_root
+  - meta_fps
+  - meta_fps_manifest
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  - results_csv
+  notes:
+  - Contract covers PhyFPS-Bench-Gen prompt suite, Visual Chronometer PhyFPS prediction, and Meta FPS
+    alignment metrics.
+  - Alignment metrics require Meta FPS inputs from model documentation or a manifest.

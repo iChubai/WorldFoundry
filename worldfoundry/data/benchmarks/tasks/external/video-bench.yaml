@@ -61,7 +61,7 @@ metadata:
   - Leaderboard-grade runs require generated videos for the requested official prompt/dimension set.
   blockers:
   - Full leaderboard parity requires the complete official assets, generated artifacts, and verified scorecard evidence.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VideoBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:video-bench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/videobench/run_videobench_official_runner.py
   prompt_suite:
     mode: videobench_standard
@@ -108,7 +108,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/video-bench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VideoBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:video-bench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -221,7 +221,7 @@ tasks:
       - action_consistency
       - scene_consistency
       - videobench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:VideoBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:video-bench
       runner_script: worldfoundry/evals/tasks/execution/runners/videobench/run_videobench_official_runner.py
       cli_examples:
         normalize_existing_official_results: ${WORLDFOUNDRY_UNIFIED_PYTHON} 

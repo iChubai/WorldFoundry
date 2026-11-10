@@ -111,7 +111,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     default_metrics: [foreground_miou, background_rmse]
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldbench
   run_command:
   - wf
   - zoo
@@ -195,7 +195,7 @@ data_refs:
 
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -232,3 +232,20 @@ validation_command:
 - --output-dir
 - <out>
 - --json
+contract:
+  input_keys:
+  - official_results_path
+  - worldbench_dataset_root
+  - generated_video_dir
+  - answer_manifest
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - worldbench_evaluation
+  requires_upstream_runtime: false
+  notes:
+  - In-tree runtime evaluates raw generated continuations with the shared WorldFoundry SAM2 base model.
+  - Existing WorldBench result files remain supported through the compatibility normalizer.
+  - The public release computes Dice while naming it mIoU, so the contract reports conventional IoU and
+    release-compatible Dice separately.

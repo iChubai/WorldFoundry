@@ -31,7 +31,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: robomme
   status: integrated
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:RoboMMEContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:robomme
   runtime:
     kind: external_official_results_runner
     root_env: WORLDFOUNDRY_ROBOMME_ROOT
@@ -58,7 +58,7 @@ metadata:
   - Full leaderboard parity is not claimed until official rollouts are executed and imported.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:RoboMMEContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:robomme
     task_yaml_available: true
     runtime_verified: false
     normalizer_verified: true
@@ -131,4 +131,4 @@ tasks:
       - permanence_success_rate
       - reference_success_rate
       - imitation_success_rate
-      runner_target: worldfoundry.evals.tasks.contracts.external:RoboMMEContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:robomme

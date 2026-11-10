@@ -71,7 +71,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: wbench
   contract_validation_command: wf zoo benchmark-run --benchmark-id wbench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/wbench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:wbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/wbench/run_wbench_official_runner.py
   official_runner_command: wf zoo benchmark-run
   name: WBench
@@ -145,7 +145,7 @@ metadata:
   - --json
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:wbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -337,5 +337,5 @@ tasks:
       - consistency_score
       - physical_score
       - wbench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:WBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:wbench
       runner_script: worldfoundry/evals/tasks/execution/runners/wbench/run_wbench_official_runner.py

@@ -213,7 +213,7 @@ runner:
     accepts_generated_artifacts: true
     supports_fixture: true
     input_kind: worldolympiad_case_root_or_official_results
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldOlympiadContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldolympiad
   validation_command:
   - wf
   - zoo
@@ -277,7 +277,7 @@ data_refs:
   - ziplab/WorldOlympiad
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldOlympiadContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldolympiad
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -311,3 +311,21 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - prompt_json
+  - reference_video
+  - generated_video_dir
+  - chunk_timestamps
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_case_metrics
+  - benchmark_contract
+  notes:
+  - Contract covers the physical, geometry, and interaction tracks of the WorldOlympiad triathlon.
+  - WorldFoundry keeps the official batch evaluator in tree, so --run-official needs no external checkout.
+  - Per-case judge JSON, scheduler summaries, and summarize_scores aggregates are also normalized in tree.
+  - Scored execution requires DA3, SAM3, and QwenVL services plus weights provisioned outside the source
+    tree.

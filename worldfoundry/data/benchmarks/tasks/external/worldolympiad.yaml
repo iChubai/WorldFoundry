@@ -32,7 +32,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: worldolympiad
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldOlympiadContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:worldolympiad
   official_runner_script: worldfoundry/evals/tasks/execution/runners/worldolympiad/run_worldolympiad_official_runner.py
   contract_validation_command: wf zoo benchmark-run --benchmark-id worldolympiad --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/worldolympiad --json
   runtime:
@@ -62,7 +62,7 @@ metadata:
     - ziplab/WorldOlympiad
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldOlympiadContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:worldolympiad
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -179,7 +179,7 @@ tasks:
       - transition_smoothness
       - global_consistency
       - clip_semantic_adherence
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldOlympiadContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldolympiad
       runner_script: worldfoundry/evals/tasks/execution/runners/worldolympiad/run_worldolympiad_official_runner.py
     runtime_requirements:
       runtime_root: worldfoundry/evals/tasks/execution/runners/worldolympiad/runtime/worldolympiad

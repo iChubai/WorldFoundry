@@ -143,7 +143,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     input_kind: generated_frames_dir_or_official_results
-  runner_target: worldfoundry.evals.tasks.contracts.external:VideoScoreContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:videoscore
   validation_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" 
     worldfoundry/evals/tasks/execution/runners/videoscore/run_videoscore_official_runner.py --videoscore-root 
     "${WORLDFOUNDRY_VIDEOSCORE_ROOT:-worldfoundry/evals/tasks/execution/runners/videoscore/runtime/videoscore}" 
@@ -223,7 +223,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/videoscore.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VideoScoreContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:videoscore
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -249,3 +249,15 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - video_prompt_manifest
+  - video_frames_dir
+  - videoscore_model_repo
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  notes:
+  - Contract maps VideoScore's five human-feedback dimensions to WorldFoundry scorecard.
+  - Official scorer-model inference and benchmark correlations remain explicit validation stages.

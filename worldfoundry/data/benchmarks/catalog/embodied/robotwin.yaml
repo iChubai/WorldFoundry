@@ -72,7 +72,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evals.tasks.contracts.external:RoboTwinContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:robotwin
   run_command:
   - wf
   - embodied
@@ -229,7 +229,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/robotwin.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:RoboTwinContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:robotwin
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -264,3 +264,22 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_ROBOTWIN_RESULTS_PATH
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - dataset_root
+  - simulator_root
+  - task_manifest
+  - policy_results_path
+  - official_results_path
+  - robotwin_eval_result_dir
+  output_keys:
+  - scorecard
+  - raw_results
+  - raw_metric_table
+  - per_sample_metrics
+  - rollout_logs
+  - videos
+  notes:
+  - Contract covers RoboTwin 2.0 dual-arm embodied manipulation benchmarks for VLA / embodied-action policies.
+  - RoboTwin is not a video-generation benchmark; WorldFoundry treats it as simulator-backed action evaluation.
+  - Large datasets, simulator assets, and policy execution remain explicit acquisition/runtime stages.

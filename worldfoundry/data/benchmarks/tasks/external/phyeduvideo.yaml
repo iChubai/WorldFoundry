@@ -26,7 +26,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: phyeduvideo
   contract_validation_command: wf zoo benchmark-run --benchmark-id phyeduvideo --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/phyeduvideo --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:phyeduvideo
   official_runner_command: wf zoo benchmark-run
   name: PhyEduVideo
   domain:
@@ -76,7 +76,7 @@ metadata:
   official_runner_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:phyeduvideo
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -215,7 +215,7 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: result_importer
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:phyeduvideo
       runner_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
       metric_ids:
       - semantic_adherence
@@ -235,7 +235,7 @@ tasks:
       - motion_smoothness
       - temporal_flickering
       - phyeduvideo_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:PhyEduVideoContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:phyeduvideo
       runner_script: worldfoundry/evals/tasks/execution/runners/phyeduvideo/run_phyeduvideo_official_runner.py
     runtime_requirements:
       in_tree_runtime: worldfoundry/evals/tasks/execution/runners/phyeduvideo

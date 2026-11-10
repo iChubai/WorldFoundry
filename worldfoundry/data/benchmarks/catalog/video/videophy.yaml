@@ -73,7 +73,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     supports_fixture: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VideoPhyContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:videophy
   official_runner_script: worldfoundry/evals/tasks/execution/runners/videophy/run_videophy_official_runner.py
   run_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}"
     worldfoundry/evals/tasks/execution/runners/videophy/run_videophy_official_runner.py --run-official
@@ -143,7 +143,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/videophy/run_videophy_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VideoPhyContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:videophy
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -175,3 +175,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - videophy_prompt_manifest
+  - generated_video_dir
+  - autoeval_checkpoint
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract covers VideoPhy semantic adherence and physical commonsense scoring.
+  - Official auto-rater and data materialization remain explicit upstream runtime stages.

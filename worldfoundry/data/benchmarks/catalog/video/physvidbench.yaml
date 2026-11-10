@@ -98,7 +98,7 @@ runner:
     module: worldfoundry.evals.tasks.execution.runners.physvidbench.run_physvidbench_official_runner
     generated_arg: null
     limit_arg: --limit
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:physvidbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
   validation_command:
   - wf
@@ -183,7 +183,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/physvidbench/run_physvidbench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhysVidBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:physvidbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -213,3 +213,18 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - physical_commonsense_prompt_manifest
+  - generated_video_dir
+  - caption_judge_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract records the paper-described physical-commonsense T2V evaluation and result-normalization
+    surface.
+  - Full official scoring still requires generated videos, AuroraCap caption extraction, and Gemini QA
+    outputs.

@@ -182,7 +182,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     default_metrics: [perceptual_clip_iqa_metrics]
-  runner_target: worldfoundry.evals.tasks.contracts.external:FourDWorldBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:4dworldbench
   validation_command:
   - wf
   - zoo
@@ -236,7 +236,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:FourDWorldBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:4dworldbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -273,3 +273,20 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - dataset_json
+  - generated_video_dir
+  - model_name
+  - dimension
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - dimension_result_json
+  notes:
+  - Contract covers the official 4DWorldBench world-generation dimensions for perceptual quality, Condition-4D
+    alignment, physical realism, and 4D consistency.
+  - WorldFoundry keeps the runner and metric entrypoints in-tree; heavy judges and geometry/video-quality
+    backbones are resolved through WorldFoundry base_models or explicit environment variables.

@@ -91,7 +91,7 @@ runner:
     module: worldfoundry.evals.tasks.execution.runners.videoscience_bench.run_videoscience_bench_official_runner
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:videoscience-bench
   validation_command:
   - wf
   - zoo
@@ -158,7 +158,7 @@ official_runner_script:
   worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:videoscience-bench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -190,3 +190,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - science_prompt_manifest
+  - generated_video_dir
+  - judge_results_path
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract maps VideoScience-Bench scientific reasoning evaluation to WorldFoundry scorecard.
+  - Official data and evaluation code remain upstream runtime dependencies.

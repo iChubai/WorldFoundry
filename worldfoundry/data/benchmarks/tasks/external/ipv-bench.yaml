@@ -59,7 +59,7 @@ metadata:
   benchmark_id: ipv-bench
   contract_validation_command: wf zoo benchmark-run --benchmark-id ipv-bench --mode contract --output-dir
     tmp/benchmark_zoo/benchmark_contract/ipv-bench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:IPVBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:ipv-bench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/ipv_bench/run_ipv_bench_official_runner.py
   name: IPV-Bench
   domain:
@@ -112,7 +112,7 @@ metadata:
     - worldfoundry/evals/tasks/execution/runners/ipv_bench
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:IPVBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:ipv-bench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -254,7 +254,7 @@ tasks:
       evaluator_target: worldfoundry.evals.tasks.execution.framework.video_quality_contract:evaluate_ipv_bench_video_quality_contract_file
       status: implemented
     - name: external_official_runner
-      runner_target: worldfoundry.evals.tasks.contracts.external:IPVBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:ipv-bench
       runner_script: worldfoundry/evals/tasks/execution/runners/ipv_bench/run_ipv_bench_official_runner.py
       metric_ids:
       - visual_quality

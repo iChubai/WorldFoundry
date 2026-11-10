@@ -124,7 +124,7 @@ integration:
     runtime_surface: in_tree_official_runtime_with_result_normalizer
     full_suite_verified: false
 runner:
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldMemBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldmembench
   official_script: worldfoundry/evals/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py
   workspace:
     module: worldfoundry.evals.tasks.execution.runners.worldmembench.run_worldmembench_official_runner
@@ -169,7 +169,7 @@ artifact_layout:
   filename_template: scorecard.json
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldMemBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldmembench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -194,3 +194,20 @@ notes:
 - CLIP, LAION heads and DINO checkpoint loading reuse canonical components; human/object masked DINO features share one implementation.
 - DA3-Streaming and ViPE pose preparation accept staged artifacts or explicitly configured model runtimes; the WorldMemBench checkout is not required.
 - GPU and full-checkpoint replay are pending; result import does not establish leaderboard validity.
+contract:
+  input_keys:
+  - generated_video_dir
+  - official_results_path
+  - worldmembench_config
+  - weights_dir
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - official_metric_summaries
+  notes:
+  - Imports official per-model summaries or runs all twelve metric protocols in tree with shared model
+    components.
+  - Scores retain official units, case statuses, and camera-error directions; no composite score is defined.
+  - Full evaluation needs metric checkpoints, staged or configured DA3-Streaming/ViPE artifacts, and a
+    Dynamic Memory VLM endpoint.

@@ -105,7 +105,7 @@ runner:
     generated_arg: null
     limit_arg: --limit
     supports_fixture: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:phyground
   official_runner_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
   validation_command:
   - wf
@@ -172,7 +172,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:phyground
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -204,3 +204,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - phyground_prompt_manifest
+  - first_frame_dir
+  - generated_video_dir
+  - judge_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - benchmark_contract
+  notes:
+  - Contract maps PhyGround physical reasoning scores and per-law diagnostics to WorldFoundry scorecard.
+  - Official scoring requires the released prompt/image assets and judge model or API backend.

@@ -166,7 +166,7 @@ runner:
     model_arg: --model-id
     dataset_manifest_arg: --manifest
     dataset_root_arg: --assets-root
-  runner_target: worldfoundry.evals.tasks.contracts.external:HarnessEvalWContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:harnesseval-w
   runtime:
     kind: in_tree_official_runtime
     root: worldfoundry/evals/tasks/execution/runners/harnesseval_w
@@ -233,7 +233,7 @@ data_refs:
   - MirroS-Lab/HarnessEval-W
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:HarnessEvalWContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:harnesseval-w
   runner_script_available: true
   task_yaml_available: true
   normalizer_verified: true
@@ -262,3 +262,20 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_artifact_dir
+  - manifest
+  - plan_root
+  - backend_config
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_case_metrics
+  - official_report
+  - benchmark_contract
+  notes:
+  - In-tree Python evaluator preserves official skill plans, evidence and common-case aggregation.
+  - Model components are reused from base_models; no upstream generation or shell launchers are included.
+  - Full-suite GPU/judge parity remains unverified; synthetic fixtures are not leaderboard evidence.

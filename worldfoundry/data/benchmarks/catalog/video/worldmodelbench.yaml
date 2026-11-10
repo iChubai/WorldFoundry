@@ -122,7 +122,7 @@ runner:
     supports_run_official: false
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldmodelbench
   repo_url: https://github.com/WorldModelBench-Team/WorldModelBench
   repo_revision: 00b7aa17a05f9fd1ab5c8f66bcf476d04c9c33bf
   validation_command:
@@ -209,7 +209,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldModelBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:worldmodelbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -242,3 +242,15 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - question_manifest
+  - generated_video_dir
+  - judge_model_path
+  output_keys:
+  - scorecard
+  - judge_responses
+  - raw_metric_table
+  notes:
+  - Contract records 7-domain/56-subdomain judging as a normalized scorecard surface.
+  - Leaderboard answers and judge checkpoints must be handled by the official runtime.

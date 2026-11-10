@@ -76,7 +76,7 @@ metadata:
     metrics_available: 4
     scope: bounded_official_gpu_validation
     scorecard: tmp/local_open_eval/worldscore_bounded_gpu_validation_after_readiness_layers_20260525/scorecard.json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldScoreContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:worldscore
   official_runner_script: worldfoundry/evals/tasks/execution/runners/worldscore/run_worldscore_official_runner.py
   offline_normalization:
     description: Import a WorldScore result artifact with run_worldscore_official_runner.py --official-results-path.
@@ -107,7 +107,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/worldscore.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldScoreContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:worldscore
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -180,7 +180,7 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldScoreContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldscore
       runner_script: worldfoundry/evals/tasks/execution/runners/worldscore/run_worldscore_official_runner.py
       metric_ids:
       - controllability

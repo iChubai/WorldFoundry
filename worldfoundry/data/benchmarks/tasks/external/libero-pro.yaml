@@ -25,7 +25,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: libero-pro
   status: integrated
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:LIBEROProContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:libero-pro
   runtime:
     kind: external_official_results_runner
     root_env: WORLDFOUNDRY_LIBERO_PRO_ROOT
@@ -52,7 +52,7 @@ metadata:
   - Full leaderboard parity is not claimed until official rollouts are executed and imported.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:LIBEROProContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:libero-pro
     task_yaml_available: true
     runtime_verified: false
     normalizer_verified: true
@@ -121,4 +121,4 @@ tasks:
       - task_success
       - episode_success
       - action_accuracy
-      runner_target: worldfoundry.evals.tasks.contracts.external:LIBEROProContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:libero-pro

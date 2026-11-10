@@ -76,7 +76,7 @@ runner:
   workspace:
     dispatch: vbench_series
   official_script: worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py
-  runner_target: worldfoundry.evals.tasks.contracts.external:VBenchPlusPlusContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:vbench-plus-plus
   run_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" 
     worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py --benchmark-id 
     vbench-plus-plus --variant "${WORLDFOUNDRY_VBENCH_PLUS_PLUS_VARIANT:-long}" --videos-path 
@@ -181,7 +181,7 @@ data_refs:
   - ${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VBenchPlusPlusContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:vbench-plus-plus
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -230,3 +230,16 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - prompt_suite_json
+  - reference_image_dir
+  - official_results_path
+  output_keys:
+  - scorecard
+  - dimension_scores
+  - raw_metric_table
+  notes:
+  - Contract covers VBench++ I2V, long-video, and trustworthiness variants through one scorecard surface.
+  - Official runtime remains variant-specific and requires the upstream VBench dependency stack.

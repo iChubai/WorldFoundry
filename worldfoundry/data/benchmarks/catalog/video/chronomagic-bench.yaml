@@ -114,7 +114,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     default_metrics: [chscore]
-  runner_target: worldfoundry.evals.tasks.contracts.external:ChronoMagicBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:chronomagic-bench
   validation_command: PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}" 
     worldfoundry/evals/tasks/execution/runners/chronomagic_bench/run_chronomagic_bench_official_runner.py 
     --chronomagic-root "${WORLDFOUNDRY_CHRONOMAGIC_ROOT:-worldfoundry/evals/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench}" 
@@ -212,7 +212,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/chronomagic-bench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:ChronoMagicBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:chronomagic-bench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -270,3 +270,15 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - chronomagic_prompt_manifest
+  - generated_video_dir
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_metrics
+  notes:
+  - Contract maps time-lapse/metamorphic T2V outputs to normalized WorldFoundry scorecards.
+  - Official CHScore/evaluation runtime remains a separate validation stage.

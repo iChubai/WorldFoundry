@@ -61,7 +61,7 @@ metadata:
   benchmark_id: devil-dynamics
   contract_validation_command: wf zoo benchmark-run --benchmark-id devil-dynamics --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/devil-dynamics --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:DevilDynamicsContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:devil-dynamics
   official_runner_command: wf zoo benchmark-run
   metric_evaluator_target: worldfoundry.evals.tasks.execution.runners.devil_dynamics.devil_dynamics_contract_evaluator:write_devil_dynamics_evaluation
   metric_protocol:
@@ -114,7 +114,7 @@ metadata:
     worldfoundry/evals/tasks/execution/runners/devil_dynamics/run_devil_dynamics_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:DevilDynamicsContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:devil-dynamics
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -221,7 +221,7 @@ tasks:
       - dynamics_controllability
       - dynamics_quality
       - devil_dynamics_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:DevilDynamicsContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:devil-dynamics
       evaluator_target: worldfoundry.evals.tasks.execution.runners.devil_dynamics.devil_dynamics_contract_evaluator:write_devil_dynamics_evaluation
       runner_script: 
         worldfoundry/evals/tasks/execution/runners/devil_dynamics/run_devil_dynamics_official_runner.py

@@ -20,7 +20,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: stevo-bench
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:StevoBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:stevo-bench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py
   contract_validation_command: wf zoo benchmark-run --benchmark-id stevo-bench --mode contract
     --output-dir tmp/benchmark_zoo/benchmark_contract/stevo-bench --json
@@ -56,7 +56,7 @@ metadata:
     filename_template: scorecard.json
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:StevoBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:stevo-bench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -117,5 +117,5 @@ tasks:
       - occlusion_done
       - trigger_applied
       - control_success
-      runner_target: worldfoundry.evals.tasks.contracts.external:StevoBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:stevo-bench
       runner_script: worldfoundry/evals/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py

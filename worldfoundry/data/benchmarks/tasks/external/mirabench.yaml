@@ -293,7 +293,7 @@ metadata:
   base_model_dependency_preflight:
     status: ready
     missing: []
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:MiraBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:mirabench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/mirabench/run_mirabench_official_runner.py
   local_evaluator:
     target: worldfoundry.evals.tasks.execution.framework.video_quality_contract:evaluate_mirabench_video_quality_contract_file
@@ -361,7 +361,7 @@ metadata:
     - worldfoundry/evals/tasks/execution/runners/mirabench/runtime/mirabench
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:MiraBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:mirabench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -492,7 +492,7 @@ tasks:
       - fid
       - kid
       - mirabench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:MiraBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:mirabench
       runner_script: worldfoundry/evals/tasks/execution/runners/mirabench/run_mirabench_official_runner.py
       official_validation_command: wf zoo benchmark-run --benchmark-id mirabench --mode
         official-validation --official-results-path <official_results.csv> --generated-artifact-dir <generated_videos>

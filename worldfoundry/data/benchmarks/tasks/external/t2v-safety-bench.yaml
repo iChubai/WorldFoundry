@@ -43,7 +43,7 @@ metadata:
   benchmark_id: t2v-safety-bench
   contract_validation_command: wf zoo benchmark-run --benchmark-id t2v-safety-bench --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/t2v-safety-bench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:T2VSafetyBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:t2v-safety-bench
   official_runner_command: wf zoo benchmark-run
   name: T2VSafetyBench
   domain:
@@ -96,7 +96,7 @@ metadata:
     worldfoundry/evals/tasks/execution/runners/t2v_safety_bench/run_t2v_safety_bench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:T2VSafetyBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:t2v-safety-bench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -269,7 +269,7 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evals.tasks.contracts.external:T2VSafetyBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:t2v-safety-bench
       runner_script: 
         worldfoundry/evals/tasks/execution/runners/t2v_safety_bench/run_t2v_safety_bench_official_runner.py
       metric_ids:

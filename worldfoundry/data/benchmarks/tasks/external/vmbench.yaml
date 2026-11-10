@@ -33,7 +33,7 @@ metadata:
     notes:
     - RAFT, SEA-RAFT, and GMFlow reusable motion assets are tracked through the WorldFoundry base-model registry.
     - VMBench-specific checkpoints remain required for full metric recomputation.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VMBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:vmbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/vmbench/run_vmbench_official_runner.py
   prompt_suite:
     mode: vmbench_standard
@@ -70,7 +70,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/vmbench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VMBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:vmbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -180,5 +180,5 @@ tasks:
       - commonsense_adherence_score
       - motion_smoothness_score
       - vmbench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:VMBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:vmbench
       runner_script: worldfoundry/evals/tasks/execution/runners/vmbench/run_vmbench_official_runner.py

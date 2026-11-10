@@ -31,7 +31,7 @@ metadata:
   contract_validation_command: >-
     wf zoo benchmark-run --benchmark-id worldbench --mode contract
     --output-dir tmp/benchmark_zoo/benchmark_contract/worldbench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:worldbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/worldbench/run_worldbench_official_runner.py
   prompt_suite:
     hf_dataset_id: worldbenchmark/IntuitivePhysics
@@ -79,7 +79,7 @@ metadata:
     evaluator_config: worldfoundry/data/benchmarks/assets/worldbench/evaluator.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:worldbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -199,11 +199,11 @@ tasks:
     evaluation_protocol:
     - name: in_tree_video_evaluator
       metric_ids: [foreground_miou, foreground_dice, background_rmse]
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldbench
       runner_script: worldfoundry/evals/tasks/execution/runners/worldbench/run_worldbench_official_runner.py
     - name: in_tree_text_evaluator
       metric_ids: [text_based_accuracy, multiple_choice_accuracy, binary_accuracy]
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldbench
       runner_script: worldfoundry/evals/tasks/execution/runners/worldbench/run_worldbench_official_runner.py
     - name: in_tree_official_runtime
       metric_ids:
@@ -213,5 +213,5 @@ tasks:
       - text_based_accuracy
       - multiple_choice_accuracy
       - binary_accuracy
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldbench
       runner_script: worldfoundry/evals/tasks/execution/runners/worldbench/run_worldbench_official_runner.py

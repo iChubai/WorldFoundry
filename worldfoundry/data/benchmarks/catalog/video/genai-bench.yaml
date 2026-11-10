@@ -84,7 +84,7 @@ runner:
     limit_arg: --limit
     supports_fixture: true
     default_metrics: [genai_bench_average]
-  runner_target: worldfoundry.evals.tasks.contracts.external:GenAIBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:genai-bench
   validation_command:
   - wf
   - zoo
@@ -145,7 +145,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/genai-bench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:GenAIBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:genai-bench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -182,3 +182,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_artifact_manifest
+  - human_preference_data
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - pairwise_preferences
+  - benchmark_contract
+  notes:
+  - Contract records GenAI-Bench pairwise judge accuracy against human preference labels.
+  - Full inference requires MLLM judge outputs; existing human labels and model predictions can be normalized
+    locally.

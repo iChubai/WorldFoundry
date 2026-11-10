@@ -39,7 +39,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:metaworld
   verification_status: normalizer_only
   validation_command:
   - wf
@@ -105,7 +105,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/metaworld.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:metaworld
   runner_script_available: false
   task_yaml_available: true
   runtime_verified: false
@@ -131,3 +131,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_METAWORLD_RESULTS_PATH
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - simulator_root
+  - task_manifest
+  - policy_results_path
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_results
+  - per_sample_metrics
+  - rollout_logs
+  notes:
+  - Contract covers Meta-World multi-task and meta-RL manipulation suites.
+  - WorldFoundry treats continuous-control policy outputs as action traces rather than generated videos.

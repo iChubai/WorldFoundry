@@ -114,7 +114,7 @@ runner:
     generated_arg: null
     limit_arg: --limit
     supports_fixture: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:world-in-world
   validation_command:
   - wf
   - zoo
@@ -168,7 +168,7 @@ data_refs:
 official_runner_script: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:world-in-world
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -199,3 +199,17 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - closed_loop_task_manifest
+  - world_model_rollouts_dir
+  - planner_results_path
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - rollout_logs
+  - benchmark_contract
+  notes:
+  - Contract covers closed-loop visual-world-model utility metrics.
+  - Official evaluation remains simulator/planner heavy and is kept as an upstream runtime stage.

@@ -29,7 +29,7 @@ metrics:
 metadata:
   source_kind: benchmark_zoo
   benchmark_id: worldreasonbench
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldReasonBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:worldreasonbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/worldreasonbench/run_worldreasonbench_official_runner.py
   contract_validation_command: wf zoo benchmark-run --benchmark-id worldreasonbench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/worldreasonbench --json
   runtime:
@@ -53,7 +53,7 @@ metadata:
     fixture: worldfoundry/data/benchmarks/assets/worldreasonbench
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:WorldReasonBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:worldreasonbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -160,7 +160,7 @@ tasks:
       - induced_pairwise_accuracy
       - pairwise_accuracy_with_ties
       - pairwise_accuracy_without_ties
-      runner_target: worldfoundry.evals.tasks.contracts.external:WorldReasonBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:worldreasonbench
       runner_script: worldfoundry/evals/tasks/execution/runners/worldreasonbench/run_worldreasonbench_official_runner.py
     runtime_requirements:
       root_env: WORLDFOUNDRY_WORLDREASONBENCH_ROOT

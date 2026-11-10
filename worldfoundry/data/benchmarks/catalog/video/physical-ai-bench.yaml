@@ -57,7 +57,7 @@ runner:
     supports_official_runtime: true
     accepts_generated_artifacts: true
     default_metrics: [aesthetic_quality, background_consistency, imaging_quality, motion_smoothness, overall_consistency, subject_consistency]
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicalAIBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:physical-ai-bench
   runner_script: worldfoundry/evals/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
   run_command:
   - wf
@@ -115,7 +115,7 @@ data_refs:
 
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicalAIBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:physical-ai-bench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: true
@@ -134,3 +134,23 @@ artifact_layout:
   dataset_root_env: WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - official_results_path
+  - dataset_root
+  - generated_video_dir
+  - prediction_manifest
+  - reference_image_dir
+  - precomputed_depth_dir
+  - precomputed_segmentation_dir
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_scores
+  - official_results
+  requires_upstream_runtime: false
+  notes:
+  - Generation and conditional-generation evaluation are integrated independently in tree.
+  - VBench, VBench++ I2V, Qwen-VL, DOVER, LPIPS, Video-Depth-Anything, GroundingDINO, and SAM2 are reused
+    from WorldFoundry base/runtime modules.
+  - No upstream checkout or third_party directory is executed at runtime.

@@ -46,10 +46,10 @@ metadata:
   blockers:
   - Official RoboCasa scene assets, policy checkpoints, and long-horizon simulator rollouts must be validated before 
     integrated status.
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:RoboCasaContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:robocasa
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:RoboCasaContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:robocasa
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -175,4 +175,4 @@ tasks:
       - task_success
       - episode_success
       - reward
-      runner_target: worldfoundry.evals.tasks.contracts.external:RoboCasaContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:robocasa

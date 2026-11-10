@@ -27,7 +27,7 @@ def test_benchmark_zoo_entries_are_exposed_as_cli_task_definitions(tmp_path: Pat
       "status": "confirmed_official_code",
       "official_repo_url": "https://github.com/example/external-video-bench",
       "runner": {
-        "runner_target": "worldfoundry.evals.tasks.contracts.external:VBenchContract"
+        "runner_target": "worldfoundry.evals.tasks.contracts.external:vbench"
       },
       "metrics": [
         {"id": "overall_quality", "higher_is_better": true, "primary": true}
@@ -72,7 +72,7 @@ def test_benchmark_zoo_exports_catalog_v2_specs(tmp_path) -> None:
       "name": "External Video Bench",
       "status": "confirmed_official_code",
       "runner": {
-        "runner_target": "worldfoundry.evals.tasks.contracts.external:VBenchContract"
+        "runner_target": "worldfoundry.evals.tasks.contracts.external:vbench"
       }
     }
   ]
@@ -109,7 +109,7 @@ def test_load_benchmark_zoo_registry_resolves_manifest_entries(tmp_path: Path) -
       "name": "External Video Bench",
       "status": "confirmed_official_code",
       "runner": {
-        "runner_target": "worldfoundry.evals.tasks.contracts.external:VBenchContract"
+        "runner_target": "worldfoundry.evals.tasks.contracts.external:vbench"
       }
     }
   ]

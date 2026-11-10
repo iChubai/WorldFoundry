@@ -115,7 +115,7 @@ runner:
     accepts_generated_artifacts: true
     supports_fixture: true
     default_metrics: [vmbench_average]
-  runner_target: worldfoundry.evals.tasks.contracts.external:VMBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:vmbench
   validation_command:
   - wf
   - zoo
@@ -180,7 +180,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/vmbench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evals.tasks.contracts.external:VMBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:vmbench
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -206,3 +206,16 @@ artifact_layout:
   generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
   output_artifact: benchmark_scorecard
   filename_template: scorecard.json
+contract:
+  input_keys:
+  - generated_video_dir
+  - prompt_json
+  - official_results_path
+  output_keys:
+  - scorecard
+  - raw_metric_table
+  - per_sample_metrics
+  notes:
+  - Contract maps official VMBench results.json/scores.csv outputs to WorldFoundry scorecard.
+  - Official runtime requires the upstream CUDA dependency stack, checkpoints, and 0001.mp4-style video
+    layout.

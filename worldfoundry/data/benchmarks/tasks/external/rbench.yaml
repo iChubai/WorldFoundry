@@ -125,13 +125,13 @@ metadata:
     - <results_root>/5_tasks/<model>/<task>/<vlm>/results.csv
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:RBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:rbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
     surface: in_tree_official_aggregation
     normalizer_verified: true
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:RBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:rbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/rbench/run_rbench_official_runner.py
   metric_evaluator_target: worldfoundry.evals.tasks.execution.runners.rbench.rbench_contract_evaluator:write_rbench_evaluation
   metric_protocol:
@@ -264,7 +264,7 @@ tasks:
       - visual_quality
       - task_track_overall
       evaluator_target: worldfoundry.evals.tasks.execution.runners.rbench.rbench_contract_evaluator:write_rbench_evaluation
-      runner_target: worldfoundry.evals.tasks.contracts.external:RBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:rbench
       runner_script: worldfoundry/evals/tasks/execution/runners/rbench/run_rbench_official_runner.py
       status: implemented
       official_validation_command: wf zoo benchmark-run --benchmark-id rbench --mode official-validation --official-results-path <rbench_results_root> --result-model-id <model_id> --output-dir <out> --json
@@ -286,7 +286,7 @@ tasks:
       - multi_entity_collaboration
       - spatial_relationship
       - visual_reasoning
-      runner_target: worldfoundry.evals.tasks.contracts.external:RBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:rbench
       runner_script: worldfoundry/evals/tasks/execution/runners/rbench/run_rbench_official_runner.py
     runtime_requirements:
       benchmark_data_root_env: WORLDFOUNDRY_RBENCH_DATA_ROOT

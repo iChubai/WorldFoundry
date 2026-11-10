@@ -28,7 +28,7 @@ metadata:
   benchmark_id: videoverse
   contract_validation_command: wf zoo benchmark-run --benchmark-id videoverse --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/videoverse --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VideoVerseContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:videoverse
   official_runner_command: wf zoo benchmark-run
   prompt_suite:
     source: bundled_official_assets
@@ -76,7 +76,7 @@ metadata:
     - worldfoundry/data/benchmarks/assets/videoverse/prompt/prompts_of_VideoVerse_decomposed.json
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VideoVerseContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:videoverse
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -197,7 +197,7 @@ tasks:
       - static_scene_consistency
       - dynamic_event_consistency
       - videoverse_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:VideoVerseContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:videoverse
       runner_script: worldfoundry/evals/tasks/execution/runners/videoverse/run_videoverse_official_runner.py
     - name: in_tree_official_runner
       metric_ids:
@@ -208,7 +208,7 @@ tasks:
       - static_scene_consistency
       - dynamic_event_consistency
       - videoverse_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:VideoVerseContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:videoverse
       runner_script: wf zoo benchmark-run
       official_validation_command: wf zoo benchmark-run --benchmark-id videoverse --mode 
         official-validation --official-results-path <official_results.json> --generated-artifact-dir <generated_videos> 

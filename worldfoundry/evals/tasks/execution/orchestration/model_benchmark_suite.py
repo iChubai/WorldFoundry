@@ -834,7 +834,7 @@ def _resume_cell(
         ]:
             return None
         resolved_config = None
-        if prepared.model_zoo_manifest_dir is not None:
+        if prepared.model_zoo_manifest_dir is not None and prepared.model_id is not None:
             from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config
 
             resolved_config = resolve_model_zoo_config(

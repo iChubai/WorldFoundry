@@ -59,7 +59,7 @@ metadata:
     - The VBench-2.0 runner has no runner-local foundation-model fork; dimension code resolves checkpoints through 
       base-model/cache paths.
     missing: []
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:VBench2Contract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:vbench-2.0
   official_runner_script: 
     worldfoundry/evals/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py
   prompt_suite:
@@ -100,7 +100,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:VBench2Contract
+    runner_target: worldfoundry.evals.tasks.contracts.external:vbench-2.0
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: true
@@ -184,6 +184,6 @@ tasks:
       - vbench2_human_fidelity
       - vbench2_physics
       - vbench2_total
-      runner_target: worldfoundry.evals.tasks.contracts.external:VBench2Contract
+      runner_target: worldfoundry.evals.tasks.contracts.external:vbench-2.0
       runner_script: worldfoundry/evals/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py
       default_mode: vbench2

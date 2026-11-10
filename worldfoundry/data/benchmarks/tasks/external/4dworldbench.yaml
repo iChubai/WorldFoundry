@@ -55,7 +55,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: 4dworldbench
   contract_validation_command: wf zoo benchmark-run --benchmark-id 4dworldbench --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/4dworldbench --json
-  official_runner_target: worldfoundry.evals.tasks.contracts.external:FourDWorldBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:4dworldbench
   official_runner_script: worldfoundry/evals/tasks/execution/runners/four_d_worldbench/run_four_d_worldbench_official_runner.py
   official_runner_command: wf zoo benchmark-run
   task_type: three_d_four_d_world_generation_evaluation
@@ -98,7 +98,7 @@ metadata:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml
   runner_availability:
     available: true
-    runner_target: worldfoundry.evals.tasks.contracts.external:FourDWorldBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:4dworldbench
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -261,5 +261,5 @@ tasks:
       - physical_realism_score
       - four_d_consistency
       - four_d_worldbench_average
-      runner_target: worldfoundry.evals.tasks.contracts.external:FourDWorldBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:4dworldbench
       runner_script: worldfoundry/evals/tasks/execution/runners/four_d_worldbench/run_four_d_worldbench_official_runner.py

@@ -114244,17 +114244,6 @@
               "description": "Viewer passed to the pipeline for every generated sample."
             },
             {
-              "field": "use-sharp",
-              "option": "--pipeline.use-sharp",
-              "detail": "Optional",
-              "kind": "boolean",
-              "target": "call",
-              "required": false,
-              "default": null,
-              "choices": [],
-              "description": "Use Sharp passed to the pipeline for every generated sample."
-            },
-            {
               "field": "return-mesh",
               "option": "--pipeline.return-mesh",
               "detail": "Optional",

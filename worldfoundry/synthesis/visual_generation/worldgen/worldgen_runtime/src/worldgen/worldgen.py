@@ -16,7 +16,6 @@ class WorldGen:
     def __init__(
         self,
         mode: str = "t2s",
-        use_sharp: bool = False,
         inpaint_bg: bool = False,
         lora_path: str | None = None,
         resolution: int = 1600,
@@ -44,12 +43,6 @@ class WorldGen:
             self.pano_gen_model = build_pano_fill_model(lora_path=lora_path, device=device, low_vram=low_vram)
         else:
             raise ValueError(f"Invalid mode: {mode}, mode must be 't2s' or 'i2s'")
-
-        self.use_sharp = use_sharp
-        if use_sharp:
-            from .pano_sharp import build_sharp_model
-
-            self.sharp_model = build_sharp_model(device=device)
 
         self.inpaint_bg = inpaint_bg
         if inpaint_bg:
@@ -90,14 +83,6 @@ class WorldGen:
         self, pano_image: Image.Image, return_mesh: bool = False
     ) -> SplatFile | o3d.geometry.TriangleMesh:
         init_pred = pred_pano_depth(self.depth_model, pano_image)
-
-        if self.use_sharp:
-            from .pano_sharp import predict_equirectangular
-
-            splat = predict_equirectangular(
-                self.sharp_model, pano_image, device=self.device, depth_predictions=init_pred
-            )
-            return splat
 
         if return_mesh:
             mesh = self.depth2mesh(init_pred)

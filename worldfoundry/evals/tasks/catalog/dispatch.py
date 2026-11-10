@@ -15,14 +15,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from worldfoundry.evals.api.json_contract import tuple_of_str as _str_tuple
-from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
-    iter_benchmark_catalog_manifest_paths,
-)
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import readable_catalog_shards
 from worldfoundry.evals.tasks.catalog.benchmark_id import normalize_benchmark_id
-from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, REPO_ROOT, load_manifest
+from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, REPO_ROOT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,22 +163,12 @@ class BenchmarkIntegrationSpec:
 @lru_cache(maxsize=1)
 def load_catalog_dispatch_entries() -> tuple[tuple[str, Mapping[str, Any]], ...]:
     """Return ``(benchmark_id, raw_entry)`` for every video and embodied catalog shard."""
-    from worldfoundry.evals.tasks.catalog.schema import iter_benchmark_zoo_payloads
-
-    entries: list[tuple[str, Mapping[str, Any]]] = []
-    for path in iter_benchmark_catalog_manifest_paths(BENCHMARK_ZOO_DIR):
-        try:
-            payload = load_manifest(path)
-            items = iter_benchmark_zoo_payloads(payload)
-        except (OSError, TypeError, ValueError, yaml.YAMLError) as exc:
-            _LOGGER.warning("skipping malformed benchmark catalog shard %s: %s", path, exc)
-            continue
-        for item in items:
-            benchmark_id = _entry_id(item)
-            if benchmark_id is None:
-                continue
-            entries.append((benchmark_id, item))
-    return tuple(entries)
+    return tuple(
+        (benchmark_id, item)
+        for shard in readable_catalog_shards(BENCHMARK_ZOO_DIR)
+        for item in shard.entries
+        if (benchmark_id := _entry_id(item)) is not None
+    )
 
 
 def clear_catalog_dispatch_cache() -> None:

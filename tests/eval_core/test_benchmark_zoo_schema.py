@@ -9,7 +9,10 @@ import pytest
 
 from worldfoundry.cli import zoo as zoo_cli
 from worldfoundry.evals.api import BenchmarkSpec
-from worldfoundry.evals.tasks.catalog.benchmark_catalog import load_benchmark_catalog_shard_entries
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
+    clear_benchmark_catalog_cache,
+    load_benchmark_catalog_shard_entries,
+)
 from worldfoundry.evals.tasks.catalog.schema import (
     OPEN_SOURCE_STATUSES,
     BenchmarkDatasetRef,
@@ -22,11 +25,7 @@ from worldfoundry.evals.tasks.catalog.specs import (
     benchmark_zoo_entries_to_benchmark_specs,
     benchmark_zoo_entry_to_benchmark_spec,
 )
-from worldfoundry.evals.tasks.catalog.zoo_registry import (
-    BenchmarkZooRegistry,
-    clear_benchmark_zoo_registry_cache,
-    load_benchmark_zoo_registry,
-)
+from worldfoundry.evals.tasks.catalog.zoo_registry import BenchmarkZooRegistry, load_benchmark_zoo_registry
 from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
 
 NEW_VIDEO_WORLD_NORMALIZER_IDS = (
@@ -879,7 +878,7 @@ entries:
         encoding="utf-8",
     )
 
-    clear_benchmark_zoo_registry_cache()
+    clear_benchmark_catalog_cache()
     try:
         first = load_benchmark_zoo_registry(tmp_path)
         second = load_benchmark_zoo_registry(tmp_path)
@@ -887,12 +886,12 @@ entries:
         assert first is second
         assert first.get("cached-benchmark").benchmark_id == "cached-benchmark"
 
-        clear_benchmark_zoo_registry_cache()
+        clear_benchmark_catalog_cache()
         refreshed = load_benchmark_zoo_registry(tmp_path)
         assert refreshed is not first
         assert refreshed.keys() == ["cached-benchmark"]
     finally:
-        clear_benchmark_zoo_registry_cache()
+        clear_benchmark_catalog_cache()
 
 
 def test_benchmark_zoo_registry_rejects_duplicate_aliases() -> None:

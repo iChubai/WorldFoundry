@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -81,26 +82,67 @@ def _entry_benchmark_id(entry: Mapping[str, Any]) -> str | None:
     return None
 
 
+@dataclass(frozen=True)
+class CatalogShard:
+    """One parsed catalog manifest file: its raw entry mappings, or the error that stopped parsing it."""
+
+    path: Path
+    entries: tuple[Mapping[str, Any], ...] = ()
+    error: Exception | None = None
+
+
+def _root_key(root: str | Path | None) -> str:
+    return str(resolve_benchmark_catalog_root(root).expanduser().resolve())
+
+
+@lru_cache(maxsize=16)
+def _catalog_shards(root_key: str) -> tuple[CatalogShard, ...]:
+    """Parse every catalog manifest under *root_key* once; all catalog views derive from this."""
+    from .schema import iter_benchmark_zoo_payloads
+
+    shards: list[CatalogShard] = []
+    for path in iter_benchmark_catalog_manifest_paths(root_key):
+        try:
+            entries = tuple(iter_benchmark_zoo_payloads(load_manifest(path)))
+        except (OSError, TypeError, ValueError, yaml.YAMLError) as exc:
+            shards.append(CatalogShard(path, error=exc))
+            continue
+        shards.append(CatalogShard(path, entries))
+    return tuple(shards)
+
+
+def readable_catalog_shards(root: str | Path | None = None) -> tuple[CatalogShard, ...]:
+    """Return the parseable shards under *root*, logging each malformed shard that is skipped.
+
+    A silently dropped shard would surface much later as a confusing "benchmark not found",
+    so every skip is logged with the shard path.
+    """
+    readable: list[CatalogShard] = []
+    for shard in _catalog_shards(_root_key(root)):
+        if shard.error is not None:
+            _LOGGER.warning("skipping malformed benchmark catalog shard %s: %s", shard.path, shard.error)
+            continue
+        readable.append(shard)
+    return tuple(readable)
+
+
+def _strict_catalog_shards(root: str | Path | None) -> tuple[CatalogShard, ...]:
+    shards = _catalog_shards(_root_key(root))
+    for shard in shards:
+        if shard.error is not None:
+            raise shard.error
+    return shards
+
+
 @lru_cache(maxsize=16)
 def _catalog_benchmark_path_index(directory: str) -> dict[str, Path]:
     """Map benchmark ids to concrete catalog manifest paths under *directory*."""
-    from .schema import iter_benchmark_zoo_payloads
-
     index: dict[str, Path] = {}
-    for candidate in iter_benchmark_catalog_manifest_paths(directory):
-        try:
-            payload = load_manifest(candidate)
-            entries = iter_benchmark_zoo_payloads(payload)
-        except (OSError, TypeError, ValueError, yaml.YAMLError) as exc:
-            # Skip malformed shards so callers can fall back gracefully, but say
-            # so: a silently dropped shard surfaces much later as a confusing
-            # "benchmark not found" from downstream callers.
-            _LOGGER.warning("skipping malformed benchmark catalog shard %s: %s", candidate, exc)
-            continue
-        for entry in entries:
+    for shard in readable_catalog_shards(directory):
+        for entry in shard.entries:
             benchmark_id = _entry_benchmark_id(entry)
             if benchmark_id:
-                index.setdefault(benchmark_id, candidate)
+                index.setdefault(benchmark_id, shard.path)
     return index
 
 
@@ -122,45 +164,46 @@ def resolve_benchmark_manifest_path(value: str | Path, benchmark_id: str | None 
 @lru_cache(maxsize=8)
 def benchmark_catalog_ids(root: str) -> tuple[str, ...]:
     """Return benchmark ids declared in catalog manifests."""
-    from .schema import iter_benchmark_zoo_payloads
-
-    ids: set[str] = set()
-    for path in iter_benchmark_catalog_manifest_paths(root):
-        payload = load_manifest(path)
-        for entry in iter_benchmark_zoo_payloads(payload):
-            # Same dual-key extraction as the path index: a shard declaring only
-            # benchmark_id: must not vanish from the id universe (ET-18).
-            benchmark_id = _entry_benchmark_id(entry)
-            if benchmark_id:
-                ids.add(benchmark_id)
+    ids = {
+        benchmark_id
+        for shard in _strict_catalog_shards(root)
+        for entry in shard.entries
+        if (benchmark_id := _entry_benchmark_id(entry))
+    }
     return tuple(sorted(ids))
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=16)
 def _load_benchmark_catalog_entries_cached(root_key: str) -> tuple[Any, ...]:
-    """Load all benchmark-zoo entries declared under the catalog root."""
-    from .schema import load_entries
+    """Build benchmark-zoo entries from the parsed catalog shards under *root_key*."""
+    from .schema import BenchmarkZooEntry
 
-    entries = []
-    for path in iter_benchmark_catalog_manifest_paths(root_key):
-        entries.extend(load_entries(path))
-    return tuple(entries)
+    return tuple(
+        BenchmarkZooEntry.from_dict(item) for shard in _strict_catalog_shards(root_key) for item in shard.entries
+    )
 
 
 def load_benchmark_catalog_entries(root: str | Path | None = None) -> tuple[Any, ...]:
     """Load all benchmark-zoo entries declared under the catalog root."""
-    return _load_benchmark_catalog_entries_cached(str(resolve_benchmark_catalog_root(root)))
+    return _load_benchmark_catalog_entries_cached(_root_key(root))
 
 
 def load_benchmark_catalog_shard_entries(shard: str, root: str | Path | None = None) -> tuple[Any, ...]:
     """Load benchmark-zoo entries from one catalog shard directory."""
-    from .schema import load_entries
+    return load_benchmark_catalog_entries(resolve_benchmark_catalog_root(root) / shard)
 
-    shard_root = resolve_benchmark_catalog_root(root) / shard
-    entries = []
-    for path in iter_benchmark_catalog_manifest_paths(shard_root):
-        entries.extend(load_entries(path))
-    return tuple(entries)
+
+def clear_benchmark_catalog_cache() -> None:
+    """Drop every cached catalog view so the next lookup re-reads the manifests from disk."""
+    from .dispatch import clear_catalog_dispatch_cache
+    from .zoo_registry import _load_benchmark_zoo_registry_cached
+
+    _catalog_shards.cache_clear()
+    _catalog_benchmark_path_index.cache_clear()
+    benchmark_catalog_ids.cache_clear()
+    _load_benchmark_catalog_entries_cached.cache_clear()
+    _load_benchmark_zoo_registry_cached.cache_clear()
+    clear_catalog_dispatch_cache()
 
 
 def formal_benchmark_ids(catalog_dir: str | Path | None = None) -> list[str]:

@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.evals.api.registry import AliasRegistryStore, lookup_key, require_text
-from worldfoundry.evals.tasks.catalog.benchmark_catalog import iter_benchmark_catalog_manifest_paths
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import load_benchmark_catalog_entries
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR
 
 from .schema import INTEGRATION_STATUSES, BenchmarkZooEntry
@@ -139,39 +139,8 @@ class BenchmarkZooRegistry:
 
     @classmethod
     def from_path(cls, path: str | Path | None = None) -> BenchmarkZooRegistry:
-        """Factory method to construct a registry from catalog shards under a target path.
-
-        If no path is provided, it defaults to the standard benchmark zoo directory.
-
-        Args:
-            path: Directory containing catalog shards (YAML/JSON manifest files).
-                  Defaults to `default_benchmark_zoo_dir()`.
-
-        Returns:
-            An initialized `BenchmarkZooRegistry` containing entries from the specified path.
-        """
-        root = Path(path) if path is not None else default_benchmark_zoo_dir()
-        return cls.from_paths(_manifest_paths(root))
-
-    @classmethod
-    def from_paths(cls, paths: Iterable[str | Path]) -> BenchmarkZooRegistry:
-        """Factory method to construct a registry from multiple catalog shard file paths.
-
-        This method loads entries from a list of specified YAML/JSON manifest files.
-
-        Args:
-            paths: File paths pointing to catalog YAML/JSON manifests.
-
-        Returns:
-            An initialized `BenchmarkZooRegistry` containing entries from all specified paths.
-        """
-        entries: list[BenchmarkZooEntry] = []
-        for path in paths:
-            # Import here to avoid circular dependencies.
-            from .schema import load_entries
-
-            entries.extend(load_entries(path))
-        return cls(entries)
+        """Construct a registry from the catalog shards under *path* (default: the bundled catalog)."""
+        return cls(load_benchmark_catalog_entries(path if path is not None else default_benchmark_zoo_dir()))
 
     def register(self, entry: BenchmarkZooEntry | Mapping[str, Any]) -> BenchmarkZooEntry:
         """Registers a new benchmark-zoo entry into this registry.
@@ -419,11 +388,6 @@ def default_benchmark_zoo_dir() -> Path:
     return BENCHMARK_ZOO_DIR
 
 
-def _manifest_paths(root: Path) -> tuple[Path, ...]:
-    """Resolves all manifest paths under the given directory or a specific file."""
-    return iter_benchmark_catalog_manifest_paths(root)
-
-
 @lru_cache(maxsize=32)
 def _load_benchmark_zoo_registry_cached(resolved_root: str) -> BenchmarkZooRegistry:
     """An LRU cached helper to load and construct a BenchmarkZooRegistry from a path string.
@@ -455,12 +419,3 @@ def load_benchmark_zoo_registry(path: str | Path | None = None) -> BenchmarkZooR
     root = Path(path) if path is not None else default_benchmark_zoo_dir()
     # Resolve the path to get a canonical representation for caching.
     return _load_benchmark_zoo_registry_cached(str(root.resolve()))
-
-
-def clear_benchmark_zoo_registry_cache() -> None:
-    """Clears the cached registry instances to force reloading of manifests from disk.
-
-    Calling this function will ensure that the next call to `load_benchmark_zoo_registry`
-    will rebuild the registry from scratch, reflecting any changes in the underlying manifest files.
-    """
-    _load_benchmark_zoo_registry_cached.cache_clear()

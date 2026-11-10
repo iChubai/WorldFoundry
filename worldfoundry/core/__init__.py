@@ -25,13 +25,14 @@ Implementation groups:
 - ``model_loading``: model materialization and checkpoint loading / state conversion.
 - ``io``: assets, filesystems, structured formats and input datasets.
 - ``media``: image / audio / video codecs, processing and artifact previews.
-- ``execution``: inference bootstrap, devices, processes, CUDA graphs and realtime execution.
+- ``execution``: inference bootstrap, processes, CUDA graphs and realtime execution.
+- ``platform``: accelerator detection, torch backend selection and the persistent compile cache.
 - ``configuration``: structured / Python configuration and validation.
 - ``acceleration``: reusable cache, token-pruning and low-precision operators.
 - ``vram``: parameter placement, offload and encoder lifetime.
 - ``memory``: context / semantic memory, retrieval and persistence.
 - ``geometry``: camera transforms, conditioning, trajectories and RGBD warping.
-- ``observability``: logging, terminal formatting, timing and profiling.
+- ``observability``: logging, rank-aware output, terminal formatting, timing and profiling.
 - ``utils``: general Python object and tensor helpers.
 
 The root retains the public facade and cross-cutting contracts, registries,
@@ -51,7 +52,6 @@ _EXPORT_MODULES = {
     "PromptProcessor": "worldfoundry.core.prompting",
     "assign_state_dict_strict": "worldfoundry.core.model_loading.checkpoints",
     "adaptive_batched_inference": "worldfoundry.core.execution.inference_runtime",
-    "batched_image_features": "worldfoundry.core.utils.tensors.features",
     "euler_angles_to_rotation_matrix_zyx": "worldfoundry.core.geometry.transforms",
     "compose_horizontal_views": "worldfoundry.core.utils",
     "split_horizontal_views": "worldfoundry.core.utils",
@@ -130,7 +130,7 @@ _EXPORT_MODULES = {
     "cp_pre_process": "worldfoundry.core.attention",
     "copy_uri": "worldfoundry.core.io",
     "cso_communication": "worldfoundry.core.attention",
-    "cuda_visible_devices_from_device": "worldfoundry.core.execution.device",
+    "cuda_visible_devices_from_device": "worldfoundry.core.platform.device",
     "destroy_model_parallel": "worldfoundry.core.distributed",
     "dist_init": "worldfoundry.core.distributed",
     "dump_serialized": "worldfoundry.core.io",
@@ -219,11 +219,11 @@ _EXPORT_MODULES = {
     "resolve_hf_snapshot_path": "worldfoundry.core.io",
     "resolve_local_checkpoint_file": "worldfoundry.core.io",
     "resolve_local_hf_model_path": "worldfoundry.core.io",
-    "get_current_torch_device": "worldfoundry.core.execution.device",
-    "resolve_inference_device": "worldfoundry.core.execution.device",
+    "get_current_torch_device": "worldfoundry.core.platform.device",
+    "resolve_inference_device": "worldfoundry.core.platform.device",
     "resolve_inference_batch_size": "worldfoundry.core.execution.inference_runtime",
     "resize_and_letterbox": "worldfoundry.core.utils",
-    "resolve_inference_dtype": "worldfoundry.core.execution.device",
+    "resolve_inference_dtype": "worldfoundry.core.platform.device",
     "run_torchrun_module": "worldfoundry.core.execution.process",
     "run_logged_subprocess": "worldfoundry.core.execution.process",
     "stack_or_pad_tensors": "worldfoundry.core.utils",
@@ -262,12 +262,11 @@ _EXPORT_MODULES = {
     "as_list": "worldfoundry.core.utils",
     "jsonable": "worldfoundry.core.io",
     "mean_flat": "worldfoundry.core.utils",
-    "mean_pairwise_cosine_distance": "worldfoundry.core.utils.tensors.features",
     "ParallelHelper": "worldfoundry.core.io",
     "PPScheduler": "worldfoundry.core.distributed",
     "pp_scheduler": "worldfoundry.core.distributed",
-    "print_per_rank": "worldfoundry.core.distributed",
-    "print_rank_0": "worldfoundry.core.distributed",
+    "print_per_rank": "worldfoundry.core.observability.rank_logging",
+    "print_rank_0": "worldfoundry.core.observability.rank_logging",
     "set_random_seed": "worldfoundry.core.utils",
     "skip_model_initialization": "worldfoundry.core.vram",
     "split_state_dict_with_prefix": "worldfoundry.core.model_loading",

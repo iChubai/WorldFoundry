@@ -16,7 +16,7 @@ def new_decode_cache(model: Any) -> list[torch.Tensor | str | None]:
 
 def prepare_wan_chunk_decoder(decoder: torch.nn.Module, *, compile_decoder: bool = False) -> torch.nn.Module:
     """Reuse the optional full-graph one-latent wrapper, not a whole-clip graph."""
-    from worldfoundry.core.execution.compile_cache import CompilePolicy, compile_module_cached
+    from worldfoundry.core.platform.compile_cache import CompilePolicy, compile_module_cached
 
     return compile_module_cached(
         decoder,

@@ -336,7 +336,7 @@ commands without executing them.
 
 ## Compiler caches
 
-`worldfoundry.core.execution.compile_cache` configures persistent `torch.compile` caches
+`worldfoundry.core.platform.compile_cache` configures persistent `torch.compile` caches
 for Inductor, Triton, the CUDA driver JIT, and torch C++/CUDA extensions. The
 compatibility import `worldfoundry.runtime.compile_cache` exposes the same API.
 The root is `WORLDFOUNDRY_COMPILE_CACHE_DIR` when set, otherwise

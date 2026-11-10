@@ -420,7 +420,7 @@ class GR00TRuntime:
         """
         if self.policy is not None:
             return
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         # Ensure gr00t modules are correctly aliased before policy import
         checkpoint = self.config.checkpoint_dir.expanduser().resolve()

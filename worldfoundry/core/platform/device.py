@@ -47,7 +47,7 @@ def is_npu_available() -> bool:
 def setup_npu(*, allow_internal_format: bool = False) -> Any:
     """Explicitly configure and return the available NPU namespace.
 
-    Historically importing :mod:`worldfoundry.core.execution.device` silently set
+    Historically importing :mod:`worldfoundry.core.platform.device` silently set
     ``allow_internal_format=False`` process-wide.  Callers that require that
     numerical/layout policy must now opt in through this function.
     """

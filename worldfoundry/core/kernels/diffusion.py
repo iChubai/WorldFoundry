@@ -33,17 +33,17 @@ import torch
 import torch.nn.functional as F
 import torch.version
 
-from worldfoundry.core.execution.compile_numerics import (
-    compiled_layer_norm_scale_shift,
-    compiled_residual_gate,
-    compiled_residual_gate_inplace,
-)
 from worldfoundry.core.kernels.capabilities import (
     QUALIFIED_TRITON_CAPABILITIES,
     default_kernel_thresholds,
     detected_kernel_device_profiles,
     kernel_device_profile,
     triton_tensor_eligible,
+)
+from worldfoundry.core.kernels.compiled_ops import (
+    compiled_layer_norm_scale_shift,
+    compiled_residual_gate,
+    compiled_residual_gate_inplace,
 )
 from worldfoundry.core.kernels.registry import (
     KERNEL_REGISTRY,
@@ -273,7 +273,7 @@ def _configure_triton_cache_once() -> None:
     """Configure the persistent cache before the first eager Triton import."""
 
     try:
-        from worldfoundry.core.execution.compile_cache import configure_persistent_compile_cache
+        from worldfoundry.core.platform.compile_cache import configure_persistent_compile_cache
 
         configure_persistent_compile_cache(namespace="in-tree-kernels")
     except (ImportError, OSError):

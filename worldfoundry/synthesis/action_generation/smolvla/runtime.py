@@ -109,8 +109,8 @@ class SmolVLARuntime:
         from accelerate import init_empty_weights
         from safetensors.torch import load_file
 
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration import SmolVLAConfig
         from .modeling import SmolVLAPolicy

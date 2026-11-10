@@ -103,11 +103,12 @@ def _distributed_rank_and_barrier():
     """Return ``(rank, barrier)``; missing process group is treated as single-process rank 0."""
 
     try:
-        from worldfoundry.core.distributed.runtime import torch_process_group as distributed
-
-        return distributed.get_rank(), distributed.barrier
-    except Exception:
+        import torch.distributed as dist
+    except ImportError:
         return 0, lambda: None
+    if dist.is_available() and dist.is_initialized():
+        return dist.get_rank(), dist.barrier
+    return 0, lambda: None
 
 
 def download_from_cache_or_uri(

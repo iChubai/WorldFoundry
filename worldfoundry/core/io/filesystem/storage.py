@@ -36,6 +36,23 @@ def is_remote_uri(uri: str | os.PathLike[str]) -> bool:
     return parse_uri_scheme(uri) not in {"", "file"}
 
 
+def suffix_for_uri(value: str | os.PathLike[str]) -> str:
+    """Return the lower-case file suffix for local paths and URL-like strings."""
+
+    text = str(value).strip()
+    if not text:
+        return ""
+    parsed = urlparse(text)
+    path_text = unquote(parsed.path) if parsed.scheme else text
+    name = Path(path_text).name
+    suffixes = Path(name).suffixes
+    if not suffixes:
+        return ""
+    if len(suffixes) >= 2 and suffixes[-2].casefold() == ".tar":
+        return ".tar" + suffixes[-1].casefold()
+    return suffixes[-1].casefold()
+
+
 def uri_to_local_path(uri: str | os.PathLike[str]) -> Path:
     """Convert a local path or ``file://`` URI into a ``Path``."""
 
@@ -343,6 +360,7 @@ __all__ = [
     "read_binary_uri",
     "read_text_uri",
     "remove_uri",
+    "suffix_for_uri",
     "uri_to_local_path",
     "write_binary_uri",
     "write_text_uri",

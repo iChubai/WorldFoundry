@@ -6,8 +6,67 @@ import ast
 import subprocess
 import sys
 import tokenize
+from graphlib import CycleError, TopologicalSorter
 from importlib.util import resolve_name
 from pathlib import Path
+
+# Core units from the bottom layer up. A unit imports its own layer or lower ones,
+# and units within one layer never import each other in a cycle.
+_LAYERS: tuple[frozenset[str], ...] = (
+    frozenset({"action_normalization", "contracts", "env_registry", "prompting", "registry", "utils"}),
+    frozenset({"observability"}),
+    frozenset({"io"}),
+    frozenset({"configuration", "platform"}),
+    frozenset({"distributed"}),
+    frozenset({"geometry", "kernels", "media"}),
+    frozenset({"attention"}),
+    frozenset({"nn"}),
+    frozenset({"model_loading.checkpoints"}),
+    frozenset({"acceleration", "vram"}),
+    frozenset({"model_loading"}),
+    frozenset({"execution", "memory", "safety"}),
+)
+
+# Wan-family DiT forward replacements that live under attention.parallel and import nn.
+_ATTENTION_FORWARDS_IMPORTING_NN = frozenset(
+    {
+        "worldfoundry.core.attention.parallel.causal_rope_sequence_parallel",
+        "worldfoundry.core.attention.parallel.memory_rope_sequence_parallel",
+        "worldfoundry.core.attention.parallel.patch_xdit_context_parallel",
+        "worldfoundry.core.attention.parallel.rope_sequence_parallel",
+        "worldfoundry.core.attention.parallel.scope_xdit_context_parallel",
+        "worldfoundry.core.attention.parallel.video_xdit_context_parallel",
+    }
+)
+
+
+def _core_unit(module: str) -> str | None:
+    """Return the layer-table unit that owns ``module``; ``None`` is the ``worldfoundry.core`` facade."""
+    relative = module.removeprefix("worldfoundry.core").lstrip(".")
+    if not relative:
+        return None
+    matches = [unit for layer in _LAYERS for unit in layer if relative == unit or relative.startswith(f"{unit}.")]
+    return max(matches, key=len) if matches else relative.split(".")[0]
+
+
+def _core_import_edges(root: Path) -> list[tuple[str, str]]:
+    """Return ``(importer, imported module)`` pairs inside core, including lazy and type-only imports."""
+    edges = []
+    for path in sorted((root / "worldfoundry/core").rglob("*.py")):
+        parts = path.relative_to(root).with_suffix("").parts
+        module = ".".join(parts[:-1] if parts[-1] == "__init__" else parts)
+        package = module if parts[-1] == "__init__" else module.rpartition(".")[0]
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, ast.ImportFrom):
+                targets = [
+                    resolve_name("." * node.level + (node.module or ""), package) if node.level else node.module or ""
+                ]
+            elif isinstance(node, ast.Import):
+                targets = [alias.name for alias in node.names]
+            else:
+                continue
+            edges.extend((module, target) for target in targets if target.startswith("worldfoundry.core"))
+    return edges
 
 
 def test_control_plane_imports_remain_lightweight() -> None:
@@ -24,7 +83,8 @@ import worldfoundry.core.configuration
 import worldfoundry.core.io
 import worldfoundry.core.nn
 import worldfoundry.core.utils
-from worldfoundry.core.execution import compile_cache, inference, process, realtime, runtime_cache
+from worldfoundry.core.execution import inference, process, realtime, runtime_cache
+from worldfoundry.core.platform import compile_cache
 from worldfoundry.core.geometry import path
 from worldfoundry.core.observability import logging_setup, nvtx, realtime_timing, time, torchprofile
 from worldfoundry.core.media.processing import postprocess, rtx
@@ -118,3 +178,33 @@ def test_model_consumers_reference_existing_core_modules() -> None:
                 if not module.with_suffix(".py").is_file() and not (module / "__init__.py").is_file():
                     unresolved.append((str(path.relative_to(root)), node.lineno, target))
     assert not unresolved, f"model consumers reference missing core modules: {unresolved}"
+
+
+def test_core_layer_table_assigns_every_package_and_module() -> None:
+    core = Path(__file__).resolve().parents[2] / "worldfoundry/core"
+    entries = {path.stem for path in core.glob("*.py") if path.name != "__init__.py"}
+    entries |= {path.name for path in core.iterdir() if (path / "__init__.py").is_file()}
+    assigned = {unit.split(".")[0] for layer in _LAYERS for unit in layer}
+    assert entries == assigned, f"unassigned: {sorted(entries - assigned)}; stale: {sorted(assigned - entries)}"
+
+
+def test_core_imports_follow_the_layer_table() -> None:
+    root = Path(__file__).resolve().parents[2]
+    layer_of = {unit: index for index, layer in enumerate(_LAYERS) for unit in layer}
+    upward = []
+    graph: dict[str, set[str]] = {}
+    for importer, imported in _core_import_edges(root):
+        source, target = _core_unit(importer), _core_unit(imported)
+        if source is None or source == target:
+            continue
+        if importer in _ATTENTION_FORWARDS_IMPORTING_NN and target == "nn":
+            continue
+        if target is None or layer_of.get(target, len(_LAYERS)) > layer_of.get(source, len(_LAYERS)):
+            upward.append((importer, imported))
+            continue
+        graph.setdefault(source, set()).add(target)
+    assert not upward, f"core imports that point up the layer table: {upward}"
+    try:
+        tuple(TopologicalSorter(graph).static_order())
+    except CycleError as error:
+        raise AssertionError(f"core units import each other: {error.args[1]}") from None

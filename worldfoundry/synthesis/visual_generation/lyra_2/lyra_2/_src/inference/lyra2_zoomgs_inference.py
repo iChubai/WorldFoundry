@@ -44,8 +44,8 @@ from lyra_2._src.inference.lyra2_ar_inference import (
 from lyra_2._src.utils.model_loader import load_model_from_checkpoint
 
 from worldfoundry.core.attention import attention_backend_context
-from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.core.execution import inference_runtime as misc
+from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.data.io import save_img_or_video
 
 torch.enable_grad(False)

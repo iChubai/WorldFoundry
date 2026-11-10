@@ -25,7 +25,7 @@ from typing import Any, cast
 import imageio
 import numpy as np
 
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 # ──────────────────────────────────────────────────────────────────────────
 # Decode / encode — imageio ffmpeg only; odd resolutions stay unpadded

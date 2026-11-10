@@ -38,7 +38,7 @@ from typing import Any, TypeVar, cast
 
 import torch
 
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 try:
     # PyTorch has not yet promoted pytree to a stable public namespace on all

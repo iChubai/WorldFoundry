@@ -3,8 +3,7 @@
 Hydra-style mappings name a ``target`` / ``class_path`` plus
 ``params`` / ``init_args``. :func:`resolve_symbol` imports
 ``package.module:Symbol`` (or dotted form). :func:`instantiate_from_config`
-calls the constructor. :func:`count_parameters` / :func:`count_params`
-report torch-style parameter counts for LVDM-shaped modules.
+calls the constructor.
 
 This does not load weights or download repositories.
 """
@@ -40,7 +39,7 @@ def resolve_symbol(
 
 
 # ──────────────────────────────────────────────────────────────────────────
-# Instantiate + parameter counts — Hydra target/class_path; no weight load
+# Instantiate — Hydra target/class_path; no weight load
 # ──────────────────────────────────────────────────────────────────────────
 
 
@@ -74,27 +73,7 @@ def instantiate_from_config(config: Mapping[str, Any] | str, **additional_kwargs
     return resolve_symbol(str(target))(**params)
 
 
-def count_parameters(model: Any, *, trainable_only: bool = False) -> int:
-    """Return the number of parameters owned by a torch-style module."""
-
-    parameters = model.parameters()
-    if trainable_only:
-        parameters = (parameter for parameter in parameters if parameter.requires_grad)
-    return sum(parameter.numel() for parameter in parameters)
-
-
-def count_params(model: Any, verbose: bool = False) -> int:
-    """Compatibility wrapper used by checkpoint-shaped LVDM modules."""
-
-    total = count_parameters(model)
-    if verbose:
-        print(f"{model.__class__.__name__} has {total * 1e-6:.2f} M params.")
-    return total
-
-
 __all__ = [
-    "count_parameters",
-    "count_params",
     "get_obj_from_str",
     "instantiate_from_config",
     "resolve_symbol",

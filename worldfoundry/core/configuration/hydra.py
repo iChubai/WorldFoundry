@@ -38,7 +38,7 @@ import attrs
 from omegaconf import DictConfig, OmegaConf
 
 from worldfoundry.core.configuration.cosmos_config import Config
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 _hydra_api = __import__("hydra", fromlist=["compose", "initialize"])
 compose, initialize = _hydra_api.compose, _hydra_api.initialize

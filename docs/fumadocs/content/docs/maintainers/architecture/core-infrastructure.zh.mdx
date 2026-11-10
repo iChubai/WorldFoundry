@@ -28,7 +28,7 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>model_loading</code></div></div>
         <p>模型构建、加载策略及权重转换；checkpoints 统一管理安全加载和 state-dict 赋值。</p>
-        <p className="pi-kv-read"><span>阅读入口</span> <code>checkpoints/, factory.py, inference_model.py, lora.py</code></p>
+        <p className="pi-kv-read"><span>阅读入口</span> <code>checkpoints/, model.py, inference_model.py, lora.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>io</code></div></div>
@@ -42,13 +42,18 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>execution</code></div></div>
-        <p>设备与进程生命周期、推理策略、运行时缓存、CUDA Graph 回放及实时执行编排。</p>
+        <p>进程生命周期、推理策略、运行时缓存、编译准备、CUDA Graph 回放及实时执行编排。</p>
         <p className="pi-kv-read"><span>阅读入口</span> <code>graphs/, realtime/, inference.py, inference_runtime.py, process.py</code></p>
       </li>
       <li className="pi-kv-row">
+        <div className="pi-kv-head"><div className="pi-kv-names"><code>platform</code></div></div>
+        <p>加速器探测、torch 与通信后端选择，以及持久化的 <code>torch.compile</code> 缓存。</p>
+        <p className="pi-kv-read"><span>阅读入口</span> <code>device.py, compile_cache.py</code></p>
+      </li>
+      <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>configuration</code></div></div>
-        <p>结构化及 Python 配置、Hydra 适配、参数覆盖、延迟构建和校验。</p>
-        <p className="pi-kv-read"><span>阅读入口</span> <code>lazy_config/, hydra.py, hydra_utils.py, overrides.py, python.py, validators.py</code></p>
+        <p>结构化及 Python 配置、Hydra 适配、参数覆盖、延迟构建、按 <code>target</code> 构造对象和校验。</p>
+        <p className="pi-kv-read"><span>阅读入口</span> <code>lazy_config/, factory.py, hydra.py, hydra_utils.py, overrides.py, python.py, validators.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>nn</code></div></div>
@@ -57,8 +62,8 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>acceleration</code></div></div>
-        <p>通用缓存、token 裁剪和可选低精度线性算子。</p>
-        <p className="pi-kv-read"><span>阅读入口</span> <code>quantization/, cache.py, token_pruning.py, technology.py</code></p>
+        <p>通用缓存、token 裁剪、可选低精度线性算子，以及常驻 attention 的投影与精度调度。</p>
+        <p className="pi-kv-read"><span>阅读入口</span> <code>quantization/, cache.py, mha_schedule.py, token_pruning.py, technology.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>kernels</code></div></div>
@@ -82,8 +87,8 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>observability</code></div></div>
-        <p>日志、终端格式、计时、性能分析及可选 NVTX 标记。</p>
-        <p className="pi-kv-read"><span>阅读入口</span> <code>logging_setup.py, formatting.py, colors.py, time.py, torchprofile.py</code></p>
+        <p>日志、按 rank 输出、终端格式、计时、性能分析及可选 NVTX 标记。</p>
+        <p className="pi-kv-read"><span>阅读入口</span> <code>logging_setup.py, rank_logging.py, formatting.py, colors.py, time.py, torchprofile.py</code></p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head"><div className="pi-kv-names"><code>safety</code></div></div>
@@ -108,6 +113,25 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
 <Callout type="info">
   扩散包在其自身边界上重申此规则，见 [原生扩散](/zh/docs/maintainers/architecture/native-diffusion)。通用 attention、transformer、加载、offload 原语在 `core`；扩散域契约、scheduler、recipe 在 `base_models/diffusion_model`。
 </Callout>
+
+### core 内部分层
+
+core 的子包按固定顺序分层：模块只 import 本层或更低层，同一层内的模块不能互相成环。自底向上依次是：
+
+1. `utils` 及根目录模块 `registry`、`contracts`、`env_registry`、`prompting`、`action_normalization`
+2. `observability`
+3. `io`
+4. `configuration`、`platform`
+5. `distributed`
+6. `media`、`geometry`、`kernels`
+7. `attention`
+8. `nn`
+9. `model_loading/checkpoints`
+10. `acceleration`、`vram`
+11. `model_loading`
+12. `execution`、`memory`、`safety`
+
+低层需要的工具函数下沉到那一层，而不是向上 import。`tests/core/test_core_module_boundaries.py` 保存这张表，出现向上的 import 就失败。`attention/parallel` 下替换 Wan 系 DiT forward 的模块会 import `nn`，测试里按名字列出了它们。
 
 ## 被谁消费
 
@@ -136,12 +160,14 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
 - CUDA Graph、预热、帧预取和执行重叠归到 `execution`；encoder 的参数放置和生命周期归到 `vram`。
 - `memory` 与 `vram` 分开：前者管理上下文记忆及检索，后者管理物理显存、参数放置和 offload。
 - 配置工具从 `io` 移到 `configuration`，终端格式从 `io` 移到 `observability`，运行时调度从 `utils` 移到 `execution`。
+- 按 `target`/`class_path` 构造对象归 `configuration`；按 rank 输出的日志归 `observability`。
+- 加速器探测和持久化编译缓存归 `platform`；attention 投影与精度调度归 `acceleration`；只服务评测的特征工具放在 `worldfoundry/evals`。
 - Wan 的序列并行适配器和 VGGT 的观测预处理归到对应模型；仓库代码盘点归到 `scripts/model_zoo`。
 
 公开的延迟加载函数及类入口保持稳定。内部模块使用实际所属的新路径，已删除目录不留下兼容转发壳。
 
 ## 回归检查
 
-`tests/core/test_core_module_boundaries.py` 无需可选模型依赖即可检查延迟加载目标及 core 引用，并阻止 core 反向依赖模型或应用包。实际导出解析在模型环境中测试。
+`tests/core/test_core_module_boundaries.py` 无需可选模型依赖即可检查延迟加载目标及 core 引用，并阻止 core 反向依赖模型或应用包，同时检查上面的分层表。实际导出解析在模型环境中测试。
 
 涉及实际模型的变更还需通过 `make test-geometry`：固定输入、权重、环境和随机种子，与接受过的基准输出比较数值，并检查回放记录的源码哈希仍对应当前代码。目录迁移必须同时保持计算行为和引用有效。

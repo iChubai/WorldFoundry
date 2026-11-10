@@ -26,8 +26,8 @@ from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import CheckpointImpl, CheckpointWrapper
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import checkpoint_wrapper as ptd_checkpoint_wrapper
 
-from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
+from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.a2a_cp import MinimalA2AAttnOp
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.blockmask import (
     AttnMaskSpec,

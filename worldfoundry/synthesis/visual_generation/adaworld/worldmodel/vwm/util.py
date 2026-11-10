@@ -4,14 +4,14 @@ from inspect import isfunction
 import torch
 from einops import repeat
 
-from worldfoundry.core.model_loading.factory import (
-    count_params as count_params,
-)
-from worldfoundry.core.model_loading.factory import (
+from worldfoundry.core.configuration.factory import (
     get_obj_from_str as _get_obj_from_str,
 )
-from worldfoundry.core.model_loading.factory import (
+from worldfoundry.core.configuration.factory import (
     instantiate_from_config as instantiate_from_config,
+)
+from worldfoundry.core.utils.tensors.torch import (
+    count_params as count_params,
 )
 
 

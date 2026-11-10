@@ -27,9 +27,9 @@ from einops import rearrange
 from worldfoundry.core.distributed.sequence_parallel.xfuser_parallel import (
     initialize_usp,  # noqa: F401 - public compatibility export
 )
-from worldfoundry.core.execution.device import is_npu_available
 from worldfoundry.core.nn import sinusoidal_embedding_1d
 from worldfoundry.core.nn.checkpointing.gradient import gradient_checkpoint_forward
+from worldfoundry.core.platform.device import is_npu_available
 
 _xfuser_distributed = __import__(
     "xfuser.core.distributed",

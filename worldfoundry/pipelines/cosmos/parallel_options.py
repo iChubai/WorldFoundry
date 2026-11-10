@@ -7,9 +7,9 @@ from collections.abc import Mapping
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.denoisers.cosmos2p5_parallel import validate_cosmos_parallel_policy
 from worldfoundry.core.distributed.model_parallel.inference_parallel import (
     build_inference_parallel_context,
-    validate_inference_parallel_policy,
     validate_parallel_degrees,
 )
 
@@ -18,7 +18,7 @@ def build_cosmos_parallel_context(options, policy, *, attention_heads: int):
     tp, cp = validate_parallel_degrees(options.get("tensor_parallel", 1), options.get("context_parallel", 1))
     if tp * cp == 1:
         return None
-    validate_inference_parallel_policy(policy)
+    validate_cosmos_parallel_policy(policy)
     for name in (
         "quantization",
         "quantization_mode",

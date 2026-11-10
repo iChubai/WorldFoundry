@@ -90,7 +90,7 @@ def isolated_logging():
     # tests.
     saved_dist = None
     try:
-        from worldfoundry.core.distributed.runtime.logging import distributed_logger as _dl
+        from worldfoundry.core.observability.rank_logging import distributed_logger as _dl
 
         saved_dist = (_dl, list(_dl.handlers), _dl.propagate, _dl.level)
     except Exception:
@@ -139,7 +139,7 @@ def test_facade_logs_flow_through_pipeline(isolated_logging, capsys):
     minimal environments.
     """
     pytest.importorskip("torch")
-    from worldfoundry.core.distributed.runtime.logging import log
+    from worldfoundry.core.observability.rank_logging import log
 
     configure_logging(level="DEBUG", force=True)
     log.info("facade-says-hi")
@@ -266,7 +266,7 @@ def test_distributed_logger_reparented(isolated_logging, capsys):
     """``print_rank_0`` / ``print_per_rank`` flow through the unified pipeline
     rather than the singleton's own handler. Requires ``torch``."""
     pytest.importorskip("torch")
-    from worldfoundry.core.distributed.runtime.logging import distributed_logger, print_rank_0
+    from worldfoundry.core.observability.rank_logging import distributed_logger, print_rank_0
 
     configure_logging(level="DEBUG", force=True)
 

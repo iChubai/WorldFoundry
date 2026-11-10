@@ -27,7 +27,7 @@ from torch.distributed.checkpoint import FileSystemReader
 from torch.distributed.checkpoint.state_dict import StateDictOptions, get_model_state_dict, set_model_state_dict
 from torch.distributed.checkpoint.stateful import Stateful
 
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 # ──────────────────────────────────────────────────────────────────────────
 # Planner internals — torch's private DCP APIs; lock derived_version writers

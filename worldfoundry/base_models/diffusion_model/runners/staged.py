@@ -14,8 +14,8 @@ import torch
 from einops import rearrange, reduce, repeat
 from PIL import Image
 
-from worldfoundry.core.execution.device import get_device_name, get_device_type, is_npu_available, parse_device_type
 from worldfoundry.core.model_loading import GeneralLoRALoader, ModelConfig, load_state_dict
+from worldfoundry.core.platform.device import get_device_name, get_device_type, is_npu_available, parse_device_type
 from worldfoundry.core.vram import AutoTorchModule, AutoWrappedLinear
 
 

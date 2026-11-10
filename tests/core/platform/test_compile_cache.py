@@ -10,7 +10,7 @@ import pytest
 import torch
 from torch.fx import GraphModule
 
-from worldfoundry.core.execution import compile_cache
+from worldfoundry.core.platform import compile_cache
 
 RECOMPILE_LIMIT = "WORLDFOUNDRY_COMPILE_RECOMPILE_LIMIT"
 ACCUMULATED_RECOMPILE_LIMIT = "WORLDFOUNDRY_COMPILE_ACCUMULATED_RECOMPILE_LIMIT"

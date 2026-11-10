@@ -9,7 +9,7 @@ layout without inheriting Diffusers' ``ModelMixin``.
 :func:`register_to_config` captures ``__init__`` arguments.
 
 This is not Hydra instantiation
-(:mod:`worldfoundry.core.model_loading.factory`).
+(:mod:`worldfoundry.core.configuration.factory`).
 """
 
 from __future__ import annotations

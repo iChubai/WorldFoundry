@@ -19,7 +19,7 @@ from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
 from worldfoundry.base_models.perception_core.optical_flow.sea_raft import (
     config_path as sea_raft_config_path,
 )
-from worldfoundry.core.execution.device import get_current_torch_device
+from worldfoundry.core.platform.device import get_current_torch_device
 
 # isort: split
 from .utils import load_dimension_info, read_video_frames_cv2

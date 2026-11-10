@@ -6,7 +6,7 @@ stdout/stderr redirection context managers, a ``watch``-style decorator,
 and logging filters that drop or rewrite noisy third-party messages.
 
 This is not the distributed rank logger
-(:mod:`worldfoundry.core.distributed.runtime.logging`).
+(:mod:`worldfoundry.core.observability.rank_logging`).
 """
 
 import ast

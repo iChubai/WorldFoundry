@@ -23,7 +23,7 @@ from inference.common.config import MagiConfig
 from inference.model.vae import AutoModel, DiagonalGaussianDistribution, VideoTokenizerABC
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
-from worldfoundry.core.distributed.runtime.logging import distributed_logger as magi_logger
+from worldfoundry.core.observability.rank_logging import distributed_logger as magi_logger
 
 
 ############################################

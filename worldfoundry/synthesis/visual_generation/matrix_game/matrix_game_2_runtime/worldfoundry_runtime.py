@@ -214,8 +214,8 @@ def _apply_matrix_game2_optimizations(model, policy):
     from worldfoundry.base_models.diffusion_model.loaders.module import _compile_policy_from_runtime
     from worldfoundry.base_models.diffusion_model.optimizations.qkv_fusion import fuse_qkv_projections
     from worldfoundry.core.attention.backends.dispatch import attention_compile_receipt_scope
-    from worldfoundry.core.execution.compile_cache import compile_callable_cached
     from worldfoundry.core.model_loading.optimize import AppliedOptimizations, apply_quantization_policy
+    from worldfoundry.core.platform.compile_cache import compile_callable_cached
 
     applied = AppliedOptimizations()
     model._worldfoundry_applied_optimizations = applied

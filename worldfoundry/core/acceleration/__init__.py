@@ -4,10 +4,10 @@
 - token_pruning: token selection and reconstruction.
 - quantization: low-precision Linear execution and FP8/NVFP4 packing.
 - technology: inventory of active acceleration families.
+- mha_schedule: projection fusion and precision schedules for resident attention.
 
 CUDA graph dispatch, frame prefetch, overlap and prewarm are owned by
 core.execution. One-shot encoder placement is owned by core.vram.
-Existing package-level APIs continue to expose those helpers.
 """
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -50,88 +50,32 @@ from worldfoundry.core.acceleration.token_pruning import (
     restore_tokens,
     select_token_indices,
 )
-from worldfoundry.core.execution.graphs.cuda_graph_dispatch import (
-    CUDAGraphDispatch,
-    cuda_graph_capture_ar_index,
-)
-from worldfoundry.core.execution.realtime.frame_prefetch import (
-    CudaHostPrefetch,
-    LazyCudaFrame,
-    prefetch_to_numpy,
-)
-from worldfoundry.core.execution.realtime.overlap import (
-    CudaStreamOverlap,
-    HostThreadOverlap,
-    SynchronousOverlap,
-)
-from worldfoundry.core.execution.realtime.prewarm import (
-    PrewarmDeadline,
-    PrewarmSequenceTiming,
-    PrewarmTimeoutError,
-    PrewarmTiming,
-    cuda_graph_prewarm_steps,
-    run_async_prewarm_sequence,
-    run_prewarm_sequence,
-    run_timed_prewarm,
-)
-from worldfoundry.core.vram.encoder_lifecycle import (
-    collect_and_release_cuda_memory,
-    ensure_one_shot_encoder,
-    move_tensors_to_cpu,
-    offload_module_to_cpu,
-    release_one_shot_encoder_references,
-    run_one_shot_encoder_stage,
-    setup_one_shot_encoder,
-)
 
 __all__ = [
     "AccelerationTechnology",
     "AdaCacheResidualCache",
     "AdaptiveResidualCache",
     "BlockTaylorSeerCache",
-    "CUDAGraphDispatch",
-    "CudaHostPrefetch",
-    "CudaStreamOverlap",
     "CustomTaylorResidualCache",
     "FixedStepCache",
     "Float8Linear",
-    "HostThreadOverlap",
-    "LazyCudaFrame",
     "MagCacheResidualCache",
     "NVFP4Linear",
-    "PrewarmDeadline",
-    "PrewarmSequenceTiming",
-    "PrewarmTimeoutError",
-    "PrewarmTiming",
-    "SynchronousOverlap",
     "TaylorSeerResidualCache",
     "TeaCacheResidualCache",
     "TokenPruneState",
     "TokenPruner",
     "WeightOnlyLinear",
     "acceleration_technology_report",
-    "collect_and_release_cuda_memory",
-    "cuda_graph_capture_ar_index",
-    "cuda_graph_prewarm_steps",
     "dequantize_nvfp4",
-    "ensure_one_shot_encoder",
-    "move_tensors_to_cpu",
-    "offload_module_to_cpu",
-    "prefetch_to_numpy",
     "prune_tokens",
     "quantization_runtime_report",
     "quantize_nvfp4",
-    "release_one_shot_encoder_references",
     "replace_linear_with_float8",
     "replace_linear_with_nvfp4",
     "replace_linear_with_weight_only",
     "reset_quantization_runtime_window",
     "restore_tokens",
-    "run_async_prewarm_sequence",
-    "run_one_shot_encoder_stage",
-    "run_prewarm_sequence",
-    "run_timed_prewarm",
     "select_token_indices",
     "set_low_precision_enabled",
-    "setup_one_shot_encoder",
 ]

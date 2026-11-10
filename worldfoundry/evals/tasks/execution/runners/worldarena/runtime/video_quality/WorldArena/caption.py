@@ -11,8 +11,8 @@ try:
 except ImportError:
     json_repair = None
 
-from worldfoundry.core.execution.device import get_current_torch_device, resolve_inference_dtype
 from worldfoundry.core.execution.inference_runtime import resolve_generation_max_new_tokens
+from worldfoundry.core.platform.device import get_current_torch_device, resolve_inference_dtype
 
 
 def _loads_jsonish(text):

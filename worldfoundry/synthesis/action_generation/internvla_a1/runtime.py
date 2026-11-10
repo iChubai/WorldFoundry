@@ -163,7 +163,7 @@ class InternVLAA1Runtime:
         from safetensors.torch import load_model as load_safetensors_model
         from torch import nn
 
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration import InternVLAA1Config
         from .cosmos import CosmosImageTokenizer

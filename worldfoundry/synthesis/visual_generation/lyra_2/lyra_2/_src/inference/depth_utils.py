@@ -23,7 +23,7 @@ import sys
 import cv2
 import torch
 
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 DA3_CANONICAL_PACKAGE = "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3"
 

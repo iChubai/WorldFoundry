@@ -4,10 +4,10 @@ import numpy as np
 import torch
 from rich import print
 
-from worldfoundry.core.model_loading.factory import (
+from worldfoundry.core.configuration.factory import (
     get_obj_from_str as get_obj_from_str,
 )
-from worldfoundry.core.model_loading.factory import (
+from worldfoundry.core.configuration.factory import (
     instantiate_from_config,
 )
 

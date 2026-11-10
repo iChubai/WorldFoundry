@@ -234,23 +234,6 @@ def build_inference_parallel_context(
         raise
 
 
-def validate_inference_parallel_policy(policy) -> None:
-    """Reject combinations that have no distributed inference validation."""
-
-    from worldfoundry.core.model_loading.policy import OffloadMode, QuantizationMode
-
-    if policy.offload.mode is not OffloadMode.NONE:
-        raise ValueError("multi-rank Cosmos inference requires offload_mode=none")
-    if policy.dtype is not torch.float32:
-        raise ValueError("multi-rank Cosmos inference currently requires torch_dtype=float32 for numerical stability")
-    if torch.is_autocast_enabled(policy.device.type):
-        raise ValueError("multi-rank Cosmos inference requires autocast to be disabled")
-    if policy.device.type == "cuda" and torch.backends.cuda.matmul.allow_tf32:
-        raise ValueError("multi-rank Cosmos inference requires CUDA matmul TF32 to be disabled")
-    if policy.quantization.mode is not QuantizationMode.NONE or policy.compile or policy.options:
-        raise ValueError("multi-rank Cosmos inference requires dense, uncompiled weights without runtime options")
-
-
 class ColumnParallelLinear(torch.nn.Module):
     """A checkpoint-loaded output feature slice; no constructor RNG consumption."""
 
@@ -318,6 +301,5 @@ __all__ = [
     "RowParallelLinear",
     "balanced_ranges",
     "build_inference_parallel_context",
-    "validate_inference_parallel_policy",
     "validate_parallel_degrees",
 ]

@@ -1,7 +1,7 @@
 """Central logging configuration for WorldFoundry.
 
 This module is the single opt-in entry point for wiring the framework's
-loguru-backed ``log`` facade (:mod:`worldfoundry.core.distributed.runtime.logging`)
+loguru-backed ``log`` facade (:mod:`worldfoundry.core.observability.rank_logging`)
 together with the stdlib :mod:`logging` hierarchy — vendored model runtimes,
 the sequence-parallel infrastructure (``init_logger``), and the rank-aware
 ``distributed_logger``. Calling :func:`configure_logging` once at process
@@ -639,7 +639,7 @@ def _apply_distributed_logger(level: int) -> None:
     distributed stack; if it is unavailable we simply skip reparenting.
     """
     try:
-        from worldfoundry.core.distributed.runtime.logging import distributed_logger
+        from worldfoundry.core.observability.rank_logging import distributed_logger
     except Exception:
         return
     distributed_logger.handlers.clear()

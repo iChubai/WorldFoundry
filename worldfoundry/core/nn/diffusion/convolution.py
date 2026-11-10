@@ -32,7 +32,7 @@ Public surface:
 import torch
 import torch.nn as nn
 
-from worldfoundry.core.model_loading.factory import instantiate_from_config
+from worldfoundry.core.configuration.factory import instantiate_from_config
 
 # ──────────────────────────────────────────────────────────────────────────
 # Causal convolutions — pad then crop the leading axis so t cannot see t+1

@@ -5,8 +5,8 @@ from dataclasses import asdict
 import torch
 
 from worldfoundry.core.acceleration.guards import guard_fixed_inference
+from worldfoundry.core.acceleration.mha_schedule import MHASchedule, ScheduledProjection, scheduled_sdpa
 from worldfoundry.core.acceleration.plugins import AccelerationHandle, PreparedAcceleration
-from worldfoundry.core.attention.schedule import MHASchedule, ScheduledProjection, scheduled_sdpa
 
 from .projection_selection import ProjectionSelection, select_native_projections
 

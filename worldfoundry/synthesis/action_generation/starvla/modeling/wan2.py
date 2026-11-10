@@ -60,8 +60,8 @@ class Wan2Interface(nn.Module):
         )
         self.config = config
 
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.io.paths import resolve_local_hf_model_path
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         probe_device = resolve_inference_device(str(wm_cfg.get("device", "cuda")), allow_cpu_fallback=True)
         self.inference_dtype = resolve_inference_dtype(probe_device, str(wm_cfg.get("torch_dtype", "auto")))

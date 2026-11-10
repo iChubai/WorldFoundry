@@ -18,7 +18,7 @@ class VideoCrafterComponents:
 def load_videocrafter_components() -> VideoCrafterComponents:
     """Load the packaged inference helpers and shared LVDM factory."""
 
-    from worldfoundry.core.model_loading.factory import instantiate_from_config
+    from worldfoundry.core.configuration.factory import instantiate_from_config
 
     from .videocrafter_inference import (
         batch_ddim_sampling,

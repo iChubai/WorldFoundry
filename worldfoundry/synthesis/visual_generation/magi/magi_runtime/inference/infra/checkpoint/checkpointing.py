@@ -21,8 +21,8 @@ import torch
 import torch.distributed
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
-from worldfoundry.core.distributed import print_per_rank, print_rank_0
 from worldfoundry.core.model_loading.checkpoints import load_sharded_safetensors_parallel_with_progress, unwrap_model
+from worldfoundry.core.observability.rank_logging import print_per_rank, print_rank_0
 
 
 def _split_state_dict_for_pp(weight_dict: OrderedDict, model_config):

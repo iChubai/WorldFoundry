@@ -19,7 +19,7 @@ import torch
 from safetensors import safe_open
 
 from worldfoundry.core.io.filesystem.storage import read_text_uri
-from worldfoundry.core.model_loading import load_torch_state_dict
+from worldfoundry.core.model_loading.checkpoints.file import load_torch_state_dict
 
 # ──────────────────────────────────────────────────────────────────────────
 # Index expansion — flatten sharded safetensors.json into unique shard paths

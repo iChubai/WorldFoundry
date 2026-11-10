@@ -402,7 +402,7 @@ def compile_module_if_enabled(
     ``_STRICT`` env vars when the explicit kwargs are omitted. Already
     compiled wrappers (``_worldfoundry_core_compiled``) are returned
     unchanged. Delegates to
-    :func:`worldfoundry.core.execution.compile_cache.compile_module_cached`.
+    :func:`worldfoundry.core.platform.compile_cache.compile_module_cached`.
     """
 
     should_compile = _env_flag("WORLDFOUNDRY_TORCH_COMPILE", default=False) if enabled is None else bool(enabled)
@@ -424,7 +424,7 @@ def compile_module_if_enabled(
     else:
         selected_dynamic = None
 
-    from worldfoundry.core.execution.compile_cache import CompilePolicy, compile_module_cached
+    from worldfoundry.core.platform.compile_cache import CompilePolicy, compile_module_cached
 
     compiled = compile_module_cached(
         module,

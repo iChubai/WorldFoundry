@@ -148,7 +148,7 @@ def acceleration_technology_report(
         AccelerationTechnology(
             "compilation",
             "persistent Inductor/Triton cache",
-            "worldfoundry.core.execution.compile_cache",
+            "worldfoundry.core.platform.compile_cache",
             True,
             False,
             True,

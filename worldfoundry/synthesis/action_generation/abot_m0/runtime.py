@@ -241,8 +241,8 @@ class ABotM0Runtime:
             return self._model
         import torch
 
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.execution.inference import compile_module_if_enabled
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         from .action_head import ActionHeadConfig
         from .modeling import ABotM0Model

@@ -27,7 +27,7 @@ from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math impo
     make_beta_schedule,
     rescale_zero_terminal_snr,
 )
-from worldfoundry.core.model_loading.factory import instantiate_from_config  # noqa: E402 - Follows the logging setup.
+from worldfoundry.core.configuration.factory import instantiate_from_config  # noqa: E402 - Follows the logging setup.
 from worldfoundry.core.nn.blocks.ema import LitEma  # noqa: E402 - Follows the logging setup.
 from worldfoundry.core.nn.diffusion.convolution import disabled_train  # noqa: E402 - Follows the logging setup.
 from worldfoundry.core.nn.diffusion.utils import (  # noqa: E402 - Follows the logging setup.

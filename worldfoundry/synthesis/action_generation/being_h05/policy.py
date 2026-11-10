@@ -25,7 +25,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.qwen.beingh.qwen3_navit import 
     Qwen3Config,
     Qwen3ForCausalLM,
 )
-from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
 from .modeling.beingvla import BeingH, BeingHConfig
 from .modeling.internvit import InternVisionConfig, InternVisionModel

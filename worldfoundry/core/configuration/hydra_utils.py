@@ -3,7 +3,7 @@
 LEGACY (vendored jimfan-utils lineage): frozen API kept for existing callers.
 This is the ``cls``/``class`` instantiation vocabulary; do not adopt it in new
 code -- use ``worldfoundry.core.configuration.lazy_config.instantiate``
-(``_target_``) or ``worldfoundry.core.model_loading.factory`` instead, and
+(``_target_``) or ``worldfoundry.core.configuration.factory`` instead, and
 ``worldfoundry.core.registry.TypedRegistry`` for new registries.
 """
 

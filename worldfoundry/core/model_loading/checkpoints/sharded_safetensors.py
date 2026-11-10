@@ -27,7 +27,7 @@ from safetensors.torch import load as load_from_bytes
 from safetensors.torch import load_file
 from tqdm.auto import tqdm
 
-from worldfoundry.core.distributed.runtime.logging import print_per_rank
+from worldfoundry.core.observability.rank_logging import print_per_rank
 
 # ──────────────────────────────────────────────────────────────────────────
 # Shard I/O — optional .zst sibling; zstd must not deadlock on stderr

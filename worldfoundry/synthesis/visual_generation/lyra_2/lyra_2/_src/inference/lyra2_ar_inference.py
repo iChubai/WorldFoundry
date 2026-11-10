@@ -26,8 +26,8 @@ from lyra_2._src.utils.forward_warp_utils_pytorch import (
 )
 
 from worldfoundry.core.distributed.model_parallel.megatron_compat import parallel_state
-from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.core.execution import inference_runtime as misc
+from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.data.io import save_img_or_video
 
 torch.enable_grad(False)

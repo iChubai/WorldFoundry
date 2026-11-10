@@ -28,7 +28,7 @@ from einops import rearrange
 from torch import nn
 from torch.distributed._composable.fsdp import fully_shard
 
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 # isort: split
 from worldfoundry.core.kernels import layer_norm_scale_shift, residual_gate_add

@@ -34,9 +34,9 @@ from torch.distributed.tensor import DTensor
 from worldfoundry.core.configuration.lazy_config import instantiate as lazy_instantiate
 from worldfoundry.core.distributed import broadcast_dtensor_model_states
 from worldfoundry.core.distributed.model_parallel.context import broadcast
-from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.core.execution import inference_runtime as misc
 from worldfoundry.core.geometry.transforms import ray_condition
+from worldfoundry.core.observability.rank_logging import log
 
 try:
     from worldfoundry.core.distributed.model_parallel.megatron_compat import parallel_state

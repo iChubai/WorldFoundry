@@ -329,7 +329,7 @@ Hugging Face cache snapshot。Direct root 支持 `org/name`、`org--name` 和嵌
 
 ## 编译器缓存
 
-`worldfoundry.core.execution.compile_cache` 为 Inductor、Triton、CUDA driver JIT 和
+`worldfoundry.core.platform.compile_cache` 为 Inductor、Triton、CUDA driver JIT 和
 torch C++/CUDA extensions 配置持久化 `torch.compile` 缓存；兼容入口
 `worldfoundry.runtime.compile_cache` 暴露同一 API。根目录优先使用
 `WORLDFOUNDRY_COMPILE_CACHE_DIR`，否则为

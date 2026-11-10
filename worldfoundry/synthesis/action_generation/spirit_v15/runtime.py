@@ -55,7 +55,7 @@ class SpiritV15Runtime:
             return self._model
 
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         from .modeling import SpiritVLAPolicy
 

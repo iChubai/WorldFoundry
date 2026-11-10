@@ -129,7 +129,7 @@ def scheduled_sdpa(q, k, v, *, num_heads, schedule):
     original_dtype = q.dtype
     projected = [tensor.reshape(tensor.shape[0], tensor.shape[1], num_heads, -1) for tensor in (q, k, v)]
     if schedule.sdpa_backend == "scaled_int8_fp8":
-        from .backends.scaled_int8_fp8 import scaled_int8_fp8_attention
+        from worldfoundry.core.attention.backends.scaled_int8_fp8 import scaled_int8_fp8_attention
 
         result = scaled_int8_fp8_attention(*projected)
         return result.reshape(result.shape[0], result.shape[1], -1)
@@ -138,17 +138,17 @@ def scheduled_sdpa(q, k, v, *, num_heads, schedule):
         projected = [tensor.to(torch.float8_e4m3fn) for tensor in projected]
     if schedule.sdpa_backend == "fa2":
         if schedule.use_tma:
-            from .backends.triton_tma import triton_tma_sdpa
+            from worldfoundry.core.attention.backends.triton_tma import triton_tma_sdpa
 
             result = triton_tma_sdpa(*projected)
         else:
-            from .backends.triton_fa2 import flash_attention_2
+            from worldfoundry.core.attention.backends.triton_fa2 import flash_attention_2
 
             result = flash_attention_2(*projected, output_dtype=original_dtype)
     else:
         q, k, v = [tensor.transpose(1, 2) for tensor in projected]
         if schedule.quantized_sdpa:
-            from .backends.native_fp8 import native_cudnn_fp8_sdpa
+            from worldfoundry.core.attention.backends.native_fp8 import native_cudnn_fp8_sdpa
 
             result = native_cudnn_fp8_sdpa(q, k, v).to(original_dtype)
         elif schedule.sdpa_backend == "cudnn":

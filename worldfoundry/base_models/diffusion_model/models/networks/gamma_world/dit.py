@@ -59,7 +59,7 @@ from torch.nn.attention.flex_attention import BlockMask, create_block_mask, flex
 from worldfoundry.core.attention import attention
 from worldfoundry.core.attention.backends.native import NativeAttention
 from worldfoundry.core.distributed.model_parallel.context import split_inputs_cp
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 # isort: split
 from worldfoundry.core.kernels import layer_norm_scale_shift, qk_rmsnorm_rope, residual_gate_add

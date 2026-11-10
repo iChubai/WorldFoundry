@@ -73,12 +73,12 @@ from worldfoundry.core.distributed.model_parallel.context import (
     broadcast_split_tensor,
     cat_outputs_cp,
 )
-from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.core.distributed.sharding.fsdp_runtime import hsdp_device_mesh
 from worldfoundry.core.execution import inference_runtime as misc
 from worldfoundry.core.model_loading import InferenceModel, load_state_dict, non_strict_load_model
+from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.core.observability.time import CudaSyncTimer as sync_timer
-from worldfoundry.core.utils import count_parameters as count_params
+from worldfoundry.core.utils import count_params
 
 IS_PREPROCESSED_KEY = "is_preprocessed"
 NUM_EMBEDDING_PADDING_TOKENS = 512

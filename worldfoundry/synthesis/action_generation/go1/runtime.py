@@ -125,7 +125,7 @@ class GO1Runtime:
         if self._model is not None:
             return self._model
 
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration_go1 import GO1ModelConfig
         from .modeling_go1 import GO1Model

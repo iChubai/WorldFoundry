@@ -11,7 +11,7 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.trainer import Trainer
 from transformers import logging as transf_logging
 
-from worldfoundry.core.model_loading.factory import instantiate_from_config
+from worldfoundry.core.configuration.factory import instantiate_from_config
 
 
 def get_parser() -> argparse.ArgumentParser:

@@ -36,7 +36,7 @@ from worldfoundry.base_models.diffusion_model.schedulers.lvdm.schedule_math impo
 
 # import pytorch_lightning as pl
 # from pytorch_lightning.utilities import rank_zero_only
-from worldfoundry.core.model_loading.factory import instantiate_from_config  # noqa: E402 - Follows the logging setup.
+from worldfoundry.core.configuration.factory import instantiate_from_config  # noqa: E402 - Follows the logging setup.
 from worldfoundry.core.nn.blocks.ema import LitEma  # noqa: E402 - Follows the logging setup.
 from worldfoundry.core.nn.diffusion.convolution import disabled_train  # noqa: E402 - Follows the logging setup.
 from worldfoundry.core.nn.diffusion.utils import (  # noqa: E402 - Follows the logging setup.

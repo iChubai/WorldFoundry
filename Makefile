@@ -118,7 +118,7 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/core/acceleration/test_easycache.py \
 	tests/core/acceleration/test_fp8_conv.py \
 	tests/core/acceleration/test_svdquant.py \
-	tests/core/attention/test_mha_schedule.py \
+	tests/core/acceleration/test_mha_schedule.py \
 	tests/core/test_sol_attention.py \
 	tests/base_models/diffusion_model/test_camera_attention_dispatch.py \
 	tests/base_models/diffusion_model/optimizations/test_calibrated_plugins.py \
@@ -157,6 +157,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_inspatio_reproducibility.py \
 	tests/synthesis/test_inspatio_python_orchestration.py \
 	tests/core/execution \
+	tests/core/platform \
 	tests/core/model_loading/test_checkpoint_roundtrip.py \
 	tests/core/geometry/test_geometry_conventions.py \
 	tests/runtime/test_geometry_regression.py \
@@ -318,11 +319,11 @@ INFER_CUDA_CONTRACTS = \
 	tests/base_models/diffusion_model/optimizations/test_acceleration_plugins.py::test_sana_cuda_default_fusion_keeps_native_strides_and_output \
 	tests/core/acceleration/test_fp8_conv.py::test_fp8_implicit_gemm_matches_reference \
 	tests/core/acceleration/test_svdquant.py::test_packed_integer_kernel_matches_independent_groupwise_reference \
-	tests/core/attention/test_mha_schedule.py::test_pointer_fa2_executes_unequal_sequence_lengths \
-	tests/core/attention/test_mha_schedule.py::test_pointer_fa2_wan_head_width_and_fused_projection_strides \
-	tests/core/attention/test_mha_schedule.py::test_optional_schedule_provider_matches_torch \
-	tests/core/attention/test_mha_schedule.py::test_scheduled_projection_uses_real_low_precision_kernel \
-	tests/core/attention/test_mha_schedule.py::test_e5m2_masked_gemm_matches_independent_quantized_reference \
+	tests/core/acceleration/test_mha_schedule.py::test_pointer_fa2_executes_unequal_sequence_lengths \
+	tests/core/acceleration/test_mha_schedule.py::test_pointer_fa2_wan_head_width_and_fused_projection_strides \
+	tests/core/acceleration/test_mha_schedule.py::test_optional_schedule_provider_matches_torch \
+	tests/core/acceleration/test_mha_schedule.py::test_scheduled_projection_uses_real_low_precision_kernel \
+	tests/core/acceleration/test_mha_schedule.py::test_e5m2_masked_gemm_matches_independent_quantized_reference \
 	tests/core/attention/test_kv_arena.py::test_cuda_long_sequence_attention_and_stream_ownership \
 	tests/core/attention/test_kv_arena.py::test_cuda_graph_replay_reads_updated_current_segment \
 	tests/core/attention/test_gqa_storage.py::test_efficient_cuda_gqa_matches_math \

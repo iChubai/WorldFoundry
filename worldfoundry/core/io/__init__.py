@@ -295,7 +295,7 @@ _EXPORT_MODULES = {
     "segment_sky": "worldfoundry.core.media.artifacts",
     "show_batch_img": "worldfoundry.core.media.artifacts",
     "squeeze_depth_to_2d": "worldfoundry.core.media.artifacts",
-    "suffix_for_uri": "worldfoundry.core.media.types",
+    "suffix_for_uri": "worldfoundry.core.io.filesystem.storage",
     "text_dump": "worldfoundry.core.io.filesystem.file_utils",
     "text_load": "worldfoundry.core.io.filesystem.file_utils",
     "timestamp_file_name": "worldfoundry.core.io.filesystem.file_utils",

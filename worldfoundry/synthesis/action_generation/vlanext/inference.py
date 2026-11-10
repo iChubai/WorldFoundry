@@ -4,7 +4,7 @@ from PIL import Image
 from transformers import AutoProcessor, AutoTokenizer, SiglipImageProcessor
 
 from worldfoundry.core.attention import resolve_transformers_attention_implementation
-from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 from worldfoundry.core.vram import skip_model_initialization
 
 from .modeling.model import LlamaProcessorWrapper, VLANeXt

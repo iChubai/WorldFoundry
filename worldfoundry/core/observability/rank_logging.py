@@ -1,4 +1,4 @@
-"""Rank-aware logging helpers for distributed runtime code.
+"""Rank-aware logging for single-process and distributed runs.
 
 ``print_rank_0`` avoids N-way log spam. ``print_per_rank`` is for
 debug of a single collective mismatch. Not a metrics path — use

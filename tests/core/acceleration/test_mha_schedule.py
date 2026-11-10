@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch.nn import functional as F
 
-from worldfoundry.core.attention.schedule import MHASchedule, scheduled_sdpa
+from worldfoundry.core.acceleration.mha_schedule import MHASchedule, scheduled_sdpa
 
 
 @pytest.mark.parametrize(
@@ -110,8 +110,8 @@ def test_optional_schedule_provider_matches_torch(provider):
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
 @pytest.mark.parametrize("precision", ["fp8_e4m3", "fp8_e5m2", "int8"])
 def test_scheduled_projection_uses_real_low_precision_kernel(precision, monkeypatch):
+    from worldfoundry.core.acceleration.mha_schedule import ScheduledProjection
     from worldfoundry.core.acceleration.quantization import linear
-    from worldfoundry.core.attention.schedule import ScheduledProjection
 
     # Small test operands need an explicit work-gate override; this is numerical
     # and execution coverage, never profitability evidence for small matrices.

@@ -24,7 +24,7 @@ from inference.model.t5 import T5Embedder
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core import env_is_true, is_last_tp_cp_rank
-from worldfoundry.core.distributed.runtime.logging import distributed_logger as magi_logger
+from worldfoundry.core.observability.rank_logging import distributed_logger as magi_logger
 
 try:
     from worldfoundry.core.io.paths import resolve_data_path

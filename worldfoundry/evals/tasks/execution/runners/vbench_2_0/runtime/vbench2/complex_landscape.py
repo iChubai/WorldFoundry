@@ -14,8 +14,8 @@ from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.mm_utils impor
     tokenizer_image_token,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava.model.builder import load_pretrained_model
-from worldfoundry.core.execution.device import resolve_inference_dtype
 from worldfoundry.core.io import sample_video_frames
+from worldfoundry.core.platform.device import resolve_inference_dtype
 from worldfoundry.core.utils import extract_yes_no_answer, resolve_generation_max_new_tokens
 
 # isort: split

@@ -195,7 +195,7 @@ class DynamiCrafter:
         import torch
         from omegaconf import OmegaConf
 
-        from worldfoundry.core.model_loading.factory import (
+        from worldfoundry.core.configuration.factory import (
             instantiate_from_config,
         )
 

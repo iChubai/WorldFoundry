@@ -8,23 +8,30 @@ quantization, media IO — lives here exactly once; model packages must not reim
 
 | Path | Purpose |
 | --- | --- |
-| `model_loading/` | Checkpoint materialization, state-dict loading, LoRA/PEFT, model factories |
+| `model_loading/` | Checkpoint materialization, state-dict loading, LoRA/PEFT, model construction |
 | `vram/` | Device maps, layer-wise and disk offload, encoder lifecycle |
 | `attention/` | Attention backends (SDPA, flash, sparse, …), KV cache, RoPE, sequence/context parallel attention |
 | `distributed/` | Collectives, model/sequence parallel, sharding |
-| `execution/` | Device selection, `torch.compile` and CUDA graph helpers, queued batching, realtime execution |
-| `acceleration/` | Caching (EasyCache, …), quantization, token pruning, convolution layout |
+| `execution/` | Compile preparation, CUDA graph helpers, queued batching, realtime execution |
+| `platform/` | Accelerator detection, torch and collective backend selection, persistent `torch.compile` cache |
+| `acceleration/` | Caching (EasyCache, …), quantization, token pruning, convolution layout, attention precision schedules |
 | `kernels/` | Triton and native kernels with a capability registry and autotune cache |
 | `nn/` | Reusable blocks: transformer layers, diffusion blocks, latent utilities, checkpointing |
 | `memory/` | Memory stores and retrieval for streaming and multi-turn models (`BaseMemory`) |
 | `media/` | Video/image codecs, artifact writing, resolution presets |
 | `io/` | Packaged-data paths (`package_data_path`), input loading, manifests, filesystem helpers |
 | `geometry/` | Camera poses, trajectories, warping, surfels |
-| `configuration/` | Config loading (Hydra, lazy config), overrides, validators |
-| `observability/` | Logging setup, NVTX ranges, realtime timing, profiling |
+| `configuration/` | Config loading (Hydra, lazy config), `target` factories, overrides, validators |
+| `observability/` | Logging setup, rank-aware logging, NVTX ranges, realtime timing, profiling |
 | `safety/` | Guardrails |
 | `utils/` | Python and tensor utilities |
 | `contracts.py`, `registry.py`, `env_registry.py`, `prompting.py`, `action_normalization.py` | Shared contracts, registries, prompt and action helpers |
+
+Subpackages are layered: a module imports only its own layer or the ones below it, from
+`utils` and the root modules at the bottom up through `observability`, `io`,
+`configuration`/`platform`, `distributed`, `media`/`geometry`/`kernels`, `attention`, `nn`,
+`model_loading/checkpoints`, `acceleration`/`vram`, `model_loading`, and finally
+`execution`/`memory`/`safety`. `tests/core/test_core_module_boundaries.py` enforces the order.
 
 Inference tuning flags exposed as `--pipeline.load.*` (offload, attention backend, compile,
 quantization, CUDA graphs) are implemented here. See

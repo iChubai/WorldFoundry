@@ -26,8 +26,13 @@ from uuid import uuid4
 
 import yaml
 
-from worldfoundry.core.io.filesystem.storage import read_binary_uri, read_text_uri, write_binary_uri, write_text_uri
-from worldfoundry.core.media.types import suffix_for_uri
+from worldfoundry.core.io.filesystem.storage import (
+    read_binary_uri,
+    read_text_uri,
+    suffix_for_uri,
+    write_binary_uri,
+    write_text_uri,
+)
 
 _TEXT_FORMATS = {"txt", "text"}
 _JSON_FORMATS = {"json"}

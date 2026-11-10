@@ -483,7 +483,7 @@ class MolmoAct2Runtime:
 
         import torch
 
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration_molmoact2 import MolmoAct2Config
         from .modeling_molmoact2 import MolmoAct2ForConditionalGeneration

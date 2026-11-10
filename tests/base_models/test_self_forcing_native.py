@@ -654,7 +654,7 @@ def test_self_forcing_builder_declares_blocks_for_regional_compile(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from worldfoundry.core.execution import compile_cache
+    from worldfoundry.core.platform import compile_cache
 
     compiled: list[object] = []
 

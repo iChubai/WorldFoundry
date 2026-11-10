@@ -31,7 +31,7 @@ import torch
 import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core.distributed.collectives.generic import get_world_size  # noqa: F401 - public compatibility export
 from worldfoundry.core.distributed.model_parallel.pipeline import init_pp_scheduler
-from worldfoundry.core.distributed.runtime.logging import print_rank_0
+from worldfoundry.core.observability.rank_logging import print_rank_0
 
 # ──────────────────────────────────────────────────────────────────────────
 # Inference process-group + CP/PP mesh — not a wrapper of init_torch_distributed

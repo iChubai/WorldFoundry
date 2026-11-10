@@ -13,7 +13,7 @@ from __future__ import annotations
 import torch
 import torch.distributed as dist
 
-from worldfoundry.core.execution.device import parse_device_type, parse_nccl_backend
+from worldfoundry.core.platform.device import parse_device_type, parse_nccl_backend
 
 xfuser = __import__("xfuser")
 

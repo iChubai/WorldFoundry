@@ -17,6 +17,7 @@ from ...components import BuildPurpose, ComponentBuildContext
 from ...contracts import DenoiserInput, DenoiserOutput
 from ...loaders import ModuleLoadSpec, NativeModuleLoader
 from ..networks.cosmos2p5.model import Cosmos25Transfer3DModel, Cosmos25Transformer3DModel
+from .cosmos2p5_parallel import validate_cosmos_parallel_policy
 
 _KEY_REPLACEMENTS = {
     "adaln_modulation_self_attn.1": "norm1.linear_1",
@@ -201,7 +202,6 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
     from worldfoundry.core.distributed.model_parallel.inference_parallel import (
         InferenceParallelContext,
         build_inference_parallel_context,
-        validate_inference_parallel_policy,
         validate_parallel_degrees,
     )
     from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule
@@ -214,7 +214,7 @@ def _build(context: ComponentBuildContext, config: Mapping[str, object]) -> Cosm
     owns_context = False
     load_policy = context.policy
     if tp * cp > 1:
-        validate_inference_parallel_policy(context.policy)
+        validate_cosmos_parallel_policy(context.policy)
         if context.purpose is not BuildPurpose.INFERENCE:
             raise ValueError("Cosmos model parallelism supports inference builds only")
         if config["num_attention_heads"] % tp:

@@ -23,7 +23,7 @@ def load_model(config_path: str | Path, checkpoint_path: str | Path, device: str
     from . import src as _src  # noqa: F401
 
     # isort: split
-    from worldfoundry.core.model_loading.factory import instantiate_from_config
+    from worldfoundry.core.configuration.factory import instantiate_from_config
 
     config = OmegaConf.load(str(config_path))
     payload = torch.load(str(checkpoint_path), map_location="cpu")

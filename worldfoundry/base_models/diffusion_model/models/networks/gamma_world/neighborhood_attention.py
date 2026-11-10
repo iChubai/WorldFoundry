@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 import torch
 from torch import nn
 
-from worldfoundry.core.distributed.runtime.logging import log
+from worldfoundry.core.observability.rank_logging import log
 
 try:
     import natten

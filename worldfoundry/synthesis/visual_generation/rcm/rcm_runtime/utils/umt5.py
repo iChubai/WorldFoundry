@@ -24,8 +24,8 @@ import torch
 import torch.nn as nn
 
 from worldfoundry.core.distributed.runtime import torch_process_group as distributed
-from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.core.io.assets.easy_io import easy_io
+from worldfoundry.core.observability.rank_logging import log
 
 
 def basic_clean(text):

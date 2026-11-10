@@ -27,13 +27,13 @@ ApproximateAttentionStateResolver = Callable[[], Mapping[str, object]]
 PostLoadHook = Callable[[torch.nn.Module], None]
 
 if TYPE_CHECKING:
-    from worldfoundry.core.execution.compile_cache import CompilePolicy
+    from worldfoundry.core.platform.compile_cache import CompilePolicy
 
 
 def _compile_policy_from_runtime(policy: RuntimePolicy) -> tuple[CompilePolicy, dict[str, Any]]:
     """Resolve the public compile knobs and external CUDA-Graph interaction."""
 
-    from worldfoundry.core.execution.compile_cache import CompilePolicy
+    from worldfoundry.core.platform.compile_cache import CompilePolicy
 
     backend = str(policy.options.get("compile_backend", "inductor")).strip()
     if not backend:
@@ -589,7 +589,7 @@ class NativeModuleLoader:
             )
 
         if compile_setup is not None:
-            from worldfoundry.core.execution.compile_cache import compile_callable_cached
+            from worldfoundry.core.platform.compile_cache import compile_callable_cached
 
             compile_policy, compile_options = compile_setup
             targets = [("", module)]

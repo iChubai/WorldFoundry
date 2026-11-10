@@ -30,8 +30,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from worldfoundry.core.io.filesystem.file_utils import f_join
-from worldfoundry.core.observability.formatting import to_readable_count_str
 from worldfoundry.core.utils.python.functional_utils import assert_implements_method, implements_method
 from worldfoundry.core.utils.python.tree_utils import _require_tree, tree_value_at_path
 
@@ -273,39 +271,6 @@ def get_device(x, strict: bool = False) -> int:
         return _get_device(xs[0])
 
 
-def load_torch(*fpath: str, map_location="cpu") -> dict:
-    """
-    Default maps to "cpu"
-    """
-    from worldfoundry.core.model_loading import load_torch_checkpoint
-
-    path = str(f_join(fpath))
-    try:
-        return load_torch_checkpoint(path, map_location=map_location)
-    except RuntimeError as e:
-        raise RuntimeError(f"{e}\n\n --- Error loading {path}") from e
-
-
-def save_torch(D, *fpath):
-    """
-    Supports both (D, fpath) and (fpath, D) arg order, as long as one of them is a str
-    """
-    if isinstance(D, str):
-        assert not isinstance(fpath, str), "Either torch_save(D, fpath) or torch_save(fpath, D)"
-        # ``fpath`` is a varargs tuple here; unwrap the payload so the swapped
-        # call order saves the object itself instead of a 1-tuple.
-        if len(fpath) != 1:
-            raise ValueError("save_torch(fpath, D) expects exactly one object to save")
-        fpath, D = (D,), fpath[0]
-    torch.save(D, str(f_join(fpath)))
-
-
-# Aliases for consistency with load_pickle, load_text, load_json/yaml, etc.
-torch_load = load_torch
-torch_save = save_torch
-dump_torch = save_torch
-
-
 def torch_compute_stats(x, precision: int = 2):
     """Human-readable mean/std/median/min/max after a float32 cast."""
     x = x.to(dtype=torch.float32)
@@ -525,19 +490,20 @@ def load_state_dict(objects, states, strip_prefix=None, strict=False):
     return tree.map_structure_with_path(_load, objects)
 
 
-def count_parameters(model, verbose: bool = False):
-    """Sum ``numel`` over parameters (includes frozen); optionally log the count."""
-    count = sum(parameter.numel() for parameter in model.parameters())
+def count_parameters(model: nn.Module, *, trainable_only: bool = False) -> int:
+    """Return the number of parameters owned by a torch-style module."""
+    parameters = model.parameters()
+    if trainable_only:
+        parameters = (parameter for parameter in parameters if parameter.requires_grad)
+    return sum(parameter.numel() for parameter in parameters)
+
+
+def count_params(model: nn.Module, verbose: bool = False) -> int:
+    """Count every parameter and optionally print the total in millions, as LVDM modules expect."""
+    total = count_parameters(model)
     if verbose:
-        from worldfoundry.core.distributed.runtime.logging import log
-
-        log.info("parameter count: {:,}", count)
-    return count
-
-
-def readable_count_parameters(model, precision: int = 2):
-    """Human-readable parameter count (e.g. ``12.3M``)."""
-    return to_readable_count_str(count_parameters(model), precision=precision)
+        print(f"{model.__class__.__name__} has {total * 1e-6:.2f} M params.")
+    return total
 
 
 def get_module_device(model):

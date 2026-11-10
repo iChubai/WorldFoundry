@@ -23,8 +23,8 @@ import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 from transformers import CLIPTextModel, CLIPTokenizer, T5EncoderModel, T5Tokenizer
 
-from worldfoundry.core.model_loading.factory import count_params
 from worldfoundry.core.nn.diffusion.utils import autocast
+from worldfoundry.core.utils.tensors.torch import count_params
 
 # LayerNormFp32 forces a cast to fp32, which causes a bug with amp_bf16
 open_clip.model.LayerNormFp32 = open_clip.transformer.LayerNorm

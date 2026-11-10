@@ -1,6 +1,6 @@
 """Distributed transport, process lifecycle and parallel topology.
 
-- runtime: process groups, launch, rank coordination and logging.
+- runtime: process groups, launch and rank coordination.
 - collectives: tensor, object, DeviceMesh and metric communication.
 - model_parallel: TP/CP/PP/DP groups, context splitting and pipeline scheduling.
 - sequence_parallel: sequence process state, communicators and all-to-all runtime.
@@ -72,7 +72,6 @@ from worldfoundry.core.distributed.model_parallel.groups import (
 from worldfoundry.core.distributed.model_parallel.pipeline import PPScheduler, init_pp_scheduler, pp_scheduler
 from worldfoundry.core.distributed.runtime.inference_runtime import dist_init, is_last_rank, is_last_tp_cp_rank
 from worldfoundry.core.distributed.runtime.inference_runtime import get_device as get_distributed_device
-from worldfoundry.core.distributed.runtime.logging import print_per_rank, print_rank_0
 from worldfoundry.core.distributed.runtime.rank_orchestration import (
     DistributedOpSpec,
     PayloadBus,
@@ -136,8 +135,6 @@ __all__ = [
     "is_last_tp_cp_rank",
     "model_parallel_is_initialized",
     "pp_scheduler",
-    "print_per_rank",
-    "print_rank_0",
     "robust_broadcast",
     "split_inputs_cp",
     "split_inputs_cp_object_list",

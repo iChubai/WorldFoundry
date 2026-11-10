@@ -3,6 +3,7 @@
 - ``aesthetic`` — LAION aesthetic predictor shared by benchmark quality evaluators
 - ``bbox`` — IoU helpers for scene-level ``fid`` crops
 - ``clip_embed`` — CLIP encode/cosine helpers for benchmark evaluators
+- ``features`` — OOM-safe batched image features and pairwise cosine distance for benchmark runtimes
 - ``images`` — RGB input normalization for image-based helpers
 - ``imports`` — import-path setup for bundled metric implementations
 - ``lazy`` — lightweight public exports for metric packages

@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from src.Open_MAGVIT2.modules.util import SOSProvider
 
-from worldfoundry.core.model_loading.factory import instantiate_from_config
+from worldfoundry.core.configuration.factory import instantiate_from_config
 
 
 def disabled_train(self, mode=True):

@@ -251,7 +251,7 @@ class MotionCtrlRuntime:
 
         import torch
 
-        from worldfoundry.core.model_loading.factory import instantiate_from_config
+        from worldfoundry.core.configuration.factory import instantiate_from_config
         from worldfoundry.synthesis.visual_generation.motionctrl.motionctrl_runtime.main.inference.motionctrl_inference import (
             load_model_checkpoint,
         )

@@ -206,7 +206,7 @@ def _compile_eval_forward(
     if failure_key in failures:
         return forward
 
-    from worldfoundry.core.execution.compile_cache import CompilePolicy, compile_callable_cached
+    from worldfoundry.core.platform.compile_cache import CompilePolicy, compile_callable_cached
 
     compiled = compile_callable_cached(
         forward,
@@ -539,7 +539,7 @@ def timer(name: str):
     """Log wall time of a block; import logger lazily to stay CPU-importable."""
     started = time.perf_counter()
     yield
-    from worldfoundry.core.distributed.runtime.logging import log
+    from worldfoundry.core.observability.rank_logging import log
 
     log.info("{} takes {:.4f}s", name, time.perf_counter() - started)
 

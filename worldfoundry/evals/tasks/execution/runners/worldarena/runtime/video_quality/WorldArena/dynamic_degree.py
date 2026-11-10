@@ -20,7 +20,7 @@ from worldfoundry.core.distributed.collectives.evaluation import (
     get_rank,
     get_world_size,
 )
-from worldfoundry.core.execution.device import get_current_torch_device
+from worldfoundry.core.platform.device import get_current_torch_device
 
 
 class DynamicDegree:

@@ -38,8 +38,8 @@ from worldfoundry.core.distributed.model_parallel.context import (
     cat_outputs_cp_with_grad,
     split_inputs_cp,
 )
-from worldfoundry.core.distributed.runtime.logging import log
 from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
+from worldfoundry.core.observability.rank_logging import log
 
 
 class Lyra2AttentionBlock(nn.Module):

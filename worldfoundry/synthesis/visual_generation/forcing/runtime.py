@@ -414,7 +414,7 @@ class _ForcingRuntime:
         env.setdefault("TOKENIZERS_PARALLELISM", "false")
         env.setdefault("PYTHONUNBUFFERED", "1")
         if self.device.startswith("cuda:") or (self.device == "cuda" and "CUDA_VISIBLE_DEVICES" not in env):
-            from worldfoundry.core.execution.device import cuda_visible_devices_from_device
+            from worldfoundry.core.platform.device import cuda_visible_devices_from_device
 
             visible_devices = cuda_visible_devices_from_device(self.device, inherited=env.get("CUDA_VISIBLE_DEVICES"))
             if visible_devices is not None:

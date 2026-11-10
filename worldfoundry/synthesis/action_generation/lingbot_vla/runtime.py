@@ -71,13 +71,13 @@ class _LingBotV1Runtime:
         from transformers import AutoConfig, AutoProcessor, PretrainedConfig
 
         from worldfoundry.core.attention import resolve_transformers_attention_implementation
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.execution.inference import (
             compile_module_if_enabled,
             install_worldfoundry_inference_infra,
         )
         from worldfoundry.core.io.assets.hf import materialize_hf_snapshot
         from worldfoundry.core.model_loading.checkpoints import load_safetensors_into_model_streaming
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.utils.tensors.torch import freeze_params, set_random_seed
 
         from .modeling.policy import LingbotVlaPolicy

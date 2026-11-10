@@ -1,7 +1,7 @@
 """Lazy public utility API with two implementation domains.
 
 - python: object/tree helpers, text parsing and optional-dependency import guards.
-- tensors: array operations, batching, shape inference, seeds and features.
+- tensors: array operations, batching, shape inference, seeds and parameter counts.
 
 Runtime, graph and concurrency helpers are owned by core.execution; media helpers
 are owned by core.media; field validators are owned by core.configuration.
@@ -24,7 +24,6 @@ _SUBMODULES = {
 }
 
 _EXPORT_MODULES = {
-    "batched_image_features": "worldfoundry.core.utils.tensors.features",
     "AverageMeter": "worldfoundry.core.utils.tensors.torch",
     "Bool": "worldfoundry.core.configuration.validators",
     "ClassRegistry": "worldfoundry.core.utils.python.functional_utils",
@@ -84,9 +83,9 @@ _EXPORT_MODULES = {
     "contains_rnn": "worldfoundry.core.utils.tensors.torch",
     "copy_non_leaf": "worldfoundry.core.utils.python.tree_utils",
     "count_parameters": "worldfoundry.core.utils.tensors.torch",
+    "count_params": "worldfoundry.core.utils.tensors.torch",
     "deprecated": "worldfoundry.core.utils.python.functional_utils",
     "divide": "worldfoundry.core.utils.python.misc_utils",
-    "dump_torch": "worldfoundry.core.utils.tensors.torch",
     "enable_dict_arg": "worldfoundry.core.utils.python.functional_utils",
     "enable_kwargs": "worldfoundry.core.utils.python.functional_utils",
     "enable_list_arg": "worldfoundry.core.utils.python.functional_utils",
@@ -120,7 +119,6 @@ _EXPORT_MODULES = {
     "imshow": "worldfoundry.core.media.processing.image_utils",
     "is_array_tensor": "worldfoundry.core.utils.tensors.arrays",
     "is_accelerator_out_of_memory": "worldfoundry.core.execution.inference_runtime",
-    "mean_pairwise_cosine_distance": "worldfoundry.core.utils.tensors.features",
     "is_mapping": "worldfoundry.core.utils.python.functional_utils",
     "is_numpy": "worldfoundry.core.utils.tensors.arrays",
     "is_sequence": "worldfoundry.core.utils.python.functional_utils",
@@ -129,7 +127,6 @@ _EXPORT_MODULES = {
     "load_state_dict": "worldfoundry.core.utils.tensors.torch",
     "load_pil_image": "worldfoundry.core.media.processing.image_utils",
     "materialize_image_input": "worldfoundry.core.media.processing.image_utils",
-    "load_torch": "worldfoundry.core.utils.tensors.torch",
     "make_list": "worldfoundry.core.utils.python.functional_utils",
     "make_recursive_func": "worldfoundry.core.utils.python.functional_utils",
     "make_tuple": "worldfoundry.core.utils.python.functional_utils",
@@ -143,14 +140,12 @@ _EXPORT_MODULES = {
     "pack_kwargs": "worldfoundry.core.utils.python.functional_utils",
     "pack_varargs": "worldfoundry.core.utils.python.functional_utils",
     "random_derangement": "worldfoundry.core.utils.tensors.torch",
-    "readable_count_parameters": "worldfoundry.core.utils.tensors.torch",
     "remove_batch_dim": "worldfoundry.core.utils.tensors.arrays",
     "resolve_generation_max_new_tokens": "worldfoundry.core.execution.inference_runtime",
     "resolve_inference_batch_size": "worldfoundry.core.execution.inference_runtime",
     "resize_and_letterbox": "worldfoundry.core.media.processing.image_utils",
     "safe_hash": "worldfoundry.core.utils.python.misc_utils",
     "sanity_check_image_tensor": "worldfoundry.core.media.processing.image_utils",
-    "save_torch": "worldfoundry.core.utils.tensors.torch",
     "sequential_split_dataset": "worldfoundry.core.utils.tensors.torch",
     "set_deterministic": "worldfoundry.core.utils.tensors.torch",
     "set_random_seed": "worldfoundry.core.utils.tensors.torch",
@@ -186,10 +181,8 @@ _EXPORT_MODULES = {
     "to_state_dict": "worldfoundry.core.utils.tensors.torch",
     "torch_compute_stats": "worldfoundry.core.utils.tensors.torch",
     "torch_flatten_indices": "worldfoundry.core.utils.tensors.torch",
-    "torch_load": "worldfoundry.core.utils.tensors.torch",
     "torch_multi_index_select": "worldfoundry.core.utils.tensors.torch",
     "torch_normalize": "worldfoundry.core.utils.tensors.torch",
-    "torch_save": "worldfoundry.core.utils.tensors.torch",
     "tree_assign_at_path": "worldfoundry.core.utils.python.tree_utils",
     "tree_value_at_path": "worldfoundry.core.utils.python.tree_utils",
     "unfreeze_params": "worldfoundry.core.utils.tensors.torch",

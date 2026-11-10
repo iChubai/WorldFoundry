@@ -874,8 +874,8 @@ class XWAMRuntime:
             return
         import torch
 
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
         from worldfoundry.core.model_loading.checkpoints import assign_state_dict_strict
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         _variant_root, config_path, weight_path = _resolve_policy_assets(self.config, self.variant)
         base_root, model_config_path, tokenizer_path = _resolve_base_assets(self.config)

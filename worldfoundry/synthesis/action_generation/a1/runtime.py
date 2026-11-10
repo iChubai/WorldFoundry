@@ -291,7 +291,7 @@ class A1Runtime:
         self.checkpoint_root = Path(config.checkpoint_location).expanduser().resolve()
         if not self.checkpoint_root.is_dir():
             raise FileNotFoundError(f"A1 requires an hfd-staged local checkpoint directory: {self.checkpoint_root}")
-        from worldfoundry.core.execution.device import resolve_inference_device, resolve_inference_dtype
+        from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         self.device = torch.device(resolve_inference_device(config.device))
         self.dtype = resolve_inference_dtype(self.device, config.torch_dtype)

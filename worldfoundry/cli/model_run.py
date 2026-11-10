@@ -915,7 +915,10 @@ def load_model_run_schema(
         field_id = _normalise(input_field.field_id)
         if field_id in _SKIPPED_CALL_FIELDS:
             continue
-        if field_id == "input-path" and text_to_video_entry:
+        # Text-to-video entries drop the generic input path, except on a named task that
+        # requires its own conditioning input (for example image-to-video or video-to-video).
+        named_conditioned_task = task.task_id != spec.default_task_id and input_field.required
+        if field_id == "input-path" and text_to_video_entry and not named_conditioned_task:
             continue
         target = _normalise(input_field.target)
         scope = "input" if target in {"prompt", "input-path"} else "load" if target == "load-kwargs" else "call"

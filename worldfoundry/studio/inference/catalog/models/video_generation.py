@@ -1503,7 +1503,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         ),
     },
     "show-o": {
-        "display_name": "Show-O",
         "category": "Video Generation",
         "default_model_ref": _show_o_default_ref,
         "default_backend": "from_pretrained",
@@ -2328,7 +2327,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "tags": ("image-to-video", "human-animation", "official-runtime", "local-checkpoint"),
     },
     "sama-14b": {
-        "display_name": "SAMA-14B",
         "category": "Video-to-Video",
         "default_task_type": "video-to-video",
         "suggested_task_types": ("video-to-video",),
@@ -2356,7 +2354,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "tags": ("video-to-video", "official-runtime", "local-checkpoint"),
     },
     "krea-realtime-video": {
-        "display_name": "Krea Realtime Video",
         "default_model_ref": lambda: resolve._checkpoint_model_ref(
             "krea-realtime-video",
             "krea--krea-realtime-video",

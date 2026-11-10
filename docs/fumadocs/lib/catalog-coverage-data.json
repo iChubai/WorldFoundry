@@ -359,7 +359,7 @@
         },
         {
           "id": "sama-14b",
-          "name": "SAMA",
+          "name": "SAMA-14B",
           "status": "integrated",
           "aliases": [
             "sama-14b"
@@ -1459,7 +1459,7 @@
         },
         {
           "id": "depth-anything-v2-prior",
-          "name": "Depth Anything V 2",
+          "name": "Depth Anything V 2 Prior",
           "status": "integrated",
           "aliases": [
             "depth-anything-v2-prior"
@@ -1504,7 +1504,7 @@
         },
         {
           "id": "geocalib-prior",
-          "name": "GeoCalib",
+          "name": "GeoCalib Prior",
           "status": "integrated",
           "aliases": [
             "geocalib-prior"
@@ -1552,7 +1552,7 @@
         },
         {
           "id": "metric3d-prior",
-          "name": "Metric 3D",
+          "name": "Metric 3D Prior",
           "status": "integrated",
           "aliases": [
             "metric3d-prior"
@@ -1616,7 +1616,7 @@
         },
         {
           "id": "track-anything-prior",
-          "name": "Segment and Track Anything",
+          "name": "Segment and Track Anything Prior",
           "status": "integrated",
           "aliases": [
             "track-anything-prior"
@@ -1640,7 +1640,7 @@
         },
         {
           "id": "unidepth-v2-prior",
-          "name": "UniDepth V 2",
+          "name": "UniDepth V 2 Prior",
           "status": "integrated",
           "aliases": [
             "unidepth-v2-prior"
@@ -1648,7 +1648,7 @@
         },
         {
           "id": "unik3d-prior",
-          "name": "UniK 3D",
+          "name": "UniK 3D Prior",
           "status": "integrated",
           "aliases": [
             "unik3d-prior"
@@ -1672,7 +1672,7 @@
         },
         {
           "id": "video-depth-anything-prior",
-          "name": "Video Depth Anything",
+          "name": "Video Depth Anything Prior",
           "status": "integrated",
           "aliases": [
             "video-depth-anything-prior"

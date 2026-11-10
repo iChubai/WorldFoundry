@@ -1577,7 +1577,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         ),
     },
     "diamond": {
-        "display_name": "Diamond",
         "default_interactions": ("forward_left",),
         "supports_stream": True,
         "aliases": ("wmfactory-diamond",),
@@ -1817,7 +1816,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         ),
     },
     "matrix-game-1": {
-        "display_name": "Matrix-Game-1",
         "default_model_ref": _matrix_game_1_default_ref,
         "default_input_path": "worldfoundry/data/test_cases/matrix-game-1/official_initial_image/forest_00.jpg",
         "default_load_kwargs": _matrix_game_1_default_load_kwargs,
@@ -1855,7 +1853,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Defaults use the official 50-step Matrix-Game-1 runner with a bounded 17-frame Studio regression shape and an in-domain GameWorldScore initial image staged in-tree. Generic Studio images generated noisy visuals and are not accepted as official visual parity.",
     },
     "matrix-game-2": {
-        "display_name": "Matrix-Game-2",
         "default_model_ref": _matrix_game_2_default_ref,
         "default_load_kwargs": _matrix_game_2_default_load_kwargs,
         "default_interactions": (),
@@ -1865,7 +1862,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Resident interactive runtime. The initial image and all navigation/camera actions come from the user; no private benchmark fixture or action trajectory is selected by default.",
     },
     "matrix-game-3": {
-        "display_name": "Matrix-Game-3",
         "default_model_ref": _matrix_game_3_default_ref,
         "default_prompt": MATRIX_GAME_3_OFFICIAL_PROMPT,
         "default_load_kwargs": _matrix_game_3_default_load_kwargs,
@@ -2507,7 +2503,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Uses the local post-distillation Evoke checkpoint and the shared WorldFoundry Python environment; camera-trajectory runs additionally use local ViGeo1.1 weights.",
     },
     "minwm-hy-action2v": {
-        "display_name": "minWM HY Action2V",
         "default_model_ref": _minwm_default_ref,
         "default_input_path": str(resolve._data_path("test_cases", "minwm", "first_frame.png")),
         "default_prompt": (

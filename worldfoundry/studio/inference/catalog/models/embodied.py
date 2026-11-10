@@ -1357,7 +1357,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Independent CogACT action entry with an in-tree vendored VLA/DiT runtime. Real inference requires CogACT checkpoints plus gated meta-llama/Llama-2-7b-hf access.",
     },
     "db-cogact": {
-        "display_name": "DB-CogACT",
         "category": "Embodied Action",
         "default_model_ref": _db_cogact_default_ref,
         "default_prompt": "put the object on the target area",
@@ -1593,7 +1592,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "MolmoAct2 DROID/YAM action-reasoning VLA. The default Studio demo mirrors the official DROID server schema: external_cam, wrist_cam, 8-D Franka state, franka_droid normalization.",
     },
     "dreamzero": {
-        "display_name": "DreamZero",
         "category": "Embodied Action",
         "default_prompt": "Move the pan forward and use the brush in the middle of the plates to brush the inside of the pan",
         "default_interactions": ("world_action", "robot_action"),
@@ -1671,7 +1669,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "LingBot-VA is a video-action world model for LIBERO/RoboTwin-style action traces; official execution remains checkpoint and CUDA-12.6 profile gated.",
     },
     "lapa": {
-        "display_name": "LAPA",
         "category": "Visual Action",
         "default_model_ref": _lapa_default_ref,
         "default_prompt": "infer latent action tokens from the video context",
@@ -1767,7 +1764,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Diffusion-based action policy profile. It is not a diffusion video-generation model.",
     },
     "act": {
-        "display_name": "ACT",
         "category": "Embodied Action",
         "default_prompt": "produce the next robot action chunk",
         "default_interactions": ("action_chunk",),
@@ -1807,7 +1803,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "VLM/VLA policy pipeline for robot action traces.",
     },
     "being-h05": {
-        "display_name": "Being-H05",
         "category": "Embodied Action",
         "default_prompt": "complete the robot manipulation instruction",
         "default_interactions": ("robot_action",),

@@ -1275,7 +1275,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Being-H05 through the public CLI contract.",
+          "description": "Run Being-H0.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "being-h05-2b"
@@ -1290,7 +1290,7 @@
               "required": false,
               "default": "complete the robot manipulation instruction",
               "choices": [],
-              "description": "Prompt used as the input for direct Being-H05 inference."
+              "description": "Prompt used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "input-path",
@@ -1301,7 +1301,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Being-H05 inference."
+              "description": "Input Path used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "interactions",
@@ -1340,7 +1340,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Being-H05 through the public CLI contract.",
+          "description": "Run Being-H0.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "being-h05-2b-libero"
@@ -1355,7 +1355,7 @@
               "required": false,
               "default": "complete the robot manipulation instruction",
               "choices": [],
-              "description": "Prompt used as the input for direct Being-H05 inference."
+              "description": "Prompt used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "input-path",
@@ -1366,7 +1366,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Being-H05 inference."
+              "description": "Input Path used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "interactions",
@@ -1405,7 +1405,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Being-H05 through the public CLI contract.",
+          "description": "Run Being-H0.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "being-h05-2b-robocasa"
@@ -1420,7 +1420,7 @@
               "required": false,
               "default": "complete the robot manipulation instruction",
               "choices": [],
-              "description": "Prompt used as the input for direct Being-H05 inference."
+              "description": "Prompt used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "input-path",
@@ -1431,7 +1431,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Being-H05 inference."
+              "description": "Input Path used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "interactions",
@@ -1470,7 +1470,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Being-H05 through the public CLI contract.",
+          "description": "Run Being-H0.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "being-h05-2b-libero-robocasa"
@@ -1485,7 +1485,7 @@
               "required": false,
               "default": "complete the robot manipulation instruction",
               "choices": [],
-              "description": "Prompt used as the input for direct Being-H05 inference."
+              "description": "Prompt used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "input-path",
@@ -1496,7 +1496,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Being-H05 inference."
+              "description": "Input Path used as the input for direct Being-H0.5 inference."
             },
             {
               "field": "interactions",
@@ -5622,7 +5622,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Cosmos Transfer2.5 through the public CLI contract.",
+          "description": "Run Cosmos Transfer 2.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "cosmos-transfer-2.5-2b"
@@ -5637,7 +5637,7 @@
               "required": false,
               "default": "A cinematic night scene follows the control video edges with stable geometry, realistic lighting, and smooth coherent motion.",
               "choices": [],
-              "description": "Prompt used as the input for direct Cosmos Transfer2.5 inference."
+              "description": "Prompt used as the input for direct Cosmos Transfer 2.5 inference."
             },
             {
               "field": "negative-prompt",
@@ -5659,7 +5659,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/longcat_video/motorcycle.mp4",
               "choices": [],
-              "description": "Input Path used as the input for direct Cosmos Transfer2.5 inference."
+              "description": "Input Path used as the input for direct Cosmos Transfer 2.5 inference."
             },
             {
               "field": "interactions",
@@ -6408,7 +6408,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Depth Anything 3 Prior through the public CLI contract.",
+          "description": "Run Depth Anything 3 Metric Prior through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -6421,7 +6421,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/images/000.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Depth Anything 3 Prior inference."
+              "description": "Input Path used as the input for direct Depth Anything 3 Metric Prior inference."
             },
             {
               "field": "focal-length",
@@ -6849,7 +6849,7 @@
     },
     {
       "id": "depth-anything-v2-prior",
-      "name": "Depth Anything V2",
+      "name": "Depth Anything V2 Prior",
       "category": "three_d_four_d",
       "categoryLabel": "3D & 4D",
       "categoryLabelZh": "3D 与 4D",
@@ -7341,7 +7341,7 @@
         {
           "id": "runtime-plan",
           "label": "Runtime Plan",
-          "description": "Run Diamond through the public CLI contract.",
+          "description": "Run DIAMOND through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "diamond-atari"
@@ -7356,7 +7356,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Diamond inference."
+              "description": "Prompt used as the input for direct DIAMOND inference."
             },
             {
               "field": "input-path",
@@ -7367,7 +7367,7 @@
               "required": false,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Diamond inference."
+              "description": "Input Path used as the input for direct DIAMOND inference."
             },
             {
               "field": "interactions",
@@ -9309,7 +9309,7 @@
     },
     {
       "id": "geocalib-prior",
-      "name": "GeoCalib",
+      "name": "GeoCalib Prior",
       "category": "three_d_four_d",
       "categoryLabel": "3D & 4D",
       "categoryLabelZh": "3D 与 4D",
@@ -12205,7 +12205,7 @@
         {
           "id": "official-meta-demo",
           "label": "Official Meta Demo",
-          "description": "Run WorldFM through the public CLI contract.",
+          "description": "Run InSpatio-WorldFM through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -12229,7 +12229,7 @@
               "required": false,
               "default": "Reconstruct the scene and surface geometry with stable camera motion.",
               "choices": [],
-              "description": "Prompt used as the input for direct WorldFM inference."
+              "description": "Prompt used as the input for direct InSpatio-WorldFM inference."
             },
             {
               "field": "interactions",
@@ -15171,7 +15171,7 @@
         {
           "id": "official-universal-image",
           "label": "Official Universal Image",
-          "description": "Run Matrix-Game-2 through the public CLI contract.",
+          "description": "Run Matrix-Game 2.0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "matrix-game-2-universal-action-validation"
@@ -15186,7 +15186,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/matrix-game-2/universal/0000.png",
               "choices": [],
-              "description": "Input Image used as the input for direct Matrix-Game-2 inference."
+              "description": "Input Image used as the input for direct Matrix-Game 2.0 inference."
             },
             {
               "field": "config-path",
@@ -15607,7 +15607,7 @@
         {
           "id": "official-cityscape-image",
           "label": "Official Cityscape Image",
-          "description": "Run Matrix-Game-3 through the public CLI contract.",
+          "description": "Run Matrix-Game 3.0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -15620,7 +15620,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/matrix-game-3/001/image.png",
               "choices": [],
-              "description": "Input Image used as the input for direct Matrix-Game-3 inference."
+              "description": "Input Image used as the input for direct Matrix-Game 3.0 inference."
             },
             {
               "field": "prompt",
@@ -15631,7 +15631,7 @@
               "required": false,
               "default": "A colorful, animated cityscape with a gas station and various buildings.",
               "choices": [],
-              "description": "Prompt used as the input for direct Matrix-Game-3 inference."
+              "description": "Prompt used as the input for direct Matrix-Game 3.0 inference."
             },
             {
               "field": "interactions",
@@ -15962,7 +15962,7 @@
     },
     {
       "id": "metric3d-prior",
-      "name": "Metric3D",
+      "name": "Metric3D Prior",
       "category": "three_d_four_d",
       "categoryLabel": "3D & 4D",
       "categoryLabelZh": "3D 与 4D",
@@ -21548,7 +21548,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Show-O through the public CLI contract.",
+          "description": "Run Show-o through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -21561,7 +21561,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Show-O inference."
+              "description": "Prompt used as the input for direct Show-o inference."
             },
             {
               "field": "input-path",
@@ -21572,7 +21572,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Show-O inference."
+              "description": "Input Path used as the input for direct Show-o inference."
             },
             {
               "field": "interactions",
@@ -27403,7 +27403,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Worldcrafter through the public CLI contract.",
+          "description": "Run WorldCrafter through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -27416,7 +27416,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Worldcrafter inference."
+              "description": "Prompt used as the input for direct WorldCrafter inference."
             },
             {
               "field": "input-path",
@@ -27427,7 +27427,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Worldcrafter inference."
+              "description": "Input Path used as the input for direct WorldCrafter inference."
             },
             {
               "field": "camera-path",
@@ -30518,7 +30518,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run ACT through the public CLI contract.",
+          "description": "Run Action Chunking Transformer through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -30531,7 +30531,7 @@
               "required": false,
               "default": "produce the next robot action chunk",
               "choices": [],
-              "description": "Prompt used as the input for direct ACT inference."
+              "description": "Prompt used as the input for direct Action Chunking Transformer inference."
             },
             {
               "field": "input-path",
@@ -30542,7 +30542,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct ACT inference."
+              "description": "Input Path used as the input for direct Action Chunking Transformer inference."
             },
             {
               "field": "interactions",
@@ -30904,7 +30904,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Ahawam through the public CLI contract.",
+          "description": "Run AHA-WAM through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -30917,7 +30917,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Ahawam inference."
+              "description": "Prompt used as the input for direct AHA-WAM inference."
             },
             {
               "field": "input-path",
@@ -30928,7 +30928,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Ahawam inference."
+              "description": "Input Path used as the input for direct AHA-WAM inference."
             },
             {
               "field": "interactions",
@@ -31321,7 +31321,7 @@
           "safetensors",
           "einops",
           "cv2",
-          "worldfoundry.base_models.diffusion_model.models.networks.ltx.alayaworld",
+          "worldfoundry.base_models.diffusion_model.models.networks.ltx.model",
           "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.api",
           "worldfoundry.synthesis.visual_generation.alayaworld"
         ],
@@ -31393,7 +31393,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Alayaworld through the public CLI contract.",
+          "description": "Run AlayaWorld through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -31406,7 +31406,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Alayaworld inference."
+              "description": "Prompt used as the input for direct AlayaWorld inference."
             },
             {
               "field": "input-path",
@@ -31417,7 +31417,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Alayaworld inference."
+              "description": "Input Path used as the input for direct AlayaWorld inference."
             },
             {
               "field": "frames",
@@ -34075,7 +34075,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Ati Wan21 14b through the public CLI contract.",
+          "description": "Run ATI-Wan2.1-14B through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -34088,7 +34088,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Ati Wan21 14b inference."
+              "description": "Prompt used as the input for direct ATI-Wan2.1-14B inference."
             },
             {
               "field": "input-path",
@@ -34099,7 +34099,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Ati Wan21 14b inference."
+              "description": "Input Path used as the input for direct ATI-Wan2.1-14B inference."
             },
             {
               "field": "interactions",
@@ -43380,7 +43380,7 @@
         {
           "id": "wall-planning",
           "label": "Wall Planning",
-          "description": "Run Dino Wm through the public CLI contract.",
+          "description": "Run DINO-WM through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -43393,7 +43393,7 @@
               "required": true,
               "default": "/home/ubuntu/.cache/worldfoundry/checkpoints/dino_wm",
               "choices": [],
-              "description": "Checkpoint Base Path used while loading the Dino Wm pipeline."
+              "description": "Checkpoint Base Path used while loading the DINO-WM pipeline."
             },
             {
               "field": "load.model-name",
@@ -43408,7 +43408,7 @@
                 "pusht",
                 "point_maze"
               ],
-              "description": "Model Name used while loading the Dino Wm pipeline."
+              "description": "Model Name used while loading the DINO-WM pipeline."
             },
             {
               "field": "plan-only",
@@ -47032,7 +47032,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run DVLT through the public CLI contract.",
+          "description": "Run Déjà View Looping Transformer through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -47045,7 +47045,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/images/000.png",
               "choices": [],
-              "description": "Input Path used as the input for direct DVLT inference."
+              "description": "Input Path used as the input for direct Déjà View Looping Transformer inference."
             },
             {
               "field": "execute",
@@ -53628,7 +53628,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Giga World Policy 0 5 through the public CLI contract.",
+          "description": "Run GigaWorld-Policy-0.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -53641,7 +53641,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Giga World Policy 0 5 inference."
+              "description": "Prompt used as the input for direct GigaWorld-Policy-0.5 inference."
             },
             {
               "field": "input-path",
@@ -53652,7 +53652,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Giga World Policy 0 5 inference."
+              "description": "Input Path used as the input for direct GigaWorld-Policy-0.5 inference."
             },
             {
               "field": "interactions",
@@ -55205,7 +55205,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Helixworld through the public CLI contract.",
+          "description": "Run HelixWorld Preview v1 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -55218,7 +55218,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Helixworld inference."
+              "description": "Prompt used as the input for direct HelixWorld Preview v1 inference."
             },
             {
               "field": "negative-prompt",
@@ -55240,7 +55240,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Helixworld inference."
+              "description": "Input Path used as the input for direct HelixWorld Preview v1 inference."
             },
             {
               "field": "interactions",
@@ -64307,7 +64307,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Kandinsky6 Pro Distill through the public CLI contract.",
+          "description": "Run Kandinsky 6.0 pro-distill through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -64320,7 +64320,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Kandinsky6 Pro Distill inference."
+              "description": "Prompt used as the input for direct Kandinsky 6.0 pro-distill inference."
             },
             {
               "field": "input-path",
@@ -64331,7 +64331,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Kandinsky6 Pro Distill inference."
+              "description": "Input Path used as the input for direct Kandinsky 6.0 pro-distill inference."
             },
             {
               "field": "interactions",
@@ -65578,7 +65578,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Krea Realtime Video through the public CLI contract.",
+          "description": "Run Krea Realtime Video 14B through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -65591,7 +65591,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Krea Realtime Video inference."
+              "description": "Prompt used as the input for direct Krea Realtime Video 14B inference."
             },
             {
               "field": "negative-prompt",
@@ -67320,7 +67320,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run LingBot Map through the public CLI contract.",
+          "description": "Run LingBot-Map through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -67333,7 +67333,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct LingBot Map inference."
+              "description": "Input Path used as the input for direct LingBot-Map inference."
             },
             {
               "field": "interactions",
@@ -70086,7 +70086,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Liveworld through the public CLI contract.",
+          "description": "Run LiveWorld through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -70099,7 +70099,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Liveworld inference."
+              "description": "Prompt used as the input for direct LiveWorld inference."
             },
             {
               "field": "input-path",
@@ -70110,7 +70110,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Liveworld inference."
+              "description": "Input Path used as the input for direct LiveWorld inference."
             }
           ],
           "artifacts": [
@@ -76260,7 +76260,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Matrix-Game-1 through the public CLI contract.",
+          "description": "Run Matrix-Game 1.0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -76273,7 +76273,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Matrix-Game-1 inference."
+              "description": "Prompt used as the input for direct Matrix-Game 1.0 inference."
             },
             {
               "field": "input-path",
@@ -76284,7 +76284,7 @@
               "required": true,
               "default": "worldfoundry/data/test_cases/matrix-game-1/official_initial_image/forest_00.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Matrix-Game-1 inference."
+              "description": "Input Path used as the input for direct Matrix-Game 1.0 inference."
             },
             {
               "field": "interactions",
@@ -79387,7 +79387,7 @@
         {
           "id": "low-poly-rendering",
           "label": "Low Poly Rendering",
-          "description": "Run Matrix Game 4 Egypt through the public CLI contract.",
+          "description": "Run Matrix-Game 4 Ancient Egypt through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -79400,7 +79400,7 @@
               "required": true,
               "default": null,
               "choices": [],
-              "description": "Low-poly RGB video used as the input for direct Matrix Game 4 Egypt inference."
+              "description": "Low-poly RGB video used as the input for direct Matrix-Game 4 Ancient Egypt inference."
             },
             {
               "field": "prompt",
@@ -79714,7 +79714,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Minimax H3 through the public CLI contract.",
+          "description": "Run MiniMax H3 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "minimax-h3"
@@ -79729,7 +79729,7 @@
               "required": false,
               "default": "Reconstruct the scene and surface geometry with stable camera motion.",
               "choices": [],
-              "description": "Prompt used as the input for direct Minimax H3 inference."
+              "description": "Prompt used as the input for direct MiniMax H3 inference."
             },
             {
               "field": "steps",
@@ -79939,7 +79939,7 @@
     },
     {
       "id": "minwm-hy-action2v",
-      "name": "minWM",
+      "name": "minWM HY Action2V",
       "category": "world_models",
       "categoryLabel": "World models",
       "categoryLabelZh": "世界模型",
@@ -85807,7 +85807,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run DreamZero through the public CLI contract.",
+          "description": "Run NVIDIA DreamZero through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "dreamzero-droid"
@@ -85822,7 +85822,7 @@
               "required": false,
               "default": "Move the pan forward and use the brush in the middle of the plates to brush the inside of the pan",
               "choices": [],
-              "description": "Prompt used as the input for direct DreamZero inference."
+              "description": "Prompt used as the input for direct NVIDIA DreamZero inference."
             },
             {
               "field": "input-path",
@@ -85833,7 +85833,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct DreamZero inference."
+              "description": "Input Path used as the input for direct NVIDIA DreamZero inference."
             },
             {
               "field": "interactions",
@@ -85989,7 +85989,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run DreamZero through the public CLI contract.",
+          "description": "Run NVIDIA DreamZero through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "dreamzero-agibot"
@@ -86004,7 +86004,7 @@
               "required": false,
               "default": "Move the pan forward and use the brush in the middle of the plates to brush the inside of the pan",
               "choices": [],
-              "description": "Prompt used as the input for direct DreamZero inference."
+              "description": "Prompt used as the input for direct NVIDIA DreamZero inference."
             },
             {
               "field": "input-path",
@@ -86015,7 +86015,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct DreamZero inference."
+              "description": "Input Path used as the input for direct NVIDIA DreamZero inference."
             },
             {
               "field": "interactions",
@@ -94270,7 +94270,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Rise through the public CLI contract.",
+          "description": "Run RISE through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -94283,7 +94283,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Rise inference."
+              "description": "Prompt used as the input for direct RISE inference."
             },
             {
               "field": "input-path",
@@ -94294,7 +94294,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Rise inference."
+              "description": "Input Path used as the input for direct RISE inference."
             },
             {
               "field": "interactions",
@@ -94737,7 +94737,7 @@
         {
           "id": "text-to-long-video",
           "label": "Text To Long Video",
-          "description": "Run Rolling Forcing through the public CLI contract.",
+          "description": "Run RollingForcing through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -94750,7 +94750,7 @@
               "required": true,
               "default": "A golden retriever runs along a sunlit beach beside rolling ocean waves while the camera tracks smoothly, with coherent motion, stable anatomy, detailed wet sand, and realistic warm lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Rolling Forcing inference."
+              "description": "Prompt used as the input for direct RollingForcing inference."
             },
             {
               "field": "frames",
@@ -95301,7 +95301,7 @@
     },
     {
       "id": "sama-14b",
-      "name": "SAMA",
+      "name": "SAMA-14B",
       "category": "video",
       "categoryLabel": "Video",
       "categoryLabelZh": "视频",
@@ -96809,7 +96809,7 @@
     },
     {
       "id": "track-anything-prior",
-      "name": "Segment and Track Anything",
+      "name": "Segment and Track Anything Prior",
       "category": "three_d_four_d",
       "categoryLabel": "3D & 4D",
       "categoryLabelZh": "3D 与 4D",
@@ -103157,7 +103157,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Tinyvla through the public CLI contract.",
+          "description": "Run TinyVLA through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -103170,7 +103170,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Tinyvla inference."
+              "description": "Prompt used as the input for direct TinyVLA inference."
             },
             {
               "field": "input-path",
@@ -103181,7 +103181,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Tinyvla inference."
+              "description": "Input Path used as the input for direct TinyVLA inference."
             },
             {
               "field": "interactions",
@@ -104555,7 +104555,7 @@
     },
     {
       "id": "unidepth-v2-prior",
-      "name": "UniDepth V2",
+      "name": "UniDepth V2 Prior",
       "category": "three_d_four_d",
       "categoryLabel": "3D & 4D",
       "categoryLabelZh": "3D 与 4D",
@@ -104852,7 +104852,7 @@
     },
     {
       "id": "unik3d-prior",
-      "name": "UniK3D",
+      "name": "UniK3D Prior",
       "category": "three_d_four_d",
       "categoryLabel": "3D & 4D",
       "categoryLabelZh": "3D 与 4D",
@@ -107720,7 +107720,7 @@
     },
     {
       "id": "video-depth-anything-prior",
-      "name": "Video Depth Anything",
+      "name": "Video Depth Anything Prior",
       "category": "three_d_four_d",
       "categoryLabel": "3D & 4D",
       "categoryLabelZh": "3D 与 4D",
@@ -109659,7 +109659,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Wan 2.5 through the public CLI contract.",
+          "description": "Run Wan 2.5 API through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -109672,7 +109672,7 @@
               "required": false,
               "default": "Reconstruct the scene and surface geometry with stable camera motion.",
               "choices": [],
-              "description": "Prompt used as the input for direct Wan 2.5 inference."
+              "description": "Prompt used as the input for direct Wan 2.5 API inference."
             },
             {
               "field": "negative-prompt",
@@ -109940,7 +109940,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Wan 2.6 through the public CLI contract.",
+          "description": "Run Wan 2.6 API through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -109953,7 +109953,7 @@
               "required": false,
               "default": "Reconstruct the scene and surface geometry with stable camera motion.",
               "choices": [],
-              "description": "Prompt used as the input for direct Wan 2.6 inference."
+              "description": "Prompt used as the input for direct Wan 2.6 API inference."
             },
             {
               "field": "negative-prompt",
@@ -109975,7 +109975,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Wan 2.6 inference."
+              "description": "Input Path used as the input for direct Wan 2.6 API inference."
             },
             {
               "field": "seed",
@@ -110306,7 +110306,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Wan 2.7 through the public CLI contract.",
+          "description": "Run Wan 2.7 API through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -110319,7 +110319,7 @@
               "required": false,
               "default": "Reconstruct the scene and surface geometry with stable camera motion.",
               "choices": [],
-              "description": "Prompt used as the input for direct Wan 2.7 inference."
+              "description": "Prompt used as the input for direct Wan 2.7 API inference."
             },
             {
               "field": "negative-prompt",
@@ -110341,7 +110341,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Wan 2.7 inference."
+              "description": "Input Path used as the input for direct Wan 2.7 API inference."
             },
             {
               "field": "seed",
@@ -113603,7 +113603,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run World Labs through the public CLI contract.",
+          "description": "Run World Labs API through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -113616,7 +113616,7 @@
               "required": false,
               "default": "Reconstruct the scene and surface geometry with stable camera motion.",
               "choices": [],
-              "description": "Prompt used as the input for direct World Labs inference."
+              "description": "Prompt used as the input for direct World Labs API inference."
             },
             {
               "field": "input-path",
@@ -113627,7 +113627,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct World Labs inference."
+              "description": "Input Path used as the input for direct World Labs API inference."
             },
             {
               "field": "prompt-type",
@@ -114794,7 +114794,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Worldplay2 through the public CLI contract.",
+          "description": "Run WorldPlay2 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "worldplay2-fast"
@@ -114809,7 +114809,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Worldplay2 inference."
+              "description": "Prompt used as the input for direct WorldPlay2 inference."
             },
             {
               "field": "negative-prompt",
@@ -114831,7 +114831,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Worldplay2 inference."
+              "description": "Input Path used as the input for direct WorldPlay2 inference."
             },
             {
               "field": "interactions",
@@ -114980,7 +114980,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Worldplay2 through the public CLI contract.",
+          "description": "Run WorldPlay2 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "worldplay2-ar"
@@ -114995,7 +114995,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Worldplay2 inference."
+              "description": "Prompt used as the input for direct WorldPlay2 inference."
             },
             {
               "field": "negative-prompt",
@@ -115017,7 +115017,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Worldplay2 inference."
+              "description": "Input Path used as the input for direct WorldPlay2 inference."
             },
             {
               "field": "interactions",
@@ -115166,7 +115166,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run Worldplay2 through the public CLI contract.",
+          "description": "Run WorldPlay2 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "worldplay2-bi"
@@ -115181,7 +115181,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Worldplay2 inference."
+              "description": "Prompt used as the input for direct WorldPlay2 inference."
             },
             {
               "field": "negative-prompt",
@@ -115203,7 +115203,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Worldplay2 inference."
+              "description": "Input Path used as the input for direct WorldPlay2 inference."
             },
             {
               "field": "interactions",
@@ -115605,7 +115605,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Xgen Jing through the public CLI contract.",
+          "description": "Run XGEN-JING Flash v1 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -115618,7 +115618,7 @@
               "required": false,
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
-              "description": "Prompt used as the input for direct Xgen Jing inference."
+              "description": "Prompt used as the input for direct XGEN-JING Flash v1 inference."
             },
             {
               "field": "input-path",
@@ -115629,7 +115629,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
               "choices": [],
-              "description": "Input Path used as the input for direct Xgen Jing inference."
+              "description": "Input Path used as the input for direct XGEN-JING Flash v1 inference."
             }
           ],
           "artifacts": [
@@ -116707,7 +116707,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Abot M0 through the public CLI contract.",
+          "description": "Run ABot-M0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -116720,7 +116720,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Abot M0 inference."
+              "description": "Prompt used as the input for direct ABot-M0 inference."
             },
             {
               "field": "input-path",
@@ -116731,7 +116731,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Abot M0 inference."
+              "description": "Input Path used as the input for direct ABot-M0 inference."
             },
             {
               "field": "interactions",
@@ -117164,7 +117164,7 @@
         {
           "id": "latent-action-world-model",
           "label": "Latent Action World Model",
-          "description": "Run Adaworld through the public CLI contract.",
+          "description": "Run AdaWorld through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -119638,7 +119638,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run DB-CogACT through the public CLI contract.",
+          "description": "Run DB-CogACT / Dexbotic through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "db-cogact-libero"
@@ -119653,7 +119653,7 @@
               "required": false,
               "default": "put the object on the target area",
               "choices": [],
-              "description": "Prompt used as the input for direct DB-CogACT inference."
+              "description": "Prompt used as the input for direct DB-CogACT / Dexbotic inference."
             },
             {
               "field": "input-path",
@@ -119664,7 +119664,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/libero/main_view.png",
               "choices": [],
-              "description": "Input Path used as the input for direct DB-CogACT inference."
+              "description": "Input Path used as the input for direct DB-CogACT / Dexbotic inference."
             },
             {
               "field": "interactions",
@@ -120352,7 +120352,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Dexora 1b through the public CLI contract.",
+          "description": "Run Dexora 1B through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -120365,7 +120365,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Dexora 1b inference."
+              "description": "Prompt used as the input for direct Dexora 1B inference."
             },
             {
               "field": "input-path",
@@ -120376,7 +120376,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Dexora 1b inference."
+              "description": "Input Path used as the input for direct Dexora 1B inference."
             },
             {
               "field": "interactions",
@@ -120801,7 +120801,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Dm0 through the public CLI contract.",
+          "description": "Run DM0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -120814,7 +120814,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Dm0 inference."
+              "description": "Prompt used as the input for direct DM0 inference."
             },
             {
               "field": "input-path",
@@ -120825,7 +120825,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Dm0 inference."
+              "description": "Input Path used as the input for direct DM0 inference."
             },
             {
               "field": "interactions",
@@ -121989,7 +121989,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Eventvla through the public CLI contract.",
+          "description": "Run EventVLA through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -122002,7 +122002,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Eventvla inference."
+              "description": "Prompt used as the input for direct EventVLA inference."
             },
             {
               "field": "input-path",
@@ -122013,7 +122013,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Eventvla inference."
+              "description": "Input Path used as the input for direct EventVLA inference."
             },
             {
               "field": "interactions",
@@ -122443,7 +122443,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Galaxea Vla through the public CLI contract.",
+          "description": "Run Galaxea G0Plus through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -122456,7 +122456,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Galaxea Vla inference."
+              "description": "Prompt used as the input for direct Galaxea G0Plus inference."
             },
             {
               "field": "input-path",
@@ -122467,7 +122467,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Galaxea Vla inference."
+              "description": "Input Path used as the input for direct Galaxea G0Plus inference."
             },
             {
               "field": "interactions",
@@ -123872,7 +123872,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Go1 through the public CLI contract.",
+          "description": "Run GO-1 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -123885,7 +123885,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Go1 inference."
+              "description": "Prompt used as the input for direct GO-1 inference."
             },
             {
               "field": "input-path",
@@ -123896,7 +123896,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Go1 inference."
+              "description": "Input Path used as the input for direct GO-1 inference."
             },
             {
               "field": "interactions",
@@ -124322,7 +124322,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run H Rdt through the public CLI contract.",
+          "description": "Run H-RDT through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -124335,7 +124335,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct H Rdt inference."
+              "description": "Prompt used as the input for direct H-RDT inference."
             },
             {
               "field": "input-path",
@@ -124346,7 +124346,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct H Rdt inference."
+              "description": "Input Path used as the input for direct H-RDT inference."
             },
             {
               "field": "interactions",
@@ -124742,7 +124742,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Happyoyster through the public CLI contract.",
+          "description": "Run HappyOyster through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -125672,7 +125672,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Hunyuanworld 1 through the public CLI contract.",
+          "description": "Run HunyuanWorld 1.0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -126947,7 +126947,7 @@
         {
           "id": "interactive-video",
           "label": "Interactive Video",
-          "description": "Run LAPA through the public CLI contract.",
+          "description": "Run Latent Action Pretraining through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "lapa-7b-openx"
@@ -126962,7 +126962,7 @@
               "required": false,
               "default": "infer latent action tokens from the video context",
               "choices": [],
-              "description": "Prompt used as the input for direct LAPA inference."
+              "description": "Prompt used as the input for direct Latent Action Pretraining inference."
             },
             {
               "field": "input-path",
@@ -126973,7 +126973,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct LAPA inference."
+              "description": "Input Path used as the input for direct Latent Action Pretraining inference."
             },
             {
               "field": "interactions",
@@ -128946,7 +128946,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Lingbot Vla through the public CLI contract.",
+          "description": "Run LingBot-VLA through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "lingbot-vla-4b"
@@ -128961,7 +128961,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Lingbot Vla inference."
+              "description": "Prompt used as the input for direct LingBot-VLA inference."
             },
             {
               "field": "input-path",
@@ -128972,7 +128972,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Lingbot Vla inference."
+              "description": "Input Path used as the input for direct LingBot-VLA inference."
             },
             {
               "field": "interactions",
@@ -129143,7 +129143,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Lingbot Vla through the public CLI contract.",
+          "description": "Run LingBot-VLA through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "lingbot-vla-4b-posttrain-robotwin"
@@ -129158,7 +129158,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Lingbot Vla inference."
+              "description": "Prompt used as the input for direct LingBot-VLA inference."
             },
             {
               "field": "input-path",
@@ -129169,7 +129169,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Lingbot Vla inference."
+              "description": "Input Path used as the input for direct LingBot-VLA inference."
             },
             {
               "field": "interactions",
@@ -129340,7 +129340,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Lingbot Vla through the public CLI contract.",
+          "description": "Run LingBot-VLA through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "lingbot-vla-4b-depth-posttrain-robotwin"
@@ -129355,7 +129355,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Lingbot Vla inference."
+              "description": "Prompt used as the input for direct LingBot-VLA inference."
             },
             {
               "field": "input-path",
@@ -129366,7 +129366,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Lingbot Vla inference."
+              "description": "Input Path used as the input for direct LingBot-VLA inference."
             },
             {
               "field": "interactions",
@@ -129878,7 +129878,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Lingbot Vla V2 through the public CLI contract.",
+          "description": "Run LingBot-VLA 2.0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "lingbot-vla-v2-6b"
@@ -129893,7 +129893,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Lingbot Vla V2 inference."
+              "description": "Prompt used as the input for direct LingBot-VLA 2.0 inference."
             },
             {
               "field": "input-path",
@@ -129904,7 +129904,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Lingbot Vla V2 inference."
+              "description": "Input Path used as the input for direct LingBot-VLA 2.0 inference."
             },
             {
               "field": "interactions",
@@ -130331,7 +130331,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Mem 0 through the public CLI contract.",
+          "description": "Run Mem-0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -130344,7 +130344,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Mem 0 inference."
+              "description": "Prompt used as the input for direct Mem-0 inference."
             },
             {
               "field": "input-path",
@@ -130355,7 +130355,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Mem 0 inference."
+              "description": "Input Path used as the input for direct Mem-0 inference."
             },
             {
               "field": "interactions",
@@ -131073,7 +131073,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Mosaicmem through the public CLI contract.",
+          "description": "Run MosaicMem through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -131316,7 +131316,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Motionbricks through the public CLI contract.",
+          "description": "Run MotionBricks through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -132095,7 +132095,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Nwm through the public CLI contract.",
+          "description": "Run Navigation World Models through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "nwm-recon"
@@ -132111,7 +132111,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Nwm through the public CLI contract.",
+          "description": "Run Navigation World Models through the public CLI contract.",
           "source": "cli",
           "variantIds": [
             "nwm-scand"
@@ -132699,7 +132699,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Omniforcing through the public CLI contract.",
+          "description": "Run OmniForcing through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -133433,7 +133433,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Pi0 through the public CLI contract.",
+          "description": "Run pi0 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -133446,7 +133446,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Pi0 inference."
+              "description": "Prompt used as the input for direct pi0 inference."
             },
             {
               "field": "input-path",
@@ -133457,7 +133457,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Pi0 inference."
+              "description": "Input Path used as the input for direct pi0 inference."
             },
             {
               "field": "interactions",
@@ -133880,7 +133880,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Pi0 Fast through the public CLI contract.",
+          "description": "Run pi0-FAST through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -133893,7 +133893,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Pi0 Fast inference."
+              "description": "Prompt used as the input for direct pi0-FAST inference."
             },
             {
               "field": "input-path",
@@ -133904,7 +133904,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Pi0 Fast inference."
+              "description": "Input Path used as the input for direct pi0-FAST inference."
             },
             {
               "field": "interactions",
@@ -134314,7 +134314,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Pi05 through the public CLI contract.",
+          "description": "Run pi0.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -134327,7 +134327,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Pi05 inference."
+              "description": "Prompt used as the input for direct pi0.5 inference."
             },
             {
               "field": "input-path",
@@ -134338,7 +134338,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Pi05 inference."
+              "description": "Input Path used as the input for direct pi0.5 inference."
             },
             {
               "field": "interactions",
@@ -135026,7 +135026,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Pointworld through the public CLI contract.",
+          "description": "Run PointWorld through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -135302,7 +135302,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Rdt 1b through the public CLI contract.",
+          "description": "Run RDT-1B through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -135315,7 +135315,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Rdt 1b inference."
+              "description": "Prompt used as the input for direct RDT-1B inference."
             },
             {
               "field": "input-path",
@@ -135326,7 +135326,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Rdt 1b inference."
+              "description": "Input Path used as the input for direct RDT-1B inference."
             },
             {
               "field": "interactions",
@@ -140974,7 +140974,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Simworld through the public CLI contract.",
+          "description": "Run SimWorld through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -142049,7 +142049,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Spirit V1 5 through the public CLI contract.",
+          "description": "Run Spirit-VLA v1.5 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -142062,7 +142062,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Spirit V1 5 inference."
+              "description": "Prompt used as the input for direct Spirit-VLA v1.5 inference."
             },
             {
               "field": "input-path",
@@ -142073,7 +142073,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Spirit V1 5 inference."
+              "description": "Input Path used as the input for direct Spirit-VLA v1.5 inference."
             },
             {
               "field": "interactions",
@@ -142469,7 +142469,7 @@
         {
           "id": "starcraft-offline-client",
           "label": "Starcraft Offline Client",
-          "description": "Run Starwm through the public CLI contract.",
+          "description": "Run StarWM through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -142482,7 +142482,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/models/runtime/configs/starwm/data/wm_test_horizon5_1traj.json",
               "choices": [],
-              "description": "Input File used while loading the Starwm pipeline."
+              "description": "Input File used while loading the StarWM pipeline."
             },
             {
               "field": "load.served-model-id",
@@ -142493,7 +142493,7 @@
               "required": true,
               "default": "StarWM-demo",
               "choices": [],
-              "description": "Served Model ID used while loading the Starwm pipeline."
+              "description": "Served Model ID used while loading the StarWM pipeline."
             },
             {
               "field": "plan-only",
@@ -143656,7 +143656,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Uwm through the public CLI contract.",
+          "description": "Run Unified World Models through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -144250,7 +144250,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run VGGT World through the public CLI contract.",
+          "description": "Run VGGT-World through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -144826,7 +144826,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Wilddet3d through the public CLI contract.",
+          "description": "Run WildDet3D through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -145057,7 +145057,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Wildworld through the public CLI contract.",
+          "description": "Run WildWorld through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -145296,7 +145296,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Worldgrow through the public CLI contract.",
+          "description": "Run WorldGrow through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -145538,7 +145538,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Worldmem through the public CLI contract.",
+          "description": "Run WorldMem through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [],
@@ -147311,7 +147311,7 @@
         {
           "id": "default",
           "label": "Default",
-          "description": "Run Xiaomi Robotics 1 through the public CLI contract.",
+          "description": "Run Xiaomi-Robotics-1 through the public CLI contract.",
           "source": "cli",
           "variantIds": [],
           "inputs": [
@@ -147324,7 +147324,7 @@
               "required": false,
               "default": "Follow the instruction and predict the next executable action chunk.",
               "choices": [],
-              "description": "Prompt used as the input for direct Xiaomi Robotics 1 inference."
+              "description": "Prompt used as the input for direct Xiaomi-Robotics-1 inference."
             },
             {
               "field": "input-path",
@@ -147335,7 +147335,7 @@
               "required": true,
               "default": "/workspace/worldfoundry/data/test_cases/test_vla_case1/droid/exterior_image_1_left.png",
               "choices": [],
-              "description": "Input Path used as the input for direct Xiaomi Robotics 1 inference."
+              "description": "Input Path used as the input for direct Xiaomi-Robotics-1 inference."
             },
             {
               "field": "interactions",

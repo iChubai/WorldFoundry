@@ -977,7 +977,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "tags": ("text-to-world", "image-to-world", "video", "cosmos"),
     },
     "cosmos-transfer-2.5": {
-        "display_name": "Cosmos Transfer2.5",
         "default_model_ref": _cosmos_transfer2p5_default_ref,
         "default_load_kwargs": _cosmos_transfer2p5_default_load_kwargs,
         "default_input_path": str(resolve._data_path("test_cases", "longcat_video", "motorcycle.mp4")),
@@ -1132,7 +1131,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Video-to-video model that re-renders an input clip along a new camera trajectory.",
     },
     "dvlt": {
-        "display_name": "DVLT",
         "category": "3D Scene",
         "supports_stream": False,
         "supports_from_pretrained": True,
@@ -1148,7 +1146,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Multi-view point cloud reconstruction; not image-to-video generation.",
     },
     "lingbot-map": {
-        "display_name": "LingBot Map",
         "category": "3D Scene",
         "supports_stream": False,
         "supports_from_pretrained": True,
@@ -1173,7 +1170,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "Streaming 3D map reconstruction from images; not video generation.",
     },
     "worldfm": {
-        "display_name": "WorldFM",
         "runtime_kind": "worldfm",
         "category": "3D Scene",
         "default_model_ref": _worldfm_default_ref,
@@ -2058,7 +2054,6 @@ OVERRIDES.update(
             "tags": ("depth", "geometry", "panorama", "prior"),
         },
         "depth-anything-v2-prior": {
-            "display_name": "Depth Anything V2 Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,
@@ -2074,7 +2069,6 @@ OVERRIDES.update(
             "tags": ("depth", "geometry", "prior"),
         },
         "depth-anything-v3-prior": {
-            "display_name": "Depth Anything 3 Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,
@@ -2124,7 +2118,6 @@ OVERRIDES.update(
             "notes": "Point/multi-view 3D reconstruction; not text-to-video generation.",
         },
         "geocalib-prior": {
-            "display_name": "GeoCalib Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,
@@ -2140,7 +2133,6 @@ OVERRIDES.update(
             "tags": ("camera-calibration", "geometry", "prior"),
         },
         "metric3d-prior": {
-            "display_name": "Metric3D Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,
@@ -2173,7 +2165,6 @@ OVERRIDES.update(
             "tags": ("depth", "geometry", "depth-completion", "prior"),
         },
         "track-anything-prior": {
-            "display_name": "Segment and Track Anything Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,
@@ -2190,7 +2181,6 @@ OVERRIDES.update(
             "tags": ("tracking", "segmentation", "geometry", "prior"),
         },
         "unidepth-v2-prior": {
-            "display_name": "UniDepth V2 Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,
@@ -2208,7 +2198,6 @@ OVERRIDES.update(
             "tags": ("depth", "geometry", "metric-depth", "prior"),
         },
         "unik3d-prior": {
-            "display_name": "UniK3D Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,
@@ -2226,7 +2215,6 @@ OVERRIDES.update(
             "tags": ("depth", "geometry", "panorama", "prior"),
         },
         "video-depth-anything-prior": {
-            "display_name": "Video Depth Anything Prior",
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
             "supports_stream": False,

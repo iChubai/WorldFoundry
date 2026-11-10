@@ -1064,6 +1064,14 @@ def _discover_catalog_infos() -> tuple[_AstPipelineInfo, ...]:
     return (*_discover_ast_pipelines(), *_discover_component_pipelines(), *_discover_action_syntheses())
 
 
+@lru_cache(maxsize=1)
+def _catalog_model_names() -> dict[str, str]:
+    """Return the model catalog's display name for each catalog model id."""
+    from worldfoundry.zoo.catalog import load_model_zoo_registry
+
+    return {entry.model_id: entry.name for entry in load_model_zoo_registry().list() if entry.name}
+
+
 def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
     override = CURATED_OVERRIDES.get(info.model_id) or CURATED_OVERRIDES.get(_catalog_id_key(info.model_id), {})
     override = {**override, **studio_contract_override(info.model_id)}
@@ -1078,7 +1086,7 @@ def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
         "category",
         inferred_category,
     )
-    display_name = override.get("display_name", info.display_name)
+    display_name = override.get("display_name") or _catalog_model_names().get(info.model_id) or info.display_name
     runtime_kind = override.get("runtime_kind", _runtime_kind_from_family(info.model_id, info.family))
     supports_from_pretrained = bool(override.get("supports_from_pretrained", info.supports_from_pretrained))
     supports_api_init = bool(override.get("supports_api_init", info.supports_api_init))

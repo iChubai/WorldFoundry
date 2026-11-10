@@ -19,28 +19,24 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "notes": "3D Gaussian splat world generation via the World Labs Marble API.",
     },
     "wan-2p5": {
-        "display_name": "Wan 2.5",
         "category": "Remote API",
         "default_backend": "api_init",
         "default_endpoint": "https://dashscope.aliyuncs.com/api/v1",
         "tags": ("api", "text-to-video", "image-to-video"),
     },
     "wan-2p6": {
-        "display_name": "Wan 2.6",
         "category": "Remote API",
         "default_backend": "api_init",
         "default_endpoint": "https://dashscope.aliyuncs.com/api/v1",
         "tags": ("api", "image-to-video"),
     },
     "wan-2p7": {
-        "display_name": "Wan 2.7",
         "category": "Remote API",
         "default_backend": "api_init",
         "default_endpoint": "https://dashscope.aliyuncs.com/api/v1",
         "tags": ("api", "image-to-video"),
     },
     "worldlabs": {
-        "display_name": "World Labs",
         "category": "Remote API",
         "default_backend": "api_init",
         "default_endpoint": "https://api.worldlabs.ai",

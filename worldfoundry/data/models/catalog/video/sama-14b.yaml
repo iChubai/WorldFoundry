@@ -1,5 +1,5 @@
 id: sama-14b
-name: SAMA
+name: SAMA-14B
 runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: sama-14b
 tasks:

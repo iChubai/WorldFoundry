@@ -41,6 +41,8 @@ CLI task profile：`default`。绑定的 pipeline 类是 `MoVersePipeline`。
 
 运行 `wf run moverse --pipeline.task-profile default` 沿相机路径生成视频。
 
+运行环境：独立环境 `moverse`（Python 3.10，CUDA 12.4，torch==2.6.0+cu124）。
+
 权重仓库：`Orange-3DV-Team/MoVerse`、`black-forest-labs/FLUX.1-Fill-dev`、`depth-anything/DA3NESTED-GIANT-LARGE-1.1` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh moverse`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="moverse" locale="zh" />

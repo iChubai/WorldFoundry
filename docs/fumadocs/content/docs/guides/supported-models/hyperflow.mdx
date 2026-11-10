@@ -37,6 +37,8 @@ Supply a complete local diffusers MiniMax-H3 snapshot, weights_path and the dedi
 
 Generate a clip with `wf run hyperflow --pipeline.task-profile t2va`. Switch tasks in the command builder above to change `--pipeline.task-profile`.
 
+It runs in the dedicated environment `hyperflow` (Python 3.11, CUDA 12.8, torch==2.11.0+cu128).
+
 Weights: `videorebirth/hyperflow` and `MiniMaxAI/MiniMax-H3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hyperflow`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="hyperflow" locale="en" />

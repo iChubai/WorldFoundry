@@ -39,6 +39,8 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `JoyAIEchoLon
 
 用 `wf run joyai-echo-longvideo --pipeline.task-profile interactive-video` 把静态图生成为视频。
 
+运行环境：独立环境 `joyai-echo-longvideo`（Python 3.11，CUDA 12.8，torch==2.8.0）。
+
 权重仓库：`jdopensource/JoyAI-Echo`、`google/gemma-3-12b-it`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh joyai-echo-longvideo`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="joyai-echo-longvideo" locale="zh" />

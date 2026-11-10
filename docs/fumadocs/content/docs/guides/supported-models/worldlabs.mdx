@@ -1,6 +1,6 @@
 ---
 title: "World Labs API"
-description: "World Labs API from World Labs: world generation, assets, and 1 more task; Runner parity pending."
+description: "World Labs API from World Labs: world generation, assets, and 1 more task."
 modelId: "worldlabs"
 pageSource: authored
 ---
@@ -31,11 +31,11 @@ Inputs `prompt` and `input-path` (bundled samples are used when omitted).
 
 CLI task profiles: `default`. WorldFoundry binds `WorldLabsPipeline`.
 
-Family status: **Runner parity pending**.
-
 Supply your own World Labs account and API key through WORLDLABS_API_KEY (or WLT_API_KEY); access is provisioned through World Labs' platform (worldlabs.ai). No weights are downloaded and no local GPU is needed — generation happens on the provider side, so cost, quota, and content policy follow your provider account.
 
 Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+
+The provider controls model versioning, so outputs can change over time.
 
 ## Running in WorldFoundry
 

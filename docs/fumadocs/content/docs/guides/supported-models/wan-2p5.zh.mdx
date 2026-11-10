@@ -25,6 +25,8 @@ Wan 2.5 API 是阿里巴巴通义万相 Wan 2.5 视频生成模型的 DashScope 
 
 没有本地 checkpoint、分辨率、帧数或步数表——这些设置在 DashScope 请求里。任务：文生视频、图生视频。自备服务方密钥。
 
+模型版本由服务方控制，即使 WorldFoundry 侧没有任何改动，输出也可能随时间变化。
+
 ## 在 WorldFoundry 中运行
 
 不创建本地 GPU 环境。在 dashscope.aliyun.com 开通 DashScope key，然后启动 `wf run wan-2p5`。费用、配额与内容政策以阿里云账号为准。

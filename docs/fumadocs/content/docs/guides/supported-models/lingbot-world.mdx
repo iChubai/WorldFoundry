@@ -41,6 +41,8 @@ The wrapper resolves only local HFD or explicit checkpoint directories — no ru
 
 Generate a camera-controlled clip with `wf run lingbot-world --pipeline.task-profile image-navigation-video`. Switch tasks in the command builder above to change `--pipeline.task-profile`.
 
+It runs in the dedicated environment `lingbot-world` (Python 3.10, CUDA 12.1, torch==2.5.1).
+
 Weights: `robbyant/lingbot-world-base-cam`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="lingbot-world" locale="en" />

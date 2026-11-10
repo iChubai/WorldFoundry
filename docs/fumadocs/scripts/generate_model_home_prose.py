@@ -1041,7 +1041,15 @@ def task_profile_sentence(recipe: dict[str, Any], locale: str) -> str:
     return text
 
 
+def hosted_route(recipe: dict[str, Any]) -> bool:
+    """Provider-hosted models have no local runner, so runner parity does not apply."""
+
+    return str(recipe.get("category") or "") == "hosted_api"
+
+
 def family_status_sentence(recipe: dict[str, Any], locale: str) -> str:
+    if hosted_route(recipe):
+        return ""
     label = status_label(recipe, locale)
     if locale == "zh":
         return f"系列状态：**{label}**。"
@@ -1423,7 +1431,8 @@ def run_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) ->
         add(builder)
 
     env = environment_sentence(recipe, locale)
-    if env and not mentions(blob, str((recipe.get("runtime") or {}).get("environmentName") or "___never___")):
+    env_name = str((recipe.get("runtime") or {}).get("environmentName") or "")
+    if env and not (env_name and f"`{env_name}`" in blob):
         add(env)
 
     ckpt = checkpoint_sentence(recipe, locale)
@@ -1456,7 +1465,7 @@ def run_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) ->
 
     # The runtime contract section states the family status unless an exemplar replaces it.
     status_elsewhere = not exemplar_block(model_id, "contract_extra", locale)
-    limits = limits_clause(recipe, docs, locale, include_status=not status_elsewhere)
+    limits = limits_clause(recipe, docs, locale, include_status=not status_elsewhere and not hosted_route(recipe))
     if limits and not mentions(blob, "license", "VRAM", "显存", "Status:", "状态", "许可证"):
         add(limits)
     return parts[:4]
@@ -1916,7 +1925,7 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
     env_kind = str(runtime.get("environmentKind") or "")
     overview0 = (locale_paragraphs(docs, "overview", locale) or [""])[0]
 
-    extras: list[str] = [status_label(recipe, locale)]
+    extras: list[str] = [] if hosted_route(recipe) else [status_label(recipe, locale)]
     if len(ids) > 1:
         extras.append(f"{len(ids)} variants" if locale == "en" else f"{len(ids)} 个 variant")
     if env_kind == "dedicated" and runtime.get("environmentName"):

@@ -41,6 +41,8 @@ CLI task profile：`default`。绑定的 pipeline 类是 `KairosPipeline`。
 
 用 `wf run kairos-sensenova --pipeline.task-profile default` 推进世界。
 
+运行环境：独立环境 `kairos-sensenova`（Python 3.10，CUDA 12.8，torch==2.12.0）。
+
 权重仓库：`kairos-agi/kairos-sensenova-robot-4B-480P-distilled`、`kairos-agi/kairos-sensenova-4B-480P-pretrained`、`kairos-agi/kairos-sensenova-4B-720P`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh kairos-sensenova`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="kairos-sensenova" locale="zh" />

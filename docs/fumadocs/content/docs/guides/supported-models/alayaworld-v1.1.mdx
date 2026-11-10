@@ -37,6 +37,8 @@ Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weigh
 
 Run `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video` to follow the camera path.
 
+It runs in the dedicated environment `alayaworld-v1.1` (Python 3.11, CUDA 12.8, torch>=2.6).
+
 Weights: `AlayaLab/AlayaWorld-v1.1-stage2b`, `AlayaLab/AlayaWorld-v1.1-stage3`, and `Lightricks/LTX-2.3` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh alayaworld-v1.1`. Add `--download` to fetch missing public checkpoints.
 
 Gated weights: `google/gemma-3-12b-it-qat-q4_0-unquantized` (accept the upstream terms before downloading).

@@ -41,6 +41,8 @@ CLI task profile：`official-static-sdg`、`official-zoomgs`。绑定的 pipelin
 
 用 `wf run lyra-1 --pipeline.task-profile official-static-sdg` 生成世界。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
 
+运行环境：独立环境 `lyra`（Python 3.10，CUDA 12.4，torch==2.6.0）。
+
 权重仓库：`depth-anything/DA3NESTED-GIANT-LARGE-1.1`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lyra-1`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="lyra" locale="zh" />

@@ -1,6 +1,6 @@
 ---
 title: "Veo3"
-description: "Veo3 from Google DeepMind: text-to-video, image-to-video, and 1 more task; Runner parity pending."
+description: "Veo3 from Google DeepMind: text-to-video, image-to-video, and 1 more task."
 modelId: "veo3"
 pageSource: generated
 ---
@@ -27,11 +27,11 @@ Inputs `prompt` and `input-path` (bundled samples are used when omitted).
 
 CLI task profiles: `default`. WorldFoundry binds `Veo3Pipeline`.
 
-Family status: **Runner parity pending**.
-
 Supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Veo access is provisioned through Google's AI developer offerings (e.g. the Gemini API); regional availability applies.
 
 Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+
+The provider controls model versioning, so outputs can change over time without any change on the WorldFoundry side.
 
 ## Running in WorldFoundry
 

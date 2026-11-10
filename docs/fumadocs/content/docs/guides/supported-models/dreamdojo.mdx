@@ -23,6 +23,8 @@ The unified action layout includes GR-1 `[0,58)`, G1 `[58,101)`, YAM `[101,147)`
 
 Prepare the GR-1 EMA checkpoint, Cosmos-Predict2.5 video tokenizer, and Cosmos-Reason1-7B text encoder. The public loader automatically converts distributed checkpoint shards to `model_ema_bf16.pt` when needed.
 
+It runs in the dedicated environment `dreamdojo` (Python 3.10, CUDA 12.8, torch==2.7.0).
+
 ```python
 from worldfoundry.pipelines.component_pipelines import DreamDojoPipeline
 

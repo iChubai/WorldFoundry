@@ -41,6 +41,8 @@ The official causal-fast recipe uses eight GPUs; a four-GPU compact topology is 
 
 Run `wf run lingbot-world-v2 --pipeline.task-profile image-camera-video` to follow the camera path.
 
+It runs in the dedicated environment `lingbot-world-v2` (Python 3.10, CUDA 12.1, torch==2.5.1).
+
 Weights: `robbyant/lingbot-world-v2-14b-causal-fast`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world-v2`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="lingbot-world-v2" locale="en" />

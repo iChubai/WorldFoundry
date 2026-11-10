@@ -1,6 +1,6 @@
 ---
 title: "Matrix-Game 3.5"
-description: "Matrix-Game 3.5（Riemann Dynamics（黎曼动力））：图生视频、相机可控视频等 4 项任务；Runner 一致性待确认。"
+description: "Matrix-Game 3.5（Riemann Dynamics（黎曼动力））：图生视频、相机可控视频等 4 项任务；Runner 一致性待确认; 独立环境 `matrix-game-3.5`。"
 modelId: "matrix-game-3.5-first-person"
 pageSource: authored
 ---
@@ -41,7 +41,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MatrixGame35
 
 用 `wf run matrix-game-3.5-first-person --pipeline.task-profile interactive-video` 生成相机可控视频。
 
-运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+运行环境：独立环境 `matrix-game-3.5`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`RiemannDynamics/Matrix-Game-3.5-Base`、`Wan-AI/Wan2.2-TI2V-5B`、`depth-anything/DA3NESTED-GIANT-LARGE-1.1` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh matrix-game-3.5-first-person`；下载缺失的公开权重时加 `--download`。
 

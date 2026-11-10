@@ -41,6 +41,8 @@ Validated without a GPU: WorldFoundry builds the official command and maps the s
 
 Generate a clip with `wf run ltx-2.5 --pipeline.task-profile interactive-video`.
 
+It runs in the dedicated environment `ltx-2.5` (Python 3.11, CUDA 12.8, torch==2.11.0+cu128).
+
 Weights: `Lightricks/LTX-2.5`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh ltx-2.5`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="ltx-2.5" locale="en" />

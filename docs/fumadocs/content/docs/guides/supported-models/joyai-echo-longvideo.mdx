@@ -41,6 +41,8 @@ Clone JoyAI-Echo at the pinned revision, prepare its dedicated environment, and 
 
 Animate a still image with `wf run joyai-echo-longvideo --pipeline.task-profile interactive-video`.
 
+It runs in the dedicated environment `joyai-echo-longvideo` (Python 3.11, CUDA 12.8, torch==2.8.0).
+
 Weights: `jdopensource/JoyAI-Echo` and `google/gemma-3-12b-it`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh joyai-echo-longvideo`. Add `--download` to fetch missing public checkpoints.
 
 Gated weights: `google/gemma-3-12b-it` (accept the upstream terms before downloading).

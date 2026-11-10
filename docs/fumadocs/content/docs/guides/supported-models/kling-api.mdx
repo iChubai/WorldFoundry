@@ -1,6 +1,6 @@
 ---
 title: "Kling API"
-description: "Kling API from Kuaishou: text-to-video, image-to-video, and 1 more task; Runner parity pending."
+description: "Kling API from Kuaishou: text-to-video, image-to-video, and 1 more task."
 modelId: "kling-api"
 pageSource: generated
 ---
@@ -27,11 +27,11 @@ Inputs `prompt` and `input-path` (bundled samples are used when omitted).
 
 CLI task profiles: `default`. WorldFoundry binds `KlingApiPipeline`.
 
-Family status: **Runner parity pending**.
-
 The hosted-API Studio pipeline is available; supply your own provider API key and account. No weights are downloaded and no local GPU environment is needed — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Credentials come from the Kling open platform (app.klingai.com).
 
 Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+
+The provider controls model versioning, so outputs can change over time without any change in WorldFoundry.
 
 ## Running in WorldFoundry
 

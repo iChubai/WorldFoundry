@@ -37,6 +37,8 @@ CLI task profile：`image-to-video`。绑定的 pipeline 类是 `AlayaWorldV11Pi
 
 运行 `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video` 沿相机路径生成视频。
 
+运行环境：独立环境 `alayaworld-v1.1`（Python 3.11，CUDA 12.8，torch>=2.6）。
+
 权重仓库：`AlayaLab/AlayaWorld-v1.1-stage2b`、`AlayaLab/AlayaWorld-v1.1-stage3`、`Lightricks/LTX-2.3` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh alayaworld-v1.1`；下载缺失的公开权重时加 `--download`。
 
 gated 权重：`google/gemma-3-12b-it-qat-q4_0-unquantized`（下载前需在上游接受条款）。

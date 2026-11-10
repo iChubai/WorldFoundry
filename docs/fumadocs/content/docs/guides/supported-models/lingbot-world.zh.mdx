@@ -41,6 +41,8 @@ CLI task profile：`image-navigation-video`、`image-action-video`。绑定的 p
 
 用 `wf run lingbot-world --pipeline.task-profile image-navigation-video` 生成相机可控视频。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
 
+运行环境：独立环境 `lingbot-world`（Python 3.10，CUDA 12.1，torch==2.5.1）。
+
 权重仓库：`robbyant/lingbot-world-base-cam`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lingbot-world`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="lingbot-world" locale="zh" />

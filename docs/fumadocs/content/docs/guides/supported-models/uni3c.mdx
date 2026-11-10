@@ -41,6 +41,8 @@ Choose the camera-only or unified camera-plus-human route and provide the matchi
 
 Generate a camera-controlled clip with `wf run uni3c --pipeline.task-profile image-camera-control-video`.
 
+It runs in the dedicated environment `uni3c` (Python 3.10, CUDA 12.4, torch==2.6.0+cu124).
+
 Weights: `ewrfcas/Uni3C`, `Wan-AI/Wan2.1-I2V-14B-720P-Diffusers`, and `theFoxofSky/RealisDance-DiT`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh uni3c`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="uni3c" locale="en" />

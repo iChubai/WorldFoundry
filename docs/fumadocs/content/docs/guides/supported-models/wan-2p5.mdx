@@ -25,6 +25,8 @@ Related suites: [VBench](/docs/evaluation/benchmark-hub/vbench) and [Physics-IQ]
 
 There is no local checkpoint, resolution, frame count, or step table — those settings live on the DashScope request. Tasks: text-to-video and image-to-video. Bring your own provider key.
 
+The provider controls model versioning, so outputs can change over time without any change on the WorldFoundry side.
+
 ## Running in WorldFoundry
 
 No GPU environment is provisioned. Issue a DashScope key at dashscope.aliyun.com, then launch `wf run wan-2p5`. Cost, quota, and content policy follow your Alibaba Cloud account.

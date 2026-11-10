@@ -416,6 +416,21 @@ def profile_candidates(item: dict[str, Any], model_id: str) -> list[str]:
     )
 
 
+def profile_environment(
+    profile: dict[str, Any] | None, requested_id: str, environments: dict[str, dict[str, Any]]
+) -> list[str]:
+    """Environment named by ``execution.environment``, resolved like ``model_env_install.sh``.
+
+    An environment manifest for the requested model or variant id wins; otherwise the
+    runtime profile's environment applies, and ``_unified`` keeps the default lookup.
+    """
+
+    name = text(as_dict(profile.get("execution")).get("environment")) if profile else None
+    if not name or name == "_unified" or requested_id in environments:
+        return []
+    return [name]
+
+
 def select_manifest(
     index: dict[str, dict[str, Any]], candidates: list[str]
 ) -> tuple[str | None, dict[str, Any] | None]:
@@ -675,7 +690,10 @@ def variant_data(
                 text(item.get("id") or item.get("model_id")),
             )
         )
-        environment_candidates = [candidate.removeprefix("runtime-profile:") for candidate in environment_candidates]
+        environment_candidates = [
+            *profile_environment(profile, variant_id, environments),
+            *(candidate.removeprefix("runtime-profile:") for candidate in environment_candidates),
+        ]
         environment_id, environment = select_manifest(environments, environment_candidates)
         if environment is None and profile is not None:
             environment_id, environment = "_unified", unified_environment
@@ -1651,7 +1669,10 @@ def main() -> int:
                         *candidates,
                     ]
                 )
-                env_candidates = [candidate.removeprefix("runtime-profile:") for candidate in env_candidates]
+                env_candidates = [
+                    *profile_environment(profile, model_id, environments),
+                    *(candidate.removeprefix("runtime-profile:") for candidate in env_candidates),
+                ]
                 env_id, environment = select_manifest(environments, env_candidates)
                 if environment is None and profile is not None:
                     env_id, environment = "_unified", unified_environment

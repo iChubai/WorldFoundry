@@ -43,6 +43,8 @@ first_chunk_t and chunk_t select the schedule: c1-1 frame-wise gives the lowest 
 
 Step the world with `wf run causal-rcm --pipeline.task-profile default`.
 
+It runs in the dedicated environment `causal-rcm` (Python 3.12, CUDA 12.6, torch==2.11.0).
+
 Weights: `worstcoder/rcm-Wan` and `worstcoder/Wan`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh causal-rcm`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="causal-rcm" locale="en" />

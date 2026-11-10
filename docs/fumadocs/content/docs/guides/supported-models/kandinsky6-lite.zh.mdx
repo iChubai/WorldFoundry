@@ -1,6 +1,6 @@
 ---
 title: "Kandinsky 6.0 lite"
-description: "Kandinsky 6.0 lite（kandinskylab）：文生视频、图生视频等 3 项任务；Runner 一致性待确认。"
+description: "Kandinsky 6.0 lite（kandinskylab）：文生视频、图生视频等 3 项任务；Runner 一致性待确认; 独立环境 `worldfoundry-kandinsky6-cu126`。"
 modelId: "kandinsky6-lite"
 pageSource: generated
 ---
@@ -31,7 +31,7 @@ CLI task profile：`text-to-video`、`image-to-video`、`audio-video-generation`
 
 运行 `wf run kandinsky6-lite --pipeline.task-profile text-to-video` 生成视频。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
 
-运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+运行环境：独立环境 `worldfoundry-kandinsky6-cu126`（Python 3.10，CUDA 12.6，torch==2.9.0+cu126）。
 
 权重仓库：`kandinskylab/Kandinsky-6.0-Lite-5s-Diffusers`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh kandinsky6-lite`；下载缺失的公开权重时加 `--download`。
 

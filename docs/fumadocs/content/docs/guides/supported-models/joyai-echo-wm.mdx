@@ -37,6 +37,8 @@ Supply a first-frame image, prompt, and Action DSL such as w-60,a-60. Select var
 
 Launch `wf run joyai-echo-wm`.
 
+It runs in the dedicated environment `joyai-echo-wm` (Python 3.11, CUDA 12.8, torch==2.9.1).
+
 Weights: `Echo-Team/Echo-WM` and `google/gemma-3-12b-it-qat-q4_0-unquantized`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh joyai-echo-wm`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="joyai-echo-wm" locale="en" />

@@ -41,6 +41,8 @@ Pick the variant by input: lyra-1 when you start from an image or video, lyra-2 
 
 Generate a world with `wf run lyra-1 --pipeline.task-profile official-static-sdg`. Switch tasks in the command builder above to change `--pipeline.task-profile`.
 
+It runs in the dedicated environment `lyra` (Python 3.10, CUDA 12.4, torch==2.6.0).
+
 Weights: `depth-anything/DA3NESTED-GIANT-LARGE-1.1`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lyra-1`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="lyra" locale="en" />

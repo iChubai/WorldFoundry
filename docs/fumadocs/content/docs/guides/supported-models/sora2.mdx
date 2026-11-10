@@ -1,6 +1,6 @@
 ---
 title: "Sora2"
-description: "Sora2 from OpenAI: text-to-video, image-to-video, and 1 more task; Runner parity pending."
+description: "Sora2 from OpenAI: text-to-video, image-to-video, and 1 more task."
 modelId: "sora2"
 pageSource: authored
 ---
@@ -29,11 +29,11 @@ Inputs `prompt` and `input-path` (bundled samples are used when omitted).
 
 CLI task profiles: `default`. WorldFoundry binds `Sora2Pipeline`.
 
-Family status: **Runner parity pending**.
-
 The hosted-API Studio pipeline needs your own provider account and API key: pass api_key or set SORA2_API_KEY, SORA_API_KEY, or OPENAI_API_KEY. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Access requires an OpenAI account with Sora API availability in your region and tier.
 
 Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+
+The provider controls model versioning, so outputs can change over time without any change in WorldFoundry.
 
 ## Running in WorldFoundry
 

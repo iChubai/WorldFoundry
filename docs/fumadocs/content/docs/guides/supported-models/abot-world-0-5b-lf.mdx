@@ -43,6 +43,8 @@ Stage the checkpoint in a local directory before running; the runtime works offl
 
 Run `wf run abot-world-0-5b-lf --pipeline.task-profile interactive-video` to roll out the world model.
 
+It runs in the dedicated environment `abot-world` (Python 3.12, CUDA 12.9, torch==2.8.0).
+
 Weights: `acvlab/ABot-World-0-5B-LF`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh abot-world-0-5b-lf`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="abot-world-0-5b-lf" locale="en" />

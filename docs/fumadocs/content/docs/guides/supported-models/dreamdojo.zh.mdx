@@ -23,6 +23,8 @@ DreamDojo 从初始图像与归一化机器人动作预测机器人视角视频�
 
 准备 GR-1 EMA 权重、Cosmos-Predict2.5 视频 tokenizer 与 Cosmos-Reason1-7B 文本编码器。需要时，公共加载入口会自动将分布式 checkpoint 分片转换为 `model_ema_bf16.pt`。
 
+运行环境：独立环境 `dreamdojo`（Python 3.10，CUDA 12.8，torch==2.7.0）。
+
 ```python
 from worldfoundry.pipelines.component_pipelines import DreamDojoPipeline
 

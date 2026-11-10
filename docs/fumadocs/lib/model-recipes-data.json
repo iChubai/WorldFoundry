@@ -34659,6 +34659,17 @@
               "description": "Prompt used as the input for direct Bernini inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "/workspace/WorldFoundry/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
+              "choices": [],
+              "description": "Source Image used as the input for direct Bernini inference."
+            },
+            {
               "field": "task-type",
               "option": "--pipeline.task-type",
               "detail": "Optional",
@@ -34814,6 +34825,17 @@
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
               "description": "Prompt used as the input for direct Bernini inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": null,
+              "choices": [],
+              "description": "Source Video used as the input for direct Bernini inference."
             },
             {
               "field": "task-type",
@@ -34973,6 +34995,17 @@
               "description": "Prompt used as the input for direct Bernini inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "/workspace/WorldFoundry/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
+              "choices": [],
+              "description": "Source Image used as the input for direct Bernini inference."
+            },
+            {
               "field": "task-type",
               "option": "--pipeline.task-type",
               "detail": "Optional",
@@ -35128,6 +35161,17 @@
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
               "description": "Prompt used as the input for direct Bernini inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": null,
+              "choices": [],
+              "description": "Source Video used as the input for direct Bernini inference."
             },
             {
               "field": "images",
@@ -35913,6 +35957,17 @@
               "description": "Prompt used as the input for direct Bernini inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "/workspace/WorldFoundry/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
+              "choices": [],
+              "description": "Source Image used as the input for direct Bernini inference."
+            },
+            {
               "field": "task-type",
               "option": "--pipeline.task-type",
               "detail": "Optional",
@@ -36068,6 +36123,17 @@
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
               "description": "Prompt used as the input for direct Bernini inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": null,
+              "choices": [],
+              "description": "Source Video used as the input for direct Bernini inference."
             },
             {
               "field": "task-type",
@@ -36227,6 +36293,17 @@
               "description": "Prompt used as the input for direct Bernini inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "/workspace/WorldFoundry/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
+              "choices": [],
+              "description": "Source Image used as the input for direct Bernini inference."
+            },
+            {
               "field": "task-type",
               "option": "--pipeline.task-type",
               "detail": "Optional",
@@ -36382,6 +36459,17 @@
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
               "description": "Prompt used as the input for direct Bernini inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": null,
+              "choices": [],
+              "description": "Source Video used as the input for direct Bernini inference."
             },
             {
               "field": "images",
@@ -37151,6 +37239,17 @@
               "description": "Prompt used as the input for direct Bernini inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "/workspace/WorldFoundry/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
+              "choices": [],
+              "description": "Source Image used as the input for direct Bernini inference."
+            },
+            {
               "field": "task-type",
               "option": "--pipeline.task-type",
               "detail": "Optional",
@@ -37306,6 +37405,17 @@
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
               "description": "Prompt used as the input for direct Bernini inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": null,
+              "choices": [],
+              "description": "Source Video used as the input for direct Bernini inference."
             },
             {
               "field": "task-type",
@@ -37465,6 +37575,17 @@
               "description": "Prompt used as the input for direct Bernini inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "/workspace/WorldFoundry/worldfoundry/data/test_cases/studio_demo/00/image.jpg",
+              "choices": [],
+              "description": "Source Image used as the input for direct Bernini inference."
+            },
+            {
               "field": "task-type",
               "option": "--pipeline.task-type",
               "detail": "Optional",
@@ -37620,6 +37741,17 @@
               "default": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
               "choices": [],
               "description": "Prompt used as the input for direct Bernini inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": null,
+              "choices": [],
+              "description": "Source Video used as the input for direct Bernini inference."
             },
             {
               "field": "images",
@@ -40424,6 +40556,17 @@
               "description": "Prompt used as the input for direct Cosmos3 inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Input Image used as the input for direct Cosmos3 inference."
+            },
+            {
               "field": "negative-prompt",
               "option": "--pipeline.negative-prompt",
               "detail": "Optional",
@@ -40597,6 +40740,17 @@
               "description": "Prompt used as the input for direct Cosmos3 inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Input Video used as the input for direct Cosmos3 inference."
+            },
+            {
               "field": "negative-prompt",
               "option": "--pipeline.negative-prompt",
               "detail": "Optional",
@@ -40768,6 +40922,17 @@
               "default": "A robot arm is cleaning a plate in the kitchen",
               "choices": [],
               "description": "Prompt used as the input for direct Cosmos3 inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Policy and forward dynamics use the first frame; inverse dynamics conditions on the clip."
             },
             {
               "field": "action-mode",
@@ -40975,6 +41140,17 @@
               "default": "A robot arm is cleaning a plate in the kitchen",
               "choices": [],
               "description": "Prompt used as the input for direct Cosmos3 inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Policy and forward dynamics use the first frame; inverse dynamics conditions on the clip."
             },
             {
               "field": "action-mode",
@@ -41193,6 +41369,17 @@
               "default": "A robot arm is cleaning a plate in the kitchen",
               "choices": [],
               "description": "Prompt used as the input for direct Cosmos3 inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Policy and forward dynamics use the first frame; inverse dynamics conditions on the clip."
             },
             {
               "field": "action-mode",
@@ -41739,6 +41926,17 @@
               "description": "Prompt used as the input for direct Cosmos3 inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Input Image used as the input for direct Cosmos3 inference."
+            },
+            {
               "field": "negative-prompt",
               "option": "--pipeline.negative-prompt",
               "detail": "Optional",
@@ -41912,6 +42110,17 @@
               "description": "Prompt used as the input for direct Cosmos3 inference."
             },
             {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Input Video used as the input for direct Cosmos3 inference."
+            },
+            {
               "field": "negative-prompt",
               "option": "--pipeline.negative-prompt",
               "detail": "Optional",
@@ -42083,6 +42292,17 @@
               "default": "A robot arm is cleaning a plate in the kitchen",
               "choices": [],
               "description": "Prompt used as the input for direct Cosmos3 inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Policy and forward dynamics use the first frame; inverse dynamics conditions on the clip."
             },
             {
               "field": "action-mode",
@@ -42290,6 +42510,17 @@
               "default": "A robot arm is cleaning a plate in the kitchen",
               "choices": [],
               "description": "Prompt used as the input for direct Cosmos3 inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Policy and forward dynamics use the first frame; inverse dynamics conditions on the clip."
             },
             {
               "field": "action-mode",
@@ -42508,6 +42739,17 @@
               "default": "A robot arm is cleaning a plate in the kitchen",
               "choices": [],
               "description": "Prompt used as the input for direct Cosmos3 inference."
+            },
+            {
+              "field": "input-path",
+              "option": "--pipeline.input-path",
+              "detail": "Required",
+              "kind": "path",
+              "target": "input",
+              "required": true,
+              "default": "",
+              "choices": [],
+              "description": "Policy and forward dynamics use the first frame; inverse dynamics conditions on the clip."
             },
             {
               "field": "action-mode",
@@ -43318,7 +43560,7 @@
               "kind": "path",
               "target": "load",
               "required": true,
-              "default": "/System/Volumes/Data/home/ubuntu/.cache/worldfoundry/checkpoints/dino_wm",
+              "default": "/home/ubuntu/.cache/worldfoundry/checkpoints/dino_wm",
               "choices": [],
               "description": "Checkpoint Base Path used while loading the DINO-WM pipeline."
             },
@@ -61438,47 +61680,46 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "native_diffusion",
         "runtimeStatus": null,
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
+        "environmentId": "kandinsky6",
+        "environmentName": "worldfoundry-kandinsky6-cu126",
+        "environmentKind": "dedicated",
+        "python": "3.10",
+        "cudaProfile": "cu126",
+        "cudaLabel": "CUDA 12.6",
+        "driverStatus": null,
+        "condaPackages": [],
         "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
+          "torch==2.9.0+cu126",
+          "torchvision==0.24.0+cu126",
+          "diffusers==0.40.0",
+          "transformers==5.14.1",
+          "accelerate==1.12.0",
+          "safetensors==0.8.0",
+          "pydantic==2.12.5",
+          "numpy",
+          "pillow",
+          "einops",
+          "av==16.0.1",
+          "librosa==0.11.0",
+          "pyyaml",
+          "tqdm"
         ],
         "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "torch": "torch==2.9.0+cu126",
+          "torchvision": "torchvision==0.24.0+cu126",
+          "diffusers": "diffusers==0.40.0",
+          "transformers": "transformers==5.14.1",
+          "accelerate": "accelerate==1.12.0"
         },
         "validationImports": [
           "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
           "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "transformers",
+          "av"
         ],
         "notes": [
           "Native audio-video inference; checkpoint-backed CUDA parity is pending.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "Pro-distill default text-to-video generation is validated on one H100 80GB with this environment."
         ]
       },
       "sources": [
@@ -62010,13 +62251,13 @@
         "overview": [
           "Kandinsky 6.0 lite is a video generation model from kandinskylab for text-to-video, image-to-video, and audio video generation.",
           "WorldFoundry binds it to the `Kandinsky6Pipeline` pipeline.",
-          "It runs in the shared unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).",
+          "It runs in the dedicated environment `worldfoundry-kandinsky6-cu126` (Python 3.10, CUDA 12.6, torch==2.9.0+cu126).",
           "Weights come from the Hugging Face repository `kandinskylab/Kandinsky-6.0-Lite-5s-Diffusers`, pinned to revision 50029a58a."
         ],
         "overviewZh": [
           "Kandinsky 6.0 lite 是来自 kandinskylab 的视频生成模型，支持文生视频、图生视频、音视频联合生成。",
           "WorldFoundry 将它绑定到 `Kandinsky6Pipeline` pipeline。",
-          "它运行在统一环境 `worldfoundry-unified-cu128` 中（Python 3.11，CUDA 12.8）。",
+          "它运行在独立环境 `worldfoundry-kandinsky6-cu126` 中（Python 3.10，CUDA 12.6，torch==2.9.0+cu126）。",
           "权重来自 Hugging Face 仓库 `kandinskylab/Kandinsky-6.0-Lite-5s-Diffusers`，固定在 revision 50029a58a。"
         ],
         "architecture": [],
@@ -62027,14 +62268,14 @@
           "Text To Video",
           "Image To Video",
           "Audio Video Generation",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.10 · CUDA 12.6",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "文生视频",
           "图生视频",
           "音视频联合生成",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.10 · CUDA 12.6",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -62099,47 +62340,46 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "native_diffusion",
         "runtimeStatus": null,
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
+        "environmentId": "kandinsky6",
+        "environmentName": "worldfoundry-kandinsky6-cu126",
+        "environmentKind": "dedicated",
+        "python": "3.10",
+        "cudaProfile": "cu126",
+        "cudaLabel": "CUDA 12.6",
+        "driverStatus": null,
+        "condaPackages": [],
         "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
+          "torch==2.9.0+cu126",
+          "torchvision==0.24.0+cu126",
+          "diffusers==0.40.0",
+          "transformers==5.14.1",
+          "accelerate==1.12.0",
+          "safetensors==0.8.0",
+          "pydantic==2.12.5",
+          "numpy",
+          "pillow",
+          "einops",
+          "av==16.0.1",
+          "librosa==0.11.0",
+          "pyyaml",
+          "tqdm"
         ],
         "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "torch": "torch==2.9.0+cu126",
+          "torchvision": "torchvision==0.24.0+cu126",
+          "diffusers": "diffusers==0.40.0",
+          "transformers": "transformers==5.14.1",
+          "accelerate": "accelerate==1.12.0"
         },
         "validationImports": [
           "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
           "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "transformers",
+          "av"
         ],
         "notes": [
           "Native audio-video inference; checkpoint-backed CUDA parity is pending.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "Pro-distill default text-to-video generation is validated on one H100 80GB with this environment."
         ]
       },
       "sources": [
@@ -62671,13 +62911,13 @@
         "overview": [
           "Kandinsky 6.0 lite-distill is a video generation model from kandinskylab for text-to-video, image-to-video, and audio video generation.",
           "WorldFoundry binds it to the `Kandinsky6Pipeline` pipeline.",
-          "It runs in the shared unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).",
+          "It runs in the dedicated environment `worldfoundry-kandinsky6-cu126` (Python 3.10, CUDA 12.6, torch==2.9.0+cu126).",
           "Weights come from the Hugging Face repository `kandinskylab/Kandinsky-6.0-Lite-distill-5s-Diffusers`, pinned to revision e056a84f3."
         ],
         "overviewZh": [
           "Kandinsky 6.0 lite-distill 是来自 kandinskylab 的视频生成模型，支持文生视频、图生视频、音视频联合生成。",
           "WorldFoundry 将它绑定到 `Kandinsky6Pipeline` pipeline。",
-          "它运行在统一环境 `worldfoundry-unified-cu128` 中（Python 3.11，CUDA 12.8）。",
+          "它运行在独立环境 `worldfoundry-kandinsky6-cu126` 中（Python 3.10，CUDA 12.6，torch==2.9.0+cu126）。",
           "权重来自 Hugging Face 仓库 `kandinskylab/Kandinsky-6.0-Lite-distill-5s-Diffusers`，固定在 revision e056a84f3。"
         ],
         "architecture": [],
@@ -62688,14 +62928,14 @@
           "Text To Video",
           "Image To Video",
           "Audio Video Generation",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.10 · CUDA 12.6",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "文生视频",
           "图生视频",
           "音视频联合生成",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.10 · CUDA 12.6",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -62760,47 +63000,46 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "native_diffusion",
         "runtimeStatus": null,
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
+        "environmentId": "kandinsky6",
+        "environmentName": "worldfoundry-kandinsky6-cu126",
+        "environmentKind": "dedicated",
+        "python": "3.10",
+        "cudaProfile": "cu126",
+        "cudaLabel": "CUDA 12.6",
+        "driverStatus": null,
+        "condaPackages": [],
         "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
+          "torch==2.9.0+cu126",
+          "torchvision==0.24.0+cu126",
+          "diffusers==0.40.0",
+          "transformers==5.14.1",
+          "accelerate==1.12.0",
+          "safetensors==0.8.0",
+          "pydantic==2.12.5",
+          "numpy",
+          "pillow",
+          "einops",
+          "av==16.0.1",
+          "librosa==0.11.0",
+          "pyyaml",
+          "tqdm"
         ],
         "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "torch": "torch==2.9.0+cu126",
+          "torchvision": "torchvision==0.24.0+cu126",
+          "diffusers": "diffusers==0.40.0",
+          "transformers": "transformers==5.14.1",
+          "accelerate": "accelerate==1.12.0"
         },
         "validationImports": [
           "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
           "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "transformers",
+          "av"
         ],
         "notes": [
           "Native audio-video inference; checkpoint-backed CUDA parity is pending.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "Pro-distill default text-to-video generation is validated on one H100 80GB with this environment."
         ]
       },
       "sources": [
@@ -63332,13 +63571,13 @@
         "overview": [
           "Kandinsky 6.0 lite-pretrain is a video generation model from kandinskylab for text-to-video, image-to-video, and audio video generation.",
           "WorldFoundry binds it to the `Kandinsky6Pipeline` pipeline.",
-          "It runs in the shared unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).",
+          "It runs in the dedicated environment `worldfoundry-kandinsky6-cu126` (Python 3.10, CUDA 12.6, torch==2.9.0+cu126).",
           "Weights come from the Hugging Face repository `kandinskylab/Kandinsky-6.0-Lite-pretrain-5s-Diffusers`, pinned to revision ae9378bb1."
         ],
         "overviewZh": [
           "Kandinsky 6.0 lite-pretrain 是来自 kandinskylab 的视频生成模型，支持文生视频、图生视频、音视频联合生成。",
           "WorldFoundry 将它绑定到 `Kandinsky6Pipeline` pipeline。",
-          "它运行在统一环境 `worldfoundry-unified-cu128` 中（Python 3.11，CUDA 12.8）。",
+          "它运行在独立环境 `worldfoundry-kandinsky6-cu126` 中（Python 3.10，CUDA 12.6，torch==2.9.0+cu126）。",
           "权重来自 Hugging Face 仓库 `kandinskylab/Kandinsky-6.0-Lite-pretrain-5s-Diffusers`，固定在 revision ae9378bb1。"
         ],
         "architecture": [],
@@ -63349,14 +63588,14 @@
           "Text To Video",
           "Image To Video",
           "Audio Video Generation",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.10 · CUDA 12.6",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "文生视频",
           "图生视频",
           "音视频联合生成",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.10 · CUDA 12.6",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -63421,47 +63660,46 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "native_diffusion",
         "runtimeStatus": null,
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
+        "environmentId": "kandinsky6",
+        "environmentName": "worldfoundry-kandinsky6-cu126",
+        "environmentKind": "dedicated",
+        "python": "3.10",
+        "cudaProfile": "cu126",
+        "cudaLabel": "CUDA 12.6",
+        "driverStatus": null,
+        "condaPackages": [],
         "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
+          "torch==2.9.0+cu126",
+          "torchvision==0.24.0+cu126",
+          "diffusers==0.40.0",
+          "transformers==5.14.1",
+          "accelerate==1.12.0",
+          "safetensors==0.8.0",
+          "pydantic==2.12.5",
+          "numpy",
+          "pillow",
+          "einops",
+          "av==16.0.1",
+          "librosa==0.11.0",
+          "pyyaml",
+          "tqdm"
         ],
         "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "torch": "torch==2.9.0+cu126",
+          "torchvision": "torchvision==0.24.0+cu126",
+          "diffusers": "diffusers==0.40.0",
+          "transformers": "transformers==5.14.1",
+          "accelerate": "accelerate==1.12.0"
         },
         "validationImports": [
           "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
           "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "transformers",
+          "av"
         ],
         "notes": [
           "Native audio-video inference; checkpoint-backed CUDA parity is pending.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "Pro-distill default text-to-video generation is validated on one H100 80GB with this environment."
         ]
       },
       "sources": [
@@ -63993,13 +64231,13 @@
         "overview": [
           "Kandinsky 6.0 pro is a video generation model from kandinskylab for text-to-video, image-to-video, and audio video generation.",
           "WorldFoundry binds it to the `Kandinsky6Pipeline` pipeline.",
-          "It runs in the shared unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).",
+          "It runs in the dedicated environment `worldfoundry-kandinsky6-cu126` (Python 3.10, CUDA 12.6, torch==2.9.0+cu126).",
           "Weights come from the Hugging Face repository `kandinskylab/Kandinsky-6.0-Pro-5s-Diffusers`, pinned to revision e8e4a0025."
         ],
         "overviewZh": [
           "Kandinsky 6.0 pro 是来自 kandinskylab 的视频生成模型，支持文生视频、图生视频、音视频联合生成。",
           "WorldFoundry 将它绑定到 `Kandinsky6Pipeline` pipeline。",
-          "它运行在统一环境 `worldfoundry-unified-cu128` 中（Python 3.11，CUDA 12.8）。",
+          "它运行在独立环境 `worldfoundry-kandinsky6-cu126` 中（Python 3.10，CUDA 12.6，torch==2.9.0+cu126）。",
           "权重来自 Hugging Face 仓库 `kandinskylab/Kandinsky-6.0-Pro-5s-Diffusers`，固定在 revision e8e4a0025。"
         ],
         "architecture": [],
@@ -64010,14 +64248,14 @@
           "Text To Video",
           "Image To Video",
           "Audio Video Generation",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.10 · CUDA 12.6",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "文生视频",
           "图生视频",
           "音视频联合生成",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.10 · CUDA 12.6",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -64354,47 +64592,46 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "native_diffusion",
         "runtimeStatus": null,
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
-        "condaPackages": [
-          "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
-        ],
+        "environmentId": "kandinsky6",
+        "environmentName": "worldfoundry-kandinsky6-cu126",
+        "environmentKind": "dedicated",
+        "python": "3.10",
+        "cudaProfile": "cu126",
+        "cudaLabel": "CUDA 12.6",
+        "driverStatus": null,
+        "condaPackages": [],
         "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
+          "torch==2.9.0+cu126",
+          "torchvision==0.24.0+cu126",
+          "diffusers==0.40.0",
+          "transformers==5.14.1",
+          "accelerate==1.12.0",
+          "safetensors==0.8.0",
+          "pydantic==2.12.5",
+          "numpy",
+          "pillow",
+          "einops",
+          "av==16.0.1",
+          "librosa==0.11.0",
+          "pyyaml",
+          "tqdm"
         ],
         "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "torch": "torch==2.9.0+cu126",
+          "torchvision": "torchvision==0.24.0+cu126",
+          "diffusers": "diffusers==0.40.0",
+          "transformers": "transformers==5.14.1",
+          "accelerate": "accelerate==1.12.0"
         },
         "validationImports": [
           "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
           "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "transformers",
+          "av"
         ],
         "notes": [
           "Native audio-video inference; checkpoint-backed CUDA parity is pending.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "Pro-distill default text-to-video generation is validated on one H100 80GB with this environment."
         ]
       },
       "sources": [
@@ -64926,13 +65163,13 @@
         "overview": [
           "Kandinsky 6.0 pro-pretrain is a video generation model from kandinskylab for text-to-video, image-to-video, and audio video generation.",
           "WorldFoundry binds it to the `Kandinsky6Pipeline` pipeline.",
-          "It runs in the shared unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).",
+          "It runs in the dedicated environment `worldfoundry-kandinsky6-cu126` (Python 3.10, CUDA 12.6, torch==2.9.0+cu126).",
           "Weights come from the Hugging Face repository `kandinskylab/Kandinsky-6.0-Pro-pretrain-5s-Diffusers`, pinned to revision fd9a3fcd1."
         ],
         "overviewZh": [
           "Kandinsky 6.0 pro-pretrain 是来自 kandinskylab 的视频生成模型，支持文生视频、图生视频、音视频联合生成。",
           "WorldFoundry 将它绑定到 `Kandinsky6Pipeline` pipeline。",
-          "它运行在统一环境 `worldfoundry-unified-cu128` 中（Python 3.11，CUDA 12.8）。",
+          "它运行在独立环境 `worldfoundry-kandinsky6-cu126` 中（Python 3.10，CUDA 12.6，torch==2.9.0+cu126）。",
           "权重来自 Hugging Face 仓库 `kandinskylab/Kandinsky-6.0-Pro-pretrain-5s-Diffusers`，固定在 revision fd9a3fcd1。"
         ],
         "architecture": [],
@@ -64943,14 +65180,14 @@
           "Text To Video",
           "Image To Video",
           "Audio Video Generation",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.10 · CUDA 12.6",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "文生视频",
           "图生视频",
           "音视频联合生成",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.10 · CUDA 12.6",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -68257,40 +68494,51 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "independent_in_tree_runtime",
         "runtimeStatus": "public_binding_17f8step_gpu_validated",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
-        "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
+        "environmentId": "lingbot-world",
+        "environmentName": "lingbot-world",
+        "environmentKind": "dedicated",
+        "python": "3.10",
+        "cudaProfile": "cu121",
+        "cudaLabel": "CUDA 12.1",
+        "driverStatus": "compatible",
         "condaPackages": [
-          "python=3.11",
+          "python=3.10",
           "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
+          "ffmpeg"
         ],
         "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
+          "torch==2.5.1",
+          "torchvision==0.20.1",
+          "flash-attn==2.8.3",
+          "diffusers>=0.31.0",
+          "transformers>=4.49.0,<=4.51.3",
+          "tokenizers>=0.20.3",
+          "accelerate>=1.1.1",
+          "opencv-python>=4.9.0.80",
+          "imageio[ffmpeg]",
+          "imageio-ffmpeg",
+          "einops",
+          "easydict",
+          "ftfy",
+          "numpy>=1.23.5,<2",
+          "scipy",
+          "tqdm",
+          "pillow",
+          "pyyaml"
         ],
         "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "torch": "torch==2.5.1",
+          "torchvision": "torchvision==0.20.1",
+          "flash-attn": "flash-attn==2.8.3",
+          "diffusers": "diffusers>=0.31.0",
+          "transformers": "transformers>=4.49.0,<=4.51.3",
+          "accelerate": "accelerate>=1.1.1"
         },
         "validationImports": [
           "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "flash_attn",
+          "cv2",
+          "imageio"
         ],
         "notes": [
           "Uses the official Base-Act preview checkpoint; Base-Cam is not substituted.",
@@ -68298,10 +68546,9 @@
           "An H100 in the dedicated environment generated a 17-frame, 8-step video from the official example image and a forward [F,4] WASD matrix; the official full-length settings remain untested.",
           "A previous dedicated-environment GPU run generated 49 frames at 40 steps from a real room image with forward camera poses and a nonzero [F,4] action matrix. The two controls were not separately ablated.",
           "The public WorldFoundryPipelineRunner binding generated the 17-frame, 8-step cat example; its MP4 decoded fully at 544x720 and 16 fps. The public runner has not been exercised at the official 161-frame length.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "Runtime dependencies are declared in-tree; environment creation does not read an external LingBot repository checkout.",
+          "LingBot-World act2cam parity requires the dedicated official environment with flash-attn; the unified env produced near-black act2cam videos on the upstream examples/05 demo.",
+          "Exact torch and flash-attn pins intentionally keep this model out of unified runtime routing."
         ]
       },
       "sources": [
@@ -68815,13 +69062,13 @@
         "highlights": [
           "Interactive World Model",
           "Action Conditioned Video",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.10 · CUDA 12.1",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "交互式世界模型",
           "动作条件视频生成",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.10 · CUDA 12.1",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -76346,50 +76593,73 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "native_diffusion",
         "runtimeStatus": "checkpoint_gpu_default_25_step_validated_official_sample_parity_pending",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
+        "environmentId": "matrix-game-3.5",
+        "environmentName": "matrix-game-3.5",
+        "environmentKind": "dedicated",
         "python": "3.11",
         "cudaProfile": "cu128",
         "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
+        "driverStatus": "compatible",
         "condaPackages": [
           "python=3.11",
           "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
+          "ffmpeg"
         ],
         "pipPackages": [
           "torch",
           "torchvision",
-          "torchaudio",
-          "xfuser"
+          "numpy",
+          "accelerate",
+          "transformers",
+          "sentencepiece",
+          "modelscope",
+          "huggingface-hub",
+          "safetensors",
+          "einops",
+          "omegaconf",
+          "PyYAML",
+          "tqdm",
+          "opencv-python",
+          "pillow",
+          "imageio",
+          "imageio-ffmpeg",
+          "decord",
+          "pycocotools",
+          "moviepy==1.0.3",
+          "pycolmap",
+          "trimesh"
         ],
         "packageVersions": {
           "torch": "torch",
           "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "accelerate": "accelerate",
+          "transformers": "transformers"
         },
         "validationImports": [
           "torch",
           "torchvision",
           "numpy",
+          "accelerate",
           "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "safetensors",
+          "cv2",
+          "imageio",
+          "worldfoundry.base_models.diffusion_model.recipes.matrix_game",
+          "worldfoundry.base_models.diffusion_model.models.networks.matrix_game_3p5",
+          "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.api",
+          "worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_3p5_runtime",
+          "worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_3p5_synthesis"
         ],
         "notes": [
           "Each block generates 84 new frames and consumes 84 camera poses; the exported history also includes the anchor frame.",
           "The currently released checkpoint is the 25-step bidirectional 5B base model, not the announced few-step real-time distilled model.",
           "The public runtime retains only the generated rollout and provenance needed to reproduce inference; copied validation panels, debug videos, and latent dumps are not runtime outputs.",
           "A default 25-step, one-block A100 80GB run passed on 2026-07-20 with 85 non-empty 1280x704 frames at 16 fps; upstream official-sample parity and benchmark scoring are still pending.",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "Both independent Matrix-Game 3.5 model IDs share this native Python 3.11 inference environment.",
+          "Matrix-specific networks and recipes use the canonical native diffusion infrastructure; Depth-Anything-3 is reused in-tree.",
+          "Matrix-Game 3.5, Wan2.2-TI2V-5B, and Depth-Anything-3 weights remain local external assets.",
+          "Official 704x1280 generation requires one CUDA GPU with roughly 40 GB VRAM and at least 64 GB system RAM.",
+          "Accelerated attention is auto-detected on CUDA and PyTorch SDPA remains the fallback."
         ]
       },
       "sources": [
@@ -78961,14 +79231,14 @@
           "Image To Video",
           "Camera Controlled Video",
           "Interactive World Model",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.11 · CUDA 12.8",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "图生视频",
           "相机可控视频生成",
           "交互式世界模型",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.11 · CUDA 12.8",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {
@@ -118554,7 +118824,7 @@
               "kind": "integer",
               "target": "call",
               "required": false,
-              "default": 4,
+              "default": 25,
               "choices": [],
               "description": "Steps passed to the pipeline for every generated sample."
             },

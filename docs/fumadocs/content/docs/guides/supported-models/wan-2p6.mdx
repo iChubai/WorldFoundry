@@ -1,6 +1,6 @@
 ---
 title: "Wan 2.6 API"
-description: "Wan 2.6 API from Alibaba (Tongyi Lab): image-to-video and hosted api; Runner parity pending."
+description: "Wan 2.6 API from Alibaba (Tongyi Lab): image-to-video and hosted api."
 modelId: "wan-2p6"
 pageSource: authored
 ---
@@ -33,11 +33,11 @@ Inputs `prompt` and `input-path` (bundled samples are used when omitted).
 
 CLI task profiles: `default`. WorldFoundry binds `Wan2p6Pipeline`.
 
-Family status: **Runner parity pending**.
-
 The hosted-API Studio pipeline is available; supply your own provider API key and account. No weights are downloaded and no local GPU environment is needed — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Keys are issued via Alibaba Cloud DashScope (dashscope.aliyun.com).
 
 Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+
+The provider controls model versioning, so outputs can change over time without any change in WorldFoundry.
 
 ## Running in WorldFoundry
 

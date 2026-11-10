@@ -39,6 +39,8 @@ Execution is offline and needs four pre-staged Hugging Face snapshots (`Orange-3
 
 Run `wf run moverse --pipeline.task-profile default` to follow the camera path.
 
+It runs in the dedicated environment `moverse` (Python 3.10, CUDA 12.4, torch==2.6.0+cu124).
+
 Weights: `Orange-3DV-Team/MoVerse`, `black-forest-labs/FLUX.1-Fill-dev`, and `depth-anything/DA3NESTED-GIANT-LARGE-1.1` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh moverse`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="moverse" locale="en" />

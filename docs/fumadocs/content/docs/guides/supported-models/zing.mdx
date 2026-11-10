@@ -37,6 +37,8 @@ Use ZingPipeline.from_pretrained(checkpoint_dir). num_frames includes the option
 
 Step the world with `wf run zing --pipeline.task-profile interactive-world-model`.
 
+It runs in the dedicated environment `zing` (Python 3.11, CUDA 12.8, torch>=2.6).
+
 Weights: `seedleap/zing-0.5`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh zing`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="zing" locale="en" />

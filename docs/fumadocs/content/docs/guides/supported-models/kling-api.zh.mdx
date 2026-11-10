@@ -1,6 +1,6 @@
 ---
 title: "Kling API"
-description: "Kling API（快手（Kuaishou））：文生视频、图生视频等 3 项任务；Runner 一致性待确认。"
+description: "Kling API（快手（Kuaishou））：文生视频、图生视频等 3 项任务。"
 modelId: "kling-api"
 pageSource: generated
 ---
@@ -29,11 +29,11 @@ Kling API 是快手「可灵」视频生成系列的托管接入点，覆盖文�
 
 CLI task profile：`default`。绑定的 pipeline 类是 `KlingApiPipeline`。
 
-系列状态：**Runner 一致性待确认**。
-
 托管 API 的 Studio pipeline 已可用，需自备服务方的 API key 与账号。本地不下载权重，也不需要 GPU 环境——生成在服务方完成，费用、配额与内容政策均以你的服务方账号为准。凭据需在可灵开放平台（app.klingai.com）申请。
 
 需要付费的服务方账号与 API key；WorldFoundry 不提供任何凭据。
+
+模型版本由服务方控制，即使 WorldFoundry 未变化，输出也可能随时间改变。
 
 ## 在 WorldFoundry 中运行
 

@@ -41,6 +41,8 @@ Set WORLDFOUNDRY_KAIROS_MODELS_ROOT (or models_root) to a directory matching the
 
 Step the world with `wf run kairos-sensenova --pipeline.task-profile default`.
 
+It runs in the dedicated environment `kairos-sensenova` (Python 3.10, CUDA 12.8, torch==2.12.0).
+
 Weights: `kairos-agi/kairos-sensenova-robot-4B-480P-distilled`, `kairos-agi/kairos-sensenova-4B-480P-pretrained`, and `kairos-agi/kairos-sensenova-4B-720P`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh kairos-sensenova`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="kairos-sensenova" locale="en" />

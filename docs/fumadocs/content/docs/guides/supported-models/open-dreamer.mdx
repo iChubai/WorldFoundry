@@ -41,6 +41,8 @@ Stage the official checkout (at WORLDFOUNDRY_MODEL_SOURCE_DIR/open-dreamer-infer
 
 Run `wf run open-dreamer --pipeline.task-profile default` to roll out the world model.
 
+It runs in the dedicated environment `open-dreamer` (Python 3.11, CUDA 12.8).
+
 No public checkpoint is listed for this model; stage the weights as described in the usage notes. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh open-dreamer`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="open-dreamer" locale="en" />

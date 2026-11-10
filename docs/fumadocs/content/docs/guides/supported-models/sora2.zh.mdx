@@ -1,6 +1,6 @@
 ---
 title: "Sora2"
-description: "Sora2（OpenAI）：文生视频、图生视频等 3 项任务；Runner 一致性待确认。"
+description: "Sora2（OpenAI）：文生视频、图生视频等 3 项任务。"
 modelId: "sora2"
 pageSource: generated
 ---
@@ -29,11 +29,11 @@ OpenAI 曾公开将初代 Sora 描述为在视频潜空间时空 patch 上运行
 
 CLI task profile：`default`。绑定的 pipeline 类是 `Sora2Pipeline`。
 
-系列状态：**Runner 一致性待确认**。
-
 托管 API 的 Studio pipeline 需要你自备服务方账号与 API key：传入 api_key，或设置 SORA2_API_KEY、SORA_API_KEY 或 OPENAI_API_KEY。本地不会下载任何权重、也不会创建 GPU 环境——生成在服务方完成，费用、配额与内容政策均以你的服务方账号为准。使用前需确认你的 OpenAI 账号在所在地区与订阅层级下拥有 Sora API 权限。
 
 需要付费的服务方账号与 API key；WorldFoundry 不提供任何凭据。
+
+模型版本由服务方控制，即使 WorldFoundry 没有任何改动，输出也可能随时间变化。
 
 ## 在 WorldFoundry 中运行
 

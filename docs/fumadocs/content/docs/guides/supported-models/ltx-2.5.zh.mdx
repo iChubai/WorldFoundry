@@ -39,6 +39,8 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LTX25Pipelin
 
 用 `wf run ltx-2.5 --pipeline.task-profile interactive-video` 生成视频。
 
+运行环境：独立环境 `ltx-2.5`（Python 3.11，CUDA 12.8，torch==2.11.0+cu128）。
+
 权重仓库：`Lightricks/LTX-2.5`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh ltx-2.5`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="ltx-2.5" locale="zh" />

@@ -72,7 +72,7 @@ integration:
   - The default route uses Helios-Distilled and supports T2V, I2V, and V2V.
   - Group offloading and multi-GPU context parallelism are exposed as runtime options.
   - Resident Distilled sessions keep native 9-latent/33-frame history and allow prompt changes only between segments; no keyboard-control claim is made.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:helios
 pipeline_binding: helios
 runner_parity:

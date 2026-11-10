@@ -66,7 +66,7 @@ integration:
   notes:
   - Gamma-World is a native diffusion recipe and does not require an external source checkout or model-owned runtime.
   - Reason1, Wan VAE, checkpoint loading, scheduling, action normalization, and window execution reuse the shared base-model/core infrastructure.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:gamma-world
 pipeline_binding: gamma-world
 runner_parity:

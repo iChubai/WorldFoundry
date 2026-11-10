@@ -21,7 +21,7 @@ from scipy.special import softmax
 
 pytestmark = pytest.mark.unit
 
-_ROOT = Path(__file__).resolve().parents[3] / "worldfoundry/evaluation/tasks/execution/runners/vmbench/runtime/official"
+_ROOT = Path(__file__).resolve().parents[3] / "worldfoundry/evals/tasks/execution/runners/vmbench/runtime/official"
 
 
 def _prediction_row(source: Path, scores: list[float]) -> str:

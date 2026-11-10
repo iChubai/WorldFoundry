@@ -11,14 +11,14 @@ import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     compute_distribution_metrics,
     compute_fid,
     compute_inception_score,
     compute_kid,
 )
-from worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity import metrics as backend
-from worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity.feature_extractor_base import (
+from worldfoundry.evals.tasks.metrics._shared.vendor.torch_fidelity import metrics as backend
+from worldfoundry.evals.tasks.metrics._shared.vendor.torch_fidelity.feature_extractor_base import (
     FeatureExtractorBase,
 )
 
@@ -74,7 +74,7 @@ class DistributionInputTests(unittest.TestCase):
                     self.assertEqual(actual, expected)
 
     def test_swav_lists_match_directory_statistics(self):
-        from worldfoundry.evaluation.tasks.metrics.fid.swav import _swav_fid_module
+        from worldfoundry.evals.tasks.metrics.fid.swav import _swav_fid_module
 
         module = _swav_fid_module()
         native_statistics = module.calculate_activation_statistics

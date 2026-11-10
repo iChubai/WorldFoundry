@@ -3,7 +3,7 @@ title: Embodied official runtime setup
 description: After cloning WorldFoundry, configure checkpoints, Docker-backed simulator assets, and result paths for embodied benchmark evaluation.
 ---
 
-WorldFoundry ships **result normalizers, CLI entry points, and simulator interfaces** under `worldfoundry.evaluation.tasks.embodied`. **Checkpoints, simulator assets, Docker images, and rollout outputs are not in git.** You point WorldFoundry at them with environment variables or CLI flags on your machine.
+WorldFoundry ships **result normalizers, CLI entry points, and simulator interfaces** under `worldfoundry.evals.tasks.embodied`. **Checkpoints, simulator assets, Docker images, and rollout outputs are not in git.** You point WorldFoundry at them with environment variables or CLI flags on your machine.
 
 - **Native closed-loop simulators** (`ai2thor`, `behavior1k`, `calvin`, `kinetix`, `libero`, `libero-mem`, `libero-plus`, `libero-pro`, `maniskill2`, `maniskill`, `mikasa`, `molmospaces`, `rlbench`, `robocasa`, `robocerebra`, `robomme`, `robotwin`, `simpler-env`, `vlabench`) — Official result import, in-tree simulator API, Docker-backed rollout hooks
 - **Result import only** (`bridgedata-v2`, `metaworld`) — Official-shaped result normalization

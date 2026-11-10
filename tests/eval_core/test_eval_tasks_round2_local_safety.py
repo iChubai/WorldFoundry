@@ -6,7 +6,7 @@ import ast
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TASKS_ROOT = REPO_ROOT / "worldfoundry" / "evaluation" / "tasks"
+TASKS_ROOT = REPO_ROOT / "worldfoundry" / "evals" / "tasks"
 METRICS_ROOT = TASKS_ROOT / "metrics"
 
 MIND_PROCESS = TASKS_ROOT / "execution/runners/mind/runtime/mind/src/process.py"

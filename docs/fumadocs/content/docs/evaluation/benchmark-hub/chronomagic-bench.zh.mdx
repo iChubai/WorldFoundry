@@ -22,8 +22,8 @@ WorldFoundry **内置官方 runtime**，按所选分量脚本执行（`chscore`�
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/run_chronomagic_bench_official_runner.py \
-  --chronomagic-root worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench \
+  worldfoundry/evals/tasks/execution/runners/chronomagic_bench/run_chronomagic_bench_official_runner.py \
+  --chronomagic-root worldfoundry/evals/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench \
   --components chscore \
   --generated-video-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --model-name worldfoundry \
@@ -41,7 +41,7 @@ hf download BestWishYsh/ChronoMagic-Bench --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/BestWishYsh/ChronoMagic-Bench
 ```
 
-仓内指针：`worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench`。
+仓内指针：`worldfoundry/evals/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench`。
 
 产物包括 `scorecard.json`（主键 `chronomagic_score`）、`raw_metric_table.jsonl`，以及打分器运行时捕获的上游日志。
 

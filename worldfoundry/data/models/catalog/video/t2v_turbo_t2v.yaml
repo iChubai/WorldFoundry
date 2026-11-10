@@ -28,7 +28,7 @@ integration:
   notes:
   - Uses the shared WorldFoundry native diffusion assembler, runner, checkpoint loader, offload policy, and LVDM components.
   - The VideoCrafter2 base model and ordered T2V-Turbo LoRA remain separate declarative checkpoint inputs.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: t2v_turbo_t2v
 runner_parity:
   status: native_checkpoint_validated

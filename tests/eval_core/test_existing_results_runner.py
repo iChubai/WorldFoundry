@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from worldfoundry.evaluation.api import ArtifactRef, GenerationRequest, GenerationResult, MetricResult
-from worldfoundry.evaluation.runner import ExistingResultsRunRequest, execute_existing_results
+from worldfoundry.evals.api import ArtifactRef, GenerationRequest, GenerationResult, MetricResult
+from worldfoundry.evals.runner import ExistingResultsRunRequest, execute_existing_results
 
 
 def _read_jsonl(path: Path) -> list[dict]:

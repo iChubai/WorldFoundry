@@ -46,7 +46,7 @@ catalog_policy:
   - api_or_closed
   - unknown
 runtime_profile: runtime-profile:dust3r-base-model
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: dust3r-base-model
 docs:
   publisher: NAVER Labs Europe

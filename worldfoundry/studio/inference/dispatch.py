@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING, Any
 
 from worldfoundry.core.execution.process import terminate_process_group
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
-from worldfoundry.evaluation.reporting import is_sensitive_key, redact_secret_text
+from worldfoundry.evals.reporting import is_sensitive_key, redact_secret_text
 from worldfoundry.runtime.conda import (
     RuntimeCondaEnvSpec,
     apply_unified_env_override,

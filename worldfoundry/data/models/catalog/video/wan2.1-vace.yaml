@@ -1,6 +1,6 @@
 id: wan2.1-vace
 name: Wan2.1 VACE
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: wan2.1-vace
 tasks:
 - video-editing

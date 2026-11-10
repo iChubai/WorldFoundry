@@ -32,7 +32,7 @@ wf zoo benchmark-run \
 
 `--run-official` 对照 Natural-25 给生成视频加相机 sidecar 打分（`--scorer-profile`、`--sidecar-profile-gate`）。没有再观察支持的行从 D5/D6 **排除**，不记失败。环境变量：`WORLDFOUNDRY_WRBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WRBENCH_ROOT`。共享栈：`vggt_omega`、`dinov2`、`qwen3_5_vl`、`qwen3_vl`。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/wrbench.yaml`，`worldfoundry/data/benchmarks/assets/wrbench`，`worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime/wrbench`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/wrbench.yaml`，`worldfoundry/data/benchmarks/assets/wrbench`，`worldfoundry/evals/tasks/execution/runners/wrbench/runtime/wrbench`。
 
 产物包括 `scorecard.json`（主键 `wrbench_average`，榜单键 `Avg`）与 `generation_requests.jsonl`。
 

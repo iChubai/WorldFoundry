@@ -25,7 +25,7 @@ fake_torch.no_grad = no_grad
 sys.modules["torch"] = fake_torch
 
 from worldfoundry.synthesis import base_synthesis
-from worldfoundry.evaluation.models.runtime import profiles as runtime_profiles
+from worldfoundry.evals.models.runtime import profiles as runtime_profiles
 
 assert runtime_profiles.BaseSynthesis is base_synthesis.BaseSynthesis
 assert runtime_profiles.RuntimeProfileSynthesis.__mro__[1] is base_synthesis.BaseSynthesis

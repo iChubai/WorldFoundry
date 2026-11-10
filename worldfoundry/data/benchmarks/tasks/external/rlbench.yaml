@@ -47,10 +47,10 @@ metadata:
   - Benchmark-specific policy checkpoint
   blockers:
   - CoppeliaSim/PyRep runtime validation and task-manifest mapping must be validated before integrated status.
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:RLBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:RLBenchContract
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:RLBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:RLBenchContract
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -84,7 +84,7 @@ metadata:
     - --json
   official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
-    target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
+    target: worldfoundry.evals.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
     official_result_normalization:
@@ -178,4 +178,4 @@ tasks:
       - episode_success
       - reward
       - normalized_return
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:RLBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:RLBenchContract

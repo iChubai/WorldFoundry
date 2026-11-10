@@ -18,7 +18,7 @@ WorldFoundry **integrates the official video-quality metric runtime** (`runners/
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/worldarena/run_worldarena_official_runner.py \
   --run-official \
   --dimension action_following \
   --config-path <worldarena_config.yaml> \
@@ -29,7 +29,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 Ground-truth comparisons take `--gt-data-dir` / `--action-gt-data-dir`. Weights resolve from `--ckpt-root`. `--official-results-path` imports an existing result file. Env: `WORLDFOUNDRY_WORLDARENA_RESULTS_PATH`, `WORLDFOUNDRY_WORLDARENA_ROOT`. No Hugging Face dataset is required by the contract.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldarena.yaml`, `worldfoundry/evaluation/tasks/execution/runners/worldarena`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldarena.yaml`, `worldfoundry/evals/tasks/execution/runners/worldarena`.
 
 Outputs include `scorecard.json` (primary `ewm_score`).
 

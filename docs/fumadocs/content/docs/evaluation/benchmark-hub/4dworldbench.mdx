@@ -20,7 +20,7 @@ WorldFoundry **hosts the official runtime** (`run_four_d_worldbench_official_run
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/four_d_worldbench/run_four_d_worldbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/four_d_worldbench/run_four_d_worldbench_official_runner.py \
   --run-official \
   --dataset-json <dataset.json> \
   --model-name <model_name> \
@@ -32,7 +32,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 Model-backed dims resolve `WORLDFOUNDRY_4DWORLDBENCH_KEYE_MODEL`, `WORLDFOUNDRY_4DWORLDBENCH_DROID_CKPT`, and `OPENAI_API_KEY`. Pixel-level dims run without them. Shared stacks: `keye_vl`, `droid_slam`, `vfimamba`, `fastvqa`. Default import path: `WORLDFOUNDRY_4DWORLDBENCH_RESULTS_PATH`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/four_d_worldbench`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/4dworldbench.yaml`, `worldfoundry/evals/tasks/execution/runners/four_d_worldbench`.
 
 Outputs include `scorecard.json` (primary `four_d_worldbench_average`) and `raw_metric_table.jsonl`.
 

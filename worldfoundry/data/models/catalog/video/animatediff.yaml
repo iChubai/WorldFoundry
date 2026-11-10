@@ -24,7 +24,7 @@ official_sources:
   paper: https://arxiv.org/abs/2307.04725
 integration:
   status: integrated
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:animatediff
 runner_parity:
   status: verified

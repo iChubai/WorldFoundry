@@ -18,7 +18,7 @@ SRC_ROOT = REPO_ROOT
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from worldfoundry.evaluation.utils import load_manifest  # noqa: E402
+from worldfoundry.evals.utils import load_manifest  # noqa: E402
 
 DEFAULT_MANIFEST_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
 DEFAULT_CACHE_DIR = REPO_ROOT / "cache" / "hfd"

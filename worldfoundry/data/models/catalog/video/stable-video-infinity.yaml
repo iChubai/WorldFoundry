@@ -62,7 +62,7 @@ runner_parity:
   - Exact-setting parity against the pinned official native runtime reached 31.03 dB PSNR, 4.05 pixel MAE,
     and 0.993 luma correlation across all 81 frames; visual contact-sheet review passed.
 runtime_profile: runtime-profile:stable-video-infinity
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: stable-video-infinity
 catalog_category: video
 catalog_scope: Video-generation and video-token catalog entries. Integrated entries expose WorldFoundry pipeline targets;

@@ -23,14 +23,14 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: vlabench
   status: integrated
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:VLABenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:VLABenchContract
   runtime:
     kind: external_official_results_runner
     root_env: WORLDFOUNDRY_VLABENCH_ROOT
     results_path_env: WORLDFOUNDRY_VLABENCH_RESULTS_PATH
     preflight_profile: vlabench
   local_evaluator:
-    target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
+    target: worldfoundry.evals.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
   contract_validation_command: wf zoo benchmark-run --benchmark-id vlabench --mode contract --output-dir 
@@ -50,7 +50,7 @@ metadata:
   - Full leaderboard parity is not claimed until official rollouts are executed and imported.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:VLABenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:VLABenchContract
     task_yaml_available: true
     runtime_verified: false
     normalizer_verified: true
@@ -121,4 +121,4 @@ tasks:
       - task_success
       - episode_success
       - reward
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:VLABenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:VLABenchContract

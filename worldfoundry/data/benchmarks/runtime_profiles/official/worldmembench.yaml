@@ -18,13 +18,13 @@ required_imports: []
 required_packages: []
 required_paths:
 - id: official_runner_script
-  path: worldfoundry/evaluation/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py
+  path: worldfoundry/evals/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py
 - id: in_tree_runtime
-  path: worldfoundry/evaluation/tasks/execution/runners/worldmembench/runtime/cli.py
+  path: worldfoundry/evals/tasks/execution/runners/worldmembench/runtime/cli.py
 - id: metric_requirements
   path: worldfoundry/data/benchmarks/requirements/worldmembench.txt
 - id: metrics_module
-  path: worldfoundry/evaluation/tasks/execution/runners/worldmembench/worldmembench_metrics.py
+  path: worldfoundry/evals/tasks/execution/runners/worldmembench/worldmembench_metrics.py
 - id: task_yaml
   path: worldfoundry/data/benchmarks/tasks/external/worldmembench.yaml
 required_assets:
@@ -58,7 +58,7 @@ normalization_command: *worldmembench_validation_command
 full_runtime_command:
 - python
 - -m
-- worldfoundry.evaluation.tasks.execution.runners.worldmembench.run_worldmembench_official_runner
+- worldfoundry.evals.tasks.execution.runners.worldmembench.run_worldmembench_official_runner
 - --run-official
 - --input-path
 - <manifest.jsonl>

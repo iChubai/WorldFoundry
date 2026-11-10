@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.tasks.execution.framework.source_cache import (
+from worldfoundry.evals.tasks.execution.framework.source_cache import (
     SourceSpec,
     SourceUnavailableError,
     ensure_source,

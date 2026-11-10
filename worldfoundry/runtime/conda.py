@@ -43,7 +43,7 @@ from .env import resolve_ckpt_dir, resolve_hfd_root
 # ── Defaults ─────────────────────────────────────────────────────────────────
 
 # Same values evaluation.utils derives; resolved from core so the runtime
-# layer never imports worldfoundry.evaluation (SA-10).
+# layer never imports worldfoundry.evals (SA-10).
 REPO_ROOT = project_root()
 DATA_ROOT = package_data_root()
 

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from worldfoundry.evaluation.models.catalog.schema import ModelZooEntry
-from worldfoundry.evaluation.models.catalog.zoo_registry import (
+from worldfoundry.evals.models.catalog.schema import ModelZooEntry
+from worldfoundry.evals.models.catalog.zoo_registry import (
     ModelZooRegistry,
     UnknownModelZooKeyError,
 )

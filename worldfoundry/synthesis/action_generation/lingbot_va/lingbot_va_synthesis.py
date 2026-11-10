@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.lingbot_va.runtime import (
     RUNTIME_ROOT,
     WAN_VA_PACKAGE,

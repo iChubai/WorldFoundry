@@ -7,7 +7,7 @@ source:
   official_repo_url: https://github.com/Tencent-Hunyuan/HY-World-2.0
   license: tencent-hunyuan-community
 runtime_profile: runtime-profile:hyworld-worldgen
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: hyworld-worldgen
 official_sources:
   project_page: https://3d-models.hunyuan.tencent.com/world/

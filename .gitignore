@@ -968,16 +968,16 @@ worldfoundry/studio/assets/vendor/
 !worldfoundry/data/benchmarks/assets/iworld-bench/camera_trajectories/source_reference_npz/rgbd_dataset_freiburg3_nostructure_notexture_near_withloop_005.npz
 !worldfoundry/data/benchmarks/assets/iworld-bench/camera_trajectories/source_reference_npz/rgbd_dataset_freiburg3_nostructure_texture_near_withloop_014.npz
 !worldfoundry/data/benchmarks/assets/iworld-bench/camera_trajectories/source_reference_npz/rgbd_dataset_freiburg3_structure_notexture_near_011.npz
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/intrinsics.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/poses.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/intrinsics.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/poses.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/intrinsics.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/poses.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/intrinsics.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/poses.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/intrinsics.npy
-!worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/poses.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/intrinsics.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/poses.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/intrinsics.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/poses.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/intrinsics.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/poses.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/intrinsics.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/poses.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/intrinsics.npy
+!worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/poses.npy
 !worldfoundry/synthesis/visual_generation/vid2world/csgo_utils/csgo_validation_start_indices.npy
 
 !worldfoundry/core/checkpoint/

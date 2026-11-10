@@ -124,10 +124,10 @@ integration:
     runtime_surface: in_tree_official_runtime_with_result_normalizer
     full_suite_verified: false
 runner:
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldMemBenchContract
-  official_script: worldfoundry/evaluation/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:WorldMemBenchContract
+  official_script: worldfoundry/evals/tasks/execution/runners/worldmembench/run_worldmembench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.worldmembench.run_worldmembench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.worldmembench.run_worldmembench_official_runner
     supports_official_runtime: true
     accepts_generated_artifacts: true
     supports_fixture: false
@@ -138,7 +138,7 @@ runner:
     pass_generated_artifact_dir: true
   runtime:
     kind: in_tree_official_runtime
-    in_tree_path: worldfoundry/evaluation/tasks/execution/runners/worldmembench/runtime
+    in_tree_path: worldfoundry/evals/tasks/execution/runners/worldmembench/runtime
     repo_url: https://github.com/ZJU-REAL/WorldMemBench
     repo_revision: 1b79840143a98e017891e893b5d3ef75b93078a3
     results_path_env: WORLDFOUNDRY_WORLDMEMBENCH_RESULTS_PATH
@@ -169,7 +169,7 @@ artifact_layout:
   filename_template: scorecard.json
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldMemBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:WorldMemBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

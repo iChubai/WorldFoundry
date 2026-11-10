@@ -40,7 +40,7 @@ runner_parity:
   - A positive/zero/negative cameraX contrast verified vertical viewpoint response; independent upstream pixel parity and gameplay
     physics were not measured. Missing local assets still return blocked runtime diagnostics.
 runtime_profile: runtime-profile:oasis-500m
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: oasis-500m
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked entries retain

@@ -8,7 +8,7 @@ source:
   license: worldcrafter-academic-only
 checkpoint: TencentARC/WorldCrafter-Base
 runtime_profile: runtime-profile:worldcrafter
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: worldcrafter
 official_sources:
   project_page: https://drexubery.github.io/WorldCrafter/

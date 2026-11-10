@@ -29,7 +29,7 @@ output_artifacts:
 - generated_3d_asset
 - generated_video
 runtime_profile: runtime-profile:flashworld
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: flashworld
 runner_parity:
   status: verified

@@ -15,7 +15,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.models.runtime.profiles import RuntimeProfileSynthesis
+from worldfoundry.evals.models.runtime.profiles import RuntimeProfileSynthesis
 from worldfoundry.synthesis.visual_generation.animatediff.worldfoundry_runtime import (
     DEFAULT_ANIMATEDIFF_HF_HUB_CACHE,
     DEFAULT_ANIMATEDIFF_INFERENCE_CONFIG,

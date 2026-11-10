@@ -27,7 +27,7 @@ checkpoints:
     revision: 4a852c02855395e2757f852e9b1d2bf537cec517
 pipeline_binding: kandinsky6-pro-distill
 runtime_profile: runtime-profile:kandinsky6-pro-distill
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 integration:
   status: integrated
   runtime_profile: kandinsky6-pro-distill

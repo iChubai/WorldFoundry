@@ -35,7 +35,7 @@ integration:
     remains pending.
   - The released action prediction head is zero initialized; action prediction is
     not advertised.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:astronex-world
 pipeline_binding: astronex-world
 runner_parity:

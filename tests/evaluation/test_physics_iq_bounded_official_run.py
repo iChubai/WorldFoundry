@@ -6,18 +6,18 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.reporting.validation import validate_contract_file
-from worldfoundry.evaluation.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
-from worldfoundry.evaluation.tasks.execution.runners.physics_iq import physics_iq_runtime
-from worldfoundry.evaluation.tasks.execution.runners.physics_iq import (
+from worldfoundry.evals.reporting.validation import validate_contract_file
+from worldfoundry.evals.tasks.execution.framework.benchmark_assets import bundled_benchmark_asset
+from worldfoundry.evals.tasks.execution.runners.physics_iq import physics_iq_runtime
+from worldfoundry.evals.tasks.execution.runners.physics_iq import (
     run_physics_iq_official_runner as runner,
 )
-from worldfoundry.evaluation.tasks.execution.runners.physics_iq.official import raw_metrics
-from worldfoundry.evaluation.tasks.execution.runners.physics_iq.physics_iq_prompts import (
+from worldfoundry.evals.tasks.execution.runners.physics_iq.official import raw_metrics
+from worldfoundry.evals.tasks.execution.runners.physics_iq.physics_iq_prompts import (
     VIEWS,
     resolve_descriptions_path,
 )
-from worldfoundry.evaluation.tasks.execution.runners.physics_iq.protocols import ORIGINAL
+from worldfoundry.evals.tasks.execution.runners.physics_iq.protocols import ORIGINAL
 
 
 def _original_descriptions() -> Path:

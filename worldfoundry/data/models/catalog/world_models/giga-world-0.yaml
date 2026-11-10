@@ -37,7 +37,7 @@ integration:
   - WorldFoundry registers an executable GR1 image-to-video runtime using the released transformer, T5 encoder, and Wan Diffusers VAE.
   - The launcher accepts an explicit torch-attention compatibility backend for low-resolution checkpoint smoke while retaining the official NATTEN route.
 runtime_profile: runtime-profile:giga-world-0
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: giga-world-0
 runner_parity:
   status: implemented_checkpoint_required

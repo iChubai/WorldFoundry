@@ -35,7 +35,7 @@ integration:
   - WorldFoundry registers an in-tree runtime manifest pipeline for the vendored Genie Envisioner source.
   - Official WorldArena-listed source is vendored in-tree under worldfoundry/synthesis/visual_generation/genie_envisioner/genie_envisioner_runtime.
 runtime_profile: runtime-profile:genie-envisioner
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: genie-envisioner
 runner_parity:
   status: implemented_checkpoint_required

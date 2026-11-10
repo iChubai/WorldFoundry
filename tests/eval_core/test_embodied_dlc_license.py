@@ -9,7 +9,7 @@ cli_embodied = importlib.import_module("worldfoundry.cli.embodied")
 
 
 def _load_docker_runner():
-    return importlib.import_module("worldfoundry.evaluation.tasks.embodied.docker_runner")
+    return importlib.import_module("worldfoundry.evals.tasks.embodied.docker_runner")
 
 
 def test_embodied_accept_license_flags_merge_with_existing_environment(monkeypatch) -> None:

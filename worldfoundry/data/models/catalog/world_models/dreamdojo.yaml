@@ -4,7 +4,7 @@ family: NVIDIA DreamDojo
 availability: open_source
 license: other:nvidia-open-model-license
 provider: official_repo
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: dreamdojo
 runtime_profile: runtime-profile:dreamdojo
 release_type: code_and_weights

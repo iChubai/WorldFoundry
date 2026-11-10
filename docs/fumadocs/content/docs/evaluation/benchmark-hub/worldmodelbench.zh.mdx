@@ -35,7 +35,7 @@ wf zoo benchmark-run \
 
 official-run 用 `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE`（VILA 权重或 HF 模型 id）驱动 `evaluation.py`。封装会按 N、2N、5N 类别长度校验 accs/preds 形状，并记录 350 条视频覆盖。环境变量：`WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WORLDMODELBENCH_DATA_ROOT`。共享资源：`worldmodelbench_dataset_assets`。清单：`worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json`。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml`，`worldfoundry/evals/tasks/execution/runners/worldmodelbench/runtime/evaluation.py`。
 
 产物包括 `scorecard.json`（主键 `world_model_average`）与 `judge_responses.jsonl`。
 

@@ -38,7 +38,7 @@ runner_parity:
   - Full official 93-frame / 50-step quality parity remains pending.
   - Per-run visual QA and artifact checks are tracked outside the model catalog.
 runtime_profile: runtime-profile:longcat-video
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: longcat-video
 catalog_category: video
 catalog_scope: Video-generation and video-token catalog entries. Integrated entries

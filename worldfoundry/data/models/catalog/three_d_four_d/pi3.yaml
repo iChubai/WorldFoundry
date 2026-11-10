@@ -23,7 +23,7 @@ integration:
   status: runtime_ported
   notes:
   - In-tree Pi3 point-cloud navigation pipeline is registered for reconstruction and trajectory rendering.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: pi3
 runner_parity:
   status: pending

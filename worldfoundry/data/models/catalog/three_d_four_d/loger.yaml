@@ -23,7 +23,7 @@ integration:
   status: verified
   notes:
   - In-tree LoGeR point-cloud navigation pipeline is registered for reconstruction and trajectory rendering.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: loger
 runner_parity:
   status: verified

@@ -9,7 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_evaluation_uses_lmms_eval_style_top_level_domains() -> None:
-    evaluation_root = REPO_ROOT / "worldfoundry/evaluation"
+    evaluation_root = REPO_ROOT / "worldfoundry/evals"
     tasks_root = evaluation_root / "tasks"
     models_root = evaluation_root / "models"
 
@@ -200,19 +200,19 @@ def test_evaluation_uses_lmms_eval_style_top_level_domains() -> None:
         if path.is_dir() and path.name != "__pycache__"
     )
     assert nested_subpackages == [
-        "worldfoundry/evaluation/models/catalog",
-        "worldfoundry/evaluation/models/integrations",
-        "worldfoundry/evaluation/models/pipelines",
-        "worldfoundry/evaluation/models/runners",
-        "worldfoundry/evaluation/models/runtime",
-        "worldfoundry/evaluation/tasks/catalog",
-        "worldfoundry/evaluation/tasks/contracts",
-        "worldfoundry/evaluation/tasks/datasets",
-        "worldfoundry/evaluation/tasks/embodied",
-        "worldfoundry/evaluation/tasks/execution",
-        "worldfoundry/evaluation/tasks/metrics",
-        "worldfoundry/evaluation/tasks/official",
-        "worldfoundry/evaluation/tasks/release",
+        "worldfoundry/evals/models/catalog",
+        "worldfoundry/evals/models/integrations",
+        "worldfoundry/evals/models/pipelines",
+        "worldfoundry/evals/models/runners",
+        "worldfoundry/evals/models/runtime",
+        "worldfoundry/evals/tasks/catalog",
+        "worldfoundry/evals/tasks/contracts",
+        "worldfoundry/evals/tasks/datasets",
+        "worldfoundry/evals/tasks/embodied",
+        "worldfoundry/evals/tasks/execution",
+        "worldfoundry/evals/tasks/metrics",
+        "worldfoundry/evals/tasks/official",
+        "worldfoundry/evals/tasks/release",
     ]
 
 
@@ -221,7 +221,7 @@ def test_scripts_qa_tree_is_not_packaged() -> None:
 
 
 def test_dataset_helpers_are_split_by_responsibility() -> None:
-    tasks_root = REPO_ROOT / "worldfoundry/evaluation/tasks"
+    tasks_root = REPO_ROOT / "worldfoundry/evals/tasks"
     datasets_facade = tasks_root / "datasets" / "__init__.py"
 
     assert sum(1 for _ in datasets_facade.open(encoding="utf-8")) < 180
@@ -238,8 +238,8 @@ def test_dataset_helpers_are_split_by_responsibility() -> None:
 
 
 def test_zoo_schemas_use_shared_json_contract_base() -> None:
-    model_schema = REPO_ROOT / "worldfoundry/evaluation/models/catalog/schema.py"
-    benchmark_schema = REPO_ROOT / "worldfoundry/evaluation/tasks/catalog/schema.py"
+    model_schema = REPO_ROOT / "worldfoundry/evals/models/catalog/schema.py"
+    benchmark_schema = REPO_ROOT / "worldfoundry/evals/tasks/catalog/schema.py"
 
     for path in (model_schema, benchmark_schema):
         text = path.read_text(encoding="utf-8")
@@ -251,7 +251,7 @@ def test_zoo_schemas_use_shared_json_contract_base() -> None:
 
 
 def test_embodied_contracts_use_shared_json_contract_base() -> None:
-    contract_path = REPO_ROOT / "worldfoundry/evaluation/tasks/embodied/contracts.py"
+    contract_path = REPO_ROOT / "worldfoundry/evals/tasks/embodied/contracts.py"
     text = contract_path.read_text(encoding="utf-8")
 
     assert "JsonDataclass = JsonContract" in text
@@ -262,14 +262,14 @@ def test_embodied_contracts_use_shared_json_contract_base() -> None:
 
 
 def test_embodied_task_modules_are_owned_by_embodied_package() -> None:
-    tasks_root = REPO_ROOT / "worldfoundry/evaluation/tasks"
+    tasks_root = REPO_ROOT / "worldfoundry/evals/tasks"
 
-    import worldfoundry.evaluation.tasks.embodied as canonical
-    import worldfoundry.evaluation.tasks.embodied.contracts as canonical_contracts
-    import worldfoundry.evaluation.tasks.embodied.evaluate as canonical_evaluate
-    import worldfoundry.evaluation.tasks.embodied.materialize as canonical_materialize
-    import worldfoundry.evaluation.tasks.embodied.metrics as canonical_metrics
-    import worldfoundry.evaluation.tasks.embodied.normalizer as canonical_normalizer
+    import worldfoundry.evals.tasks.embodied as canonical
+    import worldfoundry.evals.tasks.embodied.contracts as canonical_contracts
+    import worldfoundry.evals.tasks.embodied.evaluate as canonical_evaluate
+    import worldfoundry.evals.tasks.embodied.materialize as canonical_materialize
+    import worldfoundry.evals.tasks.embodied.metrics as canonical_metrics
+    import worldfoundry.evals.tasks.embodied.normalizer as canonical_normalizer
 
     for retired_module in (
         "run_embodied.py",
@@ -289,7 +289,7 @@ def test_embodied_task_modules_are_owned_by_embodied_package() -> None:
 
 
 def test_external_benchmark_contract_registry_is_split_from_contract_data() -> None:
-    tasks_root = REPO_ROOT / "worldfoundry/evaluation/tasks"
+    tasks_root = REPO_ROOT / "worldfoundry/evals/tasks"
     contracts_module = tasks_root / "contracts" / "external.py"
     registry_module = tasks_root / "contracts" / "registry.py"
 
@@ -310,17 +310,17 @@ def test_external_benchmark_contract_registry_is_split_from_contract_data() -> N
 
 
 def test_task_package_facade_is_lazy_and_bounded() -> None:
-    tasks_init = REPO_ROOT / "worldfoundry/evaluation/tasks/__init__.py"
+    tasks_init = REPO_ROOT / "worldfoundry/evals/tasks/__init__.py"
     text = tasks_init.read_text(encoding="utf-8")
     watched_modules = [
-        "worldfoundry.evaluation.tasks.catalog.zoo_registry",
-        "worldfoundry.evaluation.tasks.catalog.yaml",
-        "worldfoundry.evaluation.tasks.catalog.registry",
-        "worldfoundry.evaluation.tasks.execution.runners",
+        "worldfoundry.evals.tasks.catalog.zoo_registry",
+        "worldfoundry.evals.tasks.catalog.yaml",
+        "worldfoundry.evals.tasks.catalog.registry",
+        "worldfoundry.evals.tasks.execution.runners",
     ]
     script = (
         "import json, sys; "
-        "import worldfoundry.evaluation.tasks; "
+        "import worldfoundry.evals.tasks; "
         f"watched = {watched_modules!r}; "
         "print(json.dumps([name for name in watched if name in sys.modules]))"
     )
@@ -340,16 +340,16 @@ def test_task_package_facade_is_lazy_and_bounded() -> None:
     )
     assert json.loads(result.stdout) == []
 
-    from worldfoundry.evaluation.tasks import load_benchmark_zoo_registry, load_task_registry_from_paths
-    from worldfoundry.evaluation.tasks.catalog.registry import load_task_registry_from_paths as RegistryLoader
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry as ZooLoader
+    from worldfoundry.evals.tasks import load_benchmark_zoo_registry, load_task_registry_from_paths
+    from worldfoundry.evals.tasks.catalog.registry import load_task_registry_from_paths as RegistryLoader
+    from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry as ZooLoader
 
     assert load_benchmark_zoo_registry is ZooLoader
     assert load_task_registry_from_paths is RegistryLoader
 
 
 def test_native_task_package_is_retired() -> None:
-    tasks_root = REPO_ROOT / "worldfoundry/evaluation/tasks"
+    tasks_root = REPO_ROOT / "worldfoundry/evals/tasks"
 
     assert not (tasks_root / "native").exists()
     for retired_native_shim in ("native_schema.py", "native_loader.py", "yaml.py"):
@@ -359,17 +359,17 @@ def test_native_task_package_is_retired() -> None:
 
     import pytest
 
-    import worldfoundry.evaluation.tasks as facade
-    import worldfoundry.evaluation.tasks.catalog.yaml as canonical_yaml
+    import worldfoundry.evals.tasks as facade
+    import worldfoundry.evals.tasks.catalog.yaml as canonical_yaml
 
     with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("worldfoundry.evaluation.tasks.native")
+        importlib.import_module("worldfoundry.evals.tasks.native")
     assert facade.load_catalog_yaml is canonical_yaml.load_catalog_yaml
     assert facade.load_yaml_mapping_with_extends is canonical_yaml.load_yaml_mapping_with_extends
 
 
 def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
-    models_root = REPO_ROOT / "worldfoundry/evaluation/models"
+    models_root = REPO_ROOT / "worldfoundry/evals/models"
     pipeline_root = models_root / "pipelines"
     pipelines_facade = pipeline_root / "__init__.py"
 
@@ -384,7 +384,7 @@ def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
 
     lazy_script = (
         "import json, sys; "
-        "import worldfoundry.evaluation.models.pipelines; "
+        "import worldfoundry.evals.models.pipelines; "
         "blocked = {'torch', 'diffusers'}; "
         "print(json.dumps(sorted(name for name in sys.modules if name.split('.')[0] in blocked)))"
     )
@@ -442,20 +442,20 @@ def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
 
 
 def test_model_package_facade_is_lazy_and_bounded() -> None:
-    models_init = REPO_ROOT / "worldfoundry/evaluation/models/__init__.py"
+    models_init = REPO_ROOT / "worldfoundry/evals/models/__init__.py"
     text = models_init.read_text(encoding="utf-8")
     watched_modules = [
-        "worldfoundry.evaluation.models.catalog.registry",
-        "worldfoundry.evaluation.models.catalog.manifest",
-        "worldfoundry.evaluation.models.integrations",
-        "worldfoundry.evaluation.models.pipelines.lifecycle",
-        "worldfoundry.evaluation.models.runners.builtins",
-        "worldfoundry.evaluation.models.runners.resolver",
-        "worldfoundry.evaluation.models.runners.registry",
+        "worldfoundry.evals.models.catalog.registry",
+        "worldfoundry.evals.models.catalog.manifest",
+        "worldfoundry.evals.models.integrations",
+        "worldfoundry.evals.models.pipelines.lifecycle",
+        "worldfoundry.evals.models.runners.builtins",
+        "worldfoundry.evals.models.runners.resolver",
+        "worldfoundry.evals.models.runners.registry",
     ]
     script = (
         "import json, sys; "
-        "import worldfoundry.evaluation.models; "
+        "import worldfoundry.evals.models; "
         f"watched = {watched_modules!r}; "
         "print(json.dumps([name for name in watched if name in sys.modules]))"
     )
@@ -475,9 +475,9 @@ def test_model_package_facade_is_lazy_and_bounded() -> None:
     )
     assert json.loads(result.stdout) == []
 
-    from worldfoundry.evaluation.models import ModelRunnerRegistry, WorldFoundryPipelineRunner
-    from worldfoundry.evaluation.models.runners.pipeline import WorldFoundryPipelineRunner as CanonicalPipelineRunner
-    from worldfoundry.evaluation.models.runners.registry import ModelRunnerRegistry as CanonicalRegistry
+    from worldfoundry.evals.models import ModelRunnerRegistry, WorldFoundryPipelineRunner
+    from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner as CanonicalPipelineRunner
+    from worldfoundry.evals.models.runners.registry import ModelRunnerRegistry as CanonicalRegistry
 
     assert WorldFoundryPipelineRunner is CanonicalPipelineRunner
     assert ModelRunnerRegistry is CanonicalRegistry
@@ -485,8 +485,8 @@ def test_model_package_facade_is_lazy_and_bounded() -> None:
 
 def test_model_catalog_uses_canonical_pipeline_runner_target() -> None:
     catalog_root = REPO_ROOT / "worldfoundry/data/models/catalog"
-    legacy_target = "worldfoundry.evaluation.models." + "pipeline_runner:WorldFoundryPipelineRunner"
-    canonical_target = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+    legacy_target = "worldfoundry.evals.models." + "pipeline_runner:WorldFoundryPipelineRunner"
+    canonical_target = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 
     runner_targets = [
         line.strip()
@@ -501,7 +501,7 @@ def test_model_catalog_uses_canonical_pipeline_runner_target() -> None:
 
 
 def test_retired_model_root_reexport_shims_are_not_reintroduced() -> None:
-    models_root = REPO_ROOT / "worldfoundry/evaluation/models"
+    models_root = REPO_ROOT / "worldfoundry/evals/models"
     retired = {
         "catalog_registry.py",
         "manifests.py",
@@ -522,7 +522,7 @@ def test_retired_model_root_reexport_shims_are_not_reintroduced() -> None:
 
 
 def test_low_value_evaluation_subpackages_are_not_reintroduced() -> None:
-    evaluation_root = REPO_ROOT / "worldfoundry/evaluation"
+    evaluation_root = REPO_ROOT / "worldfoundry/evals"
 
     forbidden_paths = [
         evaluation_root / "api" / "registry",
@@ -565,36 +565,36 @@ def test_low_value_evaluation_subpackages_are_not_reintroduced() -> None:
 
 def test_old_evaluation_import_paths_are_not_reintroduced() -> None:
     old_markers = [
-        "worldfoundry.evaluation.benchmarks",
-        "worldfoundry.evaluation.cli",
-        "worldfoundry.evaluation.local_open_eval",
-        "worldfoundry.evaluation.mcp",
-        "worldfoundry.evaluation.worldscore",
-        "worldfoundry/evaluation/benchmarks",
-        "worldfoundry/evaluation/cli",
-        "worldfoundry/evaluation/mcp",
+        "worldfoundry.evals.benchmarks",
+        "worldfoundry.evals.cli",
+        "worldfoundry.evals.local_open_eval",
+        "worldfoundry.evals.mcp",
+        "worldfoundry.evals.worldscore",
+        "worldfoundry/evals/benchmarks",
+        "worldfoundry/evals/cli",
+        "worldfoundry/evals/mcp",
         "from ..benchmarks",
         "from .benchmarks",
-        "worldfoundry.evaluation.api.registry.aliases",
-        "worldfoundry.evaluation.api.registry.core",
-        "worldfoundry.evaluation.models.pipeline_dispatch",
-        "worldfoundry.evaluation.reporting_format",
-        "worldfoundry.evaluation.reporting_markdown",
-        "worldfoundry.evaluation.reporting_run_summary",
-        "worldfoundry.evaluation.reporting_runtime_evidence",
-        "worldfoundry.evaluation.runtime",
-        "worldfoundry.evaluation.runtime.assets",
-        "worldfoundry.evaluation.runtime.env",
-        "worldfoundry.evaluation.tui",
-        "worldfoundry.evaluation.tasks.run_embodied.normalizer",
-        "worldfoundry.evaluation.tasks.run_embodied.metrics",
-        "worldfoundry.evaluation.tasks.run_metrics.registry",
-        "worldfoundry.evaluation.tasks." + "zoo.",
-        "worldfoundry.evaluation.models." + "zoo.",
-        "worldfoundry.evaluation.utils.paths",
+        "worldfoundry.evals.api.registry.aliases",
+        "worldfoundry.evals.api.registry.core",
+        "worldfoundry.evals.models.pipeline_dispatch",
+        "worldfoundry.evals.reporting_format",
+        "worldfoundry.evals.reporting_markdown",
+        "worldfoundry.evals.reporting_run_summary",
+        "worldfoundry.evals.reporting_runtime_evidence",
+        "worldfoundry.evals.runtime",
+        "worldfoundry.evals.runtime.assets",
+        "worldfoundry.evals.runtime.env",
+        "worldfoundry.evals.tui",
+        "worldfoundry.evals.tasks.run_embodied.normalizer",
+        "worldfoundry.evals.tasks.run_embodied.metrics",
+        "worldfoundry.evals.tasks.run_metrics.registry",
+        "worldfoundry.evals.tasks." + "zoo.",
+        "worldfoundry.evals.models." + "zoo.",
+        "worldfoundry.evals.utils.paths",
     ]
     violations = []
-    for path in (REPO_ROOT / "worldfoundry/evaluation").rglob("*.py"):
+    for path in (REPO_ROOT / "worldfoundry/evals").rglob("*.py"):
         text = path.read_text(encoding="utf-8")
         for marker in old_markers:
             if marker in text:
@@ -605,33 +605,33 @@ def test_old_evaluation_import_paths_are_not_reintroduced() -> None:
 
 def test_docs_do_not_advertise_removed_evaluation_subpackages() -> None:
     forbidden_markers = [
-        "worldfoundry/evaluation/runner/",
+        "worldfoundry/evals/runner/",
         "evaluation/runner/",
-        "worldfoundry/evaluation/benchmark_zoo",
+        "worldfoundry/evals/benchmark_zoo",
         "evaluation/benchmark_zoo",
-        "worldfoundry/evaluation/cli",
-        "worldfoundry/evaluation/mcp",
+        "worldfoundry/evals/cli",
+        "worldfoundry/evals/mcp",
         "evaluation/cli",
         "evaluation/mcp",
-        "worldfoundry/evaluation/model_zoo",
+        "worldfoundry/evals/model_zoo",
         "evaluation/model_zoo",
         "evaluation/models_schema.py",
         "evaluation/models_registry.py",
         "evaluation/models_manifests.py",
-        "worldfoundry/evaluation/reporting.py",
-        "worldfoundry/evaluation/reporting_run_",
-        "worldfoundry/evaluation/runtime.py",
-        "worldfoundry/evaluation/runtime_",
-        "worldfoundry/evaluation/scorecard.py",
-        "evaluation/reporting.py",
+        "worldfoundry/evals/reporting.py",
+        "worldfoundry/evals/reporting_run_",
+        "worldfoundry/evals/runtime.py",
+        "worldfoundry/evals/runtime_",
+        "worldfoundry/evals/scorecard.py",
+        "evals/reporting.py",
         "evaluation/reporting_compare.py",
         "evaluation/reporting_run_",
         "evaluation/runtime.py",
         "evaluation/runtime_",
         "evaluation/scorecard.py",
         '<Folder name="runner"',
-        "worldfoundry/evaluation/tasks/" + "zoo.py",
-        "evaluation/tasks/" + "zoo.py",
+        "worldfoundry/evals/tasks/" + "zoo.py",
+        "evals/tasks/" + "zoo.py",
     ]
     docs_roots = [
         REPO_ROOT / "docs" / "fumadocs" / "content" / "docs",

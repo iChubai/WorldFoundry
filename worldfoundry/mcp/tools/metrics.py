@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from worldfoundry.evaluation.tasks.metrics.registry import (
+from worldfoundry.evals.tasks.metrics.registry import (
     default_metric_registry,
     list_metric_registry_entries,
 )

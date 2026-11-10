@@ -46,10 +46,10 @@ metadata:
   blockers:
   - Official SimplerEnv simulator rollouts, policy wrappers, and result import mapping must be validated before 
     integrated status.
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:SimplerEnvContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:SimplerEnvContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -82,7 +82,7 @@ metadata:
     - --json
   official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
-    target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
+    target: worldfoundry.evals.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
     official_result_normalization:
@@ -175,4 +175,4 @@ tasks:
       - task_success
       - episode_success
       - reward
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:SimplerEnvContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:SimplerEnvContract

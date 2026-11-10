@@ -51,7 +51,7 @@ integration:
   - The local BF16, FP8, and FP4 Echo checkpoints and CUDA devices are present, but
     GPU inference is blocked by the gated Gemma 3 12B encoder and missing dedicated
     environment.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:joyai-echo-longvideo
 pipeline_binding: joyai-echo-longvideo
 runner_parity:

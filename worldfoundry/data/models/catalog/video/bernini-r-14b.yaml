@@ -28,7 +28,7 @@ integration:
 runner_parity:
   status: pending_gpu_validation
 runtime_profile: runtime-profile:bernini-r-14b
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: bernini-r-14b
 catalog_category: video
 docs:

@@ -21,7 +21,7 @@ hf download EmbodiedCity/iWorld-Bench-Dataset --repo-type dataset \
   --local-dir "${WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT}"
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/iworldbench/run_iworldbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/iworldbench/run_iworldbench_official_runner.py \
   --run-official \
   --generated-videos-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --metric memory \

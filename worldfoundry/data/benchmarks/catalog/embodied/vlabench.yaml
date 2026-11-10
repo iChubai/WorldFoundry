@@ -29,7 +29,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VLABenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:VLABenchContract
   expected_artifacts:
   - scorecard.json
   - raw_results.jsonl
@@ -102,7 +102,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/vlabench.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:VLABenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:VLABenchContract
   task_yaml_available: true
   runtime_verified: false
   normalizer_verified: true

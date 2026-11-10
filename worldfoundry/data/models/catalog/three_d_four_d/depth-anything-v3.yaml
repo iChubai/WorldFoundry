@@ -26,7 +26,7 @@ integration:
   status: runtime_ported
   notes:
   - In-tree official SOH export route is registered separately from the geometry-prior profile at depth-anything-v3-prior.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: depth-anything-v3
 runner_parity:
   status: pending

@@ -29,7 +29,7 @@ metadata:
   benchmark_id: videoscience-bench
   contract_validation_command: wf zoo benchmark-run --benchmark-id videoscience-bench --mode contract 
     --output-dir tmp/benchmark_zoo/benchmark_contract/videoscience-bench --json
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoScienceBenchContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
   official_runner_command: wf zoo benchmark-run
   name: VideoScience-Bench
   domain:
@@ -79,12 +79,12 @@ metadata:
   data_refs:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/videoscience-bench.yaml
     in_tree_runtime_paths:
-    - worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
+    - worldfoundry/evals/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
   official_runner_script: 
-    worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
+    worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoScienceBenchContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -96,7 +96,7 @@ metadata:
     filename_template: scorecard.json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
+    root: worldfoundry/evals/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
     root_env: WORLDFOUNDRY_VIDEOSCIENCE_BENCH_ROOT
     repo_url: https://github.com/hao-ai-lab/VideoScience.git
     revision: 0b3bb2da74388991bf842bca1096a6a25d3c9311
@@ -117,7 +117,7 @@ metadata:
     - mcq_or_qa_accuracy
     - artifact_presence_format
   local_evaluator:
-    target: worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
+    target: worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
     status: implemented
     protocol: official_result_normalization
     official_result_normalization:
@@ -240,9 +240,9 @@ tasks:
           kind: video
     evaluation_protocol:
     - name: external_official_runner
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:VideoScienceBenchContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:VideoScienceBenchContract
       runner_script: 
-        worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
+        worldfoundry/evals/tasks/execution/runners/videoscience_bench/run_videoscience_bench_official_runner.py
       metric_ids:
       - prompt_consistency
       - phenomenon_congruency
@@ -266,7 +266,7 @@ tasks:
       - immutability
       - spatio_temporal_coherence
       - videoscience_average
-      evaluator_target: worldfoundry.evaluation.tasks.execution.runners.videoscience_bench.videoscience_bench_in_tree_evaluator:VideoScienceBenchInTreeEvaluator
+      evaluator_target: worldfoundry.evals.tasks.execution.runners.videoscience_bench.videoscience_bench_in_tree_evaluator:VideoScienceBenchInTreeEvaluator
       status: available_for_structured_evidence
       metadata:
         scoring_modes:
@@ -282,7 +282,7 @@ tasks:
         - rubric_manifest or checklist_scores keyed by official VideoScience dimension
         - VideoScience-Judge checklist/key-frame/CV evidence for official parity
     runtime_requirements:
-      in_tree_runtime: worldfoundry/evaluation/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
+      in_tree_runtime: worldfoundry/evals/tasks/execution/runners/videoscience_bench/runtime/videoscience_bench
       optional_root_env: WORLDFOUNDRY_VIDEOSCIENCE_BENCH_ROOT
       generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
       results_path_env: WORLDFOUNDRY_VIDEOSCIENCE_BENCH_RESULTS_PATH

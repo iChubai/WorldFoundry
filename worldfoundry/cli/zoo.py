@@ -14,8 +14,8 @@ from worldfoundry.core.io.paths import (
     hfd_root_path,
     resolve_worldfoundry_path,
 )
-from worldfoundry.evaluation.tasks.execution.orchestration.interfaces import BENCHMARK_RUN_PUBLIC_MODES
-from worldfoundry.evaluation.utils import (
+from worldfoundry.evals.tasks.execution.orchestration.interfaces import BENCHMARK_RUN_PUBLIC_MODES
+from worldfoundry.evals.utils import (
     BENCHMARK_ZOO_DIR,
     MODEL_ZOO_DIR,
     REPO_ROOT,
@@ -51,7 +51,7 @@ _SCRIPT_SETUP_DOWNLOAD_EMBODIED_ACTION_ASSETS = "scripts/setup/download_embodied
 
 def _iter_manifest_files(root: Path) -> list[Path]:
     """Enumerate manifest YAML/JSON files under a directory."""
-    from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import (
+    from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
         is_catalog_metadata_manifest,
         is_default_benchmark_catalog_root,
         iter_benchmark_catalog_manifest_paths,
@@ -109,7 +109,7 @@ def _print_table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> None:
 
 def _model_manifest_paths(manifest_dir: Path) -> dict[str, str]:
     """Map each model id to its manifest file path under *manifest_dir*."""
-    from worldfoundry.evaluation.models.catalog.schema import load_entries
+    from worldfoundry.evals.models.catalog.schema import load_entries
 
     paths: dict[str, str] = {}
     for path in _iter_manifest_files(manifest_dir):
@@ -120,7 +120,7 @@ def _model_manifest_paths(manifest_dir: Path) -> dict[str, str]:
 
 def _benchmark_manifest_paths(manifest_dir: Path) -> dict[str, str]:
     """Map each benchmark id to its manifest file path under *manifest_dir*."""
-    from worldfoundry.evaluation.tasks.catalog.schema import load_entries
+    from worldfoundry.evals.tasks.catalog.schema import load_entries
 
     paths: dict[str, str] = {}
     for path in _iter_manifest_files(manifest_dir):
@@ -616,7 +616,7 @@ def _add_repeated_args(argv: list[str], flag: str, values: list[str] | None) -> 
 
 
 def _handle_zoo_models_list(args: argparse.Namespace) -> int:
-    from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+    from worldfoundry.evals.models.catalog import load_model_zoo_registry
 
     registry = load_model_zoo_registry(args.manifest_dir)
     entries = registry.list()
@@ -666,8 +666,8 @@ def _handle_zoo_models_list(args: argparse.Namespace) -> int:
 
 def _handle_zoo_model_specs(args: argparse.Namespace) -> int:
     """Export model-zoo entries as public WorldFoundry ``WorldModelManifest`` objects."""
-    from worldfoundry.evaluation.models.catalog.manifest import model_zoo_entries_to_world_model_manifests
-    from worldfoundry.evaluation.models.catalog.schema import load_entries
+    from worldfoundry.evals.models.catalog.manifest import model_zoo_entries_to_world_model_manifests
+    from worldfoundry.evals.models.catalog.schema import load_entries
 
     entries = []
     for path in _iter_manifest_files(args.manifest_dir):
@@ -700,7 +700,7 @@ def _handle_zoo_model_specs(args: argparse.Namespace) -> int:
 
 def _handle_zoo_model_show(args: argparse.Namespace) -> int:
     """Show one model-zoo entry with discovery, readiness, and command metadata."""
-    from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+    from worldfoundry.evals.models.catalog import load_model_zoo_registry
 
     registry = load_model_zoo_registry(args.manifest_dir)
     entry = registry.get(args.model_id)
@@ -820,7 +820,7 @@ def _handle_zoo_embodied_assets(args: argparse.Namespace) -> int:
 
 
 def _handle_zoo_benchmarks_list(args: argparse.Namespace) -> int:
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
+    from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 
     registry = load_benchmark_zoo_registry(args.manifest_dir)
     entries = registry.list()
@@ -901,8 +901,8 @@ def _benchmark_list_payload(entry) -> dict[str, Any]:
 
 def _handle_zoo_benchmark_specs(args: argparse.Namespace) -> int:
     """Export benchmark-zoo entries as public WorldFoundry ``BenchmarkSpec`` objects."""
-    from worldfoundry.evaluation.tasks.catalog.schema import load_entries
-    from worldfoundry.evaluation.tasks.catalog.specs import (
+    from worldfoundry.evals.tasks.catalog.schema import load_entries
+    from worldfoundry.evals.tasks.catalog.specs import (
         benchmark_zoo_entries_to_benchmark_specs,
     )
 
@@ -938,8 +938,8 @@ def _handle_zoo_benchmark_specs(args: argparse.Namespace) -> int:
 
 def _handle_zoo_benchmark_show(args: argparse.Namespace) -> int:
     """Show one benchmark-zoo entry with discovery, readiness, and command metadata."""
-    from worldfoundry.evaluation.tasks.catalog.specs import benchmark_zoo_entries_to_benchmark_specs
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
+    from worldfoundry.evals.tasks.catalog.specs import benchmark_zoo_entries_to_benchmark_specs
+    from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 
     registry = load_benchmark_zoo_registry(args.manifest_dir)
     entry = registry.get(args.benchmark_id)
@@ -1059,7 +1059,7 @@ def _benchmark_run_cli_success(result: Any) -> bool:
 
 def _handle_zoo_benchmark_run(args: argparse.Namespace) -> int:
     """Run a benchmark-zoo manifest benchmark evaluation."""
-    from worldfoundry.evaluation.tasks.execution.orchestration.benchmark_runner import run_benchmark_execution
+    from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import run_benchmark_execution
 
     benchmark_id = canonical_benchmark_zoo_id(args.benchmark_id, args.manifest_dir)
     env_overrides = parse_key_value_mapping(args.env)
@@ -1095,9 +1095,9 @@ def _handle_zoo_benchmark_run(args: argparse.Namespace) -> int:
 
 def _handle_zoo_benchmark_fetch(args: argparse.Namespace) -> int:
     """Fetch the official upstream sources a benchmark runtime pins into the source cache."""
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
-    from worldfoundry.evaluation.tasks.execution.framework.official_sources import benchmark_source_spec
-    from worldfoundry.evaluation.tasks.execution.framework.source_cache import ensure_source
+    from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
+    from worldfoundry.evals.tasks.execution.framework.official_sources import benchmark_source_spec
+    from worldfoundry.evals.tasks.execution.framework.source_cache import ensure_source
 
     entry = load_benchmark_zoo_registry(args.manifest_dir).get(args.benchmark_id)
     spec = benchmark_source_spec(entry.benchmark_id, entry.runner_runtime or {})

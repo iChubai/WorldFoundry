@@ -5,8 +5,8 @@ from dataclasses import is_dataclass
 
 import pytest
 
-from worldfoundry.evaluation.api import GenerationRequest, GenerationResult, WorldModelConfig
-from worldfoundry.evaluation.tasks.embodied import (
+from worldfoundry.evals.api import GenerationRequest, GenerationResult, WorldModelConfig
+from worldfoundry.evals.tasks.embodied import (
     CAPABILITY_SESSION_CONTROL,
     CAPABILITY_VLA_ACTION_PREDICTION,
     CAPABILITY_WAM_BRANCH,

@@ -11,7 +11,7 @@
 **资产：** OpenCLIP / BLIP2 / PickScore / InternVideo2 / UMT 权重，cache 顺序为 `WORLDFOUNDRY_T2V_METRICS_CACHE_DIR` → `WORLDFOUNDRY_HFD_ROOT` → package `hf_cache`。
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import CLIPScore, list_all_clipscore_models
+from worldfoundry.evals.tasks.metrics import CLIPScore, list_all_clipscore_models
 
 print(list_all_clipscore_models()[:5])
 
@@ -40,7 +40,7 @@ Higher values indicate stronger prompt satisfaction. This is useful for composit
 **资产：** 本地 VQA 模型走 Hugging Face / LAVIS / WorldFoundry base-model cache；API 模型需要 provider 凭据（`OPENAI_API_KEY`、Gemini key 等）。
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import VQAScore
+from worldfoundry.evals.tasks.metrics import VQAScore
 
 vqa = VQAScore(model="clip-flant5-xxl", device="cuda")
 score = vqa.forward(
@@ -63,7 +63,7 @@ print(float(score.item()))
 **资产：** 与 CLIPScore 相同的 cache 顺序。BLIP2/LAVIS URL、InternVideo2 `internvl_c_13b_224px`、UMT `b16_ptk710_f8_res224` 或 `l16_ptk710_f8_res224`。
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import ITMScore
+from worldfoundry.evals.tasks.metrics import ITMScore
 
 itm = ITMScore(model="blip2-itm", device="cuda")
 score = itm.forward(images="sample.png", texts="a cat sitting on a windowsill")

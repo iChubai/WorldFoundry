@@ -17,7 +17,7 @@ description: 六类世界状态评测，复用官方 Python 评分与 WorldFound
 合成 fixture 不需要模型、GPU、下载或 token，只验证格式与聚合：
 
 ```bash
-python -m worldfoundry.evaluation.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
+python -m worldfoundry.evals.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
   --run-fixture --strict --output-dir tmp/harnesseval-fixture --json
 ```
 
@@ -48,7 +48,7 @@ plans/<family>/<case>.skill_plan.json
 权重目录必须在源码包外；HPSv3 使用已注册的基础模型资源，AMT/RAFT/CLIP/aesthetic 优先使用配置目录中的权重，缺失时复用已注册资源。
 
 ```bash
-python -m worldfoundry.evaluation.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
+python -m worldfoundry.evals.tasks.execution.runners.harnesseval_w.run_harnesseval_w \
   --run-official --generated-artifact-dir /path/to/generation \
   --manifest /path/to/manifest.json --plan-root /path/to/plans \
   --assets-root /path/to/dataset --model-id my-model \

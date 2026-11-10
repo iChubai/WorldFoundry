@@ -35,7 +35,7 @@ wf zoo benchmark-run \
 
 Official-run drives `evaluation.py` with `WORLDFOUNDRY_WORLDMODELBENCH_JUDGE` (VILA checkpoint or HF model id). The wrapper validates accs/preds shapes against N, 2N, and 5N category lengths and records 350-instance video coverage. Env: `WORLDFOUNDRY_WORLDMODELBENCH_RESULTS_PATH`, `WORLDFOUNDRY_WORLDMODELBENCH_DATA_ROOT`. Shared asset: `worldmodelbench_dataset_assets`. Manifest: `worldfoundry/data/benchmarks/assets/worldmodelbench/worldmodelbench.json`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/worldmodelbench/runtime/evaluation.py`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldmodelbench.yaml`, `worldfoundry/evals/tasks/execution/runners/worldmodelbench/runtime/evaluation.py`.
 
 Outputs include `scorecard.json` (primary `world_model_average`) and `judge_responses.jsonl`.
 

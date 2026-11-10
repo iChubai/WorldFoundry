@@ -17,7 +17,7 @@ Lower values indicate closer generated and reference feature distributions. FID 
 **资产：** Torch-fidelity InceptionV3 / CLIP / SwAV 权重，经 `torch.hub` 与 `torchvision` cache 加载。离线可传 `feature_extractor_weights_path` 或提前放入 Torch cache。
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import compute_fid
+from worldfoundry.evals.tasks.metrics import compute_fid
 
 ref_dir = "/data/coco_val"
 gen_dir = "/data/my_model_samples"
@@ -44,7 +44,7 @@ Lower values indicate closer generated and reference feature distributions. FID 
 **用法**: 带 bbox 物体裁剪的 SceneFID。
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import compute_scene_fid
+from worldfoundry.evals.tasks.metrics import compute_scene_fid
 
 score = compute_scene_fid(
     "/data/ref",
@@ -73,7 +73,7 @@ A high score means individual images produce confident predictions while the who
 **资产：** Torch-fidelity InceptionV3，经 `torch.hub` / `torchvision` cache 加载。
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import compute_inception_score
+from worldfoundry.evals.tasks.metrics import compute_inception_score
 
 result = compute_inception_score("/data/generated_only")
 print(result)  # dict with mean/std IS
@@ -98,7 +98,7 @@ Unlike FID, KID does not fit Gaussian distributions and its estimator can be unb
 **资产：** Torch-fidelity Inception feature，经 `torch.hub` / `torchvision` cache 加载。
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import compute_kid
+from worldfoundry.evals.tasks.metrics import compute_kid
 
 kid = compute_kid("/data/ref", "/data/gen")
 print(kid["kernel_inception_distance_mean"])
@@ -120,7 +120,7 @@ print(kid["kernel_inception_distance_mean"])
 
 ```python
 import numpy as np
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     compute_fvd_from_numpy,
     compute_fvd_from_frame_dirs,
 )
@@ -159,7 +159,7 @@ Lower values indicate closer video distributions. JEDi was proposed to address l
 
 ```python
 import numpy as np
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     compute_jedi_from_features,
     compute_mock_jedi,
 )
@@ -177,7 +177,7 @@ print(compute_mock_jedi())
 ### 一次跑多个 torch-fidelity 指标
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import compute_distribution_metrics
+from worldfoundry.evals.tasks.metrics import compute_distribution_metrics
 
 scores = compute_distribution_metrics(
     "/data/ref", "/data/gen", metrics=("fid", "kid", "prc")

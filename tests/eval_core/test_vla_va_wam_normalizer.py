@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import worldfoundry.evaluation.tasks.embodied.normalizer as normalizer
+import worldfoundry.evals.tasks.embodied.normalizer as normalizer
 
 
 def test_normalize_json_results_writes_scorecard_and_metrics(tmp_path: Path) -> None:

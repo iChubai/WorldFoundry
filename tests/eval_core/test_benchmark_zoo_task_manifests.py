@@ -7,15 +7,15 @@ from pathlib import Path
 import yaml
 
 from worldfoundry.base_models.capabilities import resolve_base_model_capability_ids
-from worldfoundry.evaluation.tasks import load_task_registry_from_paths
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import (
+from worldfoundry.evals.tasks import load_task_registry_from_paths
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
     DEFAULT_BENCHMARK_RUNTIME_PROFILE_PATH,
     DEFAULT_EMBODIED_CATALOG_DIR,
     DEFAULT_VIDEO_CATALOG_DIR,
     formal_benchmark_ids,
     load_benchmark_runtime_profiles,
 )
-from worldfoundry.evaluation.tasks.catalog.integrity import (
+from worldfoundry.evals.tasks.catalog.integrity import (
     build_benchmark_inventory_integrity,
     build_docs_benchmark_coverage,
 )
@@ -732,8 +732,8 @@ def test_task_manifests_distinguish_runner_scripts_from_commands() -> None:
         if script is not None:
             assert str(script).startswith(
                 (
-                    "worldfoundry/evaluation/tasks/execution/",
-                    "worldfoundry/evaluation/tasks/embodied/runners/",
+                    "worldfoundry/evals/tasks/execution/",
+                    "worldfoundry/evals/tasks/embodied/runners/",
                 )
             ), manifest_path
             assert (REPO_ROOT / script).is_file(), manifest_path
@@ -790,8 +790,8 @@ def test_runtime_profile_package_required_paths_exist() -> None:
             checked_paths.append(path)
             assert (REPO_ROOT / path).exists(), f"{profile['id']}: {path}"
 
-    assert "worldfoundry/evaluation/tasks/embodied/normalizer.py" in checked_paths
-    assert all("worldfoundry/evaluation/runner/" not in path for path in checked_paths)
+    assert "worldfoundry/evals/tasks/embodied/normalizer.py" in checked_paths
+    assert all("worldfoundry/evals/runner/" not in path for path in checked_paths)
 
 
 def test_new_video_world_contract_profiles_remain_contract_preflight_only() -> None:
@@ -855,7 +855,7 @@ def test_robotwin_embodied_task_manifest_loads_with_official_task_list() -> None
     assert manifest["metadata"]["source_kind"] == "benchmark_zoo"
     assert (
         manifest["metadata"]["official_runner_script"]
-        == "worldfoundry/evaluation/tasks/embodied/runners/robotwin/run_robotwin_official_runner.py"
+        == "worldfoundry/evals/tasks/embodied/runners/robotwin/run_robotwin_official_runner.py"
     )
     assert manifest["metadata"]["runtime"]["root_env"] == "WORLDFOUNDRY_ROBOTWIN_ROOT"
     assert manifest["metadata"]["runtime"]["task_count"] == 50

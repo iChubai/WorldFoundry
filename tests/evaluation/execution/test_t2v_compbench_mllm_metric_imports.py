@@ -13,7 +13,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava import constan
 
 pytestmark = pytest.mark.unit
 
-_PACKAGE = "worldfoundry.evaluation.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.mllm_metrics"
+_PACKAGE = "worldfoundry.evals.tasks.execution.runners.t2v_compbench.runtime.t2v_compbench.mllm_metrics"
 
 
 @pytest.mark.parametrize(

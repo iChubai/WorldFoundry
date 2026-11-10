@@ -48,7 +48,7 @@ def _load_metric(monkeypatch: pytest.MonkeyPatch, name: str) -> ModuleType:
         SimpleNamespace(tag2text_caption=Mock()),
     )
     source = Path(__file__).resolve().parents[3] / (
-        f"worldfoundry/evaluation/tasks/execution/runners/vbench/runtime/vbench/{name}.py"
+        f"worldfoundry/evals/tasks/execution/runners/vbench/runtime/vbench/{name}.py"
     )
     spec = importlib.util.spec_from_file_location(f"test_vbench_metadata_{name}", source)
     assert spec is not None and spec.loader is not None

@@ -18,7 +18,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.llava_next.llava import constan
 
 pytestmark = pytest.mark.unit
 
-_MODULE = "worldfoundry.evaluation.tasks.execution.runners.t2vworldbench.runtime.t2vworldbench.eval"
+_MODULE = "worldfoundry.evals.tasks.execution.runners.t2vworldbench.runtime.t2vworldbench.eval"
 
 
 def test_evaluator_binds_the_canonical_llava_helpers() -> None:

@@ -22,7 +22,7 @@ from time import monotonic
 from typing import Any
 
 from worldfoundry.core.observability.time import utc_now_iso
-from worldfoundry.evaluation.reporting.run_manifest import redact_secret_text
+from worldfoundry.evals.reporting.run_manifest import redact_secret_text
 from worldfoundry.runtime.jobs import TERMINAL_JOB_STATUSES
 
 DEFAULT_SHUTDOWN_GRACE_SECONDS = 5.0

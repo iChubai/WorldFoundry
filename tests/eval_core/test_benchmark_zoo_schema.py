@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from worldfoundry.cli import zoo as zoo_cli
-from worldfoundry.evaluation.api import BenchmarkSpec
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import load_benchmark_catalog_shard_entries
-from worldfoundry.evaluation.tasks.catalog.schema import (
+from worldfoundry.evals.api import BenchmarkSpec
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import load_benchmark_catalog_shard_entries
+from worldfoundry.evals.tasks.catalog.schema import (
     OPEN_SOURCE_STATUSES,
     BenchmarkDatasetRef,
     BenchmarkMetricSpec,
@@ -18,16 +18,16 @@ from worldfoundry.evaluation.tasks.catalog.schema import (
     BenchmarkSource,
     BenchmarkZooEntry,
 )
-from worldfoundry.evaluation.tasks.catalog.specs import (
+from worldfoundry.evals.tasks.catalog.specs import (
     benchmark_zoo_entries_to_benchmark_specs,
     benchmark_zoo_entry_to_benchmark_spec,
 )
-from worldfoundry.evaluation.tasks.catalog.zoo_registry import (
+from worldfoundry.evals.tasks.catalog.zoo_registry import (
     BenchmarkZooRegistry,
     clear_benchmark_zoo_registry_cache,
     load_benchmark_zoo_registry,
 )
-from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
+from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
 
 NEW_VIDEO_WORLD_NORMALIZER_IDS = (
     "aigcbench",
@@ -95,7 +95,7 @@ def test_benchmark_zoo_entry_roundtrips_nested_dict_and_json() -> None:
         integration_status="integrated",
         runner=BenchmarkRunnerSpec(
             install_profile="default",
-            runner_target="worldfoundry.evaluation.example",
+            runner_target="worldfoundry.evals.example",
             run_command="conda run -n worldfoundry example",
             verification_status="verified",
             notes=("runner note",),
@@ -158,7 +158,7 @@ def test_benchmark_zoo_entry_accepts_flat_manifest_fields() -> None:
             "runner_availability": {"available": True, "task_yaml_available": True},
             "integration_status": "planned",
             "install_profile": "api",
-            "runner_target": "worldfoundry.evaluation.flat",
+            "runner_target": "worldfoundry.evals.flat",
             "run_command": "conda run -n worldfoundry flat",
             "verification_status": "pending",
             "metrics": [{"id": "score", "higher_is_better": False}],
@@ -195,7 +195,7 @@ def test_benchmark_zoo_entry_accepts_flat_manifest_fields() -> None:
     assert entry.data_refs["task_yaml"] == "data/benchmarks/tasks/external/flat-example.yaml"
     assert entry.runner_availability["task_yaml_available"] is True
     assert entry.install_profile == "api"
-    assert entry.runner_target == "worldfoundry.evaluation.flat"
+    assert entry.runner_target == "worldfoundry.evals.flat"
     assert entry.run_command == "conda run -n worldfoundry flat"
     assert entry.verification_status == "pending"
     assert entry.metrics[0].metric_id == "score"
@@ -398,7 +398,7 @@ def test_benchmark_zoo_loads_video_world_manifest() -> None:
     assert worldscore_validation["leaderboard_valid"] is False
     assert (
         by_id["worldscore"].runner.clone_dir
-        == "worldfoundry/evaluation/tasks/execution/runners/worldscore/runtime/worldscore"
+        == "worldfoundry/evals/tasks/execution/runners/worldscore/runtime/worldscore"
     )
     assert by_id["worldscore"].run_command is not None
     assert "run_worldscore_official_runner.py" in _command_text(by_id["worldscore"].run_command)
@@ -788,7 +788,7 @@ def test_benchmark_maturity_comes_from_manifest() -> None:
             "official_benchmark_verified": True,
             "integration_evidence": True,
             "runner": {
-                "runner_target": "worldfoundry.evaluation.tasks.contracts.external:VBenchContract",
+                "runner_target": "worldfoundry.evals.tasks.contracts.external:VBenchContract",
                 "verification_status": "verified",
             },
             "metrics": [{"id": "score"}],
@@ -810,7 +810,7 @@ def test_benchmark_user_commands_use_manifest_fields_only() -> None:
                 "wf zoo benchmark-run --benchmark-id stable-release-planned-runner "
                 "--mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/stable-release-planned-runner --json"
             ),
-            "runner": {"runner_target": "worldfoundry.evaluation.tasks.contracts.external:VBenchContract"},
+            "runner": {"runner_target": "worldfoundry.evals.tasks.contracts.external:VBenchContract"},
             "metrics": [{"id": "score"}],
             "dataset": {"not_applicable": True},
         }
@@ -908,8 +908,8 @@ def test_benchmark_zoo_registry_rejects_duplicate_aliases() -> None:
 def test_benchmark_zoo_schema_and_registry_imports_are_lightweight() -> None:
     repo_root = Path(__file__).resolve().parents[2]
     paths = [
-        repo_root / "worldfoundry" / "evaluation" / "tasks" / "catalog" / "schema.py",
-        repo_root / "worldfoundry" / "evaluation" / "tasks" / "catalog" / "zoo_registry.py",
+        repo_root / "worldfoundry" / "evals" / "tasks" / "catalog" / "schema.py",
+        repo_root / "worldfoundry" / "evals" / "tasks" / "catalog" / "zoo_registry.py",
     ]
     allowed_modules = set(sys.stdlib_module_names) | {"__future__", "worldfoundry"}
 

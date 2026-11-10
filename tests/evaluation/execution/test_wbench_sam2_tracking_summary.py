@@ -21,7 +21,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 _SOURCE = Path(__file__).resolve().parents[3] / (
-    "worldfoundry/evaluation/tasks/execution/runners/wbench/runtime/wbench/tools/run_sam2_track.py"
+    "worldfoundry/evals/tasks/execution/runners/wbench/runtime/wbench/tools/run_sam2_track.py"
 )
 _TASKS = [
     ("1", "m1.png", "v1.mp4", None),

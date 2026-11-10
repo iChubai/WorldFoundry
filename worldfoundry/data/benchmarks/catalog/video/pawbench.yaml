@@ -75,9 +75,9 @@ runner:
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/pawbench/run_pawbench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/pawbench/run_pawbench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.pawbench.run_pawbench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.pawbench.run_pawbench_official_runner
     generated_arg: --generated-artifact-dir
     dataset_root_arg: --dataset-root
     model_arg: --model-name
@@ -86,7 +86,7 @@ runner:
     supports_fixture: true
     default_metrics: [calibration_tvd_percent, coverage_percent]
     input_kind: pawbench_dataset_rollouts_or_official_metrics
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PAWBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:PAWBenchContract
   validation_command:
   - wf
   - zoo
@@ -122,8 +122,8 @@ runner:
   - benchmark_contract.json
   runtime:
     kind: in_tree_official_runtime_hosted_judges
-    root: worldfoundry/evaluation/tasks/execution/runners/pawbench
-    runtime_root: worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime/pawbench
+    root: worldfoundry/evals/tasks/execution/runners/pawbench
+    runtime_root: worldfoundry/evals/tasks/execution/runners/pawbench/runtime/pawbench
     repo_url: https://github.com/Andrew0613/PAWBench.git
     repo_revision: f9ae040227a5b76ee50e37871fbbefc89fcc7fea
     root_env: WORLDFOUNDRY_PAWBENCH_ROOT
@@ -165,10 +165,10 @@ data_refs:
   upstream_repository: https://github.com/Andrew0613/PAWBench
   dataset_repo: Andrew613/PAWBench
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/pawbench
+  - worldfoundry/evals/tasks/execution/runners/pawbench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PAWBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:PAWBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

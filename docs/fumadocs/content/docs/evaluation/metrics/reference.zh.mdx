@@ -27,7 +27,7 @@ Registry key 大小写不敏感，下划线会归一化为连字符（`clip_scor
 ### Python API
 
 ```python
-from worldfoundry.evaluation.tasks.metrics.registry import (
+from worldfoundry.evals.tasks.metrics.registry import (
     default_metric_registry,
     list_metric_registry_entries,
     validate_metric_ids,
@@ -65,7 +65,7 @@ metric = create_existing_results_metric(
   ]} />
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     compute_distribution_metrics,
     compute_fid,
     compute_inception_score,
@@ -85,7 +85,7 @@ is_scores = compute_inception_score("/path/to/generated")
 
 FID、KID、Inception Score 和 `compute_distribution_metrics(...)` 接受图片目录或明确的图片文件列表。列表保留传入顺序，与目录使用相同的 RGB 转换和 `samples_resize_and_crop` 预处理。SwAV FID 也接受文件列表，并沿用自身的预处理及 `max_size` 上限。
 
-内置后端通过 `worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity` 加载，与已安装的 `torch_fidelity` 包及 TorchMetrics 的导入顺序相互独立。自定义特征提取器和噪声源需注册到该内置包。
+内置后端通过 `worldfoundry.evals.tasks.metrics._shared.vendor.torch_fidelity` 加载，与已安装的 `torch_fidelity` 包及 TorchMetrics 的导入顺序相互独立。自定义特征提取器和噪声源需注册到该内置包。
 
 Precision 表示生成样本被参考流形覆盖的比例，recall 表示参考样本被生成流形覆盖的比例。在 `compute_distribution_metrics(...)` 中，后端 `input1_*` 参数对应生成输入，`input2_*` 参数对应参考输入。批量接口也在生成集上计算 Inception Score。
 
@@ -102,7 +102,7 @@ SceneFID 的 bbox 约定：四值表示 `(x1, y1, x2, y2)`，五值表示 `(x, y
 
 ```python
 import numpy as np
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     compute_fvd_from_numpy,
     compute_fvd_from_frame_dirs,
     compute_fid_vid,
@@ -148,7 +148,7 @@ registry 记录官方 benchmark runner 报告的成对分数的方向，使 run 
 - `wf evaluate --metric ...` — **仅内置 existing-results 指标**（`artifact_count`、`required_artifacts_present`、`has_artifact:<name>`、`numeric`、`numeric:<name>`）。
 - `wf plan create --metric ...` — 构造 run plan JSON 时使用相同内置 metric ID。
 
-分布指标目前通过 Python 调用。Benchmark runner 在计算官方 metric stack 时可能复用相同底层实现（EvalCrafter IS/FID、MiraBench FVD 等）。多模态 scorer（CLIPScore、VQAScore、ITMScore）通过 `worldfoundry.evaluation.tasks.metrics.get_score_model(...)` 暴露，实现位于 `execution/runners/_scorers/`。
+分布指标目前通过 Python 调用。Benchmark runner 在计算官方 metric stack 时可能复用相同底层实现（EvalCrafter IS/FID、MiraBench FVD 等）。多模态 scorer（CLIPScore、VQAScore、ITMScore）通过 `worldfoundry.evals.tasks.metrics.get_score_model(...)` 暴露，实现位于 `execution/runners/_scorers/`。
 
 ## 依赖
 
@@ -160,7 +160,7 @@ pip install -e ".[distribution_metrics]"
 
 `distribution_metrics` extra 核心依赖包括 `torch`、`torchvision`、`torchmetrics`、`scikit-learn`、`scipy`、`transformers`、`pillow`，以及 `pyproject.toml` 中声明的可选 metric 包。
 
-重依赖保持 lazy import：导入 `worldfoundry.evaluation.tasks.metrics` 不应要求所有 checkpoint 已就绪，直到具体 `compute_*` 被调用。
+重依赖保持 lazy import：导入 `worldfoundry.evals.tasks.metrics` 不应要求所有 checkpoint 已就绪，直到具体 `compute_*` 被调用。
 
 修改指标时，请用有代表性的输入与上游实现比对分数，并记录后端版本和结果。私有指标回归测试未包含在公开仓库中。
 
@@ -251,7 +251,7 @@ FVD 解析顺序见 `fvd/fvd_core.py`：显式 `i3d_checkpoint` → `WORLDFOUNDR
 ## 架构
 
 ```
-worldfoundry/evaluation/tasks/metrics/
+worldfoundry/evals/tasks/metrics/
 ├── __init__.py          # compute_* 与 scorer 入口的 lazy re-export
 ├── registry.py          # MetricModuleSpec、MetricRegistry、内置与自动发现的 entry
 ├── _shared/             # 跨 metric helper（torch-fidelity loader、CLIP/aesthetic/pyiqa helper）
@@ -274,7 +274,7 @@ worldfoundry/evaluation/tasks/metrics/
 
 ### Import 入口
 
-顶层 `metrics/__init__.py` 从各 per-metric 模块 re-export `compute_*` 函数，保持 `from worldfoundry.evaluation.tasks.metrics import compute_fid` 等现有 import 可用。
+顶层 `metrics/__init__.py` 从各 per-metric 模块 re-export `compute_*` 函数，保持 `from worldfoundry.evals.tasks.metrics import compute_fid` 等现有 import 可用。
 
 Benchmark catalog metric 与官方结果归一化在 `execution/runners/` 完成；benchmark-specific 配置应写在对应的 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub) 子页面。
 

@@ -10,11 +10,11 @@ import pytest
 # import time; skip this module in environments without the [api] extra.
 pytest.importorskip("fastapi")
 
-from worldfoundry.evaluation.api import GenerationRequest, WorldModelConfig
-from worldfoundry.evaluation.models import resolve_model_zoo_config, resolve_model_zoo_runner
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
-from worldfoundry.evaluation.models.pipelines.loading import build_pipeline_runner_spec
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile, load_runtime_profile_manifest
+from worldfoundry.evals.api import GenerationRequest, WorldModelConfig
+from worldfoundry.evals.models import resolve_model_zoo_config, resolve_model_zoo_runner
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile, load_runtime_profile_manifest
 from worldfoundry.studio.inference.catalog import discover_catalog
 from worldfoundry.studio.workspace.app import _workspace_models
 
@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
 MODEL_DATA_DIR = REPO_ROOT / "worldfoundry" / "data" / "models"
 SRC_ROOT = REPO_ROOT
-UNIFIED_MODEL_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+UNIFIED_MODEL_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 PIPELINE_MODEL_IDS = ("longcat-video",)
 TARGET_PIPELINE_MODEL_IDS = (
     "fantasyworld",

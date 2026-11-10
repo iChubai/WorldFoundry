@@ -1,6 +1,6 @@
 id: videocrafter
 name: VideoCrafter
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: videocrafter
 runtime_profile: runtime-profile:videocrafter2-t2v
 tasks:

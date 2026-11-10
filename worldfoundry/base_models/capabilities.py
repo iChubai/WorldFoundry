@@ -602,31 +602,31 @@ def _benchmark_dataset_capability(
 
 _IN_TREE_SOURCE_ASSETS: dict[str, tuple[str, str]] = {
     "bridgedata_v2_source_assets": ("file", "worldfoundry/data/benchmarks/tasks/external/bridgedata-v2.yaml"),
-    "calvin_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/calvin"),
-    "libero_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/libero"),
+    "calvin_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/calvin"),
+    "libero_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/libero"),
     "maniskill_source_assets": ("file", "worldfoundry/data/benchmarks/tasks/external/maniskill.yaml"),
     "metaworld_source_assets": ("file", "worldfoundry/data/benchmarks/tasks/external/metaworld.yaml"),
-    "rlbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/rlbench"),
-    "robocasa_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/robocasa"),
-    "simpler_env_source_assets": ("dir", "worldfoundry/evaluation/tasks/embodied/simulators/simpler"),
-    "iworld_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/iworldbench"),
-    "t2vworldbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/t2vworldbench"),
-    "vmbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/vmbench"),
-    "mirabench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/mirabench"),
-    "devil_dynamics_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/devil_dynamics"),
-    "phygenbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/phygenbench"),
-    "physvidbench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/physvidbench"),
+    "rlbench_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/rlbench"),
+    "robocasa_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/robocasa"),
+    "simpler_env_source_assets": ("dir", "worldfoundry/evals/tasks/embodied/simulators/simpler"),
+    "iworld_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/iworldbench"),
+    "t2vworldbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/t2vworldbench"),
+    "vmbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/vmbench"),
+    "mirabench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/mirabench"),
+    "devil_dynamics_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/devil_dynamics"),
+    "phygenbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/phygenbench"),
+    "physvidbench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/physvidbench"),
     "visual_chronometer_source_assets": (
         "dir",
-        "worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer",
+        "worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer",
     ),
-    "videophy_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/videophy"),
-    "physics_iq_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/physics_iq"),
-    "t2v_safety_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/t2v_safety_bench"),
-    "ipv_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/ipv_bench"),
-    "videoscience_bench_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/videoscience_bench"),
-    "phyeduvideo_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/phyeduvideo"),
-    "worldarena_source_assets": ("dir", "worldfoundry/evaluation/tasks/execution/runners/worldarena"),
+    "videophy_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/videophy"),
+    "physics_iq_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/physics_iq"),
+    "t2v_safety_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/t2v_safety_bench"),
+    "ipv_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/ipv_bench"),
+    "videoscience_bench_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/videoscience_bench"),
+    "phyeduvideo_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/phyeduvideo"),
+    "worldarena_source_assets": ("dir", "worldfoundry/evals/tasks/execution/runners/worldarena"),
 }
 
 
@@ -2541,8 +2541,8 @@ BASE_MODEL_CAPABILITIES.update(
         "t2v_metrics_blip2_itm": BaseModelCapability(
             id="t2v_metrics_blip2_itm",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners._scorers.itm_score",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/_scorers/itm_score",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners._scorers.itm_score",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/_scorers/itm_score",
             package_imports=("torch", "transformers", "PIL", "numpy", "timm"),
             install_packages=("torch", "transformers", "Pillow", "numpy", "timm"),
             asset_env=("WORLDFOUNDRY_T2V_METRICS_BLIP2_ITM_DIR",),
@@ -2564,8 +2564,8 @@ BASE_MODEL_CAPABILITIES.update(
         "t2v_metrics_internvideo2_itm": BaseModelCapability(
             id="t2v_metrics_internvideo2_itm",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners._scorers.itm_score",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/_scorers/itm_score",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners._scorers.itm_score",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/_scorers/itm_score",
             package_imports=("torch", "transformers", "decord", "PIL", "numpy"),
             install_packages=("torch", "transformers", "decord", "Pillow", "numpy"),
             asset_env=("WORLDFOUNDRY_T2V_METRICS_INTERNVIDEO2_ITM_DIR",),
@@ -2589,8 +2589,8 @@ BASE_MODEL_CAPABILITIES.update(
         "jedi_source_assets": BaseModelCapability(
             id="jedi_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.metrics.jedi",
-            canonical_path="worldfoundry/evaluation/tasks/metrics/jedi",
+            canonical_owner="worldfoundry.evals.tasks.metrics.jedi",
+            canonical_path="worldfoundry/evals/tasks/metrics/jedi",
             asset_env=("WORLDFOUNDRY_JEDI_ROOT",),
             assets=(
                 BaseModelAsset(
@@ -2598,7 +2598,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=("WORLDFOUNDRY_JEDI_ROOT",),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/metrics/jedi",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/metrics/jedi",
                     min_file_count=4,
                     required_files=("JEDi.py", "V_JEPA.py", "mmd_polynomial.py", "utils.py"),
                     note=(
@@ -2621,8 +2621,8 @@ BASE_MODEL_CAPABILITIES.update(
         "jedi_vjepa_vith16": BaseModelCapability(
             id="jedi_vjepa_vith16",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.metrics.jedi",
-            canonical_path="worldfoundry/evaluation/tasks/metrics/jedi",
+            canonical_owner="worldfoundry.evals.tasks.metrics.jedi",
+            canonical_path="worldfoundry/evals/tasks/metrics/jedi",
             package_imports=("torch", "vjepa", "numpy", "yaml"),
             install_packages=("torch", "vjepa", "numpy", "pyyaml"),
             asset_env=("WORLDFOUNDRY_JEDI_MODEL_DIR", "WORLDFOUNDRY_JEDI_VJEPA_DIR"),
@@ -2643,8 +2643,8 @@ BASE_MODEL_CAPABILITIES.update(
         "jedi_vjepa_ssv2_probe": BaseModelCapability(
             id="jedi_vjepa_ssv2_probe",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.metrics.jedi",
-            canonical_path="worldfoundry/evaluation/tasks/metrics/jedi",
+            canonical_owner="worldfoundry.evals.tasks.metrics.jedi",
+            canonical_path="worldfoundry/evals/tasks/metrics/jedi",
             package_imports=("torch", "vjepa", "numpy", "yaml"),
             install_packages=("torch", "vjepa", "numpy", "pyyaml"),
             asset_env=("WORLDFOUNDRY_JEDI_MODEL_DIR", "WORLDFOUNDRY_JEDI_VJEPA_DIR"),
@@ -3054,8 +3054,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench_source_assets": BaseModelCapability(
             id="vbench_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench/runtime",
             asset_env=(),
             assets=(
                 BaseModelAsset(
@@ -3063,7 +3063,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=(),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/vbench/runtime",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/vbench/runtime",
                     min_file_count=1,
                     required_files=("vbench/VBench_full_info.json",),
                     required_paths=("vbench", "prompts"),
@@ -3075,8 +3075,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench_plus_plus_source_assets": BaseModelCapability(
             id="vbench_plus_plus_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench_plus_plus",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench_plus_plus",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/runtime",
             asset_env=(),
             assets=(
                 BaseModelAsset(
@@ -3084,7 +3084,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=(),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/runtime",
                     min_file_count=1,
                     required_files=(
                         "vbench2_beta_i2v/vbench2_i2v_full_info.json",
@@ -3100,8 +3100,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench2_source_assets": BaseModelCapability(
             id="vbench2_source_assets",
             family="benchmark_data_asset",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench_2_0",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench_2_0",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench_2_0/runtime",
             asset_env=(),
             assets=(
                 BaseModelAsset(
@@ -3109,7 +3109,7 @@ BASE_MODEL_CAPABILITIES.update(
                     kind="dir",
                     role="benchmark_source",
                     env=(),
-                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime",
+                    local_path="${WORLDFOUNDRY_REPO_ROOT}/worldfoundry/evals/tasks/execution/runners/vbench_2_0/runtime",
                     min_file_count=1,
                     required_files=("vbench2/VBench2_full_info.json",),
                     required_paths=("entrypoints", "vbench2"),
@@ -3121,8 +3121,8 @@ BASE_MODEL_CAPABILITIES.update(
         "vbench_metric_checkpoint_assets": BaseModelCapability(
             id="vbench_metric_checkpoint_assets",
             family="video_metric_model",
-            canonical_owner="worldfoundry.evaluation.tasks.execution.runners.vbench",
-            canonical_path="worldfoundry/evaluation/tasks/execution/runners/vbench/runtime",
+            canonical_owner="worldfoundry.evals.tasks.execution.runners.vbench",
+            canonical_path="worldfoundry/evals/tasks/execution/runners/vbench/runtime",
             package_imports=("torch", "torchvision", "transformers", "open_clip", "cv2", "numpy"),
             install_packages=("torch", "torchvision", "transformers", "open-clip-torch", "opencv-python", "numpy"),
             asset_env=(

@@ -8,7 +8,7 @@ source:
   license: apache-2.0
 checkpoint: Jinjing713/Spatia
 runtime_profile: runtime-profile:spatia
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: spatia
 official_sources:
   project_page: https://zhaojingjing713.github.io/Spatia/

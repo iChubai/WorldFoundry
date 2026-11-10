@@ -39,7 +39,7 @@ runner_parity:
   - Official release-parity evidence remains pending; per-run artifact checks are
     tracked outside the model catalog.
 runtime_profile: runtime-profile:longvie-1
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: longvie-1
 catalog_category: video
 catalog_scope: Video-generation and video-token catalog entries. Integrated entries

@@ -16,7 +16,7 @@ def test_framepack_in_tree_runner_is_exposed_as_runnable() -> None:
     assert schema.runner_entry_kind == "runnable_runner"
     assert schema.runnable is True
     assert schema.blocked_reason == ""
-    assert schema.runner_target == "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+    assert schema.runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 
 
 def test_framepack_local_hunyuan_tokenizer_bypasses_invalid_root_config(tmp_path) -> None:

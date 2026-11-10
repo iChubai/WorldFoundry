@@ -22,7 +22,7 @@ Score the generation track over staged data and generated videos:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py \
   --run-official \
   --track generation \
   --dataset-root "${WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT}" \
@@ -35,7 +35,7 @@ Conditional track (checkpoints or prediction dirs as needed):
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  -m worldfoundry.evaluation.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner \
+  -m worldfoundry.evals.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner \
   --run-official \
   --track conditional-generation \
   --dataset-root "${WORLDFOUNDRY_PHYSICAL_AI_BENCH_DATASET_ROOT}" \

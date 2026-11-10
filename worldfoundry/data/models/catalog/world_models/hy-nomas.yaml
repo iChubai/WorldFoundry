@@ -55,7 +55,7 @@ integration:
   notes:
   - Inference-only native component graph; no external checkout, training package or upstream web service.
   - Standard and low-memory variants reuse shared checkpoint loading, Euler scheduling, weight quantization and KV compression.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:hy-nomas
 pipeline_binding: hy-nomas
 runner_parity:

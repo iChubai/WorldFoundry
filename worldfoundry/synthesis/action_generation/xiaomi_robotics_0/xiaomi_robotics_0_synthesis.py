@@ -9,7 +9,7 @@ from typing import Any
 
 from worldfoundry.core.io.formats.serialization import write_json
 from worldfoundry.core.io.paths import resolve_data_path
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation._native_policy_runtime import option_bool
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
 

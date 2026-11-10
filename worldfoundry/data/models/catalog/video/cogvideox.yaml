@@ -1,6 +1,6 @@
 id: cogvideox
 name: CogVideoX
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: cogvideox
 runtime_profile: runtime-profile:cogvideox-5b-t2v
 tasks:
@@ -82,7 +82,7 @@ variants:
   - id: cogvideox-2b-t2v
     task: text-to-video
     runtime_profile: cogvideox-2b-t2v
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: cogvideox-2b-t2v
     integration:
       status: verified
@@ -94,7 +94,7 @@ variants:
   - id: cogvideox-5b-t2v
     task: text-to-video
     runtime_profile: cogvideox-5b-t2v
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: cogvideox-5b-t2v
     integration:
       status: verified
@@ -106,7 +106,7 @@ variants:
   - id: cogvideox-5b-i2v
     task: image-to-video
     runtime_profile: cogvideox-5b-i2v
-    runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+    runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
     pipeline_binding: cogvideox-5b-i2v
     integration:
       status: verified

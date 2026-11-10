@@ -35,7 +35,7 @@ integration:
   notes:
   - In-tree Astra inference route is registered under worldfoundry/synthesis/visual_generation/kling/astra_runtime.
   - Studio defaults mirror the official Wan2.1-backed Sekai image rollout.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: astra
 runner_parity:
   status: verified

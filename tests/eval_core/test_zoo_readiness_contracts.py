@@ -4,16 +4,16 @@ import importlib
 from collections import Counter
 from pathlib import Path
 
-from worldfoundry.evaluation.tasks.catalog.benchmark_catalog import (
+from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
     DEFAULT_EMBODIED_CATALOG_DIR,
     DEFAULT_VIDEO_CATALOG_DIR,
     load_benchmark_catalog_entries,
     load_benchmark_catalog_shard_entries,
 )
-from worldfoundry.evaluation.tasks.catalog.specs import benchmark_zoo_entry_to_benchmark_spec
-from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
-from worldfoundry.evaluation.models import ModelRunnerRegistry
-from worldfoundry.evaluation.models.catalog import load_entries as load_model_entries
+from worldfoundry.evals.tasks.catalog.specs import benchmark_zoo_entry_to_benchmark_spec
+from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
+from worldfoundry.evals.models import ModelRunnerRegistry
+from worldfoundry.evals.models.catalog import load_entries as load_model_entries
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -158,7 +158,7 @@ def test_iworld_bench_tracks_released_public_assets_without_leaderboard_claim() 
     # is catalog-integrated now; it still must not claim official-benchmark
     # verification or leaderboard validity.
     assert entry.integration_status == "integrated"
-    assert entry.runner_target == "worldfoundry.evaluation.tasks.contracts.external:IWorldBenchContract"
+    assert entry.runner_target == "worldfoundry.evals.tasks.contracts.external:IWorldBenchContract"
     assert entry.open_source_status == "experimental"
     assert entry.official_benchmark_verified is False
     assert entry.integration_evidence is True

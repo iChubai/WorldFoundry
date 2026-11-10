@@ -55,7 +55,7 @@ Catalog entries and variants reference a runtime profile and a binding (`runtime
 
 Python code never reads raw YAML ad hoc. Each catalog domain follows the same three-step pattern: **schema parse** normalizes loose author input into typed entries, **registry build** creates alias indexes for CLI queries, and **spec conversion** emits public contracts the evaluation API imports.
 
-For models, `schema.py` produces `ModelZooEntry` objects; `zoo_registry.py` indexes them by id, alias, task, and integration status; `manifest.py` converts entries into `WorldModelManifest`. For benchmarks, the parallel chain in `evaluation/tasks/catalog/` produces `BenchmarkZooEntry` → `BenchmarkZooRegistry` → `BenchmarkSpec`.
+For models, `schema.py` produces `ModelZooEntry` objects; `zoo_registry.py` indexes them by id, alias, task, and integration status; `manifest.py` converts entries into `WorldModelManifest`. For benchmarks, the parallel chain in `evals/tasks/catalog/` produces `BenchmarkZooEntry` → `BenchmarkZooRegistry` → `BenchmarkSpec`.
 
 When a catalog field moves or renames, update the schema parser first—registry queries, resolver behavior, and docs exports all depend on it.
 

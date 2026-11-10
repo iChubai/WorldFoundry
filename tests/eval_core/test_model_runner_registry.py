@@ -6,14 +6,14 @@ from pathlib import Path
 import pytest
 
 from tests.eval_core.contract_fixture import CONTRACT_FIXTURE_RUNNER_TARGET, ContractFixtureRunner
-from worldfoundry.evaluation.api import WorldModelConfig
-from worldfoundry.evaluation.models import (
+from worldfoundry.evals.api import WorldModelConfig
+from worldfoundry.evals.models import (
     ModelRunnerRegistry,
     resolve_model_zoo_config,
     resolve_world_model_runner,
 )
 
-PIPELINE_RUNNER_TARGET = "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+PIPELINE_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 
 
 def _write_model_zoo_manifest(manifest_dir: Path, models: list[dict[str, object]]) -> None:

@@ -135,16 +135,16 @@ runner:
   scoring:
     engines: [video_quality]
     hooks:
-      video_quality: worldfoundry.evaluation.tasks.execution.framework.video_quality_contract:evaluate_aigcbench_video_quality_contract_file
+      video_quality: worldfoundry.evals.tasks.execution.framework.video_quality_contract:evaluate_aigcbench_video_quality_contract_file
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/aigcbench/run_aigcbench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/aigcbench/run_aigcbench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.aigcbench.run_aigcbench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.aigcbench.run_aigcbench_official_runner
     generated_arg: null
     limit_arg: --limit
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:AIGCBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:AIGCBenchContract
   validation_command:
   - wf
   - zoo
@@ -206,7 +206,7 @@ data_refs:
   official_repo: provenance only; runtime uses WorldFoundry-integrated generation and in-tree metric normalization
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:AIGCBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:AIGCBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

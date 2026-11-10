@@ -42,7 +42,7 @@ integration:
   - Training, example assets and unreleased causal-pretrain/bidirectional routes are excluded.
 runtime_profile: runtime-profile:lingbot-world-v2
 pipeline_binding: lingbot-world-v2
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runner_parity:
   status: short_single_gpu_verified_official_8gpu_pending
   notes:

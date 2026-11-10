@@ -1,4 +1,4 @@
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 aliases:
 - Qwen3-VL-OFT-LIBERO-4in1
 - WM4A-Wan2d2-OFT-LIBERO-4in1

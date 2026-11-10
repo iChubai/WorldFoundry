@@ -53,7 +53,7 @@ WorldMemBench 保留 MUSIQ-SPAQ、保持宽高比的 OpenCV 缩放、每 4 帧�
 YAML 中的 checkpoint 覆盖项可以指向已经准备的共享资产。
 
 ```bash
-python -m worldfoundry.evaluation.tasks.execution.runners.worldmembench.run_worldmembench_official_runner \
+python -m worldfoundry.evals.tasks.execution.runners.worldmembench.run_worldmembench_official_runner \
   --run-official --input-path <manifest.jsonl> \
   --weights-dir <metric-assets> --config <worldmembench.yaml> \
   --output-dir <fresh-out> --json

@@ -186,7 +186,7 @@ def list_tasks_payload(
         Dictionary with ``tasks``, ``total``, and ``query`` keys.
     """
 
-    from worldfoundry.evaluation.tasks.catalog.specs import list_benchmark_zoo_cli_tasks
+    from worldfoundry.evals.tasks.catalog.specs import list_benchmark_zoo_cli_tasks
 
     rows = list_benchmark_zoo_cli_tasks(
         suite=suite,
@@ -222,7 +222,7 @@ def get_task_info_payload(task: str, benchmark: str | None = None) -> dict[str, 
         Task payload dictionary.
     """
 
-    from worldfoundry.evaluation.tasks.catalog.specs import get_benchmark_zoo_cli_task, list_benchmark_zoo_cli_tasks
+    from worldfoundry.evals.tasks.catalog.specs import get_benchmark_zoo_cli_task, list_benchmark_zoo_cli_tasks
 
     if benchmark is None and "/" in task:
         task, benchmark = task.split("/", 1)

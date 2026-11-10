@@ -13,8 +13,8 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-import worldfoundry.evaluation.models.pipelines as model_pipelines
-from worldfoundry.evaluation.models.catalog.registry import discover_model_registry
+import worldfoundry.evals.models.pipelines as model_pipelines
+from worldfoundry.evals.models.catalog.registry import discover_model_registry
 from worldfoundry.pipelines.multiworld.pipeline_multiworld_ittakestwo import (
     MultiWorldItTakesTwoPipeline,
 )

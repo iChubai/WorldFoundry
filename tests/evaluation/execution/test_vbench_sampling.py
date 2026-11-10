@@ -25,7 +25,7 @@ _RUNTIMES = (
 @pytest.fixture(params=_RUNTIMES, ids=("vbench", "i2v", "trustworthiness"))
 def sampling(request: pytest.FixtureRequest) -> ModuleType:
     source = Path(__file__).resolve().parents[3] / (
-        f"worldfoundry/evaluation/tasks/execution/runners/{request.param}/utils.py"
+        f"worldfoundry/evals/tasks/execution/runners/{request.param}/utils.py"
     )
     spec = importlib.util.spec_from_file_location("test_vbench_sampling_runtime", source)
     assert spec is not None and spec.loader is not None

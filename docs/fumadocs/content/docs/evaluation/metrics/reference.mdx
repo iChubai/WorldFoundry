@@ -27,7 +27,7 @@ Registry keys are normalized case-insensitively with hyphens instead of undersco
 ### Python API
 
 ```python
-from worldfoundry.evaluation.tasks.metrics.registry import (
+from worldfoundry.evals.tasks.metrics.registry import (
     default_metric_registry,
     list_metric_registry_entries,
     validate_metric_ids,
@@ -69,7 +69,7 @@ Set-level metrics comparing reference and generated image collections. Torch-fid
   ]} />
 
 ```python
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     compute_distribution_metrics,
     compute_fid,
     compute_inception_score,
@@ -92,7 +92,7 @@ is_scores = compute_inception_score("/path/to/generated")
 
 FID, KID, Inception Score, and `compute_distribution_metrics(...)` accept image directories or explicit image-file lists. File lists preserve caller order and use the same RGB conversion and `samples_resize_and_crop` preprocessing as directories. SwAV FID also accepts file lists and applies its existing preprocessing and `max_size` limit.
 
-The bundled backend loads under `worldfoundry.evaluation.tasks.metrics._shared.vendor.torch_fidelity`, independently of an installed `torch_fidelity` package or TorchMetrics import order. Register custom extractors and noise sources on that bundled package.
+The bundled backend loads under `worldfoundry.evals.tasks.metrics._shared.vendor.torch_fidelity`, independently of an installed `torch_fidelity` package or TorchMetrics import order. Register custom extractors and noise sources on that bundled package.
 
 Precision measures the fraction of generated samples covered by the reference manifold; recall measures the fraction of reference samples covered by the generated manifold. In `compute_distribution_metrics(...)`, backend `input1_*` options refer to generated inputs and `input2_*` options to reference inputs. The combined helper also computes Inception Score on the generated set.
 
@@ -109,7 +109,7 @@ SceneFID bounding boxes use one convention: four values mean `(x1, y1, x2, y2)` 
 
 ```python
 import numpy as np
-from worldfoundry.evaluation.tasks.metrics import (
+from worldfoundry.evals.tasks.metrics import (
     compute_fvd_from_numpy,
     compute_fvd_from_frame_dirs,
     compute_fid_vid,
@@ -155,7 +155,7 @@ The registry records the direction of pairwise scores that official benchmark ru
 - `wf evaluate --metric ...` — **Built-in existing-results metrics only** (`artifact_count`, `required_artifacts_present`, `has_artifact:<name>`, `numeric`, `numeric:<name>`).
 - `wf plan create --metric ...` — Same built-in metric IDs when constructing a run plan JSON.
 
-Distribution metrics are invoked through Python today. Benchmark runners may call the same underlying implementations when computing official metric stacks (EvalCrafter IS/FID paths, MiraBench FVD, and similar). Multimodal scorers (CLIPScore, VQAScore, ITMScore) are exposed through `worldfoundry.evaluation.tasks.metrics.get_score_model(...)` and implemented in `execution/runners/_scorers/`.
+Distribution metrics are invoked through Python today. Benchmark runners may call the same underlying implementations when computing official metric stacks (EvalCrafter IS/FID paths, MiraBench FVD, and similar). Multimodal scorers (CLIPScore, VQAScore, ITMScore) are exposed through `worldfoundry.evals.tasks.metrics.get_score_model(...)` and implemented in `execution/runners/_scorers/`.
 
 ## Dependencies
 
@@ -167,7 +167,7 @@ pip install -e ".[distribution_metrics]"
 
 Core dependencies in the `distribution_metrics` extra include `torch`, `torchvision`, `torchmetrics`, `scikit-learn`, `scipy`, `transformers`, `pillow`, and the optional metric packages declared in `pyproject.toml`.
 
-Keep heavy imports lazy: importing `worldfoundry.evaluation.tasks.metrics` should not require every checkpoint to be present until a specific `compute_*` function is called.
+Keep heavy imports lazy: importing `worldfoundry.evals.tasks.metrics` should not require every checkpoint to be present until a specific `compute_*` function is called.
 
 When changing a metric, compare representative inputs and scores with the upstream implementation, then record the backend version and results alongside the change. The private metric regression suite is not included in the public repository.
 
@@ -258,7 +258,7 @@ FVD resolution order is documented in `fvd/fvd_core.py`: explicit `i3d_checkpoin
 ## Architecture
 
 ```
-worldfoundry/evaluation/tasks/metrics/
+worldfoundry/evals/tasks/metrics/
 ├── __init__.py          # Lazy re-exports of compute_* helpers and scorer entry points
 ├── registry.py          # MetricModuleSpec, MetricRegistry, built-in and discovered entries
 ├── _shared/             # Cross-metric helpers (torch-fidelity loader, CLIP/aesthetic/pyiqa helpers)
@@ -281,7 +281,7 @@ Registry entries for migrated metrics are registered via `registry.discover_metr
 
 ### Import surface
 
-Top-level `metrics/__init__.py` re-exports `compute_*` functions from per-metric modules so existing `from worldfoundry.evaluation.tasks.metrics import compute_fid` imports keep working.
+Top-level `metrics/__init__.py` re-exports `compute_*` functions from per-metric modules so existing `from worldfoundry.evals.tasks.metrics import compute_fid` imports keep working.
 
 Benchmark catalog metrics and official-result normalization belong in `execution/runners/`; benchmark-specific setup belongs on the matching [Benchmark Hub](/docs/evaluation/benchmark-hub) page.
 

@@ -49,10 +49,10 @@ metadata:
   blockers:
   - Dataset materialization, split definition, and policy-result import validation must be validated before integrated 
     status.
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:BridgeDataV2Contract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:BridgeDataV2Contract
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:BridgeDataV2Contract
+    runner_target: worldfoundry.evals.tasks.contracts.external:BridgeDataV2Contract
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -86,7 +86,7 @@ metadata:
     - --json
   official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
-    target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
+    target: worldfoundry.evals.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
     official_result_normalization:
@@ -187,4 +187,4 @@ tasks:
       - goal_success
       - action_accuracy
       - rollout_success
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:BridgeDataV2Contract
+      runner_target: worldfoundry.evals.tasks.contracts.external:BridgeDataV2Contract

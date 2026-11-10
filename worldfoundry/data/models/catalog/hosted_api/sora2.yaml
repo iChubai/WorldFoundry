@@ -15,7 +15,7 @@ integration:
   notes:
   - Hosted API Studio pipeline is available; users must provide their own provider
     API key.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: sora2
 runner_parity:
   status: not_applicable

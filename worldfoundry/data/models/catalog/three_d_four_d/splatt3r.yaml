@@ -31,7 +31,7 @@ integration:
   - Runtime code is vendored in-tree under worldfoundry/base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime;
     checkpoints remain external assets.
 runtime_profile: runtime-profile:splatt3r
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: splatt3r
 runner_parity:
   status: verified

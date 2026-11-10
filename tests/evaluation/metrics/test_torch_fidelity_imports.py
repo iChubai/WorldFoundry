@@ -18,7 +18,7 @@ class TorchFidelityImportTests(unittest.TestCase):
 import inspect
 import sys
 from pathlib import Path
-from worldfoundry.evaluation.tasks.metrics._shared.torch_fidelity import calculate_metrics, vendor_root
+from worldfoundry.evals.tasks.metrics._shared.torch_fidelity import calculate_metrics, vendor_root
 
 if sys.argv[1] == 'external-first':
     import torchmetrics

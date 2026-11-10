@@ -47,7 +47,7 @@ runner_parity:
   - The pipeline resolves the official inference entrypoint and returns blocked runtime diagnostics until
     the checkout, JAX environment, checkpoint, and a 368x640 Minecraft/VPT context clip are staged.
 runtime_profile: runtime-profile:open-dreamer
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: open-dreamer
 catalog_category: world_models
 catalog_scope: World-model catalog entries. Integrated entries expose in-tree WorldFoundry runtimes; blocked

@@ -1,6 +1,6 @@
 id: mochi-1
 name: Mochi-1
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: mochi-1
 runtime_profile: runtime-profile:mochi-1-preview-t2v
 tasks:
@@ -35,7 +35,7 @@ variants:
     private: false
     gated: false
   runtime_profile: mochi-1-preview-t2v
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: mochi-1-preview-t2v
   integration:
     status: integrated

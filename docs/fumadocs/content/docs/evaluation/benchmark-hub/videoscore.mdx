@@ -26,7 +26,7 @@ hf download TIGER-Lab/VideoScore-Bench --repo-type dataset --local-dir /path/to/
 export WORLDFOUNDRY_VIDEOFEEDBACK_DATASET_ROOT=/path/to/VideoScore-Bench
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/videoscore/run_videoscore_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/videoscore/run_videoscore_official_runner.py \
   --bench-name video_feedback \
   --bounded-sample-count 4 \
   --dataset-root "${WORLDFOUNDRY_VIDEOFEEDBACK_DATASET_ROOT}" \
@@ -36,7 +36,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 Import upstream `eval_*_videoscore.json` via `--official-results-path` / `--from-upstream-results`. Env: `WORLDFOUNDRY_VIDEOSCORE_MODEL_DIR`, `WORLDFOUNDRY_VIDEOSCORE_FRAMES_DIR`, `WORLDFOUNDRY_VIDEOSCORE_ROOT`. Shared stack: `videoscore_reward_metric_stack`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/videoscore.yaml`, `worldfoundry/evaluation/tasks/execution/runners/videoscore/runtime/videoscore`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/videoscore.yaml`, `worldfoundry/evals/tasks/execution/runners/videoscore/runtime/videoscore`.
 
 Outputs include `scorecard.json` (primary `videoscore_average`).
 

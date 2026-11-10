@@ -27,7 +27,7 @@ runner_parity:
   notes:
   - Pipeline target imports and plan-only inference are wired; full artifact parity needs runtime assets.
 runtime_profile: runtime-profile:wonderjourney
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: wonderjourney
 catalog_category: three_d_four_d
 catalog_scope: 3D Gaussian-splatting catalog entries. Integrated entries expose in-tree

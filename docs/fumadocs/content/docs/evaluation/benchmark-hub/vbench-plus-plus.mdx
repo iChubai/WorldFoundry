@@ -21,7 +21,7 @@ WorldFoundry **vendors the VBench++ runtime**. A bounded long-video component is
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/run_vbench_plus_plus_official_runner.py \
   --benchmark-id vbench-plus-plus \
   --variant long \
   --videos-path "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
@@ -34,7 +34,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 I2V uses official image-suite naming. Optional checkout override: `WORLDFOUNDRY_VBENCH_PLUS_PLUS_ROOT`. Shared stack: `vbench_perception_metric_stack`. Prompt / image suites live in the public VBench repo.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml`, `worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/vbench-plus-plus.yaml`, `worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/runtime`.
 
 Outputs include `scorecard.json` (primary `vbench_plus_plus_average`) and `dimension_scores.json`.
 

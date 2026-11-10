@@ -12,7 +12,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 
 _BASE_MODEL_TARGETS: Mapping[str, str] = {

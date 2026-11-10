@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from worldfoundry.evaluation.utils import load_manifest_collection
+from worldfoundry.evals.utils import load_manifest_collection
 from worldfoundry.pipelines.component_pipelines import OpenVLAPipeline
 from worldfoundry.runtime.conda import (
     is_cuda_profile_supported,

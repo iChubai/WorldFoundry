@@ -1,6 +1,6 @@
 id: skyreels-v2
 name: SkyReels-V2
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:skyreels-v2
 tasks:
 - text-to-video

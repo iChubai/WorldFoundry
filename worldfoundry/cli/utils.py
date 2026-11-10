@@ -68,7 +68,7 @@ def task_roots_from_args(args: argparse.Namespace) -> tuple[Path, ...]:
         Deduplicated tuple of :class:`Path` directories to search for
         task definitions.
     """
-    from worldfoundry.evaluation.utils import BENCHMARK_TASK_ROOT
+    from worldfoundry.evals.utils import BENCHMARK_TASK_ROOT
 
     roots: list[Path] = list(args.task_root or ())
     if not roots:
@@ -145,7 +145,7 @@ def canonical_model_zoo_id(value: str | None, manifest_dir: Path | None) -> str 
         return None
     if manifest_dir is None or not manifest_dir.exists():
         return value
-    from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+    from worldfoundry.evals.models.catalog import load_model_zoo_registry
 
     return load_model_zoo_registry(manifest_dir).get(value).model_id
 
@@ -159,8 +159,8 @@ def canonical_benchmark_zoo_id(value: str, manifest_dir: Path | None) -> str:
     """
     if manifest_dir is None or not manifest_dir.exists():
         return value
-    from worldfoundry.evaluation.tasks.catalog.schema import load_entries
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import BenchmarkZooRegistry, load_benchmark_zoo_registry
+    from worldfoundry.evals.tasks.catalog.schema import load_entries
+    from worldfoundry.evals.tasks.catalog.zoo_registry import BenchmarkZooRegistry, load_benchmark_zoo_registry
 
     if manifest_dir.is_file():
         return BenchmarkZooRegistry(load_entries(manifest_dir)).get(value).benchmark_id

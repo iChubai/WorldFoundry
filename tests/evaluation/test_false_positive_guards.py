@@ -8,63 +8,63 @@ from types import SimpleNamespace
 
 import pytest
 
-from worldfoundry.evaluation.reporting.validation import validate_contract_file
-from worldfoundry.evaluation.tasks.execution.runners.four_d_worldbench.runtime.four_d_worldbench.runner import (
+from worldfoundry.evals.reporting.validation import validate_contract_file
+from worldfoundry.evals.tasks.execution.runners.four_d_worldbench.runtime.four_d_worldbench.runner import (
     validate_video_inputs,
 )
-from worldfoundry.evaluation.tasks.execution.runners.iworldbench.iworldbench_metrics import (
+from worldfoundry.evals.tasks.execution.runners.iworldbench.iworldbench_metrics import (
     COMPONENT_METRIC_ORDER,
     compute_iworldbench_metrics,
 )
-from worldfoundry.evaluation.tasks.execution.runners.iworldbench.iworldbench_prompts import (
+from worldfoundry.evals.tasks.execution.runners.iworldbench.iworldbench_prompts import (
     CANONICAL_PROMPT_COUNT,
 )
-from worldfoundry.evaluation.tasks.execution.runners.iworldbench.run_iworldbench_official_runner import (
+from worldfoundry.evals.tasks.execution.runners.iworldbench.run_iworldbench_official_runner import (
     _metric_rows as iworldbench_metric_rows,
 )
-from worldfoundry.evaluation.tasks.execution.runners.iworldbench.run_iworldbench_official_runner import (
+from worldfoundry.evals.tasks.execution.runners.iworldbench.run_iworldbench_official_runner import (
     _scorecard as iworldbench_scorecard,
 )
-from worldfoundry.evaluation.tasks.execution.runners.iworldbench.run_iworldbench_official_runner import (
+from worldfoundry.evals.tasks.execution.runners.iworldbench.run_iworldbench_official_runner import (
     main as iworldbench_main,
 )
-from worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_metrics import (
+from worldfoundry.evals.tasks.execution.runners.likephys.likephys_metrics import (
     compute_likephys_metrics,
     misrank_by_variation,
 )
-from worldfoundry.evaluation.tasks.execution.runners.likephys.likephys_scenarios import (
+from worldfoundry.evals.tasks.execution.runners.likephys.likephys_scenarios import (
     REPORTED_VARIATION_FILTERS,
     scenario_id_for_variations,
 )
-from worldfoundry.evaluation.tasks.execution.runners.rbench.rbench_metrics import (
+from worldfoundry.evals.tasks.execution.runners.rbench.rbench_metrics import (
     aggregate_task_track,
     compute_rbench_metrics,
     normalize_embodiment_row,
     normalize_task_score,
 )
-from worldfoundry.evaluation.tasks.execution.runners.memobench.run_memobench_official_runner import (
+from worldfoundry.evals.tasks.execution.runners.memobench.run_memobench_official_runner import (
     _scorecard as memobench_scorecard,
 )
-from worldfoundry.evaluation.tasks.execution.runners.vbench_2_0.vbench_shared_official_impl import (
+from worldfoundry.evals.tasks.execution.runners.vbench_2_0.vbench_shared_official_impl import (
     PLUS_VARIANT_AVERAGE,
     aggregate_rows,
     canonical_declared_dimensions,
     raw_dimension_rows,
 )
-from worldfoundry.evaluation.tasks.execution.runners.videophy2.videophy2_metrics import (
+from worldfoundry.evals.tasks.execution.runners.videophy2.videophy2_metrics import (
     compute_videophy2_metrics,
 )
-from worldfoundry.evaluation.tasks.execution.runners.videoscience_bench.runtime.videoscience_bench.judge.vlm_as_a_judge import (
+from worldfoundry.evals.tasks.execution.runners.videoscience_bench.runtime.videoscience_bench.judge.vlm_as_a_judge import (
     WEIGHTS,
     _compute_overall_1to4,
 )
-from worldfoundry.evaluation.tasks.execution.runners.videoscience_bench.runtime.videoscience_bench.videoscience_batch import (
+from worldfoundry.evals.tasks.execution.runners.videoscience_bench.runtime.videoscience_bench.videoscience_batch import (
     _metrics_from_rubric,
 )
-from worldfoundry.evaluation.tasks.execution.runners.videoverse.run_videoverse_official_runner import (
+from worldfoundry.evals.tasks.execution.runners.videoverse.run_videoverse_official_runner import (
     normalize_videoverse_results,
 )
-from worldfoundry.evaluation.tasks.execution.runners.vmbench.vmbench_prompts import (
+from worldfoundry.evals.tasks.execution.runners.vmbench.vmbench_prompts import (
     materialize_vmbench_meta_info,
 )
 

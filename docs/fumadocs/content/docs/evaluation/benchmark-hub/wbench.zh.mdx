@@ -25,7 +25,7 @@ WorldFoundry **检入指标 runtime**（HPSv3、TransNetV2、PAVRM、DreamSim、
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/wbench/run_wbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/wbench/run_wbench_official_runner.py \
   --run-official \
   --model-name <model_name> \
   --phase gpu \
@@ -38,7 +38,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 只有视频真正遵循该官方多轮接口时才传 `--submission-protocol text_multi_turn|camera_conditioned|action_conditioned`。环境变量：`WORLDFOUNDRY_WBENCH_RESULTS_PATH`、`WORLDFOUNDRY_WBENCH_ROOT`。共享栈：`video_world_perception_stack`。
 
-仓内指针：`worldfoundry/data/benchmarks/tasks/external/wbench.yaml`，`worldfoundry/evaluation/tasks/execution/runners/wbench`。
+仓内指针：`worldfoundry/data/benchmarks/tasks/external/wbench.yaml`，`worldfoundry/evals/tasks/execution/runners/wbench`。
 
 产物包括 `scorecard.json`（主键 `wbench_average`）。
 

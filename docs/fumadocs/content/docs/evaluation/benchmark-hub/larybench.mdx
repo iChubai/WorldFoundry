@@ -41,7 +41,7 @@ export MODEL_DIR=/path/to/representation_checkpoints
 hf download meituan-longcat/LARYBench --repo-type dataset --local-dir "${DATA_DIR}"
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/larybench/run_larybench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/larybench/run_larybench_official_runner.py \
   --run-official \
   --stage extract \
   --dataset calvin \
@@ -60,7 +60,7 @@ In-tree pointers:
 
 ```text
 worldfoundry/data/benchmarks/tasks/external/larybench.yaml
-worldfoundry/evaluation/tasks/execution/runners/larybench/
+worldfoundry/evals/tasks/execution/runners/larybench/
 ```
 
 Outputs under `--output-dir` include `scorecard.json` (primary `extraction_coverage`), `benchmark_contract.json`, and `raw_metric_table.jsonl`.

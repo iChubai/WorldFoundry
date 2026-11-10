@@ -1301,9 +1301,9 @@ def test_vipe_priors_namespace_points_to_split_prior_owners():
 def test_geometric_priors_are_independent_model_catalog_entries():
     import yaml
 
-    from worldfoundry.evaluation.models.catalog.schema import load_entries
-    from worldfoundry.evaluation.models.runners.resolver import resolve_model_zoo_config
-    from worldfoundry.evaluation.models.runtime import load_runtime_profile_manifest
+    from worldfoundry.evals.models.catalog.schema import load_entries
+    from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config
+    from worldfoundry.evals.models.runtime import load_runtime_profile_manifest
 
     catalog_root = REPO_ROOT / "worldfoundry/data/models/catalog/three_d_four_d"
     runtime_root = REPO_ROOT / "worldfoundry/data/models/runtime/profiles"
@@ -1332,7 +1332,7 @@ def test_geometric_priors_are_independent_model_catalog_entries():
         assert entries[0].integration_status == "integrated"
         assert entries[0].runner_entry_kind == "runnable_runner"
         assert entries[0].is_runnable_runner_entry is True
-        assert entries[0].runner_target == "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner"
+        assert entries[0].runner_target == "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
         resolved = resolve_model_zoo_config(model_id, manifest_dir=catalog_root.parent)
         assert str(resolved.diagnostics["pipeline_target"]).startswith("worldfoundry.pipelines.geometry_priors.")
         assert payload["integration"]["kind"] == "pipeline_runner"

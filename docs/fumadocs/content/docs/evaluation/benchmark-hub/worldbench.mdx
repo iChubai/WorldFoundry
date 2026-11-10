@@ -20,7 +20,7 @@ hf download worldbenchmark/IntuitivePhysics --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/worldbenchmark/IntuitivePhysics
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/worldbench/run_worldbench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/worldbench/run_worldbench_official_runner.py \
   --run-official \
   --video-only \
   --dataset-root "${WORLDFOUNDRY_WORLDBENCH_DATASET_ROOT}" \
@@ -32,7 +32,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 `--predicted-mask-dir` skips SAM2 when masks already exist. `--text-only` plus `--answer-manifest` covers QA. Frame knobs: `--ground-truth-start-frame`, `--generated-skip-frames`. Shared assets: `worldbench_dataset_assets`, `facebook/sam2.1-hiera-large`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldbench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/worldbench`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/worldbench.yaml`, `worldfoundry/evals/tasks/execution/runners/worldbench`.
 
 Outputs include `scorecard.json` (primary `foreground_miou`) and `worldbench_evaluation.json`.
 

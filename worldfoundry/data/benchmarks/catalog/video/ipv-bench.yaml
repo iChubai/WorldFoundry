@@ -92,16 +92,16 @@ runner:
   scoring:
     engines: [video_quality]
     hooks:
-      video_quality: worldfoundry.evaluation.tasks.execution.framework.video_quality_contract:evaluate_ipv_bench_video_quality_contract_file
+      video_quality: worldfoundry.evals.tasks.execution.framework.video_quality_contract:evaluate_ipv_bench_video_quality_contract_file
   normalization:
     artifact_official_run: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/ipv_bench/run_ipv_bench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/ipv_bench/run_ipv_bench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.ipv_bench.run_ipv_bench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.ipv_bench.run_ipv_bench_official_runner
     generated_arg: null
     limit_arg: --limit
     supports_fixture: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:IPVBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:IPVBenchContract
   validation_command:
   - wf
   - zoo
@@ -119,7 +119,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_runner
-    root: worldfoundry/evaluation/tasks/execution/runners/ipv_bench
+    root: worldfoundry/evals/tasks/execution/runners/ipv_bench
     repo_url: https://github.com/showlab/Impossible-Videos.git
     repo_revision: b959c423093d6e46a7e7008e205b9a16104e3f70
     root_env: WORLDFOUNDRY_IPV_BENCH_ROOT
@@ -161,10 +161,10 @@ blockers:
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/ipv-bench.yaml
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/ipv_bench
+  - worldfoundry/evals/tasks/execution/runners/ipv_bench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:IPVBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:IPVBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

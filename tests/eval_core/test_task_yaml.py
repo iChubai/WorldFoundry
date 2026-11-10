@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from worldfoundry.evaluation.tasks.catalog import (
+from worldfoundry.evals.tasks.catalog import (
     CATALOG_BENCHMARK_SCHEMA_VERSION,
     CATALOG_TASK_SCHEMA_VERSION,
 )
-from worldfoundry.evaluation.tasks import (
+from worldfoundry.evals.tasks import (
     TASK_YAML_SCHEMA_VERSION,
     load_benchmark_yaml,
     load_catalog_yaml,

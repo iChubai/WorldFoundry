@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench import run_worldmembench_official_runner as runner
+from worldfoundry.evals.tasks.execution.runners.worldmembench import run_worldmembench_official_runner as runner
 
 pytestmark = pytest.mark.unit
 

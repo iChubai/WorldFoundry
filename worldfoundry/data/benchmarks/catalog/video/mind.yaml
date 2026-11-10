@@ -223,9 +223,9 @@ metrics:
   output_unit: score
   primary: true
 runner:
-  official_script: worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.mind.run_mind_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.mind.run_mind_official_runner
     generated_arg: --generated-artifact-dir
     dataset_root_arg: --gt-root
     supports_official_runtime: true
@@ -233,7 +233,7 @@ runner:
     supports_fixture: true
     default_metrics: [mind_average]
     input_kind: mind_results_or_generated_videos
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:MINDContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:MINDContract
   validation_command:
   - wf
   - zoo
@@ -249,8 +249,8 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_runtime
-    root: worldfoundry/evaluation/tasks/execution/runners/mind
-    runtime_root: worldfoundry/evaluation/tasks/execution/runners/mind/runtime/mind
+    root: worldfoundry/evals/tasks/execution/runners/mind
+    runtime_root: worldfoundry/evals/tasks/execution/runners/mind/runtime/mind
     root_env: WORLDFOUNDRY_MIND_ROOT
     results_path_env: WORLDFOUNDRY_MIND_RESULTS_PATH
     generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
@@ -296,7 +296,7 @@ data_refs:
   - CSU-JPG/MIND
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:MINDContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:MINDContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false
@@ -308,7 +308,7 @@ base_model_dependencies:
 - video_world_perception_stack
 validation_command:
 - python
-- worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py
+- worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.py
 - --run-fixture
 - --output-dir
 - <out>

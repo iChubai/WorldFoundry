@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.models.runtime.profiles import RuntimeProfileSynthesis
+from worldfoundry.evals.models.runtime.profiles import RuntimeProfileSynthesis
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 
 from ..runtime_facade import DelegatedPredictMixin

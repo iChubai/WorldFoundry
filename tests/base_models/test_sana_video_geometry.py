@@ -24,7 +24,7 @@ from worldfoundry.base_models.diffusion_model.models.initializers.sana import (
     SanaWorldInitializer,
 )
 from worldfoundry.core.geometry.trajectory import rollout_wasd_camera_actions
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.pipelines.sana.pipeline_sana import SanaVideo2b480pPipeline
 
 

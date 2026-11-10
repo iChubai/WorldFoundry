@@ -538,9 +538,9 @@ exclude = [
     "thirdparty/**",
     "worldfoundry/base_models/**",
     "worldfoundry/synthesis/**",
-    "worldfoundry/evaluation/tasks/execution/runners/*/runtime/**",
-    "worldfoundry/evaluation/tasks/execution/runners/*/official/**",
-    "worldfoundry/evaluation/tasks/metrics/*/vendor/**",
+    "worldfoundry/evals/tasks/execution/runners/*/runtime/**",
+    "worldfoundry/evals/tasks/execution/runners/*/official/**",
+    "worldfoundry/evals/tasks/metrics/*/vendor/**",
 ]
 
 [tool.ty.analysis]
@@ -749,7 +749,7 @@ include-package-data = true
     "models/runtime/configs/**/*.py",
     "models/runtime/configs/**/*.md",
 ]
-"worldfoundry.evaluation.tasks.execution.runners" = [
+"worldfoundry.evals.tasks.execution.runners" = [
     "chronomagic_bench/runtime/chronomagic_bench/MTScore/configs/*.json",
     "devil_dynamics/runtime/official/*.sh",
     "ewmbench/runtime/ewmbench/*.yaml",

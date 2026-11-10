@@ -38,7 +38,7 @@ runner_parity:
 catalog_category: three_d_four_d
 catalog_scope: Independent geometric prior integrations used by 3D and world-model
   runtimes.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 docs:
   publisher: Zhejiang University (ReLER Lab)
   publisher_kind: university

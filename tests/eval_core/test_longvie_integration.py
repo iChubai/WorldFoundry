@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.api import GenerationRequest
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
-from worldfoundry.evaluation.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
+from worldfoundry.evals.api import GenerationRequest
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
 from worldfoundry.pipelines.longvie.pipeline_longvie import LongVie1Pipeline
 from worldfoundry.pipelines.longvie.pipeline_longvie import LongVie2Pipeline
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.runtime.conda import load_runtime_conda_env_spec
 from worldfoundry.synthesis.visual_generation.longvie.runtime_env import (
     WAN21_I2V_REQUIRED_FILES,

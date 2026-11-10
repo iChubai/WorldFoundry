@@ -17,7 +17,7 @@ GENERATED_SITE_PATHS = {
     "scripts/docs/**",
     "worldfoundry/data/models/**",
     "worldfoundry/data/benchmarks/**",
-    "worldfoundry/evaluation/api/**",
+    "worldfoundry/evals/api/**",
 }
 
 

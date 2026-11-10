@@ -8,7 +8,7 @@ import sys
 from types import ModuleType
 from typing import Any
 
-from worldfoundry.evaluation.utils import REPO_ROOT
+from worldfoundry.evals.utils import REPO_ROOT
 
 from .help import WorldFoundryArgumentParser
 from .observability import (

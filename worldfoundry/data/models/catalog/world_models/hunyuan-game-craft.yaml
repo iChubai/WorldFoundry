@@ -24,7 +24,7 @@ official_sources:
     status: confirmed
 integration:
   status: integrated
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: hunyuan-game-craft
 runner_parity:
   status: pending

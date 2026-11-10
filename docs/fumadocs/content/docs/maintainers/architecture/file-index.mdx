@@ -106,7 +106,7 @@ The boundary rule is the same on every entry: a package exposes stable, serializ
       <li className="pi-kv-row">
         <div className="pi-kv-head">
           <div className="pi-kv-names">
-            <code>worldfoundry/evaluation</code>
+            <code>worldfoundry/evals</code>
           </div>
         </div>
         <p>Public contracts, execution runners, catalog loaders, metrics, reporting, scorecards. The benchmark side of the artifact boundary.</p>
@@ -145,6 +145,6 @@ A run flows down this list, not across it at random. User input enters through `
 ## Where to go next
 
 - **Adding a model** — start at `pipelines/` and `operators/`, then `synthesis/`. See [Model runtime](/docs/maintainers/architecture/model-runtime) and [Runtime assembly](/docs/maintainers/architecture/runtime-assembly).
-- **Adding a benchmark** — start at `data/benchmarks/` and `evaluation/tasks/`. See [Benchmarks and data](/docs/maintainers/architecture/benchmarks-data) and [Evaluation core](/docs/maintainers/architecture/evaluation-core).
-- **Tracing a run** — start at `cli/main.py` → `evaluation/tasks/execution/orchestration/`. See [Workflow](/docs/maintainers/architecture/workflow) and [Surfaces and orchestration](/docs/maintainers/architecture/surfaces-orchestration).
+- **Adding a benchmark** — start at `data/benchmarks/` and `evals/tasks/`. See [Benchmarks and data](/docs/maintainers/architecture/benchmarks-data) and [Evaluation core](/docs/maintainers/architecture/evaluation-core).
+- **Tracing a run** — start at `cli/main.py` → `evals/tasks/execution/orchestration/`. See [Workflow](/docs/maintainers/architecture/workflow) and [Surfaces and orchestration](/docs/maintainers/architecture/surfaces-orchestration).
 - **Shared primitives** — anything reusable across model families belongs in `worldfoundry/core`. See [Core infrastructure](/docs/maintainers/architecture/core-infrastructure).

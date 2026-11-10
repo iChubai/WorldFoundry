@@ -11,7 +11,7 @@ on:
       # Site content is generated from these catalog and public API surfaces.
       - "worldfoundry/data/models/**"
       - "worldfoundry/data/benchmarks/**"
-      - "worldfoundry/evaluation/api/**"
+      - "worldfoundry/evals/api/**"
   workflow_dispatch:
 
 # Keep the OIDC token out of the npm/Next.js build job. Only deploy-pages

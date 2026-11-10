@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.models.catalog.registry import discover_model_registry
-from worldfoundry.evaluation.models.runtime import (
+from worldfoundry.evals.models.catalog.registry import discover_model_registry
+from worldfoundry.evals.models.runtime import (
     RuntimeProfile,
     load_runtime_asset_profile_by_id,
     load_runtime_asset_profiles,

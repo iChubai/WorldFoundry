@@ -6,7 +6,7 @@ import pytest
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.api import (
     _model_name_from_repo_id,
 )
-from worldfoundry.evaluation.utils import worldfoundry_data_path
+from worldfoundry.evals.utils import worldfoundry_data_path
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.synthesis.visual_generation.inspatio_world.worldfoundry_runtime import (
     InspatioWorldRuntime,

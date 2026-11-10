@@ -34,7 +34,7 @@ def test_workspace_app_uses_start_new_session_not_preexec_fn() -> None:
 def test_reward_server_no_longer_unpickles_http_bodies() -> None:
     source = (
         REPO_ROOT
-        / "worldfoundry/evaluation/tasks/execution/runners/worldolympiad"
+        / "worldfoundry/evals/tasks/execution/runners/worldolympiad"
         / "runtime/worldolympiad/3d_metrics/serve_reward_3d.py"
     ).read_text(encoding="utf-8")
     assert "pickle.loads" not in source
@@ -49,10 +49,10 @@ def test_model_side_modules_do_not_import_evaluation_utils() -> None:
         pattern = "*.py" if package == "runtime" else "**/*.py"
         for path in (REPO_ROOT / "worldfoundry" / package).glob(pattern):
             source = path.read_text(encoding="utf-8", errors="replace")
-            if "worldfoundry.evaluation.utils" not in source:
+            if "worldfoundry.evals.utils" not in source:
                 continue
             for node in ast.walk(ast.parse(source)):
-                if isinstance(node, ast.ImportFrom) and node.module == "worldfoundry.evaluation.utils":
+                if isinstance(node, ast.ImportFrom) and node.module == "worldfoundry.evals.utils":
                     offenders.append(str(path.relative_to(REPO_ROOT)))
     assert offenders == []
 
@@ -93,7 +93,7 @@ def test_core_inference_does_not_import_pipelines() -> None:
 
 def test_pipeline_invocation_contract_is_core_owned_and_compatible() -> None:
     from worldfoundry.core.contracts import PipelineInvocation as CoreInvocation
-    from worldfoundry.evaluation.models.pipelines.invocation import (
+    from worldfoundry.evals.models.pipelines.invocation import (
         PipelineInvocation as EvaluationInvocation,
     )
 
@@ -103,7 +103,7 @@ def test_pipeline_invocation_contract_is_core_owned_and_compatible() -> None:
         "worldfoundry/pipelines/video_official/pipeline_official_video.py",
     ):
         source = (REPO_ROOT / relpath).read_text(encoding="utf-8")
-        assert "worldfoundry.evaluation" not in source
+        assert "worldfoundry.evals" not in source
         assert "worldfoundry.core.contracts" in source
 
 
@@ -124,7 +124,7 @@ def test_worldolympiad_openrouter_key_priority(monkeypatch) -> None:
     module = runpy.run_path(
         str(
             REPO_ROOT
-            / "worldfoundry/evaluation/tasks/execution/runners/worldolympiad/runtime"
+            / "worldfoundry/evals/tasks/execution/runners/worldolympiad/runtime"
             / "worldolympiad/model/openrouter.py"
         )
     )
@@ -141,7 +141,7 @@ def test_worldolympiad_openrouter_key_priority(monkeypatch) -> None:
 
     source = (
         REPO_ROOT
-        / "worldfoundry/evaluation/tasks/execution/runners/worldolympiad/runtime/worldolympiad"
+        / "worldfoundry/evals/tasks/execution/runners/worldolympiad/runtime/worldolympiad"
         / "model/openrouter.py"
     ).read_text(encoding="utf-8")
     assert "Bearer {os.getenv('api_key')}" not in source
@@ -167,8 +167,8 @@ def _finally_call_count(relpath: str, call_name: str) -> int:
 
 
 def test_runner_temporary_media_is_cleaned_in_finally() -> None:
-    wbench = "worldfoundry/evaluation/tasks/execution/runners/wbench/runtime/wbench/src/metrics/vlm/vlm_evaluator.py"
-    memobench = "worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench/evaluation/vqa/llm-vqa.py"
+    wbench = "worldfoundry/evals/tasks/execution/runners/wbench/runtime/wbench/src/metrics/vlm/vlm_evaluator.py"
+    memobench = "worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench/evaluation/vqa/llm-vqa.py"
     assert _finally_call_count(wbench, "remove") >= 2
     assert _finally_call_count(memobench, "unlink") >= 1
 
@@ -179,9 +179,9 @@ def test_artifact_timestamps_are_utc_and_elapsed_time_is_monotonic() -> None:
     stamped = timestamp_file_name("scorecard.json")
     assert re.fullmatch(r"scorecard_\d{8}-\d{6}\.json", stamped)
 
-    camera = (
-        REPO_ROOT / "worldfoundry/evaluation/tasks/execution/runners/camerabench/camerabench_metrics.py"
-    ).read_text(encoding="utf-8")
+    camera = (REPO_ROOT / "worldfoundry/evals/tasks/execution/runners/camerabench/camerabench_metrics.py").read_text(
+        encoding="utf-8"
+    )
     assert camera.count("datetime.now(timezone.utc).isoformat()") == 3
     assert "datetime.now().isoformat()" not in camera
 
@@ -339,7 +339,7 @@ def test_xc17_callers_use_scratch_directory() -> None:
         "worldfoundry/base_models/three_dimensions/point_clouds/lyra/utils.py",
         "worldfoundry/pipelines/matrix_game/pipeline_matrix_game_3.py",
         "worldfoundry/core/media/codecs/video.py",
-        "worldfoundry/evaluation/models/runtime/profile_synthesis.py",
+        "worldfoundry/evals/models/runtime/profile_synthesis.py",
         "worldfoundry/studio/inference/dispatch.py",
     ]
     for relpath in files:
@@ -353,7 +353,7 @@ def test_xc17_callers_use_scratch_directory() -> None:
 
 
 def test_suite_and_studio_closures_bind_loop_variables() -> None:
-    suite = (REPO_ROOT / "worldfoundry/evaluation/tasks/execution/orchestration/model_benchmark_suite.py").read_text(
+    suite = (REPO_ROOT / "worldfoundry/evals/tasks/execution/orchestration/model_benchmark_suite.py").read_text(
         encoding="utf-8"
     )
     studio = (REPO_ROOT / "worldfoundry/studio/inference/execution.py").read_text(encoding="utf-8")

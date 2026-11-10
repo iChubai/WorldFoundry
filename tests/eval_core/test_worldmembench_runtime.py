@@ -15,28 +15,28 @@ from typing import Any
 import numpy as np
 import pytest
 
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.evaluate import evaluate
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics import registry
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.dynamic.checklist import CATEGORIES
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.dynamic.scoring import (
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.evaluate import evaluate
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics import registry
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.dynamic.checklist import CATEGORIES
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.dynamic.scoring import (
     aggregate_scores,
     score_answers,
 )
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.general_video_quality.aesthetic_quality import (
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.general_video_quality.aesthetic_quality import (
     AestheticQualityMetric,
 )
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.general_video_quality.imaging_quality import (
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.general_video_quality.imaging_quality import (
     ImagingQualityMetric,
 )
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.human.evaluator import (
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.human.evaluator import (
     MaskedDinoV2Features as HumanFeatures,
 )
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.object.evaluator import (
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.object.evaluator import (
     MaskedDinoV2Features as ObjectFeatures,
 )
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.metrics.registry import MetricRegistry
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime.video import DecodedFrame, VideoInfo
-from worldfoundry.evaluation.tasks.execution.runners.worldmembench.worldmembench_metrics import (
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.metrics.registry import MetricRegistry
+from worldfoundry.evals.tasks.execution.runners.worldmembench.runtime.video import DecodedFrame, VideoInfo
+from worldfoundry.evals.tasks.execution.runners.worldmembench.worldmembench_metrics import (
     METRIC_SPECS,
     load_official_results,
 )
@@ -61,7 +61,7 @@ class _Backend:
 def test_all_official_metrics_are_available_without_upstream_package() -> None:
     assert set(registry.names()) == set(METRIC_SPECS)
     completed = subprocess.run(
-        [sys.executable, "-m", "worldfoundry.evaluation.tasks.execution.runners.worldmembench.runtime", "list-metrics"],
+        [sys.executable, "-m", "worldfoundry.evals.tasks.execution.runners.worldmembench.runtime", "list-metrics"],
         capture_output=True,
         text=True,
         check=True,

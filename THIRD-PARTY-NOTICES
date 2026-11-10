@@ -537,7 +537,7 @@ PAWBench
 
   The official evaluator, metric implementation, and PAWEval rubrics are
   vendored under
-  ``worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime``. The
+  ``worldfoundry/evals/tasks/execution/runners/pawbench/runtime``. The
   complete Apache-2.0 license is retained in this notice; benchmark data, generated rollouts, and credentials are omitted.
 
 Runtime-provisioned Studio browser assets
@@ -666,7 +666,7 @@ Revision: ed4ccc6486b8271723ee8baea60d89b32d0a7518
 License: Apache-2.0 as declared in the upstream README; no standalone LICENSE file
 is present at this revision.
 Adapted evaluation source is under
-worldfoundry/evaluation/tasks/execution/runners/harnesseval_w/runtime/.
+worldfoundry/evals/tasks/execution/runners/harnesseval_w/runtime/.
 The reusable resident MegaSAM adapter is under
 worldfoundry/base_models/three_dimensions/slam/megasam_resident.py.
 See the evaluator's WORLDFOUNDRY_PROVENANCE.md for retained source and modifications.
@@ -6358,7 +6358,7 @@ WorldMemBench evaluation protocols
 Source: https://github.com/ZJU-REAL/WorldMemBench
 Source revision: 1b79840143a98e017891e893b5d3ef75b93078a3
 License: MIT
-Files: worldfoundry/evaluation/tasks/execution/runners/worldmembench/runtime/
+Files: worldfoundry/evals/tasks/execution/runners/worldmembench/runtime/
 
 WorldFoundry retains the official sampling, revisit, alignment, aggregation,
 VLM judging and result protocols. CLIP, LAION aesthetic heads and DINO model

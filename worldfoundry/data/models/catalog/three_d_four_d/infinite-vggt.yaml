@@ -25,7 +25,7 @@ integration:
   status: runtime_ported
   notes:
   - In-tree StreamVGGT (Infinite VGGT) pipeline is registered for streaming 3D reconstruction.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: infinite-vggt
 runner_parity:
   status: pending

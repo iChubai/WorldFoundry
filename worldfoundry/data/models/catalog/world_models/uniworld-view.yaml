@@ -31,7 +31,7 @@ integration:
   - WorldFoundry invokes the pinned official inference entry point in an isolated environment and validates all local assets before generation.
   - The image and video routes preserve the official BLIP2 captioning and camera controls.
 runtime_profile: runtime-profile:uniworld-view
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: uniworld-view
 runner_parity:
   status: verified_configuration

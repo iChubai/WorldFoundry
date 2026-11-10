@@ -8,22 +8,22 @@ from pathlib import Path
 import pytest
 import yaml
 
-from worldfoundry.evaluation.tasks.catalog.zoo_registry import (
+from worldfoundry.evals.tasks.catalog.zoo_registry import (
     clear_benchmark_zoo_registry_cache,
     load_benchmark_zoo_registry,
 )
-from worldfoundry.evaluation.tasks.contracts.external import get_external_benchmark_contract
-from worldfoundry.evaluation.tasks.embodied import EmbodiedClosedLoopRunner
-from worldfoundry.evaluation.tasks.embodied.config_loader import load_canonical_embodied_config
-from worldfoundry.evaluation.tasks.embodied.docker_runner import build_docker_run_command
-from worldfoundry.evaluation.tasks.embodied.simulators import (
+from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
+from worldfoundry.evals.tasks.embodied import EmbodiedClosedLoopRunner
+from worldfoundry.evals.tasks.embodied.config_loader import load_canonical_embodied_config
+from worldfoundry.evals.tasks.embodied.docker_runner import build_docker_run_command
+from worldfoundry.evals.tasks.embodied.simulators import (
     SIMULATOR_ENTRIES,
     get_simulator_entry,
     list_simulator_ids,
     resolve_simulator_class,
 )
-from worldfoundry.evaluation.tasks.embodied.simulators.base import BaseSimulator
-from worldfoundry.evaluation.tasks.embodied.simulators.specs import (
+from worldfoundry.evals.tasks.embodied.simulators.base import BaseSimulator
+from worldfoundry.evals.tasks.embodied.simulators.specs import (
     GRIPPER_CLOSE_NEG,
     GRIPPER_CLOSE_POS,
     POSITION_DELTA,

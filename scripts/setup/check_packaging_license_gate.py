@@ -35,7 +35,7 @@ NATIVE_LICENSE_LINK = "thirdparty/fastvideo-kernel/LICENSE"
 RETAINED_UPSTREAM_LICENSES = (
     "worldfoundry/base_models/diffusion_model/models/autoencoders/kandinsky6/mmaudio/ext/bigvgan_v2/LICENSE",
     "worldfoundry/base_models/diffusion_model/models/autoencoders/kandinsky6/mmaudio/ext/bigvgan_v2/incl_licenses/LICENSE_*",
-    "worldfoundry/evaluation/tasks/execution/runners/worldmembench/runtime/LICENSE",
+    "worldfoundry/evals/tasks/execution/runners/worldmembench/runtime/LICENSE",
 )
 REQUIRED_RUNTIME_RESOURCES = (
     "worldfoundry/synthesis/visual_generation/dino_wm/datasets/UPSTREAM.md",

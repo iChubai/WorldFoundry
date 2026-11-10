@@ -33,128 +33,104 @@ class SymbolSpec:
 
 SYMBOLS = (
     # Serializable evaluation contracts.
-    SymbolSpec("worldfoundry.evaluation.api", "ArtifactRef", "worldfoundry/evaluation/api/artifacts.py", "contracts"),
+    SymbolSpec("worldfoundry.evals.api", "ArtifactRef", "worldfoundry/evals/api/artifacts.py", "contracts"),
+    SymbolSpec("worldfoundry.evals.api", "local_path_for_uri", "worldfoundry/evals/api/artifacts.py", "contracts"),
+    SymbolSpec("worldfoundry.evals.api", "enrich_artifact_ref", "worldfoundry/evals/api/artifacts.py", "contracts"),
+    SymbolSpec("worldfoundry.evals.api", "GenerationRequest", "worldfoundry/evals/api/generation.py", "contracts"),
+    SymbolSpec("worldfoundry.evals.api", "GenerationResult", "worldfoundry/evals/api/generation.py", "contracts"),
     SymbolSpec(
-        "worldfoundry.evaluation.api", "local_path_for_uri", "worldfoundry/evaluation/api/artifacts.py", "contracts"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.api", "enrich_artifact_ref", "worldfoundry/evaluation/api/artifacts.py", "contracts"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.api", "GenerationRequest", "worldfoundry/evaluation/api/generation.py", "contracts"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.api", "GenerationResult", "worldfoundry/evaluation/api/generation.py", "contracts"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.api",
+        "worldfoundry.evals.api",
         "normalize_generation_status",
-        "worldfoundry/evaluation/api/generation.py",
+        "worldfoundry/evals/api/generation.py",
         "contracts",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.api",
+        "worldfoundry.evals.api",
         "is_generation_result_successful",
-        "worldfoundry/evaluation/api/generation.py",
+        "worldfoundry/evals/api/generation.py",
         "contracts",
     ),
     # Models, runners, and pipeline extension points.
     SymbolSpec(
-        "worldfoundry.evaluation.api",
+        "worldfoundry.evals.api",
         "WorldModelManifest",
-        "worldfoundry/evaluation/api/world_model_manifest.py",
+        "worldfoundry/evals/api/world_model_manifest.py",
         "models",
     ),
-    SymbolSpec("worldfoundry.evaluation.api", "WorldModelConfig", "worldfoundry/evaluation/api/models.py", "models"),
-    SymbolSpec("worldfoundry.evaluation.api", "WorldModelRunner", "worldfoundry/evaluation/api/models.py", "models"),
+    SymbolSpec("worldfoundry.evals.api", "WorldModelConfig", "worldfoundry/evals/api/models.py", "models"),
+    SymbolSpec("worldfoundry.evals.api", "WorldModelRunner", "worldfoundry/evals/api/models.py", "models"),
     SymbolSpec(
         "worldfoundry.pipelines.pipeline_utils", "PipelineABC", "worldfoundry/pipelines/pipeline_utils.py", "models"
     ),
     # Metric and task contracts.
-    SymbolSpec("worldfoundry.evaluation.api", "MetricSpec", "worldfoundry/evaluation/api/metrics.py", "metrics-tasks"),
-    SymbolSpec(
-        "worldfoundry.evaluation.api", "MetricResult", "worldfoundry/evaluation/api/metrics.py", "metrics-tasks"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.api", "AggregateResult", "worldfoundry/evaluation/api/metrics.py", "metrics-tasks"
-    ),
-    SymbolSpec("worldfoundry.evaluation.api", "Metric", "worldfoundry/evaluation/api/metrics.py", "metrics-tasks"),
-    SymbolSpec(
-        "worldfoundry.evaluation.api", "EvaluationProtocolSpec", "worldfoundry/evaluation/api/tasks.py", "metrics-tasks"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.api", "WorldTaskConfig", "worldfoundry/evaluation/api/tasks.py", "metrics-tasks"
-    ),
-    SymbolSpec("worldfoundry.evaluation.api", "BenchmarkSpec", "worldfoundry/evaluation/api/tasks.py", "metrics-tasks"),
+    SymbolSpec("worldfoundry.evals.api", "MetricSpec", "worldfoundry/evals/api/metrics.py", "metrics-tasks"),
+    SymbolSpec("worldfoundry.evals.api", "MetricResult", "worldfoundry/evals/api/metrics.py", "metrics-tasks"),
+    SymbolSpec("worldfoundry.evals.api", "AggregateResult", "worldfoundry/evals/api/metrics.py", "metrics-tasks"),
+    SymbolSpec("worldfoundry.evals.api", "Metric", "worldfoundry/evals/api/metrics.py", "metrics-tasks"),
+    SymbolSpec("worldfoundry.evals.api", "EvaluationProtocolSpec", "worldfoundry/evals/api/tasks.py", "metrics-tasks"),
+    SymbolSpec("worldfoundry.evals.api", "WorldTaskConfig", "worldfoundry/evals/api/tasks.py", "metrics-tasks"),
+    SymbolSpec("worldfoundry.evals.api", "BenchmarkSpec", "worldfoundry/evals/api/tasks.py", "metrics-tasks"),
     # Canonical run and benchmark facade.
-    SymbolSpec(
-        "worldfoundry.evaluation.public", "WorldFoundryRunRequest", "worldfoundry/evaluation/framework.py", "runs"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.public", "WorldFoundryRunResult", "worldfoundry/evaluation/framework.py", "runs"
-    ),
-    SymbolSpec("worldfoundry.evaluation.public", "run_worldfoundry", "worldfoundry/evaluation/framework.py", "runs"),
-    SymbolSpec("worldfoundry.evaluation.public", "list_video_benchmarks", "worldfoundry/evaluation/public.py", "runs"),
-    SymbolSpec("worldfoundry.evaluation.public", "run_benchmark", "worldfoundry/evaluation/public.py", "runs"),
-    SymbolSpec(
-        "worldfoundry.evaluation.public", "normalize_upstream_results", "worldfoundry/evaluation/public.py", "runs"
-    ),
-    SymbolSpec(
-        "worldfoundry.evaluation.public", "benchmark_integration_spec", "worldfoundry/evaluation/public.py", "runs"
-    ),
+    SymbolSpec("worldfoundry.evals.public", "WorldFoundryRunRequest", "worldfoundry/evals/framework.py", "runs"),
+    SymbolSpec("worldfoundry.evals.public", "WorldFoundryRunResult", "worldfoundry/evals/framework.py", "runs"),
+    SymbolSpec("worldfoundry.evals.public", "run_worldfoundry", "worldfoundry/evals/framework.py", "runs"),
+    SymbolSpec("worldfoundry.evals.public", "list_video_benchmarks", "worldfoundry/evals/public.py", "runs"),
+    SymbolSpec("worldfoundry.evals.public", "run_benchmark", "worldfoundry/evals/public.py", "runs"),
+    SymbolSpec("worldfoundry.evals.public", "normalize_upstream_results", "worldfoundry/evals/public.py", "runs"),
+    SymbolSpec("worldfoundry.evals.public", "benchmark_integration_spec", "worldfoundry/evals/public.py", "runs"),
     # Evidence and reporting.
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "build_env_requirements",
-        "worldfoundry/evaluation/reporting/run_manifest.py",
+        "worldfoundry/evals/reporting/run_manifest.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "build_environment",
-        "worldfoundry/evaluation/reporting/run_manifest.py",
+        "worldfoundry/evals/reporting/run_manifest.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "build_run_manifest",
-        "worldfoundry/evaluation/reporting/run_manifest.py",
+        "worldfoundry/evals/reporting/run_manifest.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "write_run_manifest_artifacts",
-        "worldfoundry/evaluation/reporting/run_manifest.py",
+        "worldfoundry/evals/reporting/run_manifest.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "build_scorecard",
-        "worldfoundry/evaluation/reporting/scorecard.py",
+        "worldfoundry/evals/reporting/scorecard.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "write_scorecard",
-        "worldfoundry/evaluation/reporting/scorecard.py",
+        "worldfoundry/evals/reporting/scorecard.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "build_run_summary",
-        "worldfoundry/evaluation/reporting/run_report.py",
+        "worldfoundry/evals/reporting/run_report.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "build_markdown_report",
-        "worldfoundry/evaluation/reporting/run_report.py",
+        "worldfoundry/evals/reporting/run_report.py",
         "reporting",
     ),
     SymbolSpec(
-        "worldfoundry.evaluation.reporting",
+        "worldfoundry.evals.reporting",
         "write_run_report_artifacts",
-        "worldfoundry/evaluation/reporting/run_report.py",
+        "worldfoundry/evals/reporting/run_report.py",
         "reporting",
     ),
     # Runtime paths, local assets, and bounded subprocesses.

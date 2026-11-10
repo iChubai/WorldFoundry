@@ -21,7 +21,7 @@ WorldFoundry **vendors the VBench-2.0 runtime**. The runner checks prompt-suite 
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/vbench_2_0/run_vbench_2_0_official_runner.py \
   --benchmark-id vbench-2.0 \
   --variant vbench2 \
   --dimension Motion_Order_Understanding \
@@ -33,7 +33,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 Env: `WORLDFOUNDRY_VBENCH2_DATASET_ROOT`, `WORLDFOUNDRY_VBENCH2_RESULTS_PATH`, `WORLDFOUNDRY_VBENCH2_ROOT`, `WORLDFOUNDRY_HF_CACHE_DIR`. Shared stack: `vbench_perception_metric_stack`.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml`, `worldfoundry/evaluation/tasks/execution/runners/vbench_2_0/runtime`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/vbench-2.0.yaml`, `worldfoundry/evals/tasks/execution/runners/vbench_2_0/runtime`.
 
 Outputs include `scorecard.json` (primary `vbench2_total`), `dimension_scores.json`, and coverage manifests.
 

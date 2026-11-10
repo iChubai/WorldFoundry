@@ -41,7 +41,7 @@ from .env import (
 LOCAL_ASSET_MANIFEST_ENV = "WORLDFOUNDRY_LOCAL_ASSET_MANIFEST"
 
 # Same values evaluation.utils derives; resolved from core so the runtime
-# layer never imports worldfoundry.evaluation (SA-10).
+# layer never imports worldfoundry.evals (SA-10).
 REPO_ROOT = project_root()
 BENCHMARKS_DATA_ROOT = package_data_root() / "benchmarks"
 

@@ -27,7 +27,7 @@ checkpoint_refs:
 - repo_id: facebook/VGGT-1B
   role: environment_encoder
 runtime_profile: runtime-profile:multiworld
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: multiworld
 integration:
   status: integrated

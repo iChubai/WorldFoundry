@@ -32,7 +32,7 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: world-in-world
   contract_validation_command: wf zoo benchmark-run --benchmark-id world-in-world --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/world-in-world --json
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldInWorldContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
   official_runner_command: wf zoo benchmark-run
   name: World-in-World
   domain:
@@ -80,11 +80,11 @@ metadata:
   data_refs:
     task_yaml: worldfoundry/data/benchmarks/tasks/external/world-in-world.yaml
     bundled_assets: worldfoundry/data/benchmarks/assets/world-in-world
-    result_importer: worldfoundry/evaluation/tasks/execution/runners/world_in_world
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
+    result_importer: worldfoundry/evals/tasks/execution/runners/world_in_world
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldInWorldContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -96,7 +96,7 @@ metadata:
     filename_template: scorecard.json
   runtime:
     kind: in_tree_result_importer
-    root: worldfoundry/evaluation/tasks/execution/runners/world_in_world
+    root: worldfoundry/evals/tasks/execution/runners/world_in_world
     upstream_revision: 6ac81ef12451c29d22cdec9ac96e3fe46b22ac2a
     asset_override_env: WORLDFOUNDRY_WORLD_IN_WORLD_ASSETS_ROOT
     prompt_manifest_env: WORLDFOUNDRY_WORLD_IN_WORLD_PROMPT_MANIFEST
@@ -115,7 +115,7 @@ metadata:
     - world_in_world_average
     primary_metric: world_in_world_average
   local_evaluator:
-    target: worldfoundry/evaluation/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
+    target: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
     status: implemented
     protocol: official_result_normalization
     official_result_normalization:
@@ -240,8 +240,8 @@ tasks:
           kind: structured_trace
     evaluation_protocol:
     - name: result_importer
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldInWorldContract
-      runner_script: worldfoundry/evaluation/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
+      runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+      runner_script: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
       metric_ids:
       - active_recognition_success_rate
       - image_goal_navigation_success_rate
@@ -266,8 +266,8 @@ tasks:
       - robotic_manipulation_success_rate
       - interaction_trace_consistency
       - world_in_world_average
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:WorldInWorldContract
-      runner_script: worldfoundry/evaluation/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
+      runner_target: worldfoundry.evals.tasks.contracts.external:WorldInWorldContract
+      runner_script: worldfoundry/evals/tasks/execution/runners/world_in_world/run_world_in_world_official_runner.py
     runtime_requirements:
       bundled_prompt_assets: worldfoundry/data/benchmarks/assets/world-in-world
       generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR

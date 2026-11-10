@@ -94,19 +94,19 @@ runner:
   scoring:
     engines: [physics_contract]
     hooks:
-      physics_contract: worldfoundry.evaluation.tasks.execution.runners.phyground.phyground_contract_evaluator:write_phyground_evaluation
+      physics_contract: worldfoundry.evals.tasks.execution.runners.phyground.phyground_contract_evaluator:write_phyground_evaluation
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/phyground/run_phyground_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
   pass_benchmark_id: false
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.phyground.run_phyground_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.phyground.run_phyground_official_runner
     generated_arg: null
     limit_arg: --limit
     supports_fixture: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhyGroundContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/phyground/run_phyground_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
   validation_command:
   - wf
   - zoo
@@ -169,10 +169,10 @@ data_refs:
   - <phyground_data_root>/prompts/phyground.json
   - <phyground_data_root>/annotations/
   - <phyground_data_root>/videos/<model_id>/
-official_runner_script: worldfoundry/evaluation/tasks/execution/runners/phyground/run_phyground_official_runner.py
+official_runner_script: worldfoundry/evals/tasks/execution/runners/phyground/run_phyground_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhyGroundContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhyGroundContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

@@ -17,7 +17,7 @@ integration:
   notes:
   - Hosted DashScope API Studio pipeline is available; users must provide their own
     provider API key.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: wan-2p7
 runner_parity:
   status: not_applicable

@@ -1,6 +1,6 @@
 id: dynamicrafter
 name: DynamiCrafter
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: dynamicrafter
 runtime_profile: runtime-profile:dynamicrafter-512-i2v
 tasks:
@@ -69,7 +69,7 @@ variants:
 - id: dynamicrafter-512-i2v
   task: image-to-video
   runtime_profile: dynamicrafter-512-i2v
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: dynamicrafter-512-i2v
   integration:
     status: integrated
@@ -78,7 +78,7 @@ variants:
 - id: dynamicrafter-1024-i2v
   task: image-to-video
   runtime_profile: dynamicrafter-1024-i2v
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   pipeline_binding: dynamicrafter-1024-i2v
   integration:
     status: integrated

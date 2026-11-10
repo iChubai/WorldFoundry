@@ -51,7 +51,7 @@ runner_parity:
   - A checkpoint-backed MoE T2V short clip has been compared with the pinned official runner;
     pixel-exact parity, the five-second recipe, refiner, and other modes remain pending.
 runtime_profile: runtime-profile:lingbot-video
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: lingbot-video
 catalog_category: video
 docs:

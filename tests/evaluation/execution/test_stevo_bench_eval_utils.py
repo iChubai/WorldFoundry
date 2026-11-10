@@ -16,7 +16,7 @@ import pytest
 pytestmark = pytest.mark.unit
 
 _SOURCE = Path(__file__).resolve().parents[3] / (
-    "worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/eval/utils.py"
+    "worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/eval/utils.py"
 )
 
 

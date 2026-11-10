@@ -1,7 +1,7 @@
 """Regression tests for SA-10: runtime layer must not import evaluation.
 
 ``worldfoundry/runtime/{assets,conda}.py`` used to import path
-constants and manifest loaders from ``worldfoundry.evaluation.utils`` — an
+constants and manifest loaders from ``worldfoundry.evals.utils`` — an
 upward dependency from the runtime layer into the evaluation framework.  The
 loaders now live in ``worldfoundry.core.io.manifests`` and the constants are
 derived from ``worldfoundry.core.io.paths``; ``evaluation.utils`` re-exports
@@ -20,7 +20,7 @@ def test_runtime_modules_import_without_evaluation():
         "import worldfoundry.runtime.assets\n"
         "import worldfoundry.runtime.conda\n"
         "loaded = sorted(name for name in sys.modules "
-        "if name.startswith('worldfoundry.evaluation'))\n"
+        "if name.startswith('worldfoundry.evals'))\n"
         "assert not loaded, f'runtime pulled in evaluation modules: {loaded}'\n"
         "print('OK')\n"
     )
@@ -36,7 +36,7 @@ def test_runtime_modules_import_without_evaluation():
 
 def test_evaluation_utils_reexports_core_manifest_loaders():
     import worldfoundry.core.io.manifests as core_manifests
-    import worldfoundry.evaluation.utils as evaluation_utils
+    import worldfoundry.evals.utils as evaluation_utils
 
     assert evaluation_utils.load_manifest is core_manifests.load_manifest
     assert evaluation_utils.load_manifest_collection is core_manifests.load_manifest_collection
@@ -45,7 +45,7 @@ def test_evaluation_utils_reexports_core_manifest_loaders():
 
 
 def test_runtime_constants_match_evaluation_utils():
-    import worldfoundry.evaluation.utils as evaluation_utils
+    import worldfoundry.evals.utils as evaluation_utils
     import worldfoundry.runtime.assets as runtime_assets
     import worldfoundry.runtime.conda as runtime_conda
 

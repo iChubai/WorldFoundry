@@ -44,7 +44,7 @@ integration:
   - Pre-rendered control bundles stay explicit runtime inputs; preprocessing is not silently substituted.
 runtime_profile: runtime-profile:uni3c
 pipeline_binding: uni3c
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runner_parity:
   status: checkpoint_gpu_validated
   notes:

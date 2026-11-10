@@ -71,7 +71,7 @@
       "runtime": {
         "profileId": "animatediff",
         "bindingId": "animatediff",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:AnimateDiffPipeline",
         "loadingMethod": "from_pretrained",
@@ -494,7 +494,7 @@
       "runtime": {
         "profileId": "astra",
         "bindingId": "astra",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kling.pipeline_astra:AstraPipeline",
         "loadingMethod": "from_pretrained",
@@ -891,7 +891,7 @@
       "runtime": {
         "profileId": "being-h05",
         "bindingId": "being-h05",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:BeingH05Pipeline",
         "loadingMethod": "from_pretrained",
@@ -1014,7 +1014,7 @@
           "pipelineBinding": "being-h05",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-being-h05",
@@ -1080,7 +1080,7 @@
           "pipelineBinding": "being-h05",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-being-h05",
@@ -1146,7 +1146,7 @@
           "pipelineBinding": "being-h05",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-being-h05",
@@ -1212,7 +1212,7 @@
           "pipelineBinding": "being-h05",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-being-h05",
@@ -1727,7 +1727,7 @@
       "runtime": {
         "profileId": "cameractrl",
         "bindingId": "cameractrl",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:CameraCtrlPipeline",
         "loadingMethod": "from_pretrained",
@@ -2103,7 +2103,7 @@
       "runtime": {
         "profileId": "cogvideox-5b-t2v",
         "bindingId": "cogvideox",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.cogvideox.pipeline_cogvideox_5b_t2v:CogVideoX5bT2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -5113,7 +5113,7 @@
       "runtime": {
         "profileId": "cosmos-transfer2.5-2b-controlled-video",
         "bindingId": "cosmos-transfer-2.5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.cosmos.pipeline_cosmos_transfer2p5:CosmosTransfer2p5Pipeline",
         "loadingMethod": "from_pretrained",
@@ -5647,7 +5647,7 @@
       "runtime": {
         "profileId": "dap",
         "bindingId": "dap",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DAPPipeline",
         "loadingMethod": "from_pretrained",
@@ -5953,7 +5953,7 @@
       "runtime": {
         "profileId": "depth-anything-v3-prior",
         "bindingId": "depth-anything-v3-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DepthAnythingV3PriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -6230,7 +6230,7 @@
       "runtime": {
         "profileId": "depth-anything-v1",
         "bindingId": "depth-anything-v1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.depth_anything.pipeline_depth_anything_v1:DepthAnything1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -6507,7 +6507,7 @@
       "runtime": {
         "profileId": "depth-anything-v2-prior",
         "bindingId": "depth-anything-v2-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DepthAnythingV2PriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -6792,7 +6792,7 @@
       "runtime": {
         "profileId": "diamond",
         "bindingId": "diamond",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DIAMONDPipeline",
         "loadingMethod": "from_pretrained",
@@ -7243,7 +7243,7 @@
       "runtime": {
         "profileId": "dualcamctrl",
         "bindingId": "dualcamctrl",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:DualCamCtrlPipeline",
         "loadingMethod": "from_pretrained",
@@ -7762,7 +7762,7 @@
       "runtime": {
         "profileId": "dust3r-base-model",
         "bindingId": "dust3r-base-model",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:DUSt3RPipeline",
         "loadingMethod": "from_pretrained",
@@ -8032,7 +8032,7 @@
       "runtime": {
         "profileId": "fantasyworld",
         "bindingId": "fantasyworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.fantasy_world.pipeline_fantasy_world:FantasyWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -8600,7 +8600,7 @@
       "runtime": {
         "profileId": "flashworld",
         "bindingId": "flashworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.flash_world.pipeline_flash_world:FlashWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -8967,7 +8967,7 @@
       "runtime": {
         "profileId": "geocalib-prior",
         "bindingId": "geocalib-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:GeoCalibPriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -9246,7 +9246,7 @@
       "runtime": {
         "profileId": "giga-brain-0",
         "bindingId": "giga-brain-0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:GigaBrain0Pipeline",
         "loadingMethod": "from_pretrained",
@@ -9379,7 +9379,7 @@
           "pipelineBinding": "giga-brain-0",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -9449,7 +9449,7 @@
           "pipelineBinding": "giga-brain-0",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -9812,7 +9812,7 @@
       "runtime": {
         "profileId": "hunyuanworld-mirror",
         "bindingId": "hunyuanworld-mirror",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_mirror:HunyuanMirrorPipeline",
         "loadingMethod": "from_pretrained",
@@ -10220,7 +10220,7 @@
       "runtime": {
         "profileId": "hy-worldplay",
         "bindingId": "hy-worldplay",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_worldplay:HunyuanWorldPlayPipeline",
         "loadingMethod": "from_pretrained",
@@ -10664,7 +10664,7 @@
       "runtime": {
         "profileId": "infinite-world",
         "bindingId": "infinite-world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.infinite_world.pipeline_infinite_world:InfiniteWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -11019,7 +11019,7 @@
       "runtime": {
         "profileId": "inspatio-world-1p5",
         "bindingId": "inspatio-world-1p5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.inspatio_world.pipeline_inspatio_world_v15:InspatioWorldV15Pipeline",
         "loadingMethod": "from_pretrained",
@@ -11344,7 +11344,7 @@
       "runtime": {
         "profileId": "inspatio-world",
         "bindingId": "inspatio-world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.inspatio_world.pipeline_inspatio_world:InspatioWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -11753,7 +11753,7 @@
       "runtime": {
         "profileId": "worldfm",
         "bindingId": "worldfm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldfm.pipeline_worldfm:WorldFMPipeline",
         "loadingMethod": "from_pretrained",
@@ -12092,7 +12092,7 @@
       "runtime": {
         "profileId": "kairos-sensenova",
         "bindingId": "kairos-sensenova",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kairos.pipeline_kairos:KairosPipeline",
         "loadingMethod": "from_pretrained",
@@ -12515,7 +12515,7 @@
       "runtime": {
         "profileId": "lingbot-world",
         "bindingId": "lingbot-world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.lingbot_world.pipeline_lingbot_world:LingBotPipeline",
         "loadingMethod": "from_pretrained",
@@ -12985,7 +12985,7 @@
       "runtime": {
         "profileId": "loger",
         "bindingId": "loger",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.pi3.pipeline_loger:LoGeRPipeline",
         "loadingMethod": "from_pretrained",
@@ -13306,7 +13306,7 @@
       "runtime": {
         "profileId": "longvie-2",
         "bindingId": "longvie-2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.longvie.pipeline_longvie:LongVie2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -13828,7 +13828,7 @@
       "runtime": {
         "profileId": "lyra",
         "bindingId": "lyra",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.lyra.pipeline_lyra2:LyraPipeline",
         "loadingMethod": "from_pretrained",
@@ -14656,7 +14656,7 @@
       "runtime": {
         "profileId": "matrix-game-2-universal-ref-image-seed42-15f",
         "bindingId": "matrix-game-2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_2:MatrixGame2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -15128,7 +15128,7 @@
       "runtime": {
         "profileId": "matrix-game-3",
         "bindingId": "matrix-game-3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_3:MatrixGame3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -15620,7 +15620,7 @@
       "runtime": {
         "profileId": "metric3d-prior",
         "bindingId": "metric3d-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:Metric3DPriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -15925,7 +15925,7 @@
       "runtime": {
         "profileId": "molmoact2",
         "bindingId": "molmoact2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:MolmoAct2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -16074,7 +16074,7 @@
           "pipelineBinding": "molmoact2",
           "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -16144,7 +16144,7 @@
           "pipelineBinding": "molmoact2",
           "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -16214,7 +16214,7 @@
           "pipelineBinding": "molmoact2",
           "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -16284,7 +16284,7 @@
           "pipelineBinding": "molmoact2",
           "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -16354,7 +16354,7 @@
           "pipelineBinding": "molmoact2",
           "status": "in_tree_checkpoint_runtime_gpu_validated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -16913,7 +16913,7 @@
       "runtime": {
         "profileId": "monst3r",
         "bindingId": "monst3r",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:MonST3RPipeline",
         "loadingMethod": "from_pretrained",
@@ -17499,7 +17499,7 @@
       "runtime": {
         "profileId": "motionctrl",
         "bindingId": "motionctrl",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:MotionCtrlPipeline",
         "loadingMethod": "from_pretrained",
@@ -18015,7 +18015,7 @@
       "runtime": {
         "profileId": "neoverse",
         "bindingId": "neoverse",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.neoverse.pipeline_neoverse:NeoVersePipeline",
         "loadingMethod": "from_pretrained",
@@ -18493,7 +18493,7 @@
       "runtime": {
         "profileId": "openvla",
         "bindingId": "openvla",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OpenVLAPipeline",
         "loadingMethod": "from_pretrained",
@@ -18608,7 +18608,7 @@
           "pipelineBinding": "openvla",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -18666,7 +18666,7 @@
           "pipelineBinding": "openvla",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -19287,7 +19287,7 @@
       "runtime": {
         "profileId": "prior-depth-anything",
         "bindingId": "prior-depth-anything",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:PriorDepthAnythingPipeline",
         "loadingMethod": "from_pretrained",
@@ -19590,7 +19590,7 @@
       "runtime": {
         "profileId": "recammaster",
         "bindingId": "recammaster",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kling.pipeline_recammaster:ReCamMasterPipeline",
         "loadingMethod": "from_pretrained",
@@ -19977,7 +19977,7 @@
       "runtime": {
         "profileId": "roboflamingo",
         "bindingId": "roboflamingo",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:RoboFlamingoPipeline",
         "loadingMethod": "from_pretrained",
@@ -20284,7 +20284,7 @@
       "runtime": {
         "profileId": "scope",
         "bindingId": "scope",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.scope.pipeline_scope:SCOPEPipeline",
         "loadingMethod": "from_pretrained",
@@ -20716,7 +20716,7 @@
       "runtime": {
         "profileId": "show-o",
         "bindingId": "show-o",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:ShowOPipeline",
         "loadingMethod": "from_pretrained",
@@ -21127,7 +21127,7 @@
       "runtime": {
         "profileId": "solaris",
         "bindingId": "solaris",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.solaris.pipeline_solaris:SolarisPipeline",
         "loadingMethod": "from_pretrained",
@@ -21512,7 +21512,7 @@
       "runtime": {
         "profileId": "splatt3r",
         "bindingId": "splatt3r",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:Splatt3RPipeline",
         "loadingMethod": "from_pretrained",
@@ -21774,7 +21774,7 @@
       "runtime": {
         "profileId": "starvla",
         "bindingId": "starvla",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:StarVLAPipeline",
         "loadingMethod": "from_pretrained",
@@ -21911,7 +21911,7 @@
           "pipelineBinding": "starvla",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -21961,7 +21961,7 @@
           "pipelineBinding": "starvla",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-unified-cu128",
@@ -22463,7 +22463,7 @@
       "runtime": {
         "profileId": "step-video-t2v",
         "bindingId": "step-video-t2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.step_video.pipeline_step_video_t2v:StepVideoT2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -22842,7 +22842,7 @@
       "runtime": {
         "profileId": "vggt-omega",
         "bindingId": "vggt-omega",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.vggt_omega.pipeline_vggt_omega:VGGTOmegaPipeline",
         "loadingMethod": "from_pretrained",
@@ -23226,7 +23226,7 @@
       "runtime": {
         "profileId": "vmem",
         "bindingId": "vmem",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.vmem.pipeline_vmem:VMemPipeline",
         "loadingMethod": "from_pretrained",
@@ -23561,7 +23561,7 @@
       "runtime": {
         "profileId": "wan2.1-t2v-1.3b-832x480-81f",
         "bindingId": "wan2.1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.wan.pipeline_wan_2p1_t2v:Wan2p1T2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -24762,7 +24762,7 @@
       "runtime": {
         "profileId": "wan2.2-ti2v-5b-1280x704-121f",
         "bindingId": "wan2.2-t2v-a14b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.wan.pipeline_wan_2p2:Wan2p2T2VA14BPipeline",
         "loadingMethod": "from_pretrained",
@@ -25712,7 +25712,7 @@
       "runtime": {
         "profileId": "warp-as-history",
         "bindingId": "warp-as-history",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.warp_as_history.pipeline_warp_as_history:WarpAsHistoryPipeline",
         "loadingMethod": "from_pretrained",
@@ -26099,7 +26099,7 @@
       "runtime": {
         "profileId": "worldcam",
         "bindingId": "worldcam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldcam.pipeline_worldcam:WorldCamPipeline",
         "loadingMethod": "from_pretrained",
@@ -26587,7 +26587,7 @@
       "runtime": {
         "profileId": "worldcrafter",
         "bindingId": "worldcrafter",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline",
         "loadingMethod": "from_pretrained",
@@ -26891,7 +26891,7 @@
       "runtime": {
         "profileId": "worldcrafter-base",
         "bindingId": "worldcrafter-base",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline",
         "loadingMethod": "from_pretrained",
@@ -27614,7 +27614,7 @@
       "runtime": {
         "profileId": "worldcrafter-fast",
         "bindingId": "worldcrafter-fast",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldcrafter.pipeline_worldcrafter:WorldCrafterPipeline",
         "loadingMethod": "from_pretrained",
@@ -28334,7 +28334,7 @@
       "runtime": {
         "profileId": "yume",
         "bindingId": "yume",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.yume.pipeline_yume:YumePipeline",
         "loadingMethod": "from_pretrained",
@@ -28939,7 +28939,7 @@
       "runtime": {
         "profileId": "zeroscope",
         "bindingId": "zeroscope",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:ZeroScopePipeline",
         "loadingMethod": "from_pretrained",
@@ -29263,7 +29263,7 @@
       "runtime": {
         "profileId": "ac3d",
         "bindingId": "ac3d",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.ac3d.pipeline_ac3d:AC3DPipeline",
         "loadingMethod": "from_pretrained",
@@ -29725,7 +29725,7 @@
       "runtime": {
         "profileId": "act",
         "bindingId": "act",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:ACTPipeline",
         "loadingMethod": "from_pretrained",
@@ -30076,7 +30076,7 @@
       "runtime": {
         "profileId": "ahawam",
         "bindingId": "ahawam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.ahawam.pipeline:AHAWAMPipeline",
         "loadingMethod": "from_pretrained",
@@ -31243,7 +31243,7 @@
       "runtime": {
         "profileId": "alayaworld-v1.1",
         "bindingId": "alayaworld-v1.1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.alayaworld_v11.pipeline_alayaworld_v11:AlayaWorldV11Pipeline",
         "loadingMethod": "from_pretrained",
@@ -31679,7 +31679,7 @@
       "runtime": {
         "profileId": "allegro-ti2v",
         "bindingId": "allegro",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.allegro.pipeline_allegro_ti2v:AllegroTi2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -32787,7 +32787,7 @@
       "runtime": {
         "profileId": "astronex-world",
         "bindingId": "astronex-world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.astronex_world.pipeline_astronex_world:AstronexWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -33238,7 +33238,7 @@
       "runtime": {
         "profileId": "ati-wan21-14b",
         "bindingId": "ati-wan21-14b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.ati.pipeline_ati:ATIPipeline",
         "loadingMethod": "from_pretrained",
@@ -33552,7 +33552,7 @@
       "runtime": {
         "profileId": "bernini",
         "bindingId": "bernini",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.bernini.pipeline_bernini:BerniniWorldFoundryPipeline",
         "loadingMethod": "from_pretrained",
@@ -34812,7 +34812,7 @@
       "runtime": {
         "profileId": "bernini-r-1.3b",
         "bindingId": "bernini-r-1.3b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.bernini.pipeline_bernini:BerniniWorldFoundryPipeline",
         "loadingMethod": "from_pretrained",
@@ -36052,7 +36052,7 @@
       "runtime": {
         "profileId": "bernini-r-14b",
         "bindingId": "bernini-r-14b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.bernini.pipeline_bernini:BerniniWorldFoundryPipeline",
         "loadingMethod": "from_pretrained",
@@ -37291,7 +37291,7 @@
       "runtime": {
         "profileId": "causal-forcing",
         "bindingId": "causal-forcing",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.forcing.pipeline_forcing:CausalForcingPipeline",
         "loadingMethod": "from_pretrained",
@@ -37654,7 +37654,7 @@
       "runtime": {
         "profileId": "cogact",
         "bindingId": "cogact",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:CogACTPipeline",
         "loadingMethod": "from_pretrained",
@@ -38190,7 +38190,7 @@
       "runtime": {
         "profileId": "cosmos-predict2-2b-video2world",
         "bindingId": "cosmos-predict-2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.cosmos.pipeline_cosmos_predict2:CosmosPredict2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -38873,7 +38873,7 @@
       "runtime": {
         "profileId": "cosmos-predict2.5-2b",
         "bindingId": "cosmos-predict-2.5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.cosmos.pipeline_cosmos_predict2p5:CosmosPredict2p5Pipeline",
         "loadingMethod": "from_pretrained",
@@ -39562,7 +39562,7 @@
       "runtime": {
         "profileId": "cosmos3",
         "bindingId": "cosmos3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.cosmos.pipeline_cosmos3:Cosmos3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -42579,7 +42579,7 @@
       "runtime": {
         "profileId": "diffusion-policy",
         "bindingId": "diffusion-policy",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:DiffusionPolicyPipeline",
         "loadingMethod": "from_pretrained",
@@ -42937,7 +42937,7 @@
       "runtime": {
         "profileId": "dino-wm",
         "bindingId": "dino-wm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:DinoWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -43204,7 +43204,7 @@
       "runtime": {
         "profileId": "dreamdojo",
         "bindingId": "dreamdojo",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:DreamDojoPipeline",
         "loadingMethod": "from_pretrained",
@@ -43799,7 +43799,7 @@
       "runtime": {
         "profileId": "dreamdojo-student",
         "bindingId": "dreamdojo-student",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.dreamdojo.pipeline_dreamdojo_student:DreamDojoStudentPipeline",
         "loadingMethod": "from_pretrained",
@@ -44155,7 +44155,7 @@
       "runtime": {
         "profileId": "dreamx-world-5b",
         "bindingId": "dreamx-world-5b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.dreamx_world.pipeline_dreamx_world:DreamXWorld5BARPipeline",
         "loadingMethod": "from_pretrained",
@@ -44489,7 +44489,7 @@
       "runtime": {
         "profileId": "dynamicrafter-512-i2v",
         "bindingId": "dynamicrafter",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.dynamicrafter.pipeline_dynamicrafter_512_i2v:DynamiCrafter512I2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -46573,7 +46573,7 @@
       "runtime": {
         "profileId": "dvlt",
         "bindingId": "dvlt",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:DVLTPipeline",
         "loadingMethod": "from_pretrained",
@@ -46878,7 +46878,7 @@
       "runtime": {
         "profileId": "easyanimate-i2v",
         "bindingId": "easyanimate",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.easyanimate.pipeline_easyanimate_i2v:EasyAnimateI2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -48039,7 +48039,7 @@
       "runtime": {
         "profileId": "echo-infinity",
         "bindingId": "echo-infinity",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.echo_infinity.pipeline_echo_infinity:EchoInfinityPipeline",
         "loadingMethod": "from_pretrained",
@@ -48315,7 +48315,7 @@
       "runtime": {
         "profileId": "echo-memory-context-k1",
         "bindingId": "echo-memory-context-k1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.echo_memory.pipeline_echo_memory:EchoMemoryContextK1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -48743,7 +48743,7 @@
       "runtime": {
         "profileId": "joyai-echo-wm",
         "bindingId": "joyai-echo-wm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -49355,7 +49355,7 @@
       "runtime": {
         "profileId": "emu3.5",
         "bindingId": "emu3.5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.emu35.pipeline_emu35:Emu35Pipeline",
         "loadingMethod": "from_pretrained",
@@ -49786,7 +49786,7 @@
       "runtime": {
         "profileId": "evoke",
         "bindingId": "evoke",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.evoke.pipeline_evoke:EvokePipeline",
         "loadingMethod": "from_pretrained",
@@ -50239,7 +50239,7 @@
       "runtime": {
         "profileId": "fastvideo-causal-wan2.2-i2v-14b",
         "bindingId": "fastvideo-causal-wan2.2-i2v-14b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.fastvideo_causal_wan.pipeline_fastvideo_causal_wan:FastVideoCausalWanPipeline",
         "loadingMethod": "from_pretrained",
@@ -50530,7 +50530,7 @@
       "runtime": {
         "profileId": "framepack",
         "bindingId": "framepack",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:FramePackPipeline",
         "loadingMethod": "from_pretrained",
@@ -51699,7 +51699,7 @@
       "runtime": {
         "profileId": "gamma-world",
         "bindingId": "gamma-world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.gamma_world.pipeline_gamma_world:GammaWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -52740,7 +52740,7 @@
       "runtime": {
         "profileId": "gen3c",
         "bindingId": "gen3c",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.gen3c.pipeline_gen3c:Gen3CPipeline",
         "loadingMethod": "from_pretrained",
@@ -53613,7 +53613,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "hailuo-2p3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.minimax.pipeline_hailuo_2p3:Hailuo2p3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -53886,7 +53886,7 @@
       "runtime": {
         "profileId": "helios",
         "bindingId": "helios",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.helios.pipeline_helios:HeliosPipeline",
         "loadingMethod": "from_pretrained",
@@ -54747,7 +54747,7 @@
       "runtime": {
         "profileId": "helixworld",
         "bindingId": "helixworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.helixworld.pipeline_helixworld:HelixWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -55158,7 +55158,7 @@
       "runtime": {
         "profileId": "hunyuan-game-craft",
         "bindingId": "hunyuan-game-craft",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_game_craft:HunyuanGameCraftPipeline",
         "loadingMethod": "from_pretrained",
@@ -55538,7 +55538,7 @@
       "runtime": {
         "profileId": "hunyuanvideo-t2v",
         "bindingId": "hunyuanvideo",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video:HunyuanVideoT2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -56258,7 +56258,7 @@
       "runtime": {
         "profileId": "hunyuanvideo-1.5-t2v",
         "bindingId": "hunyuanvideo-1.5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video:HunyuanVideo15T2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -56938,7 +56938,7 @@
       "runtime": {
         "profileId": "hunyuanworld-voyager",
         "bindingId": "hunyuanworld-voyager",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hunyuan_world_voyager_official:HunyuanWorldVoyagerOfficialPipeline",
         "loadingMethod": "from_pretrained",
@@ -57254,7 +57254,7 @@
       "runtime": {
         "profileId": "hy-embodied-vla",
         "bindingId": "hy-embodied-vla",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hy_embodied_vla.pipeline_hy_embodied_vla:HyEmbodiedVLAPipeline",
         "loadingMethod": "from_pretrained",
@@ -57357,7 +57357,7 @@
           "pipelineBinding": "hy-embodied-vla",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-hy-embodied-vla-cu128",
@@ -57435,7 +57435,7 @@
           "pipelineBinding": "hy-embodied-vla",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-hy-embodied-vla-cu128",
@@ -57991,7 +57991,7 @@
       "runtime": {
         "profileId": "hy-nomas",
         "bindingId": "hy-nomas",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hy_nomas.pipeline_hy_nomas:HyNomasPipeline",
         "loadingMethod": "from_pretrained",
@@ -58784,7 +58784,7 @@
       "runtime": {
         "profileId": "hydra",
         "bindingId": "hydra",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hydra.pipeline_hydra:HydraPipeline",
         "loadingMethod": "from_pretrained",
@@ -59134,7 +59134,7 @@
       "runtime": {
         "profileId": "hyperflow",
         "bindingId": "hyperflow",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hyperflow.pipeline_hyperflow:HyperFlowPipeline",
         "loadingMethod": "from_pretrained",
@@ -59645,7 +59645,7 @@
       "runtime": {
         "profileId": "i2vgen-xl",
         "bindingId": "i2vgen-xl",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:I2VGenXLPipeline",
         "loadingMethod": "from_pretrained",
@@ -60745,7 +60745,7 @@
       "runtime": {
         "profileId": "joyai-echo-longvideo",
         "bindingId": "joyai-echo-longvideo",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoLongVideoPipeline",
         "loadingMethod": "from_pretrained",
@@ -61178,7 +61178,7 @@
       "runtime": {
         "profileId": "kandinsky6-lite",
         "bindingId": "kandinsky6-lite",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kandinsky6.pipeline_kandinsky6:Kandinsky6Pipeline",
         "loadingMethod": "from_pretrained",
@@ -61847,7 +61847,7 @@
       "runtime": {
         "profileId": "kandinsky6-lite-distill",
         "bindingId": "kandinsky6-lite-distill",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kandinsky6.pipeline_kandinsky6:Kandinsky6Pipeline",
         "loadingMethod": "from_pretrained",
@@ -62516,7 +62516,7 @@
       "runtime": {
         "profileId": "kandinsky6-lite-pretrain",
         "bindingId": "kandinsky6-lite-pretrain",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kandinsky6.pipeline_kandinsky6:Kandinsky6Pipeline",
         "loadingMethod": "from_pretrained",
@@ -63185,7 +63185,7 @@
       "runtime": {
         "profileId": "kandinsky6-pro",
         "bindingId": "kandinsky6-pro",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kandinsky6.pipeline_kandinsky6:Kandinsky6Pipeline",
         "loadingMethod": "from_pretrained",
@@ -63857,7 +63857,7 @@
       "runtime": {
         "profileId": "kandinsky6-pro-distill",
         "bindingId": "kandinsky6-pro-distill",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kandinsky6.pipeline_kandinsky6:Kandinsky6Pipeline",
         "loadingMethod": "from_pretrained",
@@ -64126,7 +64126,7 @@
       "runtime": {
         "profileId": "kandinsky6-pro-pretrain",
         "bindingId": "kandinsky6-pro-pretrain",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kandinsky6.pipeline_kandinsky6:Kandinsky6Pipeline",
         "loadingMethod": "from_pretrained",
@@ -64795,7 +64795,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "kling-api",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.kling.pipeline_kling_api:KlingApiPipeline",
         "loadingMethod": "from_pretrained",
@@ -65121,7 +65121,7 @@
       "runtime": {
         "profileId": "krea-realtime-video",
         "bindingId": "krea-realtime-video",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:KreaRealtimeVideoPipeline",
         "loadingMethod": "from_pretrained",
@@ -66206,7 +66206,7 @@
       "runtime": {
         "profileId": "lagernvs",
         "bindingId": "lagernvs",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:LagrNVSPipeline",
         "loadingMethod": "from_pretrained",
@@ -66551,7 +66551,7 @@
       "runtime": {
         "profileId": "last-r1",
         "bindingId": "last-r1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:LastR1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -66856,7 +66856,7 @@
       "runtime": {
         "profileId": "lingbot-map",
         "bindingId": "lingbot-map",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.lingbot_map.pipeline_lingbot_map:LingBotMapPipeline",
         "loadingMethod": "from_pretrained",
@@ -67130,7 +67130,7 @@
       "runtime": {
         "profileId": "lingbot-video",
         "bindingId": "lingbot-video",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.lingbot_video.pipeline_lingbot_video:LingBotVideoGenerationPipeline",
         "loadingMethod": "from_pretrained",
@@ -68045,7 +68045,7 @@
       "runtime": {
         "profileId": "lingbot-world-act",
         "bindingId": "lingbot-world-act",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.lingbot_world.pipeline_lingbot_world:LingBotPipeline",
         "loadingMethod": "from_pretrained",
@@ -68691,7 +68691,7 @@
       "runtime": {
         "profileId": "lingbot-world-v2",
         "bindingId": "lingbot-world-v2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.lingbot_world_v2.pipeline_lingbot_world_v2:LingBotWorldV2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -69166,7 +69166,7 @@
       "runtime": {
         "profileId": "lingbot-world-v2-1.3b",
         "bindingId": "lingbot-world-v2-1.3b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.lingbot_world_v2.pipeline_lingbot_world_v2:LingBotWorldV2SmallPipeline",
         "loadingMethod": "from_pretrained",
@@ -69597,7 +69597,7 @@
       "runtime": {
         "profileId": "liveworld",
         "bindingId": "liveworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.liveworld.pipeline_liveworld:LiveWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -69889,7 +69889,7 @@
       "runtime": {
         "profileId": "longcat-video",
         "bindingId": "longcat-video",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.longcat_video.pipeline_longcat_video:LongCatVideoPipeline",
         "loadingMethod": "from_pretrained",
@@ -70317,7 +70317,7 @@
       "runtime": {
         "profileId": "longvie-1",
         "bindingId": "longvie-1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.longvie.pipeline_longvie:LongVie1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -70788,7 +70788,7 @@
       "runtime": {
         "profileId": "ltx-2.5",
         "bindingId": "ltx-2.5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.ltx25.pipeline_ltx25:LTX25Pipeline",
         "loadingMethod": "from_pretrained",
@@ -71222,7 +71222,7 @@
       "runtime": {
         "profileId": "ltx-2.3-i2v",
         "bindingId": "ltx-2.x",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.ltx2.pipeline_ltx2_3_i2v:LTX23I2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -72424,7 +72424,7 @@
       "runtime": {
         "profileId": "ltx-video-i2v",
         "bindingId": "ltx-video",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.ltx_video.pipeline_ltx_video_i2v:LTXVideoI2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -73606,7 +73606,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "luma-ray2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.luma.pipeline_luma_ray2:LumaRay2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -73950,7 +73950,7 @@
       "runtime": {
         "profileId": "magi-1",
         "bindingId": "magi-1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:MAGI1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -75058,7 +75058,7 @@
       "runtime": {
         "profileId": "magi2-preview",
         "bindingId": "magi2-preview",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.magi2.pipeline_magi2:NativeMagi2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -75461,7 +75461,7 @@
       "runtime": {
         "profileId": "magicworld",
         "bindingId": "magicworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.magic_world.pipeline_magic_world:MagicWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -75792,7 +75792,7 @@
       "runtime": {
         "profileId": "matrix-game-1",
         "bindingId": "matrix-game-1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_1:MatrixGame1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -76175,7 +76175,7 @@
       "runtime": {
         "profileId": "matrix-game-3.5-first-person",
         "bindingId": "matrix-game-3.5-first-person",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game_3p5:MatrixGame35FirstPersonPipeline",
         "loadingMethod": "from_pretrained",
@@ -78895,7 +78895,7 @@
       "runtime": {
         "profileId": "matrix-game-4-egypt",
         "bindingId": "matrix-game-4-egypt",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.matrix_game.pipeline_matrix_game4:MatrixGame4EgyptPipeline",
         "loadingMethod": "from_pretrained",
@@ -79212,7 +79212,7 @@
       "runtime": {
         "profileId": "minimax-h3",
         "bindingId": "minimax-h3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.minimax.pipeline_minimax_h3:NativeMiniMaxH3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -79591,7 +79591,7 @@
       "runtime": {
         "profileId": "minwm-hy-action2v",
         "bindingId": "minwm-hy-action2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.minwm.pipeline_minwm:MinWMHYAction2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -79929,7 +79929,7 @@
       "runtime": {
         "profileId": "mira",
         "bindingId": "mira",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MIRAPipeline",
         "loadingMethod": "from_pretrained",
@@ -80282,7 +80282,7 @@
       "runtime": {
         "profileId": "mmaudio",
         "bindingId": "mmaudio",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:MMAudioPipeline",
         "loadingMethod": "from_pretrained",
@@ -81370,7 +81370,7 @@
       "runtime": {
         "profileId": "mochi-1-preview-t2v",
         "bindingId": "mochi-1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:Mochi1PreviewT2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -82498,7 +82498,7 @@
       "runtime": {
         "profileId": "modelscope-t2v",
         "bindingId": "modelscope-t2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:ModelScopeT2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -83591,7 +83591,7 @@
       "runtime": {
         "profileId": "molmobot",
         "bindingId": "molmobot",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:MolmoBotPipeline",
         "loadingMethod": "from_pretrained",
@@ -84416,7 +84416,7 @@
       "runtime": {
         "profileId": "multiworld",
         "bindingId": "multiworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.multiworld.pipeline_multiworld_ittakestwo:MultiWorldItTakesTwoPipeline",
         "loadingMethod": "from_pretrained",
@@ -84800,7 +84800,7 @@
       "runtime": {
         "profileId": "mvdiffusion",
         "bindingId": "mvdiffusion",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:MVDiffusionPipeline",
         "loadingMethod": "from_pretrained",
@@ -85169,7 +85169,7 @@
       "runtime": {
         "profileId": "dreamzero",
         "bindingId": "dreamzero",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:DreamZeroPipeline",
         "loadingMethod": "from_pretrained",
@@ -85329,7 +85329,7 @@
           "pipelineBinding": "dreamzero",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-dreamzero-cu129",
@@ -85383,7 +85383,7 @@
           "pipelineBinding": "dreamzero",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-dreamzero-cu129",
@@ -85955,7 +85955,7 @@
       "runtime": {
         "profileId": "gr00t",
         "bindingId": "gr00t",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:GR00TPipeline",
         "loadingMethod": "from_pretrained",
@@ -86091,7 +86091,7 @@
           "pipelineBinding": "gr00t",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-gr00t",
@@ -86137,7 +86137,7 @@
           "pipelineBinding": "gr00t",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-gr00t",
@@ -86457,7 +86457,7 @@
       "runtime": {
         "profileId": "octo",
         "bindingId": "octo",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OctoPipeline",
         "loadingMethod": "from_pretrained",
@@ -86579,7 +86579,7 @@
           "pipelineBinding": "octo",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-octo-jax",
@@ -86625,7 +86625,7 @@
           "pipelineBinding": "octo",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-octo-jax",
@@ -87169,7 +87169,7 @@
       "runtime": {
         "profileId": "omnivinci",
         "bindingId": "omnivinci",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:OmniVinciPipeline",
         "loadingMethod": "from_pretrained",
@@ -87981,7 +87981,7 @@
       "runtime": {
         "profileId": "open-magvit2",
         "bindingId": "open-magvit2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OpenMAGVIT2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -88322,7 +88322,7 @@
       "runtime": {
         "profileId": "open-sora",
         "bindingId": "open-sora",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:OpenSoraPipeline",
         "loadingMethod": "from_pretrained",
@@ -89434,7 +89434,7 @@
       "runtime": {
         "profileId": "open-sora-plan",
         "bindingId": "open-sora-plan",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:OpenSoraPlanPipeline",
         "loadingMethod": "from_pretrained",
@@ -90514,7 +90514,7 @@
       "runtime": {
         "profileId": "openpi",
         "bindingId": "openpi",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OpenPIPipeline",
         "loadingMethod": "from_pretrained",
@@ -90614,7 +90614,7 @@
           "pipelineBinding": "openpi",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-openpi-cu12",
@@ -90660,7 +90660,7 @@
           "pipelineBinding": "openpi",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-openpi-cu12",
@@ -90706,7 +90706,7 @@
           "pipelineBinding": "openpi",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-openpi-cu12",
@@ -90752,7 +90752,7 @@
           "pipelineBinding": "openpi",
           "status": "integrated",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-openpi-cu12",
@@ -91506,7 +91506,7 @@
       "runtime": {
         "profileId": "pika-h3-flex",
         "bindingId": "pika-h3-flex",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.pika_h3_flex.pipeline_pika_h3_flex:PikaH3FlexPipeline",
         "loadingMethod": "from_pretrained",
@@ -92150,7 +92150,7 @@
       "runtime": {
         "profileId": "pixelsplat",
         "bindingId": "pixelsplat",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:PixelSplatPipeline",
         "loadingMethod": "from_pretrained",
@@ -92478,7 +92478,7 @@
       "runtime": {
         "profileId": "pusa-vidgen",
         "bindingId": "pusa-vidgen",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.pusa_vidgen.pipeline_pusa_vidgen:PusaVidGenPipeline",
         "loadingMethod": "from_pretrained",
@@ -92986,7 +92986,7 @@
       "runtime": {
         "profileId": "qwen2.5-omni",
         "bindingId": "qwen2.5-omni",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:Qwen25OmniPipeline",
         "loadingMethod": "from_pretrained",
@@ -94252,7 +94252,7 @@
       "runtime": {
         "profileId": "rolling-forcing",
         "bindingId": "rolling-forcing",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.forcing.pipeline_forcing:RollingForcingPipeline",
         "loadingMethod": "from_pretrained",
@@ -94652,7 +94652,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "runway-gen4p5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.runway.pipeline_runway_gen4p5:RunwayGen4p5Pipeline",
         "loadingMethod": "from_pretrained",
@@ -94948,7 +94948,7 @@
       "runtime": {
         "profileId": "sama-14b",
         "bindingId": "sama-14b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:SAMA14BPipeline",
         "loadingMethod": "from_pretrained",
@@ -96028,7 +96028,7 @@
       "runtime": {
         "profileId": "sana-wm",
         "bindingId": "sana-wm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.sana_wm.pipeline_sana_wm:SanaWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -96462,7 +96462,7 @@
       "runtime": {
         "profileId": "track-anything-prior",
         "bindingId": "track-anything-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:TrackAnythingPriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -96739,7 +96739,7 @@
       "runtime": {
         "profileId": "self-forcing",
         "bindingId": "self-forcing",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.forcing.pipeline_forcing:SelfForcingPipeline",
         "loadingMethod": "from_pretrained",
@@ -97120,7 +97120,7 @@
       "runtime": {
         "profileId": "skyreels-v3",
         "bindingId": "skyreels-v3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.skyreels_v3.pipeline_skyreels_v3:SkyReelsV3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -97530,7 +97530,7 @@
       "runtime": {
         "profileId": "skyreels-v2",
         "bindingId": "skyreels-v2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.skyreels_v2.pipeline_skyreels_v2:SkyReelsV2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -97918,7 +97918,7 @@
       "runtime": {
         "profileId": "solarwm",
         "bindingId": "solarwm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -98707,7 +98707,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "sora2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.sora.pipeline_sora2:Sora2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -98966,7 +98966,7 @@
       "runtime": {
         "profileId": "spatia",
         "bindingId": "spatia",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.spatia.pipeline_spatia:SpatiaPipeline",
         "loadingMethod": "from_pretrained",
@@ -99393,7 +99393,7 @@
       "runtime": {
         "profileId": "spatial-ladder",
         "bindingId": "spatial-ladder",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:SpatialLadderPipeline",
         "loadingMethod": "from_pretrained",
@@ -100208,7 +100208,7 @@
       "runtime": {
         "profileId": "spatial-reasoner",
         "bindingId": "spatial-reasoner",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:SpatialReasonerPipeline",
         "loadingMethod": "from_pretrained",
@@ -101022,7 +101022,7 @@
       "runtime": {
         "profileId": "stable-video-infinity",
         "bindingId": "stable-video-infinity",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.stable_video_infinity.pipeline_stable_video_infinity:StableVideoInfinityPipeline",
         "loadingMethod": "from_pretrained",
@@ -101548,7 +101548,7 @@
       "runtime": {
         "profileId": "stable-virtual-camera",
         "bindingId": "stable-virtual-camera",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:StableVirtualCameraPipeline",
         "loadingMethod": "from_pretrained",
@@ -101990,7 +101990,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "t2v_turbo_t2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.t2v_turbo.pipeline_t2v_turbo_t2v:T2VTurboT2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -103511,7 +103511,7 @@
       "runtime": {
         "profileId": "unianimate-dit",
         "bindingId": "unianimate-dit",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:UniAnimateDiTPipeline",
         "loadingMethod": "from_pretrained",
@@ -104592,7 +104592,7 @@
       "runtime": {
         "profileId": "unidepth-v2-prior",
         "bindingId": "unidepth-v2-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:UniDepthV2PriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -104889,7 +104889,7 @@
       "runtime": {
         "profileId": "unik3d-prior",
         "bindingId": "unik3d-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:UniK3DPriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -105191,7 +105191,7 @@
       "runtime": {
         "profileId": "uniworld-view",
         "bindingId": "uniworld-view",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.uniworld_view.pipeline_uniworld_view:UniWorldViewPipeline",
         "loadingMethod": "from_pretrained",
@@ -105970,7 +105970,7 @@
       "runtime": {
         "profileId": "vchitect-2-t2v",
         "bindingId": "vchitect-2-t2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.vchitect.pipeline_vchitect_2_t2v:Vchitect2T2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -107066,7 +107066,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "veo3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.veo.pipeline_veo3:Veo3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -107389,7 +107389,7 @@
       "runtime": {
         "profileId": "versecrafter",
         "bindingId": "versecrafter",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.versecrafter.pipeline_versecrafter:VerseCrafterPipeline",
         "loadingMethod": "from_pretrained",
@@ -107756,7 +107756,7 @@
       "runtime": {
         "profileId": "video-depth-anything-prior",
         "bindingId": "video-depth-anything-prior",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.geometry_priors.pipeline_geometry_priors:VideoDepthAnythingPriorPipeline",
         "loadingMethod": "from_pretrained",
@@ -108064,7 +108064,7 @@
       "runtime": {
         "profileId": "videocrafter2-t2v",
         "bindingId": "videocrafter",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.videocrafter.pipeline_videocrafter2_t2v:VideoCrafter2T2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -108471,7 +108471,7 @@
       "runtime": {
         "profileId": "videocrafter1-i2v",
         "bindingId": "videocrafter1-i2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.videocrafter.pipeline_videocrafter1_i2v:VideoCrafter1I2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -108865,7 +108865,7 @@
       "runtime": {
         "profileId": "videocrafter1-t2v",
         "bindingId": "videocrafter1-t2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.videocrafter.pipeline_videocrafter1_t2v:VideoCrafter1T2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -109244,7 +109244,7 @@
       "runtime": {
         "profileId": "videocrafter2-t2v",
         "bindingId": "videocrafter2-t2v",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.videocrafter.pipeline_videocrafter2_t2v:VideoCrafter2T2VPipeline",
         "loadingMethod": "from_pretrained",
@@ -109637,7 +109637,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "wan-2p5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.wan.pipeline_wan_2p5:Wan2p5Pipeline",
         "loadingMethod": "from_pretrained",
@@ -109918,7 +109918,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "wan-2p6",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.wan.pipeline_wan_2p6:Wan2p6Pipeline",
         "loadingMethod": "from_pretrained",
@@ -110284,7 +110284,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "wan-2p7",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.wan.pipeline_wan_2p7:Wan2p7Pipeline",
         "loadingMethod": "from_pretrained",
@@ -110627,7 +110627,7 @@
       "runtime": {
         "profileId": "wan2.1-vace",
         "bindingId": "wan2.1-vace",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.wan.pipeline_wan_vace:Wan2p1VACEPipeline",
         "loadingMethod": "from_pretrained",
@@ -111785,7 +111785,7 @@
       "runtime": {
         "profileId": "wan21-fun-14b-cam",
         "bindingId": "wan21-fun-14b-cam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan21Fun14BCameraPipeline",
         "loadingMethod": "from_pretrained",
@@ -112103,7 +112103,7 @@
       "runtime": {
         "profileId": "wan22-fun-5b-cam",
         "bindingId": "wan22-fun-5b-cam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan22Fun5BCameraPipeline",
         "loadingMethod": "from_pretrained",
@@ -112434,7 +112434,7 @@
       "runtime": {
         "profileId": "wan22-fun-a14b-cam",
         "bindingId": "wan22-fun-a14b-cam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan22FunA14BCameraPipeline",
         "loadingMethod": "from_pretrained",
@@ -112753,7 +112753,7 @@
       "runtime": {
         "profileId": "wonderjourney",
         "bindingId": "wonderjourney",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:WonderJourneyPipeline",
         "loadingMethod": "from_pretrained",
@@ -113166,7 +113166,7 @@
       "runtime": {
         "profileId": "wonderworld",
         "bindingId": "wonderworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_wonderworld:WonderWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -113581,7 +113581,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "worldlabs",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldlabs.pipeline_worldlabs:WorldLabsPipeline",
         "loadingMethod": "from_pretrained",
@@ -113890,7 +113890,7 @@
       "runtime": {
         "profileId": "worldlabs-marble-1.1",
         "bindingId": "worldlabs-marble-1.1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldlabs_marble_1p1.pipeline_worldlabs_marble_1p1:WorldLabsMarble11Pipeline",
         "loadingMethod": "from_pretrained",
@@ -114116,7 +114116,7 @@
       "runtime": {
         "profileId": "worldgen",
         "bindingId": "worldgen",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.three_d_four_d.pipeline_runtime:WorldGenPipeline",
         "loadingMethod": "from_pretrained",
@@ -114552,7 +114552,7 @@
       "runtime": {
         "profileId": "worldplay2",
         "bindingId": "worldplay2",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.worldplay2.pipeline_worldplay2:WorldPlay2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -115541,7 +115541,7 @@
       "runtime": {
         "profileId": "xgen-jing",
         "bindingId": "xgen-jing",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.xgen_jing.pipeline_xgen_jing:XGENJINGPipeline",
         "loadingMethod": "from_pretrained",
@@ -115802,7 +115802,7 @@
       "runtime": {
         "profileId": "zing",
         "bindingId": "zing",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.zing.pipeline_zing:ZingPipeline",
         "loadingMethod": "from_pretrained",
@@ -116161,7 +116161,7 @@
       "runtime": {
         "profileId": "a1",
         "bindingId": "a1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.a1.pipeline:A1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -116608,7 +116608,7 @@
       "runtime": {
         "profileId": "abot-m0",
         "bindingId": "abot-m0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.abot_m0.pipeline:ABotM0Pipeline",
         "loadingMethod": "from_pretrained",
@@ -117099,7 +117099,7 @@
       "runtime": {
         "profileId": "adaworld",
         "bindingId": "adaworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:AdaWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -117427,7 +117427,7 @@
       "runtime": {
         "profileId": "being-h07",
         "bindingId": "being-h07",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:BeingH07Pipeline",
         "loadingMethod": "from_pretrained",
@@ -117928,7 +117928,7 @@
       "runtime": {
         "profileId": "causal-rcm",
         "bindingId": "causal-rcm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:CausalRCMPipeline",
         "loadingMethod": "from_pretrained",
@@ -118617,7 +118617,7 @@
       "runtime": {
         "profileId": "ctrl-world",
         "bindingId": "ctrl-world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:CtrlWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -119155,7 +119155,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "cut3r",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.cut3r.pipeline_cut3r:CUT3RPipeline",
         "loadingMethod": "from_pretrained",
@@ -119463,7 +119463,7 @@
       "runtime": {
         "profileId": "db-cogact",
         "bindingId": "db-cogact",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:DBCogACTPipeline",
         "loadingMethod": "from_pretrained",
@@ -120045,7 +120045,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "depth-anything-v3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.depth_anything.pipeline_depth_anything_v3:DepthAnything3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -120288,7 +120288,7 @@
       "runtime": {
         "profileId": "dexora-1b",
         "bindingId": "dexora-1b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.dexora.pipeline:DexoraPipeline",
         "loadingMethod": "from_pretrained",
@@ -120731,7 +120731,7 @@
       "runtime": {
         "profileId": "dm0",
         "bindingId": "dm0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.dm0.pipeline:DM0Pipeline",
         "loadingMethod": "from_pretrained",
@@ -121170,7 +121170,7 @@
       "runtime": {
         "profileId": "egowm",
         "bindingId": "egowm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:EgoWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -121914,7 +121914,7 @@
       "runtime": {
         "profileId": "eventvla",
         "bindingId": "eventvla",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.eventvla.pipeline:EventVLAPipeline",
         "loadingMethod": "from_pretrained",
@@ -122800,7 +122800,7 @@
       "runtime": {
         "profileId": "genie-envisioner",
         "bindingId": "genie-envisioner",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:GenieEnvisionerPipeline",
         "loadingMethod": "from_pretrained",
@@ -123301,7 +123301,7 @@
       "runtime": {
         "profileId": "giga-world-0",
         "bindingId": "giga-world-0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:GigaWorld0Pipeline",
         "loadingMethod": "from_pretrained",
@@ -123798,7 +123798,7 @@
       "runtime": {
         "profileId": "go1",
         "bindingId": "go1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.go1.pipeline:GO1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -124243,7 +124243,7 @@
       "runtime": {
         "profileId": "h-rdt",
         "bindingId": "h-rdt",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.h_rdt.h_rdt_synthesis:HRDTSynthesis",
         "loadingMethod": "from_pretrained",
@@ -124699,7 +124699,7 @@
       "runtime": {
         "profileId": "happyoyster",
         "bindingId": "happyoyster",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:HappyOysterPipeline",
         "loadingMethod": "from_pretrained",
@@ -124910,7 +124910,7 @@
       "runtime": {
         "profileId": "hma",
         "bindingId": "hma",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:HMAPipeline",
         "loadingMethod": "from_pretrained",
@@ -125608,7 +125608,7 @@
       "runtime": {
         "profileId": "hunyuanworld-1",
         "bindingId": "hunyuanworld-1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:HunyuanWorld1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -125828,7 +125828,7 @@
       "runtime": {
         "profileId": "hyworld-worldgen",
         "bindingId": "hyworld-worldgen",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hy_world_2p0_worldgen:HYWorld2WorldgenPipeline",
         "loadingMethod": "from_pretrained",
@@ -126103,7 +126103,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "infinite-vggt",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.infinite_vggt.pipeline_infinite_vggt:InfiniteVGGTPipeline",
         "loadingMethod": "from_pretrained",
@@ -126310,7 +126310,7 @@
       "runtime": {
         "profileId": "internvla-a1",
         "bindingId": "internvla-a1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.internvla_a1.internvla_a1_synthesis:InternVLAA1Synthesis",
         "loadingMethod": "from_pretrained",
@@ -126804,7 +126804,7 @@
       "runtime": {
         "profileId": "lapa",
         "bindingId": "lapa",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:LAPAPipeline",
         "loadingMethod": "from_pretrained",
@@ -126926,7 +126926,7 @@
           "pipelineBinding": "lapa",
           "status": "runtime_ported",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-lapa-jax-cu118",
@@ -127239,7 +127239,7 @@
       "runtime": {
         "profileId": "lda-1b",
         "bindingId": "lda-1b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.lda_1b.lda_1b_synthesis:LDA1BSynthesis",
         "loadingMethod": "from_pretrained",
@@ -127735,7 +127735,7 @@
       "runtime": {
         "profileId": "leworldmodel",
         "bindingId": "leworldmodel",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:LeWorldModelPipeline",
         "loadingMethod": "from_pretrained",
@@ -128005,7 +128005,7 @@
       "runtime": {
         "profileId": "lingbot-va",
         "bindingId": "lingbot-va",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:LingBotVAPipeline",
         "loadingMethod": "from_pretrained",
@@ -128129,7 +128129,7 @@
           "pipelineBinding": "lingbot-va",
           "status": "in_tree_checkpoint_runtime_gpu_server_init_verified_rollout_pending",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-lingbot-va-cu12",
@@ -128183,7 +128183,7 @@
           "pipelineBinding": "lingbot-va",
           "status": "in_tree_checkpoint_runtime_gpu_server_init_verified_rollout_pending",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-lingbot-va-cu12",
@@ -128237,7 +128237,7 @@
           "pipelineBinding": "lingbot-va",
           "status": "in_tree_checkpoint_runtime_gpu_server_init_verified_rollout_pending",
           "pipelineTarget": null,
-          "runner": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+          "runner": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
           "loadingMethod": null,
           "invocationMode": null,
           "environmentName": "worldfoundry-lingbot-va-cu12",
@@ -130255,7 +130255,7 @@
       "runtime": {
         "profileId": "mem-0",
         "bindingId": "mem-0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.mem0.pipeline:Mem0Pipeline",
         "loadingMethod": "from_pretrained",
@@ -130708,7 +130708,7 @@
       "runtime": {
         "profileId": "mineworld",
         "bindingId": "mineworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MineWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -131012,7 +131012,7 @@
       "runtime": {
         "profileId": "mosaicmem",
         "bindingId": "mosaicmem",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MosaicMemPipeline",
         "loadingMethod": "from_pretrained",
@@ -131254,7 +131254,7 @@
       "runtime": {
         "profileId": "motionbricks",
         "bindingId": "motionbricks",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MotionBricksPipeline",
         "loadingMethod": "from_pretrained",
@@ -131499,7 +131499,7 @@
       "runtime": {
         "profileId": "moverse",
         "bindingId": "moverse",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.moverse.pipeline_moverse:MoVersePipeline",
         "loadingMethod": "from_pretrained",
@@ -131941,7 +131941,7 @@
       "runtime": {
         "profileId": "nwm",
         "bindingId": "nwm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:NWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -132292,7 +132292,7 @@
       "runtime": {
         "profileId": "oasis-500m",
         "bindingId": "oasis-500m",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:Oasis500MPipeline",
         "loadingMethod": "from_pretrained",
@@ -132643,7 +132643,7 @@
       "runtime": {
         "profileId": "omniforcing",
         "bindingId": "omniforcing",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:OmniForcingPipeline",
         "loadingMethod": "from_pretrained",
@@ -132877,7 +132877,7 @@
       "runtime": {
         "profileId": "open-dreamer",
         "bindingId": "open-dreamer",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:OpenDreamerPipeline",
         "loadingMethod": "from_pretrained",
@@ -133369,7 +133369,7 @@
       "runtime": {
         "profileId": "pi0",
         "bindingId": "pi0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OpenPIPipeline",
         "loadingMethod": "from_pretrained",
@@ -133813,7 +133813,7 @@
       "runtime": {
         "profileId": "pi0-fast",
         "bindingId": "pi0-fast",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OpenPIPipeline",
         "loadingMethod": "from_pretrained",
@@ -134248,7 +134248,7 @@
       "runtime": {
         "profileId": "pi05",
         "bindingId": "pi05",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OpenPIPipeline",
         "loadingMethod": "from_pretrained",
@@ -134696,7 +134696,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "pi3",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.pi3.pipeline_pi3:Pi3Pipeline",
         "loadingMethod": "from_pretrained",
@@ -134959,7 +134959,7 @@
       "runtime": {
         "profileId": "pointworld",
         "bindingId": "pointworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:PointWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -135218,7 +135218,7 @@
       "runtime": {
         "profileId": "rdt-1b",
         "bindingId": "rdt-1b",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.rdt_1b.pipeline:RDT1BPipeline",
         "loadingMethod": "from_pretrained",
@@ -135684,7 +135684,7 @@
       "runtime": {
         "profileId": "rt-1",
         "bindingId": "rt-1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.rt1.pipeline_rt1:RT1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -135956,7 +135956,7 @@
       "runtime": {
         "profileId": "sana",
         "bindingId": "sana",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.sana.pipeline_sana:SanaPipeline",
         "loadingMethod": "from_pretrained",
@@ -140583,7 +140583,7 @@
       "runtime": {
         "profileId": "shotstream",
         "bindingId": "shotstream",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:ShotStreamPipeline",
         "loadingMethod": "from_pretrained",
@@ -140922,7 +140922,7 @@
       "runtime": {
         "profileId": "simworld",
         "bindingId": "simworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:SimWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -141126,7 +141126,7 @@
       "runtime": {
         "profileId": "smolvla",
         "bindingId": "smolvla",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.smolvla.pipeline:SmolVLAPipeline",
         "loadingMethod": "from_pretrained",
@@ -141981,7 +141981,7 @@
       "runtime": {
         "profileId": "spirit-v1.5",
         "bindingId": "spirit-v1.5",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.spirit_v15.pipeline:SpiritV15Pipeline",
         "loadingMethod": "from_pretrained",
@@ -142401,7 +142401,7 @@
       "runtime": {
         "profileId": "starwm",
         "bindingId": "starwm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:StarWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -142698,7 +142698,7 @@
       "runtime": {
         "profileId": "tesseract",
         "bindingId": "tesseract",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:TesserActPipeline",
         "loadingMethod": "from_pretrained",
@@ -143186,7 +143186,7 @@
       "runtime": {
         "profileId": "uni3c",
         "bindingId": "uni3c",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.uni3c.pipeline_uni3c:Uni3CPipeline",
         "loadingMethod": "from_pretrained",
@@ -143595,7 +143595,7 @@
       "runtime": {
         "profileId": "uwm",
         "bindingId": "uwm",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:UWMPipeline",
         "loadingMethod": "from_pretrained",
@@ -143845,7 +143845,7 @@
       "runtime": {
         "profileId": null,
         "bindingId": "vggt",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.vggt.pipeline_vggt:VGGTPipeline",
         "loadingMethod": "from_pretrained",
@@ -144194,7 +144194,7 @@
       "runtime": {
         "profileId": "vggt-world",
         "bindingId": "vggt-world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:VGGTWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -144444,7 +144444,7 @@
       "runtime": {
         "profileId": "vid2world",
         "bindingId": "vid2world",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:Vid2WorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -144751,7 +144751,7 @@
       "runtime": {
         "profileId": "wilddet3d",
         "bindingId": "wilddet3d",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WildDet3DPipeline",
         "loadingMethod": "from_pretrained",
@@ -144995,7 +144995,7 @@
       "runtime": {
         "profileId": "wildworld",
         "bindingId": "wildworld",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WildWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -145224,7 +145224,7 @@
       "runtime": {
         "profileId": "worldgrow",
         "bindingId": "worldgrow",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WorldGrowPipeline",
         "loadingMethod": "from_pretrained",
@@ -145478,7 +145478,7 @@
       "runtime": {
         "profileId": "worldmem",
         "bindingId": "worldmem",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:WorldMemPipeline",
         "loadingMethod": "from_pretrained",
@@ -145742,7 +145742,7 @@
       "runtime": {
         "profileId": "wow",
         "bindingId": "wow",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.wow.pipeline_wow:WoWPipeline",
         "loadingMethod": "from_pretrained",
@@ -146153,7 +146153,7 @@
       "runtime": {
         "profileId": "x-wam",
         "bindingId": "x-wam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.x_wam.pipeline_x_wam:XWAMPipeline",
         "loadingMethod": "from_pretrained",
@@ -147254,7 +147254,7 @@
       "runtime": {
         "profileId": "xiaomi-robotics-1",
         "bindingId": "xiaomi-robotics-1",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.xiaomi_robotics_1.pipeline:XiaomiRobotics1Pipeline",
         "loadingMethod": "from_pretrained",
@@ -147685,7 +147685,7 @@
       "runtime": {
         "profileId": "abot-world-0-5b-lf",
         "bindingId": "abot-world-0-5b-lf",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.abot_world.pipeline_abot_world:ABotWorldPipeline",
         "loadingMethod": "from_pretrained",
@@ -148051,7 +148051,7 @@
       "runtime": {
         "profileId": "fastwam",
         "bindingId": "fastwam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.synthesis.action_generation.fastwam.pipeline:FastWAMPipeline",
         "loadingMethod": "from_pretrained",
@@ -148611,7 +148611,7 @@
       "runtime": {
         "profileId": "hy-world-2.0",
         "bindingId": "hy-world-2.0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.hunyuan_world.pipeline_hy_world_2p0:HYWorld2Pipeline",
         "loadingMethod": "from_pretrained",
@@ -149044,7 +149044,7 @@
       "runtime": {
         "profileId": "mme-vla",
         "bindingId": "mme-vla",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:MMEVLAPipeline",
         "loadingMethod": "from_pretrained",
@@ -149628,7 +149628,7 @@
       "runtime": {
         "profileId": "openvla-oft",
         "bindingId": "openvla-oft",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:OpenVLAOFTPipeline",
         "loadingMethod": "from_pretrained",
@@ -151272,7 +151272,7 @@
       "runtime": {
         "profileId": "spatial-forcing",
         "bindingId": "spatial-forcing",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.spatial_forcing.pipeline_spatial_forcing:SpatialForcingPipeline",
         "loadingMethod": "from_pretrained",
@@ -152438,7 +152438,7 @@
       "runtime": {
         "profileId": "vlanext",
         "bindingId": "vlanext",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:VLANeXtPipeline",
         "loadingMethod": "from_pretrained",
@@ -152992,7 +152992,7 @@
       "runtime": {
         "profileId": "wan21-fun-1p3b-cam",
         "bindingId": "wan21-fun-1p3b-cam",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.video_x_fun.pipeline_video_x_fun:Wan21Fun1P3BCameraPipeline",
         "loadingMethod": "from_pretrained",
@@ -153319,7 +153319,7 @@
       "runtime": {
         "profileId": "xvla",
         "bindingId": "xvla",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.component_pipelines:XVLAPipeline",
         "loadingMethod": "from_pretrained",
@@ -153798,7 +153798,7 @@
       "runtime": {
         "profileId": "xiaomi-robotics-0",
         "bindingId": "xiaomi-robotics-0",
-        "runnerTarget": "worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner",
+        "runnerTarget": "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner",
         "runner": "worldfoundry.pipeline",
         "pipelineTarget": "worldfoundry.pipelines.xiaomi_robotics_0.pipeline_xiaomi_robotics_0:XiaomiRobotics0Pipeline",
         "loadingMethod": "from_pretrained",

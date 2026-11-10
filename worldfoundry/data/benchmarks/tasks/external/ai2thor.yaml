@@ -45,7 +45,7 @@ metadata:
     validation.
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
+    runner_target: worldfoundry.evals.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -73,7 +73,7 @@ metadata:
   - run
   - --config
   - worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml
-  official_runner_target: worldfoundry.evaluation.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
+  official_runner_target: worldfoundry.evals.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
 tasks:
   ai2thor_scene_rollouts:
     benchmark_name: ai2thor
@@ -139,4 +139,4 @@ tasks:
       - task_success
       - episode_success
       - reward
-      runner_target: worldfoundry.evaluation.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner
+      runner_target: worldfoundry.evals.tasks.embodied.rollout_runner:build_ai2thor_closed_loop_runner

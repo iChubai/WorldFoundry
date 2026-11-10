@@ -8,7 +8,7 @@ import argparse
 import json
 from pathlib import Path
 
-from worldfoundry.evaluation.utils import TMP_ROOT
+from worldfoundry.evals.utils import TMP_ROOT
 
 from .presentation import print_details
 from .run import execute_run_plan_file
@@ -104,7 +104,7 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     """Route evaluate workloads to either cached run-plan replay or runtime eval."""
     if args.plan is None:
         _validate_evaluate_usage(args)
-    from worldfoundry.evaluation.runner import EvaluateRunRequest, execute_evaluate_run
+    from worldfoundry.evals.runner import EvaluateRunRequest, execute_evaluate_run
 
     if args.plan is not None:
         result = execute_run_plan_file(args)
@@ -133,14 +133,14 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     model_id = args.model_id
     model_runner = args.model_runner
     if args.embodied_spec is not None:
-        from worldfoundry.evaluation.api.json_contract import to_plain
-        from worldfoundry.evaluation.tasks.embodied.contracts import (
+        from worldfoundry.evals.api.json_contract import to_plain
+        from worldfoundry.evals.tasks.embodied.contracts import (
             EmbodiedGenerationSpec,
             EvaluationTrack,
             RequestKind,
         )
-        from worldfoundry.evaluation.tasks.embodied.materialize import materialize_vla_va_wam_requests
-        from worldfoundry.evaluation.tasks.embodied.metrics import metric_suite
+        from worldfoundry.evals.tasks.embodied.materialize import materialize_vla_va_wam_requests
+        from worldfoundry.evals.tasks.embodied.metrics import metric_suite
 
         spec_payload = _load_json_mapping_or_inline(args.embodied_spec, field_name="--embodied-spec")
         if spec_payload is None:
@@ -184,7 +184,7 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
         }
     if args.task_type and args.benchmark_name and args.data_path:
         from worldfoundry.cli.utils import resolve_cli_benchmark_for_materialize
-        from worldfoundry.evaluation.runner import materialize_requests_from_benchmark
+        from worldfoundry.evals.runner import materialize_requests_from_benchmark
 
         benchmark = resolve_cli_benchmark_for_materialize(args.task_type, args.benchmark_name)
         materialized = materialize_requests_from_benchmark(
@@ -259,7 +259,7 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
 
 
 def _handle_validate(args: argparse.Namespace) -> int:
-    from worldfoundry.evaluation.tasks.catalog.specs import (
+    from worldfoundry.evals.tasks.catalog.specs import (
         get_benchmark_zoo_cli_task,
         validate_benchmark_zoo_cli_task,
     )

@@ -8,7 +8,7 @@ source:
   license: research-only-non-commercial-not-eu
 checkpoint: TencentARC/VerseCrafter
 runtime_profile: runtime-profile:versecrafter
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: versecrafter
 official_sources:
   project_page: https://sixiaozheng.github.io/VerseCrafter_page/

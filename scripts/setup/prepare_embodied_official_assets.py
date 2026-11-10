@@ -15,7 +15,7 @@ SRC_ROOT = REPO_ROOT
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from worldfoundry.evaluation.tasks.execution.framework.io import utc_now_iso, write_json  # noqa: E402
+from worldfoundry.evals.tasks.execution.framework.io import utc_now_iso, write_json  # noqa: E402
 from worldfoundry.runtime.assets import expand_worldfoundry_path  # noqa: E402
 
 

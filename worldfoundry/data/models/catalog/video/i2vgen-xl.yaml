@@ -1,6 +1,6 @@
 id: i2vgen-xl
 name: I2VGen-XL
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:i2vgen-xl
 tasks:
 - image-to-video

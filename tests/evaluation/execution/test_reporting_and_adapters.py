@@ -8,11 +8,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from worldfoundry.evaluation.api import ArtifactRef, GenerationRequest, GenerationResult
-from worldfoundry.evaluation.reporting.run_comparison import build_run_comparison
-from worldfoundry.evaluation.tasks.embodied.metrics import ResultFieldMetric
-from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import run_evaluate
-from worldfoundry.evaluation.tasks.metrics.registry import BuiltinExistingResultsMetric
+from worldfoundry.evals.api import ArtifactRef, GenerationRequest, GenerationResult
+from worldfoundry.evals.reporting.run_comparison import build_run_comparison
+from worldfoundry.evals.tasks.embodied.metrics import ResultFieldMetric
+from worldfoundry.evals.tasks.execution.orchestration.evaluate import run_evaluate
+from worldfoundry.evals.tasks.metrics.registry import BuiltinExistingResultsMetric
 
 
 class ReportingAndAdapterTests(unittest.TestCase):

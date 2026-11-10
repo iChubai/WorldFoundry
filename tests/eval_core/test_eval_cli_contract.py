@@ -438,7 +438,7 @@ def test_run_cli_in_process_engine_resolves_contract_model(tmp_path, monkeypatch
 
 
 def test_contract_runner_artifact_behavior_is_api_owned() -> None:
-    from worldfoundry.evaluation.tasks.execution.orchestration.contract import execute_contract_run, run_contract
+    from worldfoundry.evals.tasks.execution.orchestration.contract import execute_contract_run, run_contract
 
     assert execute_contract_run is run_contract
 
@@ -1187,7 +1187,7 @@ def test_vbench_manifest_script_normalizes_existing_upstream_results(tmp_path, c
                             "validation_command": [
                                 sys.executable,
                                 "-m",
-                                "worldfoundry.evaluation.tasks.execution.runners.vbench.run_vbench_official_runner",
+                                "worldfoundry.evals.tasks.execution.runners.vbench.run_vbench_official_runner",
                                 "run",
                                 "--videos-path",
                                 str(videos_dir),
@@ -1235,7 +1235,7 @@ def test_vbench_manifest_script_normalizes_existing_upstream_results(tmp_path, c
 
 
 def test_vbench_entrypoint_lists_dimensions(capsys) -> None:
-    from worldfoundry.evaluation.tasks.execution.runners.vbench.run_vbench_official_runner import main as vbench_main
+    from worldfoundry.evals.tasks.execution.runners.vbench.run_vbench_official_runner import main as vbench_main
 
     exit_code = vbench_main(["dimensions", "--json"])
     payload = json.loads(capsys.readouterr().out)

@@ -19,7 +19,7 @@ import torch.nn.functional as F
 pytestmark = pytest.mark.unit
 
 _ROOT = Path(__file__).resolve().parents[3] / (
-    "worldfoundry/evaluation/tasks/execution/runners/vmbench/runtime/official/q_align/model"
+    "worldfoundry/evals/tasks/execution/runners/vmbench/runtime/official/q_align/model"
 )
 
 

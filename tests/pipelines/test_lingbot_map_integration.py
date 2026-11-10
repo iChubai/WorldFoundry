@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.lingbot_map.pipeline_lingbot_map import LingBotMapPipeline
 
 

@@ -101,9 +101,9 @@ metrics:
   aggregator: mean
   output_unit: rate
 runner:
-  official_script: worldfoundry/evaluation/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/stevo_bench/run_stevo_bench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.stevo_bench.run_stevo_bench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.stevo_bench.run_stevo_bench_official_runner
     generated_arg: --generated-artifact-dir
     dataset_root_arg: --task-root
     model_arg: --judge-model
@@ -112,7 +112,7 @@ runner:
     supports_fixture: true
     default_metrics: [task_success]
     input_kind: stevo_bench_run_dir_or_official_results
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:StevoBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:StevoBenchContract
   validation_command:
   - wf
   - zoo
@@ -148,8 +148,8 @@ runner:
   - benchmark_contract.json
   runtime:
     kind: in_tree_official_runtime_hosted_judges
-    root: worldfoundry/evaluation/tasks/execution/runners/stevo_bench
-    runtime_root: worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench
+    root: worldfoundry/evals/tasks/execution/runners/stevo_bench
+    runtime_root: worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench
     root_env: WORLDFOUNDRY_STEVO_BENCH_ROOT
     results_path_env: WORLDFOUNDRY_STEVO_BENCH_RESULTS_PATH
     task_root_env: WORLDFOUNDRY_STEVO_BENCH_TASK_ROOT
@@ -196,7 +196,7 @@ data_refs:
   dataset_repo: JhanLiufu/StEvo-Bench
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:StevoBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:StevoBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

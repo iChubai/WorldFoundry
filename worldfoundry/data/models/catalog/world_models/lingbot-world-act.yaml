@@ -22,7 +22,7 @@ integration:
   notes:
   - Base-Act is independently cataloged and resolves the official action checkpoint rather than Base-Cam.
   - The inference path reuses the in-tree LingBot runtime and central Wan base modules.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: lingbot-world-act
 runtime_profile: runtime-profile:lingbot-world-act
 runner_parity:

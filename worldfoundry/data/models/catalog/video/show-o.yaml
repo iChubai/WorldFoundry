@@ -32,7 +32,7 @@ integration:
     generation.
   - The in-tree wrapper supports the T2I image generation path.
 runtime_profile: runtime-profile:show-o
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: show-o
 runner_parity:
   status: verified

@@ -17,26 +17,26 @@ recursive-include worldfoundry/data/benchmarks/tasks *.yaml
 recursive-include worldfoundry/data/benchmarks/runtime_profiles *.yaml
 recursive-include worldfoundry/data/benchmarks/assets *.json *.jsonl *.csv *.txt *.md *.png
 recursive-include worldfoundry/data/benchmarks/assets/larybench *.yaml
-recursive-include worldfoundry/evaluation/tasks/execution/runners/larybench *.md
+recursive-include worldfoundry/evals/tasks/execution/runners/larybench *.md
 recursive-include worldfoundry/synthesis/visual_generation/moverse/moverse_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/uni3c/uni3c_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/evoke/evoke_runtime *
 recursive-include worldfoundry/synthesis/visual_generation/mira_wm *.py *.md *.txt
 recursive-include worldfoundry/synthesis/visual_generation/rcm/rcm_runtime *.py *.md
-recursive-include worldfoundry/evaluation/tasks/execution/runners/physics_iq/official *.py
-recursive-include worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench/MTScore/configs *.json
-include worldfoundry/evaluation/tasks/execution/runners/devil_dynamics/runtime/official/cal_temporal_info.sh
-recursive-include worldfoundry/evaluation/tasks/execution/runners/ewmbench/runtime/ewmbench *.yaml *.yml
-recursive-include worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval *.py *.cpp *.cu *.h *.txt *.yaml *.yml *.json
-recursive-include worldfoundry/evaluation/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer/inference/configs *.yaml *.yml
-recursive-include worldfoundry/evaluation/tasks/execution/runners/pawbench/runtime *.py *.yaml *.yml *.md *.txt *.cff
-recursive-include worldfoundry/evaluation/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench/dot/configs *.json
-recursive-include worldfoundry/evaluation/tasks/execution/runners/vbench_plus_plus/runtime/vbench2_beta_long/configs *.yaml *.yml
-recursive-include worldfoundry/evaluation/tasks/execution/runners/vmbench/runtime/official *.py *.sh *.txt *.md *.yaml *.yml *.json
-recursive-include worldfoundry/evaluation/tasks/execution/runners/wbench/runtime/wbench *.yaml *.yml
-recursive-include worldfoundry/evaluation/tasks/execution/runners/world_in_world/runtime/official *.py *.sh *.txt *.md *.yaml *.yml *.json
-recursive-include worldfoundry/evaluation/tasks/execution/runners/worldarena/runtime/video_quality *.yaml *.yml
-recursive-include worldfoundry/evaluation/tasks/execution/runners/wrbench/runtime *.py *.json *.txt *.md
+recursive-include worldfoundry/evals/tasks/execution/runners/physics_iq/official *.py
+recursive-include worldfoundry/evals/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench/MTScore/configs *.json
+include worldfoundry/evals/tasks/execution/runners/devil_dynamics/runtime/official/cal_temporal_info.sh
+recursive-include worldfoundry/evals/tasks/execution/runners/ewmbench/runtime/ewmbench *.yaml *.yml
+recursive-include worldfoundry/evals/tasks/execution/runners/fetv/runtime/fetv_eval *.py *.cpp *.cu *.h *.txt *.yaml *.yml *.json
+recursive-include worldfoundry/evals/tasks/execution/runners/phyfps_bench_gen/runtime/visual_chronometer/inference/configs *.yaml *.yml
+recursive-include worldfoundry/evals/tasks/execution/runners/pawbench/runtime *.py *.yaml *.yml *.md *.txt *.cff
+recursive-include worldfoundry/evals/tasks/execution/runners/t2v_compbench/runtime/t2v_compbench/dot/configs *.json
+recursive-include worldfoundry/evals/tasks/execution/runners/vbench_plus_plus/runtime/vbench2_beta_long/configs *.yaml *.yml
+recursive-include worldfoundry/evals/tasks/execution/runners/vmbench/runtime/official *.py *.sh *.txt *.md *.yaml *.yml *.json
+recursive-include worldfoundry/evals/tasks/execution/runners/wbench/runtime/wbench *.yaml *.yml
+recursive-include worldfoundry/evals/tasks/execution/runners/world_in_world/runtime/official *.py *.sh *.txt *.md *.yaml *.yml *.json
+recursive-include worldfoundry/evals/tasks/execution/runners/worldarena/runtime/video_quality *.yaml *.yml
+recursive-include worldfoundry/evals/tasks/execution/runners/wrbench/runtime *.py *.json *.txt *.md
 recursive-include worldfoundry/base_models/perception_core/video_text/fetv_blip *.py *.json *.yaml *.yml *.txt
 recursive-include worldfoundry/base_models/perception_core/video_quality/fetv_stylegan_v *.py *.cpp *.cu *.h *.json *.yaml *.yml *.txt
 recursive-include worldfoundry/base_models/three_dimensions/general_3d/vipe/csrc *.cpp *.cu *.h *.cuh
@@ -136,16 +136,16 @@ global-exclude */tmp/* */temp/* */logs/* */outputs/* .env* *.py[cod]
 
 # Required iWorld-Bench camera trajectories (the only NumPy archives in package data).
 recursive-include worldfoundry/data/benchmarks/assets/iworld-bench/camera_trajectories *.npz
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/intrinsics.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/poses.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/intrinsics.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/poses.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/intrinsics.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/poses.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/intrinsics.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/poses.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/intrinsics.npy
-include worldfoundry/evaluation/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/poses.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/intrinsics.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/poses.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/intrinsics.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-21_w-22/poses.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/intrinsics.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_left-20_right-20/poses.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/intrinsics.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-10_left-20_right-10/poses.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/intrinsics.npy
+include worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-3_right-20_left-20/poses.npy
 include worldfoundry/synthesis/visual_generation/vid2world/csgo_utils/csgo_validation_start_indices.npy
 
 recursive-include worldfoundry/base_models/diffusion_model/models/networks/hunyuan_video/gamecraft PROVENANCE.md

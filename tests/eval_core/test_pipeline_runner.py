@@ -4,10 +4,10 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from worldfoundry.evaluation.api import GenerationRequest
-from worldfoundry.evaluation.models.pipelines.loading import call_pipeline_from_pretrained
-from worldfoundry.evaluation.models.runners import pipeline as pipeline_runner_module
-from worldfoundry.evaluation.models.runners.pipeline import WorldFoundryPipelineRunner
+from worldfoundry.evals.api import GenerationRequest
+from worldfoundry.evals.models.pipelines.loading import call_pipeline_from_pretrained
+from worldfoundry.evals.models.runners import pipeline as pipeline_runner_module
+from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
 from worldfoundry.pipelines.pusa_vidgen.pipeline_pusa_vidgen import PusaVidGenPipeline
 from worldfoundry.pipelines.echo_memory.pipeline_echo_memory import EchoMemoryContextK1Pipeline
 

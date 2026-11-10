@@ -15,7 +15,7 @@ from pathlib import Path
 
 import numpy as np
 
-from worldfoundry.evaluation.models import discover_model_registry
+from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.operators.kairos_operator import KairosOperator
 from worldfoundry.pipelines.kairos.pipeline_kairos import KairosPipeline
 from worldfoundry.studio.inference import catalog as studio_catalog

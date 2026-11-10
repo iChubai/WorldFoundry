@@ -27,7 +27,7 @@ checkpoints:
 - repo_id: inspatio/world
   license: apache-2.0
 runtime_profile: runtime-profile:inspatio-world
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: inspatio-world
 integration:
   status: verified

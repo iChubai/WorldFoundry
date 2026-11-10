@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from worldfoundry.evaluation.api import ArtifactRef, GenerationRequest, GenerationResult
+from worldfoundry.evals.api import ArtifactRef, GenerationRequest, GenerationResult
 
 
 def test_generation_request_and_result_snapshot_fields_are_stable() -> None:

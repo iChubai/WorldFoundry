@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-from worldfoundry.evaluation.tasks.embodied.simulators.base import DummyRecorder
-from worldfoundry.evaluation.tasks.embodied.simulators.libero_mem.benchmark import LIBEROMemBenchmark
+from worldfoundry.evals.tasks.embodied.simulators.base import DummyRecorder
+from worldfoundry.evals.tasks.embodied.simulators.libero_mem.benchmark import LIBEROMemBenchmark
 
 pytestmark = pytest.mark.unit
 

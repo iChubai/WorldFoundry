@@ -507,7 +507,7 @@ wf embodied run \
 
 Benchmark configs that have a `docker.image` entry, either directly or through
 `worldfoundry/data/benchmarks/runtime_profiles/official/<benchmark>.yaml`, are
-launched through `worldfoundry/evaluation/tasks/embodied/docker_runner.py`.
+launched through `worldfoundry/evals/tasks/embodied/docker_runner.py`.
 Inside the container, simulator dependencies are provided by the image. On the
 host, only mount datasets/checkpoints/results and provide the policy server
 endpoint.

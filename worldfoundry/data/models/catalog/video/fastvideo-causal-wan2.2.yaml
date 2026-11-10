@@ -32,7 +32,7 @@ variants:
   provider: official_repo
   runtime_profile: fastvideo-causal-wan2.2-i2v-14b
   pipeline_binding: fastvideo-causal-wan2.2-i2v-14b
-  runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+  runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
   integration:
     status: integrated
   runner_parity:
@@ -44,7 +44,7 @@ variants:
       denoiser discards the final two latent frames. The shared 73 frames have
       matching composition and forward motion, but numerical parity remains
       pending because the random generators and latent precision differ.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:fastvideo-causal-wan2.2-i2v-14b
 pipeline_binding: fastvideo-causal-wan2.2-i2v-14b
 integration:

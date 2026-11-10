@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from worldfoundry.evaluation.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR, REPO_ROOT
+from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR, REPO_ROOT
 from worldfoundry.runtime.jobs import AsyncCommandJobStore
 
 # ── Defaults ───────────────────────────────────────────────────

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.models.catalog import (
+from worldfoundry.evals.models.catalog import (
     CheckpointRef,
     DemoParitySpec,
     ModelSource,
@@ -26,9 +26,9 @@ DATA_ROOT = SOURCE_ROOT / "data"
 
 
 def test_model_zoo_schema_uses_catalog_schema_as_canonical() -> None:
-    import worldfoundry.evaluation.models.catalog.schema as catalog_schema
+    import worldfoundry.evals.models.catalog.schema as catalog_schema
 
-    legacy_path = SOURCE_ROOT / "evaluation" / "models" / "zoo_schema.py"
+    legacy_path = SOURCE_ROOT / "evals" / "models" / "zoo_schema.py"
 
     assert catalog_schema.ModelZooEntry is ModelZooEntry
     assert catalog_schema.CheckpointRef is CheckpointRef
@@ -669,7 +669,7 @@ def test_status_fields_validate_known_enum_strings(factory: object, kwargs: dict
 
 
 def test_model_zoo_schema_imports_are_stdlib_only() -> None:
-    schema_path = SOURCE_ROOT / "evaluation" / "models" / "catalog" / "schema.py"
+    schema_path = SOURCE_ROOT / "evals" / "models" / "catalog" / "schema.py"
     allowed_modules = set(sys.stdlib_module_names) | {"__future__"}
 
     tree = ast.parse(schema_path.read_text(encoding="utf-8"))

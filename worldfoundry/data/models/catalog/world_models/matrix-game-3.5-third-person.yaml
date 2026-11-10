@@ -100,7 +100,7 @@ runner_parity:
 starred: true
 catalog_category: world_models
 catalog_scope: Matrix-Game independent inference models
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 availability:
   status: open_source
   open_source: true

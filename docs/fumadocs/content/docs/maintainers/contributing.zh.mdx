@@ -117,7 +117,7 @@ python -m pytest -q tests/core/test_agent_skills.py
 ## 代码要求
 
 - **Python** — 模型或 benchmark 有重依赖时保持 lazy import。
-- **公开入口** — 用户可见 runtime class 放在 `worldfoundry/pipelines/`；评测适配器放在 `worldfoundry/evaluation/`。
+- **公开入口** — 用户可见 runtime class 放在 `worldfoundry/pipelines/`；评测适配器放在 `worldfoundry/evals/`。
 - **Model runtimes** — `worldfoundry/synthesis/**` 下的 runtime integration 必须仓内实现。不要依赖机器本地的外部 checkout；外部仓库/checkpoint 在移植或 vendor review 前只能记录为 provenance 或 acquisition metadata。
 - **Vendored code** — 已 review 的 `thirdparty/` 代码按隔离代码处理。许可名称和上游 URL 记录在[第三方许可与来源](/zh/docs/reference/vendored-licenses)所链接的仓库声明与来源文件中，保留上游分发条款要求的组件许可文件，并在 package data 中声明；许可门禁记录已审查的例外。项目许可证放在根目录，来源记录保存在集中声明中，操作文档维护在 Fumadocs。大型、独立版本的上游优先用 git submodule；只有需要重度打补丁时才仓内拷贝。不要再复制已经在 `worldfoundry/base_models/` 或 `worldfoundry/synthesis/` 里的代码。当前树：FlashAttention 是外部安装（`scripts/setup/install_flash_attn.sh`）；`diff-gaussian-rasterization/` 是带深度的规范高斯光栅器；`simple-knn/` 是 CUDA KNN 扩展；`fastvideo-kernel/` 是可选的 STA / VSA / VMoBA / TurboDiffusion kernel 树（`CUDA_HOME` + `./build.sh`；ThunderKittens 只在非 aarch64 的 Hopper `sm_90a`；FP4 attention 只在 Blackwell `sm_120a` 且 CUDA ≥ 12.8）。
 - **Synthesis** — 保持 `worldfoundry/synthesis/**` 仅用于推理：runtime wrapper、推理所需模型代码、checkpoint/path helper 和最小 runtime config。不要添加 training launcher、dataset builder、demo 媒体、notebook 或生成输出。本地 demo 资产放在已被 Git 忽略的 `testcase/` 目录。

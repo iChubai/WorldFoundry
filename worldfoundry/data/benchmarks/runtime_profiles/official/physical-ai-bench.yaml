@@ -15,8 +15,8 @@ python_path: ${WORLDFOUNDRY_UNIFIED_PYTHON:-python}
 pythonpath_roots: [.]
 required_assets:
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
-  - worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/runtime/physical_ai_bench
+  - worldfoundry/evals/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py
+  - worldfoundry/evals/tasks/execution/runners/physical_ai_bench/runtime/physical_ai_bench
   evaluator_config: worldfoundry/data/benchmarks/assets/physical-ai-bench/evaluator.yaml
   task_yaml: worldfoundry/data/benchmarks/tasks/external/physical-ai-bench.yaml
 
@@ -32,8 +32,8 @@ optional_env:
 required_imports: [numpy, cv2, skimage, scipy, yaml, torch, decord, lpips, pycocotools, supervision, transformers, requests]
 required_packages: [numpy, opencv-python, scikit-image, scipy, PyYAML, torch, decord, lpips, pycocotools, supervision, transformers, requests]
 required_paths:
-- {id: official_runner_script, path: worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py}
-- {id: in_tree_runtime, path: worldfoundry/evaluation/tasks/execution/runners/physical_ai_bench/runtime/physical_ai_bench}
+- {id: official_runner_script, path: worldfoundry/evals/tasks/execution/runners/physical_ai_bench/run_physical_ai_bench_official_runner.py}
+- {id: in_tree_runtime, path: worldfoundry/evals/tasks/execution/runners/physical_ai_bench/runtime/physical_ai_bench}
 - {id: evaluator_config, path: worldfoundry/data/benchmarks/assets/physical-ai-bench/evaluator.yaml}
 - {id: task_yaml, path: worldfoundry/data/benchmarks/tasks/external/physical-ai-bench.yaml}
 
@@ -51,7 +51,7 @@ bounded_fixture_validation:
 validation_command:
 - ${WORLDFOUNDRY_UNIFIED_PYTHON:-python}
 - -m
-- worldfoundry.evaluation.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner
+- worldfoundry.evals.tasks.execution.runners.physical_ai_bench.run_physical_ai_bench_official_runner
 - --track
 - conditional-generation
 - --run-official

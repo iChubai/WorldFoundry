@@ -1,4 +1,4 @@
-from worldfoundry.evaluation.models.catalog import load_model_zoo_registry
+from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.allegro.pipeline_allegro_ti2v import AllegroTi2VPipeline
 from worldfoundry.pipelines.cogvideox.pipeline_cogvideox_5b_t2v import CogVideoX5bT2VPipeline
 from worldfoundry.pipelines.dynamicrafter.pipeline_dynamicrafter_512_i2v import DynamiCrafter512I2VPipeline

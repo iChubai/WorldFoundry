@@ -23,7 +23,7 @@ official_sources:
     revision: 8822e2713b01db90820a2c75115a37814ff992a0
     role: vendored_runtime_source
   local_runtime:
-    path: worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
+    path: worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench
 benchmark_assets:
   prompt_suite:
     status: official_dataset_required
@@ -164,14 +164,14 @@ runner:
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.memobench.run_memobench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.memobench.run_memobench_official_runner
     supports_official_runtime: true
     accepts_generated_artifacts: true
     supports_fixture: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:MemoBenchContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
   validation_command:
   - wf
   - zoo
@@ -189,7 +189,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
+    root: worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench
     repo_url: https://github.com/MemoBench-Team/MemoBench.git
     repo_revision: 8822e2713b01db90820a2c75115a37814ff992a0
     root_env: WORLDFOUNDRY_MEMOBENCH_ROOT
@@ -251,11 +251,11 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/memobench.yaml
   sample_results: worldfoundry/data/benchmarks/assets/memobench/sample_results.csv
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/memobench/runtime/memobench
-official_runner_script: worldfoundry/evaluation/tasks/execution/runners/memobench/run_memobench_official_runner.py
+  - worldfoundry/evals/tasks/execution/runners/memobench/runtime/memobench
+official_runner_script: worldfoundry/evals/tasks/execution/runners/memobench/run_memobench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:MemoBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:MemoBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

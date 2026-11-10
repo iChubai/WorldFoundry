@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from worldfoundry.evaluation.utils import BENCHMARK_TASK_ROOT, TMP_ROOT
+from worldfoundry.evals.utils import BENCHMARK_TASK_ROOT, TMP_ROOT
 
 from .presentation import print_details, print_notice, print_table, terminal_enabled
 from .utils import (
@@ -44,7 +44,7 @@ def _build_run_plan_from_cli_args(args: argparse.Namespace):
     Returns:
         A fully constructed :class:`RunPlan` instance.
     """
-    from worldfoundry.evaluation.runner import build_run_plan, build_run_plan_from_task_registry
+    from worldfoundry.evals.runner import build_run_plan, build_run_plan_from_task_registry
 
     plan_kwargs = {
         "mode": args.mode,
@@ -96,7 +96,7 @@ def _plan_result_payload(plan) -> dict:
     """
     validation = None
     try:
-        from worldfoundry.evaluation.runner import validate_run_plan
+        from worldfoundry.evals.runner import validate_run_plan
 
         validation = validate_run_plan(plan)
     except Exception:  # pragma: no cover - validation is best-effort for summaries.
@@ -123,7 +123,7 @@ def _handle_plan_create(args: argparse.Namespace) -> int:
     Returns:
         ``0`` on success.
     """
-    from worldfoundry.evaluation.runner import write_run_plan
+    from worldfoundry.evals.runner import write_run_plan
 
     plan = _build_run_plan_from_cli_args(args)
     if args.output_json:
@@ -154,7 +154,7 @@ def _handle_plan_show(args: argparse.Namespace) -> int:
     Returns:
         ``0`` on success.
     """
-    from worldfoundry.evaluation.runner import load_run_plan
+    from worldfoundry.evals.runner import load_run_plan
 
     plan = load_run_plan(args.plan_path)
     if args.json:
@@ -186,7 +186,7 @@ def _handle_plan_validate(args: argparse.Namespace) -> int:
     Returns:
         ``0`` if the plan is valid, ``1`` if issues were found.
     """
-    from worldfoundry.evaluation.runner import load_run_plan, validate_run_plan
+    from worldfoundry.evals.runner import load_run_plan, validate_run_plan
 
     plan = load_run_plan(args.plan_path)
     payload = validate_run_plan(plan)
@@ -217,7 +217,7 @@ def _handle_metric_list(args: argparse.Namespace) -> int:
     Returns:
         ``0`` on success.
     """
-    from worldfoundry.evaluation.tasks.metrics.registry import list_metric_registry_entries
+    from worldfoundry.evals.tasks.metrics.registry import list_metric_registry_entries
 
     entries = list_metric_registry_entries()
     payload = [entry.to_dict() for entry in entries]
@@ -258,7 +258,7 @@ def _handle_metric_show(args: argparse.Namespace) -> int:
     Returns:
         ``0`` on success.
     """
-    from worldfoundry.evaluation.tasks.metrics.registry import default_metric_registry
+    from worldfoundry.evals.tasks.metrics.registry import default_metric_registry
 
     entry = default_metric_registry().get(args.metric_id)
     payload = entry.to_dict()
@@ -290,7 +290,7 @@ def _handle_metric_validate(args: argparse.Namespace) -> int:
     Returns:
         ``0`` if all IDs resolve, ``1`` if any are unknown.
     """
-    from worldfoundry.evaluation.tasks.metrics.registry import validate_metric_ids
+    from worldfoundry.evals.tasks.metrics.registry import validate_metric_ids
 
     payload = validate_metric_ids(args.metric_id)
     if args.json:

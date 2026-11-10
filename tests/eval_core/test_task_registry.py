@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.tasks import (
+from worldfoundry.evals.tasks import (
     DuplicateTaskRegistryKeyError,
     load_task_registry_from_paths,
     validate_task_yaml_file,

@@ -60,8 +60,8 @@ metadata:
   source_kind: benchmark_zoo
   benchmark_id: mind
   contract_validation_command: wf zoo benchmark-run --benchmark-id mind --mode contract --output-dir tmp/benchmark_zoo/benchmark_contract/mind --json
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:MINDContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:MINDContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.py
   official_runner_command: wf zoo benchmark-run
   name: MIND
   domain:
@@ -123,14 +123,14 @@ metadata:
     notes: Supplied through --dino-path or <weights-dir>/dinov3_vitb16; never vendored in tree.
   validation_command:
   - python
-  - worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py
+  - worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.py
   - --run-fixture
   - --output-dir
   - <out>
   - --json
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:MINDContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:MINDContract
     runner_script_available: true
     task_yaml_available: true
     runtime_verified: false
@@ -144,8 +144,8 @@ metadata:
     filename_template: scorecard.json
   runtime:
     kind: in_tree_official_runtime
-    root: worldfoundry/evaluation/tasks/execution/runners/mind
-    runtime_root: worldfoundry/evaluation/tasks/execution/runners/mind/runtime/mind
+    root: worldfoundry/evals/tasks/execution/runners/mind
+    runtime_root: worldfoundry/evals/tasks/execution/runners/mind/runtime/mind
     root_env: WORLDFOUNDRY_MIND_ROOT
     results_path_env: WORLDFOUNDRY_MIND_RESULTS_PATH
     generated_artifact_dir_env: WORLDFOUNDRY_GENERATED_ARTIFACT_DIR
@@ -175,7 +175,7 @@ metadata:
     - mind_average
     primary_metric: mind_average
   local_evaluator:
-    target: worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py
+    target: worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.py
     status: implemented
     protocol: official_mind_in_tree_runtime
     official_result_normalization:
@@ -298,5 +298,5 @@ tasks:
       - action_control_score
       - scene_consistency_score
       - mind_average
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:MINDContract
-      runner_script: worldfoundry/evaluation/tasks/execution/runners/mind/run_mind_official_runner.py
+      runner_target: worldfoundry.evals.tasks.contracts.external:MINDContract
+      runner_script: worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.py

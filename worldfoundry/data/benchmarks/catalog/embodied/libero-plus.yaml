@@ -25,7 +25,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:LIBEROPlusContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:LIBEROPlusContract
   expected_artifacts:
   - scorecard.json
   - raw_results.jsonl
@@ -99,7 +99,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/libero-plus.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:LIBEROPlusContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:LIBEROPlusContract
   task_yaml_available: true
   runtime_verified: false
   normalizer_verified: true

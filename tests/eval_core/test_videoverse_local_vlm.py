@@ -13,7 +13,7 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from worldfoundry.evaluation.tasks.execution.runners.videoverse.videoverse_local_vlm import local_vlm_generate
+from worldfoundry.evals.tasks.execution.runners.videoverse.videoverse_local_vlm import local_vlm_generate
 
 pytestmark = pytest.mark.unit
 

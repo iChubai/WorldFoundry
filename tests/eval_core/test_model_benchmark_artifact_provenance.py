@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from tests.eval_core.contract_fixture import CONTRACT_FIXTURE_MODEL_ID
-from worldfoundry.evaluation.runner import ModelBenchmarkSuiteRequest, run_model_benchmark_suite
+from worldfoundry.evals.runner import ModelBenchmarkSuiteRequest, run_model_benchmark_suite
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

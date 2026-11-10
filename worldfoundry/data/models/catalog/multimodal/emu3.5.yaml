@@ -1,6 +1,6 @@
 id: emu3.5
 name: Emu3.5
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: emu3.5
 aliases:
 - emu3p5

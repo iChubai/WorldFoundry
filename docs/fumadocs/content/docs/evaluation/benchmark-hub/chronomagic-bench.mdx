@@ -22,8 +22,8 @@ CHScore on generated close-split videos:
 
 ```bash
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/run_chronomagic_bench_official_runner.py \
-  --chronomagic-root worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench \
+  worldfoundry/evals/tasks/execution/runners/chronomagic_bench/run_chronomagic_bench_official_runner.py \
+  --chronomagic-root worldfoundry/evals/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench \
   --components chscore \
   --generated-video-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
   --model-name worldfoundry \
@@ -41,7 +41,7 @@ hf download BestWishYsh/ChronoMagic-Bench --repo-type dataset \
   --local-dir cache/worldfoundry/data/hfd_datasets/BestWishYsh/ChronoMagic-Bench
 ```
 
-In-tree pointer: `worldfoundry/evaluation/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench`.
+In-tree pointer: `worldfoundry/evals/tasks/execution/runners/chronomagic_bench/runtime/chronomagic_bench`.
 
 Outputs include `scorecard.json` (primary `chronomagic_score`), `raw_metric_table.jsonl`, and captured upstream logs when the scorer runs.
 

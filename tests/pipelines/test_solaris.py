@@ -3,8 +3,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-import worldfoundry.evaluation.models.pipelines as model_pipelines
-from worldfoundry.evaluation.models import discover_model_registry
+import worldfoundry.evals.models.pipelines as model_pipelines
+from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.pipelines.solaris.pipeline_solaris import SolarisPipeline
 from worldfoundry.synthesis.visual_generation.solaris import runtime_env as runtime_env_module
 from worldfoundry.synthesis.visual_generation.solaris import (

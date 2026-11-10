@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
-from worldfoundry.evaluation.tasks.embodied.adapters.runtime_bridge import first_image
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.tasks.embodied.adapters.runtime_bridge import first_image
 from worldfoundry.synthesis.action_generation.openvla.engine import (
     OpenVLARuntime,
     OpenVLARuntimeConfig,

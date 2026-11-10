@@ -9,7 +9,7 @@ source:
   license: unknown
 checkpoint: H-EmbodVis/HyDRA
 runtime_profile: runtime-profile:hydra
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: hydra
 official_sources:
   project_page: https://kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models/

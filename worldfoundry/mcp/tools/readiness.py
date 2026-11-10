@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.tasks.datasets import check_local_dataset
+from worldfoundry.evals.tasks.datasets import check_local_dataset
 
 from .context import MCPToolContext, get_default_context
 
@@ -18,7 +18,7 @@ def check_benchmark_datasets_payload(
 ) -> dict[str, Any]:
     """Check local Hugging Face dataset readiness for one benchmark."""
 
-    from worldfoundry.evaluation.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
+    from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 
     ctx = context or get_default_context()
     registry = load_benchmark_zoo_registry(ctx.benchmark_manifest_dir)

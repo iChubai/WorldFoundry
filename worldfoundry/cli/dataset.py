@@ -11,7 +11,7 @@ import argparse
 from pathlib import Path
 
 from worldfoundry.cli.utils import json_dump, parse_key_value_mapping
-from worldfoundry.evaluation.utils import write_json, write_jsonl
+from worldfoundry.evals.utils import write_json, write_jsonl
 
 from .presentation import print_details, print_notice, print_table, terminal_enabled
 
@@ -22,7 +22,7 @@ def _handle_dataset_create(args: argparse.Namespace) -> int:
     Args:
         args: Parsed `dataset create` CLI arguments.
     """
-    from worldfoundry.evaluation.tasks.datasets import build_dataset_manifest, write_dataset_manifest
+    from worldfoundry.evals.tasks.datasets import build_dataset_manifest, write_dataset_manifest
 
     manifest = build_dataset_manifest(
         samples_path=args.samples_path,
@@ -66,7 +66,7 @@ def _handle_dataset_show(args: argparse.Namespace) -> int:
     Args:
         args: Parsed `dataset show` CLI arguments.
     """
-    from worldfoundry.evaluation.tasks.datasets import load_dataset_manifest
+    from worldfoundry.evals.tasks.datasets import load_dataset_manifest
 
     manifest = load_dataset_manifest(args.manifest)
     payload = manifest.to_dict()
@@ -93,7 +93,7 @@ def _handle_dataset_validate(args: argparse.Namespace) -> int:
     Args:
         args: Parsed `dataset validate` CLI arguments.
     """
-    from worldfoundry.evaluation.tasks.datasets import validate_dataset_manifest
+    from worldfoundry.evals.tasks.datasets import validate_dataset_manifest
 
     payload = validate_dataset_manifest(args.manifest)
     if args.json:
@@ -126,7 +126,7 @@ def _handle_dataset_materialize(args: argparse.Namespace) -> int:
     Args:
         args: Parsed `dataset materialize` CLI arguments.
     """
-    from worldfoundry.evaluation.runner import materialize_requests_from_dataset_manifest
+    from worldfoundry.evals.runner import materialize_requests_from_dataset_manifest
 
     materialized = materialize_requests_from_dataset_manifest(
         args.manifest,
@@ -172,7 +172,7 @@ def _handle_dataset_materialize(args: argparse.Namespace) -> int:
 
 
 def _dataset_manager(args: argparse.Namespace):
-    from worldfoundry.evaluation.tasks.datasets import DatasetManager
+    from worldfoundry.evals.tasks.datasets import DatasetManager
     from worldfoundry.runtime.env import resolve_hf_cache_dir
 
     return DatasetManager(args.cache_dir or resolve_hf_cache_dir())

@@ -34,7 +34,7 @@ integration:
   - Tiny CPU transformer state-dict and FP32/BF16 rollout parity checked against upstream,
     including eviction and prompt switches.
   - Checkpoint-backed GPU generation and native auxiliary-model parity are pending.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 runtime_profile: runtime-profile:zing
 pipeline_binding: zing
 runner_parity:

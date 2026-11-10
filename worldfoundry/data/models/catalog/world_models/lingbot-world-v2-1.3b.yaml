@@ -40,7 +40,7 @@ integration:
   - Four-latent causal sampling uses shift 5, integer timesteps and a request-owned FP32 noise bank.
 runtime_profile: runtime-profile:lingbot-world-v2-1.3b
 pipeline_binding: lingbot-world-v2-1.3b
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 output_artifacts:
 - generated_world_video
 catalog_category: world_models

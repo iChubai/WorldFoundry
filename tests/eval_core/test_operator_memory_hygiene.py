@@ -16,7 +16,7 @@ PUBLIC_FRAMEWORK_GLOBS = (
     "worldfoundry/core/memory/**/*.py",
     "worldfoundry/synthesis/action_generation/memory.py",
     "worldfoundry/synthesis/visual_generation/memory/**/*.py",
-    "worldfoundry/evaluation/**/*.py",
+    "worldfoundry/evals/**/*.py",
     "worldfoundry/studio/**/*.py",
 )
 

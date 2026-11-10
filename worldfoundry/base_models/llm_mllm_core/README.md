@@ -22,7 +22,7 @@ All models live under `mllm/`:
 ## Usage
 
 These models are loaded on demand by benchmark runners under
-`worldfoundry/evaluation/tasks/execution/runners/` (VideoScore, WorldModelBench, 4DWorldBench,
+`worldfoundry/evals/tasks/execution/runners/` (VideoScore, WorldModelBench, 4DWorldBench,
 …), by VQAScore in `perception_core`, and by a few action policies under
 `worldfoundry/synthesis/action_generation/`. Check what a benchmark needs before running it:
 

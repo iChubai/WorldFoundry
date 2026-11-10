@@ -48,10 +48,10 @@ metadata:
   blockers:
   - Meta-World task-suite mapping and official-style policy result validation must be validated before integrated 
     status.
-  official_runner_target: worldfoundry.evaluation.tasks.contracts.external:MetaWorldContract
+  official_runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract
   runner_availability:
     available: true
-    runner_target: worldfoundry.evaluation.tasks.contracts.external:MetaWorldContract
+    runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract
     runner_script_available: false
     task_yaml_available: true
     runtime_verified: false
@@ -84,7 +84,7 @@ metadata:
     - --json
   official_result_entrypoint: wf zoo benchmark-run
   local_evaluator:
-    target: worldfoundry.evaluation.tasks.embodied.normalizer:normalize_results
+    target: worldfoundry.evals.tasks.embodied.normalizer:normalize_results
     status: implemented
     protocol: official_embodied_result_normalizer
     official_result_normalization:
@@ -173,4 +173,4 @@ tasks:
       - task_success
       - reward
       - normalized_return
-      runner_target: worldfoundry.evaluation.tasks.contracts.external:MetaWorldContract
+      runner_target: worldfoundry.evals.tasks.contracts.external:MetaWorldContract

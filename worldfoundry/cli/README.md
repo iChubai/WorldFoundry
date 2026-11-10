@@ -44,6 +44,6 @@ Full reference: [CLI](https://openenvision.github.io/WorldFoundry/docs/reference
 
 Add a module with a `register_*` function that builds the subparser and binds its handler,
 call it from `_build_parser` in `main.py` with a function-local import (help stays
-import-light), and call into `worldfoundry.evaluation` or `worldfoundry.runtime` for the
+import-light), and call into `worldfoundry.evals` or `worldfoundry.runtime` for the
 actual work. Every command that
 other programs consume should accept `--json` on the leaf subcommand.

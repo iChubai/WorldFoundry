@@ -8,7 +8,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from worldfoundry.evaluation.tasks.datasets import build_dataset_manifest, write_dataset_manifest
+from worldfoundry.evals.tasks.datasets import build_dataset_manifest, write_dataset_manifest
 from worldfoundry.studio.workspace import app as workspace_app
 from worldfoundry.studio.workspace.app import WORKSPACE_HTML, create_app
 from worldfoundry.studio.workspace.jobs import StudioJob

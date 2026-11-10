@@ -54,20 +54,20 @@ runner:
   normalization:
     artifact_official_run: true
     pass_generated_artifact_dir: true
-  official_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.physics_iq.run_physics_iq_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.physics_iq.run_physics_iq_official_runner
     generated_arg: --generated-artifact-dir
     dataset_root_arg: --dataset-root
     limit_arg: --limit
     benchmark_id_arg: --benchmark-id
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicsIQVerifiedContract
-  official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicsIQVerifiedContract
+  official_runner_script: worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
   run_command: >-
     PYTHONPATH=. "${WORLDFOUNDRY_UNIFIED_PYTHON:-python}"
-    worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
+    worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
     --benchmark-id physics-iq-verified --protocol verified --run-official
     --dataset-root "${WORLDFOUNDRY_PHYSICS_IQ_VERIFIED_ROOT}"
     --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}"
@@ -75,7 +75,7 @@ runner:
   runtime:
     kind: in_tree_official_runtime
     upstream_revision: b02cf26dc15d559d0ca4f63a6917070312dde185
-    root: worldfoundry/evaluation/tasks/execution/runners/physics_iq
+    root: worldfoundry/evals/tasks/execution/runners/physics_iq
     source_checkout_required: false
     bundled_descriptions: worldfoundry/data/benchmarks/assets/physics-iq-verified/descriptions/descriptions_base.csv
   expected_artifacts: [scorecard.json, benchmark_contract.json, raw_metrics.csv, official_metrics.json, results_summary.csv, raw_metric_table.jsonl, per_sample_scores.jsonl]
@@ -102,10 +102,10 @@ blockers:
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/physics-iq-verified.yaml
   bundled_assets: worldfoundry/data/benchmarks/assets/physics-iq-verified
-official_runner_script: worldfoundry/evaluation/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
+official_runner_script: worldfoundry/evals/tasks/execution/runners/physics_iq/run_physics_iq_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:PhysicsIQVerifiedContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:PhysicsIQVerifiedContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

@@ -9,12 +9,12 @@ from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
-from worldfoundry.evaluation.api import GenerationRequest, WorldModelConfig
-from worldfoundry.evaluation.models.pipelines.lifecycle import PipelineRuntimeProfile
-from worldfoundry.evaluation.models.pipelines.loading import PipelineRunnerSpec
-from worldfoundry.evaluation.models.runners.pipeline import WorldFoundryPipelineRunner
-from worldfoundry.evaluation.tasks.execution.orchestration.evaluate import run_evaluate
-from worldfoundry.evaluation.utils import model_runner_fingerprint
+from worldfoundry.evals.api import GenerationRequest, WorldModelConfig
+from worldfoundry.evals.models.pipelines.lifecycle import PipelineRuntimeProfile
+from worldfoundry.evals.models.pipelines.loading import PipelineRunnerSpec
+from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
+from worldfoundry.evals.tasks.execution.orchestration.evaluate import run_evaluate
+from worldfoundry.evals.utils import model_runner_fingerprint
 
 
 class RecordingPipeline:
@@ -62,7 +62,7 @@ class RunnerConfigurationTests(unittest.TestCase):
         for weights in ("weights-a", "weights-b"):
             config = WorldModelConfig("review", "worldfoundry.pipeline", parameters={"model_path": weights})
             spec = PipelineRunnerSpec("review", "review:Pipeline", "review", weights, weights, None, "cpu")
-            with patch("worldfoundry.evaluation.models.runners.pipeline.load_pipeline_from_config",
+            with patch("worldfoundry.evals.models.runners.pipeline.load_pipeline_from_config",
                        return_value=(spec, RecordingPipeline())):
                 runner = WorldFoundryPipelineRunner.from_config(config)
             identities.append(model_runner_fingerprint(runner))

@@ -30,7 +30,7 @@ def _accept_embodied_licenses(license_ids: list[str] | None) -> None:
 def _handle_embodied_run(args: argparse.Namespace) -> int:
     """Run an embodied closed-loop evaluation config."""
     _accept_embodied_licenses(getattr(args, "accept_license", None))
-    from worldfoundry.evaluation.tasks.embodied.orchestrator import run_embodied_eval_config
+    from worldfoundry.evals.tasks.embodied.orchestrator import run_embodied_eval_config
 
     result = run_embodied_eval_config(
         args.config,
@@ -60,7 +60,7 @@ def _handle_embodied_run(args: argparse.Namespace) -> int:
 
 def _handle_embodied_serve(args: argparse.Namespace) -> int:
     """Serve an embodied policy adapter over WebSocket."""
-    from worldfoundry.evaluation.tasks.embodied.model_server.serve import serve_from_config
+    from worldfoundry.evals.tasks.embodied.model_server.serve import serve_from_config
 
     serve_from_config(args.config, host=args.host, port=args.port)
     return 0
@@ -68,8 +68,8 @@ def _handle_embodied_serve(args: argparse.Namespace) -> int:
 
 def _handle_embodied_merge(args: argparse.Namespace) -> int:
     """Merge embodied shard outputs into one scorecard."""
-    from worldfoundry.evaluation.tasks.embodied.config_loader import load_canonical_embodied_config
-    from worldfoundry.evaluation.tasks.embodied.merge_results import merge_embodied_results
+    from worldfoundry.evals.tasks.embodied.config_loader import load_canonical_embodied_config
+    from worldfoundry.evals.tasks.embodied.merge_results import merge_embodied_results
 
     config = load_canonical_embodied_config(args.config, output_dir=args.output_dir) if args.config else {}
     output_dir = args.output_dir or config.get("output_dir") or "."
@@ -92,8 +92,8 @@ def _handle_embodied_merge(args: argparse.Namespace) -> int:
 
 def _handle_embodied_plan(args: argparse.Namespace) -> int:
     """Dry-run an embodied config and print materialized request counts."""
-    from worldfoundry.evaluation.tasks.embodied.config_loader import load_canonical_embodied_config
-    from worldfoundry.evaluation.tasks.embodied.materialize_rollouts import materialize_embodied_rollout_requests
+    from worldfoundry.evals.tasks.embodied.config_loader import load_canonical_embodied_config
+    from worldfoundry.evals.tasks.embodied.materialize_rollouts import materialize_embodied_rollout_requests
 
     config = load_canonical_embodied_config(args.config, output_dir=args.output_dir, server_url=args.server_url)
     benchmarks = []

@@ -1,8 +1,8 @@
-"""Primary symbols re-exported from worldfoundry.evaluation (lazy __getattr__)."""
+"""Primary symbols re-exported from worldfoundry.evals (lazy __getattr__)."""
 
 
 def test_evaluation_primary_exports_resolve():
-    import worldfoundry.evaluation as ev
+    import worldfoundry.evals as ev
 
     assert callable(ev.execute_evaluate_run)
     assert callable(ev.run_worldfoundry)

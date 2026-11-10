@@ -248,7 +248,7 @@ def _runtime_profiles_index() -> Mapping[str, Any]:
     Args:
         None.
     """
-    from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profiles
+    from worldfoundry.evals.models.runtime.profiles import load_runtime_profiles
 
     return load_runtime_profiles(check_conda_env_exists=False)
 

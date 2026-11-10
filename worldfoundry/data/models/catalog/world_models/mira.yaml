@@ -37,7 +37,7 @@ runner_parity:
   - Workspace discovery, argument routing, and command generation are covered without loading model weights.
   - Full artifact parity remains pending until an official-compatible checkpoint and Rocket Science split are staged.
 runtime_profile: runtime-profile:mira
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: mira
 catalog_category: world_models
 docs:

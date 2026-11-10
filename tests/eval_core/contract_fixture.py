@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Sequence
 
-from worldfoundry.evaluation.api import ArtifactRef, GenerationRequest, GenerationResult, WorldModelConfig
+from worldfoundry.evals.api import ArtifactRef, GenerationRequest, GenerationResult, WorldModelConfig
 
 
 CONTRACT_FIXTURE_MODEL_ID = "test-contract-model"

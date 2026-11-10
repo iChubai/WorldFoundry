@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from worldfoundry.evaluation.models import discover_model_registry
+from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.operators.forcing_operator import CausalForcingOperator, SelfForcingOperator
 from worldfoundry.pipelines.forcing.pipeline_forcing import CausalForcingPipeline
 from worldfoundry.synthesis.visual_generation.forcing import runtime as runtime_module

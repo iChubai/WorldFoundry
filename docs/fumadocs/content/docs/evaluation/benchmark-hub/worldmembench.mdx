@@ -62,7 +62,7 @@ checkpoints explicitly. `--weights-dir` accepts the upstream metric asset
 layout; YAML checkpoint overrides can point to already staged shared assets.
 
 ```bash
-python -m worldfoundry.evaluation.tasks.execution.runners.worldmembench.run_worldmembench_official_runner \
+python -m worldfoundry.evals.tasks.execution.runners.worldmembench.run_worldmembench_official_runner \
   --run-official --input-path <manifest.jsonl> \
   --weights-dir <metric-assets> --config <worldmembench.yaml> \
   --output-dir <fresh-out> --json

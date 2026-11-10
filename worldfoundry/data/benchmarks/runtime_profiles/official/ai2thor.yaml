@@ -15,7 +15,7 @@ python_path: ${WORLDFOUNDRY_UNIFIED_PYTHON:-python}
 pythonpath_roots:
 - .
 preflight_command: PYTHONPATH=. ${WORLDFOUNDRY_UNIFIED_PYTHON:-python} -m
-  worldfoundry.evaluation.tasks.execution.orchestration.runtime_preflight --profile ai2thor --manifest
+  worldfoundry.evals.tasks.execution.orchestration.runtime_preflight --profile ai2thor --manifest
   worldfoundry/data/benchmarks/runtime_profiles/official/ai2thor.yaml --output-dir tmp/worldfoundry_preflight/ai2thor
   --json
 required_assets:
@@ -36,7 +36,7 @@ optional_imports:
 - ai2thor
 required_paths:
 - id: official_result_normalizer
-  path: worldfoundry/evaluation/tasks/embodied/normalizer.py
+  path: worldfoundry/evals/tasks/embodied/normalizer.py
 - id: eval_config
   path: worldfoundry/data/benchmarks/eval_configs/embodied/ai2thor/floorplan1.yaml
 - id: task_yaml

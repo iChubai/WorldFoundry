@@ -20,7 +20,7 @@ export WORLDFOUNDRY_GENERATED_ARTIFACT_DIR=/path/to/mirabench/generated_videos
 export WORLDFOUNDRY_MIRABENCH_CKPT_PATH=/path/to/mirabench/data/ckpt
 
 ${WORLDFOUNDRY_UNIFIED_PYTHON} \
-  worldfoundry/evaluation/tasks/execution/runners/mirabench/run_mirabench_official_runner.py \
+  worldfoundry/evals/tasks/execution/runners/mirabench/run_mirabench_official_runner.py \
   --run-official \
   --meta-csv "${WORLDFOUNDRY_MIRABENCH_META_CSV}" \
   --generated-artifact-dir "${WORLDFOUNDRY_GENERATED_ARTIFACT_DIR}" \
@@ -43,7 +43,7 @@ wf zoo benchmark-run \
 
 Name videos `1.mp4` … `150.mp4` (from `video_idx`). Example metas are bundled under `worldfoundry/data/benchmarks/assets/mirabench/data/evaluation_example/`. `--strict` fails on missing prompt videos. Full scoring needs AMT, ViCLIP, MUSIQ, FVD/FID/KID, and 3D-consistency assets.
 
-In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/mirabench.yaml`, `worldfoundry/evaluation/tasks/execution/runners/mirabench/runtime/mirabench`.
+In-tree pointers: `worldfoundry/data/benchmarks/tasks/external/mirabench.yaml`, `worldfoundry/evals/tasks/execution/runners/mirabench/runtime/mirabench`.
 
 Outputs include `scorecard.json` (primary `mirabench_average`) and `mirabench_average_score.json`.
 

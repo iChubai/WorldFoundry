@@ -18,7 +18,7 @@ import numpy as np
 from PIL import Image
 
 from worldfoundry.core.io.paths import official_runtime_repo_path, project_root, resolve_worldfoundry_path
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
 
 

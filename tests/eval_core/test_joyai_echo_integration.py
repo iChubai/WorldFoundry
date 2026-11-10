@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evaluation.api import WorldModelConfig
-from worldfoundry.evaluation.models.catalog import load_model_catalog_manifest
-from worldfoundry.evaluation.models.pipelines.bindings import load_pipeline_binding
-from worldfoundry.evaluation.models.pipelines.loading import build_pipeline_runner_spec, load_pipeline_from_spec
-from worldfoundry.evaluation.models.runtime.environments import load_runtime_environment_profile
-from worldfoundry.evaluation.models.runtime.profiles import load_runtime_profile_manifest
+from worldfoundry.evals.api import WorldModelConfig
+from worldfoundry.evals.models.catalog import load_model_catalog_manifest
+from worldfoundry.evals.models.pipelines.bindings import load_pipeline_binding
+from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec, load_pipeline_from_spec
+from worldfoundry.evals.models.runtime.environments import load_runtime_environment_profile
+from worldfoundry.evals.models.runtime.profiles import load_runtime_profile_manifest
 from worldfoundry.synthesis.visual_generation.joyai_echo import (
     JoyAIEchoLongVideoRuntime,
     JoyAIEchoWMRuntime,

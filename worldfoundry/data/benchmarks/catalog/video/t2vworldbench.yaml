@@ -76,12 +76,12 @@ metrics:
   output_unit: score
   primary: true
 runner:
-  official_script: worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/run_t2vworldbench_official_runner.py
+  official_script: worldfoundry/evals/tasks/execution/runners/t2vworldbench/run_t2vworldbench_official_runner.py
   workspace:
-    module: worldfoundry.evaluation.tasks.execution.runners.t2vworldbench.run_t2vworldbench_official_runner
+    module: worldfoundry.evals.tasks.execution.runners.t2vworldbench.run_t2vworldbench_official_runner
     supports_official_runtime: true
     accepts_generated_artifacts: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:T2VWorldBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:T2VWorldBenchContract
   validation_command:
   - wf
   - zoo
@@ -99,7 +99,7 @@ runner:
   - --json
   runtime:
     kind: in_tree_official_source
-    root: worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/runtime/t2vworldbench
+    root: worldfoundry/evals/tasks/execution/runners/t2vworldbench/runtime/t2vworldbench
     repo_url: https://github.com/magiclinux/world_knowledge.git
     repo_revision: 4c0f18095d1c8053c11dbcfc8382ef9e4d9b768a
     root_env: WORLDFOUNDRY_T2VWORLDBENCH_ROOT
@@ -143,12 +143,12 @@ blockers:
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/t2vworldbench.yaml
   in_tree_runtime_paths:
-  - worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/runtime/t2vworldbench
+  - worldfoundry/evals/tasks/execution/runners/t2vworldbench/runtime/t2vworldbench
 official_runner_script: 
-  worldfoundry/evaluation/tasks/execution/runners/t2vworldbench/run_t2vworldbench_official_runner.py
+  worldfoundry/evals/tasks/execution/runners/t2vworldbench/run_t2vworldbench_official_runner.py
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:T2VWorldBenchContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:T2VWorldBenchContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evaluation.utils import write_json
+from worldfoundry.evals.utils import write_json
 
 from .presentation import print_details, print_table, terminal_enabled
 from .utils import json_dump
@@ -18,7 +18,7 @@ from .utils import json_dump
 
 def _handle_models_list(args: argparse.Namespace) -> int:
     """List available model types from the model registry."""
-    from worldfoundry.evaluation.models.catalog.registry import discover_model_registry
+    from worldfoundry.evals.models.catalog.registry import discover_model_registry
 
     registry = discover_model_registry()
     items = [item.to_dict() for item in registry.list(args.family)]
@@ -45,7 +45,7 @@ def _handle_models_runtime_runners(args: argparse.Namespace) -> int:
     Parameters:
         args: CLI namespace; ``json`` selects JSON lines instead of plain text rows.
     """
-    from worldfoundry.evaluation.models.runners.registry import model_runner_registry_snapshot
+    from worldfoundry.evals.models.runners.registry import model_runner_registry_snapshot
 
     payload = [entry.to_dict() for entry in model_runner_registry_snapshot().list()]
     if args.json:

@@ -22,7 +22,7 @@ import torch.nn.functional as F
 pytestmark = pytest.mark.unit
 
 _SOURCE = Path(__file__).resolve().parents[3] / (
-    "worldfoundry/evaluation/tasks/execution/runners/fetv/runtime/fetv_eval/auto_eval.py"
+    "worldfoundry/evals/tasks/execution/runners/fetv/runtime/fetv_eval/auto_eval.py"
 )
 
 

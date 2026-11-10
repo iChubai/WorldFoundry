@@ -17,9 +17,9 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-_PACKAGE = "worldfoundry.evaluation.tasks.execution.runners.videobench.runtime.videobench"
+_PACKAGE = "worldfoundry.evals.tasks.execution.runners.videobench.runtime.videobench"
 _SOURCE = Path(__file__).resolve().parents[3] / (
-    "worldfoundry/evaluation/tasks/execution/runners/videobench/runtime/videobench/VideoTextAlignment.py"
+    "worldfoundry/evals/tasks/execution/runners/videobench/runtime/videobench/VideoTextAlignment.py"
 )
 
 

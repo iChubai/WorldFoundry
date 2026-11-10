@@ -30,7 +30,7 @@ integration:
   - VGGT-Omega uses an official-architecture representation runner plus the existing
     WorldFoundry VGGTResult/save interface.
   - Weights stay under assets/checkpoints and are not committed into source files.
-runner_target: worldfoundry.evaluation.models.runners.pipeline:WorldFoundryPipelineRunner
+runner_target: worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner
 pipeline_binding: vggt-omega
 runtime_profile: runtime-profile:vggt-omega
 runner_parity:

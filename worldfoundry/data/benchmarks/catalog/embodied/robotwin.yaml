@@ -72,7 +72,7 @@ runner:
   normalization:
     dispatch: embodied
     embodied_track: vla
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:RoboTwinContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:RoboTwinContract
   run_command:
   - wf
   - embodied
@@ -229,7 +229,7 @@ data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/robotwin.yaml
 runner_availability:
   available: true
-  runner_target: worldfoundry.evaluation.tasks.contracts.external:RoboTwinContract
+  runner_target: worldfoundry.evals.tasks.contracts.external:RoboTwinContract
   runner_script_available: true
   task_yaml_available: true
   runtime_verified: false

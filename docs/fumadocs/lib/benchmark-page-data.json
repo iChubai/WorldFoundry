@@ -2398,8 +2398,8 @@
         }
       ],
       "data": {
-        "summary": "50 dual-arm tasks, RoboTwin-OD (731 objects / 147 categories), five embodiments, 100k+ pre-collected trajectories. Official dumps: TianxingChen/RoboTwin2.0 (MIT) and lerobot/robotwin_unified (license under review).",
-        "summaryZh": "50 个双臂任务、RoboTwin-OD（731 物体 / 147 类）、五种本体、10 万+ 预采集轨迹。官方包：TianxingChen/RoboTwin2.0（MIT）与 lerobot/robotwin_unified（许可证待审）。",
+        "summary": "50 dual-arm tasks, RoboTwin-OD (731 objects / 147 categories), five embodiments, 100k+ pre-collected trajectories. Official dumps: TianxingChen/RoboTwin2.0 (MIT) and lerobot/robotwin_unified (no license declared).",
+        "summaryZh": "50 个双臂任务、RoboTwin-OD（731 物体 / 147 类）、五种本体、10 万+ 预采集轨迹。官方包：TianxingChen/RoboTwin2.0（MIT）与 lerobot/robotwin_unified（未声明许可证）。",
         "sizeLabel": "50 tasks · 731 objects · 5 embodiments · 100k+ trajectories",
         "sizeLabelZh": "50 个任务 · 731 个物体 · 5 种本体 · 10 万+ 轨迹",
         "count": 50,

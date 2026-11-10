@@ -3,14 +3,14 @@ title: 交互式世界模型推理
 description: Zing、Astronex-World、SolarWM、AlayaWorld v1.1 和 Echo-WM 的纯推理入口。
 ---
 
-这些入口使用本地权重生成视频。目录查询与配置检查可在 CPU 上运行，实际生成需要 CUDA。推理不会自动下载权重。新增路线已做 CPU 契约检查，真实 checkpoint 加载、GPU 显存和视频产物仍待验证。
+这些入口使用本地权重生成视频。目录查询与配置检查可在 CPU 上运行，实际生成需要 CUDA。推理不会自动下载权重。这些路线已通过 CPU 契约检查；真实 checkpoint 加载、GPU 显存和视频产物尚未验证。
 
 | 模型 ID | 推理实现 | 外部依赖 |
 | --- | --- | --- |
 | `zing`（别名 `zing-0.5`） | 复用原生 Wan2.2、UMT5、VAE38，增加键盘控制与因果缓存 | 无外部模型仓库 |
 | `astronex-world` | 官方 causal / bidirectional 采样入口 | Astronex-World 源码与环境 |
 | `solarwm` | 官方 `solarwm infer`，读取索引中的图像、描述和相机轨迹 | SolarWM 源码及对应后端环境 |
-| `alayaworld` | 保留已有原生 LTX-2.3 + DA3 合并权重路线 | 无外部模型仓库 |
+| `alayaworld` | 原生 LTX-2.3 + DA3 合并权重路线 | 无外部模型仓库 |
 | `alayaworld-v1.1` | 提取纯推理 ViGeo rollout，复用共享加载器、VAE、历史和文本编码器 | Alaya Transformer 扩展及 ViGeo1.1 |
 | `joyai-echo-wm` | 官方 Base / Flash 音视频推理 | JoyAI-Echo 源码与环境 |
 
@@ -116,7 +116,7 @@ result = pipe(output_dir="tmp/solarwm", execute=True, return_dict=True)
 
 `wan-5b-dmd-237f` 路线会依据索引中的源片段长度生成。验证 237 帧 rollout 时，应提供至少 237 帧的视频及匹配的相机位姿；仅选择该变体，输入仍为 81 帧时，输出也只有 81 帧。
 
-Wan、LTX、H3 使用各自的环境，仓库中的 `solarwm` 环境清单只描述默认 Wan 路线。LTX/H3 按固定版本的上游文档安装，并传入对应解释器。LTX 的 `assets` 需要 `model.codec.video_vae_path`、`inference.negative_caption_cache`；H3 需要 `data.silence_latents_path`、`data.encoder_contract_path`。`h3-dmd-long` 还需 `inference.plan`、`inference.dataset_root`。这些资产须提前准备，集成不会执行预编码。
+Wan、LTX、H3 使用各自的环境，仓库中的 `solarwm` 环境清单只描述默认 Wan 路线。LTX/H3 按固定版本的上游文档安装，并传入对应解释器。LTX 的 `assets` 需要 `model.codec.video_vae_path`、`inference.negative_caption_cache`；H3 需要 `data.silence_latents_path`、`data.encoder_contract_path`。`h3-dmd-long` 还需 `inference.plan`、`inference.dataset_root`。这些资产须提前准备，WorldFoundry 不执行预编码。
 
 Wan 可用 `overrides={"data.test_index": "...", "validation.sample_count": 1}` 选择样本；LTX 使用 `data.index`、`inference.sample_count`。未知覆盖项及训练命令会被拒绝。每次运行使用独立目录，必须同时找到视频和完成标记才能返回成功。
 
@@ -179,4 +179,4 @@ result = pipe(
 )
 ```
 
-Base 提示词按上游六字段组织：Environment、Character、Style、Perspective、Sounds、Speech。Base 帧数为 `1 + 8*N`；Flash 为 `1 + 8*video_chunk_size*N`（默认 chunk size 为 3）。宽高为 32 的倍数。默认带音频，`no_audio=True` 只生成视频。目录中的注册状态不代表所有权重可下载或 GPU 产物已验证。
+Base 提示词按上游六字段组织：Environment、Character、Style、Perspective、Sounds、Speech。Base 帧数为 `1 + 8*N`；Flash 为 `1 + 8*video_chunk_size*N`（默认 chunk size 为 3）。宽高为 32 的倍数。默认带音频，`no_audio=True` 只生成视频。长时程 checkpoint 的可用性与 GPU 一致性尚未确认。

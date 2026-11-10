@@ -58,15 +58,15 @@ docs:
   publisher: Open-source research release (institution not recorded)
   publisher_kind: lab
   publisher_zh: 开源研究发布（仓库未记录正式机构）
-  overview: 'EgoWM is an egocentric navigation world model: from a first-person view and navigation actions it predicts the video a moving agent would see, with 3-DoF and 25-DoF action variants recorded (egowm-svd-3dof / egowm-svd-25dof). In this catalog the official source route is registered with the source pinned at a recorded commit; checkpoints stay runtime-gated.'
-  overview_zh: EgoWM 是第一人称导航世界模型：给定第一视角画面与导航动作，预测移动智能体将看到的视频，记录了 3 自由度与 25 自由度两个动作 variant（egowm-svd-3dof / egowm-svd-25dof）。本 catalog 中官方源码路径已注册、源码固定在记录的 commit；checkpoint 保持运行时限制。
-  architecture: The variant names record a Stable Video Diffusion backbone conditioned on 3-DoF or 25-DoF action spaces (checkpoint anuragba/egowm). Architecture internals beyond the recorded tasks are not stored in this repository.
-  architecture_zh: variant 名称记录其为以 3 自由度或 25 自由度动作空间为条件的 Stable Video Diffusion 基座（checkpoint 为 anuragba/egowm）。除已记录任务外的架构内部细节仓库未存。
-  usage_notes: Config resolution and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged. Missing assets are reported by the plan and are not treated as catalog blockers.
-  usage_notes_zh: 配置解析与 pipeline 导入预期可通过；在所需 checkpoint/资产就位前，真实生成会输出运行时计划。缺失资产由计划报告，不视为 catalog 阻塞。
+  overview: 'EgoWM is an egocentric navigation world model: from a first-person view and navigation actions it predicts the video a moving agent would see. It has a 3-DoF action variant and a 25-DoF state/action variant (egowm-svd-3dof / egowm-svd-25dof). Validated on GPU with one paired 25-DoF EVE1x sample and one paired 3-DoF SCAND trajectory.'
+  overview_zh: EgoWM 是第一人称导航世界模型：给定第一视角画面与导航动作，预测移动智能体将看到的视频。提供 3 自由度动作与 25 自由度状态／动作两个 variant（egowm-svd-3dof / egowm-svd-25dof）。已在 GPU 上用一条配对 25 自由度 EVE1x 样例和一条配对 3 自由度 SCAND 轨迹验证。
+  architecture: A Stable Video Diffusion backbone (stabilityai/stable-video-diffusion-img2vid) conditioned on 3-DoF navigation actions or a 25-DoF physical state and actions; the EgoWM weights come from anuragba/egowm.
+  architecture_zh: 以 Stable Video Diffusion（stabilityai/stable-video-diffusion-img2vid）为基座，条件为 3 自由度导航动作或 25 自由度物理状态与动作；EgoWM 权重来自 anuragba/egowm。
+  usage_notes: Stage the official EgoWM source checkout under `$WORLDFOUNDRY_MODEL_SOURCE_DIR/egowm`, the matching EgoWM checkpoint, and the SVD base model locally. The default 25-DoF variant needs an initial image and a paired `conditions_path` JSON from the same trajectory; the 3-DoF variant needs a paired `actions_path` JSON.
+  usage_notes_zh: 在本地就位官方 EgoWM 源码检出（`$WORLDFOUNDRY_MODEL_SOURCE_DIR/egowm`）、对应的 EgoWM checkpoint 与 SVD 基座。默认 25 自由度 variant 需要同一轨迹的首帧图像和配对的 `conditions_path` JSON；3 自由度 variant 需要配对的 `actions_path` JSON。
   limitations:
-  - Real generation is checkpoint/asset gated.
-  - The publishing institution is not recorded in this repository.
+  - Validation covers one trajectory per variant; it does not establish calibrated displacement or reliable reverse motion.
+  - '`smoke_synthetic=true` and `action_scale` are synthetic smoke controls and do not test robot motion.'
   limitations_zh:
-  - 真实生成受 checkpoint/资产限制。
-  - 发表机构在本仓库中未记录。
+  - 验证只覆盖每个 variant 的一条轨迹，不能证明位移标定或可靠的倒退运动。
+  - '`smoke_synthetic=true` 与 `action_scale` 只是合成 smoke 控制，不能检验机器人运动。'

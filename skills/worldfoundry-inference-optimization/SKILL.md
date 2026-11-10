@@ -1,98 +1,178 @@
 ---
 name: worldfoundry-inference-optimization
 description: >
-  Use this skill when diagnosing slow WorldFoundry inference or changing
-  attention backends, torch.compile, CUDA graphs, warmup, KV or feature caches,
-  VAE decoding, precision, offload, transfers, or Studio streaming latency.
-  Guides matched-stack profiling and optimizations that preserve numerical
-  outputs and request isolation.
+  Use this skill when WorldFoundry inference is too slow or uses too much
+  memory, or when changing attention backends, torch.compile, CUDA graphs,
+  warmup, request batching, KV or feature caches, acceleration plugins,
+  offload, precision or quantization, VAE decode, sequence or CFG
+  parallelism, or Studio streaming latency. Covers matched-stack baselines,
+  stage attribution, confirming the executed fast path, rejected knob
+  combinations, lifecycle-safe changes, and accepting a speedup only with
+  numerical evidence. Correctness gates are worldfoundry-inference-validation;
+  Studio workers and transport are worldfoundry-studio-serving.
 license: Apache-2.0
 compatibility: >
-  Requires a WorldFoundry checkout and prepared CUDA environment.
+  Requires a WorldFoundry checkout and a prepared CUDA environment.
   Measurements need local checkpoints and representative inputs.
 ---
 
 # Optimize WorldFoundry Inference
 
-Run commands from the WorldFoundry repository root. Follow
-[contribution rules](../../CONTRIBUTING.md). Read
-[native diffusion ownership](../../docs/fumadocs/content/docs/maintainers/architecture/native-diffusion.mdx)
-when changing diffusion components, and the relevant
-[validation](../../docs/fumadocs/content/docs/reference/validation.mdx)
-sections when selecting numerical and performance acceptance gates.
+Diagnose before changing code, change one variable at a time, prove the fast
+path actually executed, and accept a speedup only with numerical evidence.
+Run commands from the repository root. The
+[inference optimization guide](../../docs/fumadocs/content/docs/guides/inference-optimization.mdx)
+owns available knobs and rejected combinations;
+[diffusion acceleration](../../docs/fumadocs/content/docs/guides/diffusion-acceleration.mdx)
+owns plugin contracts; the
+[validation guide](../../docs/fumadocs/content/docs/reference/validation.mdx)
+owns acceptance.
 
-## Measure the Executed Path
+## Start from the supported defaults
 
-Trace the public pipeline or worker to its actual compute caller. Establish a
-baseline with fixed weights, input, prompt or control schedule, seed, shape,
-frame count, sampler, and precision. Record the command, revision, GPU count
-and model, driver, CUDA, PyTorch, and selected runtime policy. For Studio,
-record worker startup, the single request, and the repeated benchmark command.
-Confirm the resolved runtime and actual kernel/compile/graph dispatch through
-existing logs and request-scoped receipts. A configured fast path or lifetime
-warmup counter does not prove that the measured request used it; label fallback
-measurements by their executed path.
+- Official-looking output: keep catalog defaults, BF16, `offload_mode=resident`
+  when VRAM fits (otherwise `async-block`), and leave feature caches,
+  approximate attention, quantization, CUDA Graph, and preview decoders off.
+- Throughput on the same native Wan checkpoint: a real Flash or Sage
+  `attention_backend`, then `fuse_qkv`, `fused_rope`, and `static_cross_kv`;
+  `compile` at load followed by representative warmup; Wan VAE tiling or
+  temporal chunks when decode OOMs or dominates.
+- Most named knobs exist only on native Wan 2.1/2.2. Other families accept a
+  subset; list a model's real load keys with `wf run <model-id> --help`
+  (`--pipeline.load.*`) before setting one.
 
-Separate loading, cold compilation, warmup, cache fill, steady-state compute,
-decode, transfer, encoding, and queue wait. Use CUDA events or explicit
-synchronization for GPU attribution; CPU launch time is not completed GPU time.
-Use the existing performance harness for the affected integration. Report
-measured latency or throughput, memory, warmup policy, and fallback paths.
-Profiler-instrumented timings are attribution evidence, not headline timings.
-Use at least three measured repeats for a local latency comparison, keeping
-per-run values and spread. Collect a short operator/shape trace for compute
-hotspots or a separate host-stack trace for launch and synchronization gaps.
-Change one performance variable at a time and inspect existing core fast paths
-before proposing a custom kernel.
+## Workflow
 
-## Change the Measured Bottleneck
+```text
+- [ ] 1. Workload and stack frozen
+- [ ] 2. Baseline measured with stage attribution
+- [ ] 3. Bottleneck classified; existing fast paths checked
+- [ ] 4. One change made in its owning layer
+- [ ] 5. Executed path confirmed from receipts
+- [ ] 6. Numerical and lifecycle evidence collected
+- [ ] 7. Candidate measured against the matched baseline
+```
 
-- Shared backend selection and attention kernels belong in
-  `worldfoundry/core/attention/`; shared execution, graph, cache, and offload
-  behavior belongs in the relevant `worldfoundry/core/` domain.
-- Diffusion-specific composition uses existing runtime policy, components,
-  runners, and recipes. Keep generic infrastructure out of family packages.
-- Compile regions should contain stable compute. CUDA graph capture requires
-  stable shapes and storage, explicit warmup, and correct stream ordering.
-- Cache changes must preserve fill, eviction, reset, cancellation, and reuse
-  semantics. Exercise changed inputs and failures between repeated requests.
-- Decoder changes compare identical latents. Frame order and queue latency
-  remain part of the streaming contract; dropping output frames changes it.
-- Precision or approximate-attention changes require the existing acceptance
-  contract for the affected case. Do not substitute a new tolerance or quality
-  reference to make a candidate pass.
+### 1. Freeze the workload and stack
 
-Keep the change narrow and reuse existing configuration surfaces. Add a new
-public option only when users need a distinct supported behavior; performance
-work does not automatically require another flag or fallback implementation.
+Fix weights, input, prompt or control schedule, seed, resolution, frame count,
+sampler, steps, guidance, and precision. Record the command, commit, GPU model
+and count, driver, CUDA, PyTorch, and resolved runtime policy. For Studio,
+record worker startup, one request, and the repeated benchmark command.
+Official benchmark settings (steps, CFG, size) are part of the workload;
+changing them creates a different workload.
 
-## Validate Execution Lifecycles
+### 2. Measure and attribute
 
-For compile, graphs, warmup, cache, or offload changes, load
-[execution lifecycle](references/execution-lifecycle.md). Verify the real eager
-route first, then warmup state isolation, then the accelerated route for the
-same supported workload. Cover actual shapes, conditioning branches, object
-lifetimes, and leaf kernels rather than inferring support from config names.
-Keep compile, CUDA graphs, approximation, and deployment topology as separate
-comparisons so their costs and quality effects remain attributable.
+Report loading, cold compilation or capture, warmup, cache fill, steady-state
+denoise, decode, transfer, encoding, and queue wait separately. Use CUDA
+events or explicit synchronization for GPU time and at least three measured
+repeats with per-run values. Profiler timings attribute cost; they are never
+headline latency. For a timeline without added synchronization:
 
-## Verify and Measure the Candidate
+```bash
+WORLDFOUNDRY_NVTX=1 nsys profile --trace=cuda,nvtx,osrt -o tmp/trace/<name> <command>
+```
 
-Add small numerical and state-isolation regressions before a full replay. Use
-[inference validation](../worldfoundry-inference-validation/SKILL.md) for CUDA
-and affected real-checkpoint gates.
+The standard runner emits `worldfoundry.run`, `encode`, `denoise_step`,
+`denoiser.positive`/`denoiser.negative`, and `decode` ranges; postprocess,
+H.264 output, and offload H2D copies have their own ranges.
 
-Measure reference and candidate with matched stacks and settings. Use fresh
-processes when studying compilation, backend probing, or persistent caches.
-Report startup and steady-state costs separately, including warmup plus the
-first completed request for one-shot workloads. Moving compilation into warmup
-changes when its cost is paid, not necessarily total latency. A speedup is
-accepted only with the required numerical, artifact, lifecycle, and quality
-evidence.
+### 3. Classify and look for an existing fast path
 
-## Report the Result
+Name the dominant stage: attention or GEMM, normalization and elementwise
+glue, launch overhead, decode, offload copies, host transfer and encoding,
+queueing, or collectives. Check existing implementations before writing
+kernels: backend dispatch in `worldfoundry/core/attention/`, compile and
+graphs in `worldfoundry/core/execution/`, plugins in
+`worldfoundry/core/acceleration/`, and diffusion transforms in
+`worldfoundry/base_models/diffusion_model/optimizations/`.
 
-State the measured improvement and its hardware and workload scope. Explain
-memory, startup, precision, or quality tradeoffs with their measured values.
-Update the paired model, environment, or Studio pages that own the changed
-behavior. Keep traces, generated media, and replay outputs outside Git.
+### 4. Change one variable in its owning layer
+
+- Shared backend selection, kernels, compile, graph, cache, and offload code
+  belongs in `worldfoundry/core/`; family packages never get private copies.
+- Diffusion-specific composition goes through `RuntimePolicy`, components,
+  plugins, and runner strategies; no model-name branches in shared runners.
+- Compiled or captured regions hold stable tensor compute only. Loading,
+  offload transfers, Python request setup, and cleanup stay outside.
+- Prefer an existing configuration surface. Add a public option only for a
+  distinct supported behavior; keep exact and approximate paths separate.
+
+For compile, CUDA Graph, warmup, cache, batching, or offload changes, read
+[execution lifecycle](references/execution-lifecycle.md) before editing.
+
+### 5. Confirm what executed
+
+An accepted option is not a speedup. After one forward on a native pipeline,
+read `pipe.native_pipeline.components.denoiser.runtime_optimization_report()`
+(and the same on `components.decoder`) and compare `requested`, `effective`,
+and `fallbacks`:
+
+- Attention: attempts equal successes and no target fallback; compile shows
+  `compiled_graph_traces > 0`.
+- CUDA Graph: `replay > 0` with zero eager and capture failures.
+- Static cross-KV: hits in this request and zero bypasses.
+- Quantization: `low_precision_kernel_calls > 0`; `dense_policy_calls` ran BF16.
+- Plugins: installation reports `execution_verified=False` by design; use the
+  per-request receipts to prove execution.
+
+### 6. Collect numerical and lifecycle evidence
+
+Exact or numerically equivalent changes must reproduce the dense reference
+under the owning contract; approximations need explicit opt-in and measured
+quality limits. Existing harnesses:
+
+```bash
+python -m benchmarks.inference.wan_execution_preparation \
+  --checkpoint /path/to/Wan2.1-T2V-1.3B --output-dir tmp/wan-execution --request-batching
+python -m benchmarks.operators.attention_adapter_parity --backend flash2 --strict --out tmp/attention-parity
+```
+
+`wan_execution_preparation` replays dense, static-graph, and batched A/B/A
+requests through the public path; its `report.json` must show both
+`complete` and `passed`, and its timings are diagnostic. For sequence
+parallelism, `benchmarks.inference.wan22_multigpu_e2e` saves single-rank
+reference latents and compares the multi-rank candidate with
+`--reference-latents`, `--reference-video`, and `--fail-on-fallback`. Then run
+the CUDA and replay gates from
+[inference validation](../worldfoundry-inference-validation/SKILL.md).
+
+### 7. Measure the candidate
+
+Use the same stack, settings, and GPU set as the baseline. Use fresh processes
+for compile, autotune, backend probing, and persistent caches. Report startup
+and steady state separately, including warmup plus the first completed
+request for one-shot workloads. Framework A/B claims use
+`benchmarks.inference.framework_ab_wan22` on one GPU in `Exclusive_Process`
+mode; timings from shared `Default`-mode GPUs are diagnostic only.
+
+## Gotchas
+
+- Rejected at build: sequence parallelism with feature caches, sparse or
+  approximate attention, or CUDA Graph (fused RoPE is SP-aware); CUDA Graph
+  with feature caches or approximate attention; quantization with block or
+  disk offload; `device_map=balanced` with any offload; two feature caches at
+  once; `cfg_parallel` degrees other than 1 or 2.
+- The first compiled or captured request is slow; never time it. Moving
+  compilation into warmup moves the cost, it does not remove it.
+- After warmup freezes CUDA Graph capture, unseen request signatures bypass
+  the graph and may recompile. Warm the deployed shapes, batch sizes, and
+  condition lengths.
+- `vae_preview_decoder_path` (TAEW2.2) is a preview decoder; release and
+  benchmark videos use the official VAE.
+- Packed reusable offload buffers are opt-in and were slower than per-parameter
+  copies for small layers; measure the real layer sizes.
+- Peak allocated and reserved memory differ; report both when diagnosing OOM.
+- Plugins require an idle model; compiled models and CUDA Graph owners must be
+  rebuilt after plugin or weight changes.
+
+## Report
+
+| Config | Command | Effective path | Latency (ms, N runs, spread) | Peak alloc/reserved | Startup | Numerics | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+
+State the hardware and workload scope of every number, the measured memory,
+startup, precision, or quality tradeoffs, and whether the change is default,
+opt-in, or rejected and why. Update the paired guide or model pages that own
+the changed behavior. Traces, media, and replay outputs stay outside Git.

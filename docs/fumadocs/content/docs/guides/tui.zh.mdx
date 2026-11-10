@@ -216,8 +216,6 @@ TUI 会在 catalog 条目旁显示 readiness 警告：
 - **缺失环境** — runtime profile 声明的 conda 包或 CUDA 版本未满足。
 - **License 限制** — 模型或 dataset 带 gated 或非商业 license，需要人工确认。
 
-存在 readiness blocker 时，生成的命令默认带上 `--mode official-validation`。这样可以先验证链路是否接通，而不必为一个被阻断的 run 占用 GPU。
-
 ## 回退模式
 
 未安装 Textual 依赖时，TUI 会打印一份静态回退摘要，替代交互式面板。回退摘要列出 model ID、benchmark ID 和简短的 readiness 说明。

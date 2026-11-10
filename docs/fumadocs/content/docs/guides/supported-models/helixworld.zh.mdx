@@ -5,7 +5,7 @@ modelId: "helixworld"
 pageSource: authored
 ---
 
-HelixWorld Preview v1 从一张图像、视觉/声音/联合场景描述及动作计划共同生成视频与空间音频。原生 component 复用 LTX-2.3 transformer、Gemma 文本编码器、视频/音频 VAE、vocoder、checkpoint loader 与媒体 IO。HelixWorld 的 network variant、camera/action encoder 与 recipe 分别位于 `worldfoundry/base_models/diffusion_model/` 对应 role；框架自有的 `runners/joint_chunked.py` 持有采样循环。
+HelixWorld Preview v1 从一张图像、视觉/声音/联合场景描述及动作计划共同生成视频与空间音频。它基于 LTX-2.3 transformer、Gemma 文本编码器、视频/音频 VAE 与 vocoder，并加入相机与动作编码器。
 
 代码：[NoizAI/HelixWorld](https://github.com/NoizAI/HelixWorld)。权重：[NoizAI/HelixWorld-preview](https://huggingface.co/NoizAI/HelixWorld-preview)。
 
@@ -33,10 +33,10 @@ MP4 包含生成的音轨，返回字典还提供音频波形、采样率与视�
 
 默认分辨率为 768×512、24 FPS。帧数支持 121、153、185 等，每次增加 32 帧。每个四 latent 帧分段执行四步随机采样，并从初始分段及最近两个分段重建历史上下文。初始化和采样使用独立随机生成器，采样种子沿用官方偏移。
 
-完整 checkpoint 已在 H100 80 GB 上使用 BF16 和默认 block offload 完成 CUDA 生成验证。768×512、121 帧的运行生成了含 48 kHz 双声道音轨的 MP4；加载后生成耗时 24.1 秒，CUDA 峰值分配为 26.0 GiB、预留为 37.6 GiB。导出的 MP4 保留全部生成视频帧。
+已在 H100 80 GB 上用完整 checkpoint 验证（BF16，默认 block offload）：768×512、121 帧的运行生成含 48 kHz 双声道音轨的 MP4，加载后约 24 秒完成，CUDA 峰值分配 26.0 GiB。
 
 ## 限制
 
 - 官方 BF16 参考运行约使用 70 GB 显存，建议 80 GB GPU；Gemma 资产需要接受 Google 模型条款。
 - Preview 每次请求生成一个样本。
-- 完整 checkpoint 的 CUDA 输出一致性尚待验证。当前公开 Preview 离线推理，训练代码及技术报告尚待发布。
+- 当前公开 Preview 离线推理版本，训练代码及技术报告尚待发布。

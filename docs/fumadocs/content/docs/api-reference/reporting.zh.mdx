@@ -27,7 +27,7 @@ Environment payload 记录 Python、已安装 package 版本、git metadata 与�
 
 ## `write_run_manifest_artifacts`
 
-自定义 runner 需要一次性写出标准 manifest 三件套时，使用这个 writer。
+自定义 runner 需要一次性写出标准 manifest 文件（`run_manifest.json`、`environment.json` 和 `env_requirements.json`）时，使用这个 writer。
 
 ```python
 from worldfoundry.evals.reporting import write_run_manifest_artifacts

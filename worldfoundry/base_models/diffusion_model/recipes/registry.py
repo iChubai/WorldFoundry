@@ -352,12 +352,6 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
             ("helixworld-preview", "helix-world", "NoizAI/HelixWorld-preview"),
         ),
         (
-            "hello-world",
-            ".hello_world",
-            "hello_world_recipe",
-            ("helloworld", "AlayaLab/HelloWorld"),
-        ),
-        (
             "hunyuanvideo-t2v",
             ".hunyuan_video",
             "hunyuan_video_t2v_recipe",

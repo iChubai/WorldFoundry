@@ -1,6 +1,6 @@
 ---
 title: "HyperFlow for MiniMax-H3"
-description: "HyperFlow for MiniMax-H3 from Video Rebirth: text-to-video and image-to-video; Runner parity pending; dedicated `hyperflow`."
+description: "HyperFlow for MiniMax-H3 from Video Rebirth: text-to-video, image-to-video, and 2 more tasks; Runner parity pending; dedicated `hyperflow`."
 modelId: "hyperflow"
 pageSource: generated
 ---
@@ -15,30 +15,28 @@ Code: [Video-Rebirth/hyperflow](https://github.com/Video-Rebirth/hyperflow).
 
 ## What it is for
 
-Use `hyperflow` for the family's joint T2V/I2V inference path. The catalog records both task profiles on this page.
+`hyperflow` covers text-to-video and image-to-video: a prompt and an optional still image in, a clip out.
 
 It is published by Video Rebirth.
 
-Catalog tasks include text-to-video, image-to-video, reference-to-video, and audio-video-generation. Catalog aliases include `hyperflow-h3` and `minimax-h3-hyperflow`. Documented modalities: text and image in, video out.
+Tasks: text-to-video, image-to-video, reference-to-video, and audio video generation. Aliases: `hyperflow-h3` and `minimax-h3-hyperflow`. Modalities: text and image in, video out.
 
 ## Runtime contract
 
-Optional `prompt`, `num_frames`, `height`, `width`, and `seed`; artifacts `generated_video` and `hyperflow.mp4`.
+Inputs `prompt` (bundled samples are used when omitted); options `num-frames`, `seed`, and `memory-reserve-margin`; artifacts `generated_video` and `hyperflow.mp4`.
 
 CLI task profiles: `t2va`, `fl2va`, and `ref2va`. WorldFoundry binds `HyperFlowPipeline`.
 
 Family status: **Runner parity pending**.
 
-Recorded `t2va` defaults: seed=42 Recorded `fl2va` defaults: seed=42.
+Defaults for `t2va`: seed=42 Defaults for `fl2va`: seed=42.
 
-Supply a complete local diffusers MiniMax-H3 snapshot, weights_path and the dedicated Python executable. The upstream loader supplies the fixed grid; num_inference_steps must be 8 and output fps must be 24.
+Supply a complete local diffusers MiniMax-H3 snapshot, weights_path and the dedicated Python executable. The upstream loader supplies the fixed grid; num_inference_steps must be 8 and output fps must be 24. Validated on a single H100: T2VA, single-image FL2VA, and image-reference Ref2VA generate 124 frames at 640×384 in eight steps, with full video and stereo audio decoding.
 
 ## Running in WorldFoundry
 
-Launch `wf run hyperflow --pipeline.task-profile t2va` to sample the clip. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
+Generate a clip with `wf run hyperflow --pipeline.task-profile t2va`. Switch tasks in the command builder above to change `--pipeline.task-profile`.
 
-Recorded weight repositories include `videorebirth/hyperflow` and `MiniMaxAI/MiniMax-H3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hyperflow`. Add `--download` to fetch missing public checkpoints.
-
-Status: **Runner parity pending**.
+Weights: `videorebirth/hyperflow` and `MiniMaxAI/MiniMax-H3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hyperflow`. Add `--download` to fetch missing public checkpoints.
 
 <ModelRelatedRecipes modelId="hyperflow" locale="en" />

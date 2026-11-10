@@ -1,100 +1,164 @@
 ---
 name: worldfoundry-inference-validation
 description: >
-  Use this skill when selecting or running validation after WorldFoundry model
-  or runtime changes, updating integration tests, or reviewing inference claims.
-  Covers component parity, checkpoint conversion, numerical drift diagnosis,
-  weight-free contracts, CUDA checks, accepted-reference checkpoint replays,
-  and artifact comparisons.
+  Use this skill when choosing or running validation for a WorldFoundry model,
+  loader, kernel, or runtime change; when outputs drift or a numerical
+  comparison fails; when adding a regression to a Make gate; or when judging
+  whether inference evidence supports a claim. Covers evidence levels, the
+  public CPU and tensor gates, CUDA contracts, A/B/A request isolation,
+  component parity and first-divergence diagnosis, affected-case checkpoint
+  replays, and the evidence report. Speed work is
+  worldfoundry-inference-optimization; benchmark scoring is
+  worldfoundry-evaluation.
 license: Apache-2.0
 compatibility: >
-  Requires a WorldFoundry checkout and prepared Python environment.
-  CUDA and local checkpoints are required for GPU and replay gates.
+  Requires a WorldFoundry checkout and its Python environment. CUDA gates and
+  checkpoint replays need a GPU host with accepted local weights and inputs.
 ---
 
 # Validate WorldFoundry Inference
 
-Run commands from the WorldFoundry repository root. Follow
-[contribution rules](../../CONTRIBUTING.md). Read the relevant change-type and
-evidence sections in the
-[validation guide](../../docs/fumadocs/content/docs/reference/validation.mdx)
-before selecting gates; it owns resource and accepted-reference contracts.
+Select evidence proportional to the changed surface, run it, and label each
+result by what it actually executed. Run commands from the repository root.
+The [validation guide](../../docs/fumadocs/content/docs/reference/validation.mdx)
+owns resources, accepted references, tolerances, and CI attestation; this
+skill routes to the right gate. Before any check, name the failure it would
+detect and what you would do if it failed. If neither has an answer, skip it.
 
-## Select Evidence for the Change
+## Evidence levels
 
-Identify the changed public surface and its affected models and variants.
-Before a check, identify the failure it would detect and the action that a
-failure would require. Keep these evidence levels distinct:
+| Evidence | Establishes | Does not establish |
+| --- | --- | --- |
+| Catalog and binding tests | The model ID resolves to the current pipeline and profile | That generation works |
+| Mocked pipeline and runner tests | Loading options, input normalization, request forwarding, artifact contracts | Numerics |
+| CPU tensor tests on small real components | Executed arithmetic and request-state handling | CUDA kernels or released weights |
+| CUDA contracts | Selected kernels, streams, caches, and precision paths on the tested GPU | Accepted model outputs |
+| Checkpoint replay against an accepted reference | Declared weights, inputs, and environment still produce accepted outputs and artifacts | Other variants, inputs, or full-demo quality |
+| Benchmark execution | The configured evaluator's scores on the executed cohort | Other cohorts or settings |
 
-- Catalog, binding, and mocked tests verify resolution and request wiring.
-- Small real components verify numerical behavior and request isolation.
-- CUDA contracts verify selected kernels, streams, caches, and precision paths.
-- Accepted-reference checkpoint replays verify the declared weights, inputs,
-  numerical outputs, and exported artifacts.
-- Benchmark runs verify the configured evaluator on the executed cohort.
+Imports, mocks, `--print-config`, `--model-status`, and `plan_only` never count
+as checkpoint-backed generation evidence.
 
-Imports, mocks, and `plan_only` are not checkpoint-backed generation evidence.
-Retain tests exposing defects in supported integrations. Remove tests only
-when their implementation or contract has actually been removed.
+## Select the gates
 
-## Run the Applicable Fast Gates
+| Changed surface | Gates |
+| --- | --- |
+| Catalog, bindings, CLI, packaging, control plane | `make test`, `make lint`, `make cli-entrypoint-check` |
+| CPU-testable tensor math, loaders, samplers, codecs, request state | Above plus `make test-infer-tensors` (`make test-infer-video-tensors` for the video subset) |
+| Evaluation runners and metrics | `make test-evaluation`; `make test-eval-core` after installing `.[eval_core]` |
+| PEFT loading, serializers, geometry exports | `make test-infer-contracts PYTHON=/path/to/model-env/bin/python` |
+| CUDA kernels, graphs, attention, FP8, transport | `make test-infer-cuda-contracts PYTHON=/path/to/model-env/bin/python` on SM90+ |
+| Model loading, preprocessing, inference, camera conversion, export | Affected-case checkpoint replays (below) |
+| Matrix-Game 2 numerical contract | `make test-mg2-checkpoint-contracts`, `make test-mg2-trajectory-contracts`, `make test-mg2-conditioned-trajectory-contracts` with `MG2_CHECKPOINT_ROOT` on SM90+ |
+| Wan2.1 LightVAE student | `make test-lightvae-checkpoint-contracts LIGHTVAE21_CHECKPOINT=/path/to/checkpoint` |
 
-Run from the repository root in the prepared GPU development environment:
+Weight-free gates never replace CUDA or checkpoint evidence for an inference
+change. To register a new test in the right selection, read
+[test selection](references/test-selection.md).
+
+## Run the fast gates
+
+Iterate on one file with `python -m pytest -q tests/<area>/test_<behavior>.py`,
+then run the Make target. Make targets use a strict JUnit runner: they collect
+an independent node manifest first and reject skips, collection errors,
+missing, extra, or duplicate nodes, and stale reports. `TEST_ARGS` applies only
+to execution, so filtering with `-k` or `-m` fails the gate.
 
 ```bash
-make test-infer
+make test
 make test-infer-tensors
 ```
 
-Use `make test-infer-contracts` when the additional model/serializer dependencies
-are prepared. Use the relevant CUDA targets, including
-`make test-infer-cuda-contracts`, on supported hardware. Select only the gates
-required by the changed surface, as described in the validation guide.
+`make test-infer-tensors` hides CUDA and pins two CPU threads. CUDA targets
+fail when no GPU is available instead of reporting a skipped suite.
 
-For stateful execution, cover changed inputs, A/B/A repeatability, failed
-requests, cancellation, reset, and subsequent reuse. For public wrappers, verify
-supported input validation, loading delegation, and observable outputs.
-Required Make gates reject skipped, missing, duplicate, or stale test evidence.
+## Cover state on reusable models
 
-## Compare Components and Locate Numerical Drift
+For pipelines, workers, caches, or decoders reused across requests, run
+A/B/A: requests one and three identical, request two changing only the
+intended conditioning. Also cover reset, a failed request followed by reuse,
+and cancellation where the route exposes it. Compare eager, compiled, graph,
+and offloaded paths on the same state and shapes. The first and third outputs
+must match exactly unless the owning contract states a tolerance.
 
-For model ports and changed tensor math, compare deterministic component outputs
-before the full sampling loop. Align weights, inputs, normalization, timestep,
-dtype, and attention kernel; verify missing/unexpected checkpoint keys and
-conversion transforms before investigating activations. Use FP32 and small real
-components when supported, then validate the actual deployment precision and
-shape. The owning acceptance contract determines tolerances.
+## Compare components and locate drift
 
-When parity fails, load [numerical parity](references/numerical-parity.md).
-Check the initial latents and conditioning, then identify the first divergent
-step or block instead of explaining only the final image. Use existing replay
-capture or instance-local extension hooks, narrowing instrumentation to the
-failed boundary. Keep debug traces under `tmp/` and remove temporary hooks.
+For model ports and changed tensor math, compare deterministic component
+outputs before the full sampling loop: aligned weights, inputs, timesteps,
+dtype, and executed attention backend; FP32 small shapes first, deployment
+precision second. When parity fails, read
+[numerical parity](references/numerical-parity.md) and find the first divergent
+boundary instead of explaining the final image. Keep captures under `tmp/`
+and remove temporary hooks.
 
-## Replay Affected Checkpoint Cases
+## Replay affected checkpoint cases
 
-Use a committed candidate and an accepted reference. The model-host profile
-supplies private checkpoint and input paths; keep it outside Git.
+Commit the candidate first; replays and verification run against committed
+source, and dirty files are never replayed.
 
 ```bash
-make plan-inference INFERENCE_BASE=<comparison-commit>
-make replay-inference INFERENCE_PROFILE=/private/path/profile.json
-make verify-inference \
-  INFERENCE_PROFILE=/private/path/profile.json \
+make plan-inference PYTHON=python3 INFERENCE_BASE=<comparison-commit>
+make coverage-inference PYTHON=python3
+make replay-inference PYTHON=/path/to/model-env/bin/python \
+  INFERENCE_PROFILE=/private/path/inference-regression.json
+make verify-inference PYTHON=python3 \
+  INFERENCE_PROFILE=/private/path/inference-regression.json \
   INFERENCE_REPORT=/private/path/completed-run/report.json
 ```
 
-The plan and report must refer to the same candidate and affected cases. Follow
-the validation guide for additional fixed-reference, GPU, and trusted CI
-attestation requirements. Where completed reference and candidate directories
-are required, run `make test-geometry` with `GEOMETRY_REFERENCE` and
-`GEOMETRY_CANDIDATE` set to those directories.
+- The plan (`tmp/inference-regression-plan.json`) needs no GPU or weights. An
+  `uncovered` result means unknown paths or unresolved imports; add component
+  declarations to `tests/manual/geometry_regression_dependencies.json` instead
+  of ignoring it. `no_inference_changes` still requires the CPU gates.
+- The private host profile lives outside Git and pins the Python, Torch, CUDA,
+  and assets used for the accepted references; a changed environment fails
+  preflight rather than weakening the comparison.
+- For one geometry case, run `tests/manual/geometry_regression.py run` for the
+  reference worktree and the candidate, then `compare`; audit all affected
+  cases with `make test-geometry GEOMETRY_REFERENCE=<dir> GEOMETRY_CANDIDATE=<dir>`.
+  The validation guide lists the case environment variables.
 
-## Present the Evidence
+## Report the evidence
 
-Record exact commands, selected cases, environment, pass/fail/skip counts, and
-artifact paths in the PR. Label component-only versus public-loader coverage,
-and separate functional, numerical, performance, and lifecycle evidence.
-Distinguish a defined replay recipe from an executed, accepted replay. Missing
-resources or failed gates remain blockers; do not promote readiness or replace
-the accepted reference to hide them.
+Use this structure in the PR or review reply:
+
+```markdown
+### Validation
+| Command | Result | Scope | Artifacts |
+| --- | --- | --- | --- |
+| make test-infer-tensors | pass (N nodes, 0 skipped) | CPU tensors | tmp/inference-cpu-contracts.xml |
+| make replay-inference ... | pass, cases: <ids> | released weights, GPU <model> | /private/.../report.json |
+
+Not run: <gate> — <missing resource or reason>.
+Environment: GPU, driver, Python, Torch, CUDA; checkpoint revisions.
+```
+
+Label component-only versus public-loader coverage, and keep functional,
+numerical, performance, and lifecycle evidence in separate rows.
+
+## Gotchas
+
+- Accepted references are never regenerated to make a candidate pass, and
+  tolerances are never widened to hide drift. A changed accepted output needs
+  its own documented acceptance.
+- Exact comparison is the default. For nondeterministic GPU paths, measure the
+  reference's self-run variation before proposing any tolerance.
+- A seed set before model loading can be consumed by initialization; pin the
+  inference seed after loading, as the WorldFM case does.
+- `OMP_NUM_THREADS` and `MKL_NUM_THREADS` change CPU reconstruction numerics;
+  pin them in replay profiles.
+- `tests/manual/` and `tests/stream/` are excluded from collection. Run them
+  directly (`PYTHONPATH=. python tests/manual/<script>.py`); they may download
+  weights, use GPUs, call paid APIs, and write artifacts.
+- Keep a failing test that exposes a defect in a supported integration.
+  Delete tests only with the implementation or contract they cover.
+- A shared pipeline class or alias does not extend replay coverage to another
+  model ID, checkpoint, or mode.
+
+## Done criteria
+
+- Every executed gate is listed with node counts and zero unexpected skips.
+- Inference changes have affected-case replays verified against accepted
+  references, or the missing resource is stated as a blocker.
+- Reusable-state changes have A/B/A, reset, and failure-reuse coverage.
+- Results are labeled by scope; nothing unexecuted is described as passing.

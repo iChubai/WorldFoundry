@@ -1120,23 +1120,6 @@
   color: var(--pi-ink);
 }
 
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-profile-chip {
-  background: transparent;
-  border-color: transparent;
-}
-
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-contracts .wf-command-builder-disclosure code {
-  background: transparent !important;
-  border-color: transparent;
-  color: var(--pi-ink);
-}
-
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-profile-chip code {
-  background: transparent !important;
-  border-color: transparent;
-  color: var(--pi-ink);
-}
-
 .dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-contracts-counts,
 .dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-field-label,
 .dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-field-note,
@@ -1194,11 +1177,13 @@
   color: var(--pi-ink);
 }
 
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-value button {
+.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-value button,
+.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-more-toggle {
   color: color-mix(in srgb, var(--pi-ink) 74%, var(--pi-muted));
 }
 
-.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-value button:hover {
+.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-value button:hover,
+.dark :is(.pi-doc-content, .wf-recipe-shell) .wf-command-builder-more-toggle:hover {
   background: transparent;
   color: var(--pi-ink);
 }

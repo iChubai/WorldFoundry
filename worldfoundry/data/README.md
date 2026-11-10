@@ -14,6 +14,7 @@ the CLI, Studio, and evaluation; checkpoints and datasets are never stored here.
 | `models/runtime/environments/` | Conda environment specs |
 | `models/runtime/configs/<package>/` | Inference presets and example inputs, one directory per synthesis package (snake_case package name) |
 | `models/runtime/assets/` | Asset manifests for model checkpoints and demo examples |
+| `base_models/` | Shared base-model capabilities (imports, checkpoints, datasets), stacks, and benchmark data assets, loaded by `worldfoundry/base_models/capabilities.py` |
 | `benchmarks/catalog/{video,embodied}/` | Benchmark metadata and protocols |
 | `benchmarks/tasks/external/` | Task manifests used to materialize requests |
 | `benchmarks/runtime_profiles/`, `benchmarks/requirements/` | Benchmark runtime profiles and pip requirements |

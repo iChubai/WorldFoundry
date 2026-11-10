@@ -1,0 +1,113 @@
+/* Base elements. Unlayered so they override the shared widget sheet's body rules. */
+
+html {
+  background: var(--px-ground);
+  scrollbar-gutter: stable;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--px-ground);
+  color: var(--px-text);
+  font-family: var(--px-font-sans);
+  font-feature-settings: var(--px-font-features);
+  font-weight: 380;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body:has(.px-docs) {
+  height: auto;
+  overflow: visible;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--px-cyan-300) 45%, transparent);
+  color: var(--px-ink);
+}
+
+:where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--px-font-display);
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--px-ink);
+}
+
+:where(code, kbd, pre, samp) {
+  font-family: var(--px-font-mono);
+}
+
+:focus-visible {
+  outline: 2px solid var(--px-accent);
+  outline-offset: 2px;
+}
+
+.px-sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* Paper grain: an SVG noise tile, multiplied over the ground. */
+.px-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  mix-blend-mode: multiply;
+  opacity: 0.09;
+  pointer-events: none;
+}
+
+.dark .px-grain {
+  mix-blend-mode: screen;
+  opacity: 0.035;
+}
+
+@keyframes px-spectrum-slide {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes px-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes px-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* One monospace face across chrome, prose, and shared widgets. */
+:is(.px-docs, .px-site) :is(code, kbd, samp, pre) {
+  font-family: var(--px-font-mono) !important;
+}

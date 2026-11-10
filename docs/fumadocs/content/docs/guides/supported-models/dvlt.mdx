@@ -1,6 +1,6 @@
 ---
 title: "Déjà View Looping Transformer"
-description: "Déjà View Looping Transformer from NVIDIA: 3d-reconstruction and multi-view-reconstruction; Runner parity pending."
+description: "Déjà View Looping Transformer from NVIDIA: 3D reconstruction, multi view reconstruction, and 2 more tasks; Runner parity pending."
 modelId: "dvlt"
 pageSource: authored
 ---
@@ -9,42 +9,42 @@ Déjà View Looping Transformer (DVLT) is an NVIDIA multi-view reconstruction mo
 
 <ModelPaperFigures modelId="dvlt" locale="en" />
 
-The recorded paper is [Déjà View: Looping Transformers for Multi-View 3D Reconstruction](https://arxiv.org/abs/2605.30215) (2026).
+Paper: [Déjà View: Looping Transformers for Multi-View 3D Reconstruction](https://arxiv.org/abs/2605.30215) (2026).
 
 Project page: [research.nvidia.com/labs/dvl/projects/dvlt](https://research.nvidia.com/labs/dvl/projects/dvlt/). Code: [nv-tlabs/dvlt](https://github.com/nv-tlabs/dvlt).
 
-Paper: [arXiv 2605.30215](https://arxiv.org/abs/2605.30215). Project: [research.nvidia.com/labs/dvl/projects/dvlt](https://research.nvidia.com/labs/dvl/projects/dvlt/). Code: [nv-tlabs/dvlt](https://github.com/nv-tlabs/dvlt). Checkpoint license: **NVIDIA non-commercial research/evaluation**. Runtime source is **externalized** from the public tree — you stage it. `DVLTSynthesis` fails fast on missing prerequisites. GPU parity is **pending**.
+Paper: [arXiv 2605.30215](https://arxiv.org/abs/2605.30215). Project: [research.nvidia.com/labs/dvl/projects/dvlt](https://research.nvidia.com/labs/dvl/projects/dvlt/). Code: [nv-tlabs/dvlt](https://github.com/nv-tlabs/dvlt). Checkpoint license: **NVIDIA non-commercial research/evaluation**. Runtime source is not part of the public tree — you stage it. `DVLTSynthesis` fails fast on missing prerequisites.
 
 <ModelCommandBuilder modelId="dvlt" locale="en" />
 
 ## What it is for
 
-`dvlt` is the recorded reconstruction line. Start here to emit geometry from the documented views.
+Use `dvlt` for feed-forward 3D reconstruction from the input views.
 
-The catalog records a looping-transformer design for multi-view geometry (paper arXiv 2605.30215); the runtime source is externalized from the public release tree, so architecture internals beyond the recorded tasks are not stored here.
+DVLT uses a looping-transformer design for multi-view geometry (paper arXiv 2605.30215).
 
-Catalog tasks include 3d-reconstruction, multi-view-reconstruction, camera-pose-estimation, and depth-estimation. Catalog aliases include `deja-view`, `dejaview`, `deja-view-looping-transformer`, and `nvidia/dvlt`.
+Tasks: 3D reconstruction, multi view reconstruction, camera pose estimation, and depth estimation. Aliases: `deja-view`, `dejaview`, `deja-view-looping-transformer`, and `nvidia/dvlt`. Modalities: image in, depth out.
 
 ## Runtime contract
 
-Optional `input_path`, `execute`, `max_points`, and `focal_length`; artifacts `dvlt_reconstruction.glb`.
+Inputs `input-path` (bundled samples are used when omitted); options `execute` and `max-points`; artifacts `dvlt_reconstruction.glb`.
 
 CLI task profiles: `default`. WorldFoundry binds `DVLTPipeline`.
 
 Family status: **Runner parity pending**.
 
-Runner registration is wired; GPU parity is pending checkpoint and environment validation. The nvidia/dvlt checkpoint carries the NVIDIA non-commercial research/evaluation license — check terms before use. DVLTSynthesis fails fast on missing prerequisites.
+Stage a local DVLT source checkout, its dependencies, and the `nvidia/dvlt` checkpoint before running; DVLTSynthesis fails fast when a prerequisite is missing. Check the NVIDIA non-commercial research/evaluation license terms before use.
 
-Runtime source is externalized from the public release tree; checkpoints remain external assets.
+Checkpoint license is NVIDIA non-commercial research/evaluation only.
 
 ## Running in WorldFoundry
 
-Launch `wf run dvlt --pipeline.task-profile default` to write geometry. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.
+Reconstruct the scene with `wf run dvlt --pipeline.task-profile default`.
 
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
-Recorded weight repositories include `nvidia/dvlt`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh dvlt`. Add `--download` to fetch missing public checkpoints.
+Weights: `nvidia/dvlt`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh dvlt`. Add `--download` to fetch missing public checkpoints.
 
-Recorded licenses include nvidia-noncommercial-research-evaluation; status: **Runner parity pending**.
+License: NVIDIA non-commercial research and evaluation license.
 
 <ModelRelatedRecipes modelId="dvlt" locale="en" />

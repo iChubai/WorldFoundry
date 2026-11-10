@@ -40,6 +40,8 @@ from worldfoundry.base_models.capabilities import (
 # Capability ids the WorldOlympiad runtime reuses.
 QWEN3_VL_CAPABILITY = "qwen3_vl_8b_instruct"
 DA3_CAPABILITY = "depth_anything_v3"
+# Upstream's 3D reward default model (reward_3d_backend.py); the code package is the same.
+DA3_WEIGHTS_CAPABILITY = "depth_anything_v3_nested_giant_large"
 SAM3_CAPABILITY = "sam3"
 
 # In-tree code paths not represented by a capability entry. CLIP code lives
@@ -122,8 +124,8 @@ def resolve_qwenvl_dir(env: Mapping[str, str] | None = None) -> Path | None:
 
 
 def resolve_da3_weights_dir(env: Mapping[str, str] | None = None) -> Path | None:
-    """Resolve the Depth Anything 3 model directory (``config.json`` + ``model.safetensors``)."""
-    return _resolve_asset(DA3_CAPABILITY, env)
+    """Resolve the DA3NESTED-GIANT-LARGE-1.1 model directory (``config.json`` + ``model.safetensors``)."""
+    return _resolve_asset(DA3_WEIGHTS_CAPABILITY, env)
 
 
 def resolve_sam3_path(env: Mapping[str, str] | None = None) -> Path | None:
@@ -215,6 +217,7 @@ def resolve_all(
 
 __all__ = [
     "DA3_CAPABILITY",
+    "DA3_WEIGHTS_CAPABILITY",
     "DA3_IMPORT_NAME",
     "DA3_PACKAGE_DIR_NAME",
     "QWEN3_VL_CAPABILITY",

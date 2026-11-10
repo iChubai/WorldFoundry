@@ -219,3 +219,4 @@ def evaluate_genai_alignment_scores(
             }
         result["per_skill"] = tag_results
     return result
+

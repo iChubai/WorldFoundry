@@ -735,6 +735,7 @@ include-package-data = true
     "assets/*.png",
 ]
 "worldfoundry.data" = [
+    "base_models/**/*.yaml",
     "benchmarks/**/*.json",
     "benchmarks/**/*.jsonl",
     "benchmarks/**/*.csv",

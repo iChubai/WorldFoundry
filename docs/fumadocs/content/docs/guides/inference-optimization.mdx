@@ -132,7 +132,7 @@ configurations; compute remains BF16. Reports record observed parameter dtypes
 and require current-request execution evidence from both experts.
 `--configurations static-graph` selects that candidate alone; dense remains the reference and the report lists the
 requested configurations. Add `--inplace-residual` to exercise candidates with
-native mutating gates against the unchanged dense reference. This uses the existing native
+native mutating gates against the unchanged dense reference. This uses the native
 quality budget, additionally requires bitwise latent parity for static-Graph,
 reports RGB equality separately, and checks actual frozen-Graph replay. Its timings are diagnostic only.
 
@@ -209,7 +209,7 @@ export WORLDFOUNDRY_STUDIO_BATCH_DELAY_MS=5
 
 The size defaults to **1** (ordinary singleton dispatch). The collection window
 defaults to **5 ms**; a full batch or incompatible next request ends it early.
-The existing Workspace job pool admits concurrent jobs (default 8 via
+The Workspace job pool admits concurrent jobs (default 8 via
 `WORLDFOUNDRY_WORKSPACE_MAX_JOBS`); at least two are needed to coalesce requests.
 The resident worker still has one execution owner and keeps its request lock.
 Only a compatible FIFO prefix merges, up to the configured request cap.
@@ -306,7 +306,7 @@ Opt-in, single-rank, mutually exclusive. Each CFG branch gets its own cache. Tea
   { name: "adacache", hintLabel: "How", hint: "feature_cache=\"adacache\"", description: "Adaptive residual cache. Same SP / CUDA Graph bans as other caches.", reads: [{ label: "Applies to", value: "native Wan" }] },
   { name: "magcache", hintLabel: "How", hint: "magcache={\"ratios\": [...]}", description: "Requires calibrated per-step ratios. No Wan2.2 preset is published in-tree.", reads: [{ label: "Fails closed", value: "magcache=True without ratios" }] },
   { name: "blocktaylorseer", hintLabel: "How", hint: "feature_cache={\"algorithm\": \"blocktaylorseer\"}", description: "Pinned LightX2V per-block self / cross / FFN predictor. Default dense pattern [true, false, false, false].", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
-  { name: "taylorseer", hintLabel: "How", hint: "feature_cache=\"taylorseer\"", description: "Legacy whole-stack residual predictor. Not LightX2V’s per-block algorithm. Default interval 4.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
+  { name: "taylorseer", hintLabel: "How", hint: "feature_cache=\"taylorseer\"", description: "Whole-stack residual predictor. Not LightX2V’s per-block algorithm. Default interval 4.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
   { name: "custom", hintLabel: "How", hint: "feature_cache={\"algorithm\": \"custom\", ...}", description: "LightX2V Tea decision plus first-order stack residual. Needs published or explicit Tea coefficients.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
   { name: "firstblock / dualblock / dynamicblock", hintLabel: "How", hint: "feature_cache={\"algorithm\": \"firstblock\", \"residual_diff_threshold\": ...}", description: "Block-selective caches. residual_diff_threshold is required; there is no quality-safe default.", reads: [{ label: "Applies to", value: "native Wan, single rank" }] },
   { name: "cfg_gate_step", hintLabel: "Alias", hint: "cfg_gate_fraction", description: "After this fraction of steps, reuse the CFG delta instead of running the negative branch. 1.0 (default) is full CFG.", reads: [{ label: "Rejected with", value: "cfg_parallel=2" }] }
@@ -330,7 +330,7 @@ STA / VSA / VMoBA symbols come from the vendored `thirdparty/fastvideo-kernel` t
 
 <KvCatalog heading="Quant" vars rows={[
   { name: "fp8 / nvfp4", hintLabel: "How", hint: "quantization={\"mode\": \"fp8\", \"min_features\": 1024}", description: "Packed low-precision wrappers. Ineligible shapes stay dense and say so. This is a numerical approximation, not a certified quality preset.", reads: [{ label: "Rejected with", value: "block or disk offload" }] },
-  { name: "int8", hintLabel: "How", hint: "quantization=\"int8\"", description: "Dynamic per-token / per-channel W8A8 Triton on large GEMMs. Small shapes keep BF16 (counted as dense_policy_calls, not a fallback). Full-pipeline INT8 is opt-in and quality-unsafe by default.", reads: [{ label: "Measured", value: "A full Wan INT8 smoke executed the kernels and still failed latent / video quality (cosine ~0.91, video PSNR ~17). Treat as calibration, not a speed claim." }] },
+  { name: "int8", hintLabel: "How", hint: "quantization=\"int8\"", description: "Dynamic per-token / per-channel W8A8 Triton on large GEMMs. Small shapes keep BF16 (counted as dense_policy_calls, not a fallback). Full-pipeline INT8 is opt-in and quality-unsafe by default.", reads: [{ label: "Measured", value: "Full Wan INT8 runs the kernels but fails latent / video quality (cosine ~0.91, video PSNR ~17)." }] },
   { name: "int4", hintLabel: "How", hint: "quantization=\"int4\"", description: "Packed / groupwise storage, then dequantize + dense. Not a claimed INT4 GEMM speedup.", reads: [{ label: "Rejected with", value: "block or disk offload" }] },
   { name: "gguf", hintLabel: "How", hint: "quantization=\"gguf\" or a .gguf file", description: "Real GGUF tensor loader and compressed storage. There is no qualified GGUF low-bit GEMM in this runtime.", reads: [{ label: "Applies to", value: "native loader when the optional gguf package is installed" }] }
 ]} />
@@ -360,17 +360,17 @@ quantization settings without modifying the caller's configuration.
   { name: "Reuse a VMoBA profile on another resolution or frame count", hint: "Fails closed", description: "Chunk sizes must divide the real post-patch grid. Derive the grid first." },
   { name: "FastVideo SLA on official dense Wan", hint: "Fails closed", description: "Those checkpoints have no proj_l. Do not use LightX2V sla / sagesla aliases for this lane." },
   { name: "sage_attn2_k_int8_v_fp8 as a Wan sparse provider", hint: "Fails closed", description: "That registry entry expects quantized K/V tuples. The Wan generator supplies floating K/V and has no audited per-layer quantize cache." },
-  { name: "INT8 / INT4 / GGUF as a default quality path", hint: "Quality cliff", description: "INT8 kernels can run and still wreck latents. INT4 and GGUF are storage plus dense compute unless a future kernel path is certified." },
+  { name: "INT8 / INT4 / GGUF as a default quality path", hint: "Quality cliff", description: "INT8 kernels can run and still wreck latents. INT4 and GGUF are storage plus dense compute." },
   { name: "TAEW2.2 as the official VAE", hint: "Preview only", description: "Wrong colors / structure vs the 48-channel Wan2.2 VAE. Keep the official decoder for release and benchmarks." },
   { name: "These Wan knobs on APIs or other families", hint: "Not wired", description: "Wan 2.5+ APIs ignore them. HunyuanVideo takes dtype, offload, attention, vae_tiling. Cosmos Predict2 takes dtype, offload, vae_tiling. Echo-Memory exposes offload_model only. Matrix-Game 3.5 builds a fixed BF16 RuntimePolicy. LTX-2.5 has its own offload_mode / quantization, not this matrix." },
-  { name: "PyTorch tricks that are not in RuntimePolicy", hint: "Not wired", description: "Arbitrary torch.compile on a family runtime, sequential offload, xFormers installed but not selected, or a community TeaCache monkey-patch is “possible in PyTorch,” not a WorldFoundry control. Put it here, not under What you can do." },
+  { name: "PyTorch tricks that are not in RuntimePolicy", hint: "Not wired", description: "Arbitrary torch.compile on a family runtime, sequential offload, xFormers installed but not selected, or a community TeaCache monkey-patch is “possible in PyTorch,” not a WorldFoundry control." },
   { name: "Change official benchmark steps, CFG, size, or enable lossy caches", hint: "Invalid comparison", description: "Scoring belongs in Evaluation. A faster unofficial schedule is a different workload." },
   { name: "Inference accelerators on a training build", hint: "Rejected at build", description: "Training forbids offload, quantization, Sage, TeaCache, CUDA Graph, fuse_qkv, static_cross_kv, and the other inference wrappers." },
   { name: "cfg_parallel degree other than 2", hint: "Rejected at build", description: "The runner only implements degree 1 or 2, and degree 2 needs a live two-rank CFG group." }
 ]} />
 
 <Callout type="warn" title="OOM and first-run cost">
-Block offload is the VRAM escape hatch; resident + INT8 without expandable CUDA segments has OOM’d in the VAE stage because of an extra BF16 copy. `torch.compile` and CUDA Graph make the first request much slower. Do not time that request.
+Block offload is the VRAM escape hatch; resident + INT8 without expandable CUDA segments can OOM in the VAE stage because of an extra BF16 copy. `torch.compile` and CUDA Graph make the first request much slower. Do not time that request.
 </Callout>
 
 ## How to turn knobs on
@@ -540,7 +540,7 @@ Opt in through the Python helper `enable_layerwise_cpu_offload(..., reuse_buffer
 contiguous weights by dtype into aligned CPU buffers and reuse at most two CUDA
 slots. CUDA events prevent overwriting a slot while compute still reads it.
 Its report includes `buffer_mode` and `device_buffer_bytes`. Non-contiguous
-weights preserve the legacy layout and report `per-parameter`; callers can also
+weights keep the per-parameter layout and report `per-parameter`; callers can also
 select that path with `reuse_buffers=False` (the default).
 
 The packed path requires `torch.no_grad()` or `torch.inference_mode()`, sequential
@@ -555,27 +555,27 @@ The core `scaled_dot_product_attention` uses grouped query heads with zero-strid
 K/V views for equal-batch 4D tensors and shared masks when explicitly selecting
 `backend="efficient"`, or adapting an older SDPA without `enable_gqa`. Batch- or
 head-specific masks retain explicit head expansion. Shape and layout can still
-require a reshape copy. Existing native GQA selection remains unchanged.
+require a reshape copy. Other calls use SDPA's native GQA selection.
 
-The local measurements below used synthetic component probes with warmup
+The measurements below use synthetic component probes with warmup
 excluded, CUDA-event timings, and peak allocated memory. They are not
 end-to-end model FPS. The design was
 informed by FlashDreams [#637](https://github.com/NVIDIA/flashdreams/pull/637),
 [#632](https://github.com/NVIDIA/flashdreams/pull/632), and
 [#634](https://github.com/NVIDIA/flashdreams/pull/634).
 
-A local component measurement on 2026-09-18 used one H100 80GB, PyTorch
-2.5.1+cu121, FP16, 10 warmups and 50 measured rounds per fresh process:
+Measured on one H100 80GB with PyTorch 2.5.1+cu121, FP16, 10 warmups and 50
+measured rounds per fresh process:
 
 | Probe | Median CUDA time | Peak allocated memory |
 | --- | ---: | ---: |
-| Offload, legacy per-parameter copies | 0.932 ms | 37.38 MiB |
+| Offload, per-parameter copies (default) | 0.932 ms | 37.38 MiB |
 | Offload, packed reusable slots | 1.514 ms | 37.38 MiB |
 | GQA, explicit K/V head copies | 0.419 ms | 82 MiB |
 | GQA, grouped views | 0.358 ms | 19 MiB |
 
 Offload used eight 1024-wide Linear layers, batch 64. GQA used
 Q `[1,32,256,64]`, K/V `[1,8,8192,64]`, and the efficient SDPA backend.
-Packed offload halved H2D copy calls but was slower for these small layers, so
-it stays opt-in. Measure the actual model and its layer sizes before selecting
+Packed offload halves H2D copy calls but is slower for these small layers, so
+it is opt-in. Measure the actual model and its layer sizes before selecting
 it. Peak memory includes all live tensors in the process; it is not just weights.

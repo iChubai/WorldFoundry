@@ -69,35 +69,21 @@ docs:
   publisher: Lightricks
   publisher_kind: company
   publisher_zh: Lightricks
-  overview: LTX-2.5 is a 22B joint audio-video model. This inference-only integration
-    exposes the official fast two-stage DistilledPipeline for text-to-video and image-to-video,
-    including synchronized audio generation.
-  overview_zh: LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成开放官方快速两阶段 DistilledPipeline，支持文生视频、图生视频与同步音频生成。
-  architecture: The official distilled path encodes prompts with the bundled Gemma
-    4 12B text encoder, jointly denoises video and audio at half resolution, applies
-    the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement,
-    and decodes through separate video and audio VAEs. WorldFoundry calls that source
-    directly instead of adapting the incompatible LTX-2.3 monolithic loader.
-  architecture_zh: 官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频
-    VAE 解码。WorldFoundry 直接调用该官方源码，不复用不兼容的 LTX-2.3 单体权重加载器。
-  usage_notes: Accept the Hugging Face model terms, download the five required split
-    components while preserving their repository folders, clone the recorded source
-    revision, install its ltx-core and ltx-pipelines dependencies in the dedicated
-    environment, and pass execute=True. The optional duration head enables prompt-based
-    automatic duration.
-  usage_notes_zh: 请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出记录的源码 revision，并在独立环境中安装
-    ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。
+  overview: LTX-2.5 is a 22B joint audio-video model. WorldFoundry runs the official fast two-stage DistilledPipeline (inference only) for text-to-video and image-to-video, including synchronized audio generation.
+  overview_zh: LTX-2.5 是一个 22B 联合音视频模型。WorldFoundry 运行官方快速两阶段 DistilledPipeline（仅推理），支持文生视频、图生视频与同步音频生成。
+  architecture: The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry calls the official source directly because the LTX-2.3 monolithic loader is not compatible with LTX-2.5.
+  architecture_zh: 官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。LTX-2.3 的单体权重加载器与 LTX-2.5 不兼容，因此 WorldFoundry 直接调用官方源码。
+  usage_notes: Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, clone the pinned source revision, install its ltx-core and ltx-pipelines dependencies in the dedicated environment, and pass execute=True. The optional duration head enables prompt-based automatic duration.
+  usage_notes_zh: 请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，检出固定的源码 revision，并在独立环境中安装 ltx-core 与 ltx-pipelines 依赖；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。
   limitations:
   - The checkpoint is gated and approximately 66 GiB for the required distilled components.
-  - GPU/MPS artifact and audio-video parity have not yet been validated.
-  - DFR, full/dev-model guidance, IC-LoRA, video editing, training, UI, and server
-    surfaces are outside this inference-only integration.
-  - The LTX-2.x Community License requires a paid license for covered commercial entities
-    at or above its revenue threshold except for its defined non-commercial uses.
+  - Generated video and audio have not yet been validated on GPU or MPS.
+  - DFR, full/dev-model guidance, IC-LoRA, video editing, training, UI, and server surfaces are not supported; the integration is inference only.
+  - The LTX-2.x Community License requires a paid license for covered commercial entities at or above its revenue threshold except for its defined non-commercial uses.
   limitations_zh:
   - Checkpoint 需要接受访问条款，必需蒸馏组件合计约 66 GiB。
-  - 尚未验证 GPU/MPS 产物及音视频一致性。
-  - DFR、完整 dev 模型引导、IC-LoRA、视频编辑、训练、UI 与服务端均不在本次仅推理集成范围内。
+  - 生成的视频与音频尚未在 GPU 或 MPS 上验证。
+  - 不支持 DFR、完整 dev 模型引导、IC-LoRA、视频编辑、训练、UI 与服务端；集成仅覆盖推理。
   - LTX-2.x Community License 对达到其营收门槛的适用商业实体要求付费许可，但其定义的非商业用途除外。
   recommended_benchmarks:
   - id: vbench

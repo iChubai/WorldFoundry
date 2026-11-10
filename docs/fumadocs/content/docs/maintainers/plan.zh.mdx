@@ -15,9 +15,9 @@ World model 社区迭代很快：新架构、训练 recipe 和开源 checkpoint 
 
 ## Runtime 范围
 
-WorldFoundry 当前对外发布面聚焦 inference、evaluation、Studio 与 runtime 集成。
+WorldFoundry 对外发布面覆盖 inference、evaluation、Studio 与 runtime 集成。
 
-训练 launcher、dataset builder、finetune script 和 experiment-only callback 暂时不进入当前 release tree。后续如果恢复训练支持，应作为独立且重新设计的子系统接入，并遵循与 inference、evaluation 相同的证据标准，而不是恢复已经删除的 prototype 代码。
+训练与 post-training recipe（SFT、蒸馏、RL）位于 `worldfoundry/training/`，与 inference、evaluation 路径并列：它们产出的 checkpoint 走常规推理路径运行，该包不进入发布的 wheel。训练 launcher、dataset builder 和 experiment-only callback 不属于 `core`、`base_models` 或 `synthesis`。训练工作遵循与 inference、evaluation 相同的证据标准。
 
 ## 代码库统一
 

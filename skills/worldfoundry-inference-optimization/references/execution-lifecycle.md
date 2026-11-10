@@ -64,7 +64,29 @@ Compare a fresh no-warmup request with a post-warmup request using identical
 inputs and seed, then exercise changed inputs/seeds and A/B/A reuse. Check
 exception recovery and cancellation only where the route exposes them. Reuse
 existing lifecycle regressions instead of adding model-specific copies of
-shared ownership tests.
+shared ownership tests: `tests/core/test_acceleration_lifecycle.py`,
+`tests/core/test_compile_cache_layering.py`, `tests/core/test_layerwise_offload.py`,
+`tests/base_models/diffusion_model/test_sampling_session_isolation.py`, and
+`tests/base_models/diffusion_model/test_custom_runner_request_cleanup.py`.
+
+## Native Warmup and Batching Entry Points
+
+- `pipeline.warmup([DiffusionRequest(...)])` on a native visual pipeline runs
+  complete requests (conditioning, every sampler step, active CFG branches,
+  routed experts, decode), restores RNG, releases request caches, and freezes
+  CUDA Graph capture. The returned `warmup_reports` are execution receipts,
+  not performance certification.
+- The `warmup_requests` load option (Python, `--load-json`, or Workspace load
+  JSON) takes a nonempty list of request mappings or nested batches, with
+  `sampling` as a JSON object. The pipeline is cached only after loading and
+  warmup succeed.
+- Static cross-KV with CUDA Graph or regional compile requires resident,
+  unsharded canonical Wan weights and the canonical cross-attention
+  processor; memory adapters and block or component offload are rejected.
+- Studio resident batching (`WORLDFOUNDRY_STUDIO_BATCH_MAX_SIZE`,
+  `WORLDFOUNDRY_STUDIO_BATCH_DELAY_MS`) applies to compatible native Wan
+  requests inside one Workspace process and takes effect before worker
+  startup.
 
 ## Distinguish Startup from Steady-State Benefit
 
@@ -88,6 +110,7 @@ run longer reliability or concurrency validation when making those claims.
 
 The diagnosis-first, native-path, and lifecycle procedures draw on
 [SGLang diffusion](https://github.com/sgl-project/sglang),
-[LightX2V](https://github.com/ModelTC/LightX2V), and
-[vLLM-Omni](https://github.com/vllm-project/vllm-omni), adapted to WorldFoundry's
+[LightX2V](https://github.com/ModelTC/LightX2V),
+[vLLM-Omni](https://github.com/vllm-project/vllm-omni), and
+[FlashDreams](https://github.com/NVIDIA/flashdreams), adapted to WorldFoundry's
 execution and validation contracts.

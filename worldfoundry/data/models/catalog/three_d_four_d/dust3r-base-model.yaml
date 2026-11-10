@@ -36,12 +36,12 @@ docs:
   publisher: NAVER Labs Europe
   publisher_kind: company
   publisher_zh: NAVER 欧洲实验室（NAVER Labs Europe）
-  overview: 'DUSt3R Base Model is the base-model profile of the DUSt3R catalog entry: the concrete checkpoint surface used by the shared geometry-prior contract. It is verified — the Workspace loaded the official base checkpoint and exported a finite 10,000-point reconstruction from two views on 2026-07-11.'
-  overview_zh: DUSt3R Base Model 是 DUSt3R catalog 条目的基础模型档案：共享 geometry-prior 契约实际使用的 checkpoint 面。它已验证——Workspace 于 2026-07-11 加载官方基础 checkpoint，并从两个视图导出了 10,000 点的有限重建。
-  architecture: Same architecture as the dust3r entry (ViT pointmap regressor); this profile pins the base checkpoint and is not a standalone pipeline runner.
-  architecture_zh: 与 dust3r 条目同架构（ViT 点图回归器）；本档案固定基础 checkpoint，不是独立的 pipeline runner。
-  usage_notes: It is integrated as an independent geometry prior under worldfoundry/base_models and exposed through the shared geometry-prior pipeline/operator contract. Higher-level pipelines (e.g. ViPE) import it from this canonical owner instead of keeping private copies. Prefer citing the dust3r entry for provenance; use this profile id when configuring the prior explicitly.
-  usage_notes_zh: 它作为独立几何先验集成在 worldfoundry/base_models 下，通过共享的 geometry-prior pipeline/operator 契约对外暴露。上层管线（如 ViPE）从这一规范位置导入它，而不是各自保留私有副本。溯源请引用 dust3r 条目；显式配置该先验时使用本档案 id。
+  overview: 'DUSt3R Base Model pins the official DUSt3R base checkpoint for use as a geometry prior through the shared geometry-prior contract. Validated with the official base checkpoint: it reconstructs a finite 10,000-point cloud from two views.'
+  overview_zh: DUSt3R Base Model 固定官方 DUSt3R 基础 checkpoint，通过共享的 geometry-prior 契约作为几何先验使用。已用官方基础 checkpoint 验证：可从两个视图重建出 10,000 点的有限点云。
+  architecture: Same architecture as DUSt3R (ViT pointmap regressor), with the base checkpoint pinned.
+  architecture_zh: 与 DUSt3R 同架构（ViT 点图回归器），固定使用基础 checkpoint。
+  usage_notes: Higher-level pipelines such as ViPE use it through the shared geometry-prior pipeline/operator contract. Use this profile id when configuring the prior explicitly; cite DUSt3R for provenance.
+  usage_notes_zh: 上层管线（如 ViPE）通过共享的 geometry-prior pipeline/operator 契约使用它。显式配置该先验时使用此 profile id；溯源请引用 DUSt3R。
   limitations:
   - CC-BY-NC-SA-4.0 license applies (inherited from upstream).
   - Not a standalone runner — always consumed through the geometry-prior contract.

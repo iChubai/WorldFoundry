@@ -88,7 +88,7 @@ result = run_benchmark(
 )
 ```
 
-上面是实际 API 形态，但运行需要满足当前 VBench manifest 报告的资产、依赖、prompt 覆盖率与环境。Runner 可用不代表 leaderboard ready。
+运行这个调用需要满足 VBench benchmark manifest 列出的资产、依赖、prompt 覆盖率与环境。Runner 可用不代表结果具备 leaderboard 资格。
 
 <PythonApiReference symbol="worldfoundry.evals.public.run_benchmark" locale="zh" />
 
@@ -104,4 +104,4 @@ result = run_benchmark(
 
 <PythonApiReference symbol="worldfoundry.evals.public.benchmark_integration_spec" locale="zh" />
 
-调用 official runtime 前，请先在 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub)查看 protocol 专属输入与 blocker。
+调用 official runtime 前，请先在 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub) 查看 protocol 专属输入与 blocker。

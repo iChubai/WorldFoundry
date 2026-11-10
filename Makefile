@@ -36,6 +36,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/evaluation/execution/test_vbench_metadata_errors.py \
 	tests/evaluation/metrics/test_fvd_spatial_squeeze.py \
 	tests/evaluation/test_source_cache.py \
+	tests/evaluation/catalog/test_model_catalog_statuses.py \
 	tests/eval_core/test_videoverse_local_vlm.py \
 	tests/eval_core/test_libero_mem_recording.py \
 	tests/eval_core/test_model_benchmark_resume_controls.py \
@@ -58,6 +59,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/studio/test_catalog_class_constants.py \
 	tests/base_models/diffusion_model/test_module_boundaries.py \
 	tests/base_models/test_transnetv2_unsupported_options.py \
+	tests/base_models/diffusion_model/test_recipe_registry_table.py \
 	tests/studio/test_pipeline_owned_stream_state.py \
 	tests/studio/test_dispatch_lifecycle.py \
 	tests/studio/test_stream_init.py \

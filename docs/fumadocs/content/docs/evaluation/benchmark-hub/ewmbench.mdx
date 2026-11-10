@@ -1,6 +1,6 @@
 ---
 title: EWMBench
-description: "AgiBot embodied world-model video bench: scene, motion, semantics, diversity. WorldFoundry imports official rows; it does not invent a board."
+description: "AgiBot embodied world-model video bench: scene, motion, semantics, diversity. WorldFoundry imports official result rows."
 ---
 
 EWMBench (AgiBot / AgibotTech) evaluates **action-conditioned** robot-manipulation videos from the AgiBot-World ecosystem. It is a world-model quality bench, not a tabletop success-rate suite. Four families roll into `ewmbench_average`:
@@ -28,9 +28,9 @@ wf zoo benchmark-run \
   --json
 ```
 
-`--task-manifest` and `--config-path` bind the task set and scorer config; `--limit` bounds wiring runs. Default import path: `WORLDFOUNDRY_EWMBENCH_RESULTS_PATH`. Optional root: `WORLDFOUNDRY_EWMBENCH_ROOT`. Shared asset: `ewmbench_dataset_assets`.
+`--task-manifest` and `--config-path` bind the task set and scorer config; `--limit` caps the sample count for short test runs. Default import path: `WORLDFOUNDRY_EWMBENCH_RESULTS_PATH`. Optional root: `WORLDFOUNDRY_EWMBENCH_ROOT`. Shared asset: `ewmbench_dataset_assets`.
 
-In-tree pointers:
+Manifest and vendored runtime:
 
 ```text
 worldfoundry/data/benchmarks/tasks/external/ewmbench.yaml

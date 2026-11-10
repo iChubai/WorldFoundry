@@ -1,6 +1,6 @@
 ---
 title: T2V-CompBench
-description: "CVPR 2025 组合式 T2V 评测：1,400 条 prompt、七个绑定轴。WorldFoundry 内置 runtime，不编造榜单。"
+description: "CVPR 2025 组合式 T2V 评测：1,400 条 prompt、七个绑定轴。WorldFoundry 内置官方 runtime。"
 ---
 
 T2V-CompBench（港大，联合港中文与华为诺亚）问的是文生视频模型会不会把**正确的属性、动作和运动绑到正确的物体上**。这是组合能力，不是单一美学分。官方套件 **1,400 条 prompt**（7 × 200）：
@@ -8,8 +8,8 @@ T2V-CompBench（港大，联合港中文与华为诺亚）问的是文生视频�
 - **一致 / 动态属性绑定** — 先测静态属性，再测时变属性，是否落在正确物体上。
 - **空间关系** — 二维 / 三维布局（检测 + 深度 / SAM）。
 - **运动绑定** — 前景 vs 背景运动（DOT 跟踪）。
-- **动作绑定** 与 **物体交互** — MLLM（LLaVA 风格）评判。
-- **生成计数** — GroundingDINO 数物体。这是 WorldFoundry 已在真实 MP4 上跑过的有界官方分量。
+- **动作绑定**与**物体交互** — MLLM（LLaVA 风格）评判。
+- **生成计数** — GroundingDINO 数物体。WorldFoundry 已在真实 MP4 上验证该类别。
 
 论文：[T2V-CompBench](https://arxiv.org/abs/2407.14505)。项目：[t2v-compbench-2025.github.io](https://t2v-compbench-2025.github.io/)。代码：[KaiyueSun98/T2V-CompBench](https://github.com/KaiyueSun98/T2V-CompBench)。参考视频：[`Kaiyue/T2V-CompBench-Videos`](https://huggingface.co/datasets/Kaiyue/T2V-CompBench-Videos)（25,200 行）。
 

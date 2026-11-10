@@ -70,7 +70,7 @@ WorldFoundry 把 **模型执行** 和 **benchmark 评分** 拆开，再用进程
 如果是带着具体任务进来的：
 
 - **跑一次评测** — [快速开始](/zh/docs/quickstart)，再看 [评测](/zh/docs/evaluation) 和 [CLI 参考](/zh/docs/reference/cli)。
-- **选模型** — [支持的模型](/zh/docs/guides/supported-models)，然后 `wf zoo model-show` 和 `preflight runtime --profile <benchmark-id>`。
+- **选模型** — [支持的模型](/zh/docs/guides/supported-models)，然后 `wf zoo model-show --model-id <model-id>` 和 `wf preflight runtime --profile <benchmark-id> --output-dir <dir>`。
 - **加模型** — [添加模型](/zh/docs/guides/add-model)，再看 [模型运行时](/zh/docs/maintainers/architecture/model-runtime)。
 - **加 benchmark** — [添加基准](/zh/docs/guides/add-benchmark)，再看 [基准和数据](/zh/docs/maintainers/architecture/benchmarks-data)。
 - **读一次运行留下的文件** — [评测核心](/zh/docs/maintainers/architecture/evaluation-core)，再打开真实输出目录里的 `report.md`、`scorecard.json` 和 metrics summary。

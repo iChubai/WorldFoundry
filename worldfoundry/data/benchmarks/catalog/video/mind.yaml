@@ -305,7 +305,7 @@ runner_availability:
   surface: in_tree_runtime_with_result_normalizer
   normalizer_verified: true
 base_model_dependencies:
-- video_world_perception_stack
+- mind_metric_stack
 validation_command:
 - python
 - worldfoundry/evals/tasks/execution/runners/mind/run_mind_official_runner.py

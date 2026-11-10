@@ -5,7 +5,7 @@ modelId: "pika-h3-flex"
 pageSource: authored
 ---
 
-Pika H3 Flex 是基于 MiniMax-H3 的六步联合音视频适配器。WorldFoundry 复用 canonical MiniMax-H3 transformer、Qwen3-VL 条件编码器、几何、编解码器和媒体写出逻辑。
+Pika H3 Flex 是基于 MiniMax-H3 的六步联合音视频适配器，运行在 MiniMax-H3 基础模型及其 Qwen3-VL 条件编码器之上。
 
 代码：[Pika-Labs/Pika-H3-Flex](https://github.com/Pika-Labs/Pika-H3-Flex)。
 
@@ -19,8 +19,8 @@ Pika H3 Flex 是基于 MiniMax-H3 的六步联合音视频适配器。WorldFound
 wf run pika-h3-flex --pipeline.task-profile t2va --json
 ```
 
-运行前准备固定版本的 MiniMax-H3 基础快照和 Pika 适配器文件。模型资产保存在 Git 之外。
+运行前准备固定版本的 MiniMax-H3 基础快照和 Pika 适配器文件。
 
-## 验证状态
+## 限制
 
-树内加载器、融合 QKV/SwiGLU LoRA 转换、六节点 re-noising 调度和公共 pipeline 路由已经实现。完整真实权重产物一致性、视频/音频参考、多卡执行以及完整 480p/768p bucket 矩阵仍待 GPU 验证。
+参考生成仅接受图像参考；不支持视频与独立音频参考。多卡执行、完整 480p/768p bucket 以及真实权重输出尚未验证。

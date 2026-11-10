@@ -113,13 +113,12 @@ python tests/manual/lingbot_v2_transport_replay.py \
 The probe compares exact RGB through CPU delivery, A/B/A seeds and resets,
 separating generation and materialization time. It excludes browser presentation,
 networking and encoding, and does not certify NVENC hardware support or speed.
-A local H100 replay (1.3B, 464×832, Torch attention, eager DiT/VAE, three measured
-333-frame runs per route after warmup) preserved exact RGB through A/B/A resets.
-Excluding the first five chunks, mean CPU-delivery time was 1555.80 ms/chunk for
-the original route and 1557.84 ms/chunk for deferred frames (+0.13%). This is **not
-evidence of a CPU-delivery speedup**. The profiler confirmed pinned D2H copies on
-a separate stream; CUDA-resident consumers can avoid that host materialization.
-Queued device frames retain GPU storage until consumed or discarded.
+On one H100 (1.3B, 464×832, Torch attention, eager DiT/VAE, 333-frame runs after
+warmup), deferred frames preserve exact RGB through A/B/A resets, and CPU delivery
+takes the same time as the original route: 1557.84 ms/chunk versus 1555.80 ms/chunk
+(+0.13%, first five chunks excluded). The benefit is for CUDA-resident consumers,
+which skip host materialization; host copies run as pinned D2H transfers on a
+separate stream. Queued device frames retain GPU storage until consumed or discarded.
 
 ## Independent LingBot-V2 1.3B
 

@@ -1,6 +1,6 @@
 ---
 title: PhyGround
-description: "准则锚定的 TI2V：250 条 prompt 覆盖 13 条定律，由 PhyJudge 或人工按 1–5 分评定。WorldFoundry 导入 scores.json，不跑 judge。"
+description: "准则锚定的 TI2V：250 条 prompt 覆盖 13 条定律，由 PhyJudge 或人工按 1–5 分评定。WorldFoundry 导入 judge 的 scores.json。"
 ---
 
 PhyGround（美国东北大学）是**准则锚定**，不是实拍续写，也不是 PhyGenEval。**250** 条文本+图像转视频 prompt 各带预期物理结果，以及 **13 条**定律分类（固体、流体、光学）中适用的 **2–4** 条。Judge（PhyJudge-9B 或人工）按 **1–5** 分评语义符合、物理时序有效性、持久性与各适用定律。这更像量表，而不是 [Physics-IQ](/zh/docs/evaluation/benchmark-hub/physics-iq) 的 mask IoU。
@@ -15,7 +15,7 @@ WorldFoundry **导入** PhyJudge/vLLM 或云端 judge 的 `scores.json`。它**�
 
 ## 如何运行
 
-就位数据根（`prompts/`、`first_images/`、`annotations/`、`videos/<model_id>/`）并导入 judge 输出：
+准备数据根目录（`prompts/`、`first_images/`、`annotations/`、`videos/<model_id>/`）并导入 judge 输出：
 
 ```bash
 hf download NU-World-Model-Embodied-AI/phyground --repo-type dataset --local-dir <phyground_data_root>

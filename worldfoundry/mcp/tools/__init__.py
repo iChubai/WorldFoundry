@@ -2,11 +2,13 @@
 
 Payloads are grouped by responsibility:
 
+- ``spec``: the tool registry; payloads declare themselves with :func:`mcp_tool`.
 - ``context``: shared :class:`MCPToolContext`.
-- ``discovery``: model/benchmark/task catalog lookups.
+- ``discovery``, ``metrics``, ``readiness``: catalog, metric, and dataset lookups.
 - ``runs``: run preview/evaluate/status/result/samples/cancel lifecycle.
 - ``studio``: Studio workspace model discovery, inference jobs, and artifacts.
-- ``registration``: FastMCP tool binding.
+- ``responses``: the shared success/error envelope and error taxonomy.
+- ``registration``: FastMCP binding.
 """
 
 from __future__ import annotations
@@ -39,6 +41,7 @@ from .readiness import check_benchmark_datasets_payload
 
 # ── Registration ───────────────────────────────────────────────
 from .registration import register_tools
+from .responses import ToolNotFoundError, ToolUnavailableError
 
 # ── Run lifecycle payloads ─────────────────────────────────────
 from .runs import (
@@ -53,6 +56,7 @@ from .runs import (
 
 # ── Server metadata ─────────────────────────────────────────────────────
 from .server_info import MCP_TOOL_NAMES, server_info_payload
+from .spec import TOOL_SPECS, ToolSpec, mcp_tool
 
 # ── Studio workspace payloads ────────────────────────────────────
 from .studio import (
@@ -77,6 +81,10 @@ __all__ = [
     "MCP_JOB_INDEX_FILENAME",
     "MCP_TOOL_NAMES",
     "MCPToolContext",
+    "TOOL_SPECS",
+    "ToolNotFoundError",
+    "ToolSpec",
+    "ToolUnavailableError",
     "cancel_run_payload",
     "check_benchmark_datasets_payload",
     "get_benchmark_info_payload",
@@ -98,6 +106,7 @@ __all__ = [
     "list_studio_jobs_payload",
     "list_studio_models_payload",
     "list_tasks_payload",
+    "mcp_tool",
     "preview_run_payload",
     "register_tools",
     "resolve_mcp_output_root",

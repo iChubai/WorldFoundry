@@ -24,8 +24,7 @@ python -m worldfoundry.studio.visualization.vendor_assets
 python -m worldfoundry.studio.visualization.vendor_assets --check
 ```
 
-安装命令下载缺失、空内容或无法读取的文件，并复用可读且非空的本地模块。
-先单独安装模块，再启动 Studio；`--check` 离线检查本地可用性。
+安装命令下载缺失、空内容或无法读取的文件，并复用可读且非空的本地模块。先单独安装模块，再启动 Studio；`--check` 离线检查本地可用性。
 
 ## 可视化内容
 
@@ -35,7 +34,7 @@ python -m worldfoundry.studio.visualization.vendor_assets --check
 
 ## Workspace 模式
 
-多模型验证和发布 QA 推荐启动 workspace app，而不是单模型 Studio 进程：
+多模型工作推荐启动 workspace app，而不是单模型 Studio 进程：
 
 ```bash
 source tmp/worldfoundry_unified_env.sh
@@ -57,8 +56,7 @@ bash scripts/workspace/run_workspace.sh \
   --data-dir /path/to/benchmark-data
 ```
 
-launcher 不依赖任何机器专有路径。资产解析顺序是：命令行参数、已经导出的
-环境变量、repo 同级存在的 `ckpt/` 或 `data/` 目录、`tmp/worldfoundry_unified_env.sh`
+launcher 的资产解析顺序是：命令行参数、已经导出的环境变量、repo 同级存在的 `ckpt/` 或 `data/` 目录、`tmp/worldfoundry_unified_env.sh`
 中的 env-file 值，最后回退到 `~/.cache/worldfoundry/...`。
 
 首次 CUDA 安装与[快速开始](/zh/docs/quickstart)相同，使用官方脚本 `bash scripts/setup/bootstrap_worldfoundry.sh`。
@@ -68,10 +66,8 @@ Workspace 必须从模型推理使用的统一 runtime 环境启动，不能从�
 再启动 `7870`。如果 **LOAD** 或 **START** 报 `cv2` 等模块缺失，说明当前
 `7870` 进程不是统一 runtime 环境，先重启 workspace，再排查模型代码。
 
-不要在机器之间复制或搬迁已经创建好的 conda 环境。Python、OpenSSL 等原生
-链接可能仍指向旧 prefix，导致浏览器服务能启动，但 resident inference worker
-一运行模型就报缺少 `python3.x`、`cv2`、`libssl` 或 `libcrypto`。遇到这类
-问题，按公开 setup 路径验证或重建统一环境：
+不要在机器之间复制或搬迁已经创建好的 conda 环境。Python、OpenSSL 等原生链接可能仍指向旧 prefix，导致浏览器服务能启动，但 resident inference worker
+一运行模型就报缺少 `python3.x`、`cv2`、`libssl` 或 `libcrypto`。遇到这类问题，按公开 setup 路径验证或重建统一环境：
 
 ```bash
 bash scripts/setup/bootstrap_worldfoundry.sh --verify-only
@@ -85,10 +81,7 @@ bash scripts/workspace/run_workspace.sh
 http://127.0.0.1:7870/
 ```
 
-workspace 是发布验证时推荐使用的 UI。
-它适合提交 inference job、检查不同模型的输入表单、查看生成产物，
-以及在同一个界面里对比多次 run。
-这些 Workspace job 是视觉冒烟（`python -m worldfoundry.studio.workspace_job infer`）。日常可复现 / 模型页命令用 `wf run <id> --pipeline.task-profile …`。入口对照见 [CLI 命令入口](/zh/docs/reference/cli#命令入口)。
+workspace 适合提交 inference job、检查不同模型的输入表单、查看生成产物，以及在同一个界面里对比多次 run。这些 Workspace job 是视觉冒烟（`python -m worldfoundry.studio.workspace_job infer`）。日常可复现 / 模型页命令用 `wf run <id> --pipeline.task-profile …`。入口对照见 [CLI 命令入口](/zh/docs/reference/cli#命令入口)。
 
 Workspace 也支持 evaluation job。以 VBench 为例：选择 **Evaluation**，
 benchmark 选 `vbench`，把生成视频目录填到 **Dataset Root**（或把官方
@@ -99,8 +92,7 @@ dimension，例如 `aesthetic_quality`、`motion_smoothness`，也可以填 pres
 
 ### Create Job 配置
 
-Workspace UI **没有单独的 Settings 页**。每次提交前在 **Create Job** 对话框里
-定制参数即可。
+Workspace UI **没有单独的 Settings 页**。每次提交前在 **Create Job** 对话框里定制参数即可。
 
 - **Model / variant / task profile** — 选择 catalog 条目，以及该模型暴露的官方输入 contract。
 - **Prompt、input path、动态 task 字段** — 来自 inference contract 的模型专用输入。
@@ -109,13 +101,9 @@ Workspace UI **没有单独的 Settings 页**。每次提交前在 **Create Job*
 - **Runtime checks** — 可选内存/编译开关，例如 Torch Compile、CPU Offload、VAE Offload、Text Encoder Offload；仅在所选模型声明支持时显示。
 - **Call JSON / Load JSON** — 合并进 `call_kwargs` 和 `load_kwargs` 的高级 override。
 
-Attention 选项按模型声明的加载和推理边界传递；仅加载期支持的选项不会复制进
-推理 kwargs。显式 Load JSON / Call JSON 值在各自支持的边界优先，显式传入
-不支持的 kwargs 仍会触发校验错误。
+Attention 选项按模型声明的加载和推理边界传递；仅加载期支持的选项不会复制进推理 kwargs。显式 Load JSON / Call JSON 值在各自支持的边界优先，显式传入不支持的 kwargs 仍会触发校验错误。
 
-打开 **Create Job** 或切换 task profile 时，表单会先用 Workspace 启动时加载
-的默认值预填。catalog 和 task profile 中的模型专用官方 demo 值仍优先于这些
-共享默认值。
+打开 **Create Job** 或切换 task profile 时，表单会先用 Workspace 启动时加载的默认值预填。catalog 和 task profile 中的模型专用官方 demo 值仍优先于这些共享默认值。
 
 未配置 settings 文件时的默认值：
 
@@ -264,7 +252,7 @@ curl -sS -X POST http://127.0.0.1:7870/api/settings \
 Workspace inference 默认走快速 job 路径：默认认为 conda 环境、checkpoint
 根目录和 viewer 依赖已经在启动 server 前配置好。正常反复推理时建议保持默认。
 
-只有在环境排障或发布前 preflight 时，再显式打开检查：
+环境排障或 preflight 时再显式打开检查：
 
 <div className="pi-kv-catalog is-vars not-prose">
   <section className="pi-kv-group">
@@ -340,7 +328,7 @@ Workspace inference 默认走快速 job 路径：默认认为 conda 环境、che
             <code>always</code>
           </span>
         </div>
-        <p>对未返回 artifact paths 的旧 runtime 强制递归扫描输出目录。</p>
+        <p>对不返回 artifact paths 的模型强制递归扫描输出目录。</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -395,23 +383,19 @@ Workspace inference 默认走快速 job 路径：默认认为 conda 环境、che
 </div>
 
 为了让 job 完成路径最快，模型 runtime 应该在 run record 中显式返回
-`preview_image`、`preview_video`、`artifact_paths`、`rrd_path` 和 `output_dir`。
-只有旧 runtime 只写文件、不返回路径时，才建议把 artifact scan mode 切到
+`preview_image`、`preview_video`、`artifact_paths`、`rrd_path` 和 `output_dir`。只有 runtime 只写文件、不返回路径时，才建议把 artifact scan mode 切到
 `always`。
 
 Resident worker 会让 conda 子进程在多个 job 之间保持存活，因此子进程里的
 `StudioManager` 可以复用 pipeline cache。排查进程启动问题，或希望每个 job
 结束后立刻释放 GPU 显存时，设置 `WORLDFOUNDRY_STUDIO_RESIDENT_WORKERS=0`。
 
-**Visualizers**、**Gallery** 和 **Artifacts** 适合快速视觉 QA。
-这些视图会展示最近生成的视频、图片、manifest 和直接 artifact 链接。
-真正对外声明验证通过前，还需要把对应 run 记录到模型推理验证页。
+**Visualizers**、**Gallery** 和 **Artifacts** 适合快速视觉 QA。这些视图会展示最近生成的视频、图片、manifest 和直接 artifact 链接。真正对外声明验证通过前，还需要把对应 run 记录到模型推理验证页。
 
 ## Workspace 可视化入口
 
 `7870` Workspace 是整套可视化服务的统一浏览器入口。打开 **Visualizers**
-页面后，每张卡片都有 **Launch**、**Open** 和 **Stop** 按钮。卡片下方会
-嵌入正在运行的 viewer iframe，普通 QA 流程里不需要手动复制 URL。
+页面后，每张卡片都有 **Launch**、**Open** 和 **Stop** 按钮。卡片下方会嵌入正在运行的 viewer iframe，普通 QA 流程里不需要手动复制 URL。
 
 具身仿真器不是 Workspace visualizer。`--frontend embodied` 只会登记外部
 simulator URL 并打印 tunnel 提示；请先单独启动 simulator，再传入
@@ -421,8 +405,7 @@ simulator URL 并打印 tunnel 提示；请先单独启动 simulator，再传入
 
 `world` 默认使用 `7868`。只有部署环境要求固定代理路由时，才需要手动指定端口。
 
-实时前端需要 `worldfoundry[studio_realtime]`（`worldfoundry[ui]` 已包含）。
-服务启动时会后台加载模型；一次会话固定复用同一个 pipeline context 和执行线程。
+实时前端需要 `worldfoundry[studio_realtime]`（`worldfoundry[ui]` 已包含）。服务启动时会后台加载模型；一次会话固定复用同一个 pipeline context 和执行线程。
 WASD/IJKL 只发送按下/释放边沿，服务端按生成 chunk 重采样；RGB 帧直接进入
 WebRTC 视频轨。控制到画面的热路径不会扫描 artifact、写 manifest 或编码 MP4。
 
@@ -433,8 +416,7 @@ WebRTC 视频轨。控制到画面的热路径不会扫描 artifact、写 manife
 ### 可选 NVIDIA RTX 后处理
 
 RTX Video Super Resolution 不进入模型的因果状态：它只在 transport 前处理已经
-decode 的 RGB 帧，并保持帧数、顺序、dtype 与数值范围不变。Studio 会把处理后的
-尺寸作为 transport 的 **Native** 分辨率，并从它推导更小的传输选项。由于 `nvidia-vfx`
+decode 的 RGB 帧，并保持帧数、顺序、dtype 与数值范围不变。Studio 会把处理后的尺寸作为 transport 的 **Native** 分辨率，并从它推导更小的传输选项。由于 `nvidia-vfx`
 使用 NVIDIA 专有许可证，它不会进入默认依赖或 `all` extra，必须显式安装和启用：
 
 ```bash
@@ -445,12 +427,8 @@ export WORLDFOUNDRY_REALTIME_RTX_SCALE=1.5
 python -m worldfoundry.studio.cli <model-id> --frontend world --device cuda:0
 ```
 
-服务启动前，adapter 会检查 package、CUDA 可见性、device index、Turing 或更新
-架构的 compute capability，以及 Linux NGX driver library；随后还会加载所选 native
-effect 并处理一帧代表性输入，因此 driver image 不完整时会在 Studio 对外服务前失败。
-真正调用时，backend 收到连续的 CHW `float32` CUDA 帧（范围 `[0, 1]`）；每次调用后
-会先 clone 借用的 DLPack 输出，再复用 effect。不启动 Studio 也可以分别执行静态检查
-和完整 native probe：
+服务启动前，adapter 会检查 package、CUDA 可见性、device index、Turing 或更新架构的 compute capability，以及 Linux NGX driver library；随后还会加载所选 native
+effect 并处理一帧代表性输入，因此 driver image 不完整时会在 Studio 对外服务前失败。真正调用时，backend 收到连续的 CHW `float32` CUDA 帧（范围 `[0, 1]`）；每次调用后会先 clone 借用的 DLPack 输出，再复用 effect。不启动 Studio 也可以分别执行静态检查和完整 native probe：
 
 ```bash
 python -c 'from worldfoundry.core.media.processing.rtx import inspect_rtx_vfx_capability as check; print(check(device=0).to_payload())'
@@ -458,44 +436,29 @@ python -c 'from worldfoundry.core.media.processing.rtx import probe_rtx_vfx_runt
 ```
 
 Linux 上的 `VideoSuperRes` 还需要 `libnvidia-ngx.so.1`。即使 CUDA 与 `nvidia-smi`
-正常，compute-only/headless driver image 也可能省略它。请从与当前 driver **完全相同
-版本**的 NGX/OpenGL userspace 组件（通常为 `libnvidia-gl-<driver-major>`）安装该库，
-并在 Python 启动前让 dynamic linker 可见；不要混用不同 driver 版本的库。
+正常，compute-only/headless driver image 也可能省略它。请从与当前 driver **完全相同版本**的 NGX/OpenGL userspace 组件（通常为 `libnvidia-gl-<driver-major>`）安装该库，并在 Python 启动前让 dynamic linker 可见；不要混用不同 driver 版本的库。
 
 支持的 OS 与 driver 版本由 NVIDIA 决定，部署前应核对最新的
 [NVIDIA VFX Python requirements](https://pypi.org/project/nvidia-vfx/)。VSR 会增加
-transport 像素量和 `postprocess_ms`，因此应按下方门禁做 A/B trace。低延迟交互建议
-从 1.5x `HIGH` 起步；只有实测 GPU 仍有余量时再启用 `ULTRA` 或 2–4x。
+transport 像素量和 `postprocess_ms`，因此应按下方门禁做 A/B trace。低延迟交互建议从 1.5x `HIGH` 起步；只有实测 GPU 仍有余量时再启用 `ULTRA` 或 2–4x。
 `rtx-deblur-ultra` 保持原分辨率，不会增加传输带宽。
 
 ### 浏览器呈现计时与编码器反馈
 
-WebRTC 状态栏中的 **E2E** 是浏览器提交控制，到呈现消费该控制的 chunk 中某一帧
-之间的延迟中位数。悬停可查看 p90、服务端控制到入队时间、RTT、抖动缓冲延迟与
-解码时间。分布保留最近 256 个已测控制，并排除配置的 warmup chunk。
-键盘/摇杆边沿、STEP 和实时文本更新携带控制 ID；合并的输入以及从未呈现对应帧的
-控制不会产生虚假的延迟样本。
+WebRTC 状态栏中的 **E2E** 是浏览器提交控制，到呈现消费该控制的 chunk 中某一帧之间的延迟中位数。悬停可查看 p90、服务端控制到入队时间、RTT、抖动缓冲延迟与解码时间。分布保留最近 256 个已测控制，并排除配置的 warmup chunk。键盘/摇杆边沿、STEP 和实时文本更新携带控制 ID；合并的输入以及从未呈现对应帧的控制不会产生虚假的延迟样本。
 
 帧回执通过现有 DataChannel 传输实际 RTP 时间戳、chunk 索引和帧索引。浏览器与
-`requestVideoFrameCallback().rtpTimestamp` 匹配，即使视频先于回执到达也能关联。
-重复的保持帧对每个控制只计一次。两端的计时历史均按会话隔离且容量有界；浏览器
-耗时不会用浏览器时钟减去服务器时钟。
+`requestVideoFrameCallback().rtpTimestamp` 匹配，即使视频先于回执到达也能关联。重复的保持帧对每个控制只计一次。两端的计时历史均按会话隔离且容量有界；浏览器耗时不会用浏览器时钟减去服务器时钟。
 
 设置 `WORLDFOUNDRY_REALTIME_PERF_JSONL` 后，trace 还会记录
 `realtime.frame_presented`（控制 ID、chunk/帧标识、`control_to_display_ms`、
 `queue_ms`、`encode_ms`）与 `realtime.browser_transport`（每两秒一次 WebRTC
-统计）。它们与 `realtime.chunk_timing` 分开；下方 chunk 回归 manifest 仍检查
-服务端生成指标。浏览器码率、平均抖动缓冲延迟和解码时间使用区间增量计算。
+统计）。它们与 `realtime.chunk_timing` 分开；下方 chunk 回归 manifest 仍检查服务端生成指标。浏览器码率、平均抖动缓冲延迟和解码时间使用区间增量计算。
 DataChannel 拥塞时，计时回执让位于控制消息。
 
-现有可选 NVENC 路径（`WORLDFOUNDRY_REALTIME_NVENC=1`）将接收端 PLI/FIR 请求
-传给下一次原生编码，并用 REMB 带宽估计更新编码器的 CBR 配置。重配置在编码工作
-线程执行，保留 RTP 时钟与 CUDA 帧存储。目标码率受显式配置或分辨率推导的上限
-约束，下限为 100 kbit/s（显式上限更低时服从该上限）。降码率在下一次编码生效；
-不足 10% 的升码率更新会合并。模型生成节奏、推理分辨率和帧队列策略保持不变。
+现有可选 NVENC 路径（`WORLDFOUNDRY_REALTIME_NVENC=1`）将接收端 PLI/FIR 请求传给下一次原生编码，并用 REMB 带宽估计更新编码器的 CBR 配置。重配置在编码工作线程执行，保留 RTP 时钟与 CUDA 帧存储。目标码率受显式配置或分辨率推导的上限约束，下限为 100 kbit/s（显式上限更低时服从该上限）。降码率在下一次编码生效；不足 10% 的升码率更新会合并。模型生成节奏、推理分辨率和帧队列策略保持不变。
 
-**限制：** E2E 表示关联 chunk 帧到达浏览器呈现回调，不是像素响应检测或物理屏幕
-扫描时间。浏览器帧回调不提供 RTP 时间戳、使用 WebSocket 播放或会话没有匹配回执时，E2E
+**限制：** E2E 表示关联 chunk 帧到达浏览器呈现回调，不是像素响应检测或物理屏幕扫描时间。浏览器帧回调不提供 RTP 时间戳、使用 WebSocket 播放或会话没有匹配回执时，E2E
 显示不可用，不以服务端耗时代替。NVENC 反馈需要 PyNvVideoCodec 和具有 NVENC
 引擎的 GPU；仅有 CUDA 不够。动态码率改变传输压缩质量，不改变模型生成像素。
 
@@ -504,11 +467,9 @@ DataChannel 拥塞时，计时回执让位于控制消息。
 `tests/manual/realtime_replay.py` 使用本地权重启动公开的 Studio CLI，并驱动真实
 Chromium 客户端。每次重复都会重置会话、复用固定 seed 和输入图，每个原生模型
 chunk 发送一次 STEP，等该 chunk 的最后一个源帧呈现后再发下一次 STEP。示例采用
-Matrix-Game 2 原生的 640×352、12 FPS、9/12 帧节奏，每种网络条件重复三次，
-每次预热一个 chunk、测量六个 chunk。
+Matrix-Game 2 原生的 640×352、12 FPS、9/12 帧节奏，每种网络条件重复三次，每次预热一个 chunk、测量六个 chunk。
 
-准备统一 Python 环境、Node.js、Playwright/Chromium 及其系统库。浏览器依赖可
-安装在仓库外：
+准备统一 Python 环境、Node.js、Playwright/Chromium 及其系统库。浏览器依赖可安装在仓库外：
 
 ```bash
 npm install --prefix /private/replay-browser playwright
@@ -523,41 +484,29 @@ PYTHONPATH=. "$WORLDFOUNDRY_UNIFIED_ENV_PREFIX/bin/python" \
   --output outputs/realtime-mg2-run
 ```
 
-输出目录必须尚不存在。`CHROMIUM_EXECUTABLE` 可指定已有 Chromium 可执行文件。
-浏览器与服务器进程位于同一 Linux 主机，Studio 和 UDP 中继均绑定 loopback；
-不需要 root，也不修改宿主机网卡或网络配置。
+输出目录必须尚不存在。`CHROMIUM_EXECUTABLE` 可指定已有 Chromium 可执行文件。浏览器与服务器进程位于同一 Linux 主机，Studio 和 UDP 中继均绑定 loopback；不需要 root，也不修改宿主机网卡或网络配置。
 
-干净链路、限速丢包和短时中断三种情况均经过同一个隔离 UDP 中继。两端 SDP 的候选
-地址都被替换，并检查实际选中的远端 ICE 候选确实指向中继。因此延迟、抖动、串行
-发送速率和固定随机种子的丢包会作用于 WebRTC 媒体、反馈与 DataChannel，而不只是
+干净链路、限速丢包和短时中断三种情况均经过同一个隔离 UDP 中继。两端 SDP 的候选地址都被替换，并检查实际选中的远端 ICE 候选确实指向中继。因此延迟、抖动、串行发送速率和固定随机种子的丢包会作用于 WebRTC 媒体、反馈与 DataChannel，而不只是
 HTTP 信令。`delay_ms` 为单向延迟，`rate_bps: 0` 表示不限速。超过有限
 `queue_ms` 排队预算的数据报会丢弃。中断场景在测量 STEP 请求期间双向断流
 1.5 秒；链路计数分别记录随机丢包、队列丢包和中断丢包。
 
-产物包含 `report.json`、`report.md`、原始 `timing.jsonl`、`browser.json`、
-逐次截图、每秒采样的 Studio 进程 CPU/RSS/GPU 显存，以及记录源码状态、依赖
-版本、执行命令和 GPU 共用情况的 `environment.json`。报告保留每次重复的
+产物包含 `report.json`、`report.md`、原始 `timing.jsonl`、`browser.json`、逐次截图、每秒采样的 Studio 进程 CPU/RSS/GPU 显存，以及记录源码状态、依赖版本、执行命令和 GPU 共用情况的 `environment.json`。报告保留每次重复的
 E2E p50/p90、缺失控制、已呈现的唯一生成帧、呈现间隔和 WebRTC 统计。
-CPU 百分比只覆盖 Studio 进程，100% 表示一个 CPU 核；显存是采样的进程占用，
-不是 CUDA allocator 的精确峰值。
+CPU 百分比只覆盖 Studio 进程，100% 表示一个 CPU 核；显存是采样的进程占用，不是 CUDA allocator 的精确峰值。
 
-漏跑、浏览器/服务器回执无法关联、浏览器错误、chunk 不完整以及重置或退出清理
-失败都会使回放失败。服务端阈值复用 `RealtimeRegressionThresholds`；私有
+漏跑、浏览器/服务器回执无法关联、浏览器错误、chunk 不完整以及重置或退出清理失败都会使回放失败。服务端阈值复用 `RealtimeRegressionThresholds`；私有
 profile 的 `delivery_thresholds` 还可设置 `max_e2e_p90_ms`、
-`max_stall_fraction` 和 `max_reset_ms`。延迟阈值应来自已接受的同栈基线；示例
-检查完整性与生命周期，不预设性能目标。对比时保留 profile 和所有逐次结果。
+`max_stall_fraction` 和 `max_reset_ms`。延迟阈值应来自已接受的同栈基线；示例检查完整性与生命周期，不预设性能目标。对比时保留 profile 和所有逐次结果。
 
-**证据范围：** 这是实际 checkpoint 的传输与生命周期证据，不代替推理改动要求
-的已接受数值回放。呈现间隔可能包含模型生成和主动节奏控制；共享 GPU 的测量必须
-保留共用背景。默认 profile 使用软件编码；仅协商到 H.264 不代表执行了 NVENC。
+**证据范围：** 这是实际 checkpoint 的传输与生命周期证据，不代替推理改动要求的已接受数值回放。呈现间隔可能包含模型生成和主动节奏控制；共享 GPU 的测量必须保留共用背景。默认 profile 使用软件编码；仅协商到 H.264 不代表执行了 NVENC。
 
 无权重脚本及报告契约纳入 `make test-infer-tensors` 和
 `make test-realtime-client`；checkpoint/浏览器回放仍需手动运行。
 
 ### 实时性能回归门禁
 
-先启用原始 timing，完成一次有代表性的交互，再用显式 JSON manifest 检查
-最后一个匹配会话。Warmup chunk 会保留在 trace 中用于诊断，但带 `warmup=true`
+先启用原始 timing，完成一次有代表性的交互，再用显式 JSON manifest 检查最后一个匹配会话。Warmup chunk 会保留在 trace 中用于诊断，但带 `warmup=true`
 的记录不会进入统计。
 
 ```bash
@@ -585,8 +534,7 @@ export WORLDFOUNDRY_REALTIME_PERF_WARMUP_CHUNKS=1
 Python 调用方可使用 `worldfoundry.runtime.realtime_regression` 中的
 `RealtimeRegressionManifest.read_json()` 加载此文件，使用
 `read_realtime_trace()` 读取 trace，再将两者传给
-`evaluate_realtime_manifest()`。结果包含每个实际值、比较符和阈值，
-也可转换为统一的 `PerformanceManifest`。
+`evaluate_realtime_manifest()`。结果包含每个实际值、比较符和阈值，也可转换为统一的 `PerformanceManifest`。
 
 远程机器上使用时，需要暴露 `7870` 和实际启动的 viewer 端口。例如：
 
@@ -602,7 +550,7 @@ ssh -L 7870:127.0.0.1:7870 \
 
 inference job 完成后，Workspace 会扫描 run record 和输出目录里的可视化产物。
 **Artifacts** 页会为支持的文件显示 **Open** 和 **Open in ...** 操作。
-**Job Detail** 只保留内嵌 preview video/image，不再重复 viewer 快捷入口。
+**Job Detail** 只保留内嵌 preview video/image，不重复 viewer 快捷入口。
 
 - **`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.mp4`, `.mov`, `.webm`, `.mkv`, `.avi`, `.wav`, `.mp3`, `.flac`, `.ogg` media files** — Workspace 内联预览和直接 **Open** 链接
 - **`.ply`, `.pcd`, `.xyz`, `.glb`, `.gltf`, `.obj` geometry files；包含可解释 geometry/depth key 的 `.npz`** — Viser Geometry Viewer
@@ -611,8 +559,7 @@ inference job 完成后，Workspace 会扫描 run record 和输出目录里的�
 
 ### Base model 感知结果
 
-WorldFoundry 为仓内 3D 和 perception model 维护一份统一的可视化能力注册表。
-编写 model-specific viewer 前先查询注册表：
+WorldFoundry 为仓内 3D 和 perception model 维护一份统一的可视化能力注册表。编写 model-specific viewer 前先查询注册表：
 
 ```bash
 wf models visualizations
@@ -638,8 +585,7 @@ wf models visualize \
 
 这条共享路径覆盖 Depth Anything、SAM、RAFT、DINO、GroundingDINO、
 YOLO World、CoTracker 等仓内 family 的官方输出 schema。原生图像/视频进入
-media viewer，点云和 mesh 进入 Viser，Gaussian splat 进入 Spark，同步场景记录
-进入 Rerun。每个模型的权威映射以 registry 命令输出为准。
+media viewer，点云和 mesh 进入 Viser，Gaussian splat 进入 Spark，同步场景记录进入 Rerun。每个模型的权威映射以 registry 命令输出为准。
 
 对磁盘上已有的 run，直接在 Workspace 打开该 run，用 **Artifacts** 标签页确认
 viewer 路由。上表是路由参考；具体 run 以 Artifacts 里的 **Open** / **Open in ...**
@@ -677,8 +623,7 @@ Spark 前区分普通 PLY geometry 和 Gaussian-splat PLY。
   camera convention；Cut3R 与 MonST3R 的 world/camera 都使用 RDF。
 
 Workspace 会自动解析 VGGT、DUSt3R、LoGeR、Pi3、UniDepth V2 与 UniK3D 的上述已验证默认值。其他 exporter 可用 Visualizer Params JSON
-显式覆盖。请求端口被占用时，Viser 会显示实际绑定端口。Rerun 默认使用 WebGPU；
-只有目标浏览器需要时才设置 `WORLDFOUNDRY_STUDIO_RERUN_RENDERER=webgl`。
+显式覆盖。请求端口被占用时，Viser 会显示实际绑定端口。Rerun 默认使用 WebGPU；只有目标浏览器需要时才设置 `WORLDFOUNDRY_STUDIO_RERUN_RENDERER=webgl`。
 
 ### 选择 3D viewer
 
@@ -688,15 +633,13 @@ Workspace 会自动解析 VGGT、DUSt3R、LoGeR、Pi3、UniDepth V2 与 UniK3D �
 - **时变 geometry、camera trajectory、同步 image/depth/action** — 默认 viewer Rerun。何时保留官方 viewer：导出为 `.rrd` 会丢失官方 timeline 语义。
 - **Gaussian splat** — 默认 viewer Spark。何时保留官方 viewer：上游依赖非标准 shader 或 splat 格式。
 
-viewer 进程能启动不等于 inference 已完成视觉验证。3D/4D 方法的 release evidence
-应先确认 geometry 与 camera data 有限，再在真实浏览器中打开实际产物，检查 canvas
+viewer 进程能启动不等于 inference 已完成视觉验证。验证 3D/4D 方法时，应先确认 geometry 与 camera data 有限，再在真实浏览器中打开实际产物，检查 canvas
 非空且构图可读，执行 reset/orbit 或 timeline 交互，并检查 console error。官方
-viewer 应作为小型 visualization plugin 保留；共享 Viser/Rerun scene layer 足够时，
-不要复制其 inference runtime，也不要为单个模型另写 frontend。
+viewer 应作为小型 visualization plugin 保留；共享 Viser/Rerun scene layer 足够时，不要复制其 inference runtime，也不要为单个模型另写 frontend。
 
 ## Studio 截图
 
-这些截图来自当前用于模型发布验证的 `7870` workspace。
+这些截图来自 `7870` workspace。
 
 - **Inference jobs** — 已完成 run、内嵌 preview media、状态和日志。
 - **Create Job** — 模型专用输入项和官方 demo 默认值。
@@ -712,9 +655,7 @@ image。
 
 ### Create Job
 
-表单应该展示模型真实的输入 contract。
-下面的截图只展示 UI 结构；真正的 release demo 声明应以[发布门禁](/zh/docs/reference/validation)
-和对应的 run manifest 为准。
+表单应该展示模型真实的输入 contract。下面的截图只展示 UI 结构。
 
 ![Studio Create Job dialog](/images/studio/screens/studio-create-job-ltx2-3.png)
 
@@ -763,8 +704,7 @@ http://127.0.0.1:7868
 
 远程 GPU 节点推荐用 SSH tunnel。
 
-`world` 进程通过配置的 HTTP 端口提供页面和 WebRTC signaling；视频与控制随后
-走 ICE 选出的 WebRTC 链路。普通 SSH 端口转发只会承载 signaling，无法单独转发
+`world` 进程通过配置的 HTTP 端口提供页面和 WebRTC signaling；视频与控制随后走 ICE 选出的 WebRTC 链路。普通 SSH 端口转发只会承载 signaling，无法单独转发
 WebRTC 媒体。浏览器不能直连 GPU 主机时，请通过
 `WORLDFOUNDRY_REALTIME_ICE_SERVERS_JSON` 配置 TURN relay。
 
@@ -793,44 +733,31 @@ WASD = move
 Arrow keys / IJKL = look
 ```
 
-键盘和摇杆的按下/释放边沿会立即通过当前实时通道发送。常驻 runtime 将排队的
-状态变化重采样到各模型 chunk，不创建额外 inference request，也不重新加载
-pipeline。即使短按在生成期间已经释放，其有效状态仍会保留至少一个输入帧采样
-间隔；不足一帧的短按可能因此延长。读取当前按键状态不会消费排队的状态变化。
+键盘和摇杆的按下/释放边沿会立即通过当前实时通道发送。常驻 runtime 将排队的状态变化重采样到各模型 chunk，不创建额外 inference request，也不重新加载
+pipeline。即使短按在生成期间已经释放，其有效状态仍会保留至少一个输入帧采样间隔；不足一帧的短按可能因此延长。读取当前按键状态不会消费排队的状态变化。
 worker 会继续处理待消费输入，排空后恢复正常 idle 行为。
 
 #### 输入采样限制
 
 输入保留保证控制被采样，不保证同一个生成 chunk 立即出现可见运动。
-MatrixGame2 的 stride-4 action encoder 可能在后续 chunk 才消费最后一行输入。
-仅落在最后一行的动作仍需该后续 chunk；输入保留本身不会排空模型的动作历史。
+MatrixGame2 的 stride-4 action encoder 可能在后续 chunk 才消费最后一行输入。仅落在最后一行的动作仍需该后续 chunk；输入保留本身不会排空模型的动作历史。
 
 ### 实时文本事件、Idle step 与输出分辨率
 
 `world` 前端在键盘和摇杆旁边提供三组有序控制：
 
-- **文本事件：** 打开 **INITIAL SCENE**，选择 **ADD**，填入 event ID、按钮标签
-  与 prompt。**APPLY** 会在会话开始前装载事件目录，或在会话进行中替换它。事件
-  按钮会在下一个模型 chunk 边界激活一个文本条件；**CLEAR EVENT** 恢复基础
-  prompt。没有状态保持式文本更新路径的模型会禁用这个入口，而不是假装接受了
-  一次它无法应用的更新。
-- **STEP：** 只排入一个不带键盘方向的生成 chunk，适合静止镜头或检查某个文本
-  事件，不会开启自动生成循环。Queued-segment 模型的 **STEP** 保持禁用，因为
-  它们的下一个 segment 需要新的控制视频。
+- **文本事件：** 打开 **INITIAL SCENE**，选择 **ADD**，填入 event ID、按钮标签与 prompt。**APPLY** 会在会话开始前装载事件目录，或在会话进行中替换它。事件按钮会在下一个模型 chunk 边界激活一个文本条件；**CLEAR EVENT** 恢复基础
+  prompt。没有状态保持式文本更新路径的模型会禁用这个入口，而不是假装接受了一次它无法应用的更新。
+- **STEP：** 只排入一个不带键盘方向的生成 chunk，适合静止镜头或检查某个文本事件，不会开启自动生成循环。Queued-segment 模型的 **STEP** 保持禁用，因为它们的下一个 segment 需要新的控制视频。
 - **OUTPUT：** 选择传输帧尺寸。**NATIVE** 保持模型输出尺寸；更小的选项只会对
   WebRTC/WebSocket 流做缩放和 letterbox，不会改变模型推理分辨率、采样步数、
   causal state 或后续世界质量。
 
 Event ID 由 1–64 个字母、数字或 `_.:-` 组成；标签最长 64 字符，prompt 最长
-1,000 字符，一个目录最多 12 个事件。目录更新带 revision，因此过期的编辑器
-不会静默覆盖更新过的实时目录。
+1,000 字符，一个目录最多 12 个事件。目录更新带 revision，因此过期的编辑器不会静默覆盖更新过的实时目录。
 
 可靠控制通道会返回 `event_catalog_ack`、`event_ack`、`step_ack` 和
-`output_config_ack`。事件或输出 ACK 表示这条有序请求已被接受，并说明它在哪里
-生效（`next_chunk` 或 `next_segment`）；生成输出的完成信号仍然是 `chunk_done`。
-分辨率切换固定在完整 transport chunk 的边界上，因此已经声明的 chunk 不会被
-截断，也不会混用不同尺寸。每条请求与 ACK 携带相同的 `request_id`，所以快速
-连点不会让旧响应覆盖当前 UI 状态。
+`output_config_ack`。事件或输出 ACK 表示这条有序请求已被接受，并说明它在哪里生效（`next_chunk` 或 `next_segment`）；生成输出的完成信号仍然是 `chunk_done`。分辨率切换固定在完整 transport chunk 的边界上，因此已经声明的 chunk 不会被截断，也不会混用不同尺寸。每条请求与 ACK 携带相同的 `request_id`，所以快速连点不会让旧响应覆盖当前 UI 状态。
 
 不使用内置控件时，同一套协议也可以直接驱动：
 
@@ -842,25 +769,17 @@ Event ID 由 1–64 个字母、数字或 `_.:-` 组成；标签最长 64 字符
 {"type":"output_config","request_id":"output-1","resolution":{"mode":"fixed","width":640,"height":360}}
 ```
 
-固定传输尺寸必须是偶数，不小于 `160x90`，两个方向都不超过模型的原生/生成帧
-尺寸，并且在实时 `1920x1080` 像素预算之内。Studio 只提供由 model catalog 推导
-出的、对源安全的预设；原生尺寸未知时它不会猜测某个固定预设。切回
+固定传输尺寸必须是偶数，不小于 `160x90`，两个方向都不超过模型的原生/生成帧尺寸，并且在实时 `1920x1080` 像素预算之内。Studio 只提供由 model catalog 推导出的、对源安全的预设；原生尺寸未知时它不会猜测某个固定预设。切回
 `{"mode":"native"}` 会移除传输层缩放。WebRTC 的缩放工作在帧进入 media track
 之前完成，因此被保留的帧不会反复付出缩放代价，也不会阻塞控制事件循环。
 
 ### 可拖拽与可折叠面板
 
-**STATUS**、**CONTROLS**、**INITIAL SCENE** 与 **RUNTIME** 共用同一套面板行为。
-拖动面板标题栏可以让它浮在 viewport 上方，点 `−` 折叠，点 `+` 重新展开。
-浏览器会把浮动面板限制在可见舞台内、把选中的面板置顶，并在本地保存位置与
-折叠状态。拖动每个浏览器帧只做一次 animation-frame transform，不会给模型/帧
-传输路径增加负担。在窄屏移动端布局中，面板保持在文档流内，但仍可折叠。
+**STATUS**、**CONTROLS**、**INITIAL SCENE** 与 **RUNTIME** 共用同一套面板行为。拖动面板标题栏可以让它浮在 viewport 上方，点 `−` 折叠，点 `+` 重新展开。浏览器会把浮动面板限制在可见舞台内、把选中的面板置顶，并在本地保存位置与折叠状态。拖动每个浏览器帧只做一次 animation-frame transform，不会给模型/帧传输路径增加负担。在窄屏移动端布局中，面板保持在文档流内，但仍可折叠。
 
 ### 沉浸式全屏与实时运行日志
 
-全屏视图属于共享的 `world` 前端，因此所有路由到该前端的交互模型都可以使用。
-它会复用当前 peer 或 socket、帧缓冲和常驻模型会话。进入或退出全屏不会让
-浏览器重连，也不会重启生成。
+全屏视图属于共享的 `world` 前端，因此所有路由到该前端的交互模型都可以使用。它会复用当前 peer 或 socket、帧缓冲和常驻模型会话。进入或退出全屏不会让浏览器重连，也不会重启生成。
 
 1. 按正常流程准备模型输入并启动会话。
 2. 点击 viewport 左上角的 **FULLSCREEN**，或按 `F`。
@@ -873,16 +792,9 @@ Event ID 由 1–64 个字母、数字或 `_.:-` 组成；标签最长 64 字符
 - **CLEAR** — 只清空页面上可见的日志历史；不会重置模型会话或 runtime 状态。
 - **`Esc`** — 退出全屏，回到同一个活动会话。
 
-日志会展示 client/model 就绪状态、实时传输状态、segment 排队/生成/播放阶段、
-错误和每个 chunk 的性能数据。chunk 完成后会记录帧数、生成耗时 (`gen`)、播放
-队列深度 (`queue`) 和丢弃的旧帧数 (`dropped`)。这些内容用于当前交互会话排障；
-它们不是持久化 run artifact，也不是服务端完整 stdout/stderr 的副本。
+日志会展示 client/model 就绪状态、实时传输状态、segment 排队/生成/播放阶段、错误和每个 chunk 的性能数据。chunk 完成后会记录帧数、生成耗时 (`gen`)、播放队列深度 (`queue`) 和丢弃的旧帧数 (`dropped`)。这些内容用于当前交互会话排障；它们不是持久化 run artifact，也不是服务端完整 stdout/stderr 的副本。
 
-实时日志复用现有实时连接。浏览器按 animation frame 批量更新 DOM，并且最多
-保留最近 120 条记录，因此长时间游玩不会无限扩大日志树，也不会在帧传输热路径
-增加轮询。浏览器允许 Fullscreen API 时，点击按钮或使用快捷键会进入原生全屏；
-如果原生全屏不可用或被浏览器策略阻止，Studio 会保持当前会话，并回退到铺满
-浏览器视口的布局。
+实时日志复用现有实时连接。浏览器按 animation frame 批量更新 DOM，并且最多保留最近 120 条记录，因此长时间游玩不会无限扩大日志树，也不会在帧传输热路径增加轮询。浏览器允许 Fullscreen API 时，点击按钮或使用快捷键会进入原生全屏；如果原生全屏不可用或被浏览器策略阻止，Studio 会保持当前会话，并回退到铺满浏览器视口的布局。
 Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
 
 ## 启动 flags
@@ -1183,12 +1095,6 @@ Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
 
 Studio 只支持 `WORLDFOUNDRY_*` 环境变量。
 
-## 发布证据
-
-只有当对应官方配置已经通过仓内 Studio 或 Studio-compatible API 路径运行后，
-才把 demo media 放到公开文档中。保留对应 run manifest、解码后的视频元数据和
-视觉 QA 记录，确保页面中嵌入的视频可以追溯到实际 release candidate run。
-
 ## 代码组织
 
 Studio 的实现各自只有一个 canonical import path，根目录仅保留 CLI 与 worker 入口。
@@ -1209,13 +1115,13 @@ Studio 的实现各自只有一个 canonical import path，根目录仅保留 CL
 | `assets/web/` | 打包的 Workspace 页面与 world 前端 CSS/JS |
 | `cli.py`、`runtime_job.py`、`workspace_job.py` | 安装命令与子进程入口 |
 
-推理模块不导入 workspace、serving 或 visualization。`StudioManager` 默认保存原始 artifact；需要预览的前端显式安装 `visualization.presentation.prepare_run_record` 为 `record_processor`。原 `studio/native` 的 CUDA/C++/ImGui 前端已删除。
+推理模块不导入 workspace、serving 或 visualization。`StudioManager` 默认保存原始 artifact；需要预览的前端显式安装 `visualization.presentation.prepare_run_record` 为 `record_processor`。独立浏览器后端通过 `wf-studio` 运行。
 
 模型侧的渲染代码与模型放在一起，`base_models` 不导入 Studio：`base_models/perception_core/visualization/render.py` 用于 CLI 和 Grounding DINO，`colormaps.py` 提供 depth / normal 着色；`vipe/utils/visualization.py` 服务 VIPE；`depth_anything_v3/utils/visualize.py` 服务 DA3 导出。
 
 Wan Animate conditioning image 是模型输入，由 `base_models/diffusion_model/models/encoders/wan/variants/animate/render.py` 持有；`AAPoseMeta.draw_aapose` 不依赖 Studio。
 
-`worldfoundry/representations` 已删除。Depth Anything、VGGT、Pi3、WorldFM、Lyra 等几何 pipeline 直接从 `worldfoundry/base_models/three_dimensions` 对应模型目录导入 runtime；checkpoint 加载、预处理与几何后处理和模型代码放在一起。空基类、marker class 和旧路径转发模块不再保留。Artifact 展示仍由 Studio visualization 负责。
+Depth Anything、VGGT、Pi3、WorldFM、Lyra 等几何 pipeline 直接从 `worldfoundry/base_models/three_dimensions` 对应模型目录导入 runtime；checkpoint 加载、预处理与几何后处理和模型代码放在一起。Artifact 展示由 Studio visualization 负责。
 
 ### 推理生命周期
 

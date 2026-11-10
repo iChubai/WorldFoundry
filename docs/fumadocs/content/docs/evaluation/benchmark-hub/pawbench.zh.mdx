@@ -1,18 +1,18 @@
 ---
 title: PAWBench
-description: "分布物理评测：50 场景 × 50 次 rollout。校准 TVD 与覆盖分开报。WorldFoundry 内置 PAWEval，不编造合并榜。"
+description: "分布物理评测：50 场景 × 50 次 rollout。校准 TVD 与覆盖分开报。WorldFoundry 内置官方 PAWEval judge。"
 ---
 
-PAWBench（上海交大、上海 AI Lab、Krea AI、Hugging Face、上海创智学院、通义实验室、港大）问的是重复生成能否恢复物理上有效未来的 **分布**，不是单条视频好不好看。官方规模：**50 个场景**（25 个带参考结果概率的校准场景，25 个覆盖场景）。完整运行每个场景生成 **50 条独立 rollout，共 2,500 条视频**。
+PAWBench（上海交大、上海 AI Lab、Krea AI、Hugging Face、上海创智学院、通义实验室、港大）问的是重复生成能否恢复物理上有效未来的**分布**，而不是单条视频是否看起来合理。官方规模：**50 个场景**（25 个带参考结果概率的校准场景，25 个覆盖场景）。完整运行每个场景生成 **50 条独立 rollout，共 2,500 条视频**。
 
-两条赛道分开报。上游 **没有定义合并标量**。
+两条赛道分开报。上游**没有定义合并标量**。
 
-- **校准** — `calibration_tvd_percent`（越低越好）：与参考结果分布的总变差距离。
-- **覆盖** — `coverage_percent`：在重复 rollout 中观察到的官方物理结果支撑比例。
+- **校准**：`calibration_tvd_percent`（越低越好），与参考结果分布的总变差距离。
+- **覆盖**：`coverage_percent`，在重复 rollout 中观察到的官方物理结果支撑比例。
 
 论文：[PAWBench](https://arxiv.org/abs/2608.27345)。项目：[pawbench.github.io](https://pawbench.github.io/)。代码：[Andrew0613/PAWBench](https://github.com/Andrew0613/PAWBench)（Apache-2.0）。数据：[`Andrew613/PAWBench`](https://huggingface.co/datasets/Andrew613/PAWBench)。
 
-WorldFoundry **仓内内置官方 PAWEval judge**。新打分默认走 OpenRouter 上的 Gemini 3.5 Flash；其他 OpenAI 兼容 judge 仅供分析。已有 `metrics.json` 或运行目录可离线导入。
+WorldFoundry **内置官方 PAWEval judge**。新打分默认走 OpenRouter 上的 Gemini 3.5 Flash；其他 OpenAI 兼容 judge 仅供分析。已有 `metrics.json` 或运行目录可离线导入。
 
 <BenchmarkPageSections id="pawbench" locale="zh" />
 
@@ -42,7 +42,7 @@ wf zoo benchmark-run \
   --json
 ```
 
-产物包括 `scorecard.json`、`raw_metric_table.jsonl`、`per_sample_scores.jsonl`、`benchmark_contract.json`。仓内样本只是归一化 fixture。
+产物包括 `scorecard.json`、`raw_metric_table.jsonl`、`per_sample_scores.jsonl`、`benchmark_contract.json`。
 
 ## Rollout、裁判与 `metrics.json`
 

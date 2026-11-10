@@ -87,16 +87,10 @@ canonical checkpoint modules 保持不变，decoder CUDA Graph capture 关闭。
 
 ## 实时帧延迟物化
 
-LingBot-V2 的 `stream_realtime()` 将解码后的 uint8 RGB 保留在 CUDA 上，
-通过 `video` 和 `video_chunk` 返回有序的 `LazyCudaFrame` 列表（`layout="frame-list"`）。
-每个 chunk 独立持有像素和 producer event，不受后续解码或会话 reset 影响。
-像素转换和首块 13 帧、后续 16 帧的节奏不变；普通批量推理和直接调用
+LingBot-V2 的 `stream_realtime()` 将解码后的 uint8 RGB 保留在 CUDA 上，通过 `video` 和 `video_chunk` 返回有序的 `LazyCudaFrame` 列表（`layout="frame-list"`）。每个 chunk 独立持有像素和 producer event，不受后续解码或会话 reset 影响。像素转换和首块 13 帧、后续 16 帧的节奏不变；普通批量推理和直接调用
 `session.generate()` 仍返回 CPU 结果。
 
-Studio 的 CPU transport 先在侧流发起 pinned-memory 拷贝，再物化帧。
-支持 CUDA 输入的 transport 配合 identity 后处理时，为选定的编码器保留 GPU 像素；
-自定义后处理仍接收 CPU 输入。生成计时只等待本次 decode event，不再同步整张设备，
-也不包含延后的 host 物化。丢帧策略和队列策略不变。
+Studio 的 CPU transport 先在侧流发起 pinned-memory 拷贝，再物化帧。支持 CUDA 输入的 transport 配合 identity 后处理时，为选定的编码器保留 GPU 像素；自定义后处理仍接收 CPU 输入。生成计时只等待本次 decode event，而不是同步整张设备，也不包含延后的 host 物化。丢帧策略和队列策略不变。
 
 在仓库根目录用本地权重对照：
 
@@ -108,14 +102,9 @@ python tests/manual/lingbot_v2_transport_replay.py \
   --output tmp/lingbot-frame-transport --chunks 21 --rounds 3
 ```
 
-该 probe 检查 CPU 交付路径的 RGB 完全一致、A/B/A seed 和 reset，分别记录生成与物化耗时。
-不包含浏览器显示、网络和编码，不证明 NVENC 硬件支持或编码加速。
-本地 H100 回放（1.3B、464×832、Torch attention、eager DiT/VAE；预热后每条路径测量
-三次、每次 333 帧）在 A/B/A reset 后保持 RGB 完全一致。排除前五个 chunk 后，
-原路径 CPU 交付均值为 1555.80 ms/chunk，延迟物化为 1557.84 ms/chunk（+0.13%），
-**不能据此宣称 CPU 交付加速**。Profiler 确认 pinned D2H 在独立侧流执行；
-CUDA 消费者可以避免这一步 host 物化。
-排队的 device frames 在消费或丢弃前仍占用显存。
+该 probe 检查 CPU 交付路径的 RGB 完全一致、A/B/A seed 和 reset，分别记录生成与物化耗时。不包含浏览器显示、网络和编码，不证明 NVENC 硬件支持或编码加速。在单张 H100 上（1.3B、464×832、Torch attention、eager DiT/VAE；预热后 333 帧），延迟物化在 A/B/A reset 后保持 RGB 完全一致，CPU 交付耗时与原路径相同：
+1557.84 ms/chunk 对 1555.80 ms/chunk（+0.13%，排除前五个 chunk）。收益在于
+CUDA 消费者可以跳过 host 物化；拷回 host 时以 pinned D2H 在独立侧流执行。排队的 device frames 在消费或丢弃前仍占用显存。
 
 ## 独立 LingBot-V2 1.3B
 

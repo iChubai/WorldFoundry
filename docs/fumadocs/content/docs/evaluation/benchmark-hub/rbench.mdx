@@ -1,6 +1,6 @@
 ---
 title: RBench
-description: "PKU / ByteDance Seed robot I2V bench (ICML 2026): 650 image-text cases. WorldFoundry aggregates official VLM and operator rows; it does not invent a board."
+description: "PKU / ByteDance Seed robot I2V bench (ICML 2026): 650 image-text cases. WorldFoundry aggregates official VLM and operator rows."
 ---
 
 RBench (ReVidgen; Peking University DAGroup and ByteDance Seed; ICML 2026) evaluates **robot-oriented image-to-video**. **650** image-text cases:
@@ -12,7 +12,7 @@ Videos are scored by a VLM judge (GPT or Qwen3-VL) on physical plausibility, tas
 
 Paper: [RBench](https://arxiv.org/abs/2601.15282). Code: [DAGroup-PKU/ReVidgen](https://github.com/DAGroup-PKU/ReVidgen). Data: [`DAGroup-PKU/RBench`](https://huggingface.co/datasets/DAGroup-PKU/RBench).
 
-WorldFoundry **reproduces official `eval/4_embodiments` and `eval/5_tasks` aggregation** (option-to-score mapping, min-max, PAS and consistency penalties, amplitude filter). It does not run the VLM or the operator stack. `rbench_overall` is a **WorldFoundry composite** of the two track scores, not a published RBench number. GPT and Qwen outputs are never mixed.
+WorldFoundry **reproduces official `eval/4_embodiments` and `eval/5_tasks` aggregation** (option-to-score mapping, min-max, PAS and consistency penalties, amplitude filter). It does not run the VLM or the operator stack. `rbench_overall` is a **WorldFoundry composite** of the two track scores, not a published RBench number. GPT and Qwen judge outputs are scored separately.
 
 <BenchmarkPageSections id="rbench" locale="en" />
 

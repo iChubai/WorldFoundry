@@ -30,6 +30,29 @@ from .metrics import (
     segmentation_scores,
 )
 
+# Grounded-SAM2 configuration of the official PAI-Bench-C evaluator
+# (conditional_generation/models/grounded_sam_v2.py): SAM 2 hiera-large and
+# GroundingDINO box/text thresholds 0.3/0.25.
+OFFICIAL_SAM2_MODEL_ID = "facebook/sam2-hiera-large"
+OFFICIAL_GROUNDING_BOX_THRESHOLD = 0.3
+OFFICIAL_GROUNDING_TEXT_THRESHOLD = 0.25
+
+
+def _official_sam2_checkpoint(explicit: Path | None) -> Path:
+    """Return the SAM 2 hiera-large checkpoint: explicit, staged in the registry, or downloaded from the hub."""
+
+    if explicit is not None:
+        return explicit
+    from worldfoundry.base_models.capabilities import get_base_model_capability
+
+    status = get_base_model_capability("sam2_hiera_large").assets[0].check()
+    if status["ready"]:
+        return Path(status["matched_path"])
+    from huggingface_hub import hf_hub_download
+
+    return Path(hf_hub_download(repo_id=OFFICIAL_SAM2_MODEL_ID, filename="sam2_hiera_large.pt"))
+
+
 CONDITIONAL_METRICS = (
     "dover_tech_score",
     "blur_ssim",
@@ -368,7 +391,10 @@ def evaluate_conditional_generation(request: ConditionalGenerationRequest) -> di
 
                         segmenter = GroundedSAM2VideoSegmenter(
                             grounding_checkpoint=request.grounding_checkpoint,
-                            sam2_checkpoint=request.sam2_checkpoint,
+                            sam2_checkpoint=_official_sam2_checkpoint(request.sam2_checkpoint),
+                            sam2_model_id=OFFICIAL_SAM2_MODEL_ID,
+                            box_threshold=OFFICIAL_GROUNDING_BOX_THRESHOLD,
+                            text_threshold=OFFICIAL_GROUNDING_TEXT_THRESHOLD,
                         )
                     if captions is None:
                         captions = _caption_phrases(request, row, name)

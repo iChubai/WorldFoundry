@@ -1,0 +1,13 @@
+# deps
+/node_modules
+
+# generated
+.source
+/app/shared/
+
+# build output
+/.next/
+/tmp/
+/out/
+*.tsbuildinfo
+next-env.d.ts

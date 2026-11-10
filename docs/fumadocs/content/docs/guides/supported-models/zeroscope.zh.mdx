@@ -9,9 +9,9 @@ ZeroScope 是社区作者 **cerspense** 对 [ModelScopeT2V](/zh/docs/guides/supp
 
 <ModelPaperFigures modelId="zeroscope" locale="zh" />
 
-WorldFoundry 通过 `worldfoundry/synthesis/visual_generation/zeroscope/worldfoundry_runtime.py` 跑 Hugging Face Diffusers U-Net。在所选配置下，输出与**官方 Diffusers 路径一致**。别名 `zero-scope`、`zero_scope` 解析到这里。
+WorldFoundry 在树内运行 Hugging Face Diffusers U-Net。已验证：在所选配置下，输出与**官方 Diffusers 路径一致**。别名 `zero-scope`、`zero_scope` 解析到这里。
 
-记录了两张卡片：`cerspense/zeroscope_v2_576w`（基础 **576×320**）与 `cerspense/zeroscope_v2_XL`（放大）。Studio/API 接好的 profile 就位的是 **576w** checkpoint。两套许可都是 **CC-BY-NC-4.0**。
+提供两个 checkpoint：`cerspense/zeroscope_v2_576w`（基础 **576×320**）与 `cerspense/zeroscope_v2_XL`（放大）。Studio/API profile 使用 **576w** checkpoint。两套许可都是 **CC-BY-NC-4.0**。
 
 <ModelCommandBuilder modelId="zeroscope" locale="zh" />
 
@@ -23,10 +23,10 @@ WorldFoundry 通过 `worldfoundry/synthesis/visual_generation/zeroscope/worldfou
 
 ## 在 WorldFoundry 中运行
 
-`ZeroScopePipeline` 跑在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。把 `cerspense/zeroscope_v2_576w` 就位到 `WORLDFOUNDRY_HFD_ROOT`。商用或自动化评测前先看 CC-BY-NC-4.0——manifest 里两次记录了政策审阅。
+`ZeroScopePipeline` 跑在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。把 `cerspense/zeroscope_v2_576w` 就位到 `WORLDFOUNDRY_HFD_ROOT`。商用或自动化评测前先审阅 CC-BY-NC-4.0 许可。
 
-## 最小评测
+## 评测
 
-576w 路径 runner 已验证。对生成片段跑 [FETV](/zh/docs/evaluation/benchmark-hub/fetv)，加 `--fetv-metrics clip_score`，读 `clip_score`——这是有界官方组件。`fetv_average` 要声明的组件齐全才出现。
+对生成片段跑 [FETV](/zh/docs/evaluation/benchmark-hub/fetv)，加 `--fetv-metrics clip_score`，读 `clip_score`——这是有界官方组件。`fetv_average` 要声明的组件齐全才出现。
 
 <ModelRelatedRecipes modelId="zeroscope" locale="zh" />

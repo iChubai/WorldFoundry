@@ -7,7 +7,7 @@ description: Choose the dependency stack for each model family, benchmark runtim
 
 An environment is the dependency and launch context expected by a model or benchmark: Python packages, CUDA/Torch bucket, optional system tools, checkpoint layout, device assumptions, and command shape.
 
-The repository still uses `runtime_profile` as a metadata field because it points to a concrete environment record in `worldfoundry/data/models/runtime/profiles/<model-id>.yaml`. In reader-facing docs, this page calls the same concept an environment.
+The metadata field is `runtime_profile`; it points to a concrete environment record in `worldfoundry/data/models/runtime/profiles/<model-id>.yaml`. This page calls the same concept an environment.
 
 WorldFoundry is GPU-first and uses conda as the supported runtime and development environment path. The documented workflow creates one named CUDA environment for the main framework; separate environments are used only when an upstream simulator or official runtime requires isolation. Install `.[dev,test]` into the active GPU environment for contribution work.
 
@@ -442,7 +442,7 @@ These are not reasons to clone an external repository; the code path is in-tree.
 Most benchmark official validation runs and official-result normalizers run in the
 unified environment. Full official metric suites can require a separate conda
 profile when their dependency stack would disturb model inference. Install those
-profiles through the same public setup entrypoint:
+profiles through the same public setup entrypoint, `scripts/setup/model_env_install.sh`.
 
 The complete per-benchmark mapping for all 42 Video Generation and World Model
 entries is in the [benchmark runtime environment matrix](/docs/evaluation/benchmark-hub/runtime-environments).
@@ -473,8 +473,7 @@ and verified scope. If no reproducible environment recipe exists, the affected
 metric remains blocked rather than being reported through a fallback score.
 
 The in-tree DOVER runtime (`worldfoundry/base_models/perception_core/video_quality/dover`)
-is available for future EvalCrafter video-quality integration; the supported CLIP
-subset does not execute it.
+is not executed by the supported CLIP subset.
 
 For the supported subset, stage CLIP ViT-B/32 under the standard checkpoint
 root or set its explicit override:
@@ -485,12 +484,12 @@ export WORLDFOUNDRY_CLIP_VIT_B32_MODEL_DIR="${WORLDFOUNDRY_HFD_ROOT}/openai--cli
 
 See the [EvalCrafter benchmark page](/docs/evaluation/benchmark-hub/evalcrafter)
 for the no-proxy download and smoke command. The complete upstream suite also
-expects direct `0000.mp4` through `0699.mp4` files, but WorldFoundry does not
-currently claim that full path.
+expects direct `0000.mp4` through `0699.mp4` files; WorldFoundry does not
+support that full path.
 
 ## WorldFoundry container
 
-The supported image is the repository-root `docker/Dockerfile`, built through `docker/build_with_docker.sh`. Dockerfiles under `worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` (and the MMYOLO CircleCI Dockerfile) are upstream snapshot artifacts. WorldFoundry does not build or publish those images; they keep PyTorch 1.8/1.9-era CUDA bases and are not maintained against the current runtime. If you need an MMYOLO-specific image, build it from current upstream rather than this vendored copy.
+The supported image is the repository-root `docker/Dockerfile`, built through `docker/build_with_docker.sh`. It provides the CUDA 12.8 toolchain, system libraries, and conda; the unified environment is created inside the container with the standard bootstrap. Build, run, and first-run steps are in [docker/README.md](https://github.com/OpenEnvision/WorldFoundry/blob/main/docker/README.md). Dockerfiles under `worldfoundry/base_models/perception_core/detection/yolo_world/mmyolo/docker/` (and the MMYOLO CircleCI Dockerfile) are upstream snapshot artifacts. WorldFoundry does not build or publish those images; they keep PyTorch 1.8/1.9-era CUDA bases and are not maintained against the current runtime. If you need an MMYOLO-specific image, build it from current upstream rather than this vendored copy.
 
 ## Embodied simulator environments
 
@@ -532,4 +531,4 @@ sudo apt-get update && sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 
 ### 3. Flash Attention installation fails
 **Symptom**: The unified install script hangs or fails during `flash-attn` compilation.
-**Solution**: `flash-attn` is extremely sensitive to mismatched CUDA compiler (`nvcc`) versions. Ensure your `nvcc --version` matches the PyTorch CUDA version. Alternatively, you can disable `flash-attn` installation by passing `--skip-flash-attn` (if supported by your environment) or installing a pre-compiled wheel from the official release page.
+**Solution**: `flash-attn` is extremely sensitive to mismatched CUDA compiler (`nvcc`) versions. Ensure your `nvcc --version` matches the PyTorch CUDA version. Alternatively, pass `--skip-flash-attn` to `unified_install.sh` to skip it, or install a pre-compiled wheel from the official release page.

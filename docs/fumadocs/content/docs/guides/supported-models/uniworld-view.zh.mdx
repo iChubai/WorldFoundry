@@ -5,12 +5,10 @@ modelId: "uniworld-view"
 pageSource: authored
 ---
 
-**发表机构:** 北京大学元培研究组 · 高校
+**发表机构：** 北京大学元培研究组 · 高校
 image · video → video
 
 UniWorld-View 从单张图像或随手拍摄的单目视频生成相机可控的新视角视频。
-
-**目录状态:** 已集成
 
 ## 上游来源
 
@@ -18,9 +16,9 @@ UniWorld-View 从单张图像或随手拍摄的单目视频生成相机可控的
 - [论文](https://arxiv.org/abs/2608.04701)
 - [GitHub](https://github.com/PKU-YuanGroup/UniWorld-View)
 - [Hugging Face](https://huggingface.co/Drexubery/UniView)
-- [源码](https://github.com/NIRVANALAN/STream3R)
+- [STream3R](https://github.com/NIRVANALAN/STream3R)
 - [上游 README](https://github.com/PKU-YuanGroup/UniWorld-View#readme)
-- [上游 README](https://github.com/NIRVANALAN/STream3R#readme)
+- [STream3R README](https://github.com/NIRVANALAN/STream3R#readme)
 
 <ModelCommandBuilder modelId="uniworld-view" locale="zh" />
 
@@ -36,11 +34,11 @@ UniWorld-View 从单张图像或随手拍摄的单目视频生成相机可控的
 
 Python 适配器为 `UniWorldViewPipeline.from_pretrained(device="cuda:0")`。单图路线传入 `images`；单目视频传入 `video` 和 `mode="dynamic_view"`。后者至少需要生成 13 帧，因为第二阶段会读取 10 帧参考画面。默认 `hybrid` 渲染器依赖 PyTorch3D；`render_method="warp"` 选择 BiSplat 路线。`plan_only=True` 可在不加载权重的情况下查看子进程命令。
 
-## 就绪状态与限制
+## 限制
 
 - 上游建议显存至少 60 GB。
-- 已对官方样例的指定配置完成真实权重推理，其他场景及相机角度精度尚未量化验证。
+- 仅在官方样例的指定配置上用真实权重验证；其他场景及相机角度精度未经量化。
 - 默认保持输入宽高比时，实际输出尺寸可能不同于请求的高和宽。
-- 固定的上游版本未初始化动态视角路线的 STream3R，且单视角路线忽略请求的 FPS 和随机种子。WorldFoundry 入口在执行官方推理脚本前对这三处作了局部修复；相同种子的重复运行已逐帧核对。
+- 固定的上游版本未初始化动态视角路线的 STream3R，且单视角路线忽略请求的 FPS 和随机种子。WorldFoundry 入口在执行官方推理脚本前修复这三处问题，因此相同种子的重复运行逐帧一致。
 
 <ModelRelatedRecipes modelId="uniworld-view" locale="zh" />

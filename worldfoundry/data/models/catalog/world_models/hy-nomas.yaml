@@ -68,13 +68,13 @@ docs:
   publisher_zh: 腾讯混元
   overview: Segment-autoregressive text and camera controlled world generation with the distilled Hy-Nomas DiT and PixelUMM decoder.
   overview_zh: 基于蒸馏 Hy-Nomas DiT 与 PixelUMM 解码器的文本和相机控制分段自回归世界生成。
-  architecture: Native Hy-Nomas components reuse shared attention, RMSNorm, modulation, MLP, Qwen2.5-VL backbone, checkpoint loading, Euler scheduling and compressed KV storage.
-  architecture_zh: 原生 Hy-Nomas 组件复用共享 attention、RMSNorm、调制、MLP、Qwen2.5-VL 基座、checkpoint 加载、Euler 调度与压缩 KV 存储。
+  architecture: A distilled Hy-Nomas DiT conditioned on a Qwen2.5-VL text backbone generates latent segments autoregressively with Euler scheduling and compressed KV history; the PixelUMM decoder turns the latents into frames.
+  architecture_zh: 蒸馏 Hy-Nomas DiT 以 Qwen2.5-VL 文本基座为条件，用 Euler 调度和压缩 KV 历史自回归生成 latent 片段；PixelUMM 解码器将 latent 解码为视频帧。
   usage_notes: Ordered prompts are successive segments of one world. Use normalized camera-to-world matrices for explicit camera control. Stage the floating-point DiT, PixelUMM and Qwen2.5-VL-7B weights separately.
   usage_notes_zh: 有序 prompt 表示同一世界的连续片段。显式相机控制使用归一化 camera-to-world 矩阵。分别准备浮点 DiT、PixelUMM 与 Qwen2.5-VL-7B 权重。
   limitations:
-  - Real-checkpoint generation, CUDA quantization and Studio performance require GPU validation.
-  - Low-memory inference uses native runtime INT8/FP8 transforms of floating-point checkpoints, not the upstream packed export ABI.
+  - Generation with the full released checkpoints, low-memory quantization at deployed sizes, and Studio performance are not yet measured.
+  - Low-memory inference quantizes the floating-point checkpoints at load time (INT8/FP8); upstream packed INT8/FP8 export files are not supported.
   limitations_zh:
-  - 真实权重生成、CUDA 量化和 Studio 性能需要 GPU 验证。
-  - 低显存推理使用原生运行时对浮点 checkpoint 进行 INT8/FP8 变换，不使用上游打包导出的 ABI。
+  - 尚未测量完整发布权重的生成效果、部署规模下的低显存量化与 Studio 性能。
+  - 低显存推理在加载时对浮点 checkpoint 做 INT8/FP8 量化；不支持上游打包导出的 INT8/FP8 文件。

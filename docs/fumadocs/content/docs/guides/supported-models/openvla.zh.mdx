@@ -9,7 +9,7 @@ OpenVLA 是 7B 视觉-语言-动作策略：Prismatic VLM 把一帧 RGB 和一�
 
 <ModelPaperFigures modelId="openvla" locale="zh" />
 
-WorldFoundry 把 Hugging Face 架构（`configuration_prismatic.py`、`modeling_prismatic.py`、`processing_prismatic.py`）内置在 `worldfoundry/synthesis/action_generation/openvla`，推理不依赖远程代码。catalog 两个 variant：`openvla-7b` 与 `openvla-libero-10`。树内 runner 在基座卡片上以 `unnorm_key=bridge_orig` **已验证**。LIBERO-10 微调是同一 runner 上锁定、已就位的 checkpoint；专用 zoo 参数仍标为 planned。
+WorldFoundry 内置 Hugging Face 的 Prismatic 模型代码（`configuration_prismatic.py`、`modeling_prismatic.py`、`processing_prismatic.py`），推理不依赖远程代码。两个 variant：`openvla-7b` 与 `openvla-libero-10`。base 路由已在 `openvla-7b` 上以 `unnorm_key=bridge_orig` **验证**。LIBERO-10 微调走同一 pipeline，但尚未单独验证。
 
 <ModelCommandBuilder modelId="openvla" locale="zh" />
 
@@ -17,11 +17,11 @@ WorldFoundry 把 Hugging Face 架构（`configuration_prismatic.py`、`modeling_
 
 从 `openvla-7b` 开始。必填 `image`、`instruction`、`prompt`。`OpenVLAPipeline` 写出 `openvla_action_trace.json`（另有 `actions` / `rollout_metrics`）。默认反归一化键是 `bridge_orig`——这是已验证的 Bridge 风格路由。对应评测页是 [BridgeData V2](/zh/docs/evaluation/benchmark-hub/bridgedata-v2)。
 
-只有目标套件是 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 时，才切到 `openvla-libero-10` 并设 `unnorm_key=libero_10`。更快的连续 / 分块 OpenVLA 线看兄弟页 [OpenVLA-OFT](/zh/docs/guides/supported-models/openvla-oft)——不要把本页当成那条运行时。
+只有目标套件是 [LIBERO](/zh/docs/evaluation/benchmark-hub/libero) 时，才切到 `openvla-libero-10` 并设 `unnorm_key=libero_10`。更快的连续/分块 OpenVLA 线请用 [OpenVLA-OFT](/zh/docs/guides/supported-models/openvla-oft)。
 
 ## 运行时契约
 
-默认视觉骨干是 **SigLIP 224px** 与 DINOv2 融合；语言侧是 Llama-2 7B。动作 token 用 **256 bin**（\([-1, 1]\)），再按数据集键反归一化成 7 自由度。本机走 **fp16**，因为记录的 CUDA 11.3 / torch 1.12 栈没有所需的 bf16 算子。`video` 可选，已记录 predict 不用。
+默认视觉骨干是 **SigLIP 224px** 与 DINOv2 融合；语言侧是 Llama-2 7B。动作 token 用 **256 bin**（\([-1, 1]\)），再按数据集键反归一化成 7 自由度。推理以 **fp16** 运行。`video` 可选，不会被使用。
 
 锁定 revision：
 
@@ -30,12 +30,12 @@ WorldFoundry 把 Hugging Face 架构（`configuration_prismatic.py`、`modeling_
 
 ## 在 WorldFoundry 中运行
 
-统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 11.3）。两套 Hugging Face 树都要本地就位，然后：
+统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。两套 Hugging Face 树都要本地就位，然后：
 
 ```
 wf run openvla-7b
 ```
 
-`unnorm_key` 必须匹配该 checkpoint 的数据契约。两套记录仓库的许可都是 **MIT**。
+`unnorm_key` 必须匹配该 checkpoint 的数据契约。两个 checkpoint 的许可都是 **MIT**。
 
 <ModelRelatedRecipes modelId="openvla" locale="zh" />

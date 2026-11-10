@@ -42,6 +42,9 @@ _OPEN_SOURCE_ALIASES = frozenset(
         "open_weight",
         "open_weights",
         "open_source",
+        "open_source_noncommercial",
+        "ported_from_sandai",
+        "ported_from_sglang",
         "public",
         "source_available",
         "confirmed_official_github",
@@ -51,6 +54,7 @@ _OPEN_SOURCE_ALIASES = frozenset(
 _UNKNOWN_SOURCE_ALIASES = frozenset(
     {
         "blocked_project_page_only",
+        "code_and_weights_restricted",
         "confirmed_general_official_github_model_specific_source_pending",
         "open_weights_restricted",
         "paper_only",
@@ -129,6 +133,7 @@ _PENDING_DEMO_ALIASES = frozenset(
         "configured",
         "implemented",
         "implemented_checkpoint_pending",
+        "implemented_checkpoint_required",
         "implemented_hidden_weights_pending",
         "implemented_local_extension_pending",
         "implemented_pending_gpu_parity",
@@ -138,6 +143,7 @@ _PENDING_DEMO_ALIASES = frozenset(
         "in_tree_inference_ready_checkpoint_pending",
         "in_tree_vendor_ready_checkpoint_pending",
         "integrated",
+        "local_gpu_quality_concern",
         "native_checkpoint_layout_validated",
         "native_checkpoint_validated",
         "native_pipeline_cuda_artifact_pending",
@@ -147,6 +153,7 @@ _PENDING_DEMO_ALIASES = frozenset(
         "partial_studio_visual_validation_verified",
         "planned",
         "runtime_ported",
+        "short_single_gpu_verified_official_8gpu_pending",
         "static_runtime_verified",
         "static_runtime_verified_checkpoint_assets_staged",
         "structural_validation_passed",
@@ -167,7 +174,12 @@ _VERIFIED_DEMO_ALIASES = frozenset(
         "all_declared_variants_checkpoint_gpu_validated",
         "all_released_checkpoints_gpu_validated",
         "robotwin_and_umi_checkpoints_gpu_validated",
+        "robocasa_and_robotwin_checkpoint_gpu_validated",
         "converted_checkpoint_strict_restore_and_gpu_action_probe_validated",
+        # Checkpoint-backed runs through the public pipeline; their notes scope
+        # what remains unverified, matching the reader labels in generated docs.
+        "verified_configuration",
+        "verified_inference_only",
     }
 )
 

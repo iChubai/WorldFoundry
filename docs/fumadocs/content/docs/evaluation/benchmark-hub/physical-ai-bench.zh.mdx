@@ -10,7 +10,7 @@ WorldFoundry 仓内 evaluator **只实现两条赛道**：
 - **PAI-Bench-G**（`--track generation`）：VBench / VBench++ 风格感知指标加 VQA。数据集：`shi-labs/physical-ai-bench-generation`。
 - **PAI-Bench-C**（`--track conditional-generation`）：控制保真（Canny、深度 si-RMSE、分割、模糊 SSIM、LPIPS 多样性）。数据集：`shi-labs/physical-ai-bench-conditional-generation`（约 273 GB）。
 
-论文可能还有其他赛道。那些**不在**本 contract——不要传 `--track understanding`。contract 也**没有**指定单一主指标；不要把 `aesthetic_quality` 当成官方总分。
+不支持这两条之外的赛道，不要传 `--track understanding`。PAI-Bench 没有单一主指标，不要把 `aesthetic_quality` 当成官方总分。
 
 论文：[PAI-Bench](https://arxiv.org/abs/2512.01989)。代码：[SHI-Labs/physical-ai-bench](https://github.com/SHI-Labs/physical-ai-bench)。
 
@@ -48,7 +48,7 @@ ${WORLDFOUNDRY_UNIFIED_PYTHON} \
 
 ## 仓内赛道与 sidecar
 
-这是只做推理的集成，不会 clone / import 上游仓库或其 `third_party`。prompt、评测设置与出处在 `worldfoundry/data/benchmarks/assets/physical-ai-bench`（故意没有 `SOURCE.json`）。
+prompt、评测设置与出处在 `worldfoundry/data/benchmarks/assets/physical-ai-bench`，无需上游仓库。
 
 - **Generation** 复用仓内 VBench / VBench++ I2V runtime。示例指标：`aesthetic_quality`、`background_consistency`、`imaging_quality`、`motion_smoothness`、`overall_consistency`、`subject_consistency`。二值物理 VQA 接受预测 manifest **或** Qwen 视频裁判。
 - **Conditional-generation** 在本地实现已发表的 CPU 迁移指标，并复用共享的 DOVER、LPIPS、Video-Depth-Anything、GroundingDINO、SAM2。预计算 sidecar：`--pred-depth-dir`（`.npy`）、`--pred-segmentation-dir`（JSON）。官方数据集 pickle 只有显式 `--allow-trusted-pickle` 才会加载；分割更推荐 JSON sidecar。

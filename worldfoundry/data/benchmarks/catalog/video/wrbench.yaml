@@ -200,10 +200,7 @@ requires:
 blockers:
 - Leaderboard parity requires complete Natural-25 generation plus VGGT-Omega, DINOv2, Qwen3.5, and Qwen3-VL checkpoints.
 base_model_dependencies:
-- vggt_omega
-- dinov2
-- qwen3_5_vl
-- qwen3_vl
+- wrbench_scorer_runtime_config
 data_refs:
   task_yaml: worldfoundry/data/benchmarks/tasks/external/wrbench.yaml
   bundled_assets: worldfoundry/data/benchmarks/assets/wrbench

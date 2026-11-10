@@ -1,0 +1,433 @@
+/* Article typography and Fumadocs components on the reading sheet.
+   Selectors start with .px-prose.pi-doc-content so they outrank the shared
+   widget sheet's .pi-doc-content rules (several of which use !important). */
+
+.px-prose.pi-doc-content {
+  color: var(--px-text);
+  font-family: var(--px-font-sans);
+  font-size: 1rem;
+  font-weight: 380;
+  letter-spacing: 0;
+  line-height: 1.75;
+  min-width: 0;
+}
+
+.px-prose.pi-doc-content > :first-child {
+  margin-top: 0;
+}
+
+/* Typography applies to the content flow (direct children and prose
+   containers); widget internals keep their own spacing. */
+.px-prose.pi-doc-content > :is(h2, h3, h4, h5, h6) {
+  color: var(--px-ink);
+  font-family: var(--px-font-display);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  scroll-margin-top: calc(var(--px-top, 7.5rem) + 1.25rem);
+}
+
+.px-prose.pi-doc-content :is(h2, h3, h4, h5, h6)[id] {
+  scroll-margin-top: calc(var(--px-top, 7.5rem) + 1.25rem);
+}
+
+.px-prose.pi-doc-content > h2 {
+  font-size: 1.75rem;
+  line-height: 1.3;
+  margin: 2.75rem 0 1rem;
+}
+
+.px-prose.pi-doc-content > h3 {
+  font-size: 1.3125rem;
+  line-height: 1.45;
+  margin: 2.25rem 0 0.75rem;
+}
+
+.px-prose.pi-doc-content > h4 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 1.75rem 0 0.5rem;
+}
+
+.px-prose.pi-doc-content > :is(h2, h3, h4) a[data-card] {
+  color: inherit;
+  text-decoration: none;
+}
+
+.px-prose.pi-doc-content > :is(h2, h3, h4) > button[aria-label='Copy Anchor Link'] {
+  color: var(--px-faint);
+}
+
+.px-prose.pi-doc-content > :is(p, ul, ol, blockquote) :is(strong, b) {
+  color: var(--px-ink);
+  font-weight: 600;
+}
+
+.px-prose.pi-doc-content > :is(ul, ol) > li::marker {
+  color: var(--px-faint);
+}
+
+.px-prose.pi-doc-content > ol > li::marker {
+  color: var(--px-muted);
+  font-weight: 450;
+}
+
+.px-prose.pi-doc-content > hr {
+  border: 0;
+  border-top: 1px solid var(--px-line);
+  margin: 2.5rem 0;
+}
+
+.px-prose.pi-doc-content > blockquote {
+  border: 0 !important;
+  border-left: 2px solid var(--px-line-strong) !important;
+  border-radius: 0 !important;
+  color: var(--px-muted);
+  font-style: normal;
+  margin: 1.5em 0;
+  padding: 0.125em 0 0.125em 1.125em;
+}
+
+/* Prose containers nested in the flow. */
+.px-prose.pi-doc-content
+  :is([style*='--callout-color'], .wf-docs-tabs-panel, .fd-step)
+  .prose-no-margin
+  > :first-child,
+.px-prose.pi-doc-content :is(.wf-docs-tabs-panel, .fd-step) > :first-child {
+  margin-top: 0;
+}
+
+.px-prose.pi-doc-content
+  :is([style*='--callout-color'], .wf-docs-tabs-panel, .fd-step)
+  .prose-no-margin
+  > :last-child,
+.px-prose.pi-doc-content :is(.wf-docs-tabs-panel, .fd-step) > :last-child {
+  margin-bottom: 0;
+}
+
+/* Links in running text: ink label, cyan underline. The leading shell
+   classes outrank the shared sheet's long :not() chain. */
+.px-sheet .px-article .px-prose.pi-doc-content
+  :is(p, li, td, th, blockquote, dd, figcaption)
+  a:not([data-card]):not([class*='wf-']):not([class*='pi-']):not([class*='px-']) {
+  color: var(--px-ink);
+  font-weight: 450;
+  text-decoration-color: var(--px-link-underline);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  transition:
+    color 0.2s ease,
+    text-decoration-color 0.2s ease;
+}
+
+.px-sheet .px-article .px-prose.pi-doc-content
+  :is(p, li, td, th, blockquote, dd, figcaption)
+  a:not([data-card]):not([class*='wf-']):not([class*='pi-']):not([class*='px-']):hover {
+  color: var(--px-accent-strong);
+  text-decoration-color: var(--px-accent-strong);
+}
+
+/* Inline code chips in the content flow. */
+.px-sheet .px-prose.pi-doc-content > :is(p, ul, ol, blockquote, h2, h3, h4, dl) code,
+.px-sheet .px-prose.pi-doc-content > div > table :is(td, th) code,
+.px-sheet
+  .px-prose.pi-doc-content
+  :is([style*='--callout-color'], .wf-docs-tabs-panel, .fd-step)
+  :is(p, li)
+  > code {
+  background: var(--px-surface-2);
+  border: 1px solid var(--px-line);
+  border-radius: var(--px-radius-xs);
+  color: var(--px-ink);
+  font-family: var(--px-font-mono);
+  font-size: 0.84em;
+  font-weight: 450;
+  padding: 0.0625em 0.375em;
+  white-space: normal;
+}
+
+.px-sheet .px-prose.pi-doc-content > :is(h2, h3, h4) code {
+  font-size: 0.82em;
+}
+
+/* ---- Code blocks ---------------------------------------------------------------- */
+.px-prose.pi-doc-content figure.shiki,
+.px-prose.pi-doc-content .shiki {
+  --shiki-dark-bg: var(--px-sheet) !important;
+  background: var(--px-sheet) !important;
+  color: var(--px-text) !important;
+}
+
+.px-prose.pi-doc-content figure.shiki {
+  border: 1px solid var(--px-line) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: none !important;
+  margin: 1.5rem 0 !important;
+}
+
+.px-prose.pi-doc-content figure.shiki > div[role='region'],
+.px-prose.pi-doc-content figure.shiki pre {
+  background: var(--px-sheet) !important;
+  background-color: var(--px-sheet) !important;
+}
+
+.px-prose.pi-doc-content figure.shiki > div[role='region'] {
+  padding-block: 0.875rem;
+}
+
+.px-prose.pi-doc-content figure.shiki pre,
+.px-prose.pi-doc-content figure.shiki code {
+  font-family: var(--px-font-mono) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 400;
+  line-height: 1.7 !important;
+}
+
+.px-prose.pi-doc-content figure.shiki > div.flex.items-center.gap-2 {
+  background: var(--px-sheet);
+  border-bottom: 1px solid var(--px-line);
+  color: var(--px-muted);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.px-prose.pi-doc-content figure.shiki > div.flex.items-center.gap-2 figcaption {
+  color: var(--px-text);
+  font-family: var(--px-font-mono);
+}
+
+.px-prose.pi-doc-content figure.shiki > div:has(> button[type='button']) {
+  opacity: 1;
+}
+
+.px-prose.pi-doc-content figure.shiki > div:has(> button[type='button']) button {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--px-muted) !important;
+}
+
+.px-prose.pi-doc-content figure.shiki > div:has(> button[type='button']) button:hover {
+  color: var(--px-ink) !important;
+}
+
+.dark .px-prose.pi-doc-content .shiki span {
+  color: var(--shiki-dark) !important;
+}
+
+/* Bare <pre> blocks outside a Shiki figure. */
+.px-prose.pi-doc-content pre:not(figure.shiki pre) {
+  background: var(--px-surface-2) !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: none !important;
+  font-family: var(--px-font-mono);
+  font-size: 0.8125rem;
+}
+
+/* ---- Tabs (shared wf-docs-tabs markup) ------------------------------------------- */
+.px-prose.pi-doc-content .wf-docs-tabs {
+  background: var(--px-sheet) !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: none !important;
+  margin: 1.5rem 0 !important;
+}
+
+.px-prose.pi-doc-content .wf-docs-tabs [role='tablist'] {
+  border-bottom: 1px solid var(--px-line);
+  gap: 1.25rem;
+}
+
+.px-prose.pi-doc-content .wf-docs-tabs-trigger {
+  border-bottom: 2px solid transparent !important;
+  color: var(--px-muted) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: -1px;
+  padding: 0.625rem 0 0.5rem !important;
+}
+
+.px-prose.pi-doc-content .wf-docs-tabs-trigger:hover {
+  color: var(--px-ink) !important;
+}
+
+.px-prose.pi-doc-content .wf-docs-tabs-trigger[data-state='active'] {
+  border-bottom-color: var(--px-accent) !important;
+  color: var(--px-accent) !important;
+}
+
+.px-prose.pi-doc-content .wf-docs-tabs-panel {
+  background: var(--px-sheet) !important;
+  border-radius: 0 0 0.75rem 0.75rem !important;
+  font-size: 0.9375rem;
+}
+
+/* Fumadocs' own Tabs component. */
+.px-prose.pi-doc-content [role='tablist'] [role='tab'][data-state='active'],
+.px-prose.pi-doc-content [role='tablist'] [role='tab'][aria-selected='true'] {
+  color: var(--px-accent);
+}
+
+/* ---- Tables (content-flow tables; widget tables keep their own design) ------------- */
+.px-prose.pi-doc-content > div:has(> table) {
+  border: 1px solid var(--px-line);
+  border-radius: 0.75rem;
+  margin: 1.75rem 0;
+}
+
+.px-prose.pi-doc-content > div > table,
+.px-prose.pi-doc-content > table {
+  border: 0 !important;
+  border-collapse: collapse;
+  border-radius: 0 !important;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin: 0 !important;
+  width: 100%;
+}
+
+.px-prose.pi-doc-content > div > table :is(th, td) {
+  border: 0;
+  border-left: 1px solid var(--px-line);
+  border-top: 1px solid var(--px-line);
+  padding: 0.75rem 0.875rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.px-prose.pi-doc-content > div > table :is(th, td):first-child {
+  border-left: 0;
+}
+
+.px-prose.pi-doc-content > div > table thead tr:first-child :is(th, td) {
+  border-top: 0;
+}
+
+.px-prose.pi-doc-content > div > table th {
+  background: transparent;
+  color: var(--px-ink);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.px-prose.pi-doc-content > div > table td {
+  color: var(--px-text);
+}
+
+.px-sheet .px-prose.pi-doc-content > div > table :is(td, th) code {
+  font-size: 0.82em;
+  white-space: pre-wrap;
+}
+
+/* ---- Callouts ------------------------------------------------------------------------- */
+.px-prose.pi-doc-content [style*='--callout-color'] {
+  background: var(--px-surface-2) !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: none !important;
+  gap: 0.75rem !important;
+  margin: 1.75rem 0 !important;
+  padding: 1.125rem 1.25rem !important;
+}
+
+.px-prose.pi-doc-content [style*='--callout-color'] > div[role='none'] {
+  display: none;
+}
+
+.px-prose.pi-doc-content [style*='--callout-color'] > svg {
+  flex: none;
+  margin-top: 0.1875rem;
+}
+
+.px-prose.pi-doc-content [style*='--callout-color'] .font-medium {
+  color: var(--px-ink) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+}
+
+.px-prose.pi-doc-content [style*='--callout-color'] .text-fd-muted-foreground {
+  color: var(--px-text) !important;
+  font-size: 0.9375rem !important;
+  line-height: 1.7 !important;
+}
+
+/* ---- Cards ---------------------------------------------------------------------------- */
+.px-prose.pi-doc-content a[data-card='true'],
+.px-prose.pi-doc-content div[data-card='true'] {
+  background: var(--px-sheet) !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 0.875rem !important;
+  box-shadow: none !important;
+  position: relative;
+  transition: border-color 0.4s ease;
+}
+
+.px-prose.pi-doc-content a[data-card='true']::after {
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  background-image: var(--px-gradient-spectrum);
+  background-size: 200% 100%;
+  border-radius: inherit;
+  content: '';
+  inset: -1px;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  padding: 1px;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.4s ease;
+}
+
+.px-prose.pi-doc-content a[data-card='true']:hover {
+  border-color: transparent !important;
+}
+
+.px-prose.pi-doc-content a[data-card='true']:hover::after {
+  animation: px-spectrum-slide 2.5s linear infinite;
+  opacity: 1;
+}
+
+/* ---- Steps ----------------------------------------------------------------------------- */
+.px-prose.pi-doc-content .fd-steps {
+  border-left: 1px solid var(--px-line);
+  margin-left: 0.875rem;
+  padding-left: 1.75rem;
+}
+
+.px-prose.pi-doc-content .fd-step::before {
+  background: var(--px-card-wash) !important;
+  border: 1px solid var(--px-line) !important;
+  color: var(--px-ink) !important;
+  font-family: var(--px-font-display);
+  font-weight: 600;
+}
+
+/* ---- Details / accordions -------------------------------------------------------------- */
+.px-prose.pi-doc-content details:not(.px-inline-toc) {
+  border: 1px solid var(--px-line);
+  border-radius: 0.75rem;
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+}
+
+.px-prose.pi-doc-content details:not(.px-inline-toc) > summary {
+  color: var(--px-ink);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* ---- Media ------------------------------------------------------------------------------ */
+.px-prose.pi-doc-content :is(img, video) {
+  border-radius: 0.75rem;
+}
+
+.px-prose.pi-doc-content .katex-display {
+  margin: 1.5rem 0;
+}

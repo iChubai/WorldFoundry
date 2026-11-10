@@ -22,10 +22,33 @@ Keep reference imports in test/debug code, never the production runtime.
 
 Follow the declared checkpoint roles through
 [checkpoint specifications](../../../worldfoundry/base_models/diffusion_model/loaders/checkpoints.py)
-and the canonical resolver/loader. Check expected, missing, and unexpected
-keys, tensor shapes, dtypes, and any explicitly ignored source tensors.
+and the canonical resolver/loader. Reuse the core helpers instead of writing a
+new comparison: `remap_checkpoint_keys()` applies ordered regex renames and
+rejects colliding targets; `submodule_state_dict()` selects a prefixed
+component; `validate_state_dict_compatibility()` reports missing, unexpected,
+and shape-mismatched keys without consulting dtype. Meta tensors make the
+check allocation-free:
 
-For the transforms actually used by the port, inspect:
+```python
+import torch
+from safetensors import safe_open
+
+from worldfoundry.core.model_loading.checkpoints.assignment import validate_state_dict_compatibility
+from worldfoundry.core.model_loading.checkpoints.remap import remap_checkpoint_keys
+
+with torch.device("meta"):
+    module = build_network()  # canonical constructor under test
+source = {}
+for shard in shard_paths:  # every file listed by the safetensors index
+    with safe_open(shard, framework="pt") as handle:
+        for key in handle.keys():
+            source[key] = torch.empty(handle.get_slice(key).get_shape(), device="meta")
+validate_state_dict_compatibility(module, remap_checkpoint_keys(source, RENAMES), label="dit")
+```
+
+Use the same `RENAMES` the loader uses, then check dtypes and the explicit
+list of ignored source tensors. For the transforms actually used by the port,
+inspect:
 
 - Q/K/V packing or splitting, head order, and weight/bias pairing;
 - modulation scale/shift ordering and linear-weight transposition;
@@ -55,6 +78,13 @@ localize a failure but do not replace elementwise output comparison. For
 nondeterministic paths, measure reference self-run variation as the validation
 guide requires; an existing exact gate remains exact.
 
+Noise-like or washed-out media usually traces to one of these: latent
+scale/shift or per-channel statistics applied in the wrong direction; sigma
+or timestep order, dtype, or shift; conditioning keyword names that do not
+reach the denoiser; RoPE layout (interleaved versus split-half) or frequency
+precision; CFG branch order or a missing negative prompt; decoder value range
+or frame layout.
+
 For forward outputs exposed by a pipeline, use the existing `capture_modules`
 case field in the
 [replay harness](../../../tests/manual/geometry_regression.py). For denoiser and
@@ -74,6 +104,8 @@ the affected real-checkpoint gates after the fix; component parity does not
 replace them. Missing weights or reference dependencies remain blockers.
 
 The component-first and first-divergence procedures draw on the model/parity
-skills in [Diffusers](https://github.com/huggingface/diffusers) and
-[FastVideo](https://github.com/hao-ai-lab/FastVideo), adapted to WorldFoundry's
+skills in [Diffusers](https://github.com/huggingface/diffusers),
+[FastVideo](https://github.com/hao-ai-lab/FastVideo),
+[SGLang diffusion](https://github.com/sgl-project/sglang), and
+[FlashDreams](https://github.com/NVIDIA/flashdreams), adapted to WorldFoundry's
 loading and evidence contracts.

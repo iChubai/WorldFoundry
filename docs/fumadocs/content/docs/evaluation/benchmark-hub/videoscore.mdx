@@ -1,6 +1,6 @@
 ---
 title: VideoScore
-description: "TIGER-Lab reward model: five 1-4 aspects trained on VideoFeedback 37.6K. WorldFoundry vendors the scorer; it does not invent a board."
+description: "TIGER-Lab reward model: five 1-4 aspects trained on VideoFeedback 37.6K. WorldFoundry vendors the scorer."
 ---
 
 VideoScore (TIGER-Lab, University of Waterloo) is a **learned reward model**, not a prompt suite. It is trained on **VideoFeedback (37.6K human-annotated videos)** and predicts five aspect scores (official **1–4** scale) for any generated clip:
@@ -15,7 +15,7 @@ VideoScore (TIGER-Lab, University of Waterloo) is a **learned reward model**, no
 
 Paper: [VideoScore](https://arxiv.org/abs/2406.15252). Project: [tiger-ai-lab.github.io/VideoScore](https://tiger-ai-lab.github.io/VideoScore/). Code: [TIGER-AI-Lab/VideoScore](https://github.com/TIGER-AI-Lab/VideoScore). Bench data: [`TIGER-Lab/VideoScore-Bench`](https://huggingface.co/datasets/TIGER-Lab/VideoScore-Bench).
 
-WorldFoundry **vendors the runtime**, supports bounded in-process GPU scoring, and wraps `benchmark/eval_videoscore.py`. A bounded official scorer GPU run is verified; **SPCC / pairwise full-suite parity is not**.
+WorldFoundry **vendors the runtime**, supports bounded in-process GPU scoring, and wraps `benchmark/eval_videoscore.py`. A bounded GPU run with the official scorer is validated; full-suite SPCC / pairwise correlation has not been checked against official numbers.
 
 <BenchmarkPageSections id="videoscore" locale="en" />
 

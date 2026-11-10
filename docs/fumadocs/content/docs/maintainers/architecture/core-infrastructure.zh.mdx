@@ -128,17 +128,16 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
 
 全包目录级地图见 [代码地图](/zh/docs/maintainers/architecture/file-index)。模型调用如何流经这些原语见 [模型运行时](/zh/docs/maintainers/architecture/model-runtime) 与 [Runtime 组装](/zh/docs/maintainers/architecture/runtime-assembly)。
 
+## 归属原则
 
-## 归属与合并原则
-
-- `checkpoint` 合并进 `model_loading/checkpoints`，统一管理权重加载、赋值和转换。
-- 媒体编解码与原 `video` 处理统一归到 `media`；下载和文件系统操作留在 `io`。
+- `checkpoint` 属于 `model_loading/checkpoints`，统一管理权重加载、赋值和转换。
+- 媒体编解码与视频处理统一归到 `media`；下载和文件系统操作留在 `io`。
 - CUDA Graph、预热、帧预取和执行重叠归到 `execution`；encoder 的参数放置和生命周期归到 `vram`。
 - `memory` 与 `vram` 分开：前者管理上下文记忆及检索，后者管理物理显存、参数放置和 offload。
-- 配置工具从 `io` 移到 `configuration`，终端格式从 `io` 移到 `observability`，运行时调度从 `utils` 移到 `execution`。
+- 配置工具归 `configuration`，终端格式归 `observability`，运行时调度归 `execution`。
 - Wan 的序列并行适配器和 VGGT 的观测预处理归到对应模型；仓库代码盘点归到 `scripts/model_zoo`。
 
-公开的延迟加载函数及类入口保持稳定。内部模块使用实际所属的新路径，已删除目录不留下兼容转发壳。
+公开的延迟加载函数及类入口保持稳定。内部模块直接引用实际所属模块，不设兼容转发壳。
 
 ## 回归检查
 

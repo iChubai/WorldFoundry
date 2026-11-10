@@ -171,16 +171,12 @@ Preview 空白通常意味着 pipeline 把文件写到了预期 key 之外、返
 
 <ArchDiagram id="studio-realtime" locale="zh" />
 
-模型通过 `RealtimeSpec` 拥有因果时序；transport 不应猜测 latent stride，也不能
-静默改变严格 segment 帧数。`latest-interactive` 会在有界 backpressure 后丢弃旧帧，
-保护控制延迟；`ordered-quality` 从不丢帧，凡是 `chunk_done` 帧数属于播放契约的
+模型通过 `RealtimeSpec` 拥有因果时序；transport 不应猜测 latent stride，也不能静默改变严格 segment 帧数。`latest-interactive` 会在有界 backpressure 后丢弃旧帧，保护控制延迟；`ordered-quality` 从不丢帧，凡是 `chunk_done` 帧数属于播放契约的
 prompt-scheduled 或 queued segment 都必须使用它。
 
 Native visual 解码结果通过已有 core `VideoChunk` 携带 `video_chunk`：显式 layout、像素值域与由 layout 推导的帧数。图像输出使用长度为一的时间轴。Native 的 fresh/stream 调用在 `return_dict=True` 时保留这些语义，原始返回仍为 tensor 或产物路径。Studio 优先读取该 chunk，而非无类型别名，并复用 `core/media/codecs/video.py` 转换；即使 `[-1,1]` 输出片段全部为正值，也按声明的有符号像素处理。单视频传输要求 batch/view 轴长度为一；多视角由 sensor composition 合成。CUDA byte chunk 沿用设备快照与 event 传输。
 
-Postprocessor 位于解码 RGB 提取之后，持有隔离的会话状态，可以暂存一个 chunk，
-并按 chain 顺序 flush 尾帧。默认 identity processor 也走同一条生产边界但不改变
-输出，因此未来接 VSR、去噪或插帧时不需要侵入模型专属推理循环。RTX adapter
+Postprocessor 位于解码 RGB 提取之后，持有隔离的会话状态，可以暂存一个 chunk，并按 chain 顺序 flush 尾帧。默认 identity processor 也走同一条生产边界但不改变输出，因此未来接 VSR、去噪或插帧时不需要侵入模型专属推理循环。RTX adapter
 保持 layout/container/dtype/range，每条 stream 独占一个 VFX effect，复用前先 clone
 借用的 DLPack 输出，并由单独授权的 `rtx_postprocess` extra 控制。每个完成的 chunk
 都会记录归一化阶段 timing；用 `runtime/realtime_regression.py` 可以对 trace 中的

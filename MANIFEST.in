@@ -41,6 +41,7 @@ recursive-include worldfoundry/base_models/perception_core/video_text/fetv_blip 
 recursive-include worldfoundry/base_models/perception_core/video_quality/fetv_stylegan_v *.py *.cpp *.cu *.h *.json *.yaml *.yml *.txt
 recursive-include worldfoundry/base_models/three_dimensions/general_3d/vipe/csrc *.cpp *.cu *.h *.cuh
 recursive-include worldfoundry/studio/assets/web *.html *.css *.js
+recursive-include worldfoundry/data/base_models *.yaml
 recursive-include worldfoundry/data/models/catalog *.yaml
 recursive-include worldfoundry/data/models/runtime *.yaml
 recursive-include worldfoundry/data/models/runtime *.json

@@ -5,7 +5,7 @@ description: 如何选择和组合 WorldFoundry 的注意力、配置、I/O、�
 
 `worldfoundry.core` 是模型接入层下面的公共复用层。这里存放很多世界模型都会需要、但又不应该属于某个具体模型身份的能力，例如注意力分发、checkpoint 加载、逻辑路径、媒体 I/O、分布式通信、Transformer 形状计算、显存策略和推理进程初始化。
 
-这一部分现在记录 236 个 Core 函数或类。顶层公开接口直接从 `worldfoundry/core/__init__.py` 发现，同时补充 Lazy Config、上下文并行切分等在仓库中被高频使用的子包接口。签名、方法、参数默认值、返回标注和源码行号都会在文档构建时从 Python 源码重新生成。
+这一部分收录 Core 的函数和类。顶层公开接口直接从 `worldfoundry/core/__init__.py` 发现，同时补充 Lazy Config、上下文并行切分等被高频使用的子包接口。签名、方法、参数默认值、返回标注和源码行号都会在文档构建时从 Python 源码重新生成。
 
 文档生成器不 import runtime，但真正调用 Core API 仍然需要对应子系统的依赖。最小 package 安装有意不会拉取 Torch、OmegaConf、Loguru、视频 codec 和所有模型栈。应使用所选模型文档声明的环境；下面各分类也会指出关键依赖边界。
 

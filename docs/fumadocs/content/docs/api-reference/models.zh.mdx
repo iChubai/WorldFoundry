@@ -28,7 +28,7 @@ config = WorldModelConfig(
 )
 ```
 
-上面是当前 Matrix-Game 2 catalog 使用的 binding。Runtime binding 会演进，生产代码仍应解析当前模型 manifest，而不是把文档示例硬编码进去。
+上面的 runner target 和 variant 与 Matrix-Game 2 的 catalog 一致。生产代码应从模型 manifest 解析这些值，不要硬编码。
 
 <PythonApiReference symbol="worldfoundry.evals.api.WorldModelConfig" locale="zh" />
 

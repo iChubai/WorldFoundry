@@ -9,8 +9,6 @@ EgoWM predicts the **first-person** video a moving agent would see, given a view
 
 Paper: [arXiv 2601.15284](https://arxiv.org/abs/2601.15284). Project: [egowm.github.io](https://egowm.github.io/). Code: [miccooper9/egowm](https://github.com/miccooper9/egowm).
 
-The runtime plan reports missing source, checkpoints, or input conditions before generation. Runner: `implemented`.
-
 <ModelPaperFigures modelId="egowm" locale="en" />
 
 <ModelCommandBuilder modelId="egowm" locale="en" />
@@ -43,8 +41,8 @@ The default `variant=25dof` requires an explicit initial image and a JSON file w
 
 For paired 3-DoF inference, set `variant=3dof`, select `svd_3dof_nav.pth`, and provide the matching initial image plus `actions_path` JSON: `{"normalized_actions": [[x, y, yaw], ...]}` with exactly one row per generated frame. The x/y values must already use the official 3-DoF normalization (SCAND uses x bounds `[-2.5, 5]` and y bounds `[-4, 4]` after local-coordinate conversion and division by 0.38 m); yaw is a wrapped radian difference. `conditions_path` applies only to 25-DoF. The alternative `action_scale` adds a constant normalized x offset from the zero-displacement baseline of `-1/3` on every frame; it is a synthetic smoke control, not a paired motion test.
 
-## Run in WorldFoundry
+## Running in WorldFoundry
 
-Status: **One paired 25-DoF EVE1x sample and one paired 3-DoF SCAND test trajectory verified on GPU**. Each public route generated eight future frames plus the input. For SCAND, the public 3-DoF pipeline and the official constant-guidance pipeline produced pixel-identical frames with the same image, actions, checkpoint, and seed. The paired forward action advanced the hallway view; synthetic stationary and reverse controls remained nearly stationary. This is a single-trajectory observation, not evidence of calibrated displacement or reliable reverse motion. Stage the matching EgoWM checkpoint and SVD base model locally; missing files are reported by the runtime plan. Catalog VRAM is unset.
+Validated on GPU with one paired 25-DoF EVE1x sample and one paired 3-DoF SCAND test trajectory: each generates eight future frames plus the input, and on SCAND the 3-DoF pipeline matches the official constant-guidance pipeline pixel for pixel with the same image, actions, checkpoint, and seed. The paired forward action advances the hallway view, while synthetic stationary and reverse controls stay nearly stationary. A single trajectory does not establish calibrated displacement or reliable reverse motion. Stage the official source checkout, the matching EgoWM checkpoint, and the SVD base model locally.
 
 <ModelRelatedRecipes modelId="egowm" locale="en" />

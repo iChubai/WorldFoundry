@@ -9,8 +9,6 @@ EgoWM 根据初始视角和导航动作预测移动智能体**第一人称**会�
 
 论文：[arXiv 2601.15284](https://arxiv.org/abs/2601.15284)。项目页：[egowm.github.io](https://egowm.github.io/)。代码：[miccooper9/egowm](https://github.com/miccooper9/egowm)。
 
-运行计划会在生成前报告缺失的源码、checkpoint 或输入条件。Runner：`implemented`。
-
 <ModelPaperFigures modelId="egowm" locale="zh" />
 
 <ModelCommandBuilder modelId="egowm" locale="zh" />
@@ -45,6 +43,6 @@ EgoWM 根据初始视角和导航动作预测移动智能体**第一人称**会�
 
 ## 在 WorldFoundry 中运行
 
-状态：**一条配对 25-DoF EVE1x 样例和一条配对 3-DoF SCAND 测试轨迹已在 GPU 验证**。两个公共入口都生成了输入帧加 8 个预测帧。SCAND 样例中，公共 3-DoF pipeline 与官方恒定 CFG pipeline 在相同图像、动作、权重和随机种子下逐像素一致；配对正向动作使走廊视角前进，合成静止与反向控制则基本静止。这只是一条轨迹的观察，不能证明位移标定或可靠的倒退运动。须在本地就位对应的 EgoWM 权重与 SVD 基座；运行计划会报告缺失文件。catalog 未记录 VRAM。
+已在 GPU 上用一条配对 25-DoF EVE1x 样例和一条配对 3-DoF SCAND 测试轨迹验证：两者都生成输入帧加 8 个预测帧；SCAND 样例中，3-DoF pipeline 与官方恒定 CFG pipeline 在相同图像、动作、权重和随机种子下逐像素一致。配对正向动作使走廊视角前进，合成静止与反向控制则基本静止。单条轨迹不能证明位移标定或可靠的倒退运动。须在本地就位官方源码检出、对应的 EgoWM 权重与 SVD 基座。
 
 <ModelRelatedRecipes modelId="egowm" locale="zh" />

@@ -5,7 +5,7 @@ description: 用 benchmark、metric 与可复现 scorecard 对生成产物打分
 
 评测把模型输出变成可审查证据：准备输入、生成或导入结果、打分、写出 scorecard。模型启动细节留在 runner；benchmark 消费归一化的 `GenerationResult`。打分与 leaderboard 声明是分开的——framework 导入成功不等于官方榜单跑通。
 
-首次端到端路径见[使用指南](/zh/docs/quickstart)。Flag 与 discovery 命令见 [CLI](/zh/docs/reference/cli)。各 benchmark 布局见 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub)。Metric 配方见[指标](/zh/docs/evaluation/metrics)。
+首次端到端路径见[快速开始](/zh/docs/quickstart)。Flag 与 discovery 命令见 [CLI](/zh/docs/reference/cli)。各 benchmark 布局见 [Benchmark Hub](/zh/docs/evaluation/benchmark-hub)。Metric 配方见[指标](/zh/docs/evaluation/metrics)。
 
 ## 该跑什么
 
@@ -24,7 +24,7 @@ description: 用 benchmark、metric 与可复现 scorecard 对生成产物打分
 
 ## 按意图选择
 
-CLI、TUI 与 Workspace 把下面这些用户意图编译到同样的两种执行 request 上；它们不各自维护一套推理或 metric 实现。
+CLI、TUI 与 Workspace 把下面这些用户意图编译到同样的两种执行 request 上，并共用同一套推理与 metric 实现。
 
 - **官方复现** — 固定 recipe、官方 sample 覆盖、模型生成设置与 benchmark runtime 设置。分类：`reproduction`。
 - **Model benchmark** — 仓内模型加上 benchmark 的官方 prompt/data protocol。分类：`protocol_compliant`。

@@ -59,11 +59,11 @@ docs:
   usage_notes: Supply an RGB image and local SD2 Inpainting, Marigold depth/normals, OneFormer, and RepViT-SAM assets. Optional camera_path contains OpenCV world-to-camera matrices in exported scene units. Default image size is 512x512; calls own independent scenes while retaining weights.
   usage_notes_zh: 提供 RGB 图像以及本地 SD2 Inpainting、Marigold 深度/法线、OneFormer 和 RepViT-SAM 资产。可选 camera_path 使用导出场景单位下的 OpenCV 世界到相机矩阵。默认图像为 512x512；每次调用独立生成场景并复用常驻权重。
   limitations:
-  - Offline seed and finite camera-path generation; upstream interactive server, GPT prompts, cached panorama workflow, and full official numerical/quality parity are not validated.
+  - Supports offline seed-scene and finite camera-path generation only; the upstream interactive server, GPT prompts, and cached panorama workflow are not included. Full official numerical and quality parity has not been validated.
   - SD2 uses CreativeML Open RAIL++-M terms; other component terms also apply. The pinned WonderWorld root license is unspecified.
   - Single-image geometry and newly revealed content are generative estimates, not metric reconstruction guarantees.
   limitations_zh:
-  - 支持离线种子场景与有限相机路径生成；上游交互服务器、GPT 提示词、缓存全景流程及完整官方数值/质量一致性尚未验证。
+  - 仅支持离线种子场景与有限相机路径生成；不包含上游交互服务器、GPT 提示词与缓存全景流程。完整官方数值/质量一致性尚未验证。
   - SD2 受 CreativeML Open RAIL++-M 条款约束，其他组件也有各自条款；固定版本的 WonderWorld 根许可证未明确。
   - 单图几何及新显露区域是生成式估计，不保证度量重建精度。
   recommended_benchmarks:

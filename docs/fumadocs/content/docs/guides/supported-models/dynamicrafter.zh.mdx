@@ -1,6 +1,6 @@
 ---
 title: "DynamiCrafter"
-description: "腾讯 / 港中文的开放域图生视频。两条已接线变体：512 与 1024。官方长配置一致性待验证。许可证审完前限制再分发。"
+description: "腾讯 / 港中文的开放域图生视频，提供 512 与 1024 两个变体。上游许可审阅完成前请勿再分发。"
 modelId: "dynamicrafter"
 pageSource: authored
 ---
@@ -9,9 +9,9 @@ DynamiCrafter 给开放域静帧做动画：图（加可选提示词）进去，
 
 <ModelPaperFigures modelId="dynamicrafter" locale="zh" />
 
-论文：[arXiv 2310.12190](https://arxiv.org/abs/2310.12190)。项目页：[doubiiu.github.io/projects/DynamiCrafter](https://doubiiu.github.io/projects/DynamiCrafter/)。发布方：腾讯 AI Lab / 港中文。catalog 未记许可证；manifest 在上游许可审完前**限制再分发**。
+论文：[arXiv 2310.12190](https://arxiv.org/abs/2310.12190)。项目页：[doubiiu.github.io/projects/DynamiCrafter](https://doubiiu.github.io/projects/DynamiCrafter/)。发布方：腾讯 AI Lab / 港中文。上游许可尚未经过审阅；审阅完成前请勿再分发产出。
 
-两条变体都已接线；**官方长配置一致性待验证**。求快用 512，定稿用 1024。它会发明运动——**不**跟相机路径或动作。
+求快用 512，定稿用 1024。它会发明运动——**不**跟相机路径或动作。
 
 <ModelCommandBuilder modelId="dynamicrafter" locale="zh" />
 
@@ -34,6 +34,6 @@ DynamiCrafter 给开放域静帧做动画：图（加可选提示词）进去，
 
 ## 在 WorldFoundry 中运行
 
-状态：**Runner 一致性待验证**。统一环境 `worldfoundry-unified-cu128`（Python 3.11, CUDA 12.8）。先把 `Doubiiu/DynamiCrafter`、`Doubiiu/DynamiCrafter_512`、`Doubiiu/DynamiCrafter_1024` 就位到本地，缺文件加载失败，运行时不下载。在该环境执行 `wf run dynamicrafter-512-i2v`。catalog 未记录 VRAM。
+统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先把 `Doubiiu/DynamiCrafter`、`Doubiiu/DynamiCrafter_512`、`Doubiiu/DynamiCrafter_1024` 就位到本地，再在该环境执行 `wf run dynamicrafter-512-i2v`。
 
 <ModelRelatedRecipes modelId="dynamicrafter" locale="zh" />

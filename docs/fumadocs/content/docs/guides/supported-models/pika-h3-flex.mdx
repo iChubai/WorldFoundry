@@ -5,7 +5,7 @@ modelId: "pika-h3-flex"
 pageSource: authored
 ---
 
-Pika H3 Flex is a six-step MiniMax-H3 adapter for joint video and stereo audio generation. The WorldFoundry route reuses the canonical MiniMax-H3 transformer, Qwen3-VL conditioner, geometry, codecs and media writer.
+Pika H3 Flex is a six-step MiniMax-H3 adapter for joint video and stereo audio generation. It runs on the MiniMax-H3 base model with its Qwen3-VL conditioner.
 
 Code: [Pika-Labs/Pika-H3-Flex](https://github.com/Pika-Labs/Pika-H3-Flex).
 
@@ -19,8 +19,8 @@ The adapter is loaded with `adapter_task=fl2va` or `adapter_task=ref2va`:
 wf run pika-h3-flex --pipeline.task-profile t2va --json
 ```
 
-Prepare the pinned MiniMax-H3 base snapshot and the Pika adapter files before running. Model assets remain outside Git.
+Prepare the pinned MiniMax-H3 base snapshot and the Pika adapter files before running.
 
-## Validation status
+## Limitations
 
-The in-tree loader, fused-QKV/SwiGLU LoRA conversion, six-knot re-noising schedule and public pipeline route are implemented. Full checkpoint-backed artifact parity, video/audio references, multi-GPU execution and the complete 480p/768p bucket matrix remain pending GPU validation.
+Reference generation accepts image references only; video and standalone-audio references are not supported. Multi-GPU execution, the full 480p/768p bucket set, and checkpoint-backed outputs are not validated.

@@ -219,3 +219,6 @@ contract:
   - Contract maps official VMBench results.json/scores.csv outputs to WorldFoundry scorecard.
   - Official runtime requires the upstream CUDA dependency stack, checkpoints, and 0001.mp4-style video
     layout.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.vmbench.vmbench_prompts:materialize_vmbench_generation_requests
+  missing_requests_hint: restore the bundled VMBench prompt assets

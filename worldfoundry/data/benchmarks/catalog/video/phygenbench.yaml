@@ -189,3 +189,8 @@ contract:
   notes:
   - Contract maps PhyGenBench/PhyGenEval physical commonsense outputs to WorldFoundry scorecard.
   - Official execution requires the upstream PhyGenEval judge stack and generated videos.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.phygenbench.phygenbench_prompts:materialize_phygenbench_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.phygenbench.phygenbench_prompts:copy_phygenbench_generated_videos
+  split_parameter: split
+  missing_requests_hint: set WORLDFOUNDRY_PHYGENBENCH_ROOT or WORLDFOUNDRY_PHYGENBENCH_PROMPT_MANIFEST

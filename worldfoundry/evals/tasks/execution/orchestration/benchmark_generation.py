@@ -1,23 +1,21 @@
 """Benchmark-specific request and artifact-layout adapters.
 
-The model-benchmark orchestrator deliberately depends on this small registry
-instead of growing benchmark-id conditionals.  Most adapters follow the same
-module/function naming convention; the registry only records the differences.
+The model-benchmark orchestrator resolves adapters from the ``generation`` block
+of each benchmark catalog entry instead of growing benchmark-id conditionals.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 from importlib import import_module
 from pathlib import Path
 from typing import Any
 
 from worldfoundry.evals.api import GenerationRequest
 from worldfoundry.evals.utils import BENCHMARK_ASSETS_ROOT
-
-_TARGET_PREFIX = "worldfoundry.evals.tasks.execution.runners"
 
 
 def materialize_vbench_generation_requests(
@@ -126,218 +124,42 @@ class BenchmarkGenerationAdapter:
         )
 
 
-# benchmark id -> (module below runners, function prefix, missing-data hint,
-#                    has custom artifact layout, optional dataset-root kwarg,
-#                    optional split kwarg)
-_ADAPTER_ROWS: dict[str, tuple[Any, ...]] = {
-    "aigcbench": (
-        "aigcbench.aigcbench_prompts",
-        "aigcbench",
-        "set WORLDFOUNDRY_AIGCBENCH_DATASET_ROOT or WORLDFOUNDRY_AIGCBENCH_PROMPT_MANIFEST",
-        True,
-        "dataset_root",
-        "split",
-    ),
-    "evalcrafter": (
-        "evalcrafter.evalcrafter_prompts",
-        "evalcrafter",
-        "restore the bundled EvalCrafter prompt700.txt asset",
-        True,
-        None,
-        "split",
-    ),
-    "ewmbench": (
-        "ewmbench.ewmbench_prompts",
-        "ewmbench",
-        "restore the bundled EWMBench task_manifest.json asset",
-        True,
-        None,
-        "split",
-    ),
-    "fetv": (
-        "fetv.fetv_prompts",
-        "fetv",
-        "restore the bundled FETV fetv_data.json prompt asset",
-        True,
-    ),
-    "ipv-bench": (
-        "ipv_bench.ipv_bench_prompts",
-        "ipv_bench",
-        "set WORLDFOUNDRY_IPV_BENCH_ROOT or WORLDFOUNDRY_IPV_BENCH_PROMPT_MANIFEST",
-        False,
-    ),
-    "iworld-bench": (
-        "iworldbench.iworldbench_prompts",
-        "iworldbench",
-        "set WORLDFOUNDRY_IWORLD_BENCH_DATASET_ROOT or WORLDFOUNDRY_IWORLD_BENCH_PROMPT_MANIFEST",
-        False,
-        "dataset_root",
-        "split",
-    ),
-    "mirabench": (
-        "mirabench.mirabench_prompts",
-        "mirabench",
-        "set WORLDFOUNDRY_MIRABENCH_ROOT or WORLDFOUNDRY_MIRABENCH_META_CSV",
-        True,
-        None,
-        "split",
-    ),
-    "phyeduvideo": (
-        "phyeduvideo.phyeduvideo_prompts",
-        "phyeduvideo",
-        "set WORLDFOUNDRY_PHYEDUVIDEO_ROOT or WORLDFOUNDRY_PHYEDUVIDEO_PROMPTS_FILE",
-        True,
-        None,
-        "split",
-    ),
-    "phyfps-bench-gen": (
-        "phyfps_bench_gen.phyfps_prompts",
-        "phyfps",
-        "set WORLDFOUNDRY_PHYFPS_BENCH_GEN_ROOT or WORLDFOUNDRY_PHYFPS_BENCH_GEN_PROMPT_MANIFEST",
-        True,
-        None,
-        "split",
-    ),
-    "phygenbench": (
-        "phygenbench.phygenbench_prompts",
-        "phygenbench",
-        "set WORLDFOUNDRY_PHYGENBENCH_ROOT or WORLDFOUNDRY_PHYGENBENCH_PROMPT_MANIFEST",
-        True,
-        None,
-        "split",
-    ),
-    "phyground": (
-        "phyground.phyground_prompts",
-        "phyground",
-        "set WORLDFOUNDRY_PHYGROUND_DATA_ROOT or WORLDFOUNDRY_PHYGROUND_PROMPT_MANIFEST",
-        True,
-        None,
-        "split",
-    ),
-    "sana-wm-bench": (
-        "sana_wm_bench.sana_wm_bench_prompts",
-        "sana_wm_bench",
-        "set WORLDFOUNDRY_SANA_WM_BENCH_DATASET_ROOT to the public Efficient-Large-Model/SANA-WM-Bench download",
-        True,
-        "dataset_root",
-        "split",
-    ),
-    "physics-iq": (
-        "physics_iq.physics_iq_prompts",
-        "physics_iq",
-        "set WORLDFOUNDRY_PHYSICS_IQ_ROOT or WORLDFOUNDRY_PHYSICS_IQ_DESCRIPTIONS",
-        True,
-        "dataset_root",
-        "split",
-    ),
-    "physics-iq-verified": (
-        "physics_iq.physics_iq_prompts",
-        "physics_iq_verified",
-        "restore the bundled Physics-IQ Verified best-practice descriptions",
-        True,
-        "dataset_root",
-    ),
-    "physvidbench": (
-        "physvidbench.physvidbench_prompts",
-        "physvidbench",
-        "set WORLDFOUNDRY_PHYSVIDBENCH_ROOT or WORLDFOUNDRY_PHYSVIDBENCH_PROMPT_MANIFEST",
-        True,
-        None,
-        "split",
-    ),
-    "t2v-safety-bench": (
-        "t2v_safety_bench.t2v_safety_bench_prompts",
-        "t2v_safety_bench",
-        "restore the bundled T2VSafetyBench prompt files",
-        False,
-    ),
-    "t2v-compbench": (
-        "t2v_compbench.t2v_compbench_prompts",
-        "t2v_compbench",
-        "restore the bundled T2V-CompBench metadata assets",
-        True,
-    ),
-    "videophy": (
-        "videophy.videophy_prompts",
-        "videophy",
-        "restore the bundled VideoPhy prompt assets",
-        True,
-        None,
-        "split",
-    ),
-    "videophy2": (
-        "videophy2.videophy2_prompts",
-        "videophy2",
-        "restore the bundled VideoPhy2 prompt assets",
-        True,
-        None,
-        "split",
-    ),
-    "videoverse": (
-        "videoverse.videoverse_prompts",
-        "videoverse",
-        "set WORLDFOUNDRY_VIDEOVERSE_ROOT or WORLDFOUNDRY_VIDEOVERSE_PROMPT_MANIFEST",
-        True,
-        None,
-        "split",
-    ),
-    "vmbench": (
-        "vmbench.vmbench_prompts",
-        "vmbench",
-        "restore the bundled VMBench prompt assets",
-        False,
-    ),
-    "world-in-world": (
-        "world_in_world.world_in_world_prompts",
-        "world_in_world",
-        "set WORLDFOUNDRY_WORLD_IN_WORLD_ASSETS_ROOT or an episode manifest",
-        False,
-    ),
-    "wrbench": (
-        "wrbench.wrbench_prompts",
-        "wrbench",
-        "restore the WRBench Natural-25 assets and first frames",
-        True,
-    ),
-}
-
-
-def _adapter_from_row(benchmark_id: str, row: Sequence[Any]) -> BenchmarkGenerationAdapter:
-    module_suffix, function_prefix, hint, custom_layout, *options = row
-    module = f"{_TARGET_PREFIX}.{module_suffix}"
+def _adapter_from_catalog_entry(benchmark_id: str, block: Mapping[str, Any]) -> BenchmarkGenerationAdapter:
     return BenchmarkGenerationAdapter(
         benchmark_id=benchmark_id,
-        request_provider=f"{module}:materialize_{function_prefix}_generation_requests",
-        artifact_materializer=(f"{module}:copy_{function_prefix}_generated_videos" if custom_layout else None),
-        missing_requests_hint=str(hint),
-        dataset_root_parameter=options[0] if options else None,
-        split_parameter=options[1] if len(options) > 1 else None,
+        request_provider=str(block["request_provider"]),
+        missing_requests_hint=str(block["missing_requests_hint"]),
+        artifact_materializer=block.get("artifact_materializer"),
+        dataset_root_parameter=block.get("dataset_root_parameter"),
+        split_parameter=block.get("split_parameter"),
     )
 
 
-BENCHMARK_GENERATION_ADAPTERS = {
-    benchmark_id: _adapter_from_row(benchmark_id, row) for benchmark_id, row in _ADAPTER_ROWS.items()
-}
-BENCHMARK_GENERATION_ADAPTERS["vbench"] = BenchmarkGenerationAdapter(
-    benchmark_id="vbench",
-    request_provider=(
-        "worldfoundry.evals.tasks.execution.orchestration.benchmark_generation:materialize_vbench_generation_requests"
-    ),
-    missing_requests_hint="restore the bundled VBench_full_info.json prompt suite",
-    dataset_root_parameter="dataset_root",
-    split_parameter="split",
-)
+@lru_cache(maxsize=1)
+def list_benchmark_generation_adapters() -> dict[str, BenchmarkGenerationAdapter]:
+    """Return the generation adapters declared by the ``generation`` block of catalog entries."""
+
+    from worldfoundry.evals.tasks.catalog.benchmark_catalog import readable_catalog_shards
+
+    adapters: dict[str, BenchmarkGenerationAdapter] = {}
+    for shard in readable_catalog_shards():
+        for entry in shard.entries:
+            block = entry.get("generation") if isinstance(entry, Mapping) else None
+            if isinstance(block, Mapping):
+                benchmark_id = str(entry.get("id") or entry.get("benchmark_id")).casefold()
+                adapters[benchmark_id] = _adapter_from_catalog_entry(benchmark_id, block)
+    return adapters
 
 
 def get_benchmark_generation_adapter(benchmark_id: str) -> BenchmarkGenerationAdapter | None:
     """Return the registered adapter for a canonical benchmark id, if any."""
 
-    return BENCHMARK_GENERATION_ADAPTERS.get(benchmark_id.strip().casefold())
+    return list_benchmark_generation_adapters().get(benchmark_id.strip().casefold())
 
 
 __all__ = [
-    "BENCHMARK_GENERATION_ADAPTERS",
     "BenchmarkGenerationAdapter",
     "get_benchmark_generation_adapter",
+    "list_benchmark_generation_adapters",
     "materialize_vbench_generation_requests",
 ]

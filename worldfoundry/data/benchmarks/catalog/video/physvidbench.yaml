@@ -228,3 +228,8 @@ contract:
     surface.
   - Full official scoring still requires generated videos, AuroraCap caption extraction, and Gemini QA
     outputs.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.physvidbench.physvidbench_prompts:materialize_physvidbench_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.physvidbench.physvidbench_prompts:copy_physvidbench_generated_videos
+  split_parameter: split
+  missing_requests_hint: set WORLDFOUNDRY_PHYSVIDBENCH_ROOT or WORLDFOUNDRY_PHYSVIDBENCH_PROMPT_MANIFEST

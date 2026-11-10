@@ -205,3 +205,8 @@ contract:
   notes:
   - Contract covers VideoPhy2 action-centric physical commonsense evaluation.
   - Official auto-evaluator checkpoint and HF test data are external acquisition stages.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.videophy2.videophy2_prompts:materialize_videophy2_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.videophy2.videophy2_prompts:copy_videophy2_generated_videos
+  split_parameter: split
+  missing_requests_hint: restore the bundled VideoPhy2 prompt assets

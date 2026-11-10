@@ -23,6 +23,8 @@ Runner 一段点名可调用的 surface：runner target、official validation mo
 
 `contract` 一段写明 benchmark 的对外接口：一次运行消费的 `input_keys`、写出的 `output_keys`、`notes`，打分不需要上游包时写 `requires_upstream_runtime: false`。Metric id 默认取 catalog 的 metrics；只有上报的集合不同时，才在这一段里列出 `metric_ids`。Catalog 和 task 的 runner target 按 benchmark id 指向契约，例如 `worldfoundry.evals.tasks.contracts.external:<benchmark-id>`。
 
+用自带 prompt 集生成视频的 benchmark 再加一个 `generation` 块：`request_provider` 是返回生成请求的 `module:function`；`artifact_materializer` 可选，是把生成视频复制成官方目录结构的 `module:function`；`dataset_root_parameter` 和 `split_parameter` 写明 provider 接收这两种覆盖时用的关键字参数；`missing_requests_hint` 是 prompt 资产缺失时给出的提示。
+
 Task 契约在 `worldfoundry/data/benchmarks/tasks/external/<benchmark-id>.yaml`。prompt 列表或 simulator episode 变成 `GenerationRequest`，靠的是这份文件。协议相关的映射留在这里，或留在读它的 runner 里。不要让模型 pipeline 去懂 VBench 的维度表，也不要让 metric 去启动 Cosmos。
 
 Evidence 字段——check notes、report 路径、blockers、执行过的命令——是 catalog 里唯一被 support matrix 当成「指向证据」的句子。证据本身是 `tmp/` 下的文件，不是 YAML 里的一句话。

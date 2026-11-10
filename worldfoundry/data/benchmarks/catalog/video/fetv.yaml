@@ -257,3 +257,7 @@ contract:
   notes:
   - Contract covers FETV fine-grained text-to-video prompts and human/automatic score families.
   - Official FETV-EVAL runtime and UMT metric dependencies are not executed by the contract fixture.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.fetv.fetv_prompts:materialize_fetv_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.fetv.fetv_prompts:copy_fetv_generated_videos
+  missing_requests_hint: restore the bundled FETV fetv_data.json prompt asset

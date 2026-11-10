@@ -210,3 +210,6 @@ contract:
   notes:
   - Contract records IPV-Bench impossible-video generation and understanding metrics.
   - Human annotation or official judge outputs remain required for leaderboard-grade scores.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.ipv_bench.ipv_bench_prompts:materialize_ipv_bench_generation_requests
+  missing_requests_hint: set WORLDFOUNDRY_IPV_BENCH_ROOT or WORLDFOUNDRY_IPV_BENCH_PROMPT_MANIFEST

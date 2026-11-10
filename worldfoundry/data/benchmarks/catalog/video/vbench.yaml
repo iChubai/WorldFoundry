@@ -384,3 +384,8 @@ contract:
   notes:
   - Contract covers generated-video input and normalized scorecard output.
   - Heavy upstream dimensions remain behind the official VBench runtime.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.orchestration.benchmark_generation:materialize_vbench_generation_requests
+  dataset_root_parameter: dataset_root
+  split_parameter: split
+  missing_requests_hint: restore the bundled VBench_full_info.json prompt suite

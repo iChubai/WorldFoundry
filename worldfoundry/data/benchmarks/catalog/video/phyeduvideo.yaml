@@ -218,3 +218,8 @@ contract:
   notes:
   - Contract covers PhyEduVideo physics-education text-to-video evaluation.
   - Official evaluation requires the upstream codebase and any judge/runtime assets.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.phyeduvideo.phyeduvideo_prompts:materialize_phyeduvideo_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.phyeduvideo.phyeduvideo_prompts:copy_phyeduvideo_generated_videos
+  split_parameter: split
+  missing_requests_hint: set WORLDFOUNDRY_PHYEDUVIDEO_ROOT or WORLDFOUNDRY_PHYEDUVIDEO_PROMPTS_FILE

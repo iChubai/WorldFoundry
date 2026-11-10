@@ -258,3 +258,6 @@ contract:
   notes:
   - Contract exposes T2VSafetyBench as a safety-critical text-to-video evaluation surface.
   - Full scoring requires the upstream safety judge configuration and generated videos.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.t2v_safety_bench.t2v_safety_bench_prompts:materialize_t2v_safety_bench_generation_requests
+  missing_requests_hint: restore the bundled T2VSafetyBench prompt files

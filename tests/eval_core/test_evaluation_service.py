@@ -7,7 +7,7 @@ from worldfoundry.cli import main
 from worldfoundry.cli.command_builders import build_model_benchmark_command
 from worldfoundry.evals.api import ArtifactRef, GenerationResult
 from worldfoundry.evals.tasks.execution.orchestration.benchmark_generation import (
-    BENCHMARK_GENERATION_ADAPTERS,
+    list_benchmark_generation_adapters,
     materialize_vbench_generation_requests,
 )
 from worldfoundry.evals.tasks.execution.orchestration.fidelity import EvaluationFidelity
@@ -28,13 +28,14 @@ from worldfoundry.evals.utils import write_jsonl
 
 
 def test_generation_adapters_are_declarative_and_include_wrbench() -> None:
-    assert "wrbench" in BENCHMARK_GENERATION_ADAPTERS
-    assert "ipv-bench" in BENCHMARK_GENERATION_ADAPTERS
-    assert BENCHMARK_GENERATION_ADAPTERS["wrbench"].artifact_materializer == (
+    adapters = list_benchmark_generation_adapters()
+    assert "wrbench" in adapters
+    assert "ipv-bench" in adapters
+    assert adapters["wrbench"].artifact_materializer == (
         "worldfoundry.evals.tasks.execution.runners.wrbench.wrbench_prompts:copy_wrbench_generated_videos"
     )
-    assert BENCHMARK_GENERATION_ADAPTERS["videophy"].artifact_materializer is not None
-    assert "vbench" in BENCHMARK_GENERATION_ADAPTERS
+    assert adapters["videophy"].artifact_materializer is not None
+    assert "vbench" in adapters
 
 
 def test_vbench_generation_provider_deduplicates_official_prompts() -> None:
@@ -130,7 +131,7 @@ def test_diagnostic_artifacts_cannot_self_promote_to_leaderboard_candidate(tmp_p
 
     assert prepared.ready
     assert prepared.leaderboard_candidate is False
-    assert prepared.request is not None
+    assert isinstance(prepared.request, ModelBenchmarkRunRequest)
     assert prepared.request.leaderboard_candidate is False
     assert any(issue.code == "leaderboard_candidate_downgraded" for issue in prepared.issues)
 

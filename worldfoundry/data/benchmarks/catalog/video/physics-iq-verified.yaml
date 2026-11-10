@@ -136,3 +136,8 @@ contract:
   notes:
   - Contract maps Physics-IQ Verified to the shared in-tree raw-video evaluator and verified score protocol.
   - Official verified dataset media remain external assets; no upstream source checkout is used at runtime.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.physics_iq.physics_iq_prompts:materialize_physics_iq_verified_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.physics_iq.physics_iq_prompts:copy_physics_iq_verified_generated_videos
+  dataset_root_parameter: dataset_root
+  missing_requests_hint: restore the bundled Physics-IQ Verified best-practice descriptions

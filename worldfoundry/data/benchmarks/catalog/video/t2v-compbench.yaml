@@ -271,3 +271,7 @@ contract:
   notes:
   - Contract maps the seven official compositional T2V categories to WorldFoundry scorecard.
   - MLLM, detection, and tracking metrics require separate upstream environments and checkpoints.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.t2v_compbench.t2v_compbench_prompts:materialize_t2v_compbench_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.t2v_compbench.t2v_compbench_prompts:copy_t2v_compbench_generated_videos
+  missing_requests_hint: restore the bundled T2V-CompBench metadata assets

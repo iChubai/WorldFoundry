@@ -23,6 +23,8 @@ The runner block names the callable surface: runner target, official validation 
 
 The `contract` block states the benchmark's external interface: the `input_keys` a run consumes, the `output_keys` it writes, `notes`, and `requires_upstream_runtime: false` when scoring needs no upstream package. Metric ids default to the catalog metrics; list `metric_ids` in the block only when the reported set differs. Catalog and task runner targets name the contract by benchmark id, as in `worldfoundry.evals.tasks.contracts.external:<benchmark-id>`.
 
+Benchmarks that generate videos from their own prompt suite add a `generation` block: `request_provider` is the `module:function` that returns the generation requests, `artifact_materializer` is the optional `module:function` that copies generated videos into the official layout, `dataset_root_parameter` and `split_parameter` name the provider keywords that accept those overrides, and `missing_requests_hint` is shown when the prompt assets are absent.
+
 The task contract sits in `worldfoundry/data/benchmarks/tasks/external/<benchmark-id>.yaml`. That file is how a prompt list or simulator episode becomes `GenerationRequest` rows. Keep protocol-specific mapping there, or in the runner that reads it. Do not teach a model pipeline the VBench dimension list, and do not teach a metric how to launch Cosmos.
 
 Evidence fields — check notes, report paths, blockers, executed commands — are the only catalog statements the support matrix treats as pointers to proof. The proof itself is a file under `tmp/`, not a sentence in YAML.

@@ -131,3 +131,9 @@ contract:
   - The public dataset and model-backed VBench/Pi3 weights remain explicit runtime assets.
   - Fresh Pi3 pose estimation is a separately schedulable distributed stage; the in-tree evaluator consumes
     its eval_poses.json output.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.sana_wm_bench.sana_wm_bench_prompts:materialize_sana_wm_bench_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.sana_wm_bench.sana_wm_bench_prompts:copy_sana_wm_bench_generated_videos
+  dataset_root_parameter: dataset_root
+  split_parameter: split
+  missing_requests_hint: set WORLDFOUNDRY_SANA_WM_BENCH_DATASET_ROOT to the public Efficient-Large-Model/SANA-WM-Bench download

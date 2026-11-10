@@ -255,3 +255,9 @@ contract:
   - Contract maps AIGCBench's 11 paper metrics for image-to-video evaluation to WorldFoundry scorecard.
   - Official metric execution requires reference assets, CLIP/DOVER/optical-flow dependencies, and upstream
     scorer outputs.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.aigcbench.aigcbench_prompts:materialize_aigcbench_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.aigcbench.aigcbench_prompts:copy_aigcbench_generated_videos
+  dataset_root_parameter: dataset_root
+  split_parameter: split
+  missing_requests_hint: set WORLDFOUNDRY_AIGCBENCH_DATASET_ROOT or WORLDFOUNDRY_AIGCBENCH_PROMPT_MANIFEST

@@ -213,3 +213,6 @@ contract:
   notes:
   - Contract covers closed-loop visual-world-model utility metrics.
   - Official evaluation remains simulator/planner heavy and is kept as an upstream runtime stage.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.world_in_world.world_in_world_prompts:materialize_world_in_world_generation_requests
+  missing_requests_hint: set WORLDFOUNDRY_WORLD_IN_WORLD_ASSETS_ROOT or an episode manifest

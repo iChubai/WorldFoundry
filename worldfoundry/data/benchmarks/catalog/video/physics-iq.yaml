@@ -141,3 +141,9 @@ contract:
   notes:
   - Contract maps the original Physics-IQ protocol to the in-tree raw-video evaluator.
   - Official dataset media remain external assets; no upstream source checkout is used at runtime.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.physics_iq.physics_iq_prompts:materialize_physics_iq_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.physics_iq.physics_iq_prompts:copy_physics_iq_generated_videos
+  dataset_root_parameter: dataset_root
+  split_parameter: split
+  missing_requests_hint: set WORLDFOUNDRY_PHYSICS_IQ_ROOT or WORLDFOUNDRY_PHYSICS_IQ_DESCRIPTIONS

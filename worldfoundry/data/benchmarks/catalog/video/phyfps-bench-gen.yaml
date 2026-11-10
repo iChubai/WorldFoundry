@@ -219,3 +219,8 @@ contract:
   - Contract covers PhyFPS-Bench-Gen prompt suite, Visual Chronometer PhyFPS prediction, and Meta FPS
     alignment metrics.
   - Alignment metrics require Meta FPS inputs from model documentation or a manifest.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.phyfps_bench_gen.phyfps_prompts:materialize_phyfps_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.phyfps_bench_gen.phyfps_prompts:copy_phyfps_generated_videos
+  split_parameter: split
+  missing_requests_hint: set WORLDFOUNDRY_PHYFPS_BENCH_GEN_ROOT or WORLDFOUNDRY_PHYFPS_BENCH_GEN_PROMPT_MANIFEST

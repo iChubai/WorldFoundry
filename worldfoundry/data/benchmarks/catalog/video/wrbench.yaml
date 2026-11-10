@@ -257,3 +257,7 @@ contract:
   - D1-CamPrec and D1-CamAlign are separate metrics; D5/D6 use the official re-observation applicability
     gate.
   - Full scoring requires explicitly configured VGGT-Omega, DINOv2, Qwen3.5, and Qwen3-VL model assets.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.wrbench.wrbench_prompts:materialize_wrbench_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.wrbench.wrbench_prompts:copy_wrbench_generated_videos
+  missing_requests_hint: restore the WRBench Natural-25 assets and first frames

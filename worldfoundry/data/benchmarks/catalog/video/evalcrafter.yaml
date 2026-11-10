@@ -401,3 +401,8 @@ contract:
   notes:
   - Contract maps EvalCrafter's 700-prompt T2V evaluation and 17 objective metrics to WorldFoundry scorecard.
   - Official Docker/conda runtime and checkpoint-heavy metric execution remain a separate validation stage.
+generation:
+  request_provider: worldfoundry.evals.tasks.execution.runners.evalcrafter.evalcrafter_prompts:materialize_evalcrafter_generation_requests
+  artifact_materializer: worldfoundry.evals.tasks.execution.runners.evalcrafter.evalcrafter_prompts:copy_evalcrafter_generated_videos
+  split_parameter: split
+  missing_requests_hint: restore the bundled EvalCrafter prompt700.txt asset

@@ -38,7 +38,6 @@
 notes/
 install.sh
 data/benchmarks/WorldEval-X/.runtime/
-AGENTS.md
 CLAUDE.md
 .env*
 .envrc
@@ -89,7 +88,7 @@ __pycache__/
 .venv/
 venv/
 env/*
-ENV/
+/ENV/
 conda/
 conda_envs/
 
@@ -356,6 +355,8 @@ worldfoundry/**/*.bin
 !worldfoundry/core/model_loading/checkpoints/
 worldfoundry/core/model_loading/checkpoints/*
 !worldfoundry/core/model_loading/checkpoints/*.py
+# Kandinsky 6 checkpoint-variant configs, not downloaded weights.
+!worldfoundry/data/models/runtime/configs/kandinsky6/checkpoints/
 worldfoundry/**/*.onnx
 worldfoundry/**/*.pb
 worldfoundry/**/*.tflite
@@ -381,17 +382,13 @@ worldfoundry/cli/tui/assets/*.png
 worldfoundry/studio/assets/*.png
 worldfoundry/studio/assets/vendor/
 
-# Local-only development, planning, and benchmark workspaces.
+# Local-only development and planning workspaces.
 /test_stream/
 /test/
 /testcase/
 /plan/
 /memory/
 /configs/
-/benchmarks/*
-!/benchmarks/inference/
-/benchmarks/inference/*
-!/benchmarks/inference/wan_execution_preparation.py
 /gg
 
 # Public branch: keep private training and embedded upstream QA out of commits.

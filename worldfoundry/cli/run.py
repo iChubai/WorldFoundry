@@ -286,15 +286,9 @@ def _uses_direct_model_run(args: argparse.Namespace) -> bool:
     )
 
 
-def _handle_direct_model_run(args: argparse.Namespace) -> int:
-    """Execute one model directly from its typed inference contract."""
+def _validate_model_run_required_fields(args: argparse.Namespace, resolution: Any) -> None:
+    """Reject incomplete inline requests before direct execution or planning."""
     schema = args.model_run_schema
-    if not schema.runnable:
-        raise CliUsageError(
-            f"model {schema.model_id!r} is not runnable: {schema.blocked_reason}. "
-            f"Use `{cli_prog_name()} run {schema.requested_model_id} --model-status` for its contract.",
-        )
-    resolution = _resolved_model_run_options(args)
     missing = [
         field.option
         for field in schema.fields
@@ -309,6 +303,18 @@ def _handle_direct_model_run(args: argparse.Namespace) -> int:
     )
     if missing and args.requests_path is None:
         raise CliUsageError(f"direct {schema.model_id} inference requires {', '.join(missing)}")
+
+
+def _handle_direct_model_run(args: argparse.Namespace) -> int:
+    """Execute one model directly from its typed inference contract."""
+    schema = args.model_run_schema
+    if not schema.runnable:
+        raise CliUsageError(
+            f"model {schema.model_id!r} is not runnable: {schema.blocked_reason}. "
+            f"Use `{cli_prog_name()} run {schema.requested_model_id} --model-status` for its contract.",
+        )
+    resolution = _resolved_model_run_options(args)
+    _validate_model_run_required_fields(args, resolution)
 
     from worldfoundry.evals.api import GenerationRequest
     from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest, execute_evaluate_run
@@ -417,6 +423,7 @@ def _handle_run(args: argparse.Namespace) -> int:
         if args.engine != "in-process":
             raise CliUsageError("direct model execution requires --engine in-process")
         if args.plan_only:
+            _validate_model_run_required_fields(args, _resolved_model_run_options(args))
             return _print_model_run_plan(args)
         return _handle_direct_model_run(args)
 

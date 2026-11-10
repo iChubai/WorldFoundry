@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+import worldfoundry
 from worldfoundry.zoo.aliases import load_pipeline_alias_registry
 from worldfoundry.zoo.bindings import (
     PipelineBindingRegistry,
@@ -329,11 +330,42 @@ def validate_catalog_references(
     return tuple(issues)
 
 
+def validate_runtime_environment_imports(
+    environments: Mapping[str, RuntimeEnvironmentProfile],
+) -> tuple[RuntimeValidationIssue, ...]:
+    """Check that each in-tree validation import names an existing ``worldfoundry`` module.
+
+    Environment setup imports every ``validation_imports`` entry inside the model
+    environment and fails if any is missing.  ``worldfoundry.*`` entries are
+    resolved against the source tree here, without importing model runtimes;
+    third-party modules are left to environment setup.
+    """
+
+    package_root = Path(worldfoundry.__file__).resolve().parent
+    issues: list[RuntimeValidationIssue] = []
+    for environment_id, environment in environments.items():
+        for name in environment.validation_imports:
+            head, _, rest = name.partition(".")
+            if head != "worldfoundry":
+                continue
+            module_path = package_root.joinpath(*rest.split("."))
+            if module_path.is_dir() or module_path.with_suffix(".py").is_file():
+                continue
+            issues.append(
+                RuntimeValidationIssue(
+                    code="runtime_environment_import_missing",
+                    field=f"environments.{environment_id}.validation_imports",
+                    message=f"runtime environment {environment_id!r} validates missing module {name!r}",
+                )
+            )
+    return tuple(issues)
+
+
 def validate_runtime_registry(
     *,
     profile_root: str | Path | None = None,
 ) -> tuple[RuntimeValidationIssue, ...]:
-    """Validate model-catalog, runtime-profile, and pipeline-alias references.
+    """Validate model-catalog, runtime-profile, pipeline-alias, and environment-import references.
 
     Environments and assets are loaded once up front and shared across all
     catalog and per-profile checks.  This keeps reference validation linear in
@@ -349,6 +381,7 @@ def validate_runtime_registry(
     issues.extend(validate_pipeline_aliases_against_bindings())
     issues.extend(validate_catalog_references(runtime_profiles=profiles))
     environments = load_runtime_environment_profiles()
+    issues.extend(validate_runtime_environment_imports(environments))
     assets = load_runtime_asset_profiles(runtime_profiles={profile.model_id: profile for profile in profiles})
     for profile in profiles:
         issues.extend(validate_runtime_profile_references(profile, environments=environments, assets=assets))
@@ -466,6 +499,7 @@ __all__ = [
     "RuntimeValidationIssue",
     "validate_catalog_references",
     "validate_pipeline_aliases_against_bindings",
+    "validate_runtime_environment_imports",
     "validate_runtime_profile_references",
     "validate_runtime_registry",
 ]

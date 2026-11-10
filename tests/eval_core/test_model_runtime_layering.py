@@ -6,10 +6,12 @@ import pytest
 
 from worldfoundry.evals.models.validate import (
     validate_pipeline_aliases_against_bindings,
+    validate_runtime_environment_imports,
     validate_runtime_profile_references,
 )
 from worldfoundry.zoo.catalog.registry import discover_model_registry
 from worldfoundry.zoo.runtime import (
+    RuntimeEnvironmentProfile,
     RuntimeProfile,
     load_runtime_asset_profile_by_id,
     load_runtime_asset_profiles,
@@ -382,3 +384,24 @@ def test_runtime_profile_validator_checks_references_artifacts_and_aliases(tmp_p
     }
     assert {issue.code for issue in alias_issues} == {"pipeline_alias_unknown_canonical"}
     assert default_alias_issues == ()
+
+
+def test_runtime_environment_validator_flags_missing_in_tree_imports() -> None:
+    environment = RuntimeEnvironmentProfile(
+        environment_id="stale-env",
+        model_id="stale-model",
+        env_name="stale-env",
+        validation_imports=(
+            "torch",
+            "worldfoundry.base_models.diffusion_model.models.networks.ltx.model",
+            "worldfoundry.base_models.diffusion_model.models.representations",
+            "worldfoundry.base_models.diffusion_model.models.networks.ltx.missing",
+        ),
+    )
+
+    issues = validate_runtime_environment_imports({"stale-env": environment})
+
+    assert [(issue.code, issue.field) for issue in issues] == [
+        ("runtime_environment_import_missing", "environments.stale-env.validation_imports")
+    ]
+    assert "networks.ltx.missing" in issues[0].message

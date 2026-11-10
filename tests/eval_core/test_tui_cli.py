@@ -17,7 +17,6 @@ from worldfoundry.cli.command_builders import (
 )
 from worldfoundry.cli.inference_variants import INFER_MODEL_VARIANTS, infer_model_variant_ids
 from worldfoundry.cli.tui.controls import infer_control_specs
-from worldfoundry.cli.tui.launcher import main as tui_main
 
 
 def _assert_worldfoundry_cli_prefix(command: tuple[str, ...]) -> None:
@@ -35,6 +34,7 @@ def test_tui_catalog_loads_model_and_benchmark_rows() -> None:
     assert any(row.model_id == "openvla" for row in catalog.models)
     assert any(row.benchmark_id == "libero" for row in catalog.benchmarks)
     summary = catalog.to_dict()["summary"]
+    assert isinstance(summary, dict)
     assert summary["models"] == len(catalog.models)
     assert summary["benchmarks"] == len(catalog.benchmarks)
     # TUI training support (training_targets / training_stages) was removed
@@ -47,6 +47,7 @@ def test_tui_catalog_loads_model_and_benchmark_rows() -> None:
     assert robotwin.maturity
     assert robotwin.leaderboard_valid is False
     assert robotwin.to_dict()["official_benchmark_verified"] is False
+    assert catalog.conda_status is not None
     assert catalog.conda_status["env_specs"] >= 1
 
 
@@ -228,7 +229,7 @@ def test_suite_command_defaults_to_plan_only() -> None:
 
 
 def test_tui_cli_catalog_json_does_not_import_textual(capsys) -> None:
-    assert tui_main(["--catalog-json"]) == 0
+    assert cli.main(["tui", "--catalog-json"]) == 0
 
     payload = json.loads(capsys.readouterr().out)
     assert payload["summary"]["models"] >= 1
@@ -261,8 +262,9 @@ def test_cli_tui_print_command(capsys) -> None:
 
 def test_tui_fallback_lists_catalog_runtime_and_conda(capsys) -> None:
     assert (
-        tui_main(
+        cli.main(
             [
+                "tui",
                 "--fallback",
                 "--model-id",
                 "openvla",
@@ -475,8 +477,9 @@ def test_textual_app_headless_selects_and_tables_when_available() -> None:
 
 def test_tui_cli_writes_suite_plan(tmp_path, capsys) -> None:
     assert (
-        tui_main(
+        cli.main(
             [
+                "tui",
                 "--model-id",
                 "openvla",
                 "--benchmark-id",

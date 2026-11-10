@@ -37,7 +37,7 @@ Full reference: [CLI](https://openenvision.github.io/WorldFoundry/docs/reference
 | `inference_variants.py` | Inference variant registry and resolution; also the entry point behind `scripts/inference/run_infer.sh` |
 | `command_builders.py` | Shell command builders for inference, model x benchmark runs, suites, and Studio |
 | `observability.py` | Logging setup and per-run lifecycle events for commands that own an output tree |
-| `tui/` | Terminal UI: `launcher.py` (`wf tui`), Textual `app.py` and `app.tcss`, form `controls.py`, brand/logo/icon helpers, `assets/` |
+| `tui/` | Terminal UI: `__init__.py` (`wf tui` parser), `launcher.py` (action dispatch), Textual `app.py` and `app.tcss`, form `controls.py`, brand/logo/icon helpers, `assets/` |
 | `presentation.py`, `help.py`, `utils.py` | Tables, help rendering, JSON output and shared argparse helpers |
 
 ## Adding a command

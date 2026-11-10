@@ -420,39 +420,3 @@ class QwenPiServer:
         self.global_step += 1
 
         return {"action": action}
-
-
-if __name__ == "__main__":
-    from .websocket_policy_server import WebsocketPolicyServer
-
-    PATH_TO_PI_MODEL = os.environ["WORLDFOUNDRY_QWEN_PI_MODEL_PATH"]
-
-    model = QwenPiServer(PATH_TO_PI_MODEL, use_length=50)
-
-    # To debug model with server
-    model_server = WebsocketPolicyServer(model, port=8002)
-    model_server.serve_forever()
-
-    # # To debug model only
-    # import torch
-    # import numpy as np
-    # from PIL import Image
-    # from .image_tools import convert_to_uint8
-    # device = torch.device("cuda")
-
-    # base_0_rgb = np.random.randint(0, 256, size=(1, 3, 224, 224), dtype=np.uint8)
-    # left_wrist_0_rgb = np.random.randint(0, 256, size=(1, 3, 224, 224), dtype=np.uint8)
-    # state = np.random.rand(1,8).astype(np.float32)
-    # prompt = ["do something"]
-
-    # observation = {
-    #     "image": {
-    #         "base_0_rgb": convert_to_uint8(base_0_rgb),
-    #         "left_wrist_0_rgb": convert_to_uint8(left_wrist_0_rgb),
-    #         "right_wrist_0_rgb": convert_to_uint8(left_wrist_0_rgb),
-    #     },
-    #     "state": state,
-    #     "prompt": prompt,
-    # }
-
-    # model.infer(observation)

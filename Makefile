@@ -247,6 +247,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/test_decoded_depth_guidance.py \
 	tests/base_models/test_scene_segmentation.py \
 	tests/base_models/test_moge_uniworld_variant.py \
+	tests/base_models/test_metric3d_config.py \
 	tests/core/test_vit_qkv.py \
 	tests/synthesis/test_wonderworld_stages.py \
 	tests/core/test_gaussian_surfels.py \

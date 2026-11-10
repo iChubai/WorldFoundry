@@ -3,10 +3,11 @@ import json
 from pathlib import Path
 
 import open_clip
-from open_flamingo.src.factory import _infer_decoder_layers_attr_name
-from open_flamingo.src.flamingo_lm import FlamingoLMMixin
-from open_flamingo.src.utils import extend_instance
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo.src.factory import _infer_decoder_layers_attr_name
+from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo.src.flamingo_lm import FlamingoLMMixin
+from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo.src.utils import extend_instance
 
 from .flamingo_bc import BCFlamingo
 from .flamingo_mpt import MPTFlamingo

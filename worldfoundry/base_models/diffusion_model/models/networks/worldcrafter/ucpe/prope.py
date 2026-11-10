@@ -401,7 +401,7 @@ def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
 
 
 # Shared PRoPE algebra; WorldCrafter retains only its variable-grid projection rules.
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3.pi3.models.layers.prope import (  # noqa: E402 - Follows module-level definitions, as upstream.
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import (  # noqa: E402 - Follows module-level definitions, as upstream.
     _apply_block_diagonal,
     _invert_K,
     _invert_SE3,

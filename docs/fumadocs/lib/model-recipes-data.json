@@ -73685,42 +73685,37 @@
         "invocationMode": "native_or_standard_invocation",
         "backendStage": "in_tree_runtime",
         "runtimeStatus": "checkpoint_backed_refiner_stage_smoke",
-        "environmentId": "_unified",
-        "environmentName": "worldfoundry-unified-cu128",
-        "environmentKind": "unified",
+        "environmentId": "magi2-preview",
+        "environmentName": "magi2-preview",
+        "environmentKind": "dedicated",
         "python": "3.11",
-        "cudaProfile": "cu128",
-        "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
+        "cudaProfile": "cu124",
+        "cudaLabel": "CUDA 12.4",
+        "driverStatus": "compatible",
         "condaPackages": [
           "python=3.11",
-          "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
+          "pip>=25"
         ],
         "pipPackages": [
-          "torch",
-          "torchvision",
-          "torchaudio",
-          "xfuser"
+          "torch==2.5.1",
+          "transformers==5.5.0",
+          "accelerate>=1.10",
+          "safetensors>=0.6"
         ],
         "packageVersions": {
-          "torch": "torch",
-          "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "torch": "torch==2.5.1",
+          "transformers": "transformers==5.5.0",
+          "accelerate": "accelerate>=1.10"
         },
         "validationImports": [
           "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "transformers.models.qwen3_5.modeling_qwen3_5",
+          "accelerate",
+          "safetensors",
+          "worldfoundry.base_models.diffusion_model.models.encoders.magi2_qwen35"
         ],
         "notes": [
+          "Qwen3.5 text encoding runs as an in-tree package module with the magi2-preview environment Python (Transformers 5.5); Studio sets python_executable automatically.",
           "MAGI-2-preview 114B MoE (256 experts, top-6, 6B active/token) audio+video DiT, ported from SandAI Apache-2.0.",
           "T2V supports joint preview audio and optional video-only refinement. Image conditioning is rejected.",
           "Refiner defaults are five UniPC steps, shift 5, guidance 2, zero-SNR renoise index 220, and a 1920x1088 latent decode target. It doubles temporal resolution and exports at 25 fps while preserving preview audio.",
@@ -73729,10 +73724,9 @@
           "Preview video uses 12.5 fps and the released stride-8 latent geometry. The native preset uses 100 steps, shift 7, video guidance 5, audio guidance 7, and negative-prompt conditioning.",
           "The released checkpoint supports 10-second clips only; other durations are rejected before loading weights. The default landscape preview is 896x512.",
           "Upstream targets 8xHopper; this port collapses cp/ep/dp to single-GPU (sequential residency for the 114B MoE).",
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "MAGI-2 encodes prompts in an in-tree package-module worker using this environment's Python. Install WorldFoundry into this environment as well as the main inference environment.",
+          "Transformers 5.5 supplies Qwen3_5TextModel; the parent pipeline can keep Transformers 4.x in the unified environment.",
+          "The worker retains PyTorch 2.5.1 and its CUDA 12.4 wheel tier. Prompt precision, device, tokenization and hidden-state selection are unchanged."
         ]
       },
       "sources": [
@@ -73771,10 +73765,10 @@
           "runner": "worldfoundry.pipeline",
           "loadingMethod": "from_pretrained",
           "invocationMode": "native_or_standard_invocation",
-          "environmentName": "worldfoundry-unified-cu128",
-          "environmentKind": "unified",
+          "environmentName": "magi2-preview",
+          "environmentKind": "dedicated",
           "python": "3.11",
-          "cudaLabel": "CUDA 12.8",
+          "cudaLabel": "CUDA 12.4",
           "backendStage": "in_tree_runtime",
           "runtimeStatus": "checkpoint_backed_refiner_stage_smoke",
           "inputContract": [
@@ -73979,6 +73973,7 @@
         "114B-parameter MoE (256 experts, top-6), ~6B active per token; 10-second preview video at 12.5 fps with 44.1kHz audio.",
         "Optional refiner uses the released five-step, shift-5, guidance-2 preset and exports at 25 fps. Checkpoint-backed refiner parity is pending.",
         "Ported faithfully from SandAI MAGI-2-preview (Apache-2.0), single-GPU PyTorch (cp/ep/dp collapsed).",
+        "Qwen3.5 text encoding runs as an in-tree package module with the magi2-preview environment Python (Transformers 5.5); Studio sets python_executable automatically.",
         "MAGI-2-preview 114B MoE (256 experts, top-6, 6B active/token) audio+video DiT, ported from SandAI Apache-2.0.",
         "T2V supports joint preview audio and optional video-only refinement. Image conditioning is rejected.",
         "Refiner defaults are five UniPC steps, shift 5, guidance 2, zero-SNR renoise index 220, and a 1920x1088 latent decode target. It doubles temporal resolution and exports at 25 fps while preserving preview audio.",
@@ -73994,14 +73989,14 @@
         "overview": [
           "MAGI-2 Preview is a video generation model from sand-ai. The catalog records it for text-to-video. It is also cataloged under the aliases magi2, magi2_preview, and magi-2-preview.",
           "WorldFoundry serves it through 1 recorded runnable variant (magi2-preview). The default route binds to the worldfoundry.pipelines.magi2.pipeline_magi2:NativeMagi2Pipeline pipeline.",
-          "It runs in the shared unified environment worldfoundry-unified-cu128 (Python 3.11, CUDA 12.8).",
+          "It runs in the dedicated environment magi2-preview (Python 3.11, CUDA 12.4, torch==2.5.1).",
           "Weights are pulled from the Hugging Face repository sand-ai/MAGI-2-preview, pinned to revision 2dea51b64 (license: apache-2.0), plus 1 more recorded repository.",
           "No runner or native-demo evidence is recorded; a catalog entry alone is not proof of a successful GPU run."
         ],
         "overviewZh": [
           "MAGI-2 Preview 是来自 sand-ai 的视频生成模型。Catalog 将它记录为文生视频任务。它还有别名 magi2、magi2_preview、magi-2-preview。",
           "WorldFoundry 通过 1 个已记录的可运行 variant（magi2-preview）来运行它。默认路径绑定到 worldfoundry.pipelines.magi2.pipeline_magi2:NativeMagi2Pipeline pipeline。",
-          "它运行在统一环境 worldfoundry-unified-cu128 中（Python 3.11，CUDA 12.8）。",
+          "它运行在独立环境 magi2-preview 中（Python 3.11，CUDA 12.4，torch==2.5.1）。",
           "权重来自 Hugging Face 仓库 sand-ai/MAGI-2-preview，固定在 revision 2dea51b64（license：apache-2.0），另有 1 个已记录仓库。",
           "尚未记录任何 runner 或原生 demo 证据；仅有 catalog 条目并不代表 GPU 已成功跑通。"
         ],
@@ -74012,13 +74007,13 @@
         "highlights": [
           "Text To Video",
           "1 runnable WorldFoundry variant",
-          "Unified env · Python 3.11 · CUDA 12.8",
+          "Dedicated env · Python 3.11 · CUDA 12.4",
           "Public Hugging Face weights"
         ],
         "highlightsZh": [
           "文生视频",
           "1 个可运行的 WorldFoundry variant",
-          "统一环境 · Python 3.11 · CUDA 12.8",
+          "独立环境 · Python 3.11 · CUDA 12.4",
           "公开的 Hugging Face 权重"
         ],
         "modalities": {

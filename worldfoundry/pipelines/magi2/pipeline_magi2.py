@@ -84,7 +84,6 @@ class NativeMagi2Pipeline(PipelineABC):
         text_encoder: Any = None,
         data_proxy: Any = None,
         python_executable: str | None = None,
-        transformers_overlay: str | Path | None = None,
         device: str = "cuda",
         model_id: str | None = None,
     ) -> None:
@@ -101,7 +100,6 @@ class NativeMagi2Pipeline(PipelineABC):
         self.text_encoder = text_encoder
         self.data_proxy = data_proxy
         self.python_executable = python_executable or sys.executable
-        self.transformers_overlay = transformers_overlay
 
     # ------------------------------------------------------------------ #
     # Loading (sequential residency; components built lazily).
@@ -141,7 +139,6 @@ class NativeMagi2Pipeline(PipelineABC):
             text_encoder=options.get("text_encoder"),
             data_proxy=options.get("data_proxy"),
             python_executable=options.get("python_executable"),
-            transformers_overlay=options.get("transformers_overlay"),
             device=device,
             model_id=resolved_model_id,
         )
@@ -242,7 +239,6 @@ class NativeMagi2Pipeline(PipelineABC):
                 device=self.device,
                 skip_layer=2,
                 python_executable=self.python_executable,
-                transformers_overlay=self.transformers_overlay,
             )
 
     # ------------------------------------------------------------------ #

@@ -1008,15 +1008,16 @@ def _ac3d_default_call_kwargs() -> dict[str, Any]:
     return kwargs
 
 
+def _magi2_python_executable() -> str:
+    workspace_root = resolve._project_root().parent
+    return resolve._first_existing_path(
+        workspace_root / "conda" / "envs" / "magi2-preview" / "bin" / "python",
+        workspace_root / "envs" / "magi2-preview" / "bin" / "python",
+    )
+
+
 def _magi2_default_load_kwargs() -> dict[str, Any]:
-    return {
-        "required_components": {
-            "python_executable": resolve._worldfoundry_unified_python_executable(),
-            "transformers_overlay": str(
-                resolve._project_root() / "artifacts" / "runtime_overlays" / "magi2-transformers-5.5.0"
-            ),
-        }
-    }
+    return {"required_components": {"python_executable": _magi2_python_executable()}}
 
 
 def _warp_as_history_default_ref() -> str:

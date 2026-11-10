@@ -11,13 +11,16 @@ All models live under `mllm/`:
 
 | Path | Model / role |
 | --- | --- |
-| `mllm/qwen/` | Qwen family: Qwen2.5-VL prompt embedder, Qwen3 backbone, Qwen3Guard, Qwen-Image, Cosmos-Reason1, and Being-H / QwenPi policy backbones |
-| `mllm/llava_next/`, `mllm/vila/`, `mllm/keye_vl/`, `mllm/perceptionlm/` | General video/image MLLMs used as evaluators |
-| `mllm/internvideo2/`, `mllm/umt/` | Video–language encoders |
-| `mllm/videophy2_autoeval/`, `mllm/videocon_physics/` | Physical-commonsense judges (VideoPhy-2 AutoEval, VideoCon-Physics) |
-| `mllm/instance_anomaly_detector/` | Instance-level anomaly detection for generated videos |
-| `mllm/open_flamingo/` | OpenFlamingo backbone (used by RoboFlamingo) |
-| `mllm/modelscope_swift/` | ModelScope Swift inference framework (used by the anomaly detector) |
+| [`mllm/qwen/`](mllm/qwen/README.md) | Qwen family: Qwen2.5-VL prompt embedder, Qwen3 backbone, Qwen3Guard, Qwen-Image, Cosmos-Reason1, and Being-H / QwenPi policy backbones |
+| [`mllm/llava_next/`](mllm/llava_next/README.md), [`mllm/vila/`](mllm/vila/README.md), [`mllm/keye_vl/`](mllm/keye_vl/README.md), [`mllm/perceptionlm/`](mllm/perceptionlm/README.md) | General video/image MLLMs used as evaluators |
+| [`mllm/internvideo2/`](mllm/internvideo2/README.md), [`mllm/umt/`](mllm/umt/README.md) | Video–language encoders |
+| [`mllm/videophy2_autoeval/`](mllm/videophy2_autoeval/README.md), [`mllm/videocon_physics/`](mllm/videocon_physics/README.md) | Physical-commonsense judges (VideoPhy-2 AutoEval, VideoCon-Physics) |
+| [`mllm/instance_anomaly_detector/`](mllm/instance_anomaly_detector/README.md) | Instance-level anomaly detection for generated videos |
+| [`mllm/open_flamingo/`](mllm/open_flamingo/README.md) | OpenFlamingo backbone (used by RoboFlamingo) |
+| [`mllm/modelscope_swift/`](mllm/modelscope_swift/README.md) | ModelScope Swift inference framework (used by the anomaly detector) |
+
+Each model folder's README lists the benchmarks and metrics that use it and how to stage its
+weights.
 
 ## Usage
 

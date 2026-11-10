@@ -57,6 +57,8 @@ class GSDPT(DPT):
             fusion_block_inplace=fusion_block_inplace,
         )
         self.conf_dim = conf_dim
+        # Average-pool full-resolution image-merger features when the output is downsampled.
+        self.gs_ds_feature_mode = False
         if conf_dim and conf_dim > 1:
             assert conf_activation == "linear", "use linear prediction when using view-dependent opacity"
 
@@ -106,7 +108,14 @@ class GSDPT(DPT):
         fused = custom_interpolate(fused, (h_out, w_out), mode="bilinear", align_corners=True)
 
         # inject the image information here
-        fused = fused + self.images_merger(images)
+        if images.shape[-2:] == fused.shape[-2:]:
+            img_feat = self.images_merger(images)
+        elif self.gs_ds_feature_mode:
+            img_feat = torch.nn.functional.adaptive_avg_pool2d(self.images_merger(images), (h_out, w_out))
+        else:
+            images = custom_interpolate(images, (h_out, w_out), mode="bilinear", align_corners=True)
+            img_feat = self.images_merger(images)
+        fused = fused + img_feat
 
         if self.pos_embed:
             fused = self._add_pos_embed(fused, W, H)

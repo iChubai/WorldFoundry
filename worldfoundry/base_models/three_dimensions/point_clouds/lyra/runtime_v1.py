@@ -16,6 +16,10 @@ from worldfoundry.base_models.three_dimensions.point_clouds.lyra.utils import (
     resolve_lyra1_repo_root,
     resolve_path,
 )
+from worldfoundry.core.io.paths import package_data_path
+
+LYRA1_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "lyra_1")
+LYRA1_TOKENIZER_DIRNAME = "Cosmos-Tokenize1-CV8x8x8-720p"
 
 
 class Lyra1Representation:
@@ -30,6 +34,7 @@ class Lyra1Representation:
         dynamic_config_path: str,
         inference_config_path: str,
         device: str = "cuda",
+        vae_path: str | None = None,
     ):
         self.repo_root = repo_root
         self.static_ckpt_path = static_ckpt_path
@@ -38,6 +43,7 @@ class Lyra1Representation:
         self.dynamic_config_path = dynamic_config_path
         self.inference_config_path = inference_config_path
         self.device = device
+        self.vae_path = vae_path
 
     @classmethod
     def from_pretrained(
@@ -50,6 +56,7 @@ class Lyra1Representation:
         dynamic_config_path: str | None = None,
         inference_config_path: str | None = None,
         checkpoint_dir: str | None = None,
+        vae_path: str | None = None,
         **kwargs,
     ):
         repo_root = resolve_lyra1_repo_root(pretrained_model_path)
@@ -68,19 +75,14 @@ class Lyra1Representation:
                 dynamic_ckpt_path or str(weights_root / "lyra_dynamic.pt"),
                 repo_root,
             ),
-            static_config_path=resolve_path(
-                static_config_path or "configs/demo/lyra_static.yaml",
-                repo_root,
-            ),
-            dynamic_config_path=resolve_path(
-                dynamic_config_path or "configs/demo/lyra_dynamic.yaml",
-                repo_root,
-            ),
-            inference_config_path=resolve_path(
-                inference_config_path or "configs/inference/default.yaml",
-                repo_root,
-            ),
+            static_config_path=resolve_path(static_config_path, repo_root)
+            or str(LYRA1_CONFIG_ROOT / "demo" / "lyra_static.yaml"),
+            dynamic_config_path=resolve_path(dynamic_config_path, repo_root)
+            or str(LYRA1_CONFIG_ROOT / "demo" / "lyra_dynamic.yaml"),
+            inference_config_path=resolve_path(inference_config_path, repo_root)
+            or str(LYRA1_CONFIG_ROOT / "inference" / "default.yaml"),
             device=device or "cuda",
+            vae_path=resolve_path(vae_path, repo_root) or str(checkpoint_root / LYRA1_TOKENIZER_DIRNAME),
         )
 
     def get_representation(self, data: dict[str, object]) -> dict[str, object]:
@@ -142,10 +144,13 @@ class Lyra1Representation:
             config.dataset_name = runtime_dataset_name
             config.out_dir_inference = str(output_dir)
             config.ckpt_path = str(ckpt_path)
-            config.config_path = self._resolve_training_config_paths(
+            config.config_path = self._resolve_model_config_paths(
                 config.config_path,
-                data.get("training_config_paths"),
+                data.get("model_config_paths"),
             )
+            vae_path = data.get("vae_path") or self.vae_path
+            if vae_path:
+                config.vae_path = str(Path(str(vae_path)).expanduser().resolve())
             for field_name in [
                 "static_view_indices_fixed",
                 "target_index_subsample",
@@ -194,6 +199,7 @@ class Lyra1Representation:
             ckpt_name=getattr(config, "ckpt_name", None),
             dataset_name=runtime_dataset_name,
             target_index_manual=getattr(config, "target_index_manual", None),
+            static_view_indices_fixed=getattr(config, "static_view_indices_fixed", None),
         )
         render_results = [self._collect_render_result(root) for root in render_roots]
         result: dict[str, Any] = {
@@ -216,13 +222,15 @@ class Lyra1Representation:
     def _default_demo_config(self, mode: str) -> str:
         return self.static_config_path if mode == "static" else self.dynamic_config_path
 
-    def _resolve_training_config_paths(self, config_value, override_value):
+    @staticmethod
+    def _resolve_model_config_paths(config_value, override_value):
+        """Resolve model config paths; relative entries are relative to the packaged Lyra-1 configs."""
         source = override_value if override_value is not None else config_value
         if isinstance(source, str):
-            return resolve_path(source, self.repo_root)
+            return resolve_path(source, str(LYRA1_CONFIG_ROOT))
         if source is not None and not isinstance(source, dict):
             try:
-                return [resolve_path(path_value, self.repo_root) for path_value in list(source)]
+                return [resolve_path(path_value, str(LYRA1_CONFIG_ROOT)) for path_value in list(source)]
             except TypeError:
                 return source
         return source
@@ -243,11 +251,16 @@ class Lyra1Representation:
         ckpt_name: str | None,
         dataset_name: str,
         target_index_manual,
+        static_view_indices_fixed=None,
     ):
+        # Mirrors the output layout that sample.py builds in main_single.
         base_output_dir = Path(out_dir_inference)
         checkpoint_name = self._extract_checkpoint_name(ckpt_path, ckpt_name)
         if checkpoint_name:
             base_output_dir = base_output_dir / checkpoint_name
+        if static_view_indices_fixed is not None:
+            view_indices = "_".join(str(index) for index in list(static_view_indices_fixed))
+            base_output_dir = base_output_dir / f"static_view_indices_fixed_{view_indices}"
         base_output_dir = base_output_dir / dataset_name
 
         if isinstance(target_index_manual, int):

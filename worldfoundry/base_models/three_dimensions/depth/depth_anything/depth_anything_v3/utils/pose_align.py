@@ -46,7 +46,7 @@ def batch_apply_alignment_to_ext(rots: torch.Tensor, trans: torch.Tensor, scales
     return affine_inverse(pose_new_align)[:, :3]
 
 
-def batch_align_poses_umeyama(ext_ref: torch.Tensor, ext_est: torch.Tensor):
+def batch_align_poses_umeyama(ext_ref: torch.Tensor, ext_est: torch.Tensor, retry_degenerate: bool = False):
     device, dtype = ext_ref.device, ext_ref.dtype
     assert ext_ref.dtype in [torch.float32, torch.float64]
     assert ext_est.dtype in [torch.float32, torch.float64]
@@ -54,7 +54,9 @@ def batch_align_poses_umeyama(ext_ref: torch.Tensor, ext_est: torch.Tensor):
     assert ext_est.requires_grad is False
     rots, trans, scales = [], [], []
     for b in range(ext_ref.shape[0]):
-        r, t, s = align_poses_umeyama(ext_ref[b].cpu().numpy(), ext_est[b].cpu().numpy())
+        r, t, s = align_poses_umeyama(
+            ext_ref[b].cpu().numpy(), ext_est[b].cpu().numpy(), retry_degenerate=retry_degenerate
+        )
         rots.append(torch.from_numpy(r).to(device=device, dtype=dtype))
         trans.append(torch.from_numpy(t).to(device=device, dtype=dtype))
         scales.append(torch.tensor(s, device=device, dtype=dtype))
@@ -86,6 +88,30 @@ def _umeyama_sim3_from_paths(pose_ref, pose_est):
     r, t, s = _umeyama_alignment(p_est, p_ref)
     pose_est_aligned = _apply_sim3_to_poses(pose_est, r, t, s)
     return r, t, s, pose_est_aligned
+
+
+def _add_tiny_pose_offsets(poses: np.ndarray, offset_scale: float = 1e-6) -> np.ndarray:
+    """Add tiny sinusoidal offsets to pose translations to break degeneracy."""
+    poses = poses.copy()
+    index = np.arange(len(poses))
+    poses[:, :3, 3] += offset_scale * np.stack(
+        [
+            np.sin(2 * np.pi * index * 0.07),
+            np.cos(2 * np.pi * index * 0.11),
+            np.sin(2 * np.pi * index * 0.13),
+        ],
+        axis=1,
+    )
+    return poses
+
+
+def _umeyama_sim3_from_paths_robust(pose_ref: np.ndarray, pose_est: np.ndarray):
+    """Umeyama alignment that retries with tiny offsets when the trajectories are degenerate."""
+    try:
+        return _umeyama_sim3_from_paths(pose_ref, pose_est)
+    except Exception:
+        r, t, s, _ = _umeyama_sim3_from_paths(_add_tiny_pose_offsets(pose_ref), _add_tiny_pose_offsets(pose_est))
+        return r, t, s, _apply_sim3_to_poses(pose_est, r, t, s)
 
 
 def _umeyama_alignment(src: np.ndarray, dst: np.ndarray):
@@ -137,14 +163,16 @@ def _median_nn_thresh(pose_ref, pose_est_aligned):
     return float(np.median(dists)) if dists else 0.0
 
 
-def _ransac_align_sim3(pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_iters=10, random_state=None):
+def _ransac_align_sim3(
+    pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_iters=10, random_state=None, fit=_umeyama_sim3_from_paths
+):
     rng = np.random.default_rng(random_state)
     N = pose_ref.shape[0]
     idx_all = np.arange(N)
     sub_n = max(3, (N + 1) // 2) if sub_n is None else max(3, min(sub_n, N))
 
     # Pre-alignment + default threshold
-    r0, t0, s0, pose_est0 = _umeyama_sim3_from_paths(pose_ref, pose_est)
+    r0, t0, s0, pose_est0 = fit(pose_ref, pose_est)
     if inlier_thresh is None:
         inlier_thresh = _median_nn_thresh(pose_ref, pose_est0)
 
@@ -157,7 +185,7 @@ def _ransac_align_sim3(pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_i
     for _ in range(max_iters):
         sample = rng.choice(idx_all, size=sub_n, replace=False)
         try:
-            r, t, s, _ = _umeyama_sim3_from_paths(pose_ref[sample], pose_est[sample])
+            r, t, s, _ = fit(pose_ref[sample], pose_est[sample])
         except Exception:
             continue
         pose_h = _apply_sim3_to_poses(pose_est, r, t, s)
@@ -173,7 +201,7 @@ def _ransac_align_sim3(pose_ref, pose_est, sub_n=None, inlier_thresh=None, max_i
 
     # Fit again with best inliers
     if best_inliers is not None and best_inliers.sum() >= 3:
-        r, t, s, _ = _umeyama_sim3_from_paths(pose_ref[best_inliers], pose_est[best_inliers])
+        r, t, s, _ = fit(pose_ref[best_inliers], pose_est[best_inliers])
     else:
         r, t, s = best_model
     return r, t, s
@@ -188,6 +216,7 @@ def align_poses_umeyama(
     inlier_thresh=None,
     ransac_max_iters=10,
     random_state=None,
+    retry_degenerate: bool = False,
 ):
     """
     Align estimated trajectory to reference using Umeyama Sim(3).
@@ -195,12 +224,15 @@ def align_poses_umeyama(
     - sub_n defaults to half the number of frames (rounded up, at least 3)
     - inlier_thresh defaults to median of "distance from each estimated pose to
       nearest reference pose after pre-alignment"
+    - retry_degenerate retries a degenerate fit with tiny translation offsets
+      instead of raising
     Returns rotation (3x3), translation (3,), scale; optionally returns aligned extrinsics (4x4).
     """
     pose_ref, pose_est = _poses_from_ext(ext_ref, ext_est)
+    fit = _umeyama_sim3_from_paths_robust if retry_degenerate else _umeyama_sim3_from_paths
 
     if not ransac:
-        r, t, s, pose_est_aligned = _umeyama_sim3_from_paths(pose_ref, pose_est)
+        r, t, s, pose_est_aligned = fit(pose_ref, pose_est)
     else:
         r, t, s = _ransac_align_sim3(
             pose_ref,
@@ -209,6 +241,7 @@ def align_poses_umeyama(
             inlier_thresh=inlier_thresh,
             max_iters=ransac_max_iters,
             random_state=random_state,
+            fit=fit,
         )
         pose_est_aligned = _apply_sim3_to_poses(pose_est, r, t, s)
 

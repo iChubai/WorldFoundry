@@ -118,6 +118,10 @@ def main_single(
     else:
         main_config = load_and_merge_configs(config.config_path)
 
+    # Use the caller's tokenizer location instead of the path written into the model config
+    if config.get("vae_path"):
+        main_config.vae_path = config.vae_path
+
     # Get latest checkpoint if no checkpoint given (e.g., ckpt_name = 'checkpoint-15000')
     ckpt_name = None
     if ckpt_path is None:

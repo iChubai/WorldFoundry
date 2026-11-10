@@ -72,7 +72,6 @@ EVALUATION_ONLY = (
     "base_models/perception_core/optical_flow/sea_raft",
     "base_models/perception_core/safety/nudenet",
     "base_models/perception_core/segment/grounded_segment_anything",
-    "base_models/perception_core/segment/sam2",
     "base_models/perception_core/tracking/aot",
     "base_models/perception_core/tracking/cotracker",
     "base_models/perception_core/tracking/dot",
@@ -247,7 +246,7 @@ class _Scanner:
                 elif name == "prepend_import_path":
                     self.add(node, "import-path", name)
             elif isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in self.documentation:
-                self.constant(node)
+                self.constant(node, node.value)
         return self.found
 
     def call(self, node: ast.Call) -> None:
@@ -389,8 +388,7 @@ class _Scanner:
             self.add(node, "file-exec", f"python {ast.unparse(argument)}")
             return
 
-    def constant(self, node: ast.Constant) -> None:
-        text = node.value
+    def constant(self, node: ast.Constant, text: str) -> None:
         if "sitecustomize" in text or re.search(r"\bPYTHONPATH=", text):
             self.add(node, "pythonpath", text)
         if _THIRDPARTY.search(text) or (

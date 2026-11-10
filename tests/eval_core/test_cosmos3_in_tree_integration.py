@@ -17,7 +17,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec
 from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config
 from worldfoundry.runtime.inference_catalog import get_model_inference_spec
@@ -27,6 +26,7 @@ from worldfoundry.runtime.inference_specs.cosmos3 import (
     COSMOS3_SUPER_REPO_ID,
     COSMOS3_SUPER_REVISION,
 )
+from worldfoundry.zoo.catalog import load_model_zoo_registry
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CATALOG_ROOT = REPO_ROOT / "worldfoundry/data/models/catalog"

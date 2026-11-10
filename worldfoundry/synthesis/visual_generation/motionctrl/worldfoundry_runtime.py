@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import package_data_path
-from worldfoundry.evals.models.runtime.profiles import DEFAULT_SHARED_HFD_ROOT
+from worldfoundry.zoo.runtime.profiles import DEFAULT_SHARED_HFD_ROOT
 
 
 def _find_official_motionctrl_root() -> Path | None:

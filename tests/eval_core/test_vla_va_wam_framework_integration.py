@@ -5,19 +5,19 @@ from pathlib import Path
 
 from tests.eval_core.contract_fixture import CONTRACT_FIXTURE_RUNNER_TARGET, ContractFixtureRunner
 from worldfoundry.evals.api import GenerationRequest
-from worldfoundry.evals.models import (
+from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
+from worldfoundry.evals.models.runners.resolver import (
     ModelResolutionError,
-    WorldFoundryPipelineRunner,
     resolve_model_zoo_runner,
     resolve_world_model_runner,
 )
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
 from worldfoundry.evals.tasks.embodied import (
     EmbodiedGenerationSpec,
     run_vla_va_wam,
 )
 from worldfoundry.pipelines.component_pipelines import OpenVLAPipeline
+from worldfoundry.zoo.catalog import load_model_zoo_registry
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

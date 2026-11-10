@@ -36,7 +36,7 @@ from ..pipelines.results import (
 def load_runtime_profile(model_id: str) -> Any:
     """Load synthesis runtime profile on demand.
 
-    Delegates to :func:`worldfoundry.evals.models.runtime.profiles.load_runtime_profile`.
+    Delegates to :func:`worldfoundry.zoo.runtime.profiles.load_runtime_profile`.
 
     Args:
         model_id: The model identifier used to select the runtime profile.
@@ -44,7 +44,7 @@ def load_runtime_profile(model_id: str) -> Any:
     Returns:
         The loaded runtime profile object.
     """
-    from worldfoundry.evals.models.runtime.profiles import load_runtime_profile as load_profile
+    from worldfoundry.zoo.runtime.profiles import load_runtime_profile as load_profile
 
     return load_profile(model_id)
 

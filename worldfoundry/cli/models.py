@@ -18,7 +18,7 @@ from .utils import CliUsageError, json_dump
 
 def _handle_models_list(args: argparse.Namespace) -> int:
     """List available model types from the model registry."""
-    from worldfoundry.evals.models.catalog.registry import discover_model_registry
+    from worldfoundry.zoo.catalog.registry import discover_model_registry
 
     registry = discover_model_registry()
     items = [item.to_dict() for item in registry.list(args.family)]

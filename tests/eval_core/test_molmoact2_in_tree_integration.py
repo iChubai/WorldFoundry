@@ -6,11 +6,10 @@ from pathlib import Path
 
 import yaml
 
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.operators import MolmoAct2Operator
 from worldfoundry.pipelines.pipeline_utils import PipelineABC
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
-
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

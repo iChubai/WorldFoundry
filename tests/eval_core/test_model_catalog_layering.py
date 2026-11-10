@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from worldfoundry.evals.models.catalog import (
+from worldfoundry.zoo.catalog import (
     ModelCatalogManifest,
     catalog_manifest_from_mapping,
     load_model_catalog_manifest,
@@ -161,7 +161,7 @@ def test_model_catalog_loader_prefers_target_schema_over_legacy_duplicate(tmp_pa
 
 
 def test_packaged_matrix_game_catalog_entry_resolves_profile_and_binding() -> None:
-    from worldfoundry.evals.models.catalog.zoo_registry import load_model_zoo_registry
+    from worldfoundry.zoo.catalog.zoo_registry import load_model_zoo_registry
 
     entry = load_model_zoo_registry().by_model_id("matrix-game-1")
 

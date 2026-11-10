@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.formats.serialization import write_json
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from .runtime import (
     DEFAULT_ALLOW_CHECKPOINT_DOWNLOAD,

@@ -9,9 +9,9 @@ import pytest
 # torch-less environments (e.g. the minimal CI runner).
 torch = pytest.importorskip("torch")
 
-from worldfoundry.evals.models.catalog import UnknownModelZooKeyError, load_model_zoo_registry  # noqa: E402
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile, load_runtime_profiles  # noqa: E402
 from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry  # noqa: E402
+from worldfoundry.zoo.catalog import UnknownModelZooKeyError, load_model_zoo_registry  # noqa: E402
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile, load_runtime_profiles  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"

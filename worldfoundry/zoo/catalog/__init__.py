@@ -2,7 +2,7 @@
 
 Re-exports the core public API from the four sub-modules — :mod:`manifest`,
 :mod:`policy`, :mod:`schema`, and :mod:`zoo_registry` — so that downstream
-code can import from ``worldfoundry.evals.models.catalog`` directly.
+code can import from ``worldfoundry.zoo.catalog`` directly.
 """
 
 from .manifest import (

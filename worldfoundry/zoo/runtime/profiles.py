@@ -5,7 +5,7 @@ repositories, and checkpoints.  Loaders merge model-catalog manifests with
 per-model runtime profiles into a unified ``dict[str, RuntimeProfile]``.
 
 The synthesis bridge (:class:`RuntimeProfileSynthesis`) lives in
-:mod:`worldfoundry.evals.models.runtime.profile_synthesis` and is exposed
+:mod:`worldfoundry.zoo.runtime.profile_synthesis` and is exposed
 here lazily via module ``__getattr__`` so that loading profile metadata never
 imports ``worldfoundry.synthesis`` (and therefore torch).
 """
@@ -22,11 +22,12 @@ from pathlib import Path
 from typing import Any, cast
 from urllib.parse import urlparse
 
-from worldfoundry.evals.models.catalog.schema import iter_model_zoo_payloads
-from worldfoundry.evals.utils import DATA_ROOT, REPO_ROOT, load_manifest, load_manifest_collection, manifest_paths
+from worldfoundry.core.io.manifests import load_manifest, load_manifest_collection, manifest_paths
+from worldfoundry.core.io.paths import DATA_ROOT, REPO_ROOT
 from worldfoundry.runtime.conda import load_runtime_conda_env_specs_with_overrides
 from worldfoundry.runtime.cuda_tiers import SUPPORTED_CUDA_TIERS, unified_env_exists
 from worldfoundry.runtime.env import resolve_hfd_root
+from worldfoundry.zoo.catalog.schema import iter_model_zoo_payloads
 
 from ._shared import iter_manifest_mappings, schema_version_or_none, tuple_of_str
 
@@ -887,7 +888,7 @@ _LAZY_SYNTHESIS_EXPORTS = ("RuntimeProfileSynthesis", "BaseSynthesis")
 def __getattr__(name: str) -> Any:
     """Lazily expose the synthesis bridge without importing torch at module import."""
     if name in _LAZY_SYNTHESIS_EXPORTS:
-        from worldfoundry.evals.models.runtime import profile_synthesis
+        from worldfoundry.zoo.runtime import profile_synthesis
 
         value = getattr(profile_synthesis, name)
         globals()[name] = value

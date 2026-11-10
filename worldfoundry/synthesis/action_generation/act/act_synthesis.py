@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import resolve_worldfoundry_path
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.act.runtime import ACTRuntime, ACTRuntimeConfig, select_act_checkpoint
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_action_synthesis import ActionModelSynthesis
 

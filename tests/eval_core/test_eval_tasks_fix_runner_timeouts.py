@@ -19,7 +19,7 @@ from worldfoundry.evals.tasks.catalog.dispatch import (
 from worldfoundry.evals.tasks.execution.framework.official_runner import (
     default_benchmark_timeout,
 )
-from worldfoundry.evals.tasks.execution.orchestration.benchmark_runner import _timeout_seconds
+from worldfoundry.evals.tasks.execution.orchestration.benchmark_commands import _timeout_seconds
 
 
 def test_default_benchmark_timeout_env_resolution(monkeypatch: pytest.MonkeyPatch) -> None:

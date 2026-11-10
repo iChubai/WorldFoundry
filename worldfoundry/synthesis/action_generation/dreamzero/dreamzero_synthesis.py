@@ -12,7 +12,6 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.dreamzero.runtime import (
     DreamZeroRuntimeConfig,
     build_server_command,
@@ -21,6 +20,7 @@ from worldfoundry.synthesis.action_generation.dreamzero.runtime import (
     select_dreamzero_checkpoint,
 )
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_action_synthesis import ActionModelSynthesis
 

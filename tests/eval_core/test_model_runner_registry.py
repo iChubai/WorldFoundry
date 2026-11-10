@@ -7,11 +7,8 @@ import pytest
 
 from tests.eval_core.contract_fixture import CONTRACT_FIXTURE_RUNNER_TARGET, ContractFixtureRunner
 from worldfoundry.evals.api import WorldModelConfig
-from worldfoundry.evals.models import (
-    ModelRunnerRegistry,
-    resolve_model_zoo_config,
-    resolve_world_model_runner,
-)
+from worldfoundry.evals.models.runners.registry import ModelRunnerRegistry
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config, resolve_world_model_runner
 
 PIPELINE_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
 

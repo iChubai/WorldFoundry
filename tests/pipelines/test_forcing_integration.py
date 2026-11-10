@@ -10,10 +10,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.operators.forcing_operator import RollingForcingOperator
 from worldfoundry.synthesis.visual_generation.forcing import runtime as runtime_module
 from worldfoundry.synthesis.visual_generation.forcing.runtime import RollingForcingRuntime
+from worldfoundry.zoo.catalog.registry import discover_model_registry
 
 
 def test_rolling_forcing_operator_accepts_prompt_and_rejects_images() -> None:

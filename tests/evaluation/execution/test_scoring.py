@@ -605,7 +605,7 @@ class ScoringTests(unittest.TestCase):
             self.assertTrue(active)
             return ResolvedWorldModel(runner.model_id, runner, "runner_target")
 
-        with patch("worldfoundry.evals.models.resolve_world_model_runner",
+        with patch("worldfoundry.evals.models.runners.resolver.resolve_world_model_runner",
                    side_effect=create_runner) as resolve, patch(
                        "worldfoundry.core.worldfoundry_inference_context", side_effect=inference_context,
                    ) as runtime:

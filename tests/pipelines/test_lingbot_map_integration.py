@@ -4,8 +4,8 @@ from pathlib import Path
 
 import numpy as np
 
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.lingbot_map.pipeline_lingbot_map import LingBotMapPipeline
+from worldfoundry.zoo.catalog import load_model_zoo_registry
 
 
 class _FakeLingBotMapRepresentation:

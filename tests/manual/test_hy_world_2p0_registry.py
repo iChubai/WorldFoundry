@@ -1,9 +1,8 @@
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.hunyuan_world.pipeline_hy_world_2p0 import (
     HYWorld2PanoPipeline,
     HYWorld2Pipeline,
 )
-
+from worldfoundry.zoo.catalog import load_model_zoo_registry
 
 assert HYWorld2Pipeline.__name__ == "HYWorld2Pipeline"
 assert HYWorld2PanoPipeline.__name__ == "HYWorld2PanoPipeline"

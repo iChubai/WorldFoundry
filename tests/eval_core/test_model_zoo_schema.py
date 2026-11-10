@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evals.models.catalog import (
+from worldfoundry.zoo.catalog import (
     CheckpointRef,
     DemoParitySpec,
     ModelSource,
@@ -19,14 +19,13 @@ from worldfoundry.evals.models.catalog import (
     validate_in_tree_model_registry,
 )
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_ROOT = REPO_ROOT / "worldfoundry"
 DATA_ROOT = SOURCE_ROOT / "data"
 
 
 def test_model_zoo_schema_uses_catalog_schema_as_canonical() -> None:
-    import worldfoundry.evals.models.catalog.schema as catalog_schema
+    import worldfoundry.zoo.catalog.schema as catalog_schema
 
     legacy_path = SOURCE_ROOT / "evals" / "models" / "zoo_schema.py"
 
@@ -668,9 +667,9 @@ def test_status_fields_validate_known_enum_strings(factory: object, kwargs: dict
         factory(**kwargs)  # type: ignore[operator]
 
 
-def test_model_zoo_schema_imports_are_stdlib_only() -> None:
-    schema_path = SOURCE_ROOT / "evals" / "models" / "catalog" / "schema.py"
-    allowed_modules = set(sys.stdlib_module_names) | {"__future__"}
+def test_model_zoo_schema_has_no_third_party_imports() -> None:
+    schema_path = SOURCE_ROOT / "zoo" / "catalog" / "schema.py"
+    allowed_modules = set(sys.stdlib_module_names) | {"__future__", "worldfoundry"}
 
     tree = ast.parse(schema_path.read_text(encoding="utf-8"))
     for node in ast.walk(tree):

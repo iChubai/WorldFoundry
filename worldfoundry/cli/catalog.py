@@ -675,8 +675,8 @@ def load_catalog(
     Returns:
         A fully populated :class:`Catalog`.
     """
-    from worldfoundry.evals.models.catalog import load_model_zoo_registry
     from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
+    from worldfoundry.zoo.catalog import load_model_zoo_registry
 
     # ── Load registries ──
     model_registry = load_model_zoo_registry(model_manifest_dir or DEFAULT_MODEL_ZOO_DIR)

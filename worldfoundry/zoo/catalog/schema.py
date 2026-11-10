@@ -16,9 +16,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
-from ...api.json_contract import JsonContract, require_mapping, to_plain
-from ...api.json_contract import tuple_of_str as _tuple_of_str
-from ...utils import load_manifest
+from worldfoundry.core.io.manifests import load_manifest
+from worldfoundry.evals.api.json_contract import JsonContract, require_mapping, to_plain
+from worldfoundry.evals.api.json_contract import tuple_of_str as _tuple_of_str
 
 LOGGER = logging.getLogger(__name__)
 

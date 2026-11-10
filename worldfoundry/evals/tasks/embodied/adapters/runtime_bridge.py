@@ -30,7 +30,7 @@ def first_image(obs: Mapping[str, Any]) -> Any:
 
 
 def load_pipeline_target(model_id: str) -> str | None:
-    from worldfoundry.evals.models.pipelines.bindings import resolve_pipeline_route
+    from worldfoundry.zoo.bindings import resolve_pipeline_route
 
     route = resolve_pipeline_route(model_id=normalize_model_id(model_id))
     if route is None:

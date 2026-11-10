@@ -25,7 +25,7 @@ class WorldFoundryPipelineBackend:
 
     def available(self) -> tuple[bool, str]:
         try:
-            from worldfoundry.evals.models.catalog.zoo_registry import load_model_zoo_registry
+            from worldfoundry.zoo.catalog.zoo_registry import load_model_zoo_registry
 
             load_model_zoo_registry()
         except Exception as exc:  # availability must return diagnostics.
@@ -35,7 +35,7 @@ class WorldFoundryPipelineBackend:
     def available_for(self, model: str) -> tuple[bool, str]:
         model_id = self._worldfoundry_model_id(model)
         try:
-            from worldfoundry.evals.models.catalog.zoo_registry import load_model_zoo_registry
+            from worldfoundry.zoo.catalog.zoo_registry import load_model_zoo_registry
 
             entry = load_model_zoo_registry().get(model_id)
         except KeyError:
@@ -150,7 +150,7 @@ class WorldFoundryPipelineBackend:
             return GenerationResult(success=False, message=reason)
 
         from worldfoundry.evals.api import is_generation_result_successful
-        from worldfoundry.evals.models import resolve_model_zoo_runner
+        from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_runner
         from worldfoundry.evals.utils import MODEL_ZOO_DIR
 
         model_id = self._worldfoundry_model_id(request.model)

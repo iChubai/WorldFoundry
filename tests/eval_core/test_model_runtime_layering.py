@@ -4,16 +4,18 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evals.models.catalog.registry import discover_model_registry
-from worldfoundry.evals.models.runtime import (
+from worldfoundry.evals.models.validate import (
+    validate_pipeline_aliases_against_bindings,
+    validate_runtime_profile_references,
+)
+from worldfoundry.zoo.catalog.registry import discover_model_registry
+from worldfoundry.zoo.runtime import (
     RuntimeProfile,
     load_runtime_asset_profile_by_id,
     load_runtime_asset_profiles,
     load_runtime_environment_profile_by_id,
     load_runtime_profile_manifest,
     load_runtime_profiles,
-    validate_pipeline_aliases_against_bindings,
-    validate_runtime_profile_references,
 )
 
 

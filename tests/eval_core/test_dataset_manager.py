@@ -375,7 +375,7 @@ def test_local_dataset_check_accepts_complete_direct_hfd_sibling_list_past_count
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import worldfoundry.evals.tasks.datasets.manager as dataset_manager
+    import worldfoundry.evals.tasks.datasets.local_status as dataset_manager
 
     cache_dir = tmp_path / "hfd_datasets"
     dataset_dir = cache_dir / "org__dataset"
@@ -404,7 +404,7 @@ def test_local_dataset_check_bounds_direct_hfd_download_metadata_scan(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import worldfoundry.evals.tasks.datasets.manager as dataset_manager
+    import worldfoundry.evals.tasks.datasets.local_status as dataset_manager
 
     cache_dir = tmp_path / "hfd_datasets"
     dataset_dir = cache_dir / "org__dataset"

@@ -1301,9 +1301,9 @@ def test_vipe_priors_namespace_points_to_split_prior_owners():
 def test_geometric_priors_are_independent_model_catalog_entries():
     import yaml
 
-    from worldfoundry.evals.models.catalog.schema import load_entries
     from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config
-    from worldfoundry.evals.models.runtime import load_runtime_profile_manifest
+    from worldfoundry.zoo.catalog.schema import load_entries
+    from worldfoundry.zoo.runtime import load_runtime_profile_manifest
 
     catalog_root = REPO_ROOT / "worldfoundry/data/models/catalog/three_d_four_d"
     runtime_root = REPO_ROOT / "worldfoundry/data/models/runtime/profiles"

@@ -5,7 +5,6 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
 from worldfoundry.synthesis.action_generation.starvla.runtime import (
     StarVLAPlanRuntime,
@@ -14,6 +13,7 @@ from worldfoundry.synthesis.action_generation.starvla.runtime import (
     select_starvla_base_world_model,
     select_starvla_checkpoint,
 )
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_action_synthesis import ActionModelSynthesis
 

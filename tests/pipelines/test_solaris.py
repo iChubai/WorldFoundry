@@ -4,7 +4,6 @@ import subprocess
 from pathlib import Path
 
 import worldfoundry.evals.models.pipelines as model_pipelines
-from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.pipelines.solaris.pipeline_solaris import SolarisPipeline
 from worldfoundry.synthesis.visual_generation.solaris import runtime_env as runtime_env_module
 from worldfoundry.synthesis.visual_generation.solaris import (
@@ -13,6 +12,7 @@ from worldfoundry.synthesis.visual_generation.solaris import (
 from worldfoundry.synthesis.visual_generation.solaris import (
     worldfoundry_runtime as solaris_runtime_module,
 )
+from worldfoundry.zoo.catalog.registry import discover_model_registry
 
 
 class _DummySynthesis:

@@ -27,7 +27,7 @@ The operator lives under `worldfoundry/operators/`. Every runnable method needs 
 
 Checkpoint-shaped network math, tokenizer wrappers and component adapters belong in `worldfoundry/base_models/`. Infer-only orchestration that is not already owned by the native diffusion framework belongs in `worldfoundry/synthesis/` and consumes those components. These packages are not a place for training loops, dataset builders, dataloaders, augmentation pipelines or Lightning callbacks.
 
-The evaluation binding is how CLI, TUI, and the generic benchmark runner find the method. Resolution always goes through catalog `pipeline_target` or `pipeline_binding`, then through `worldfoundry/evals/models/pipelines/bindings.py`. That file is the only place that should normalize route strings. Do not add a second parser in catalog loading, in the resolver, or in a check helper.
+The evaluation binding is how CLI, TUI, and the generic benchmark runner find the method. Resolution always goes through catalog `pipeline_target` or `pipeline_binding`, then through `worldfoundry/zoo/bindings.py`. That file is the only place that should normalize route strings. Do not add a second parser in catalog loading, in the resolver, or in a check helper.
 
 Finally, catalog metadata is the public record. The YAML under `worldfoundry/data/models/catalog/<category>/<model-id>.yaml` holds source, license, checkpoint refs, task coverage, runtime profile, blockers, and `integration.status`. The support matrix does not trust those fields as proof. It recomputes readiness from staged evidence.
 

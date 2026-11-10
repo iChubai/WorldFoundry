@@ -15,11 +15,15 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from ...api import WorldModelManifest
-from ...api.registry import AliasRegistryStore, lookup_key
-from ...utils import MODEL_ZOO_DIR, load_manifest, manifest_paths
+from worldfoundry.core.io.manifests import load_manifest, manifest_paths
+from worldfoundry.core.io.paths import DATA_ROOT
+from worldfoundry.evals.api import WorldModelManifest
+from worldfoundry.evals.api.registry import AliasRegistryStore, lookup_key
+
 from .manifest import model_zoo_entries_to_world_model_manifests
 from .schema import ModelVariantSpec, ModelZooEntry, iter_model_zoo_payloads
+
+MODEL_ZOO_DIR = DATA_ROOT / "models" / "catalog"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +142,7 @@ def _resolve_entry_pipeline_route(entry: ModelZooEntry) -> tuple[str, str] | Non
     if not (entry.runner_target or entry.pipeline_target or entry.pipeline_binding):
         return None
     # NOTE: deferred import to avoid circular dependency at module load time.
-    from worldfoundry.evals.models.pipelines.bindings import resolve_pipeline_route
+    from worldfoundry.zoo.bindings import resolve_pipeline_route
 
     route = resolve_pipeline_route(
         model_id=entry.model_id,
@@ -157,7 +161,7 @@ def _resolve_variant_pipeline_route(entry: ModelZooEntry, variant: ModelVariantS
     if not (variant.runner_target or variant.pipeline_target or variant.pipeline_binding):
         return None
     # NOTE: deferred import to avoid circular dependency at module load time.
-    from worldfoundry.evals.models.pipelines.bindings import resolve_pipeline_route
+    from worldfoundry.zoo.bindings import resolve_pipeline_route
 
     route = resolve_pipeline_route(
         model_id=variant.variant_id,

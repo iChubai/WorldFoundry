@@ -109,7 +109,7 @@ def _print_table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> None:
 
 def _model_manifest_paths(manifest_dir: Path) -> dict[str, str]:
     """Map each model id to its manifest file path under *manifest_dir*."""
-    from worldfoundry.evals.models.catalog.schema import load_entries
+    from worldfoundry.zoo.catalog.schema import load_entries
 
     paths: dict[str, str] = {}
     for path in _iter_manifest_files(manifest_dir):
@@ -616,7 +616,7 @@ def _add_repeated_args(argv: list[str], flag: str, values: list[str] | None) -> 
 
 
 def _handle_zoo_models_list(args: argparse.Namespace) -> int:
-    from worldfoundry.evals.models.catalog import load_model_zoo_registry
+    from worldfoundry.zoo.catalog import load_model_zoo_registry
 
     registry = load_model_zoo_registry(args.manifest_dir)
     entries = registry.list()
@@ -666,8 +666,8 @@ def _handle_zoo_models_list(args: argparse.Namespace) -> int:
 
 def _handle_zoo_model_specs(args: argparse.Namespace) -> int:
     """Export model-zoo entries as public WorldFoundry ``WorldModelManifest`` objects."""
-    from worldfoundry.evals.models.catalog.manifest import model_zoo_entries_to_world_model_manifests
-    from worldfoundry.evals.models.catalog.schema import load_entries
+    from worldfoundry.zoo.catalog.manifest import model_zoo_entries_to_world_model_manifests
+    from worldfoundry.zoo.catalog.schema import load_entries
 
     entries = []
     for path in _iter_manifest_files(args.manifest_dir):
@@ -700,7 +700,7 @@ def _handle_zoo_model_specs(args: argparse.Namespace) -> int:
 
 def _handle_zoo_model_show(args: argparse.Namespace) -> int:
     """Show one model-zoo entry with discovery, readiness, and command metadata."""
-    from worldfoundry.evals.models.catalog import load_model_zoo_registry
+    from worldfoundry.zoo.catalog import load_model_zoo_registry
 
     registry = load_model_zoo_registry(args.manifest_dir)
     entry = registry.get(args.model_id)

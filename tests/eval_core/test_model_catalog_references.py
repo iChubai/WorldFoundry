@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from worldfoundry.evals.models.catalog import ModelVariantSpec, ModelZooEntry, default_model_zoo_dir
-from worldfoundry.evals.models.pipelines import build_pipeline_runner_spec, import_pipeline_target
-from worldfoundry.evals.models.pipelines.bindings import PipelineBindingRegistry
+from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec, import_pipeline_target
 from worldfoundry.evals.models.runners.registry import ModelRunnerRegistry
 from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config
-from worldfoundry.evals.models.runtime import validate_catalog_references
-
+from worldfoundry.evals.models.validate import validate_catalog_references
+from worldfoundry.zoo.bindings import PipelineBindingRegistry
+from worldfoundry.zoo.catalog import ModelVariantSpec, ModelZooEntry, default_model_zoo_dir
 
 HOSTED_API_PIPELINES = (
     ("hailuo-2p3", "worldfoundry.pipelines.minimax.pipeline_hailuo_2p3:Hailuo2p3Pipeline"),

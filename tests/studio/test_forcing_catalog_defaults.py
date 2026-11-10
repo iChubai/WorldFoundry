@@ -10,11 +10,11 @@ from typing import Any
 import pytest
 
 from worldfoundry.base_models.diffusion_model.recipes.registry import default_native_diffusion_registry
-from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.pipelines import native_diffusion
 from worldfoundry.studio.inference.catalog import find_entry
 from worldfoundry.studio.inference.catalog import resolve as catalog_resolve
 from worldfoundry.studio.inference.catalog.models import world_models
+from worldfoundry.zoo.catalog.registry import discover_model_registry
 
 NATIVE_TARGETS = {
     "self-forcing": "worldfoundry.pipelines.forcing.pipeline_native_forcing:NativeSelfForcingPipeline",

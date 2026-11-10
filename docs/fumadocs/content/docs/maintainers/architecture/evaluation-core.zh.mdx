@@ -45,7 +45,7 @@ Prepared evaluation 分别记录 generation、data、evaluation、runtime 与 re
 
 `numeric` 通配选择在分批评分前，展开为已对齐成功结果中的字段并集。各字段随后使用与显式 `numeric:<field>` 相同的定义和缺失值处理。展开仅作用于本次运行，调用方可将原指标对象复用于其他数据集。
 
-**`run_model_benchmark()`**（`model_benchmark.py:825`）把 generation 与 benchmark-zoo runner 串联。没有名为 `ModelBenchmarkRunner` 的类。它解析 benchmark manifest、从 task registry 物化 requests、运行模型、为外部 evaluator 物化 artifact（`benchmark_runner.py:870` 的 `ManifestBenchmarkRunner`），再把归一化 metrics 交给 reporting。用于端到端 model-plus-benchmark。
+**`run_model_benchmark()`**（`model_benchmark.py:795`）把 generation 与 benchmark-zoo runner 串联。没有名为 `ModelBenchmarkRunner` 的类。它解析 benchmark manifest、从 task registry 物化 requests、运行模型、为外部 evaluator 物化 artifact（`benchmark_runner.py:870` 的 `ManifestBenchmarkRunner`），再把归一化 metrics 交给 reporting。用于端到端 model-plus-benchmark。
 
 Model mode 与直接调用 `ContractRunner` 均将生成结果交给同一个评分器。Python request 提供 `metric_batch_size`（默认 32）和 `resume`。每个指标批次完成后写入 `metrics/checkpoint.jsonl`；恢复时比较请求、结果、指标实现、版本及声明的 `parameters` / `config`。新增或修改指标独立补算，不要求重新生成。未声明版本的旧 callable 仍可执行，恢复时重新评分。生成复用包含 runner 的参数与配置，并检查本地输出是否存在；需要重新生成的样本同时清除旧评分 checkpoint。
 

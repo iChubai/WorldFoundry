@@ -247,8 +247,8 @@ def _canonical_model_id_or_self(value: str, manifest_dir: str | Path | None) -> 
     root = Path(manifest_dir)
     if not root.exists() or not root.is_dir():
         return value
-    from worldfoundry.evals.models.catalog import load_model_zoo_registry
-    from worldfoundry.evals.models.catalog.zoo_registry import UnknownModelZooKeyError
+    from worldfoundry.zoo.catalog import load_model_zoo_registry
+    from worldfoundry.zoo.catalog.zoo_registry import UnknownModelZooKeyError
 
     try:
         return load_model_zoo_registry(root).get(value).model_id

@@ -12,8 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.runtime.assets import expand_worldfoundry_path
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_synthesis import BaseSynthesis
 

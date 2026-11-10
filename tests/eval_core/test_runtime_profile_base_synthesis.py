@@ -5,7 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -25,7 +24,7 @@ fake_torch.no_grad = no_grad
 sys.modules["torch"] = fake_torch
 
 from worldfoundry.synthesis import base_synthesis
-from worldfoundry.evals.models.runtime import profiles as runtime_profiles
+from worldfoundry.zoo.runtime import profiles as runtime_profiles
 
 assert runtime_profiles.BaseSynthesis is base_synthesis.BaseSynthesis
 assert runtime_profiles.RuntimeProfileSynthesis.__mro__[1] is base_synthesis.BaseSynthesis

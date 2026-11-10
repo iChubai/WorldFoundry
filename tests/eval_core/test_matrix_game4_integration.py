@@ -18,13 +18,13 @@ from worldfoundry.base_models.diffusion_model.recipes.matrix_game import MATRIX_
 from worldfoundry.base_models.diffusion_model.recipes.registry import default_native_diffusion_registry
 from worldfoundry.core.contracts import PipelineInvocation
 from worldfoundry.evals.api import GenerationRequest, GenerationResult, WorldModelConfig
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec, import_pipeline_target
 from worldfoundry.evals.models.pipelines.results import PipelineResultContext, generation_result_from_pipeline
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile_manifest
-from worldfoundry.evals.models.runtime.validate import validate_runtime_profile_references
+from worldfoundry.evals.models.validate import validate_runtime_profile_references
 from worldfoundry.pipelines.matrix_game.pipeline_matrix_game4 import MatrixGame4EgyptPipeline
 from worldfoundry.runtime.inference_catalog import get_model_inference_spec
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile_manifest
 
 MODEL_DATA = Path(__file__).resolve().parents[2] / "worldfoundry/data/models"
 TARGET = "worldfoundry.pipelines.matrix_game.pipeline_matrix_game4:MatrixGame4EgyptPipeline"

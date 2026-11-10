@@ -14,13 +14,13 @@ from typing import Any, TypeAlias
 
 import yaml
 
-from worldfoundry.evals.models.catalog.registry import load_model_zoo_registry
 from worldfoundry.evals.tasks.catalog.benchmark_id import normalize_benchmark_id
 from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
 from worldfoundry.evals.tasks.datasets import validate_dataset_manifest
 from worldfoundry.evals.tasks.execution.framework.scoring_registry import target_benchmark_metrics
 from worldfoundry.evals.tasks.metrics.registry import default_metric_registry
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR, write_json
+from worldfoundry.zoo.catalog.registry import load_model_zoo_registry
 
 from .benchmark_generation import get_benchmark_generation_adapter
 from .evaluate import EvaluateRunRequest, execute_evaluate_run

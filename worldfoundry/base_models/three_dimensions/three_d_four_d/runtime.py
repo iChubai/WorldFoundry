@@ -16,8 +16,8 @@ import yaml
 
 from worldfoundry.core.geometry.transforms import depth_to_world_points
 from worldfoundry.core.io.paths import REPO_ROOT, package_data_path
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 
 @dataclass(frozen=True)

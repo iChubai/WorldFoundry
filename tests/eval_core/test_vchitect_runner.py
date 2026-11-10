@@ -10,14 +10,14 @@ from typing import Any
 
 import pytest
 
-from worldfoundry.evals.models import resolve_model_zoo_runner
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_runner
 from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
     ModelBenchmarkSuiteRequest,
     run_model_benchmark_suite,
 )
 from worldfoundry.pipelines.vchitect.pipeline_vchitect_2_t2v import Vchitect2T2VPipeline
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 pytestmark = pytest.mark.unit
 

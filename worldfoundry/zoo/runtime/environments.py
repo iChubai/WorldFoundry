@@ -7,12 +7,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
-from worldfoundry.evals.utils import (
-    MODEL_RUNTIME_ENVIRONMENTS_ROOT,
-)
+from worldfoundry.core.io.paths import DATA_ROOT
 from worldfoundry.runtime.conda import RuntimeCondaEnvSpec, load_runtime_conda_env_specs_with_overrides
 
 from ._shared import iter_manifest_mappings, schema_version_or_none, tuple_of_str, yaml_manifest_paths
+
+MODEL_RUNTIME_ENVIRONMENTS_ROOT = DATA_ROOT / "models" / "runtime" / "environments"
 
 # Canonical directory containing per-model conda environment specification files.
 DEFAULT_RUNTIME_ENVIRONMENTS_ROOT = MODEL_RUNTIME_ENVIRONMENTS_ROOT

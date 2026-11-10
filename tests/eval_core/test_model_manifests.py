@@ -6,19 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from worldfoundry.evals.models import (
-    build_model_manifest_registry,
-    model_manifests_from_source_maps,
-)
 from worldfoundry.evals.api.registry import DuplicateRegistryKeyError, ModelRegistry
-
-
-def test_model_manifest_facade_resolves_catalog_manifest_helpers() -> None:
-    import worldfoundry.evals.models.catalog.manifest as canonical_manifest
-    import worldfoundry.evals.models as models
-
-    assert models.model_manifests_from_source_maps is canonical_manifest.model_manifests_from_source_maps
-    assert models.build_model_manifest_registry is canonical_manifest.build_model_manifest_registry
+from worldfoundry.zoo.catalog.manifest import build_model_manifest_registry, model_manifests_from_source_maps
 
 
 def _load_alpha(model_path: str, device: str) -> object:

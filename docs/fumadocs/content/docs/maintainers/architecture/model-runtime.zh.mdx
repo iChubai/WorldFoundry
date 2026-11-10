@@ -19,7 +19,7 @@ description: Pipeline、operator、synthesis、representation、memory 和 hoste
 
 每个 runnable method 都必须同时具备 Pipeline 和 Operator。Pipeline 是从 catalog `pipeline_target` 或 canonical binding resolver 可达的具体类，负责模型加载、归一化执行，以及 `GenerationResult` 的 artifact 语义。Operator 是 Pipeline 在输入侧的搭档，负责 validation、image/video loading、camera/action parsing、interaction shaping 和 perception preprocessing。Operator 可以很薄，但不能缺失。
 
-Binding 解析应统一走 `worldfoundry/evals/models/pipelines/bindings.py`。Catalog loading、pipeline loading、runner resolution 和 validation 都应调用这里的 helpers，而不是各自重新解析 route string。Runtime profile 可以携带 execution metadata、环境预期、checkpoint path 和 command hints，但它不能替代 pipeline/operator pair；`metadata_only` 或 `profile_only` 的条目不应被宣传成 runnable support。
+Binding 解析应统一走 `worldfoundry/zoo/bindings.py`。Catalog loading、pipeline loading、runner resolution 和 validation 都应调用这里的 helpers，而不是各自重新解析 route string。Runtime profile 可以携带 execution metadata、环境预期、checkpoint path 和 command hints，但它不能替代 pipeline/operator pair；`metadata_only` 或 `profile_only` 的条目不应被宣传成 runnable support。
 
 `worldfoundry/base_models/diffusion_model` 是本地 diffusion 的 canonical runtime，也是唯一 diffusion package boundary。根部 contract 与按职责组织的 `models/`、`recipes/`、`loaders/`、`runners/`、`schedulers/`、`optimizations/`、`extensions/` 共同构成架构。旧 `diffsynth/`、`image/`、`video/` 与兜底式 `common/` 子目录已经删除，不再是受支持的 ownership layer。产品模块可以单向 import 或 re-export canonical component，但 canonical component 永远不能反向 import。通用 checkpoint materialization、state-dict loading、placement/offload、distributed execution、kernel、configuration 与 IO 全部来自 `worldfoundry/core`，family package 不能重新实现一套。`worldfoundry/base_models/perception_core` 和 `worldfoundry/base_models/three_dimensions` 仍是 inference/runtime package。这里只保留推理必需的 transforms 和 geometry helpers，不保留 training datasets、dataloaders、callbacks、losses、augmentation-only modules 或 experiment scripts。
 
@@ -97,7 +97,7 @@ Evaluation runner 不会直接 import pipeline 文件，除非 catalog 中的 mo
 
 <ArchDiagram id="model-runtime-bridge" locale="zh" />
 
-`resolve_pipeline_route()`（`evals/models/pipelines/bindings.py:359`）与 `resolve_model_zoo_runner()`（`evals/models/runners/resolver.py:386`）把这条链路解析成可运行 runner。其背后的 catalog 解析、spec 合成与 runner 解析机制见 [评测核心 — 模型解析](/zh/docs/maintainers/architecture/evaluation-core)。Planned 或 profile-only 条目可以保留 `runtime_profile`，但不应暴露 runner target；薄 planning wrapper 也不应把 `pipeline_target` 误报成已验证支持。
+`resolve_pipeline_route()`（`zoo/bindings.py:327`）与 `resolve_model_zoo_runner()`（`evals/models/runners/resolver.py:386`）把这条链路解析成可运行 runner。其背后的 catalog 解析、spec 合成与 runner 解析机制见 [评测核心 — 模型解析](/zh/docs/maintainers/architecture/evaluation-core)。Planned 或 profile-only 条目可以保留 `runtime_profile`，但不应暴露 runner target；薄 planning wrapper 也不应把 `pipeline_target` 误报成已验证支持。
 
 ## 模型族索引
 

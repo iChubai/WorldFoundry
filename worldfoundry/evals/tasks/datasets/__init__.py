@@ -2,27 +2,28 @@
 
 from __future__ import annotations
 
-from .manager import (
+from .access import (
     DatasetAccessIssue,
     DatasetAccessReport,
-    DatasetDownloadPlan,
-    DatasetLocalStatus,
-    DatasetLocation,
-    DatasetManager,
-    DatasetRef,
     build_hf_download_command,
-    check_local_dataset,
     classify_dataset_access,
-    dataset_location_env_var,
+    find_hf_downloader,
+)
+from .local_status import (
+    DatasetLocalStatus,
+    check_local_dataset,
     direct_dataset_dir_candidates,
     direct_dataset_expected_files,
-    filter_dataset_refs,
-    find_hf_downloader,
     hf_cache_dataset_dir,
-    is_commit_like_revision,
+)
+from .location import (
+    DatasetLocation,
+    dataset_location_env_var,
     locate_local_dataset,
-    normalize_hf_dataset_id,
-    parse_dataset_refs,
+)
+from .manager import (
+    DatasetDownloadPlan,
+    DatasetManager,
 )
 from .manifest import (
     DATASET_MANIFEST_SCHEMA_VERSION,
@@ -34,6 +35,13 @@ from .manifest import (
     resolve_dataset_samples_path,
     validate_dataset_manifest,
     write_dataset_manifest,
+)
+from .refs import (
+    DatasetRef,
+    filter_dataset_refs,
+    is_commit_like_revision,
+    normalize_hf_dataset_id,
+    parse_dataset_refs,
 )
 
 __all__ = [

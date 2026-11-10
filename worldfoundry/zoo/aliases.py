@@ -15,7 +15,7 @@ from typing import Any, TypeVar
 
 import yaml
 
-from worldfoundry.evals.utils import DATA_ROOT
+from worldfoundry.core.io.paths import DATA_ROOT
 
 HandlerT = TypeVar("HandlerT")
 

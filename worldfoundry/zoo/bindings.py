@@ -17,7 +17,7 @@ from typing import Any, cast
 
 import yaml
 
-from worldfoundry.evals.utils import DATA_ROOT
+from worldfoundry.core.io.paths import DATA_ROOT
 
 LOGGER = logging.getLogger(__name__)
 
@@ -187,7 +187,7 @@ def runtime_profile_execution_metadata(value: Any) -> dict[str, Any]:
     if not profile_id:
         return {}
     try:
-        from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+        from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
         profile = load_runtime_profile(profile_id, check_conda_env_exists=False)
     except KeyError:

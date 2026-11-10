@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import project_root
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.lingbot_va.runtime import (
     RUNTIME_ROOT,
     WAN_VA_PACKAGE,
@@ -21,6 +20,7 @@ from worldfoundry.synthesis.action_generation.lingbot_va.runtime import (
     select_lingbot_va_checkpoint,
 )
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_action_synthesis import ActionModelSynthesis
 

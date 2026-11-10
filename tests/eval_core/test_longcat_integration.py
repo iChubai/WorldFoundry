@@ -12,8 +12,7 @@ import pytest
 pytest.importorskip("torch")
 
 from worldfoundry.evals.api import GenerationRequest
-from worldfoundry.evals.models import resolve_model_zoo_runner
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_runner
 from worldfoundry.pipelines.longcat_video.pipeline_longcat_video import LongCatVideoPipeline
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime import tokenizer_loading, video_io
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.pipeline_longcat_video import (
@@ -22,6 +21,7 @@ from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtim
 from worldfoundry.synthesis.visual_generation.longcat_video.worldfoundry_runtime import (
     LongCatVideoRuntime,
 )
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"

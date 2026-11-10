@@ -10,9 +10,8 @@ from typing import Any
 import pytest
 
 from worldfoundry.evals.api import GenerationRequest
-from worldfoundry.evals.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profiles
+from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_runner
 from worldfoundry.evals.utils import load_manifest_collection
 from worldfoundry.operators.act_operator import ACTOperator
 from worldfoundry.operators.being_h05_operator import BeingH05Operator
@@ -50,6 +49,8 @@ from worldfoundry.synthesis.action_generation.roboflamingo.runtime import (
     select_roboflamingo_runtime_config,
 )
 from worldfoundry.synthesis.visual_generation.memory.runtime import RuntimeMemory
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profiles
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PIPELINE_RUNNER_TARGET = "worldfoundry.evals.models.runners.pipeline:WorldFoundryPipelineRunner"
@@ -203,8 +204,8 @@ def _is_worldfoundry_pipeline_runner(value) -> bool:
 
 
 def test_runtime_profiles_cover_catalog_entries() -> None:
-    from worldfoundry.evals.models.catalog.schema import iter_model_zoo_payloads
     from worldfoundry.evals.utils import load_manifest, manifest_paths
+    from worldfoundry.zoo.catalog.schema import iter_model_zoo_payloads
 
     catalog_root = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"
     target_ids: set[str] = set()

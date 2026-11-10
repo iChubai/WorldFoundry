@@ -21,7 +21,7 @@ Causal-Forcing 把双向 Wan2.1 教师蒸馏成**因果自回归**学生，让�
 
 只有你明确要 **1 或 2 步**采样时才用 ++。这两个学生对**第一帧仍走 4 步**（`[1000, 750, 500, 250]`，即 ++ 发布记录的首帧步数表）。
 
-片源质量看 [VBench](/zh/docs/evaluation/benchmark-hub/vbench)。那是列出的评测入口，不是已收录的 WorldFoundry 排名。通过 `--pipeline.prompt` 提供提示词。
+片源质量看 [VBench](/zh/docs/evaluation/benchmark-hub/vbench)。通过 `--pipeline.prompt` 提供提示词。
 
 ## 变体
 
@@ -62,7 +62,7 @@ frame-wise 学生在步间重加噪时用 bf16 计算，与官方调度器对单
 
 ## 在 WorldFoundry 中运行
 
-`wf run causal-forcing` 在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行，与 Self-Forcing 相同。用 `--pipeline.load.variant causal-forcing-framewise` 选择变体。generator 从 `zhuhz22/Causal-Forcing` 解析，可就位在 `$WORLDFOUNDRY_CKPT_DIR/zhuhz22--Causal-Forcing`（或 `Causal-Forcing`）或 Hugging Face 缓存中；文本编码器、tokenizer 与 VAE 来自 `Wan-AI/Wan2.1-T2V-1.3B`。Studio 传入已就位的发布目录，每个变体从中读取自己的文件。本地未就位的 checkpoint 会按固定 revision 获取。catalog 许可证为 **unknown**——生产使用前请核对 GitHub / Hugging Face 卡片。
+`wf run causal-forcing` 在 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）中运行，与 Self-Forcing 相同。用 `--pipeline.load.variant causal-forcing-framewise` 选择变体。generator 从 `zhuhz22/Causal-Forcing` 解析，可就位在 `$WORLDFOUNDRY_CKPT_DIR/zhuhz22--Causal-Forcing`（或 `Causal-Forcing`）或 Hugging Face 缓存中；文本编码器、tokenizer 与 VAE 来自 `Wan-AI/Wan2.1-T2V-1.3B`。Studio 传入已就位的发布目录，每个变体从中读取自己的文件。本地未就位的 checkpoint 会按固定 revision 获取。未声明许可证——生产使用前请核对 GitHub / Hugging Face 卡片。
 
 需要固定每个文件时，传入 `checkpoint_overrides`：
 
@@ -86,12 +86,12 @@ t2v = pipeline(prompt="A red fox walks through a sunlit forest.", seed=42, retur
 i2v = pipeline(prompt="An abandoned room.", images="testcase/012_abandoned-room.png", seed=42, return_dict=True)
 ```
 
-## 证据
+## 验证
 
-`tests/manual/self_forcing_parity.py --model-id <variant>` 把一个变体与官方推理脚本录制的一次运行逐项对比：MovieGenVideoBench 第一条提示词、seed 42、480×832、21 个 latent 帧、bf16、单张 H100，并注入官方的初始噪声与重加噪采样。四个文生视频变体和 frame-wise 图生视频（图像 `testcase/012_abandoned-room.png`）在每一环节都与官方逐位一致：checkpoint 严格加载（0 缺失、0 多余、0 形状不符）、提示词嵌入、图生视频的预处理图像及其 latent、以录制输入逐次调用 generator、rollout 最终 latent，以及参考 latent 的整段解码与分块流式解码。回放案例 `causal-forcing-chunkwise-t2v-short` 与 `causal-forcing-framewise-short`（含一次图像首帧调用）在 128×224 下覆盖公开路线。
+`tests/manual/self_forcing_parity.py --model-id <variant>` 在 MovieGenVideoBench 第一条提示词上（seed 42、480×832、21 个 latent 帧、bf16）把一个变体与官方推理脚本对比，并注入官方的初始噪声与重加噪采样。四个文生视频变体和 frame-wise 图生视频在每一环节都与官方逐位一致，从 checkpoint 加载、提示词嵌入到最终 latent 和解码视频，整段解码与分块流式解码皆然。
 
 ## 最小评测
 
-chunk-wise 文生视频，再跑 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`。有界 VBench 主键是 `aesthetic_quality`。
+chunk-wise 文生视频，再跑 [VBench](/zh/docs/evaluation/benchmark-hub/vbench) 的 `custom_input` / `aesthetic_quality`。
 
 <ModelRelatedRecipes modelId="causal-forcing" locale="zh" />

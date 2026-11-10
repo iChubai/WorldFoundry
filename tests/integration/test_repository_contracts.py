@@ -353,7 +353,7 @@ def test_xc17_callers_use_scratch_directory() -> None:
 
 
 def test_suite_and_studio_closures_bind_loop_variables() -> None:
-    suite = (REPO_ROOT / "worldfoundry/evals/tasks/execution/orchestration/model_benchmark_suite.py").read_text(
+    suite = (REPO_ROOT / "worldfoundry/evals/tasks/execution/orchestration/suite_workers.py").read_text(
         encoding="utf-8"
     )
     studio = (REPO_ROOT / "worldfoundry/studio/inference/execution.py").read_text(encoding="utf-8")

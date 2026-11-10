@@ -4,7 +4,7 @@ from typing import Any
 import yaml
 
 from worldfoundry.evals.tasks.catalog.schema import BenchmarkRunnerSpec, BenchmarkZooEntry
-from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
+from worldfoundry.evals.tasks.execution.orchestration.suite_cells import (
     _benchmark_aware_provenance,
     _benchmark_unavailable_reason,
 )

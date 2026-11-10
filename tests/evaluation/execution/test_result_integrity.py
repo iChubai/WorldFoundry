@@ -17,8 +17,8 @@ from worldfoundry.evals.api.metrics import aggregate_mean
 from worldfoundry.evals.tasks.execution.orchestration.contract import run_contract
 from worldfoundry.evals.tasks.execution.orchestration.evaluate import run_evaluate
 from worldfoundry.evals.tasks.execution.orchestration.existing_results import run_existing_results
-from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import _SuiteGenerationMemoRunner
 from worldfoundry.evals.tasks.execution.orchestration.run_session import coerce_generation_result
+from worldfoundry.evals.tasks.execution.orchestration.suite_cells import _SuiteGenerationMemoRunner
 
 pytestmark = pytest.mark.unit
 

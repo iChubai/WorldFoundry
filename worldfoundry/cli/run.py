@@ -123,7 +123,7 @@ def _suite_presets_declare_models(args: argparse.Namespace) -> bool:
     if not suite_ids:
         return False
     try:
-        from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
+        from worldfoundry.evals.tasks.execution.orchestration.suite_presets import (
             get_model_benchmark_suite_preset,
         )
 

@@ -353,9 +353,9 @@ def _runtime_preflight_command(output_dir: Path, args) -> tuple[str, ...]:
 def _write_suite_plan(*, model_id: str, benchmark_id: str, output_dir: Path, args):
     """Execute a model × benchmark suite plan without running cells."""
     from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
-        ModelBenchmarkSuiteRequest,
         run_model_benchmark_suite,
     )
+    from worldfoundry.evals.tasks.execution.orchestration.suite_requests import ModelBenchmarkSuiteRequest
     from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR
 
     return run_model_benchmark_suite(

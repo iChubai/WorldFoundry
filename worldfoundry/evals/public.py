@@ -42,15 +42,15 @@ from worldfoundry.evals.tasks.execution.orchestration.model_benchmark import (
     ModelBenchmarkRunResult,
     run_model_benchmark,
 )
-from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import (
-    ModelBenchmarkSuiteRequest,
-    ModelBenchmarkSuiteResult,
-    run_model_benchmark_suite,
-)
+from worldfoundry.evals.tasks.execution.orchestration.model_benchmark_suite import run_model_benchmark_suite
 from worldfoundry.evals.tasks.execution.orchestration.run import (
     WorldFoundryRunRequest,
     WorldFoundryRunResult,
     run_worldfoundry,
+)
+from worldfoundry.evals.tasks.execution.orchestration.suite_requests import (
+    ModelBenchmarkSuiteRequest,
+    ModelBenchmarkSuiteResult,
 )
 from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, REPO_ROOT
 

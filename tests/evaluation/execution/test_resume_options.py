@@ -13,7 +13,12 @@ import pytest
 
 from worldfoundry.cli.main import main
 from worldfoundry.evals.tasks.datasets import build_dataset_manifest, write_dataset_manifest
-from worldfoundry.evals.tasks.execution.orchestration import model_benchmark, model_benchmark_suite, service
+from worldfoundry.evals.tasks.execution.orchestration import (
+    model_benchmark,
+    model_benchmark_suite,
+    service,
+    suite_cells,
+)
 from worldfoundry.evals.tasks.execution.orchestration import run as unified_run
 from worldfoundry.evals.tasks.execution.orchestration.evaluate import EvaluateRunRequest
 from worldfoundry.studio.workspace import app as workspace
@@ -152,7 +157,7 @@ def test_public_facade_scores_imported_results_without_starting_generation(
         return SimpleNamespace(status="succeeded", exit_code=0, output_dir=tmp_path)
 
     def generate(request: Any) -> None:
-        pytest.fail("existing results must not start benchmark generation")
+        raise pytest.fail.Exception("existing results must not start benchmark generation")
 
     monkeypatch.setattr(unified_run, "execute_evaluate_run", evaluate)
     monkeypatch.setattr(unified_run, "run_model_benchmark", generate)
@@ -226,8 +231,8 @@ def test_suite_cell_forwards_controls_to_single_benchmark(tmp_path: Path, monkey
             to_dict=lambda: {"benchmark_result": {}, "artifacts": {}},
         )
 
-    monkeypatch.setattr(model_benchmark_suite, "run_model_benchmark", execute)
-    plan = SimpleNamespace(
+    monkeypatch.setattr(suite_cells, "run_model_benchmark", execute)
+    plan: Any = SimpleNamespace(
         output_artifact="generated_video",
         model_id="custom",
         requested_model_id="custom",
@@ -238,7 +243,7 @@ def test_suite_cell_forwards_controls_to_single_benchmark(tmp_path: Path, monkey
         evaluation_provenance={},
     )
     request = model_benchmark_suite.ModelBenchmarkSuiteRequest(output_dir=tmp_path, resume=True, metric_batch_size=7)
-    model_benchmark_suite._run_cell(request, root=tmp_path, plan=plan)
+    suite_cells._run_cell(request, root=tmp_path, plan=plan)
     assert captured[0].resume is True
     assert captured[0].metric_batch_size == 7
 
@@ -246,7 +251,7 @@ def test_suite_cell_forwards_controls_to_single_benchmark(tmp_path: Path, monkey
 def test_metric_batch_size_does_not_change_suite_identity(tmp_path: Path) -> None:
     first = model_benchmark_suite.ModelBenchmarkSuiteRequest(output_dir=tmp_path, metric_batch_size=1)
     second = model_benchmark_suite.ModelBenchmarkSuiteRequest(output_dir=tmp_path, metric_batch_size=7)
-    assert model_benchmark_suite._fingerprint_request(first) == model_benchmark_suite._fingerprint_request(second)
+    assert suite_cells._fingerprint_request(first) == suite_cells._fingerprint_request(second)
 
 
 @pytest.mark.parametrize("command", ["evaluate", "run"])

@@ -11,7 +11,8 @@ from worldfoundry.evals.utils import BENCHMARK_ZOO_DIR, MODEL_ZOO_DIR
 
 from .evaluate import EvaluateRunRequest, execute_evaluate_run
 from .model_benchmark import ModelBenchmarkRunRequest, run_model_benchmark
-from .model_benchmark_suite import ModelBenchmarkSuiteRequest, run_model_benchmark_suite
+from .model_benchmark_suite import run_model_benchmark_suite
+from .suite_requests import ModelBenchmarkSuiteRequest
 
 WORLDFOUNDRY_RUN_RESULT_SCHEMA_VERSION = "worldfoundry-run-result"
 

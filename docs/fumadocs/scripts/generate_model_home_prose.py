@@ -1258,13 +1258,13 @@ def checkpoint_sentence(recipe: dict[str, Any], locale: str) -> str:
             return (
                 "The weights are not on Hugging Face; stage the GCS assets as described in the usage notes."
                 if locale == "en"
-                else "权重不在 Hugging Face 上；按使用说明从 GCS 就位。"
+                else "权重不在 Hugging Face 上；请按使用说明准备 GCS 中的权重。"
             )
         if mentions(blob, "stage", "checkpoint", "missing"):
             return (
                 "No public checkpoint is listed for this model; stage the weights as described in the usage notes."
                 if locale == "en"
-                else "该模型没有登记公开 checkpoint；按使用说明就位权重。"
+                else "该模型未登记公开的 checkpoint；请按使用说明准备权重。"
             )
         return ""
     shown = ids[:3]
@@ -1738,7 +1738,7 @@ _OPENINGS_ZH: dict[str, tuple[str, ...]] = {
         "`{variant}` 是文生视频模型：输入提示词，输出视频。",
     ),
     "i2v": (
-        "`{variant}` 把一张静态图生成为视频。",
+        "`{variant}` 把一张静态图转化为视频。",
         "用 `{variant}` 以参考图为起点生成视频。",
         "`{variant}` 是图生视频模型：输入静态图，输出视频。",
     ),
@@ -1853,7 +1853,7 @@ _RUN_CMD_EN: dict[str, tuple[str, ...]] = {
 
 _RUN_CMD_ZH: dict[str, tuple[str, ...]] = {
     "t2v": ("用 `{cmd}` 生成视频。", "运行 `{cmd}` 生成视频。"),
-    "i2v": ("用 `{cmd}` 把静态图生成为视频。", "运行 `{cmd}` 生成视频。"),
+    "i2v": ("用 `{cmd}` 把静态图转化为视频。", "运行 `{cmd}` 生成视频。"),
     "ti2v": ("用 `{cmd}` 生成视频。", "运行 `{cmd}` 生成视频。"),
     "v2v": ("用 `{cmd}` 编辑视频。", "运行 `{cmd}` 变换源视频。"),
     "vla": ("用 `{cmd}` 运行策略。", "运行 `{cmd}` 预测动作。"),
@@ -1955,7 +1955,8 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
         task_bit = f"{join_zh(tasks)}等 {total_tasks} 项任务" if more > 0 else join_zh(tasks)
     extra_bit = ("；" if locale == "zh" else "; ").join(extras[:2])
     if locale == "zh":
-        head = f"{name}" + (f"（{provider}）" if provider else "")
+        provider_bit = f"，{provider}" if "（" in provider else f"（{provider}）"
+        head = f"{name}" + (provider_bit if provider else "")
         desc = head + (f"：{task_bit}。" if task_bit else "。")
         if extra_bit:
             desc = desc.rstrip("。") + f"；{extra_bit}。"

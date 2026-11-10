@@ -339,7 +339,7 @@ def test_xc17_callers_use_scratch_directory() -> None:
         "worldfoundry/base_models/three_dimensions/point_clouds/lyra/utils.py",
         "worldfoundry/pipelines/matrix_game/pipeline_matrix_game_3.py",
         "worldfoundry/core/media/codecs/video.py",
-        "worldfoundry/evals/models/runtime/profile_synthesis.py",
+        "worldfoundry/zoo/runtime/profile_synthesis.py",
         "worldfoundry/studio/inference/dispatch.py",
     ]
     for relpath in files:

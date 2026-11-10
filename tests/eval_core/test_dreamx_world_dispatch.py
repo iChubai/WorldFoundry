@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 
 def test_dreamx_world_routes_to_the_in_tree_runnable_pipeline() -> None:

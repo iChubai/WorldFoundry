@@ -6,16 +6,19 @@ from typing import Any, Mapping
 import pytest
 
 from worldfoundry.evals.api import WorldModelConfig
-from worldfoundry.evals.models.pipelines import build_pipeline_runner_spec, import_pipeline_target
-from worldfoundry.evals.models.pipelines.aliases import build_alias_mapping, load_pipeline_alias_registry
-from worldfoundry.evals.models.pipelines.bindings import (
+from worldfoundry.evals.models.pipelines.loading import (
+    build_pipeline_runner_spec,
+    import_pipeline_target,
+    load_pipeline_from_config,
+)
+from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
+from worldfoundry.pipelines.pipeline_utils import PipelineABC
+from worldfoundry.zoo.aliases import build_alias_mapping, load_pipeline_alias_registry
+from worldfoundry.zoo.bindings import (
     load_pipeline_binding,
     resolve_pipeline_binding,
     resolve_pipeline_route,
 )
-from worldfoundry.evals.models.pipelines.loading import load_pipeline_from_config
-from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
-from worldfoundry.pipelines.pipeline_utils import PipelineABC
 
 
 class DummyPipeline(PipelineABC):

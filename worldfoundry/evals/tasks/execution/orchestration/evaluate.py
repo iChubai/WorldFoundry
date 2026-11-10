@@ -877,8 +877,11 @@ def run_evaluate(
 
     if mode == "model":
         # Handle 'model' mode: instantiate and run a model, then evaluate outputs.
-        from worldfoundry.evals.models import resolve_model_zoo_config, resolve_world_model_runner
-        from worldfoundry.evals.models.runners.resolver import ResolvedWorldModel
+        from worldfoundry.evals.models.runners.resolver import (
+            ResolvedWorldModel,
+            resolve_model_zoo_config,
+            resolve_world_model_runner,
+        )
 
         output_dir = prepare_run_output_dir(output_dir)
         request_source = _load_optional_source(run_request.requests, run_request.requests_path)

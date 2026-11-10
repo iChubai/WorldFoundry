@@ -865,7 +865,7 @@ def _official_links_from_sources(sources: Mapping[str, Any]) -> dict[str, str]:
 
 
 def _official_links_from_catalog_entry(entry: Mapping[str, Any]) -> dict[str, str]:
-    from worldfoundry.evals.models.catalog.schema import _github_url_from_sources
+    from worldfoundry.zoo.catalog.schema import _github_url_from_sources
 
     links: dict[str, str] = {}
     github = _github_url_from_sources(entry)
@@ -933,7 +933,7 @@ def _github_url_from_model_ref(model_ref: str) -> str:
 
 @lru_cache(maxsize=1)
 def _model_catalog_links_index() -> dict[str, dict[str, str]]:
-    from worldfoundry.evals.models.catalog.manifest import _catalog_paths, _iter_catalog_mappings
+    from worldfoundry.zoo.catalog.manifest import _catalog_paths, _iter_catalog_mappings
 
     index: dict[str, dict[str, str]] = {}
     for path in _catalog_paths():
@@ -1071,9 +1071,9 @@ def _safe_jsonable(value: Any) -> Any:
 @lru_cache(maxsize=1)
 def _evaluation_catalog_payload() -> dict[str, Any]:
     try:
-        from worldfoundry.evals.models.catalog.registry import discover_model_registry
         from worldfoundry.evals.tasks.catalog.specs import list_benchmark_zoo_cli_tasks
         from worldfoundry.evals.tasks.metrics.registry import list_metric_registry_entries
+        from worldfoundry.zoo.catalog.registry import discover_model_registry
 
         benchmarks = list_benchmark_zoo_cli_tasks()
         models = [item.to_dict() for item in discover_model_registry().list()]

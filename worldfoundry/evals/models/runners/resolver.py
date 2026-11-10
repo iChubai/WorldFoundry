@@ -17,15 +17,15 @@ from typing import Any
 
 from worldfoundry.evals.api import WorldModelConfig
 from worldfoundry.evals.models.import_target import load_attr
-from worldfoundry.evals.models.pipelines.bindings import (
-    first_text,
-    resolve_pipeline_route,
-    runtime_profile_execution_metadata,
-)
 from worldfoundry.evals.models.runners.builtins import (
     list_builtin_runtime_runners,
 )
 from worldfoundry.evals.models.runners.registry import default_model_runner_registry
+from worldfoundry.zoo.bindings import (
+    first_text,
+    resolve_pipeline_route,
+    runtime_profile_execution_metadata,
+)
 
 
 class ModelResolutionError(ValueError):
@@ -237,9 +237,9 @@ def resolve_model_zoo_config(
         ModelResolutionError: If the model ID is not found, the variant does
             not exist, or no ``runner_target`` can be resolved.
     """
-    from worldfoundry.evals.models.catalog.manifest import model_zoo_entry_to_world_model_manifest
-    from worldfoundry.evals.models.catalog.schema import select_default_variant
-    from worldfoundry.evals.models.catalog.zoo_registry import (
+    from worldfoundry.zoo.catalog.manifest import model_zoo_entry_to_world_model_manifest
+    from worldfoundry.zoo.catalog.schema import select_default_variant
+    from worldfoundry.zoo.catalog.zoo_registry import (
         UnknownModelZooKeyError,
         load_model_zoo_registry,
     )

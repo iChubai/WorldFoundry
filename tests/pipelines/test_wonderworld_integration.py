@@ -13,10 +13,10 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.operators.wonderworld_operator import WonderWorldOperator
 from worldfoundry.pipelines.three_d_four_d.pipeline_wonderworld import WonderWorldPipeline
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 pytestmark = pytest.mark.unit
 

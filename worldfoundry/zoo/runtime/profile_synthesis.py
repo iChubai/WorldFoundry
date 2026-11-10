@@ -3,7 +3,7 @@
 Hosts :class:`RuntimeProfileSynthesis`, the bridge between runtime-profile
 metadata and the :class:`~worldfoundry.synthesis.base_synthesis.BaseSynthesis`
 interface. This module is imported lazily from
-:mod:`worldfoundry.evals.models.runtime.profiles` so that plain profile
+:mod:`worldfoundry.zoo.runtime.profiles` so that plain profile
 metadata loading never pays the ``worldfoundry.synthesis`` import cost
 (which pulls torch when installed).
 
@@ -20,8 +20,10 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.io.paths import scratch_directory
-from worldfoundry.evals.models.runtime.profiles import (
+from worldfoundry.core.io.paths import REPO_ROOT, scratch_directory
+from worldfoundry.runtime.conda import resolve_conda_env_context, resolve_conda_executable
+from worldfoundry.synthesis.base_synthesis import BaseSynthesis
+from worldfoundry.zoo.runtime.profiles import (
     DEFAULT_COND_DIR,
     DEFAULT_SD15_ROOT,
     RuntimeProfile,
@@ -30,9 +32,6 @@ from worldfoundry.evals.models.runtime.profiles import (
     load_runtime_profile,
     resolve_existing_tool,
 )
-from worldfoundry.evals.utils import REPO_ROOT
-from worldfoundry.runtime.conda import resolve_conda_env_context, resolve_conda_executable
-from worldfoundry.synthesis.base_synthesis import BaseSynthesis
 
 
 def _coerce_path_input(value: Any, destination: Path, stem: str) -> str | None:

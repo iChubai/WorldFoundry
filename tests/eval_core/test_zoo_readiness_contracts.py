@@ -4,17 +4,13 @@ import importlib
 from collections import Counter
 from pathlib import Path
 
+from worldfoundry.evals.models.runners.registry import ModelRunnerRegistry
 from worldfoundry.evals.tasks.catalog.benchmark_catalog import (
-    DEFAULT_EMBODIED_CATALOG_DIR,
-    DEFAULT_VIDEO_CATALOG_DIR,
-    load_benchmark_catalog_entries,
     load_benchmark_catalog_shard_entries,
 )
 from worldfoundry.evals.tasks.catalog.specs import benchmark_zoo_entry_to_benchmark_spec
 from worldfoundry.evals.tasks.contracts.external import get_external_benchmark_contract
-from worldfoundry.evals.models import ModelRunnerRegistry
-from worldfoundry.evals.models.catalog import load_entries as load_model_entries
-
+from worldfoundry.zoo.catalog import load_entries as load_model_entries
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 NEW_VIDEO_WORLD_NORMALIZER_IDS = {

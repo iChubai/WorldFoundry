@@ -11,12 +11,12 @@ import pytest
 pytest.importorskip("fastapi")
 
 from worldfoundry.evals.api import GenerationRequest, WorldModelConfig
-from worldfoundry.evals.models import resolve_model_zoo_config, resolve_model_zoo_runner
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile, load_runtime_profile_manifest
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config, resolve_model_zoo_runner
 from worldfoundry.studio.inference.catalog import discover_catalog
 from worldfoundry.studio.workspace.app import _workspace_models
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile, load_runtime_profile_manifest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"

@@ -10,11 +10,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.operators.forcing_operator import CausalForcingOperator, SelfForcingOperator
 from worldfoundry.pipelines.forcing.pipeline_forcing import CausalForcingPipeline
 from worldfoundry.synthesis.visual_generation.forcing import runtime as runtime_module
 from worldfoundry.synthesis.visual_generation.forcing.runtime import RollingForcingRuntime, SelfForcingRuntime
+from worldfoundry.zoo.catalog.registry import discover_model_registry
 
 
 def test_self_forcing_operator_accepts_prompt_and_optional_image() -> None:

@@ -117,7 +117,7 @@ def test_enrich_without_hash_preserves_existing_sha256(tmp_path: Path) -> None:
 
 
 def test_zoo_yaml_parse_error_contains_path(tmp_path: Path) -> None:
-    from worldfoundry.evals.models.catalog.zoo_registry import ModelZooRegistry
+    from worldfoundry.zoo.catalog.zoo_registry import ModelZooRegistry
 
     broken = tmp_path / "broken.yaml"
     broken.write_text("model_id: [unclosed", encoding="utf-8")
@@ -126,7 +126,7 @@ def test_zoo_yaml_parse_error_contains_path(tmp_path: Path) -> None:
 
 
 def test_zoo_schema_error_contains_path(tmp_path: Path) -> None:
-    from worldfoundry.evals.models.catalog.zoo_registry import ModelZooRegistry
+    from worldfoundry.zoo.catalog.zoo_registry import ModelZooRegistry
 
     bad_entry = tmp_path / "bad_entry.yaml"
     bad_entry.write_text("models:\n  - name: entry-without-model-id\n", encoding="utf-8")
@@ -138,14 +138,14 @@ def test_zoo_schema_error_contains_path(tmp_path: Path) -> None:
 
 
 def test_duplicate_model_id_across_files_warns(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    from worldfoundry.evals.models.catalog.zoo_registry import ModelZooRegistry
+    from worldfoundry.zoo.catalog.zoo_registry import ModelZooRegistry
 
     first = tmp_path / "a.yaml"
     second = tmp_path / "b.yaml"
     first.write_text("model_id: dup-model\n", encoding="utf-8")
     second.write_text("model_id: dup-model\n", encoding="utf-8")
 
-    with caplog.at_level(logging.WARNING, logger="worldfoundry.evals.models.catalog.zoo_registry"):
+    with caplog.at_level(logging.WARNING, logger="worldfoundry.zoo.catalog.zoo_registry"):
         registry = ModelZooRegistry.from_paths([first, second])
 
     assert len(registry) == 1

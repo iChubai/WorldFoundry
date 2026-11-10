@@ -145,7 +145,7 @@ def canonical_model_zoo_id(value: str | None, manifest_dir: Path | None) -> str 
         return None
     if manifest_dir is None or not manifest_dir.exists():
         return value
-    from worldfoundry.evals.models.catalog import load_model_zoo_registry
+    from worldfoundry.zoo.catalog import load_model_zoo_registry
 
     return load_model_zoo_registry(manifest_dir).get(value).model_id
 

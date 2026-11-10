@@ -5,9 +5,8 @@ from pathlib import Path
 import pytest
 
 from worldfoundry.evals.api import GenerationRequest
-from worldfoundry.evals.models import WorldFoundryPipelineRunner, resolve_model_zoo_runner
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_runner
 from worldfoundry.pipelines.longvie.pipeline_longvie import LongVie1Pipeline, LongVie2Pipeline
 from worldfoundry.runtime.conda import load_runtime_conda_env_spec
 from worldfoundry.synthesis.visual_generation.longvie.runtime_env import (
@@ -17,6 +16,8 @@ from worldfoundry.synthesis.visual_generation.longvie.runtime_env import (
 from worldfoundry.synthesis.visual_generation.longvie.worldfoundry_runtime import (
     LongVieOfficialRuntime,
 )
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"

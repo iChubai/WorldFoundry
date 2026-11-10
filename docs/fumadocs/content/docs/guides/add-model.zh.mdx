@@ -27,7 +27,7 @@ Operator 放在 `worldfoundry/operators/`。每个 runnable method 都要有，�
 
 Checkpoint-shaped network math、tokenizer 封装与 component adapter 放在 `worldfoundry/base_models/`。不属于原生 diffusion 框架的仅推理 orchestration 放在 `worldfoundry/synthesis/`，并消费这些 component。这些包不是训练循环、dataset builder、dataloader、augmentation pipeline 或 Lightning callback 的落点。
 
-Evaluation binding 决定 CLI、TUI 和通用 benchmark runner 如何找到该方法。解析路径永远是 catalog 上的 `pipeline_target` 或 `pipeline_binding`，再经过 `worldfoundry/evals/models/pipelines/bindings.py`。Route 字符串的归一化只应出现在这个文件里，不要在 catalog 加载、resolver 或 check helper 里再写一套 parser。
+Evaluation binding 决定 CLI、TUI 和通用 benchmark runner 如何找到该方法。解析路径永远是 catalog 上的 `pipeline_target` 或 `pipeline_binding`，再经过 `worldfoundry/zoo/bindings.py`。Route 字符串的归一化只应出现在这个文件里，不要在 catalog 加载、resolver 或 check helper 里再写一套 parser。
 
 最后是 catalog 元数据，也就是对外记录。`worldfoundry/data/models/catalog/<category>/<model-id>.yaml` 里写 source、license、checkpoint refs、task coverage、runtime profile、blockers 和 `integration.status`。Support matrix 不会把这些字段当成证据，它会根据已经落盘的 report 重新计算 readiness。
 

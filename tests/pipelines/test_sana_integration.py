@@ -12,7 +12,6 @@ from typing import Any
 import pytest
 
 from worldfoundry.base_models.diffusion_model.recipes.sana_variants import SANA_VARIANTS, get_sana_variant
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.pipelines.sana.pipeline_sana import (
     LongsanaVideo2b480pPipeline,
     Sana1600M1024pxBf16Pipeline,
@@ -20,6 +19,7 @@ from worldfoundry.pipelines.sana.pipeline_sana import (
     SanaPipeline,
     SanaVideo2b480pPipeline,
 )
+from worldfoundry.zoo.catalog import load_model_zoo_registry
 
 pytestmark = pytest.mark.unit
 

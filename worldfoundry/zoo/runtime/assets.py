@@ -7,9 +7,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
-from worldfoundry.evals.models.runtime.profiles import RuntimeProfile, load_runtime_profiles
-from worldfoundry.evals.utils import DATA_ROOT
+from worldfoundry.core.io.paths import DATA_ROOT
 from worldfoundry.runtime.assets import expand_worldfoundry_path
+from worldfoundry.zoo.runtime.profiles import RuntimeProfile, load_runtime_profiles
 
 from ._shared import iter_manifest_mappings, schema_version_or_none, tuple_of_str, yaml_manifest_paths
 

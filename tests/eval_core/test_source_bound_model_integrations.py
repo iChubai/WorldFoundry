@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_CATALOG_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"

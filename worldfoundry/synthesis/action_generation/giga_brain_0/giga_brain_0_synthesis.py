@@ -13,13 +13,13 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.giga_brain_0.runtime import (
     GigaBrain0Runtime,
     GigaBrain0RuntimeConfig,
     select_giga_brain_0_paths,
 )
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_action_synthesis import ActionModelSynthesis
 

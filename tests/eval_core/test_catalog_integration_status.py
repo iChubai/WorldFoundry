@@ -6,8 +6,8 @@ import importlib
 
 import pytest
 
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 pytestmark = pytest.mark.unit
 

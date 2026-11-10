@@ -8,7 +8,6 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.evals.tasks.embodied.adapters.runtime_bridge import first_image
 from worldfoundry.synthesis.action_generation.openvla.engine import (
     OpenVLARuntime,
@@ -16,6 +15,7 @@ from worldfoundry.synthesis.action_generation.openvla.engine import (
     select_openvla_checkpoint,
 )
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 _RUNTIME_CACHE: dict[tuple[Any, ...], OpenVLARuntime] = {}
 

@@ -263,7 +263,7 @@ const MODEL_RUNTIME: ArchDiagramSpec = {
     {
       type: 'call',
       label: 'resolve_pipeline_route()',
-      file: 'evals/models/pipelines/bindings.py:359',
+      file: 'zoo/bindings.py:327',
     },
     { type: 'lane', label: { en: 'Runtime', zh: '运行时' } },
     { type: 'node', id: 'pipeline' },
@@ -320,7 +320,7 @@ const MODEL_RUNTIME_BRIDGE: ArchDiagramSpec = {
     route: {
       role: { en: 'Resolver', zh: '解析' },
       title: 'resolve_pipeline_route()',
-      file: 'evals/models/pipelines/bindings.py:359',
+      file: 'zoo/bindings.py:327',
       detail: {
         en: 'Canonical binding helpers; do not re-parse route strings',
         zh: '唯一绑定入口；不要各自重解析 route string',

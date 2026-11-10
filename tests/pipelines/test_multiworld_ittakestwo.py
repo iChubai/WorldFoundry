@@ -14,7 +14,6 @@ import numpy as np
 from PIL import Image
 
 import worldfoundry.evals.models.pipelines as model_pipelines
-from worldfoundry.evals.models.catalog.registry import discover_model_registry
 from worldfoundry.pipelines.multiworld.pipeline_multiworld_ittakestwo import (
     MultiWorldItTakesTwoPipeline,
 )
@@ -24,6 +23,7 @@ from worldfoundry.synthesis.visual_generation.multiworld import (
 from worldfoundry.synthesis.visual_generation.multiworld import (
     multiworld_ittakestwo_synthesis as synthesis_module,
 )
+from worldfoundry.zoo.catalog.registry import discover_model_registry
 
 
 def _example_action() -> dict[str, np.ndarray]:

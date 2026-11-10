@@ -39,9 +39,9 @@ def main() -> None:
     torch.backends.cudnn.benchmark = False
 
     from worldfoundry.evals.api import GenerationRequest
-    from worldfoundry.evals.models.catalog import load_model_zoo_registry
     from worldfoundry.evals.models.pipelines.invocation import build_pipeline_invocation, invoke_pipeline
     from worldfoundry.evals.models.pipelines.loading import PipelineRunnerSpec, load_pipeline_from_spec
+    from worldfoundry.zoo.catalog import load_model_zoo_registry
 
     entry = load_model_zoo_registry().get("wonderworld")
     assert entry.pipeline_target is not None

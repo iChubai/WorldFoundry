@@ -12,8 +12,8 @@ import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 _BASE_MODEL_TARGETS: Mapping[str, str] = {
     "dap": "worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1",

@@ -11,10 +11,10 @@ import torch
 from worldfoundry.base_models.diffusion_model.contracts import DiffusionOutput
 from worldfoundry.base_models.diffusion_model.recipes.registry import default_native_diffusion_registry
 from worldfoundry.evals.api import WorldModelConfig
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
 from worldfoundry.evals.models.pipelines.loading import build_pipeline_runner_spec
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile_manifest
 from worldfoundry.pipelines.helixworld import HelixWorldPipeline
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile_manifest
 
 MODEL_DATA = Path(__file__).resolve().parents[2] / "worldfoundry" / "data" / "models"
 

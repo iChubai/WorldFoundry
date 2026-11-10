@@ -28,7 +28,7 @@ assert pipeline.synthesis_model.runtime.rollout is None
 
 
 def test_v15_catalog_has_distinct_checkpoint_and_route():
-    from worldfoundry.evals.models.runtime import validate_catalog_references
+    from worldfoundry.evals.models.validate import validate_catalog_references
     from worldfoundry.studio.inference.catalog import find_entry
 
     old = find_entry("inspatio-world")

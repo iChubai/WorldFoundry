@@ -5,14 +5,13 @@ from pathlib import Path
 import pytest
 
 from worldfoundry.evals.api import GenerationRequest
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models import resolve_model_zoo_runner
+from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_runner
 from worldfoundry.pipelines.pusa_vidgen.pipeline_pusa_vidgen import PusaVidGenPipeline
 from worldfoundry.synthesis.visual_generation.pusa_vidgen.adapter import (
     PusaVidGenRuntimePlan,
 )
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
-
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODEL_MANIFEST_DIR = REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog"

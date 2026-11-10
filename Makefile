@@ -580,7 +580,7 @@ data-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -m worldfoundry.cli zoo benchmarks --json >/dev/null
 
 runtime-registry-check:
-	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evals.models.runtime.validate import validate_runtime_registry; errors = [issue for issue in validate_runtime_registry() if issue.severity == "error"]; assert not errors, "\\n".join(f"[{issue.code}] {issue.message}" for issue in errors)'
+	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evals.models.validate import validate_runtime_registry; errors = [issue for issue in validate_runtime_registry() if issue.severity == "error"]; assert not errors, "\\n".join(f"[{issue.code}] {issue.message}" for issue in errors)'
 
 workspace-registry-check:
 	PYTHONPATH=$(PYTHONPATH) $(PYTHON) -c 'from worldfoundry.evals.tasks.catalog.integrity import catalog_runner_table_issues, video_catalog_dispatch_issues; from worldfoundry.evals.tasks.catalog.workspace_registry import validate_workspace_registry; issues = [*validate_workspace_registry(), *video_catalog_dispatch_issues(), *catalog_runner_table_issues()]; assert not issues, "\n".join(issues); print("workspace registry OK")'

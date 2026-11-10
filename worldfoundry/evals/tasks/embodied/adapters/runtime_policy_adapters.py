@@ -9,7 +9,6 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.evals.tasks.embodied.adapters.runtime_bridge import (
     extract_action_values,
     first_image,
@@ -24,6 +23,7 @@ from worldfoundry.evals.tasks.embodied.policy_adapter import (
 from worldfoundry.evals.tasks.embodied.simulators.specs import DimSpec
 from worldfoundry.synthesis.action_generation.official_policy.runtime import OfficialPolicyRuntime, build_runtime_config
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 
 def _load_target(target: str) -> Any:

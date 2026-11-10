@@ -16,9 +16,10 @@ from typing import Any
 
 import yaml
 
-from ...api import WorldModelManifest
-from ...api.registry import ModelRegistry
-from ...utils import DATA_ROOT
+from worldfoundry.core.io.paths import DATA_ROOT
+from worldfoundry.evals.api import WorldModelManifest
+from worldfoundry.evals.api.registry import ModelRegistry
+
 from .schema import ModelZooEntry, load_entries, select_default_variant
 
 # ── Type aliases and constants ───────────────────────────────

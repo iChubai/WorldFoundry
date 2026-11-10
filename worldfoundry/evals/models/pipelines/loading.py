@@ -15,8 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.evals.api import WorldModelConfig
-
-from .bindings import PipelineRoute, first_text, resolve_pipeline_route, runtime_profile_id
+from worldfoundry.zoo.bindings import PipelineRoute, first_text, resolve_pipeline_route, runtime_profile_id
 
 GENERATION_DEFAULTS_PARAMETER = "_worldfoundry_generation_defaults"
 

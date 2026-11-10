@@ -7,16 +7,16 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from ..pipelines.aliases import load_pipeline_alias_registry
-from ..pipelines.bindings import (
+from worldfoundry.zoo.aliases import load_pipeline_alias_registry
+from worldfoundry.zoo.bindings import (
     PipelineBindingRegistry,
     load_pipeline_binding_registry,
     resolve_pipeline_binding,
     runtime_profile_id,
 )
-from .assets import RuntimeAssetProfile, load_runtime_asset_profile_by_id
-from .environments import RuntimeEnvironmentProfile, load_runtime_environment_profile_by_id
-from .profiles import RuntimeProfile
+from worldfoundry.zoo.runtime.assets import RuntimeAssetProfile, load_runtime_asset_profile_by_id
+from worldfoundry.zoo.runtime.environments import RuntimeEnvironmentProfile, load_runtime_environment_profile_by_id
+from worldfoundry.zoo.runtime.profiles import RuntimeProfile
 
 # Recognized artifact kinds that a runtime profile may declare.
 KNOWN_ARTIFACT_KINDS = frozenset(
@@ -263,17 +263,17 @@ def validate_catalog_references(
     """
 
     if catalog_entries is None:
-        from ..catalog.zoo_registry import load_model_zoo_registry
+        from worldfoundry.zoo.catalog.zoo_registry import load_model_zoo_registry
 
         catalog_entries = load_model_zoo_registry(catalog_root).list()
     if bindings is None:
         bindings = load_pipeline_binding_registry(binding_root)
     if runtime_profiles is None:
-        from .profiles import DEFAULT_RUNTIME_PROFILES_ROOT, load_runtime_profile_manifests
+        from worldfoundry.zoo.runtime.profiles import DEFAULT_RUNTIME_PROFILES_ROOT, load_runtime_profile_manifests
 
         runtime_profiles = load_runtime_profile_manifests(profile_root or DEFAULT_RUNTIME_PROFILES_ROOT)
     if runner_registry is None:
-        from ..runners.registry import builtin_model_runner_registry
+        from .runners.registry import builtin_model_runner_registry
 
         runner_registry = builtin_model_runner_registry()
 
@@ -340,9 +340,9 @@ def validate_runtime_registry(
     the number of manifests rather than re-scanning data trees per profile.
     """
 
-    from .assets import load_runtime_asset_profiles
-    from .environments import load_runtime_environment_profiles
-    from .profiles import DEFAULT_RUNTIME_PROFILES_ROOT, load_runtime_profile_manifests
+    from worldfoundry.zoo.runtime.assets import load_runtime_asset_profiles
+    from worldfoundry.zoo.runtime.environments import load_runtime_environment_profiles
+    from worldfoundry.zoo.runtime.profiles import DEFAULT_RUNTIME_PROFILES_ROOT, load_runtime_profile_manifests
 
     issues: list[RuntimeValidationIssue] = []
     profiles = tuple(load_runtime_profile_manifests(profile_root or DEFAULT_RUNTIME_PROFILES_ROOT))

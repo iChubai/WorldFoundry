@@ -21,15 +21,15 @@ pytestmark = pytest.mark.unit
 @pytest.mark.parametrize(
     "module_name,name",
     [
-        ("models.catalog.schema", "_tuple_of_str"),
-        ("tasks.catalog.schema", "_tuple_of_str"),
-        ("tasks.catalog.yaml", "_string_tuple"),
-        ("tasks.catalog.dispatch", "_str_tuple"),
-        ("tasks.execution.orchestration.plan", "_coerce_str_tuple"),
+        ("zoo.catalog.schema", "_tuple_of_str"),
+        ("evals.tasks.catalog.schema", "_tuple_of_str"),
+        ("evals.tasks.catalog.yaml", "_string_tuple"),
+        ("evals.tasks.catalog.dispatch", "_str_tuple"),
+        ("evals.tasks.execution.orchestration.plan", "_coerce_str_tuple"),
     ],
 )
 def test_catalog_tuple_coercers_share_the_same_contract(module_name: str, name: str) -> None:
-    coerce = getattr(importlib.import_module("worldfoundry.evals." + module_name), name)
+    coerce = getattr(importlib.import_module("worldfoundry." + module_name), name)
     assert coerce is tuple_of_str
     assert coerce(None) == ()
     assert coerce("score") == ("score",)

@@ -13,12 +13,12 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.diffusion_policy.runtime import (
     DiffusionPolicyRuntime,
     DiffusionPolicyRuntimeConfig,
     select_diffusion_policy_checkpoint,
 )
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_action_synthesis import ActionModelSynthesis
 

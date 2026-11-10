@@ -15,12 +15,12 @@ from pathlib import Path
 
 import numpy as np
 
-from worldfoundry.evals.models import discover_model_registry
 from worldfoundry.operators.kairos_operator import KairosOperator
 from worldfoundry.pipelines.kairos.pipeline_kairos import KairosPipeline
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.synthesis.visual_generation.kairos import runtime as runtime_module
 from worldfoundry.synthesis.visual_generation.kairos.runtime import KairosRuntime
+from worldfoundry.zoo.catalog.registry import discover_model_registry
 
 
 def test_kairos_dit_import_and_pytorch_attention_fallback() -> None:

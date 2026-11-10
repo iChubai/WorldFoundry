@@ -6,13 +6,13 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.evals.models.runtime.profiles import load_runtime_profile
 from worldfoundry.synthesis.action_generation.gr00t.runtime import (
     GR00TRuntime,
     GR00TRuntimeConfig,
     select_gr00t_checkpoint,
 )
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config, variant_defaults
+from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
 from ..base_action_synthesis import ActionModelSynthesis
 

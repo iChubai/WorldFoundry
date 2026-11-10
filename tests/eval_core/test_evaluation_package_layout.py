@@ -33,7 +33,9 @@ def test_evaluation_uses_lmms_eval_style_top_level_domains() -> None:
     assert "tui" not in top_level_packages
     assert "runtime" not in top_level_packages
 
-    assert (evaluation_root / "runner.py").is_file()
+    assert (evaluation_root / "public.py").is_file()
+    for removed in ("runner.py", "framework.py", "__main__.py"):
+        assert not (evaluation_root / removed).exists()
     assert (evaluation_root / "utils.py").is_file()
     assert (evaluation_root / "reporting" / "__init__.py").is_file()
     assert not (evaluation_root / "reporting.py").exists()
@@ -200,11 +202,11 @@ def test_evaluation_uses_lmms_eval_style_top_level_domains() -> None:
         if path.is_dir() and path.name != "__pycache__"
     )
     assert nested_subpackages == [
-        "worldfoundry/evals/models/catalog",
+        "worldfoundry/zoo/catalog",
         "worldfoundry/evals/models/integrations",
         "worldfoundry/evals/models/pipelines",
         "worldfoundry/evals/models/runners",
-        "worldfoundry/evals/models/runtime",
+        "worldfoundry/zoo/runtime",
         "worldfoundry/evals/tasks/catalog",
         "worldfoundry/evals/tasks/contracts",
         "worldfoundry/evals/tasks/datasets",
@@ -238,7 +240,7 @@ def test_dataset_helpers_are_split_by_responsibility() -> None:
 
 
 def test_zoo_schemas_use_shared_json_contract_base() -> None:
-    model_schema = REPO_ROOT / "worldfoundry/evals/models/catalog/schema.py"
+    model_schema = REPO_ROOT / "worldfoundry/zoo/catalog/schema.py"
     benchmark_schema = REPO_ROOT / "worldfoundry/evals/tasks/catalog/schema.py"
 
     for path in (model_schema, benchmark_schema):
@@ -405,8 +407,6 @@ def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
         "invocation",
         "results",
         "loading",
-        "bindings",
-        "aliases",
     ):
         assert (pipeline_root / f"{module}.py").is_file()
     for removed_module in (
@@ -431,10 +431,15 @@ def test_model_pipeline_package_keeps_path_a_surface_only() -> None:
         "reference_" + "runner.py",
     ):
         assert not (models_root / removed_module).exists()
+    zoo_root = REPO_ROOT / "worldfoundry/zoo"
     for module in ("manifest", "policy", "registry", "schema", "zoo_registry"):
-        assert (models_root / "catalog" / f"{module}.py").is_file()
+        assert (zoo_root / "catalog" / f"{module}.py").is_file()
     for module in ("profiles", "environments", "assets"):
-        assert (models_root / "runtime" / f"{module}.py").is_file()
+        assert (zoo_root / "runtime" / f"{module}.py").is_file()
+    for module in ("bindings", "aliases"):
+        assert (zoo_root / f"{module}.py").is_file()
+    assert not (models_root / "catalog").exists()
+    assert not (models_root / "runtime").exists()
     for module in ("builtins", "pipeline", "registry", "resolver"):
         assert (models_root / "runners" / f"{module}.py").is_file()
     for removed_module in ("plugins", "reference"):
@@ -445,8 +450,8 @@ def test_model_package_facade_is_lazy_and_bounded() -> None:
     models_init = REPO_ROOT / "worldfoundry/evals/models/__init__.py"
     text = models_init.read_text(encoding="utf-8")
     watched_modules = [
-        "worldfoundry.evals.models.catalog.registry",
-        "worldfoundry.evals.models.catalog.manifest",
+        "worldfoundry.zoo.catalog.registry",
+        "worldfoundry.zoo.catalog.manifest",
         "worldfoundry.evals.models.integrations",
         "worldfoundry.evals.models.pipelines.lifecycle",
         "worldfoundry.evals.models.runners.builtins",
@@ -475,8 +480,9 @@ def test_model_package_facade_is_lazy_and_bounded() -> None:
     )
     assert json.loads(result.stdout) == []
 
-    from worldfoundry.evals.models import ModelRunnerRegistry, WorldFoundryPipelineRunner
+    from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner
     from worldfoundry.evals.models.runners.pipeline import WorldFoundryPipelineRunner as CanonicalPipelineRunner
+    from worldfoundry.evals.models.runners.registry import ModelRunnerRegistry
     from worldfoundry.evals.models.runners.registry import ModelRunnerRegistry as CanonicalRegistry
 
     assert WorldFoundryPipelineRunner is CanonicalPipelineRunner

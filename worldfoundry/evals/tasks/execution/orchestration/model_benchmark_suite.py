@@ -30,8 +30,6 @@ from typing import Any, cast
 from worldfoundry.core.io.formats.serialization import read_jsonl_objects
 from worldfoundry.core.observability.logging_setup import get_logger
 from worldfoundry.evals.api import is_generation_result_successful
-from worldfoundry.evals.models.catalog import load_model_zoo_registry
-from worldfoundry.evals.models.catalog.manifest import model_zoo_entry_to_world_model_manifest
 from worldfoundry.evals.tasks.catalog.benchmark_catalog import resolve_benchmark_manifest_path
 from worldfoundry.evals.tasks.catalog.schema import BenchmarkZooEntry
 from worldfoundry.evals.tasks.catalog.zoo_registry import load_benchmark_zoo_registry
@@ -45,6 +43,8 @@ from worldfoundry.evals.utils import (
     write_jsonl,
     write_text,
 )
+from worldfoundry.zoo.catalog import load_model_zoo_registry
+from worldfoundry.zoo.catalog.manifest import model_zoo_entry_to_world_model_manifest
 
 from .cache import generation_cache_payload, json_sha256
 from .evaluate import _coerce_generation_requests, _load_optional_source, _model_execution_identity
@@ -673,7 +673,7 @@ def _resolve_suite_model_runner(
     plan: _SuiteCellPlan,
 ) -> Any:
     """Resolve one model lease shared by all executable cells for that model."""
-    from worldfoundry.evals.models import resolve_model_zoo_runner, resolve_world_model_runner
+    from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_runner, resolve_world_model_runner
 
     manifest_dir = _model_manifest_dir_for_cell(
         plan.requested_model_id,
@@ -835,7 +835,7 @@ def _resume_cell(
             return None
         resolved_config = None
         if prepared.model_zoo_manifest_dir is not None:
-            from worldfoundry.evals.models import resolve_model_zoo_config
+            from worldfoundry.evals.models.runners.resolver import resolve_model_zoo_config
 
             resolved_config = resolve_model_zoo_config(
                 prepared.model_id,

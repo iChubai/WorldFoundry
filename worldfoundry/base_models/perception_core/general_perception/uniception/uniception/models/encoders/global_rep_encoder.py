@@ -7,7 +7,10 @@ from functools import partial
 
 import torch.nn as nn
 
-from uniception.models.encoders.base import EncoderGlobalRepInput, EncoderGlobalRepOutput
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.encoders.base import (
+    EncoderGlobalRepInput,
+    EncoderGlobalRepOutput,
+)
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 

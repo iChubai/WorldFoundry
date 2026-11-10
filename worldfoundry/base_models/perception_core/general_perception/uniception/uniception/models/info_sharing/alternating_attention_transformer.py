@@ -9,17 +9,25 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from uniception.models.info_sharing.base import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.info_sharing.base import (
     MultiViewTransformerInput,
     MultiViewTransformerOutput,
     UniCeptionInfoSharingBase,
 )
-from uniception.models.utils.intermediate_feature_return import IntermediateFeatureReturner, feature_take_indices
-from uniception.models.utils.positional_encoding import PositionGetter
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.utils.intermediate_feature_return import (
+    IntermediateFeatureReturner,
+    feature_take_indices,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.utils.positional_encoding import (
+    PositionGetter,
+)
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 # isort: split
-from uniception.models.utils.transformer_blocks import Mlp, SelfAttentionBlock
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.utils.transformer_blocks import (
+    Mlp,
+    SelfAttentionBlock,
+)
 
 
 class MultiViewAlternatingAttentionTransformer(UniCeptionInfoSharingBase):

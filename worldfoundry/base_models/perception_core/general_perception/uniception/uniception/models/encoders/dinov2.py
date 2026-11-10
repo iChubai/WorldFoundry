@@ -6,8 +6,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from uniception.models.encoders.base import UniCeptionViTEncoderBase, ViTEncoderInput, ViTEncoderOutput
-from uniception.models.utils.intermediate_feature_return import IntermediateFeatureReturner
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.encoders.base import (
+    UniCeptionViTEncoderBase,
+    ViTEncoderInput,
+    ViTEncoderOutput,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.utils.intermediate_feature_return import (
+    IntermediateFeatureReturner,
+)
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 

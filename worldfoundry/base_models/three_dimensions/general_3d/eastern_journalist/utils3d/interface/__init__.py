@@ -3,7 +3,7 @@
 import sys
 from typing import TYPE_CHECKING
 
-import utils3d
+from worldfoundry.base_models.three_dimensions.general_3d.eastern_journalist import utils3d
 
 from ..helpers import suppress_traceback
 

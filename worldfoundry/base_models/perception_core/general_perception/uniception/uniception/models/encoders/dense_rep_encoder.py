@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from uniception.models.encoders.base import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.encoders.base import (
     UniCeptionViTEncoderBase,
     ViTEncoderInput,
     ViTEncoderNonImageInput,

@@ -15,7 +15,7 @@
 
 
 try:
-    from qwen_vl_utils import extract_vision_info, process_vision_info
+    from worldfoundry.base_models.llm_mllm_core.mllm.qwen.qwen_vl_utils import extract_vision_info, process_vision_info
 except ImportError as exc:
     _QWEN_VL_UTILS_IMPORT_ERROR = exc
 

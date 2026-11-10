@@ -71,6 +71,7 @@ class GaussianAdapter(nn.Module):
         image_shape: tuple[int, int],
         eps: float = 1e-8,
         gt_extrinsics: torch.Tensor | None = None,  # "*#batch 4 4"
+        gs_scale_extra_multiplier: float = 1.0,
         **kwargs,
     ) -> Gaussians:
         device = extrinsics.device
@@ -128,6 +129,8 @@ class GaussianAdapter(nn.Module):
         # make the scale invarient to resolution
         scale_min = self.gaussian_scale_min
         scale_max = self.gaussian_scale_max
+        if gs_scale_extra_multiplier != 1.0:
+            scale_max = scale_max * gs_scale_extra_multiplier
         scales = scale_min + (scale_max - scale_min) * scales.sigmoid()
         pixel_size = 1 / torch.tensor((W, H), dtype=dtype, device=device)
         multiplier = self.get_scale_multiplier(intr_normed, pixel_size)

@@ -114,10 +114,20 @@ def save_gaussian_ply(
     prune_by_depth_percent: float | None = 1.0,
     prune_border_gs: bool | None = True,
     match_3dgs_mcmc_dev: bool | None = False,
+    prune_by_opacity_percentile: float | None = None,
 ):
     b = gaussians.means.shape[0]
     assert b == 1, "must set batch_size=1 when exporting 3D gaussians"
     src_v, out_h, out_w, _ = ctx_depth.shape
+
+    # A downsampled GS head (gs_down_ratio > 1) yields fewer Gaussians per view
+    # than depth pixels; subsample the depth to the GS resolution.
+    n_per_view = gaussians.means.shape[1] // src_v
+    if n_per_view != out_h * out_w:
+        down_ratio = round(((out_h * out_w) / n_per_view) ** 0.5)
+        out_h, out_w = out_h // down_ratio, out_w // down_ratio
+        assert out_h * out_w == n_per_view, f"Cannot infer GS resolution: {n_per_view} != {out_h} * {out_w}"
+        ctx_depth = ctx_depth[:, ::down_ratio, ::down_ratio, :]
 
     # extract gs params
     world_means = gaussians.means
@@ -148,6 +158,17 @@ def save_gaussian_ply(
         d_mask = (in_depths[..., 0] <= d_percentile).unsqueeze(-1)
         mask = mask & d_mask
     mask = mask.squeeze(-1)  # v h w
+
+    # trim low-opacity Gaussians by a global percentile, e.g. 0.1 drops the lowest 10%.
+    if prune_by_opacity_percentile is not None and 0.0 < prune_by_opacity_percentile < 1.0:
+        opacity = gaussians.opacities[0]
+        if opacity.ndim > 1 and opacity.shape[-1] == 1:
+            opacity = opacity[..., 0]
+        opacity_map = rearrange(opacity, "(v h w) -> v h w", v=src_v, h=out_h, w=out_w).to(mask.device)
+        if mask.any():
+            flat = opacity_map[mask].float().flatten()
+            k = max(1, min(flat.numel(), int(flat.numel() * prune_by_opacity_percentile)))
+            mask = mask & (opacity_map >= torch.kthvalue(flat, k).values)
 
     # helper fn, must place after mask
     def trim_select_reshape(element):

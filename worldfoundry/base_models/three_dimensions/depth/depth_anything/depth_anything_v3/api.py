@@ -232,6 +232,12 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         infer_gs: bool = False,
         use_ray_pose: bool = False,
         ref_view_strategy: str = "saddle_balanced",
+        input_extrinsics: torch.Tensor | None = None,
+        input_intrinsics: torch.Tensor | None = None,
+        use_aligned_pred_cam: bool = False,
+        gs_down_ratio: int = 1,
+        gs_scale_extra_multiplier: float = 1.0,
+        gs_ds_feature_mode: bool = False,
     ) -> dict[str, torch.Tensor]:
         """
         Forward pass through the model.
@@ -244,6 +250,14 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
             infer_gs: Enable Gaussian Splatting branch.
             use_ray_pose: Use ray-based pose estimation instead of camera decoder.
             ref_view_strategy: Strategy for selecting reference view from multiple views.
+            input_extrinsics: Unnormalized input extrinsics ``(B, N, 4, 4)`` used by the GS branch.
+            input_intrinsics: Input intrinsics ``(B, N, 3, 3)`` used by the GS branch.
+            use_aligned_pred_cam: Unproject Gaussians with predicted cameras mapped into the
+                input-extrinsics frame by the inverse Umeyama Sim(3).
+            gs_down_ratio: Spatial downsampling factor of the GS head output.
+            gs_scale_extra_multiplier: Multiplier applied to the maximum Gaussian scale.
+            gs_ds_feature_mode: Run the GS image merger at full resolution and average-pool
+                its features when the GS head output is downsampled.
 
         Returns:
             Dictionary containing model predictions
@@ -264,7 +278,19 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
             ),
         ):
             return self.model(
-                image, extrinsics, intrinsics, export_feat_layers, infer_gs, use_ray_pose, ref_view_strategy
+                image,
+                extrinsics,
+                intrinsics,
+                export_feat_layers,
+                infer_gs,
+                use_ray_pose,
+                ref_view_strategy,
+                input_extrinsics=input_extrinsics,
+                input_intrinsics=input_intrinsics,
+                use_aligned_pred_cam=use_aligned_pred_cam,
+                gs_down_ratio=gs_down_ratio,
+                gs_scale_extra_multiplier=gs_scale_extra_multiplier,
+                gs_ds_feature_mode=gs_ds_feature_mode,
             )
 
     def inference(
@@ -293,6 +319,11 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         feat_vis_fps: int = 15,
         # Other export parameters, e.g., gs_ply, gs_video
         export_kwargs: dict | None = None,
+        # Gaussian branch options
+        use_aligned_pred_cam: bool = False,
+        gs_down_ratio: int = 1,
+        gs_scale_extra_multiplier: float = 1.0,
+        gs_ds_feature_mode: bool = False,
     ) -> Prediction:
         """
         Run inference on input images.
@@ -321,6 +352,13 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
             show_cameras: [GLB] Show camera wireframes in the exported scene (default: True)
             feat_vis_fps: [FEAT_VIS] Frame rate for output video (default: 15)
             export_kwargs: additional arguments to export functions.
+            use_aligned_pred_cam: With input extrinsics, unproject Gaussians with the predicted
+                cameras mapped into the input-extrinsics frame (inverse Umeyama Sim(3)) and
+                rescale the GS depths to that frame.
+            gs_down_ratio: Spatial downsampling factor of the GS head output (1 = full resolution).
+            gs_scale_extra_multiplier: Multiplier applied to the maximum Gaussian scale.
+            gs_ds_feature_mode: Run the GS image merger at full resolution and average-pool its
+                features when ``gs_down_ratio > 1``.
 
         Returns:
             Prediction object containing depth maps and camera parameters
@@ -348,7 +386,19 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         export_feat_layers = list(export_feat_layers) if export_feat_layers is not None else []
 
         raw_output = self._run_model_forward(
-            imgs, ex_t_norm, in_t, export_feat_layers, infer_gs, use_ray_pose, ref_view_strategy
+            imgs,
+            ex_t_norm,
+            in_t,
+            export_feat_layers,
+            infer_gs,
+            use_ray_pose,
+            ref_view_strategy,
+            input_extrinsics=ex_t,
+            input_intrinsics=in_t,
+            use_aligned_pred_cam=use_aligned_pred_cam,
+            gs_down_ratio=gs_down_ratio,
+            gs_scale_extra_multiplier=gs_scale_extra_multiplier,
+            gs_ds_feature_mode=gs_ds_feature_mode,
         )
 
         # Convert raw output to prediction
@@ -505,6 +555,13 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
         infer_gs: bool = False,
         use_ray_pose: bool = False,
         ref_view_strategy: str = "saddle_balanced",
+        *,
+        input_extrinsics: torch.Tensor | None = None,
+        input_intrinsics: torch.Tensor | None = None,
+        use_aligned_pred_cam: bool = False,
+        gs_down_ratio: int = 1,
+        gs_scale_extra_multiplier: float = 1.0,
+        gs_ds_feature_mode: bool = False,
     ) -> dict[str, torch.Tensor]:
         """Run model forward pass."""
         device = imgs.device
@@ -513,7 +570,21 @@ class DepthAnything3(nn.Module, PyTorchModelHubMixin):
             torch.cuda.synchronize(device)
         start_time = time.time()
         feat_layers = list(export_feat_layers) if export_feat_layers is not None else None
-        output = self.forward(imgs, ex_t, in_t, feat_layers, infer_gs, use_ray_pose, ref_view_strategy)
+        output = self.forward(
+            imgs,
+            ex_t,
+            in_t,
+            feat_layers,
+            infer_gs,
+            use_ray_pose,
+            ref_view_strategy,
+            input_extrinsics=input_extrinsics,
+            input_intrinsics=input_intrinsics,
+            use_aligned_pred_cam=use_aligned_pred_cam,
+            gs_down_ratio=gs_down_ratio,
+            gs_scale_extra_multiplier=gs_scale_extra_multiplier,
+            gs_ds_feature_mode=gs_ds_feature_mode,
+        )
         if need_sync:
             torch.cuda.synchronize(device)
         end_time = time.time()

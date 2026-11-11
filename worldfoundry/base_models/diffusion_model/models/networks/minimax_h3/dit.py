@@ -226,6 +226,7 @@ class MiniMaxH3Attention(nn.Module):
         self.head_dim = arch.attention_head_dim
         self.inner_dim = self.num_heads * self.head_dim
         self.softmax_scale = self.head_dim**-0.5
+        self.attention_fn = _varlen_attention
         # Fused qkv: three logical matrices stored as one tensor.
         self.qkv_proj = nn.Linear(arch.hidden_size, 3 * self.inner_dim, bias=False, dtype=_BF16)
         self.q_norm = make_rms_norm(self.head_dim, eps=arch.qk_norm_eps)
@@ -254,7 +255,7 @@ class MiniMaxH3Attention(nn.Module):
             cos_sin_cache, positions = rope_cache
             q, k = qk_norm_rope(q, k, self.q_norm, self.k_norm, cos_sin_cache, positions)
         if attention_groups is None:
-            out = _varlen_attention(q, k, v, cu_seqlens=cu_seqlens, softmax_scale=self.softmax_scale)
+            out = self.attention_fn(q, k, v, cu_seqlens=cu_seqlens, softmax_scale=self.softmax_scale)
         else:
             # Variants can expose global media with document-local text without
             # materializing a quadratic attention mask or duplicating projections.
@@ -399,20 +400,20 @@ class MiniMaxH3DiTBlock(nn.Module):
 
         residual = x
         h = self.norm1(x)
-        h = indexed_scale_shift(h, shift_msa, scale_msa, combined_indices, dtype=_BF16)
+        h = indexed_scale_shift(h, shift_msa, scale_msa, combined_indices, dtype=x.dtype)
         if attention_groups is None:
             h = self.attn(h, rope_cache=rope_cache, cu_seqlens=cu_seqlens)
         else:
             h = self.attn(h, rope_cache=rope_cache, cu_seqlens=cu_seqlens, attention_groups=attention_groups)
-        x = indexed_gate(residual, gate_msa, h, combined_indices, dtype=_BF16)
+        x = indexed_gate(residual, gate_msa, h, combined_indices, dtype=x.dtype)
 
         residual = x
         if ffn_conditioner is not None:
             x = ffn_conditioner(x)
         h = self.norm2(x)
-        h = indexed_scale_shift(h, shift_mlp, scale_mlp, combined_indices, dtype=_BF16)
+        h = indexed_scale_shift(h, shift_mlp, scale_mlp, combined_indices, dtype=x.dtype)
         h = self.mlp(h)
-        return indexed_gate(residual, gate_mlp, h, combined_indices, dtype=_BF16)
+        return indexed_gate(residual, gate_mlp, h, combined_indices, dtype=x.dtype)
 
 
 # --------------------------------------------------------------------------- #
@@ -443,7 +444,7 @@ class MiniMaxH3FinalLayer(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         shift, scale = self.adaln_proj(adaln_input)
         h = self.norm(x)
-        h = indexed_scale_shift(h, shift, scale, inverse_indices, dtype=_BF16)
+        h = indexed_scale_shift(h, shift, scale, inverse_indices, dtype=x.dtype)
         h = h.to(_FP32)  # full precision through both output projections
         return self.video_out(h), self.audio_out(h)
 
@@ -516,7 +517,7 @@ class MiniMaxH3DiTModel(nn.Module):
             raise ValueError(
                 f"refiner cu_seqlens live text length must be in [1, {int(prompt_embeds.shape[0])}], got {text_len}"
             )
-        text_rows = prompt_embeds[:text_len].to(device=device, dtype=_BF16)
+        text_rows = prompt_embeds[:text_len].to(device=device, dtype=self.condition_proj.weight.dtype)
         # Refiner attends the single text document [0, text_len].
         refiner_cu = torch.tensor([0, text_len], device=device, dtype=torch.int32)
         text_embed = self.condition_proj(text_rows)
@@ -535,7 +536,7 @@ class MiniMaxH3DiTModel(nn.Module):
         seq_len = int(img_position_ids.shape[1])
         rope_freqs = self.rope(img_position_ids).to(device)
         return (
-            rope_cos_sin_cache(rope_freqs, dtype=_BF16),
+            rope_cos_sin_cache(rope_freqs, dtype=self.condition_proj.weight.dtype),
             torch.arange(seq_len, device=device, dtype=torch.long),
         )
 
@@ -567,8 +568,9 @@ class MiniMaxH3DiTModel(nn.Module):
                 f"[1, {int(text_embeddings_selected.shape[0])}], got {text_len}"
             )
         text_pos = text_pos[:text_len]
+        dtype = self.condition_proj.weight.dtype
         if refined_prompt_embeds_length is not None:
-            text_embed = text_embeddings_selected[:text_len].to(device=device, dtype=_BF16)
+            text_embed = text_embeddings_selected[:text_len].to(device=device, dtype=dtype)
             if int(text_embed.shape[-1]) != self.hidden_size:
                 raise ValueError(
                     "refined prompt embeddings must have hidden width "
@@ -578,21 +580,21 @@ class MiniMaxH3DiTModel(nn.Module):
             text_embed = self.refine_prompt_embeds(text_embeddings_selected, refiner_cu_seqlens, device=device)
 
         seq_len = int(x.shape[1])
-        embeddings = torch.zeros((seq_len, self.hidden_size), device=device, dtype=_BF16)
+        embeddings = torch.zeros((seq_len, self.hidden_size), device=device, dtype=dtype)
 
         if text_pos.numel():
-            embeddings.index_add_(0, text_pos, text_embed[:text_len].to(_BF16))
+            embeddings.index_add_(0, text_pos, text_embed[:text_len].to(dtype))
 
         # Latent embedders stay fp32; only scatter into their packed positions.
         if img_pos.numel():
             x_rows = x.view(-1, x.shape[-1]).index_select(0, img_pos).to(_FP32)
             video_embed = self.video_patch_proj(x_rows)
-            embeddings.index_add_(0, img_pos, video_embed.to(_BF16))
+            embeddings.index_add_(0, img_pos, video_embed.to(dtype))
 
         if audio_pos.numel():
             audio_rows = audio_x.view(-1, audio_x.shape[-1]).index_select(0, audio_pos).to(_FP32)
             audio_embed = self.audio_patch_proj(audio_rows)
-            embeddings.index_add_(0, audio_pos, audio_embed.to(_BF16))
+            embeddings.index_add_(0, audio_pos, audio_embed.to(dtype))
 
         t_emb = self.time_embedder(unique_timesteps)
         return embeddings, t_emb
@@ -648,7 +650,7 @@ class MiniMaxH3DiTModel(nn.Module):
         if rope_cache is None:
             rope_freqs = self.rope(img_position_ids).to(device)
             rope_cache = (
-                rope_cos_sin_cache(rope_freqs, dtype=_BF16),
+                rope_cos_sin_cache(rope_freqs, dtype=self.condition_proj.weight.dtype),
                 torch.arange(seq_len, device=device, dtype=torch.long),
             )
         img_pos = img_pos.to(device)
@@ -667,7 +669,7 @@ class MiniMaxH3DiTModel(nn.Module):
             device=device,
             refined_prompt_embeds_length=kwargs.get("refined_prompt_embeds_length"),
         )
-        adaln_input = F.silu(t_emb).to(_BF16)
+        adaln_input = F.silu(t_emb).to(self.condition_proj.weight.dtype)
         inverse_indices = inverse_indices.to(device)
         if block_token_tags is None:
             assert token_tags is not None

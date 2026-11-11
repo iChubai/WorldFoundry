@@ -133,3 +133,40 @@ def test_forward_shapes() -> None:
     assert audio_logits.dtype == torch.float32
     assert torch.isfinite(video_logits).all()
     assert torch.isfinite(audio_logits).all()
+
+
+@pytest.mark.unit
+def test_fp32_packed_forward_preserves_block_precision() -> None:
+    torch.manual_seed(12)
+    model = MiniMaxH3DiTModel(_tiny_config()).float().eval()
+    model.rope.inv_freq.fill_(0.1)
+    inputs, *_ = _build_packed_inputs(model.arch, torch.device("cpu"))
+    inputs["prompt_embeds"] = inputs["prompt_embeds"].float()
+    with torch.no_grad():
+        video, audio = model(**inputs)
+    assert video.dtype == audio.dtype == torch.float32
+    assert torch.isfinite(video).all() and torch.isfinite(audio).all()
+
+
+@pytest.mark.unit
+def test_attention_callable_is_instance_local() -> None:
+    from worldfoundry.base_models.diffusion_model.models.networks.minimax_h3.dit import MiniMaxH3Attention
+
+    torch.manual_seed(13)
+    first = MiniMaxH3Attention(_tiny_config()).float()
+    second = MiniMaxH3Attention(_tiny_config()).float()
+    second.load_state_dict(first.state_dict())
+    calls = []
+    original = first.attention_fn
+
+    def attend(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, **kwargs: object) -> torch.Tensor:
+        calls.append(q.shape)
+        return original(q, k, v, **kwargs)
+
+    first.attention_fn = attend
+    x = torch.randn(5, first.qkv_proj.in_features)
+    kwargs = {"rope_cache": None, "cu_seqlens": torch.tensor([0, 5], dtype=torch.int32)}
+    with torch.no_grad():
+        assert torch.equal(first(x, **kwargs), second(x, **kwargs))
+    assert calls == [torch.Size([5, 2, 128])]
+    assert second.attention_fn is original

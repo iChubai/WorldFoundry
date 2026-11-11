@@ -165,6 +165,8 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_liveworld_runtime.py \
 	tests/synthesis/test_longcat_video_runtime.py \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
+	tests/pipelines/test_ac3d_integration.py \
+	tests/synthesis/test_genie_envisioner_runtime.py \
 	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
 	tests/base_models/test_vqascore_llama32_molmo_gemini.py \
 	tests/pipelines/test_kandinsky6_replay_recipes.py \

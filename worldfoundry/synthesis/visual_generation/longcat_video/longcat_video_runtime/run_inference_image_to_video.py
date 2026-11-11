@@ -21,9 +21,11 @@ from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtim
 )
 
 # isort: split
-from worldfoundry.base_models.diffusion_model.schedulers.cosmos.flow_match_euler import FlowMatchEulerDiscreteScheduler
 from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.modules.autoencoder_kl_wan import (
     AutoencoderKLWan,
+)
+from worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.longcat_video.scheduling_flow_match_euler import (
+    FlowMatchEulerDiscreteScheduler,
 )
 
 # isort: split

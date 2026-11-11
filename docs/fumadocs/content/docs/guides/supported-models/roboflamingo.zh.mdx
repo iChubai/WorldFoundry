@@ -34,6 +34,8 @@ WorldFoundry 在 `worldfoundry/synthesis/action_generation/roboflamingo` 内置�
 - `openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct` → `openflamingo--OpenFlamingo-3B-vitl-mpt1b-langinstruct`
 - `anas-awadalla/mpt-1b-redpajama-200b-dolly` → `anas-awadalla--mpt-1b-redpajama-200b-dolly`
 
+发布的 MPT-1B 权重使用 `mosaic_gpt`。WorldFoundry 通过规范实现 `worldfoundry.base_models.llm_mllm_core.mllm.mosaic_gpt` 加载其配置与权重，不执行 checkpoint 中的 Python 文件。其他语言模型保留原生 Transformers 加载路径。
+
 视觉编码器文件还声明在 `${WORLDFOUNDRY_CKPT_DIR}/open_clip/ViT-L-14.pt`。完整官方 CALVIN 评测仍需要 CALVIN 资产本身。
 
 ## 在 WorldFoundry 中运行
@@ -44,6 +46,6 @@ WorldFoundry 在 `worldfoundry/synthesis/action_generation/roboflamingo` 内置�
 wf run roboflamingo
 ```
 
-本仓库未记录许可证。生产使用前请确认 RoboFlamingo / OpenFlamingo / MPT 条款。
+RoboFlamingo 卡片未记录其自身许可证。MosaicGPT 源码采用 Apache-2.0，语言权重采用 CC-BY-SA-3.0。生产使用前请确认三套 checkpoint 各自的条款。
 
 <ModelRelatedRecipes modelId="roboflamingo" locale="zh" />

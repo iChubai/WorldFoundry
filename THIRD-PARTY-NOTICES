@@ -6864,3 +6864,22 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+MosaicGPT language backbone
+--------------------------
+Source: https://huggingface.co/anas-awadalla/mpt-1b-redpajama-200b-dolly
+Source revision: f0a13e41fcee2217cd701219ffa1eaef7fe955ea
+License: Apache-2.0 (source code)
+Copyright 2022 MosaicML Examples authors
+Files: worldfoundry/base_models/llm_mllm_core/mllm/mosaic_gpt/
+
+WorldFoundry retains the inference configuration, attention, decoder,
+initialization and generation interfaces used by the released RoboFlamingo
+language backbone. The model weights are distributed separately under
+CC-BY-SA-3.0; no weights are included here.
+
+LPLayerNorm and its autocast helper are from the Apache-2.0 implementation at:
+https://github.com/mosaicml/llm-foundry/blob/c4f8c7540df49dbbe481b6fbf61bd1701d5c50e6/llmfoundry/models/layers/norm.py
+Copyright 2022 MosaicML LLM Foundry authors
+The complete Apache-2.0 license text is retained above.

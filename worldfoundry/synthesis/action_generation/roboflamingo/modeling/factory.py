@@ -1,9 +1,6 @@
 # Inference-only RoboFlamingo source retained in-tree.
-import json
-from pathlib import Path
-
 import open_clip
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, PretrainedConfig, PreTrainedModel
 
 from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo.src.factory import _infer_decoder_layers_attr_name
 from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo.src.flamingo_lm import FlamingoLMMixin
@@ -13,31 +10,16 @@ from .flamingo_bc import BCFlamingo
 from .flamingo_mpt import MPTFlamingo
 
 
-def _trusted_staged_mpt_code(lang_encoder_path: str) -> bool:
-    """Allow the released RoboFlamingo MPT code only from its staged local layout."""
-    model_dir = Path(lang_encoder_path).expanduser().resolve()
-    if model_dir.name != "anas-awadalla--mpt-1b-redpajama-200b-dolly":
-        return False
-    official_dir = Path(__file__).resolve().parents[6] / "ckpts" / model_dir.name
-    code_files = (
-        "config.json",
-        "attention.py",
-        "configuration_mosaic_gpt.py",
-        "gpt_blocks.py",
-        "low_precision_layernorm.py",
-        "mosaic_gpt.py",
-        "param_init_fns.py",
-    )
-    if model_dir != official_dir and any((model_dir / name).resolve() != official_dir / name for name in code_files):
-        return False
-    config_path = model_dir / "config.json"
-    if not config_path.is_file():
-        return False
-    config = json.loads(config_path.read_text(encoding="utf-8"))
-    return config.get("model_type") == "mosaic_gpt" and config.get("auto_map") == {
-        "AutoConfig": "configuration_mosaic_gpt.MosaicGPTConfig",
-        "AutoModelForCausalLM": "mosaic_gpt.MosaicGPT",
-    }
+def _load_language_encoder(lang_encoder_path: str) -> PreTrainedModel:
+    """Load the released MosaicGPT or a native Transformers LM from local assets."""
+    config_dict, _ = PretrainedConfig.get_config_dict(lang_encoder_path, local_files_only=True)
+    if config_dict.get("model_type") == "mosaic_gpt":
+        from worldfoundry.base_models.llm_mllm_core.mllm.mosaic_gpt.configuration_mosaic_gpt import MosaicGPTConfig
+        from worldfoundry.base_models.llm_mllm_core.mllm.mosaic_gpt.modeling_mosaic_gpt import MosaicGPT
+
+        config = MosaicGPTConfig.from_dict(config_dict)
+        return MosaicGPT.from_pretrained(lang_encoder_path, config=config, local_files_only=True)
+    return AutoModelForCausalLM.from_pretrained(lang_encoder_path, local_files_only=True, trust_remote_code=False)
 
 
 def create_model_and_transforms(
@@ -109,11 +91,7 @@ def create_model_and_transforms(
         # Issue: GPT models don't have a pad token, which we use to
         # modify labels for the loss.
         text_tokenizer.add_special_tokens({"pad_token": "<PAD>"})
-    lang_encoder = AutoModelForCausalLM.from_pretrained(
-        lang_encoder_path,
-        local_files_only=True,
-        trust_remote_code=_trusted_staged_mpt_code(lang_encoder_path),
-    )
+    lang_encoder = _load_language_encoder(lang_encoder_path)
     # hacks for MPT-1B, which doesn't have a get_input_embeddings method
     if "mpt-1b-redpajama-200b" in lang_encoder_path:
 

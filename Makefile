@@ -164,6 +164,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_inspatio_v15_tensors.py \
 	tests/synthesis/test_inspatio_reproducibility.py \
 	tests/synthesis/test_inspatio_python_orchestration.py \
+	tests/synthesis/test_inspatio_world_runtime.py \
 	tests/core/execution \
 	tests/core/platform \
 	tests/core/model_loading/test_checkpoint_roundtrip.py \

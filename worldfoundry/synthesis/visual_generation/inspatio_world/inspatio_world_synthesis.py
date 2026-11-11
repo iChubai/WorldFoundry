@@ -23,7 +23,6 @@ class InspatioWorldSynthesis(BaseSynthesis):
 
     def __init__(
         self,
-        repo_root: str | None = None,
         checkpoint_source: str = DEFAULT_CHECKPOINT_REPO,
         wan_model_source: str = DEFAULT_WAN_MODEL_REPO,
         da3_model_source: str = DEFAULT_DA3_MODEL_REPO,
@@ -39,7 +38,6 @@ class InspatioWorldSynthesis(BaseSynthesis):
         InSpatio-World environment and models.
 
         Args:
-            repo_root (Optional[str]): Path to the root of the InSpatio-World repository. If None, uses the bundled repo.
             checkpoint_source (str): Source for the main InSpatio-World model checkpoint.
                                      Defaults to `DEFAULT_CHECKPOINT_REPO`.
             wan_model_source (str): Source for the WAN model checkpoint. Defaults to `DEFAULT_WAN_MODEL_REPO`.
@@ -49,14 +47,13 @@ class InspatioWorldSynthesis(BaseSynthesis):
             device (str): The device to load models onto (e.g., "cuda", "cpu"). Defaults to "cuda".
             defaults (Optional[Dict[str, Any]]): A dictionary of default settings to pass to the runtime.
             runtime (Optional[InspatioWorldRuntime]): An optional pre-initialized `InspatioWorldRuntime` instance.
-                                                     If provided, other initialization arguments (repo_root,
-                                                     checkpoint_source, etc.) are ignored.
+                                                     If provided, other initialization arguments
+                                                     (checkpoint_source, device, etc.) are ignored.
         """
         super().__init__()
         # Initialize the underlying InspatioWorldRuntime. If a runtime is provided, use it;
         # otherwise, create a new one with the given configuration.
         self.runtime = runtime or InspatioWorldRuntime(
-            repo_root=repo_root,
             checkpoint_source=checkpoint_source,
             wan_model_source=wan_model_source,
             da3_model_source=da3_model_source,
@@ -70,25 +67,14 @@ class InspatioWorldSynthesis(BaseSynthesis):
         """
         Synchronizes public attributes of this synthesis adapter with the attributes of the underlying runtime.
 
-        This ensures that properties like `repo_root` or `device` are accessible directly from the synthesis instance.
+        This exposes checkpoint sources and device settings directly on the synthesis instance.
         """
-        self.repo_root = self.runtime.repo_root
         self.checkpoint_source = self.runtime.checkpoint_source
         self.wan_model_source = self.runtime.wan_model_source
         self.da3_model_source = self.runtime.da3_model_source
         self.florence_model_source = self.runtime.florence_model_source
         self.device = self.runtime.device
         self.defaults = self.runtime.defaults
-
-    @classmethod
-    def bundled_repo_root(cls) -> str:
-        """
-        Returns the path to the bundled InSpatio-World repository root.
-
-        Returns:
-            str: The absolute path to the bundled repository root.
-        """
-        return InspatioWorldRuntime.bundled_repo_root()
 
     @classmethod
     def from_pretrained(

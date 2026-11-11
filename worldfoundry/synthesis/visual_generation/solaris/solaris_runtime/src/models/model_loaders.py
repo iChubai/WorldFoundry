@@ -1,7 +1,7 @@
 from flax import nnx
 
-from src.models.clip import CLIPModel as JaxCLIP
-from src.models.wan_vae import WanVAE_
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.clip import CLIPModel as JaxCLIP
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.wan_vae import WanVAE_
 
 
 def get_jax_clip_model():

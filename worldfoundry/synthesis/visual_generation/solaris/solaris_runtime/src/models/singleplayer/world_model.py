@@ -5,10 +5,18 @@ import jax
 import jax.numpy as jnp
 from einops import rearrange
 from flax import nnx
-from src.models.kv_cache import KVCache, KVCacheDict
-from src.models.transformer import Conv3d, MLPProj, WanLayerNorm, WanRMSNorm
-from src.models.transformer import WanI2VCrossAttention as WanI2VCrossAttention
-from src.models.transformer_utils import (
+
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.kv_cache import KVCache, KVCacheDict
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.transformer import (
+    Conv3d,
+    MLPProj,
+    WanLayerNorm,
+    WanRMSNorm,
+)
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.transformer import (
+    WanI2VCrossAttention as WanI2VCrossAttention,
+)
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.transformer_utils import (
     rope_apply,
     rope_params,
     sinusoidal_embedding_1d,

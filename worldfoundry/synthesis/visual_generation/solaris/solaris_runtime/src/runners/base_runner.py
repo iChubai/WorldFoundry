@@ -6,13 +6,20 @@ import jax
 import jax.experimental
 import jax.experimental.multihost_utils
 import orbax.checkpoint as ocp
-import src.utils.sharding as sharding_utils
 import torch.multiprocessing as mp
 from absl import logging
 from flax import nnx
-from src.data.dataset import VideoReadError
-from src.models.model_loaders import get_jax_clip_model, get_vae_model
-from src.utils.config import get_obj_from_str, instantiate_from_config
+
+import worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.sharding as sharding_utils
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.data.dataset import VideoReadError
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.model_loaders import (
+    get_jax_clip_model,
+    get_vae_model,
+)
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.config import (
+    get_obj_from_str,
+    instantiate_from_config,
+)
 
 
 def ensure_torch_spawn_start_method():

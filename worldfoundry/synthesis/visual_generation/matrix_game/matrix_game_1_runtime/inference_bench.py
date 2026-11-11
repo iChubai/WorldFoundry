@@ -13,20 +13,21 @@ import os
 
 import numpy as np
 import torch
-from condtions import Bench_actions_76, interaction_condition
 from diffusers.video_processor import VideoProcessor
 from einops import rearrange
-from matrixgame.encoder_variants import get_text_enc
-from matrixgame.sample.pipeline_matrixgame import MatrixGameVideoPipeline
-from matrixgame.vae_variants import get_vae
 from PIL import Image
-from teacache_forward import teacache_forward
-from tools.visualize import process_video
 
 from worldfoundry.base_models.diffusion_model.schedulers.hunyuan_compat import (
     HunyuanVideoFlowMatchDiscreteScheduler as FlowMatchDiscreteScheduler,
 )
 from worldfoundry.synthesis.visual_generation.matrix_game import MGVideoDiffusionTransformerI2V
+
+from .condtions import Bench_actions_76, interaction_condition
+from .matrixgame.encoder_variants import get_text_enc
+from .matrixgame.sample.pipeline_matrixgame import MatrixGameVideoPipeline
+from .matrixgame.vae_variants import get_vae
+from .teacache_forward import teacache_forward
+from .tools.visualize import process_video
 
 
 class VideoGenerator:

@@ -14,10 +14,11 @@ import numpy as np  # noqa: E402 - Follows the sys.path setup.
 import torch  # noqa: E402 - Follows the sys.path setup.
 import torch.multiprocessing as mp  # noqa: E402 - Follows the sys.path setup.
 from einops import rearrange  # noqa: E402 - Follows the sys.path setup.
-from utils.visualize import process_video  # noqa: E402 - Follows the sys.path setup.
+
+from ..utils.visualize import process_video  # noqa: E402 - Follows the sys.path setup.
 
 # isort: split
-from pipeline.vae_config import load_vae  # noqa: E402 - Follows the sys.path setup.
+from .vae_config import load_vae  # noqa: E402 - Follows the sys.path setup.
 
 
 def _matrix_game3_asset_root() -> str:

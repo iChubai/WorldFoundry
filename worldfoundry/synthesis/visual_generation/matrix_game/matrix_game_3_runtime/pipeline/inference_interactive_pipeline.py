@@ -34,22 +34,22 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.l
 )
 
 # isort: split
-from utils.cam_utils import (
+from ..utils.cam_utils import (
     _interpolate_camera_poses_handedness,
     compute_relative_poses,
     get_intrinsics,
     select_memory_idx_fov,
 )
-from utils.utils import (
+from ..utils.utils import (
     build_plucker_from_c2ws,
     build_plucker_from_pose,
     compute_all_poses_from_actions,
     get_extrinsics,
 )
-from utils.visualize import process_video
+from ..utils.visualize import process_video
 
 # isort: split
-from pipeline.vae_worker import start_vae_worker_process
+from .vae_worker import start_vae_worker_process
 
 RUNTIME_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

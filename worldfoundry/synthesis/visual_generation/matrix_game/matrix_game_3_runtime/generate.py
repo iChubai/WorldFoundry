@@ -20,13 +20,13 @@ from worldfoundry.core.distributed.sequence_parallel.ops import (  # noqa: E402 
 )
 
 # isort: split
-from pipeline.inference_interactive_pipeline import (  # noqa: E402 - Follows the warnings configuration.
+from .pipeline.inference_interactive_pipeline import (  # noqa: E402 - Follows the warnings configuration.
     MatrixGame3Pipeline as MatrixGame3InteractivePipeline,
 )
 
 # isort: split
 # isort: split
-from pipeline.inference_pipeline import MatrixGame3Pipeline  # noqa: E402 - Follows the warnings configuration.
+from .pipeline.inference_pipeline import MatrixGame3Pipeline  # noqa: E402 - Follows the warnings configuration.
 
 # isort: split
 from worldfoundry.core.utils.tensors.torch import (  # noqa: E402 - Follows the warnings configuration.

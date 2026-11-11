@@ -37,13 +37,14 @@ from diffusers.utils import (
 )
 from diffusers.utils.torch_utils import randn_tensor
 from diffusers.video_processor import VideoProcessor
-from matrixgame.encoder_variants.matrixgame_i2v import TextEncoder
-from matrixgame.utils.utils import black_image, numpy_to_pil
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video import (
     AutoencoderKLCausal3D,
 )
 from worldfoundry.synthesis.visual_generation.matrix_game import MGVideoDiffusionTransformerI2V
+
+from ..encoder_variants.matrixgame_i2v import TextEncoder
+from ..utils.utils import black_image, numpy_to_pil
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

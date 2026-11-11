@@ -425,11 +425,11 @@ class MatrixGame3Runtime:
         from .worldfoundry_runner import patch_torch_dynamo_config_aliases
 
         patch_torch_dynamo_config_aliases()
-        import pipeline.inference_interactive_pipeline as native_runtime
-
         from worldfoundry.base_models.diffusion_model.recipes.wan_configs.action_22 import (
             WAN_CONFIGS,
         )
+
+        from .pipeline import inference_interactive_pipeline as native_runtime
 
         device = torch.device(self.device)
         device_id = (

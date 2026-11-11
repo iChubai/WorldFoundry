@@ -196,15 +196,15 @@ def main():
     from worldfoundry.base_models.diffusion_model.recipes.wan_configs.action_22 import MAX_AREA_CONFIGS, WAN_CONFIGS
 
     # isort: split
-    import pipeline.inference_pipeline as mg3_inference
+    from .pipeline import inference_pipeline as mg3_inference
 
     # isort: split
-    import utils.visualize as visualize_utils
-    from utils.cam_utils import get_extrinsics
-    from utils.transform import get_video_transform
-    from utils.utils import compute_all_poses_from_actions
-
     from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+
+    from .utils import visualize as visualize_utils
+    from .utils.cam_utils import get_extrinsics
+    from .utils.transform import get_video_transform
+    from .utils.utils import compute_all_poses_from_actions
 
     def custom_get_data(num_frames, height, width, pil_image, device=None, dtype=None):
         if keyboard_condition_np.shape[0] != num_frames or mouse_condition_np.shape[0] != num_frames:

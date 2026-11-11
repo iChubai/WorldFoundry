@@ -73,8 +73,8 @@ class MatrixGame3RealtimeSession:
 
     @staticmethod
     def _load_helpers() -> dict[str, Any]:
-        cam_utils = importlib.import_module("utils.cam_utils")
-        runtime_utils = importlib.import_module("utils.utils")
+        cam_utils = importlib.import_module(".utils.cam_utils", __package__)
+        runtime_utils = importlib.import_module(".utils.utils", __package__)
         return {
             "build_plucker_from_c2ws": runtime_utils.build_plucker_from_c2ws,
             "build_plucker_from_pose": runtime_utils.build_plucker_from_pose,

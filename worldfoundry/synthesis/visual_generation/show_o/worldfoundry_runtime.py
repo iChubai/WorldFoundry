@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import hfd_root_path
-from worldfoundry.core.io.paths import package_module_root as package_root
 
 
 def _resolve_hfd_root() -> Path:
@@ -130,11 +129,6 @@ class ShowORuntime:
         )
 
     @staticmethod
-    def _runtime_root() -> Path:
-        """Returns the root path of the in-tree Show-O runtime package."""
-        return package_root("worldfoundry.synthesis.visual_generation.show_o.show_o_runtime")
-
-    @staticmethod
     def _get_vq_model_class(model_type: str):
         """Dynamically imports and returns the VQGAN model class based on its type.
 
@@ -205,7 +199,6 @@ class ShowORuntime:
 
         This method lazily loads the necessary models and utilities into `_runtime`
         the first time it is called, or if they haven't been loaded yet.
-        It also handles dynamic path adjustments for module imports.
 
         Args:
             **overrides: Configuration overrides to apply when generating the runtime config.
@@ -215,20 +208,9 @@ class ShowORuntime:
         """
         if self._runtime is not None:
             return self._runtime
-        import importlib
-        import sys
-
         import torch
         from transformers import AutoTokenizer
 
-        # Add the runtime root to sys.path to enable importing local modules.
-        runtime_root = self._runtime_root()
-        runtime_root_str = str(runtime_root)
-        if runtime_root_str not in sys.path:
-            sys.path.insert(0, runtime_root_str)
-        # Explicitly import the module to ensure it's available in the current context.
-        importlib.import_module("worldfoundry.synthesis.visual_generation.show_o.show_o_runtime")
-        # Now that the path is set, we can import Showo and other local modules.
         from .show_o_runtime.inference_support.prompting_utils import UniversalPrompting
         from .show_o_runtime.models import Showo
 

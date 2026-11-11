@@ -113,10 +113,9 @@ def main() -> None:
     from einops import rearrange
     from omegaconf import OmegaConf
 
-    from worldfoundry.core.media.codecs.video import write_video_torchvision
+    from worldfoundry.core.media.codecs.video import write_video
     from worldfoundry.core.model_loading.checkpoints import load_weights_only
 
-    # The causal Wan variant is placed on PYTHONPATH by RollingForcingRuntime.
     # Delaying this import keeps module discovery and ``--help`` lightweight.
     from worldfoundry.synthesis.visual_generation.forcing.causal_forcing_runtime.long_video.pipeline.rolling_forcing_inference import (
         CausalInferencePipeline,
@@ -193,10 +192,12 @@ def main() -> None:
                     if args.save_with_index
                     else f"{_safe_stem(prompt)}-{sample_index}"
                 )
-                write_video_torchvision(
-                    output_folder / f"{stem}.mp4",
+                write_video(
                     video[sample_index].clamp_(0, 255).to(torch.uint8),
+                    output_folder / f"{stem}.mp4",
                     fps=16,
+                    codec="libx264",
+                    macro_block_size=16,
                 )
 
     if dist.is_initialized():

@@ -669,16 +669,6 @@
         "tests/studio_visualization/test_realtime_delivery.py",
         "tests/studio_visualization/test_realtime_presentation.py"
       ]
-    },
-    {
-      "paths": [
-        "worldfoundry/synthesis/visual_generation/forcing/torchvision_video_compat/sitecustomize.py"
-      ],
-      "reason": "Torchvision video shim that the shared forcing bridge prepends to Rolling-Forcing subprocesses; no replay case launches that subprocess. The CPU contracts execute the shim and check its placement on the subprocess path.",
-      "required_cpu_contracts": [
-        "tests/pipelines/test_forcing_integration.py",
-        "tests/pipelines/test_forcing_runtime.py"
-      ]
     }
   ],
   "relocation_contracts": [

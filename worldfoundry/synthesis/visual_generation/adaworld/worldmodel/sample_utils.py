@@ -3,8 +3,11 @@ from typing import List as List  # noqa: UP035 - Re-exported to modules that sta
 import torch
 from omegaconf import OmegaConf
 from safetensors.torch import load_file as load_safetensors
-from vwm.modules.diffusionmodules.sampling import EulerEDMSampler
-from vwm.util import instantiate_from_config
+
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.sampling import (
+    EulerEDMSampler,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import instantiate_from_config
 
 
 def init_model(config, ckpt, load_ckpt: bool = True):
@@ -53,9 +56,14 @@ def load_model_from_config(config, ckpt: str | None = None):
 
 def get_guider(guider, scale):
     if guider == "IdentityGuider":
-        guider_config = {"target": "vwm.modules.diffusionmodules.guiders.IdentityGuider"}
+        guider_config = {
+            "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.guiders.IdentityGuider"
+        }
     elif guider == "VanillaCFG":
-        guider_config = {"target": "vwm.modules.diffusionmodules.guiders.VanillaCFG", "params": {"scale": scale}}
+        guider_config = {
+            "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.guiders.VanillaCFG",
+            "params": {"scale": scale},
+        }
     else:
         raise ValueError(f"Unknown guider {guider}")
     return guider_config
@@ -77,7 +85,9 @@ def init_sampling(
 
 def get_discretization(discretization):
     if discretization == "EDMShiftDiscretization":
-        discretization_config = {"target": "vwm.modules.diffusionmodules.discretizer.EDMShiftDiscretization"}
+        discretization_config = {
+            "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.discretizer.EDMShiftDiscretization"
+        }
     else:
         raise ValueError(f"Unknown discretization {discretization}")
     return discretization_config

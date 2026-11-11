@@ -3,10 +3,19 @@ from einops import rearrange
 from omegaconf import ListConfig, OmegaConf
 from pytorch_lightning import LightningModule
 
-from vwm.modules import UNCONDITIONAL_CONFIG
-from vwm.modules.autoencoding.temporal_ae import VideoDecoder
-from vwm.modules.diffusionmodules.wrappers import OPENAIUNETWRAPPER
-from vwm.util import default, disabled_train, get_obj_from_str, instantiate_from_config
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules import UNCONDITIONAL_CONFIG
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.autoencoding.temporal_ae import (
+    VideoDecoder,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.wrappers import (
+    OPENAIUNETWRAPPER,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import (
+    default,
+    disabled_train,
+    get_obj_from_str,
+    instantiate_from_config,
+)
 
 
 class DiffusionEngine(LightningModule):

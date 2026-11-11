@@ -6,8 +6,15 @@ import torch
 from einops import rearrange
 from omegaconf import ListConfig, OmegaConf
 from tqdm import tqdm
-from vwm.modules.diffusionmodules.sampling_utils import to_d
-from vwm.util import append_dims, default, instantiate_from_config
+
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.sampling_utils import (
+    to_d,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import (
+    append_dims,
+    default,
+    instantiate_from_config,
+)
 
 
 class BaseDiffusionSampler:

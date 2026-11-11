@@ -18,9 +18,10 @@ except BaseException:
     XFORMERS_IS_AVAILABLE = False
     print("No module 'xformers'. Processing without it")
 
-from vwm.modules.attention import MemoryEfficientCrossAttention
-
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.attention import (
+    MemoryEfficientCrossAttention,
+)
 
 
 def get_timestep_embedding(timesteps, embedding_dim):

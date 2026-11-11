@@ -5,8 +5,10 @@ import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
 
-from vwm.modules.autoencoding.regularizer import AbstractRegularizer
-from vwm.util import instantiate_from_config
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.autoencoding.regularizer import (
+    AbstractRegularizer,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import instantiate_from_config
 
 
 class AbstractAutoencoder(LightningModule):
@@ -81,8 +83,14 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
         self.max_batch_size = kwargs.pop("max_batch_size", None)
         ddconfig = kwargs.pop("ddconfig")
         super().__init__(
-            encoder_config={"target": "vwm.modules.diffusionmodules.model.Encoder", "params": ddconfig},
-            decoder_config={"target": "vwm.modules.diffusionmodules.model.Decoder", "params": ddconfig},
+            encoder_config={
+                "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.model.Encoder",
+                "params": ddconfig,
+            },
+            decoder_config={
+                "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.model.Decoder",
+                "params": ddconfig,
+            },
             **kwargs,
         )
         self.quant_conv = nn.Conv2d(2 * ddconfig["z_channels"], 2 * embed_dim, 1)
@@ -130,7 +138,11 @@ class AutoencodingEngineLegacy(AutoencodingEngine):
 class AutoencoderKL(AutoencodingEngineLegacy):
     def __init__(self, **kwargs):
         super().__init__(
-            regularizer_config={"target": ("vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer")},
+            regularizer_config={
+                "target": (
+                    "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer"
+                )
+            },
             **kwargs,
         )
 
@@ -139,7 +151,9 @@ class AutoencoderKLModeOnly(AutoencodingEngineLegacy):
     def __init__(self, **kwargs):
         super().__init__(
             regularizer_config={
-                "target": ("vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer"),
+                "target": (
+                    "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.autoencoding.regularizer.DiagonalGaussianRegularizer"
+                ),
                 "params": {"sample": False},
             },
             **kwargs,

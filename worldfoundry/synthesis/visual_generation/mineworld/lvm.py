@@ -2,10 +2,6 @@
 Wrap the Huggingface Transformers Llama to PyTorch Lightning Module.
 """
 
-import inspect
-import os
-import sys
-
 import torch
 import torch.utils.checkpoint
 from torch import nn
@@ -34,12 +30,6 @@ from worldfoundry.synthesis.visual_generation.mineworld.utils import (
 torch.backends.cuda.matmul.allow_tf32 = False
 
 logger = logging.get_logger(__name__)
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-
-if parentdir not in sys.path:
-    sys.path.insert(0, parentdir)
-
 
 def rotate_half(x):
     """Rotates half the hidden dims of the input."""

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import resolve_data_path
 
 RUNTIME_DIR = Path(__file__).resolve().parent
@@ -49,9 +50,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
 def build_command(context):
     options = dict(context.get("options") or {})
     frames = int(options.get("frames", 16))
-    command = [
-        context["python"],
-        context["entrypoint"],
+    args = [
         "--data_root",
         _option(options, "data_root", "input_dir", "input_path", default="") or "",
         "--model_ckpt",
@@ -74,10 +73,14 @@ def build_command(context):
         str(options.get("val_data_num", 1)),
     ]
     if options.get("top_p") not in (None, ""):
-        command.extend(["--top_p", str(options["top_p"])])
+        args.extend(["--top_p", str(options["top_p"])])
     else:
-        command.extend(["--top_k", str(options.get("top_k", 100))])
-    return command
+        args.extend(["--top_k", str(options.get("top_k", 100))])
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.mineworld.inference",
+        args,
+        python_executable=context["python"],
+    )
 
 
 __all__ = ["BLOCKED_REASON", "INFERENCE_ENTRYPOINT", "RUNTIME_DIR", "build_command", "missing_requirements"]

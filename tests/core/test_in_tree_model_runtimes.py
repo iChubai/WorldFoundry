@@ -351,6 +351,12 @@ class _Scanner:
             }:
                 self.add(node, "install", f"{value} {values[index + 1]}")
             elif _is_python(element) and not isinstance(element, ast.Starred):
+                previous = values[index - 1] if index else None
+                if previous is not None and previous.startswith("-"):
+                    # An interpreter path passed as the value of a preceding option flag
+                    # (e.g. ``["--python_executable", python]``) is configured data, not a launched
+                    # command head; the real executable is the first element or follows an env/launcher.
+                    continue
                 self.interpreter(node, elements[index + 1 :])
 
     def interpreter(self, node: ast.AST, arguments: list[ast.expr]) -> None:
@@ -770,6 +776,8 @@ def test_guard_detects_absolute_imports_of_vendored_packages(
         "owner = 'worldfoundry/base_models/capabilities.py'",
         "encoder = hub.load('https://tfhub.dev/google/universal-sentence-encoder-large/5')",
         "python_rng, numpy_rng = random.getstate(), np.random.get_state()",
+        "command = package_module_command(module, [*args, '--python_executable', python])",
+        "arguments = ['--seed', '0', '--python_executable', python_executable]",
         "loader = ExtensionFileLoader(name, str(compiled_so))",
         "spec = spec_from_loader(name, ExtensionFileLoader(name, str(cached_ext)))",
     ],

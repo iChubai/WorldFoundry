@@ -13,6 +13,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from worldfoundry.core.execution.process import package_module_command
+
 # True when the pipeline draws its chunk progress bar: per-chunk chatter is folded into that bar's
 #   summary line instead of being printed alongside it. EVOKE_INFER_DEBUG=1 restores every print.
 _PROGRESS_UI = os.environ.get("EVOKE_INFER_PROGRESS", "0") == "1" and os.environ.get("EVOKE_INFER_DEBUG", "0") != "1"
@@ -20,8 +22,6 @@ import torch  # noqa: E402 - Follows the environment setup.
 from PIL import Image  # noqa: E402 - Follows the environment setup.
 
 REPO_ROOT = Path(__file__).resolve().parents[2]  # scripts/inference/<this> -> repo root
-if str(REPO_ROOT) not in sys.path:  # so `import evoke` works when run directly
-    sys.path.insert(0, str(REPO_ROOT))
 
 # EVOKE_CPU_THREADS: set by infer_batch to core_count // n_shards. The OMP_* env vars it also sets are
 #   read at library init, but torch and OpenCV size their own pools independently of them, so cap those
@@ -479,12 +479,6 @@ def parse_args(argv=None):
     )
     p.add_argument("--geo_cloud_splat_radius", type=int, default=2, help="da3: render splat radius (density vs. time)")
     p.add_argument(
-        "--geo_da3_src",
-        type=str,
-        default=None,
-        help="da3: legacy source option; omit to use WorldFoundry's shared base model",
-    )
-    p.add_argument(
         "--geo_da3_weights",
         type=str,
         default=None,
@@ -505,12 +499,6 @@ def parse_args(argv=None):
         choices=["da3", "vigeo"],
         help="depth estimator: vigeo=ViGeo (default; no pose/intrinsics input, needs the "
         "models/ViGeo1.1 weights) | da3=pose-conditioned DepthAnything3",
-    )
-    p.add_argument(
-        "--geo_vigeo_src",
-        type=str,
-        default=None,
-        help="vigeo: legacy source option; omit to use WorldFoundry's shared base model",
     )
     p.add_argument(
         "--geo_vigeo_weights",
@@ -1038,7 +1026,7 @@ def _check_prereqs(args):
         from ...evoke.modules.geometric_state.depth_backend import check_assets
 
         try:
-            check_assets(args.geo_depth_backend, weights=args.geo_vigeo_weights, src=args.geo_vigeo_src)
+            check_assets(args.geo_depth_backend, weights=args.geo_vigeo_weights)
         except FileNotFoundError as _e:
             raise SystemExit(f"[geo-infer] FATAL: {_e}")  # noqa: B904 - Keeps the implicit exception context.
 
@@ -1119,7 +1107,7 @@ def _load_lingbot_pose(args):
     Returns:
         (Ks, c2ws): Ks [4] intrinsics, c2ws [F_pix, 4, 4] camera-to-world (cpu fp32, no batch dim).
     """
-    from ...evoke.utils.ev_validation import load_pose_for_v2v  # REPO_ROOT is on sys.path (module top)
+    from ...evoke.utils.ev_validation import load_pose_for_v2v
 
     # compute required pose length to cover ref + generation frames
     _W = 9  # latent_window_size
@@ -1197,10 +1185,12 @@ def _spawn_bg_postprocess(output_dir: Path, video_np, params: dict, max_workers:
     (output_dir / ".postproc_params.json").write_text(json.dumps(params))
     print(f"[geo-infer] [bg] dumped pred frames {tuple(video_np.shape)} -> {npy} ({time.time() - _t:.1f}s)", flush=True)
 
-    worker = str(Path(__file__).resolve().parent / "postprocess_viz.py")
     log_f = open(output_dir / "postproc.log", "w")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
     proc = subprocess.Popen(
-        [sys.executable, worker, str(output_dir)],
+        package_module_command(
+            "worldfoundry.synthesis.visual_generation.evoke.evoke_runtime.scripts.inference.postprocess_viz",
+            [output_dir],
+        ),
         stdout=log_f,
         stderr=subprocess.STDOUT,
         start_new_session=True,  # survive the GPU process exit
@@ -1482,10 +1472,8 @@ def build_pipe(args):
         "cloud_update_n": int(args.geo_cloud_update_n),
         "cloud_voxel": float(args.geo_cloud_voxel),
         "cloud_splat_radius": int(args.geo_cloud_splat_radius),
-        # Depth estimator selection + the active backend's paths. da3_weights / da3_src carry whichever
-        # backend is active, matching what resolve_cloud_warp produces on the training side.
+        # da3_weights carries the active depth backend's checkpoint path.
         "depth_backend": str(args.geo_depth_backend),
-        "da3_src": (args.geo_vigeo_src if args.geo_depth_backend == "vigeo" else args.geo_da3_src),
         "da3_weights": (args.geo_vigeo_weights if args.geo_depth_backend == "vigeo" else args.geo_da3_weights),
         "da3_process_res": int(args.geo_da3_process_res),
         "vigeo_mode": str(args.geo_vigeo_mode),
@@ -2262,7 +2250,6 @@ def main(argv=None):
 
     # Streaming (very long video): the pipeline holds no full frame array, so the complete video is stitched from per-chunk segments (constant memory).
     if args.stream_long_video:
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
         from .postprocess_viz import assemble_from_segments
 
         _asm = assemble_from_segments(output_dir, fps=int(args.fps))
@@ -2292,7 +2279,6 @@ def main(argv=None):
     # Post-inference encode (pred mp4 + sample frames + optional GT|Pred joystick HUD).
     # CPU-bound and GPU-idle, so with --bg_postprocess we hand it to a detached worker and
     # exit immediately, letting the next sample's GPU inference overlap this encode.
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
     from .postprocess_viz import run_postprocess
 
     _pp_params = {

@@ -632,7 +632,6 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
             _backend.lower(),
             pr,
             str(cfg.get("da3_weights") or ""),
-            str(cfg.get("da3_src") or ""),
             tuple(sorted((k, str(v)) for k, v in vigeo_opts_from_cfg(cfg).items())),
         )
         _est = _GEO_DEPTH_ESTIMATORS.get(_est_key)
@@ -645,7 +644,6 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 device,
                 pr,
                 weights=(cfg.get("da3_weights") or None),
-                src=(cfg.get("da3_src") or None),
                 vigeo_opts=vigeo_opts_from_cfg(cfg),
             )
             _GEO_DEPTH_ESTIMATORS[_est_key] = _est

@@ -23,10 +23,6 @@ import cv2
 import numpy as np
 from PIL import Image
 
-REPO_ROOT = Path(__file__).resolve().parents[2]  # scripts/inference/<this> -> repo root
-if str(REPO_ROOT) not in sys.path:  # so `import evoke` works when run directly
-    sys.path.insert(0, str(REPO_ROOT))
-
 
 def _apply_joystick_hud(video_np: np.ndarray, p: dict) -> np.ndarray:
     """Draw the joystick/energy-ring HUD on a COPY of the pred frames (params decide; no-op if unset).
@@ -166,7 +162,7 @@ def _append_warp_mask_columns(output_dir: Path, combined: list) -> list:
 
 def _write_combined(output_dir: Path, video_np: np.ndarray, p: dict) -> None:
     """Build + write the GT|Pred|Warp|WarpMask side-by-side joystick-HUD video."""
-    from ...evoke.utils.ev_validation import combine_gt_pred_with_cam_viz  # REPO_ROOT: module top
+    from ...evoke.utils.ev_validation import combine_gt_pred_with_cam_viz
 
     _t_combine = time.time()
     print("[postproc] combining GT|Pred + joystick HUD ...", flush=True)

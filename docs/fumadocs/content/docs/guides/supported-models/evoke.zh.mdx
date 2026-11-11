@@ -43,7 +43,7 @@ Evoke 在 catalog 里是**相机可控世界**，同时列出文生视频、图�
 
 ## 捆绑 runtime 说明
 
-WorldFoundry 的公开入口是 `EvokePipeline` / `wf run evoke`。捆绑的推理脚本位于 `worldfoundry/synthesis/visual_generation/evoke/evoke_runtime/scripts/inference/`：`infer_single.py` 执行推理，`postprocess_viz.py` 准备可视化产物。上游文档中的 shell launcher 属于官方仓库。
+WorldFoundry 的公开入口是 `EvokePipeline` / `wf run evoke`。推理与独立 CPU 后处理通过已安装的包模块执行，位于 `worldfoundry.synthesis.visual_generation.evoke.evoke_runtime.scripts.inference` 下，分别为 `infer_single` 和 `postprocess_viz`。预检用 `runtime_module` 标识推理入口。相机几何从本地 `vigeo.pt` 权重加载树内规范 ViGeo 类；权重路径可配置，源码路径固定。上游文档中的 shell launcher 属于官方仓库。
 
 学生模型按 latent chunk 自回归（`latent_window_size = 9`）。每个 chunk 在 RoPE 帧索引上排成 `prefix | long(16) | mid(2) | warp(W) | prev_short(1) | noise(W)`：
 

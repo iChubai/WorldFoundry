@@ -43,7 +43,7 @@ Status: **Runner parity pending**. Unified environment `worldfoundry-unified-cu1
 
 ## Bundled runtime notes
 
-WorldFoundry's public entry is `EvokePipeline` / `wf run evoke`. The bundled inference scripts live under `worldfoundry/synthesis/visual_generation/evoke/evoke_runtime/scripts/inference/`: `infer_single.py` executes inference and `postprocess_viz.py` prepares visual outputs. The shell launchers discussed by upstream belong to the official repository.
+WorldFoundry's public entry is `EvokePipeline` / `wf run evoke`. Inference and detached CPU postprocessing run as installed package modules under `worldfoundry.synthesis.visual_generation.evoke.evoke_runtime.scripts.inference`: `infer_single` and `postprocess_viz`. Preflight identifies the inference entry with `runtime_module`. Camera geometry loads the canonical in-tree ViGeo class from local `vigeo.pt` weights; checkpoint paths are configurable, source paths are fixed. The shell launchers discussed by upstream belong to the official repository.
 
 The student is autoregressive over latent chunks (`latent_window_size = 9`). Each chunk is laid out on the RoPE frame index as `prefix | long(16) | mid(2) | warp(W) | prev_short(1) | noise(W)`:
 

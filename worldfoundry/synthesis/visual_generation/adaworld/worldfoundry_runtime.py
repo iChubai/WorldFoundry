@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import resolve_data_path
 
 RUNTIME_DIR = Path(__file__).resolve().parent
@@ -54,8 +55,6 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
 def build_command(context):
     options = dict(context.get("options") or {})
     command = [
-        context["python"],
-        context["entrypoint"],
         "--checkpoint",
         _path_option(options, "checkpoint", "checkpoint_path", "ckpt", "ckpt_path", "model_path") or "",
         "--config",
@@ -92,7 +91,11 @@ def build_command(context):
         command.extend(["--source-video", source_video])
     if target_video:
         command.extend(["--target-video", target_video])
-    return command
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.sample",
+        command,
+        python_executable=context["python"],
+    )
 
 
 __all__ = ["BLOCKED_REASON", "OFFICIAL_ENTRYPOINT", "RUNTIME_DIR", "build_command", "missing_requirements"]

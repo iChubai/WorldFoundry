@@ -1,7 +1,9 @@
+import copy
+from typing import Any
 from typing import List as List  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 
 import torch
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
 from safetensors.torch import load_file as load_safetensors
 
 from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.sampling import (
@@ -16,7 +18,27 @@ def init_model(config, ckpt, load_ckpt: bool = True):
     return model
 
 
+def qualify_vwm_config(config: DictConfig) -> DictConfig:
+    """Resolve staged AdaWorld config targets without editing the supplied config."""
+    resolved = copy.deepcopy(config)
+
+    def qualify(value: Any) -> None:
+        if isinstance(value, (dict, DictConfig)):
+            target = value.get("target")
+            if isinstance(target, str) and target.startswith("vwm."):
+                value["target"] = "worldfoundry.synthesis.visual_generation.adaworld.worldmodel." + target
+            for child in value.values():
+                qualify(child)
+        elif isinstance(value, (list, ListConfig)):
+            for child in value:
+                qualify(child)
+
+    qualify(resolved)
+    return resolved
+
+
 def load_model_from_config(config, ckpt: str | None = None):
+    config = qualify_vwm_config(config)
     model = instantiate_from_config(config.model)
 
     if ckpt is not None:

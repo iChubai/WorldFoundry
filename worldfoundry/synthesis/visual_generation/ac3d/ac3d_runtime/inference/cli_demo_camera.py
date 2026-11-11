@@ -1,36 +1,27 @@
-import sys
-from pathlib import Path
+import argparse
+import os
 
-# Modified by WorldFoundry: upstream appended the CWD-relative '..' (only valid when the
-# process CWD is inference/). Anchor to the ac3d_runtime root instead so the bare imports
-# below (cogvideo_controlnet, controlnet_pipeline, inference.*) resolve regardless of CWD.
-_AC3D_RUNTIME_ROOT = str(Path(__file__).resolve().parents[1])
-if _AC3D_RUNTIME_ROOT not in sys.path:
-    sys.path.append(_AC3D_RUNTIME_ROOT)
-import argparse  # noqa: E402 - Follows the sys.path setup.
-import os  # noqa: E402 - Follows the sys.path setup.
-
-import torch  # noqa: E402 - Follows the sys.path setup.
-from diffusers import (  # noqa: E402 - Follows the sys.path setup.
+import torch
+from diffusers import (
     AutoencoderKLCogVideoX,
     CogVideoXDDIMScheduler,
     CogVideoXDPMScheduler,
 )
-from diffusers.utils import export_to_video  # noqa: E402 - Follows the sys.path setup.
-from torchvision.transforms.functional import to_pil_image  # noqa: E402 - Follows the sys.path setup.
-from transformers import T5EncoderModel, T5Tokenizer  # noqa: E402 - Follows the sys.path setup.
+from diffusers.utils import export_to_video
+from torchvision.transforms.functional import to_pil_image
+from transformers import T5EncoderModel, T5Tokenizer
 
-from worldfoundry.core.model_loading.checkpoints import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.core.model_loading.checkpoints import (
     load_tensor_state_dict,
 )
 
-from ..cogvideo_controlnet import CogVideoXControlnet  # noqa: E402 - Follows the sys.path setup.
-from ..cogvideo_transformer import CustomCogVideoXTransformer3DModel  # noqa: E402 - Follows the sys.path setup.
-from ..controlnet_pipeline import ControlnetCogVideoXPipeline  # noqa: E402 - Follows the sys.path setup.
-from .datasets.controlnet_datasets_camera import (  # noqa: E402 - Follows the sys.path setup.
+from ..cogvideo_controlnet import CogVideoXControlnet
+from ..cogvideo_transformer import CustomCogVideoXTransformer3DModel
+from ..controlnet_pipeline import ControlnetCogVideoXPipeline
+from .datasets.controlnet_datasets_camera import (
     RealEstate10KPoseControlnetDataset,
 )
-from .utils import stack_images_horizontally  # noqa: E402 - Follows the sys.path setup.
+from .utils import stack_images_horizontally
 
 
 @torch.no_grad()

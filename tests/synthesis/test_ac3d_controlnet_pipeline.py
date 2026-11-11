@@ -13,11 +13,11 @@ import torch
 
 pytestmark = pytest.mark.unit
 
+
 @pytest.fixture
 def pipeline_module() -> ModuleType:
-    return importlib.import_module(
-        "worldfoundry.synthesis.visual_generation.ac3d.ac3d_runtime.controlnet_pipeline"
-    )
+    return importlib.import_module("worldfoundry.synthesis.visual_generation.ac3d.ac3d_runtime.controlnet_pipeline")
+
 
 class T5TokenizerStub:
     def __init__(self) -> None:

@@ -116,14 +116,17 @@ def test_longcat_released_scheduler_preserves_shifted_euler_steps() -> None:
     scheduler = FlowMatchEulerDiscreteScheduler.from_config(
         {"shift": 12.0, "use_dynamic_shifting": False, "invert_sigmas": False, "time_shift_type": "linear"}
     )
+    assert isinstance(scheduler, FlowMatchEulerDiscreteScheduler)
     sigmas = torch.linspace(1, 0.001, 50, dtype=torch.float32)
-    scheduler.set_timesteps(50, sigmas=sigmas, device="cpu")
+    scheduler.set_timesteps(50, sigmas=sigmas.tolist(), device="cpu")
+    assert scheduler.sigmas is not None
+    assert scheduler.timesteps is not None
     expected_sigmas = 12.0 * sigmas / (1 + 11.0 * sigmas)
     torch.testing.assert_close(scheduler.sigmas[:-1], expected_sigmas, rtol=0, atol=0)
-    sample = torch.randn(1, 4, 2, 4, 4, generator=torch.Generator().manual_seed(17))
-    prediction = torch.ones_like(sample)
+    sample = torch.FloatTensor(torch.randn(1, 4, 2, 4, 4, generator=torch.Generator().manual_seed(17)))
+    prediction = torch.FloatTensor(torch.ones_like(sample))
 
-    actual = scheduler.step(prediction, scheduler.timesteps[0], sample, return_dict=False)[0]
+    actual = scheduler.step(prediction, float(scheduler.timesteps[0]), sample, return_dict=False)[0]
 
     expected = sample + (expected_sigmas[1] - expected_sigmas[0]) * prediction
     torch.testing.assert_close(actual, expected, rtol=0, atol=0)

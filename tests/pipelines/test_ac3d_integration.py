@@ -163,9 +163,7 @@ def test_model_registry_contains_ac3d() -> None:
 
 @pytest.mark.unit
 @pytest.mark.parametrize("dtype", ["float16", "bfloat16"])
-def test_ac3d_run_official_calls_packaged_demo(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, dtype: str
-) -> None:
+def test_ac3d_run_official_calls_packaged_demo(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, dtype: str) -> None:
     import torch
 
     module_name = "worldfoundry.synthesis.visual_generation.ac3d.ac3d_runtime.inference.cli_demo_camera"

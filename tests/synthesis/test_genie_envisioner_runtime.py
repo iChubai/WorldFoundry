@@ -29,12 +29,7 @@ def _stage_runtime(tmp_path: Path) -> tuple[Path, Path, Path, Path, list[Path]]:
     ):
         _write_fixture(source / relative)
 
-    checkpoint = (
-        tmp_path
-        / "ckpts"
-        / "agibot-world--Genie-Envisioner"
-        / "GE_base_fast_v0.1.safetensors"
-    )
+    checkpoint = tmp_path / "ckpts" / "agibot-world--Genie-Envisioner" / "GE_base_fast_v0.1.safetensors"
     _write_fixture(checkpoint)
     base = tmp_path / "ckpts" / "Lightricks--LTX-Video"
     for relative in (
@@ -59,7 +54,7 @@ def _stage_runtime(tmp_path: Path) -> tuple[Path, Path, Path, Path, list[Path]]:
 def test_runtime_spec_uses_executable_genie_envisioner_adapter() -> None:
     spec = runtime_manifest.runtime_spec("genie-envisioner")
 
-    assert spec.runtime_module.endswith("genie_envisioner.worldfoundry_runtime")
+    assert spec.runtime_module == "worldfoundry.synthesis.visual_generation.genie_envisioner.worldfoundry_runtime"
     assert spec.runtime_root_func == "runtime_root"
     assert spec.blocked_reason == ""
     assert spec.input_schema["video"] is False
@@ -120,8 +115,7 @@ def test_build_command_expands_paths_and_plan_options(tmp_path, monkeypatch) -> 
             "device": "cuda",
             "options": {
                 "checkpoint_path": (
-                    "${WORLDFOUNDRY_CKPT_DIR}/agibot-world--Genie-Envisioner/"
-                    "GE_base_fast_v0.1.safetensors"
+                    "${WORLDFOUNDRY_CKPT_DIR}/agibot-world--Genie-Envisioner/GE_base_fast_v0.1.safetensors"
                 ),
                 "base_model_dir": "${WORLDFOUNDRY_CKPT_DIR}/Lightricks--LTX-Video",
             },

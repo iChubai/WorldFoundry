@@ -68,9 +68,7 @@ def test_forcing_runtime_builds_official_command(monkeypatch, tmp_path: Path) ->
     )
 
     command = captured["command"]
-    assert command[:3] == [
-        "/tmp/python", "-m", "worldfoundry.synthesis.visual_generation.rolling_forcing.inference"
-    ]
+    assert command[:3] == ["/tmp/python", "-m", "worldfoundry.synthesis.visual_generation.rolling_forcing.inference"]
     assert command[command.index("--config_path") + 1] == str(config.resolve())
     assert command[command.index("--checkpoint_path") + 1] == str(checkpoint.resolve())
     assert command[command.index("--num_output_frames") + 1] == "6"
@@ -164,10 +162,24 @@ def test_rolling_forcing_inference_preserves_video_encoding_options(
     config.with_name("default_config.yaml").write_text("{}\n", encoding="utf-8")
     prompts = tmp_path / "prompts.txt"
     prompts.write_text("camera move\n", encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", [
-        "rolling-forcing", "--config_path", str(config), "--checkpoint_path", str(tmp_path / "model.pt"),
-        "--data_path", str(prompts), "--output_folder", str(tmp_path), "--num_output_frames", "3", "--use_ema",
-    ])
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "rolling-forcing",
+            "--config_path",
+            str(config),
+            "--checkpoint_path",
+            str(tmp_path / "model.pt"),
+            "--data_path",
+            str(prompts),
+            "--output_folder",
+            str(tmp_path),
+            "--num_output_frames",
+            "3",
+            "--use_ema",
+        ],
+    )
     monkeypatch.setattr(inference, "_distributed_device", lambda _seed: (torch.device("cpu"), 0, 1))
     checkpoint = {"generator_ema": {"weight": torch.zeros(1)}}
     monkeypatch.setattr(checkpoints, "load_weights_only", lambda *_args, **_kwargs: checkpoint)
@@ -210,9 +222,10 @@ def test_rolling_forcing_inference_preserves_video_encoding_options(
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("model_id, pipeline_name", [
-    ("self-forcing", "NativeSelfForcingPipeline"), ("causal-forcing", "NativeCausalForcingPipeline")
-])
+@pytest.mark.parametrize(
+    "model_id, pipeline_name",
+    [("self-forcing", "NativeSelfForcingPipeline"), ("causal-forcing", "NativeCausalForcingPipeline")],
+)
 def test_native_forcing_routes_do_not_use_subprocess_bridge(model_id: str, pipeline_name: str) -> None:
     model = discover_model_registry().get(model_id)
 

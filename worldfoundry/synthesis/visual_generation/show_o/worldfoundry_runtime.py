@@ -147,7 +147,7 @@ class ShowORuntime:
         Raises:
             ValueError: If the specified VQ model type is not supported.
         """
-        from models import MAGVITv2
+        from .show_o_runtime.models import MAGVITv2
 
         if model_type == "magvitv2":
             return MAGVITv2
@@ -229,8 +229,8 @@ class ShowORuntime:
         # Explicitly import the module to ensure it's available in the current context.
         importlib.import_module("worldfoundry.synthesis.visual_generation.show_o.show_o_runtime")
         # Now that the path is set, we can import Showo and other local modules.
-        from inference_support.prompting_utils import UniversalPrompting
-        from models import Showo
+        from .show_o_runtime.inference_support.prompting_utils import UniversalPrompting
+        from .show_o_runtime.models import Showo
 
         config = self._runtime_config(**overrides)
         # Determine the actual device, defaulting to 'cpu' if 'cuda' is not available.
@@ -320,8 +320,8 @@ class ShowORuntime:
         from PIL import Image
 
         runtime = self._ensure_runtime(**kwargs)  # Ensure runtime components are loaded.
-        from inference_support.prompting_utils import create_attention_mask_predict_next
-        from models import get_mask_chedule
+        from .show_o_runtime.inference_support.prompting_utils import create_attention_mask_predict_next
+        from .show_o_runtime.models import get_mask_chedule
 
         config = runtime["config"]
         model = runtime["model"]

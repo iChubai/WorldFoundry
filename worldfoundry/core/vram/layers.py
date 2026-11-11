@@ -274,10 +274,15 @@ class AutoWrappedModule(AutoTorchModule):
             vram_limit,
         )
         self.module = module
+        self.include_buffers = bool(kwargs.get("include_buffers", False))
         if offload_dtype == "disk":
             self.name = name
             self.disk_map = disk_map
-            self.required_params = [name for name, _ in self.module.named_parameters()]
+            self.required_params = (
+                list(self.module.state_dict())
+                if self.include_buffers
+                else [name for name, _ in self.module.named_parameters()]
+            )
             self.disk_offload = True
         else:
             self.disk_offload = False
@@ -293,7 +298,8 @@ class AutoWrappedModule(AutoTorchModule):
         state_dict = {}
         for name in self.required_params:
             param = self.disk_map[self.param_name(name)]
-            param = param.to(dtype=torch_dtype, device=device)
+            # Quantized modules own their fixed storage dtypes through _apply.
+            param = param.to(device=device) if self.include_buffers else param.to(dtype=torch_dtype, device=device)
             state_dict[name] = param
         # Parameters are disk-backed, but buffers deliberately remain resident
         # because non-persistent buffers cannot be reconstructed from a state
@@ -317,6 +323,10 @@ class AutoWrappedModule(AutoTorchModule):
                 torch.empty_like(parameter, device="meta"),
                 requires_grad=parameter.requires_grad,
             )
+        if self.include_buffers:
+            for name, buffer in tuple(model.named_buffers(recurse=False)):
+                if name not in model._non_persistent_buffers_set:
+                    model._buffers[name] = torch.empty_like(buffer, device="meta")
         for child in model.children():
             self.offload_to_disk(child)
 
@@ -442,6 +452,12 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
         )
         if self.disk_offload:
             self.required_params = [name for name, _ in self.module.named_parameters(recurse=False)]
+            if self.include_buffers:
+                self.required_params.extend(
+                    name
+                    for name, _ in self.module.named_buffers(recurse=False)
+                    if name not in self.module._non_persistent_buffers_set
+                )
 
     def load_from_disk(self, torch_dtype, device, copy_module=False):
         """Materialize this module's direct parameters only; children own their own maps."""
@@ -449,7 +465,8 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
         state_dict = {}
         for name in self.required_params:
             param = self.disk_map[self.param_name(name)]
-            param = param.to(dtype=torch_dtype, device=device)
+            dtype = param.dtype if self.include_buffers and not param.is_floating_point() else torch_dtype
+            param = param.to(dtype=dtype, device=device)
             state_dict[name] = param
         module.load_state_dict(state_dict, assign=True, strict=False)
         return module
@@ -459,6 +476,9 @@ class AutoWrappedNonRecurseModule(AutoWrappedModule):
         for name in self.required_params:
             parameter = model._parameters.get(name)
             if parameter is None:
+                buffer = model._buffers.get(name)
+                if self.include_buffers and buffer is not None:
+                    model._buffers[name] = torch.empty_like(buffer, device="meta")
                 continue
             model._parameters[name] = torch.nn.Parameter(
                 torch.empty_like(parameter, device="meta"),

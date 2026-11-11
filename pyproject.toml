@@ -537,6 +537,7 @@ allowed-unresolved-imports = [
     "imageio_ffmpeg.**",
     "jaxtyping.**",
     "lpips.**",
+    "ltx_kernels.**",
     "matplotlib.**",
     "msgspec.**",
     "omegaconf.**",

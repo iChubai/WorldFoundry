@@ -28,7 +28,11 @@ from ..attention import JointNAAttentionCallable, NeighborhoodAttention3D
 from .attn import NA_SOFTMAX_BOUND_BUFFER, na_dsl_available, require_softmax_bound
 
 
-@torch.library.custom_op("worldfoundry::ltx_na_attention_joint_dsl", mutates_args=())
+@torch.library.custom_op(
+    "worldfoundry::ltx_na_attention_joint_dsl",
+    mutates_args=(),
+    schema="(Tensor q, Tensor k, Tensor v, Tensor keyframe_q, Tensor keyframe_k, Tensor keyframe_v, Tensor keyframe_times, Tensor keyframe_valid, Tensor softmax_bound, SymInt[] kernel_size, SymInt num_slots) -> (Tensor, Tensor)",
+)
 def na_attention_joint_dsl(
     q: torch.Tensor,
     k: torch.Tensor,

@@ -10,14 +10,24 @@ around the exact diffusion kernels live in :mod:`worldfoundry.core.kernels.compi
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from types import MethodType
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 import torch
 import torch.nn.functional as F
 
 if TYPE_CHECKING:
     from worldfoundry.core.nn.transformer.dit import RMSNorm
+
+
+_CompileFunction = TypeVar("_CompileFunction", bound=Callable[..., Any])
+
+
+def nested_compile_region(function: _CompileFunction) -> _CompileFunction:
+    """Apply the optional PyTorch regional-compile hint without changing eager math."""
+    decorate = getattr(torch.compiler, "nested_compile_region", None)
+    return function if decorate is None else decorate(function)
 
 
 @torch.library.custom_op(

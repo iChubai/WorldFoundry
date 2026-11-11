@@ -304,18 +304,39 @@ class Float8Linear(nn.Module):
             scale = scale.transpose(0, 1).contiguous()
         else:
             quantized, scale = _quantize_tensorwise_fp8(weight.detach(), fp8_dtype)
-        self.in_features = int(weight.shape[1])
-        self.out_features = int(weight.shape[0])
-        self.fp8_dtype = fp8_dtype
-        self.scaling = resolved_scaling
+        self._initialize_weights(
+            quantized.contiguous(),
+            scale.to(device=weight.device),
+            dense=weight.detach().clone() if keep_dense_fallback else None,
+            bias=None if bias is None else bias.detach().clone(),
+            scaling=resolved_scaling,
+            use_fast_accum=use_fast_accum,
+        )
+
+    def _initialize_weights(
+        self,
+        weight_fp8: torch.Tensor,
+        weight_scale: torch.Tensor,
+        *,
+        dense: torch.Tensor | None,
+        bias: torch.Tensor | None,
+        scaling: str,
+        use_fast_accum: bool,
+        input_scale: torch.Tensor | None = None,
+    ) -> None:
+        """Bind storage and execution receipts without requantizing checkpoint codes."""
+        self.in_features = int(weight_fp8.shape[1])
+        self.out_features = int(weight_fp8.shape[0])
+        self.fp8_dtype = weight_fp8.dtype
+        self.scaling = scaling
         self.use_fast_accum = bool(use_fast_accum)
         self.low_precision_enabled = True
-        self.register_buffer("weight_fp8", quantized.contiguous())
-        self.register_buffer("weight_scale", scale.to(device=weight.device))
-        dense = weight.detach().clone() if keep_dense_fallback else None
+        self.register_buffer("weight_fp8", weight_fp8)
+        self.register_buffer("weight_scale", weight_scale)
         self.register_buffer("weight", dense)
-        self.register_buffer("bias", None if bias is None else bias.detach().clone())
-        self._hardware_eligible = _fp8_hardware_eligible(weight.device)
+        self.register_buffer("bias", bias)
+        self.register_buffer("input_scale", input_scale)
+        self._hardware_eligible = _fp8_hardware_eligible(weight_fp8.device)
         self._worldfoundry_quantization_layer = True
         self.low_precision_kernel_calls = 0
         self.dense_fallback_calls = 0
@@ -352,12 +373,52 @@ class Float8Linear(nn.Module):
             use_fast_accum=use_fast_accum,
         )
 
+    @classmethod
+    def from_prequantized(
+        cls,
+        weight: torch.Tensor,
+        weight_scale: torch.Tensor,
+        input_scale: torch.Tensor,
+        bias: torch.Tensor | None = None,
+    ) -> Float8Linear:
+        """Load E4M3 codes and calibrated scalar scales without dynamic recalibration.
+
+        This variant follows Lightricks/LTX-2@a95ab856: activation multiplication
+        and clamping precede the cast, and bias is added after the scaled GEMM.
+        It requires CUDA ``torch._scaled_mm``; there is no dense fallback.
+        """
+        if weight.dtype != torch.float8_e4m3fn:
+            raise ValueError("prequantized FP8 weights must use torch.float8_e4m3fn")
+        module = cls.__new__(cls)
+        nn.Module.__init__(module)
+        module._initialize_weights(
+            weight,
+            weight_scale.float().reshape(()),
+            dense=None,
+            bias=bias,
+            scaling="static",
+            use_fast_accum=True,
+            input_scale=input_scale.float().reshape(()),
+        )
+        return module
+
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """FP8 scaled-mm when eligible; dense ``F.linear`` otherwise (fatal if no fallback)."""
         if input.shape[-1] != self.in_features:
             raise ValueError(f"expected input width {self.in_features}, got {input.shape[-1]}")
         if input.numel() == 0:
             return input.new_empty((*input.shape[:-1], self.out_features))
+        if self.input_scale is not None:
+            if input.device.type != "cuda":
+                raise RuntimeError("calibrated fp8-scaled-mm requires CUDA and torch._scaled_mm")
+            limits = torch.finfo(self.fp8_dtype)
+            quantized = torch.clamp(input * self.input_scale.reciprocal(), limits.min, limits.max).to(self.fp8_dtype)
+            return self._forward_quantized(
+                quantized.reshape(-1, self.in_features),
+                self.input_scale,
+                input.shape,
+                input.dtype,
+            )
         input = _autocast_linear_input(input)
         # Without a retained dense payload the FP8 path is the only runnable
         # representation, so the performance gate must not turn into a runtime
@@ -416,12 +477,14 @@ class Float8Linear(nn.Module):
             weight_mat,
             input_scale,
             self.weight_scale,
-            bias=bias,
+            bias=None if self.input_scale is not None else bias,
             out_dtype=output_dtype,
             use_fast_accum=self.use_fast_accum,
         )
         if isinstance(output, tuple):
             output = output[0]
+        if self.input_scale is not None and bias is not None:
+            output = output + bias
         if not _is_compiling():
             self.low_precision_kernel_calls += 1
             self.request_low_precision_kernel_calls += 1
@@ -466,10 +529,13 @@ class Float8Linear(nn.Module):
         # original values/dtypes while still following the requested device.
         weight_fp8 = self.weight_fp8
         weight_scale = self.weight_scale
+        input_scale = self.input_scale
         result = super()._apply(fn, recurse=recurse)
         target_device = self.weight_fp8.device
         self.weight_fp8 = weight_fp8.to(device=target_device)
         self.weight_scale = weight_scale.to(device=target_device)
+        if input_scale is not None:
+            self.input_scale = input_scale.to(device=target_device)
         self._hardware_eligible = _fp8_hardware_eligible(self.weight_fp8.device)
         return result
 

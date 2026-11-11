@@ -53,6 +53,7 @@ def _restore_checkpoint_buffers(
     disk_map: DiskMap,
     *,
     torch_dtype: torch.dtype,
+    skip_quantized: bool = False,
 ) -> None:
     """Materialize checkpoint-backed buffers before installing disk wrappers.
 
@@ -68,6 +69,10 @@ def _restore_checkpoint_buffers(
     """
 
     for name, current in model.named_buffers():
+        owner_name, separator, local_name = name.rpartition(".")
+        owner = model.get_submodule(owner_name) if separator else model
+        if skip_quantized and getattr(owner, "_worldfoundry_quantization_layer", False):
+            continue
         if name not in disk_map:
             continue
         value = disk_map[name]
@@ -79,8 +84,6 @@ def _restore_checkpoint_buffers(
             )
         target_dtype = torch_dtype if value.is_floating_point() or value.is_complex() else value.dtype
         target_device = current.device if current.device.type != "meta" else torch.device("cpu")
-        owner_name, separator, local_name = name.rpartition(".")
-        owner = model.get_submodule(owner_name) if separator else model
         owner._buffers[local_name] = value.to(device=target_device, dtype=target_dtype)
 
 
@@ -103,6 +106,9 @@ def load_model(
     state_dict=None,
     strict=True,
     post_load_hook=None,
+    lazy_state_dict=False,
+    state_dict_adapter=None,
+    include_buffers=False,
 ):
     """Construct a model, assign checkpoint weights, and finalize inference placement.
 
@@ -151,11 +157,22 @@ def load_model(
         if is_deepspeed_zero3_enabled() or "Cannot copy out of meta tensor" not in str(exc):
             raise
         model = model_class(**config)
+    if lazy_state_dict:
+        # Preserve storage dtypes until the component converter and quantized
+        # modules have interpreted packed codes, scales and folded gates.
+        if state_dict is None:
+            state_dict = DiskMap(path, "cpu")
+        if state_dict_converter is not None:
+            state_dict = state_dict_converter(state_dict)
+            state_dict_converter = None
+        if state_dict_adapter is not None:
+            state_dict = state_dict_adapter(model, state_dict)
     # What is `module_map`?
     # This is a module mapping table for VRAM management.
     if module_map is not None:
         # Wrapped VRAM loading always receives its placement policy with the module map.
         vram_config = cast(dict[str, Any], vram_config)
+        wrapper_options: dict[str, Any] = {"include_buffers": True} if include_buffers else {}
         devices = [
             vram_config["offload_device"],
             vram_config["onload_device"],
@@ -183,14 +200,26 @@ def load_model(
             if post_load_hook is not None:
                 post_load_hook(model)
             model = enable_vram_management(
-                model, module_map, vram_config=vram_config, disk_map=None, vram_limit=vram_limit
+                model,
+                module_map,
+                vram_config=vram_config,
+                disk_map=None,
+                vram_limit=vram_limit,
+                **wrapper_options,
             )
         else:
             if post_load_hook is not None:
                 raise ValueError("post-load mutations are not supported with disk offload")
-            disk_map = DiskMap(path, device, state_dict_converter=state_dict_converter)
+            disk_map = (
+                state_dict if lazy_state_dict else DiskMap(path, device, state_dict_converter=state_dict_converter)
+            )
             model = enable_vram_management(
-                model, module_map, vram_config=vram_config, disk_map=disk_map, vram_limit=vram_limit
+                model,
+                module_map,
+                vram_config=vram_config,
+                disk_map=disk_map,
+                vram_limit=vram_limit,
+                **wrapper_options,
             )
     else:
         # Why do we use `DiskMap`?
@@ -243,7 +272,17 @@ def load_model(
 
 
 def load_model_with_disk_offload(
-    model_class, path, config=None, torch_dtype=torch.bfloat16, device="cpu", state_dict_converter=None, module_map=None
+    model_class,
+    path,
+    config=None,
+    torch_dtype=torch.bfloat16,
+    device="cpu",
+    state_dict_converter=None,
+    module_map=None,
+    lazy_state_dict=False,
+    preparing_dtype=None,
+    state_dict_adapter=None,
+    include_buffers=False,
 ):
     """Construct a model whose inactive weights remain disk-backed.
 
@@ -266,27 +305,36 @@ def load_model_with_disk_offload(
         model = model_class(**config)
     if hasattr(model, "eval"):
         model = model.eval()
-    disk_map = DiskMap(path, device, state_dict_converter=state_dict_converter)
-    _restore_checkpoint_buffers(model, disk_map, torch_dtype=torch_dtype)
+    if lazy_state_dict:
+        disk_map = DiskMap(path, "cpu")
+        if state_dict_converter is not None:
+            disk_map = state_dict_converter(disk_map)
+        if state_dict_adapter is not None:
+            disk_map = state_dict_adapter(model, disk_map)
+    else:
+        disk_map = DiskMap(path, device, state_dict_converter=state_dict_converter)
+    _restore_checkpoint_buffers(model, disk_map, torch_dtype=torch_dtype, skip_quantized=include_buffers)
     vram_config = {
         "offload_dtype": "disk",
         "offload_device": "disk",
         "onload_dtype": "disk",
         "onload_device": "disk",
-        "preparing_dtype": getattr(torch, "float8_e4m3fn", torch.bfloat16),
+        "preparing_dtype": preparing_dtype or getattr(torch, "float8_e4m3fn", torch.bfloat16),
         "preparing_device": device,
         "computation_dtype": torch_dtype,
         "computation_device": device,
     }
     # module_map is required here; its None default only keeps the keyword optional.
-    enable_vram_management(
+    wrapper_options: dict[str, Any] = {"include_buffers": True} if include_buffers else {}
+    managed_model = enable_vram_management(
         model,
         cast(dict[Any, Any], module_map),
         vram_config=vram_config,
         disk_map=disk_map,
         vram_limit=_disk_offload_vram_limit(device),
+        **wrapper_options,
     )
-    return model
+    return managed_model if include_buffers else model
 
 
 def _disk_offload_vram_limit(device) -> float:

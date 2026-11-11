@@ -69387,7 +69387,7 @@
       "categoryLabel": "Video",
       "categoryLabelZh": "视频",
       "provider": "Lightricks",
-      "summary": "LTX-2.5 is a 22B joint audio-video model. This inference-only integration exposes the official fast two-stage DistilledPipeline for text-to-video and image-to-video, including synchronized audio generation.",
+      "summary": "LTX-2.5 is a 22B joint audio-video model. This inference-only integration exposes the native fast two-stage distilled recipe for text-to-video and image-to-video, including synchronized audio generation.",
       "aliases": [
         "ltx2.5",
         "ltx25",
@@ -69413,8 +69413,8 @@
         "pipelineTarget": "worldfoundry.pipelines.ltx25.pipeline_ltx25:LTX25Pipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_in_tree_runtime",
-        "runtimeStatus": "command_contract_validated_checkpoint_gpu_pending",
+        "backendStage": "native",
+        "runtimeStatus": "native_checkpoint_demo_pending",
         "environmentId": "ltx-2.5",
         "environmentName": "ltx-2.5",
         "environmentKind": "dedicated",
@@ -69439,9 +69439,7 @@
           "scipy>=1.14",
           "av>=14",
           "tqdm>=4.66",
-          "pillow>=10",
-          "openimageio>=3.0",
-          "cloudpickle>=3.1"
+          "pillow>=10"
         ],
         "packageVersions": {
           "torch": "torch==2.11.0+cu128",
@@ -69464,13 +69462,15 @@
           "PIL"
         ],
         "notes": [
-          "Prediction never downloads checkpoints; the interpreter and all component paths are preflighted.",
-          "Uses the official split-checkpoint DistilledPipeline and preserves its joint audio-video output.",
-          "DFR, dev checkpoint pipelines, LoRAs, editing, training, UI, server, and upstream evaluation are intentionally excluded.",
-          "The LTX-2.5 distilled orchestration lives in worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime and its networks in worldfoundry/base_models/diffusion_model; both run in-tree as package modules.",
+          "Prediction uses local split checkpoints and runs in-process in the ltx-2.5 environment.",
+          "NativeDiffusionPipeline runs the ltx-2.5 joint-multistage recipe with canonical LTX components.",
+          "timeout_seconds defaults to 7200. The cooperative deadline is checked between stages/steps and before artifact writes; it cannot preempt a running CUDA kernel.",
+          "Reduced random split-checkpoint CPU replays match the pinned upstream stage and decoded tensors exactly. Released-checkpoint GPU, quantization, offload and complete encoded-artifact parity remain pending.",
+          "NativeDiffusionPipeline runs the ltx-2.5 joint-multistage recipe in-process in this environment. Canonical components live in worldfoundry/base_models/diffusion_model; shared loading, offload, quantization and SDR H.264/AAC media encoding live in worldfoundry/core.",
           "PyTorch is pinned to an explicit cu128 build so PyPI cannot silently replace the requested CUDA tier with a newer CUDA 13 wheel.",
           "The recorded upstream revision pins its own uv CUDA 13.2 indexes; this manifest retains the repository's broadly deployable CUDA 12.8 environment tier.",
-          "The optional diffusion VAE natten acceleration and Blackwell ltx-kernels build are deployment-specific and are not required for command-contract validation."
+          "Diffusion VAE natten acceleration and the Blackwell ltx-kernels build are deployment-specific. NVFP4 modes require ltx-kernels; unquantized execution and control-plane imports do not.",
+          "CPU random-checkpoint tensor parity is validated. Released-checkpoint GPU/MPS, quantization, offload and complete encoded-artifact parity remain pending."
         ]
       },
       "sources": [
@@ -69701,7 +69701,7 @@
         },
         {
           "field": "actions",
-          "detail": "seed, height, width, num_frames, fps, offload_mode, quantization"
+          "detail": "seed, height, width, num_frames, fps, offload_mode, quantization, diffvae_optimization, auto_duration, num_generated_keyframes, enhance_prompt, timeout_seconds"
         }
       ],
       "artifacts": [
@@ -69715,14 +69715,15 @@
         }
       ],
       "notes": [
-        "WorldFoundry runs the in-tree ltx_pipelines.distilled orchestration of the pinned revision as a package module in a dedicated environment; its networks are the canonical LTX implementations.",
-        "Split checkpoint mapping, T2V/I2V conditioning, audio-video output, offload, and quantization command contracts are CPU-tested.",
-        "Local required split components now pass CPU preflight; the two previously incomplete large files match the pinned official SHA-256 values. Checkpoint-backed GPU artifact parity remains pending.",
-        "Command construction and official split-component mapping are validated without importing upstream CUDA code.",
-        "Visual and synchronized-audio quality parity still requires a checkpoint-backed GPU run.",
-        "Prediction never downloads checkpoints; the interpreter and all component paths are preflighted.",
-        "Uses the official split-checkpoint DistilledPipeline and preserves its joint audio-video output.",
-        "DFR, dev checkpoint pipelines, LoRAs, editing, training, UI, server, and upstream evaluation are intentionally excluded."
+        "WorldFoundry runs the native ltx-2.5 joint-multistage recipe in-process in the ltx-2.5 environment, using canonical LTX components and shared loading and media code.",
+        "Reduced random split-checkpoint CPU replays match pinned upstream stage latents and decoded tensors exactly for T2V, I2V, automatic duration and generated keyframes, including disk-backed loading.",
+        "timeout_seconds defaults to 7200 and is checked cooperatively between stages/steps and before artifact writes; it cannot preempt a running CUDA kernel.",
+        "Native split-checkpoint loading and tensor parity are covered by reduced random CPU fixtures, not released-weight quality validation.",
+        "Released-checkpoint GPU, quantization, offload and complete encoded-artifact parity remain pending.",
+        "Prediction uses local split checkpoints and runs in-process in the ltx-2.5 environment.",
+        "NativeDiffusionPipeline runs the ltx-2.5 joint-multistage recipe with canonical LTX components.",
+        "timeout_seconds defaults to 7200. The cooperative deadline is checked between stages/steps and before artifact writes; it cannot preempt a running CUDA kernel.",
+        "Reduced random split-checkpoint CPU replays match the pinned upstream stage and decoded tensors exactly. Released-checkpoint GPU, quantization, offload and complete encoded-artifact parity remain pending."
       ],
       "docs": {
         "curated": true,
@@ -69732,22 +69733,22 @@
           "kind": "company"
         },
         "overview": [
-          "LTX-2.5 is a 22B joint audio-video model. This inference-only integration exposes the official fast two-stage DistilledPipeline for text-to-video and image-to-video, including synchronized audio generation."
+          "LTX-2.5 is a 22B joint audio-video model. This inference-only integration exposes the native fast two-stage distilled recipe for text-to-video and image-to-video, including synchronized audio generation."
         ],
         "overviewZh": [
-          "LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成开放官方快速两阶段 DistilledPipeline，支持文生视频、图生视频与同步音频生成。"
+          "LTX-2.5 是一个 22B 联合音视频模型。本次仅推理集成通过原生快速两阶段蒸馏配方支持文生视频、图生视频与同步音频生成。"
         ],
         "architecture": [
-          "The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry runs the distilled orchestration of Lightricks/LTX-2 at a95ab856 in-tree on its canonical LTX networks, which carry the LTX-2.5 Gemma 4 text encoder, diffusion video decoder and duration head, instead of adapting the incompatible LTX-2.3 monolithic loader."
+          "The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. NativeDiffusionPipeline runs the ltx-2.5 joint-multistage recipe in-process with canonical Gemma 4, transformer, diffusion video decoder and duration-head components, shared loading/offload and BT.709 H.264/AAC media encoding. Definitions follow Lightricks/LTX-2 at a95ab856."
         ],
         "architectureZh": [
-          "官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry 在仓库内运行该官方蒸馏推理编排（Lightricks/LTX-2，a95ab856），网络使用 WorldFoundry 规范的 LTX 实现，并已包含 LTX-2.5 的 Gemma 4 文本编码器、扩散视频解码器与时长预测头；不复用不兼容的 LTX-2.3 单体权重加载器。"
+          "官方蒸馏路径使用内嵌投影的 Gemma 4 12B 文本编码器，在半分辨率下联合去噪视频和音频，经 LTX-2.5 潜空间上采样后进行短程第二阶段细化，最后由独立音频与视频 VAE 解码。WorldFoundry 通过 NativeDiffusionPipeline 在进程内运行 ltx-2.5 joint-multistage 配方，使用规范的 Gemma 4、Transformer、 扩散视频解码器与时长预测头，以及共享加载、卸载和 BT.709 H.264/AAC 编码组件。定义对应 Lightricks/LTX-2 的 a95ab856 版本。"
         ],
         "usageNotes": [
-          "Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, create the dedicated ltx-2.5 environment, and pass execute=True. The optional duration head enables prompt-based automatic duration."
+          "Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, create the dedicated ltx-2.5 environment, and pass execute=True. The optional duration head enables prompt-based automatic duration. timeout_seconds defaults to 7200; cooperative checks run between stages/steps and before artifact writes, without preempting a running CUDA kernel."
         ],
         "usageNotesZh": [
-          "请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，并创建独立的 ltx-2.5 环境；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。"
+          "请先接受 Hugging Face 模型条款，按仓库目录结构下载五个必需拆分组件，并创建独立的 ltx-2.5 环境；执行时显式传入 execute=True。可选 duration head 可启用基于提示词的自动时长预测。timeout_seconds 默认 7200；协作式超时检查在阶段、 采样步骤之间及产物写入前执行，不能抢占正在运行的 CUDA 内核。"
         ],
         "highlights": [
           "Text To Video",
@@ -69795,13 +69796,13 @@
         ],
         "limitations": [
           "The checkpoint is gated and approximately 66 GiB for the required distilled components.",
-          "GPU/MPS artifact and audio-video parity have not yet been validated.",
+          "Released-checkpoint GPU/MPS, quantization, offload and encoded-artifact parity remain unvalidated.",
           "DFR, full/dev-model guidance, IC-LoRA, video editing, training, UI, and server surfaces are outside this inference-only integration.",
           "The LTX-2.x Community License requires a paid license for covered commercial entities at or above its revenue threshold except for its defined non-commercial uses."
         ],
         "limitationsZh": [
           "Checkpoint 需要接受访问条款，必需蒸馏组件合计约 66 GiB。",
-          "尚未验证 GPU/MPS 产物及音视频一致性。",
+          "尚未验证发布权重的 GPU/MPS、量化、卸载与编码产物一致性。",
           "DFR、完整 dev 模型引导、IC-LoRA、视频编辑、训练、UI 与服务端均不在本次仅推理集成范围内。",
           "LTX-2.x Community License 对达到其营收门槛的适用商业实体要求付费许可，但其定义的非商业用途除外。"
         ],

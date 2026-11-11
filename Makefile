@@ -55,6 +55,9 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/runtime/test_inference_actions_evidence.py \
 	tests/synthesis/test_matrix_game_2_historical_reference.py \
 	tests/studio/test_canonical_catalog_lookup.py \
+	tests/studio/test_ltx25_workspace_contract.py \
+	tests/eval_core/test_ltx25_integration.py::test_ltx25_catalog_binding_profile_and_environment_are_wired \
+	tests/eval_core/test_ltx25_integration.py::test_ltx25_pipeline_loads_from_standard_runner_spec \
 	tests/studio/test_catalog_class_constants.py \
 	tests/base_models/diffusion_model/test_module_boundaries.py \
 	tests/base_models/test_transnetv2_unsupported_options.py \
@@ -159,6 +162,13 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/execution \
 	tests/core/platform \
 	tests/core/model_loading/test_checkpoint_roundtrip.py \
+	tests/core/model_loading/test_checkpoint_transforms.py \
+	tests/core/acceleration/test_checkpoint_quantization.py \
+	tests/core/test_bt709_audio_video.py \
+	tests/base_models/test_ltx25_canonical_components.py \
+	tests/base_models/test_ltx25_native_recipe.py \
+	tests/base_models/diffusion_model/test_joint_multistage_hooks.py \
+	tests/eval_core/test_ltx25_integration.py \
 	tests/core/geometry/test_geometry_conventions.py \
 	tests/runtime/test_geometry_regression.py \
 	tests/synthesis/test_dreamx_world_backend_policy.py \

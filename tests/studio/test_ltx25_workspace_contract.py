@@ -26,13 +26,10 @@ def test_ltx25_default_variant_maps_the_complete_official_runtime() -> None:
     }
 
     required = entry.default_load_kwargs["required_components"]
-    assert "source_root" not in required
-    assert Path(required["python_executable"]).parts[-4:] == (
-        "envs",
-        "ltx-2.5",
-        "bin",
-        "python",
-    )
+    removed = {"source_root", "python_executable", "python_env_dir", "conda_dir"}
+    assert removed.isdisjoint(required)
+    assert removed.isdisjoint(entry.load_params)
+    assert {"auto_duration", "quantization", "offload_mode", "timeout_seconds"} <= set(entry.call_params)
     assert Path(required["transformer_path"]).name == ("ltx-2.5-22b-distilled-transformer-bf16.safetensors")
     assert Path(required["text_encoder_path"]).name == ("gemma4-12b-with-proj-ltx-2.5-bf16.safetensors")
     assert Path(required["video_vae_path"]).name == "ltx-2.5-video-vae-bf16.safetensors"

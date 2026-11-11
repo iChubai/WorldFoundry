@@ -1,16 +1,17 @@
 """Load-time optimization transform: apply a typed policy to a built model.
 
-This is the single place that turns a declarative :class:`QuantizationPolicy`
-into an in-place model transform (weight replacement), mirroring the
+Generic policies transform an already-loaded model here, mirroring the
 "transform stage at load time, not per-request patching" pattern used by
 FastVideo (``convert_model_to_fp8``) and LightX2V (registry-driven weight
-classes). Keeping it here — next to the policy definition and after the dense
-checkpoint is loaded/placed — means model code never imports quantization
-kernels directly, and the exact set of replaced modules is reported for the
+classes). Explicit checkpoint-layout policies install core quantization
+wrappers through component state-dict adapters before restoring raw storage;
+this module verifies and reports those installed wrappers. Model components
+select layers without owning kernels, and replacements are recorded in the
 performance manifest.
 
 Order matters and follows ``plan/inference_operator_optimization_plan.md``
-§4.1: load weights -> ``apply_quantization_policy`` -> install offload hooks.
+§4.1: load weights -> ``apply_quantization_policy`` -> install offload hooks
+for generic post-load quantizers. Checkpoint-layout adapters run before restore.
 Attention backend selection and CUDA Graph capture are separate, later stages
 (the graph captures the already-quantized module), so this function only owns
 weight-level precision transforms.
@@ -199,6 +200,16 @@ def apply_quantization_policy(model: nn.Module, policy: QuantizationPolicy) -> Q
         raise ValueError("fuse_fp8_ffn requires FP8 quantization")
     if mode == QuantizationMode.NONE:
         return QuantizationReport(requested_mode=mode.value, applied=False, reason="policy mode is none")
+    if mode in {
+        QuantizationMode.FP8_CAST,
+        QuantizationMode.FP8_SCALED_MM,
+        QuantizationMode.NVFP4_CAST,
+        QuantizationMode.NVFP4_PREQUANT,
+    }:
+        report = getattr(model, "_worldfoundry_checkpoint_quantization", None)
+        if not isinstance(report, QuantizationReport) or report.requested_mode != mode.value:
+            raise ValueError(f"{mode.value} requires a checkpoint-layout adapter before loading weights")
+        return report
 
     # Import the kernel layer lazily so importing this module (and the policy
     # vocabulary) never pulls in torch-heavy acceleration code on a CPU/doc path.

@@ -367,6 +367,7 @@ def build_joint_multistage_strategy(
         stage_steps=stage_steps,
         device=context.policy.device,
         dtype=context.policy.dtype,
+        step_noise_seed_offset=context.recipe.execution.options.get("step_noise_seed_offset"),
     )
 
 

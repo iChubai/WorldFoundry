@@ -354,6 +354,7 @@ def default_native_diffusion_registry() -> NativeDiffusionRegistry:
         ("ltx-2-t2v", ".ltx", "ltx2_t2v_recipe", ("ltx2-t2v",)),
         ("ltx-2.3-i2v", ".ltx", "ltx23_i2v_recipe", ("ltx2.3-i2v", "ltx2_3_i2v")),
         ("ltx-2.3-t2v", ".ltx", "ltx23_t2v_recipe", ("ltx2.3-t2v", "ltx2_3_t2v")),
+        ("ltx-2.5", ".ltx", "ltx25_distilled_recipe", ("ltx2.5", "ltx25", "ltx-2.5-distilled")),
         ("ltx-video-i2v", ".ltx", "ltx_video_i2v_recipe", ("ltx-video",)),
         (
             "helixworld",

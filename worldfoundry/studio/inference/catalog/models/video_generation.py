@@ -345,22 +345,13 @@ def _ltx25_checkpoint_dir() -> str:
     )
 
 
-def _ltx25_python_executable() -> str:
-    workspace_root = resolve._project_root().parent
-    return resolve._first_existing_path(
-        workspace_root / "conda" / "envs" / "ltx-2.5" / "bin" / "python",
-        workspace_root / "envs" / "ltx-2.5" / "bin" / "python",
-    )
-
-
 def _ltx25_default_load_kwargs() -> dict[str, Any]:
-    """Map Studio directly to the official split LTX-2.5 runtime assets."""
+    """Map Studio to the native LTX-2.5 recipe's local split checkpoints."""
 
     checkpoint_dir = Path(_ltx25_checkpoint_dir())
     return {
         "required_components": {
             "checkpoint_dir": str(checkpoint_dir),
-            "python_executable": _ltx25_python_executable(),
             "transformer_path": str(
                 checkpoint_dir / "diffusion_models" / "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
             ),
@@ -3985,8 +3976,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "device",
             "model_id",
             "checkpoint_dir",
-            "source_root",
-            "python_executable",
             "transformer_path",
             "text_encoder_path",
             "video_vae_path",
@@ -3999,8 +3988,8 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "diffvae_optimization",
         ),
         "aliases": ("ltx2.5", "ltx25", "ltx-2.5-distilled"),
-        "tags": ("text-to-video", "image-to-video", "joint-audio-video", "official-runtime"),
-        "notes": "Runs the vendored official LTX-2.5 DistilledPipeline in its dedicated environment.",
+        "tags": ("text-to-video", "image-to-video", "joint-audio-video", "native"),
+        "notes": "Runs the native LTX-2.5 recipe in-process in the ltx-2.5 environment.",
     },
 }
 

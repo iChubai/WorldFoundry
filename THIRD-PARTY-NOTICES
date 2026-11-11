@@ -1368,24 +1368,36 @@ Modified by JD.com for academic and research purposes only.
 Not for commercial use. For commercial use, please contact Lightricks Ltd.
 Original copyright, license, and attribution notices are retained.
 
-LTX-2.5 inference runtime and canonical LTX-2.5 components
-----------------------------------------------------------
+Canonical LTX-2.5 components and native inference
+------------------------------------------------
 Source: https://github.com/Lightricks/LTX-2/tree/a95ab856bf29407b6b066ede0abe1846050db56c
-Files: worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime/**,
-       worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/diffusion_tiling.py,
+Files: worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/diffusion_tiling.py,
        worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/diffusion_video_decoder.py,
        worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/keyframes.py,
        worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/transformer/**,
        worldfoundry/base_models/diffusion_model/models/encoders/ltx/gemma.py,
        worldfoundry/base_models/diffusion_model/models/encoders/ltx/prompts/**,
        worldfoundry/base_models/diffusion_model/models/networks/ltx/duration_head.py,
-       worldfoundry/base_models/diffusion_model/optimizations/ltx/**, and the LTX-2.5 extensions
-       of the canonical LTX transformer, connector, tokenizer, video and audio VAE, upsampler and
-       tiling modules under worldfoundry/base_models/diffusion_model/models/
-License: These files are Derivatives of LTX-2.x and are distributed under the LTX-2.x Community
-License Agreement (August 11, 2026), whose text is reproduced in the SolarWM inference runtime
-block below, including the use-based restrictions of Section 4 and Attachment A. Every file was
-modified by WorldFoundry; the runtime PROVENANCE.md lists the changes. The neighborhood-attention
+       worldfoundry/base_models/diffusion_model/models/autoencoders/ltx/video/state_dict.py,
+       worldfoundry/base_models/diffusion_model/models/representations/ltx/conditioning.py,
+       worldfoundry/base_models/diffusion_model/optimizations/ltx/**,
+       worldfoundry/core/acceleration/quantization/cast_linear.py,
+       worldfoundry/core/media/processing/image_conditioning.py,
+       worldfoundry/core/media/processing/color.py,
+       worldfoundry/core/media/codecs/pyav.py, and the LTX-2.5 extensions
+       of the canonical LTX transformer, connector, tokenizer, video and audio VAE, upsampler,
+       initializer and scheduler modules under worldfoundry/base_models/diffusion_model/.
+       In mixed first-party core files, this notice covers only Float8Linear.from_prequantized
+       and its calibrated execution path in core/acceleration/quantization/linear.py,
+       and ltx_nvfp4_kernels, quantize_nvfp4_ltx, NVFP4Linear.from_ltx_packed and its
+       LTX-provider execution path in core/acceleration/quantization/nvfp4.py.
+License: SPDX identifier LicenseRef-LTX-2.x-Community refers to the LTX-2.x Community License
+Agreement (August 11, 2026), whose full text is reproduced in the SolarWM inference runtime
+block below, including the use-based restrictions of Section 4 and Attachment A. The files and
+portions listed above are Derivatives of LTX-2.x under that agreement. WorldFoundry adapts them
+to canonical components, lazy split-checkpoint loading, native multistage sampling, shared
+quantization/offload and SDR media encoding. Other portions of mixed first-party core files
+retain their existing Apache-2.0 license. The neighborhood-attention
 fallbacks in models/autoencoders/ltx/video/transformer/fallback_na/eager.py and triton_na.py were
 vendored by LTX-2 from comfy-kitchen (Copyright (c) 2025 Comfy Org, Apache-2.0) and retain their
 SPDX headers.

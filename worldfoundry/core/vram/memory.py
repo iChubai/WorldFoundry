@@ -413,3 +413,21 @@ __all__ = [
     "release_module_storage",
     "unload_complete_models",
 ]
+
+
+def activation_budget_bytes(device: torch.device) -> int:
+    """Available CUDA/MPS activation bytes, respecting the CUDA process memory cap.
+
+    CPU returns zero (unknown budget). CUDA accounts for reserved allocator
+    blocks; MPS uses the recommended working set minus driver allocations.
+    """
+    if device.type == "cuda" and torch.cuda.is_available():
+        index = device.index if device.index is not None else torch.cuda.current_device()
+        free, _ = torch.cuda.mem_get_info(index)
+        total = torch.cuda.get_device_properties(index).total_memory
+        fraction = torch.cuda.get_per_process_memory_fraction(index)
+        available = max(0, int(fraction * total) - int(torch.cuda.memory_reserved(index)))
+        return min(int(free), available)
+    if device.type == "mps" and torch.backends.mps.is_available():
+        return max(0, int(torch.mps.recommended_max_memory()) - int(torch.mps.driver_allocated_memory()))
+    return 0

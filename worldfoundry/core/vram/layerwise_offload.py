@@ -13,7 +13,7 @@ module — those expect resident shards.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from contextlib import AbstractContextManager, contextmanager, nullcontext, suppress
 from dataclasses import dataclass, field
 from typing import Any, cast
@@ -106,7 +106,7 @@ class LayerwiseOffloadHandle:
         for layer, state, hook_handles in self._layer_hooks:
             for hook_handle in hook_handles:
                 hook_handle.remove()
-            for name, param in layer.named_parameters(recurse=True):
+            for name, param in state.named_tensors():
                 cpu_tensor = state.cpu_named_parameters.get(name)
                 if cpu_tensor is not None:
                     param.data = cpu_tensor
@@ -234,6 +234,7 @@ def enable_layerwise_cpu_offload(
     device: torch.device | str | None = None,
     pin_memory: bool = True,
     reuse_buffers: bool = False,
+    include_buffers: bool = False,
 ) -> LayerwiseOffloadHandle:
     """Attach hooks to a ModuleList or an explicitly named Sequential stack.
 
@@ -270,7 +271,9 @@ def enable_layerwise_cpu_offload(
     if any(getattr(layer, "_worldfoundry_layerwise_cpu_offload", False) for layer in layers):
         raise ValueError("one or more layers already belong to another offload handle")
 
-    packed = reuse_buffers and all(p.is_contiguous() for layer in layers for p in layer.parameters())
+    packed = (
+        reuse_buffers and not include_buffers and all(p.is_contiguous() for layer in layers for p in layer.parameters())
+    )
     if packed:
         storage_owners: dict[tuple[torch.device, int], int] = {}
         for index, layer in enumerate(layers):
@@ -299,6 +302,7 @@ def enable_layerwise_cpu_offload(
             metrics=metrics,
             state_id=index,
             pin_memory=pin_memory,
+            include_buffers=include_buffers,
             **({"pool": pool} if pool is not None else {}),
         )
         for index, layer in enumerate(layers)
@@ -397,6 +401,7 @@ class _LayerwiseOffloadState:
         metrics: _LayerwiseOffloadMetrics,
         state_id: int,
         pin_memory: bool,
+        include_buffers: bool = False,
     ) -> None:
         """Bind one module to a compute device and a shared prefetch stream."""
         self.module = module
@@ -405,9 +410,16 @@ class _LayerwiseOffloadState:
         self.metrics = metrics
         self.state_id = int(state_id)
         self.pin_memory = pin_memory
+        self.include_buffers = include_buffers
         self.cpu_named_parameters: dict[str, torch.Tensor] = {}
         self.gpu_named_parameters: dict[str, torch.Tensor] = {}
         self.next_state: _LayerwiseOffloadState | None = None
+
+    def named_tensors(self) -> Iterator[tuple[str, torch.Tensor]]:
+        """Select parameters, and optionally inference buffers, without changing defaults."""
+        yield from self.module.named_parameters(recurse=True)
+        if self.include_buffers:
+            yield from self.module.named_buffers(recurse=True)
 
     @_compiler_disable
     def offload_to_cpu(self) -> None:
@@ -416,7 +428,7 @@ class _LayerwiseOffloadState:
         ``pin_memory`` can raise on some allocators; the copy still lives on
         pageable CPU RAM so offload continues rather than aborting setup.
         """
-        for name, param in self.module.named_parameters(recurse=True):
+        for name, param in self.named_tensors():
             cpu_tensor = param.detach().to("cpu")
             if self.pin_memory:
                 with suppress(RuntimeError):
@@ -433,7 +445,7 @@ class _LayerwiseOffloadState:
         """Block the compute stream on prefetch, then bind GPU copies to params."""
         torch.cuda.current_stream(self.device).wait_stream(self.async_copy_stream)
         self.metrics.count("wait_calls")
-        named_parameters = dict(self.module.named_parameters(recurse=True))
+        named_parameters = dict(self.named_tensors())
         for name, param in named_parameters.items():
             if name not in self.cpu_named_parameters:
                 continue
@@ -488,7 +500,7 @@ class _LayerwiseOffloadState:
     @_compiler_disable
     def release_gpu_params(self) -> None:
         """Drop GPU copies after forward so only the CPU master remains."""
-        named_parameters = dict(self.module.named_parameters(recurse=True))
+        named_parameters = dict(self.named_tensors())
         for name, param in named_parameters.items():
             if name not in self.cpu_named_parameters:
                 continue

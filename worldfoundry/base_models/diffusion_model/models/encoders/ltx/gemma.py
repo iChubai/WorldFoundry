@@ -24,7 +24,6 @@ import torch
 import transformers
 from tokenizers import Tokenizer
 from transformers import (
-    AutoModelForImageTextToText,
     PretrainedConfig,
     PreTrainedModel,
     PreTrainedTokenizerBase,
@@ -364,12 +363,14 @@ class LTXGemmaTextEncoder(torch.nn.Module):
         tokenizer: LTXVGemmaTokenizer | None = None,
         processor: ProcessorMixin | None = None,
         dtype: torch.dtype = torch.bfloat16,
-    ):
+        execution_device: torch.device | None = None,
+    ) -> None:
         super().__init__()
         self.model = model
         self.tokenizer = tokenizer
         self.processor = processor
         self._dtype = dtype
+        self.execution_device = execution_device
 
     def encode(self, prompts: list[str]) -> list[tuple[tuple[torch.Tensor, ...], torch.Tensor]]:
         """Run a single fused Gemma forward over a batch of prompts.
@@ -384,11 +385,11 @@ class LTXGemmaTextEncoder(torch.nn.Module):
         tokenized = [self.tokenizer.tokenize_with_weights(t)["gemma"] for t in prompts]
         input_ids = torch.tensor(
             [[tok for tok, _ in pairs] for pairs in tokenized],
-            device=self.model.device,
+            device=self.execution_device or self.model.device,
         )
         attention_mask = torch.tensor(
             [[w for _, w in pairs] for pairs in tokenized],
-            device=self.model.device,
+            device=self.execution_device or self.model.device,
         )
         outputs = self.model.model(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
         hidden_states = outputs.hidden_states
@@ -428,7 +429,7 @@ class LTXGemmaTextEncoder(torch.nn.Module):
             text=text,
             images=image,
             return_tensors="pt",
-        ).to(self.model.device)
+        ).to(self.execution_device or self.model.device)
         pad_token_id = self.processor.tokenizer.pad_token_id if self.processor.tokenizer.pad_token_id is not None else 0
         model_inputs = _pad_inputs_for_attention_alignment(model_inputs, pad_token_id=pad_token_id)
 
@@ -439,7 +440,8 @@ class LTXGemmaTextEncoder(torch.nn.Module):
             gen_kwargs["max_new_tokens"] = max_new_tokens
 
         # fork_rng device pinning is only supported for CUDA; MPS/CPU fork CPU RNG only.
-        fork_devices = [self.model.device] if self.model.device.type == "cuda" else []
+        device = self.execution_device or self.model.device
+        fork_devices = [device] if device.type == "cuda" else []
         with torch.inference_mode(), torch.random.fork_rng(devices=fork_devices):
             torch.manual_seed(seed)
             outputs = self.model.generate(**model_inputs, **gen_kwargs)
@@ -558,21 +560,6 @@ def build_gemma_tokenizer(assets: GemmaAssets) -> LTXVGemmaTokenizer:
     )
 
 
-def load_gemma_hf_config(gemma_model_path: str) -> PretrainedConfig:
-    """Load the Hugging Face config from a Gemma directory or single-file TE checkpoint."""
-    return build_gemma_hf_config(GemmaAssets.load(gemma_model_path))
-
-
-def gemma_model_config(gemma_model_path: str) -> dict:
-    """Return the Hugging Face Gemma config as a plain dict (includes ``model_type``)."""
-    return load_gemma_hf_config(gemma_model_path).to_dict()
-
-
-def gemma_model_type(gemma_model_path: str) -> str:
-    """Return the ``model_type`` declared in a Gemma checkpoint config."""
-    return gemma_model_config(gemma_model_path).get("model_type", "") or ""
-
-
 def _populate_rotary_v5(l_model: torch.nn.Module, config: object) -> None:
     """transformers >=5 layout: single rotary_emb with per-layer-type buffers.
     Gemma 4's global ("full_attention") layers use a wider head_dim than the local layers, so when
@@ -656,8 +643,53 @@ def populate_gemma4_dense_buffers(module: LTXGemmaTextEncoder) -> LTXGemmaTextEn
     return module
 
 
-def build_meta_gemma_text_encoder(gemma_model_path: str) -> LTXGemmaTextEncoder:
-    """Construct the text encoder on the meta device from the config at ``gemma_model_path``."""
-    with torch.device("meta"):
-        model = AutoModelForImageTextToText.from_config(load_gemma_hf_config(gemma_model_path))
-    return LTXGemmaTextEncoder(model=model)
+def convert_gemma4_state_dict(state_dict: Mapping[str, torch.Tensor], *, model_type: str) -> Mapping[str, torch.Tensor]:
+    """Map the released unified / instruct Gemma-4 layout, including the tied LM head."""
+    from worldfoundry.core.model_loading.checkpoints.transforms import TransformedStateDict
+
+    flat = "model.layers.0.post_feedforward_layernorm.weight" in state_dict
+    prefixes = {"model.language_model.": "model.model.language_model."}
+    if model_type == "gemma4_unified":
+        if flat:
+            prefixes.update(
+                {
+                    "model.layers.": "model.model.language_model.layers.",
+                    "model.embed_tokens.": "model.model.language_model.embed_tokens.",
+                    "model.norm.": "model.model.language_model.norm.",
+                    "vision_model.": "model.model.embed_vision.",
+                    "multi_modal_projector.embedding_projection.": "model.model.embed_vision.multimodal_embedder.embedding_projection.",
+                    "audio_projector.": "model.model.embed_audio.",
+                }
+            )
+        prefixes.update(
+            {
+                "model.embed_audio.": "model.model.embed_audio.",
+                "model.embed_vision.embedding_projection.": "model.model.embed_vision.multimodal_embedder.embedding_projection.",
+                "model.vision_embedder.": "model.model.embed_vision.",
+            }
+        )
+    elif model_type == "gemma4":
+        prefixes.update(
+            {
+                f"model.{name}.": f"model.model.{name}."
+                for name in (
+                    "vision_tower",
+                    "audio_tower",
+                    "embed_vision",
+                    "embed_audio",
+                    "multi_modal_projector",
+                )
+            }
+        )
+    else:
+        raise ValueError(f"Unsupported Gemma-4 model_type: {model_type!r}")
+    keys = {}
+    for key in state_dict:
+        for source, destination in prefixes.items():
+            if key.startswith(source):
+                target = destination + key.removeprefix(source)
+                keys[target] = key
+                if target == "model.model.language_model.embed_tokens.weight":
+                    keys["model.lm_head.weight"] = key
+                break
+    return TransformedStateDict(state_dict, keys)

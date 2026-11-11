@@ -47,7 +47,11 @@ def triton_na_available() -> bool:
     return True
 
 
-@torch.library.custom_op("worldfoundry::ltx_na_attention_eager", mutates_args=())
+@torch.library.custom_op(
+    "worldfoundry::ltx_na_attention_eager",
+    mutates_args=(),
+    schema="(Tensor q, Tensor k, Tensor v, SymInt[] kernel_size) -> Tensor",
+)
 def na_attention_eager(
     q: torch.Tensor,
     k: torch.Tensor,
@@ -69,7 +73,11 @@ def _na_attention_eager_fake(
     return torch.empty_like(q)
 
 
-@torch.library.custom_op("worldfoundry::ltx_na_attention_triton", mutates_args=())
+@torch.library.custom_op(
+    "worldfoundry::ltx_na_attention_triton",
+    mutates_args=(),
+    schema="(Tensor q, Tensor k, Tensor v, SymInt[] kernel_size) -> Tensor",
+)
 def na_attention_triton(
     q: torch.Tensor,
     k: torch.Tensor,
@@ -93,7 +101,11 @@ def _na_attention_triton_fake(
     return torch.empty_like(q)
 
 
-@torch.library.custom_op("worldfoundry::ltx_na_attention_joint_eager", mutates_args=())
+@torch.library.custom_op(
+    "worldfoundry::ltx_na_attention_joint_eager",
+    mutates_args=(),
+    schema="(Tensor q, Tensor k, Tensor v, Tensor keyframe_q, Tensor keyframe_k, Tensor keyframe_v, Tensor keyframe_times, Tensor keyframe_valid, SymInt[] kernel_size, SymInt num_slots) -> (Tensor, Tensor)",
+)
 def na_attention_joint_eager(
     q: torch.Tensor,
     k: torch.Tensor,
@@ -142,7 +154,11 @@ def _na_attention_joint_eager_fake(
     return torch.empty_like(q), torch.empty_like(keyframe_q)
 
 
-@torch.library.custom_op("worldfoundry::ltx_na_attention_joint_triton", mutates_args=())
+@torch.library.custom_op(
+    "worldfoundry::ltx_na_attention_joint_triton",
+    mutates_args=(),
+    schema="(Tensor q, Tensor k, Tensor v, Tensor keyframe_q, Tensor keyframe_k, Tensor keyframe_v, Tensor keyframe_times, Tensor keyframe_valid, SymInt[] kernel_size, SymInt num_slots) -> (Tensor, Tensor)",
+)
 def na_attention_joint_triton(
     q: torch.Tensor,
     k: torch.Tensor,

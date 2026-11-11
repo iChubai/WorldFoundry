@@ -83,9 +83,11 @@ def _small_model(
 
 def _ff_biases(model: LTXModel) -> tuple[bool, bool]:
     block = model.transformer_blocks[0]
+    video_ff, audio_ff = block.ff, block.audio_ff
+    assert isinstance(video_ff, torch.nn.Module) and isinstance(audio_ff, torch.nn.Module)
     return (
-        all(module.bias is not None for module in block.ff.modules() if isinstance(module, torch.nn.Linear)),
-        all(module.bias is not None for module in block.audio_ff.modules() if isinstance(module, torch.nn.Linear)),
+        all(module.bias is not None for module in video_ff.modules() if isinstance(module, torch.nn.Linear)),
+        all(module.bias is not None for module in audio_ff.modules() if isinstance(module, torch.nn.Linear)),
     )
 
 
@@ -281,13 +283,17 @@ def test_connectors_follow_connector_ff_bias_and_audio_widths(ff_bias: bool) -> 
     assert video.inner_dim == 16
     assert audio.inner_dim == 8
     for connector in (video, audio):
-        linears = [m for m in connector.transformer_1d_blocks[0].ff.modules() if isinstance(m, torch.nn.Linear)]
+        feed_forward = connector.transformer_1d_blocks[0].ff
+        assert isinstance(feed_forward, torch.nn.Module)
+        linears = [m for m in feed_forward.modules() if isinstance(m, torch.nn.Linear)]
         assert all((m.bias is not None) is ff_bias for m in linears)
 
 
 def test_connector_ff_bias_defaults_to_biased_layers() -> None:
     connector = Embeddings1DConnectorConfigurator.from_config(_transformer_metadata()["config"])
-    linears = [m for m in connector.transformer_1d_blocks[0].ff.modules() if isinstance(m, torch.nn.Linear)]
+    feed_forward = connector.transformer_1d_blocks[0].ff
+    assert isinstance(feed_forward, torch.nn.Module)
+    linears = [m for m in feed_forward.modules() if isinstance(m, torch.nn.Linear)]
 
     assert linears
     assert all(m.bias is not None for m in linears)
@@ -355,10 +361,6 @@ def test_vocoder_configurator_builds_bandwidth_extension_from_nested_config() ->
     assert vocoder.output_sampling_rate == 48000
 
 
-@pytest.mark.skipif(
-    not hasattr(torch.compiler, "nested_compile_region"),
-    reason="the neighborhood-attention decoder needs torch.compiler.nested_compile_region",
-)
 def test_diffusion_video_decoder_configurator_reads_nested_decoder_config() -> None:
     from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diffusion_video_decoder import (
         DiffusionVideoDecoderConfigurator,

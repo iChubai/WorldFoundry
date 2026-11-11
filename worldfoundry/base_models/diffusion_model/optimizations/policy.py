@@ -5,8 +5,8 @@
 - ``device`` / ``dtype``: placement of constructed modules.
 - ``attention``: backend hint (``auto`` / ``sdpa`` / ``flash`` / …).
 - ``offload``: ``none`` / ``block`` / ``component`` / ``disk``.
-- ``quantization``: ``none`` / ``fp8`` / ``int8`` / …; incompatible with
-  disk offload at load time.
+- ``quantization``: ``none`` / ``fp8`` / ``int8`` / …; explicit checkpoint-layout
+  modes support disk offload through a component state-dict adapter.
 - ``compile``: compile the bound ``forward`` (not the whole module type).
 - ``options``: opt-in flags such as ``cuda_graph``, ``teacache``,
   ``approximate_attention``, ``fuse_qkv``, ``inplace_residual``,
@@ -100,6 +100,10 @@ def parse_quantization_policy(
         "nvfp4": QuantizationMode.NVFP4,
         "fp4": QuantizationMode.NVFP4,
         "gguf": QuantizationMode.GGUF,
+        "fp8cast": QuantizationMode.FP8_CAST,
+        "fp8scaledmm": QuantizationMode.FP8_SCALED_MM,
+        "nvfp4cast": QuantizationMode.NVFP4_CAST,
+        "nvfp4prequant": QuantizationMode.NVFP4_PREQUANT,
     }
     try:
         mode = aliases[normalized]

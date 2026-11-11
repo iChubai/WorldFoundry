@@ -387,3 +387,99 @@ __all__ = [
     "ltx23_t2v_recipe",
     "ltx_video_i2v_recipe",
 ]
+
+
+LTX25_MODEL_ID = "ltx-2.5"
+LTX25_REPO_ID = "Lightricks/LTX-2.5"
+LTX25_REVISION = "bf86adedf518142442575d1ce2e767b7d01c8c76"
+LTX25_COMPONENT_FILES = {
+    "transformer": "diffusion_models/ltx-2.5-22b-distilled-transformer-bf16.safetensors",
+    "text_encoder": "text_encoders/gemma4-12b-with-proj-ltx-2.5-bf16.safetensors",
+    "video_vae": "vae/ltx-2.5-video-vae-bf16.safetensors",
+    "audio_vae": "vae/ltx-2.5-audio-vae-bf16.safetensors",
+    "upsampler": "latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+    "duration_head": "model_patches/ltx-2.5-duration-head-bf16.safetensors",
+}
+
+
+def ltx25_distilled_recipe() -> NativeDiffusionRecipe:
+    """LTX-2.5 split distilled checkpoints on the native joint multi-stage runner.
+
+    Stage one uses mask-projected ancestral Euler with an independent noise
+    stream; the three-step refinement is deterministic. The decoder continues
+    the initial-noise generator for the diffusion VAE.
+    """
+    from ..models.autoencoders.ltx.component import build_ltx_diffusion_media_decoder
+    from ..models.encoders.ltx.component import build_ltx_gemma_prompt_conditioner
+    from ..schedulers.ltx import build_ltx_projected_ancestral_euler_scheduler, build_ltx_projected_euler_scheduler
+
+    denoiser = ComponentKey(ComponentKind.DENOISER)
+    conditioner = ComponentKey(ComponentKind.CONDITIONER)
+    initializer = ComponentKey(ComponentKind.LATENT_INITIALIZER)
+    scheduler_one = ComponentKey(ComponentKind.SCHEDULER, "stage-1")
+    scheduler_two = ComponentKey(ComponentKind.SCHEDULER, "stage-2")
+    processor = ComponentKey(ComponentKind.LATENT_PROCESSOR)
+    decoder = ComponentKey(ComponentKind.DECODER)
+    return NativeDiffusionRecipe(
+        model_id=LTX25_MODEL_ID,
+        aliases=("ltx2.5", "ltx25", "ltx-2.5-distilled"),
+        components=(
+            ComponentSpec(
+                denoiser,
+                build_ltx_joint_denoiser,
+                {"weights": "transformer"},
+                {"split_checkpoint": True, "precision": "weights"},
+            ),
+            ComponentSpec(
+                conditioner,
+                build_ltx_gemma_prompt_conditioner,
+                {"weights": "transformer", "text_encoder": "text_encoder", "duration_head": "duration_head"},
+            ),
+            ComponentSpec(
+                initializer,
+                build_ltx_multistage_latent_initializer,
+                {"weights": "video_vae"},
+                {"split_checkpoint": True},
+            ),
+            ComponentSpec(
+                scheduler_one, build_ltx_projected_ancestral_euler_scheduler, options={"sigmas": LTX_STAGE_1_SIGMAS}
+            ),
+            ComponentSpec(scheduler_two, build_ltx_projected_euler_scheduler, options={"sigmas": LTX_STAGE_2_SIGMAS}),
+            ComponentSpec(
+                processor,
+                build_ltx_spatial_latent_processor,
+                {"weights": "upsampler", "statistics": "video_vae"},
+                {"split_checkpoint": True},
+            ),
+            ComponentSpec(
+                decoder, build_ltx_diffusion_media_decoder, {"video_vae": "video_vae", "audio_vae": "audio_vae"}
+            ),
+        ),
+        execution=ExecutionSpec(
+            strategy="joint-multistage",
+            bindings={
+                "denoiser": denoiser,
+                "conditioner": conditioner,
+                "latent_initializer": initializer,
+                "scheduler-1": scheduler_one,
+                "scheduler-2": scheduler_two,
+                "processor": processor,
+                "decoder": decoder,
+            },
+            options={"stage_steps": (8, 3), "step_noise_seed_offset": 10000},
+        ),
+        checkpoints={
+            name: CheckpointSpec(repo_id=LTX25_REPO_ID, revision=LTX25_REVISION, files=(filename,))
+            for name, filename in LTX25_COMPONENT_FILES.items()
+        },
+        capabilities=frozenset(
+            {"text-to-video", "image-to-video", "joint-audio-video", "two-stage-refinement", "auto-duration"}
+        ),
+        options={"latent_channels": 128, "spatial_compression": 32, "temporal_compression": 8},
+        metadata={
+            "architecture": "ltx-2.5",
+            "native_inference": True,
+            "output_layout": "FHWC",
+            "upstream_revision": "a95ab856bf29407b6b066ede0abe1846050db56c",
+        },
+    )

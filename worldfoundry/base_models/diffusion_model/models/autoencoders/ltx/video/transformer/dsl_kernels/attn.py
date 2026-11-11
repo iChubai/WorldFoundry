@@ -48,7 +48,11 @@ def require_softmax_bound(attn: NeighborhoodAttention3D) -> torch.Tensor:
     return bound
 
 
-@torch.library.custom_op("worldfoundry::ltx_na_attention_dsl", mutates_args=())
+@torch.library.custom_op(
+    "worldfoundry::ltx_na_attention_dsl",
+    mutates_args=(),
+    schema="(Tensor q, Tensor k, Tensor v, SymInt[] kernel_size, Tensor softmax_bound) -> Tensor",
+)
 def na_attention_dsl(
     q: torch.Tensor,
     k: torch.Tensor,

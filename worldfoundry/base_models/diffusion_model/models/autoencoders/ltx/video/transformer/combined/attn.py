@@ -8,11 +8,13 @@ from __future__ import annotations
 import torch
 from torch import nn
 
+from worldfoundry.core.execution.compile_numerics import nested_compile_region
+
 from ..attention import NeighborhoodAttention3D
 from ..rope_math import h_positions, rot_abs_axis_impl, t_positions
 
 # Transparent path: innermost per-axis rotation is a nested compile region.
-_rot_abs_axis = torch.compiler.nested_compile_region(rot_abs_axis_impl)
+_rot_abs_axis = nested_compile_region(rot_abs_axis_impl)
 
 
 def _apply_nested_abs_rope_slab(

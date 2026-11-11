@@ -8,6 +8,14 @@ Inputs: MultiStageComponents, stage_steps matching the scheduler count.
 Output: DiffusionOutput whose artifacts come from decode_modalities (must include ``video``).
 Must not: skip the latent processor between stages, or accept a request whose
 num_inference_steps does not equal sum(stage_steps).
+
+Opt-in component hooks: a conditioner with ``resolve_request(request, conditioning)``
+may update the request after prompt encoding (for example a predicted frame
+count); a scheduler with ``step_state(denoised, step, state, *, generator)``
+returns the next latent including its own conditioning-mask projection; a decoder
+with ``uses_run_generator = True`` receives the run generator.  The execution
+option ``step_noise_seed_offset`` gives scheduler steps a per-stage generator
+seeded ``seed + offset`` instead of the run generator.
 """
 
 from __future__ import annotations
@@ -15,9 +23,12 @@ from __future__ import annotations
 import copy
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import ClassVar
 
 import torch
 from torch import Tensor
+
+from worldfoundry.core.execution.deadline import check_deadline
 
 from ..contracts import (
     ConditionEncoder,
@@ -69,8 +80,12 @@ class MultiModalLatentDecoder:
     """Runtime surface for decoders that emit more than one artifact.
 
     ``decode`` returns only the ``video`` artifact for DiffusionOutput.sample.
-    :meth:`decode_modalities` must be implemented by the recipe decoder.
+    :meth:`decode_modalities` must be implemented by the recipe decoder.  A
+    decoder that sets ``uses_run_generator`` continues the run's noise generator
+    and receives it as the ``generator`` keyword.
     """
+
+    uses_run_generator: ClassVar[bool] = False
 
     def decode(self, latents, request):
         return self.decode_modalities(latents, request)["video"]
@@ -112,6 +127,7 @@ class JointMultiStageDiffusionRunner:
         stage_steps: Sequence[int],
         device: str | torch.device,
         dtype: torch.dtype,
+        step_noise_seed_offset: int | None = None,
     ) -> None:
         if len(components.schedulers) != len(stage_steps):
             raise ValueError("joint multi-stage execution requires one scheduler per stage")
@@ -122,6 +138,7 @@ class JointMultiStageDiffusionRunner:
         self.stage_steps = tuple(int(steps) for steps in stage_steps)
         self.device = torch.device(device)
         self.dtype = dtype
+        self.step_noise_seed_offset = None if step_noise_seed_offset is None else int(step_noise_seed_offset)
 
     def _generator(self, seed: int) -> torch.Generator:
         try:
@@ -203,6 +220,9 @@ class JointMultiStageDiffusionRunner:
                 "joint multi-stage request step count must match the recipe stages: "
                 f"{request.sampling.num_inference_steps} != {expected_steps}"
             )
+        deadline_value = request.inputs.get("deadline_monotonic")
+        deadline = float(deadline_value) if deadline_value is not None else None
+        check_deadline(deadline, stage="prompt conditioning")
         generator = self._generator(request.sampling.seed)
         conditioning = self.components.conditioner.encode(
             request,
@@ -211,12 +231,19 @@ class JointMultiStageDiffusionRunner:
         )
         if not isinstance(conditioning, Conditioning):
             raise TypeError("conditioner.encode must return Conditioning")
+        check_deadline(deadline, stage="conditioned request resolution")
+        resolve_request = getattr(self.components.conditioner, "resolve_request", None)
+        if callable(resolve_request):
+            request = resolve_request(request, conditioning)
+            if not isinstance(request, DiffusionRequest):
+                raise TypeError("conditioner.resolve_request must return DiffusionRequest")
 
         previous_latents: Mapping[str, Tensor] = {}
         states: dict[str, ModalityState] = {}
         for stage_index, (scheduler, step_count) in enumerate(
             zip(self.components.schedulers, self.stage_steps, strict=True)
         ):
+            check_deadline(deadline, stage=f"stage {stage_index + 1} initialization")
             schedule = tuple(
                 scheduler.schedule(
                     self._sampling(request, step_count),
@@ -239,8 +266,14 @@ class JointMultiStageDiffusionRunner:
                 )
             )
             modality_schedulers = {name: copy.deepcopy(scheduler) for name in states}
+            step_generator = (
+                generator
+                if self.step_noise_seed_offset is None
+                else self._generator(request.sampling.seed + self.step_noise_seed_offset)
+            )
 
             for expected_index, step in enumerate(schedule):
+                check_deadline(deadline, stage=f"stage {stage_index + 1} step {expected_index + 1}")
                 if step.index != expected_index:
                     raise ValueError("scheduler step indices must be contiguous and zero-based")
                 model_states = {
@@ -263,24 +296,36 @@ class JointMultiStageDiffusionRunner:
                     denoised = prediction.samples[name]
                     if denoised.shape != state.latent.shape:
                         raise ValueError(f"{name} denoiser output shape does not match its latent state")
-                    latent = modality_schedulers[name].step(
-                        denoised,
-                        step,
-                        state.latent,
-                        generator=generator,
-                    )
-                    # A scheduler may consume velocity, noise, or clean-sample predictions.
-                    # Anchor conditioning in latent space after the solver update.
-                    latent = latent * state.denoise_mask + state.clean_latent * (1 - state.denoise_mask)
+                    step_state = getattr(modality_schedulers[name], "step_state", None)
+                    if callable(step_state):
+                        # The scheduler owns the conditioning-mask projection of this update.
+                        latent = step_state(denoised, step, state, generator=step_generator)
+                    else:
+                        latent = modality_schedulers[name].step(
+                            denoised,
+                            step,
+                            state.latent,
+                            generator=step_generator,
+                        )
+                        # A scheduler may consume velocity, noise, or clean-sample predictions.
+                        # Anchor conditioning in latent space after the solver update.
+                        latent = latent * state.denoise_mask + state.clean_latent * (1 - state.denoise_mask)
                     next_states[name] = state.with_updates(latent=latent)
                 states = next_states
 
             if stage_index + 1 < len(self.stage_steps):
                 if self.components.processor is None:
                     raise ValueError("multi-stage execution requires a latent processor between stages")
+                check_deadline(deadline, stage=f"stage {stage_index + 1} latent processing")
                 previous_latents = self.components.processor.process(states, request)
 
-        artifacts = dict(self.components.decoder.decode_modalities(states, request))
+        check_deadline(deadline, stage="media decoding")
+        decoder = self.components.decoder
+        if getattr(decoder, "uses_run_generator", False):
+            artifacts = dict(decoder.decode_modalities(states, request, generator=generator))
+        else:
+            artifacts = dict(decoder.decode_modalities(states, request))
+        check_deadline(deadline, stage="decoded output delivery")
         try:
             sample = artifacts["video"]
         except KeyError as error:

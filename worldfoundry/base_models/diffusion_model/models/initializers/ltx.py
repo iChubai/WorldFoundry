@@ -14,6 +14,7 @@ This is not the single-tensor :class:`~...contracts.LatentInitializer`.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -44,6 +45,9 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
         first_stage_scale: float | None = None,
         include_audio: bool = True,
         image_resize_mode: str = "stretch",
+        split_checkpoint: bool = False,
+        latent_channels: int = 128,
+        default_image_crf: int = 18,
     ) -> None:
         self.video_encoder = video_encoder
         if not stage_divisors or any(value <= 0 for value in stage_divisors):
@@ -54,6 +58,9 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
         self.first_stage_scale = None if first_stage_scale is None else float(first_stage_scale)
         self.include_audio = bool(include_audio)
         self.image_resize_mode = image_resize_mode
+        self.split_checkpoint = split_checkpoint
+        self.latent_channels = latent_channels
+        self.default_image_crf = default_image_crf
 
     @staticmethod
     def _round_down_to_vae(value: int) -> int:
@@ -208,7 +215,7 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
             width=width,
             fps=fps,
         )
-        video_shape = VideoLatentShape.from_pixel_shape(pixels)
+        video_shape = VideoLatentShape.from_pixel_shape(pixels, latent_channels=self.latent_channels)
         video_tools = VideoLatentTools(VideoLatentPatchifier(1), video_shape, fps)
         video_state = video_tools.create_initial_state(
             device,
@@ -216,7 +223,26 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
             previous_latents.get("video"),
         )
 
-        image = self._image_value(request)
+        if self.split_checkpoint:
+            # The causal first latent frame represents one pixel frame, just like
+            # a generated keyframe slot, even for text-only generation.
+            keyframes_mask = torch.zeros_like(video_state.denoise_mask)
+            frame_tokens = video_tools.patchifier.get_token_count(video_shape._replace(frames=1))
+            keyframes_mask[:, :frame_tokens] = 1.0
+            video_state = video_state.with_updates(keyframes_mask=keyframes_mask)
+            video_state = self._split_image_conditionings(
+                video_state, video_tools, request, height, width, device, dtype
+            )
+            if stage_index == 0 and request.inputs.get("num_generated_keyframes", 0):
+                from ..representations.ltx.conditioning import append_ltx_keyframe_slots
+
+                video_state = append_ltx_keyframe_slots(
+                    video_state,
+                    video_tools,
+                    count=int(request.inputs["num_generated_keyframes"]),
+                    num_frames=request.num_frames,
+                )
+        image = None if self.split_checkpoint else self._image_value(request)
         if image is not None:
             image_tensor = self._image_tensor(
                 image,
@@ -235,9 +261,12 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
                 strength=float(request.inputs.get("image_strength", 1.0)),
             )
 
-        states = {
-            "video": self._add_noise(video_state, scale=noise_scale, generator=generator),
-        }
+        noiser = self._add_noise
+        if self.split_checkpoint:
+            from ..representations.ltx.conditioning import add_ltx_noise
+
+            noiser = add_ltx_noise
+        states = {"video": noiser(video_state, scale=noise_scale, generator=generator)}
         if self.include_audio:
             audio_shape = AudioLatentShape.from_video_pixel_shape(pixels)
             audio_tools = AudioLatentTools(AudioPatchifier(1), audio_shape)
@@ -246,20 +275,72 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
                 dtype,
                 previous_latents.get("audio"),
             )
-            states["audio"] = self._add_noise(
+            states["audio"] = noiser(
                 audio_state,
                 scale=noise_scale,
                 generator=generator,
             )
         return states
 
+    def _split_image_conditionings(
+        self,
+        state: ModalityState,
+        tools: VideoLatentTools,
+        request: DiffusionRequest,
+        height: int,
+        width: int,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> ModalityState:
+        from worldfoundry.core.media.processing.image_conditioning import (
+            load_srgb_image,
+            recompress_image_h264,
+            resize_center_crop_bilinear,
+        )
+
+        from ..representations.ltx.conditioning import inject_ltx_image
+
+        images = request.inputs.get("images", ())
+        for image in images:
+            pixels = load_srgb_image(image["path"])
+            crf = self.default_image_crf if image.get("crf") is None else int(image["crf"])
+            pixels = recompress_image_h264(pixels, crf)
+            pixels = torch.tensor(pixels, dtype=torch.float32, device=device)
+            pixels = (resize_center_crop_bilinear(pixels, height, width) / 127.5 - 1.0).to(dtype)
+            encoded = self.video_encoder(pixels)
+            state = inject_ltx_image(
+                state,
+                tools,
+                encoded,
+                frame_index=int(image.get("frame_index", 0)),
+                strength=float(image.get("strength", 1.0)),
+            )
+        return state
+
 
 def build_ltx_multistage_latent_initializer(
     context: ComponentBuildContext,
 ) -> LTXMultiStageLatentInitializer:
     """Build the LTX-2 joint audio-video two-stage initializer."""
+    split = bool(context.component_options.get("split_checkpoint", False))
+    encoder = load_ltx_video_encoder(context)
+    default_crf = 18
+    if split:
+        from safetensors import safe_open
+
+        from ...loaders import NativeCheckpointResolver
+
+        checkpoint = NativeCheckpointResolver().materialize(context.require_checkpoint("weights"))
+        with safe_open(checkpoint.paths[0], framework="pt", device="cpu") as handle:
+            version = (handle.metadata() or {}).get("model_version", "")
+        match = re.match(r"(\d+)[.-](\d+)", version)
+        parsed = tuple(int(value) for value in match.groups()) if match else ()
+        default_crf = 18 if parsed >= (2, 4) else 33
     return LTXMultiStageLatentInitializer(
-        load_ltx_video_encoder(context),
+        encoder,
+        split_checkpoint=split,
+        latent_channels=encoder.encoder.per_channel_statistics.get_buffer("mean-of-means").numel() if split else 128,
+        default_image_crf=int(context.component_options.get("default_image_crf", default_crf)),
         stage_divisors=tuple(context.component_options.get("stage_divisors", (2, 1))),
         image_resize_mode=str(context.component_options.get("image_resize_mode", "stretch")),
     )
@@ -283,3 +364,20 @@ __all__ = [
     "build_ltx_multistage_latent_initializer",
     "build_ltx_video_latent_initializer",
 ]
+
+
+def enhance_ltx_prompt(encoder: object, prompt: str, images: object) -> str:
+    """Run instruct Gemma at the released enhancement seed and normalize its response."""
+    if images:
+        from worldfoundry.core.media.processing.image_conditioning import load_srgb_image, resize_center_crop_bilinear
+
+        image = torch.tensor(load_srgb_image(images[0]["path"]))
+        height, width = image.shape[:2]
+        scale = 896 / max(height, width)
+        image = resize_center_crop_bilinear(image, int(height * scale), int(width * scale))
+        image = image[0, :, 0].permute(1, 2, 0).to(torch.uint8)
+        prompt = encoder.enhance_i2v(prompt, image, seed=42)
+    else:
+        prompt = encoder.enhance_t2v(prompt, seed=42)
+    prompt = prompt.translate(str.maketrans("\u2018\u2019\u201c\u201d\u2014\u2013\u00a0\u2032\u2212", "''\"\"-- '-"))
+    return next((prompt[index:] for index, char in enumerate(prompt) if char.isalpha()), prompt)

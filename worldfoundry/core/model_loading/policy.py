@@ -36,6 +36,10 @@ class QuantizationMode(str, Enum):
     INT4 = "int4"
     NVFP4 = "nvfp4"
     GGUF = "gguf"
+    FP8_CAST = "fp8-cast"
+    FP8_SCALED_MM = "fp8-scaled-mm"
+    NVFP4_CAST = "nvfp4-cast"
+    NVFP4_PREQUANT = "nvfp4-prequant"
 
 
 class AttentionBackend(str, Enum):

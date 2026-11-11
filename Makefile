@@ -260,6 +260,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_lingbot_world_v2_realtime.py \
 	tests/synthesis/test_lingbot_world_v2_small.py \
 	tests/synthesis/test_lingbot_world_v2_runtime.py \
+	tests/synthesis/test_lingbot_video_runtime.py \
 	tests/synthesis/test_hunyuan_worldplay_realtime.py \
 	tests/synthesis/test_hunyuan_worldplay_state.py \
 	tests/synthesis/test_lingbot_realtime_cache_cursors.py \

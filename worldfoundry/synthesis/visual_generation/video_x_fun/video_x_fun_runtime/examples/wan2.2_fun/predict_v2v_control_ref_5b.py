@@ -17,26 +17,6 @@ project_roots = [
 for project_root in project_roots:
     sys.path.insert(0, project_root) if project_root not in sys.path else None
 
-from videox_fun.data import process_pose_file  # noqa: E402 - Follows the sys.path setup.
-from videox_fun.pipeline import Wan2_2FunControlPipeline  # noqa: E402 - Follows the sys.path setup.
-from videox_fun.utils import (  # noqa: E402 - Follows the sys.path setup.
-    register_auto_device_hook,
-    safe_enable_group_offload,
-)
-from videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the sys.path setup.
-    convert_model_weight_to_float8,
-    convert_weight_dtype_wrapper,
-    replace_parameters_by_name,
-)
-from videox_fun.utils.lora_utils import merge_lora, unmerge_lora  # noqa: E402 - Follows the sys.path setup.
-from videox_fun.utils.output import save_inference_sample  # noqa: E402 - Follows the sys.path setup.
-from videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
-    filter_kwargs,
-    get_image_latent,
-    get_image_to_video_latent,
-    get_video_to_video_latent,
-)
-
 from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (  # noqa: E402 - Follows the sys.path setup.
     load_wan_transformer,
 )
@@ -66,6 +46,34 @@ from worldfoundry.core.distributed.sequence_parallel.runtime import (  # noqa: E
 )
 from worldfoundry.core.distributed.sharding.block_fsdp import shard_model  # noqa: E402 - Follows the sys.path setup.
 from worldfoundry.core.io.paths import resolve_data_path  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.data import (  # noqa: E402 - Follows the sys.path setup.
+    process_pose_file,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.pipeline import (  # noqa: E402 - Follows the sys.path setup.
+    Wan2_2FunControlPipeline,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils import (  # noqa: E402 - Follows the sys.path setup.
+    register_auto_device_hook,
+    safe_enable_group_offload,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the sys.path setup.
+    convert_model_weight_to_float8,
+    convert_weight_dtype_wrapper,
+    replace_parameters_by_name,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.lora_utils import (  # noqa: E402 - Follows the sys.path setup.
+    merge_lora,
+    unmerge_lora,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.output import (  # noqa: E402 - Follows the sys.path setup.
+    save_inference_sample,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
+    filter_kwargs,
+    get_image_latent,
+    get_image_to_video_latent,
+    get_video_to_video_latent,
+)
 
 # GPU memory mode, which can be chosen in [model_full_load, model_full_load_and_qfloat8, model_cpu_offload, model_cpu_offload_and_qfloat8, model_group_offload, sequential_cpu_offload].
 # model_full_load means that the entire model will be moved to the GPU.

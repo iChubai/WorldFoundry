@@ -55,7 +55,14 @@ CLI task profile：`interactive-video`。`sana-wm` 绑定 `SanaWMPipeline`，
 
 ## 在 WorldFoundry 中运行
 
-用 `wf run sana-wm-streaming --pipeline.task-profile interactive-video` 生成相机可控视频。
+提供首帧图像和提示词以生成视频：
+
+```bash
+wf run sana-wm-streaming \
+  --pipeline.task-profile interactive-video \
+  --pipeline.input-path /path/to/first-frame.png \
+  --pipeline.prompt "A sunlit forest."
+```
 
 用 `scripts/setup/bootstrap_worldfoundry.sh` 准备统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 

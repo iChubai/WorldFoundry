@@ -61,7 +61,14 @@ acceptance still requires checkpoint replay.
 
 ## Running in WorldFoundry
 
-Generate a camera-controlled clip with `wf run sana-wm-streaming --pipeline.task-profile interactive-video`.
+Generate a clip from your first-frame image and prompt:
+
+```bash
+wf run sana-wm-streaming \
+  --pipeline.task-profile interactive-video \
+  --pipeline.input-path /path/to/first-frame.png \
+  --pipeline.prompt "A sunlit forest."
+```
 
 Use `scripts/setup/bootstrap_worldfoundry.sh` to prepare the unified `worldfoundry-unified-cu128` environment (Python 3.11, CUDA 12.8).
 

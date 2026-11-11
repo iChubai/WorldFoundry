@@ -1,8 +1,7 @@
 """Exponential moving-average module shared by model implementations.
 
 Shadow weights for eval without a second optimizer. Updates stay on
-the same device as the source; FSDP2 uses
-``DTensorFastEmaModelUpdater`` in ``device_mesh_collectives`` instead.
+the same device as the source.
 """
 
 from typing import Any, cast

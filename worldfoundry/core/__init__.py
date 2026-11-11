@@ -64,7 +64,6 @@ _EXPORT_MODULES = {
     "CudaSyncTimer": "worldfoundry.core.observability.time",
     "DiffusionModelConfig": "worldfoundry.core.configuration.model_config",
     "DiskMap": "worldfoundry.core.vram.disk_map",
-    "DTensorFastEmaModelUpdater": "worldfoundry.core.distributed.collectives.device_mesh",
     "FlowMatchScheduler": "worldfoundry.core.nn.diffusion.schedulers",
     "LayerwiseOffloadHandle": "worldfoundry.core.vram.layerwise_offload",
     "LoaderModelConfig": "worldfoundry.core.model_loading.config",

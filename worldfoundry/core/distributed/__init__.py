@@ -13,8 +13,6 @@ The existing package-level collective and topology APIs are exported below.
 from __future__ import annotations
 
 from worldfoundry.core.distributed.collectives.device_mesh import (
-    DTensorFastEmaModelUpdater,
-    FastEmaModelUpdater,
     broadcast_dtensor_model_states,
     get_local_tensor_if_DTensor,
     get_local_tensor_if_dtensor,
@@ -85,9 +83,7 @@ from worldfoundry.core.distributed.runtime.rank_orchestration import (
 # ──────────────────────────────────────────────────────────────────────────
 
 __all__ = [
-    "DTensorFastEmaModelUpdater",
     "DistributedOpSpec",
-    "FastEmaModelUpdater",
     "PPScheduler",
     "PayloadBus",
     "RankCoordinator",

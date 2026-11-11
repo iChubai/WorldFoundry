@@ -23,7 +23,6 @@ a single sample. Destroy with ``destroy_model_parallel`` before a second
 init; leftover groups break NCCL.
 """
 
-import warnings
 from datetime import timedelta
 
 import torch
@@ -503,16 +502,6 @@ def initialize_model_parallel(
 def is_initialized():
     """Useful for code segments that may be accessed with or without mpu initialization"""
     return _DATA_PARALLEL_GROUP is not None
-
-
-def is_unitialized() -> bool:
-    """Check if parallel state has been initialized
-
-    Deprecated. Use is_initialized instead.
-
-    """
-    warnings.warn("is_unitialized is deprecated, use is_initialized instead", DeprecationWarning, stacklevel=1)
-    return not is_initialized()
 
 
 def model_parallel_is_initialized():

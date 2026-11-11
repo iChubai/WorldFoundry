@@ -286,7 +286,7 @@ STA / VSA / VMoBA 的 symbol 来自仓内 `thirdparty/fastvideo-kernel`（或已
 - 打开 FA3 + regional compile 的 11 个进程中，有 1 个在第二次 rollout 时以 `CUDA error: unspecified launch failure` 中止，原因未查明。
 - TAEW2.1 只做解码，因此只适用于文生视频的 Wan2.1 recipe；图像条件的 recipe 需要 Wan VAE 编码器。在相同 latent 上，它相对 Wan VAE 的 PSNR 为 27.3 dB，SSIM 为 0.87。整段解码会把进程峰值显存从 22.8 GiB 提高到 30.6 GiB。
 - CUDA Graph 不适用：带缓存的 attention 在 host 端读取缓存游标，并原地写入每个请求自己的缓存。
-- 长滚动（近似路径，不是默认）：`kv_window="sink5-window7-rerope"` 把 21 帧全局缓存换成两部分：固定保留前 5 个 latent 帧的 sink，和保留最新 7 帧的滑窗（前 4 帧加当前块的 3 帧）；每次读取缓存时按缓存槽位重新对 key 施加 RoPE，做法与 FlashDreams 的 `sink5-window7-rerope` 管线相同。只有打开这个选项才能生成超过 81 帧；它的实时会话不设上限，不报告 `max_chunks`，一直生成到被重置。前 4 块（45 帧）与默认路径逐位一致；从第 5 块起滑窗第一次滚动，rollout 变成另一个样本。在同一张 H100 上连续流式生成 40 块：第 5 块起每块 0.81 s（36 块的中位数；默认路径第 7 块为 0.92 s），解码另需 0.35 s；已分配显存始终为 18.6 GiB（默认 21.0 GiB），每块峰值 24.0 GiB。第 2–4 块比默认路径慢 40–125 ms，因为每次读取都要对整个缓存重新施加 RoPE。在 4 个 prompt 的 477 帧 rollout 中，每 3 s 窗口的 VBench subject consistency 保持在 0.96–0.99，temporal flickering 分数比第一个窗口最多低 0.013、最多高 0.017；画面会逐渐漂移：Tokyo 和 Big Sur 两个 prompt 与第一个窗口的 DINO 相似度降到 0.57–0.63（镜头逐渐推近，海浪变得平滑），另两个保持在 0.91 以上。imaging quality、aesthetic quality 和 motion smoothness 没有测。
+- 长滚动（近似路径，不是默认）：`kv_window="sink5-window7-rerope"` 把 21 帧全局缓存换成两部分：固定保留前 5 个 latent 帧的 sink，和保留最新 7 帧的滑窗（前 4 帧加当前块的 3 帧）；每次读取缓存时按缓存槽位重新对 key 施加 RoPE。只有打开这个选项才能生成超过 81 帧；它的实时会话不设上限，不报告 `max_chunks`，一直生成到被重置。前 4 块（45 帧）与默认路径逐位一致；从第 5 块起滑窗第一次滚动，rollout 变成另一个样本。在同一张 H100 上连续流式生成 40 块：第 5 块起每块 0.81 s（36 块的中位数；默认路径第 7 块为 0.92 s），解码另需 0.35 s；已分配显存始终为 18.6 GiB（默认 21.0 GiB），每块峰值 24.0 GiB。第 2–4 块比默认路径慢 40–125 ms，因为每次读取都要对整个缓存重新施加 RoPE。在 4 个 prompt 的 477 帧 rollout 中，每 3 s 窗口的 VBench subject consistency 保持在 0.96–0.99，temporal flickering 分数比第一个窗口最多低 0.013、最多高 0.017；画面会逐渐漂移：Tokyo 和 Big Sur 两个 prompt 与第一个窗口的 DINO 相似度降到 0.57–0.63（镜头逐渐推近，海浪变得平滑），另两个保持在 0.91 以上。imaging quality、aesthetic quality 和 motion smoothness 没有测。
 
 ```python
 from worldfoundry.pipelines.forcing.pipeline_native_forcing import NativeSelfForcingPipeline
@@ -491,10 +491,7 @@ H.264 输出和打包 offload 分别标记 `worldfoundry.postprocess`、
 
 公共 `scaled_dot_product_attention` 在显式选择 `backend="efficient"`，或兼容不支持 `enable_gqa` 的旧 SDPA 时，对 batch 相同的四维张量和共享 mask 使用分组 query 与零步长 K/V view。按 batch/head 指定的 mask 仍走显式 head 扩展。部分形状和布局仍可能触发 reshape 拷贝；其他调用使用 SDPA 原生的 GQA 选择。
 
-以下测量使用排除 warmup 的合成组件测试，记录 CUDA-event 耗时和峰值 allocated 显存，不代表完整模型 FPS。设计参考 FlashDreams
-[#637](https://github.com/NVIDIA/flashdreams/pull/637)、
-[#632](https://github.com/NVIDIA/flashdreams/pull/632) 和
-[#634](https://github.com/NVIDIA/flashdreams/pull/634)。
+以下测量使用排除 warmup 的合成组件测试，记录 CUDA-event 耗时和峰值 allocated 显存，不代表完整模型 FPS。
 
 测量环境：单张 H100 80GB、PyTorch 2.5.1+cu121、FP16，每个独立进程 warmup 10 轮、测量 50 轮：
 

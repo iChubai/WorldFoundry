@@ -109,34 +109,6 @@ def _install_sglang_import_shims() -> None:
 _install_sglang_import_shims()
 
 
-@contextmanager
-def _checkpoint_module_aliases():
-    """Resolve official checkpoint module names to the vendored runtime.
-
-    The published ``model_index.json`` files refer to ``lingbot_video.*``.
-    WorldFoundry intentionally does not require a second source checkout or an
-    installed top-level ``lingbot_video`` package, so expose the in-tree modules
-    under those names only while Diffusers resolves checkpoint components.
-    """
-
-    package = importlib.import_module(__package__)
-    aliases = {
-        "lingbot_video": package,
-        "lingbot_video.scheduling_flow_unipc": importlib.import_module(f"{__package__}.scheduling_flow_unipc"),
-        "lingbot_video.transformer_lingbot_video": importlib.import_module(f"{__package__}.transformer_lingbot_video"),
-    }
-    previous = {name: sys.modules.get(name) for name in aliases}
-    sys.modules.update(aliases)
-    try:
-        yield
-    finally:
-        for name, module in previous.items():
-            if module is None:
-                sys.modules.pop(name, None)
-            else:
-                sys.modules[name] = module
-
-
 def _qwen_attn_implementation() -> str:
     override = os.environ.get("LINGBOT_QWEN_ATTN_IMPLEMENTATION")
     if override:
@@ -726,7 +698,7 @@ def _load_diffusers_pipe(
 
     _disable_external_progress_bars()
     _log_progress(f"loading pipeline mode={mode} model_dir={model_dir}")
-    with _checkpoint_module_aliases(), _patch_qwen3vl_from_pretrained():
+    with _patch_qwen3vl_from_pretrained():
         pipe = pipeline_class.from_pretrained(
             str(model_dir),
             transformer=transformer,

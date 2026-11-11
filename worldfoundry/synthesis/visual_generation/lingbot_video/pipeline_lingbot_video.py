@@ -95,6 +95,20 @@ class LingBotVideoPipeline(DiffusionPipeline):
 
     model_cpu_offload_seq = "text_encoder->transformer->vae"
 
+    @classmethod
+    def extract_init_dict(
+        cls, config_dict: dict[str, Any], **kwargs: Any
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """Resolve the released model-index component names inside this package."""
+        config = dict(config_dict)
+        for name, module, class_name in (
+            ("transformer", "transformer_lingbot_video", "LingBotVideoTransformer3DModel"),
+            ("scheduler", "scheduling_flow_unipc", "FlowUniPCMultistepScheduler"),
+        ):
+            if config.get(name) == [f"lingbot_video.{module}", class_name]:
+                config[name] = [f"{__package__}.{module}", class_name]
+        return super().extract_init_dict(config, **kwargs)
+
     def __init__(self, transformer, vae, text_encoder, processor, scheduler):
         super().__init__()
         if scheduler is not None and scheduler.__class__.__name__ != FlowUniPCMultistepScheduler.__name__:

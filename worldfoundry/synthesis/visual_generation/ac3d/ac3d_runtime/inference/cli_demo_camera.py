@@ -11,9 +11,6 @@ import argparse  # noqa: E402 - Follows the sys.path setup.
 import os  # noqa: E402 - Follows the sys.path setup.
 
 import torch  # noqa: E402 - Follows the sys.path setup.
-from cogvideo_controlnet import CogVideoXControlnet  # noqa: E402 - Follows the sys.path setup.
-from cogvideo_transformer import CustomCogVideoXTransformer3DModel  # noqa: E402 - Follows the sys.path setup.
-from controlnet_pipeline import ControlnetCogVideoXPipeline  # noqa: E402 - Follows the sys.path setup.
 from diffusers import (  # noqa: E402 - Follows the sys.path setup.
     AutoencoderKLCogVideoX,
     CogVideoXDDIMScheduler,
@@ -23,13 +20,17 @@ from diffusers.utils import export_to_video  # noqa: E402 - Follows the sys.path
 from torchvision.transforms.functional import to_pil_image  # noqa: E402 - Follows the sys.path setup.
 from transformers import T5EncoderModel, T5Tokenizer  # noqa: E402 - Follows the sys.path setup.
 
-from inference.datasets.controlnet_datasets_camera import (  # noqa: E402 - Follows the sys.path setup.
-    RealEstate10KPoseControlnetDataset,
-)
-from inference.utils import stack_images_horizontally  # noqa: E402 - Follows the sys.path setup.
 from worldfoundry.core.model_loading.checkpoints import (  # noqa: E402 - Follows the sys.path setup.
     load_tensor_state_dict,
 )
+
+from ..cogvideo_controlnet import CogVideoXControlnet  # noqa: E402 - Follows the sys.path setup.
+from ..cogvideo_transformer import CustomCogVideoXTransformer3DModel  # noqa: E402 - Follows the sys.path setup.
+from ..controlnet_pipeline import ControlnetCogVideoXPipeline  # noqa: E402 - Follows the sys.path setup.
+from .datasets.controlnet_datasets_camera import (  # noqa: E402 - Follows the sys.path setup.
+    RealEstate10KPoseControlnetDataset,
+)
+from .utils import stack_images_horizontally  # noqa: E402 - Follows the sys.path setup.
 
 
 @torch.no_grad()

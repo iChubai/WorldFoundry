@@ -5,7 +5,6 @@ from typing import ClassVar
 
 import numpy as np
 import torch
-from cogvideo_controlnet import CogVideoXControlnet
 from diffusers import CogVideoXDDIMScheduler, CogVideoXDPMScheduler
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.models import AutoencoderKLCogVideoX, CogVideoXTransformer3DModel
@@ -18,6 +17,8 @@ from diffusers.video_processor import VideoProcessor
 from PIL import Image
 from torchvision import transforms
 from transformers import T5EncoderModel, T5Tokenizer
+
+from .cogvideo_controlnet import CogVideoXControlnet
 
 logger = logging.get_logger(__name__)
 

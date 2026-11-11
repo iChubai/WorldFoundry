@@ -632,8 +632,9 @@ def _prepend_sys_path(path_value: str | Path) -> None:
 
 def _run_official(args: argparse.Namespace) -> None:
     _prepend_sys_path(args.runtime_root)
-    import inference.cli_demo_camera as cli_demo_camera
     import torch
+
+    from .ac3d_runtime.inference import cli_demo_camera
 
     # Upstream's generate_video reads the parsed CLI namespace as a module global
     # for a few ControlNet transformer options. Mirror the official CLI execution

@@ -12,10 +12,10 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core import cuda_visible_devices_from_device, jsonable
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 
-SRC_ROOT = Path(__file__).resolve().parents[4]
-RUNTIME_ROOT = SRC_ROOT / "worldfoundry" / "synthesis" / "visual_generation" / "longcat_video" / "longcat_video_runtime"
+RUNTIME_ROOT = Path(__file__).resolve().parent / "longcat_video_runtime"
 CHECKPOINT_SUBDIRS = ("tokenizer", "text_encoder", "vae", "scheduler", "dit")
 REQUIRED_RUNTIME_FILES = (
     "run_inference_text_to_video.py",
@@ -100,7 +100,6 @@ class LongCatVideoRuntime:
         device: str = "cuda",
         loaded: bool = False,
         python_executable: str | Path | None = None,
-        runtime_root: str | Path | None = None,
         **kwargs: Any,
     ) -> None:
         del kwargs
@@ -111,7 +110,7 @@ class LongCatVideoRuntime:
         self.checkpoint_dir = _expand_path(checkpoint_dir)
         self.task_type = task_type
         self.device = str(device)
-        self.runtime_root = _expand_path(runtime_root) or RUNTIME_ROOT
+        self.runtime_root = RUNTIME_ROOT
         self.python_executable = (
             Path(python_executable).expanduser()
             if python_executable is not None
@@ -206,30 +205,22 @@ class LongCatVideoRuntime:
         )
         context_parallel_size = max(1, int(context_parallel_size))
         script_args = (
-            str(script_path),
             "--checkpoint_dir",
             str(self.checkpoint_dir),
             "--context_parallel_size",
             str(context_parallel_size),
         )
-        if context_parallel_size > 1:
-            command = (
-                str(self.python_executable),
-                "-m",
-                "torch.distributed.run",
-                "--standalone",
-                "--nnodes",
-                "1",
-                "--nproc_per_node",
-                str(context_parallel_size),
-                *script_args,
-            )
-        else:
-            command = (str(self.python_executable), *script_args)
+        module = f"worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime.{script_path.stem}"
+        command = package_module_command(
+            module,
+            script_args,
+            python_executable=self.python_executable,
+            nproc_per_node=context_parallel_size if context_parallel_size > 1 else None,
+            launcher_options=("--standalone", "--nnodes", "1"),
+        )
         if enable_compile:
-            command = (*command, "--enable_compile")
+            command.append("--enable_compile")
         env = {
-            "PYTHONPATH": f"{self.runtime_root}:{SRC_ROOT}{os.pathsep + os.environ.get('PYTHONPATH', '') if os.environ.get('PYTHONPATH') else ''}",
             "WORLD_EVALS_LONGCAT_TASK": str(task_type),
             "WORLD_EVALS_LONGCAT_REQUEST_PATH": str(output_path_obj.with_suffix(".json")),
         }

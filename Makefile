@@ -163,6 +163,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_moverse_runtime.py \
 	tests/synthesis/test_mira_dino.py \
 	tests/synthesis/test_liveworld_runtime.py \
+	tests/synthesis/test_longcat_video_runtime.py \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
 	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
 	tests/base_models/test_vqascore_llama32_molmo_gemini.py \

@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 import struct
+import subprocess
 import sys
 import tempfile
 from collections import Counter
@@ -750,14 +751,19 @@ class BerniniRuntime:
             env.setdefault("NCCL_NET_PLUGIN", "none")
             env.setdefault("NCCL_DEBUG", "WARN")
             env.setdefault("TOKENIZERS_PARALLELISM", "false")
-            from worldfoundry.core.execution.process import run_torchrun_module
+            from worldfoundry.core.execution.process import package_module_command
 
-            completed = run_torchrun_module(
-                "worldfoundry.synthesis.visual_generation.bernini.distributed_infer",
-                nproc_per_node=nproc_per_node,
-                args=("--payload", str(payload_path)),
+            completed = subprocess.run(
+                package_module_command(
+                    "worldfoundry.synthesis.visual_generation.bernini.distributed_infer",
+                    ("--payload", str(payload_path)),
+                    nproc_per_node=nproc_per_node,
+                    python_executable=sys.executable,
+                ),
                 env=env,
-                python_executable=sys.executable,
+                text=True,
+                capture_output=True,
+                check=False,
             )
             if completed.returncode:
                 detail = (completed.stderr or completed.stdout).strip()

@@ -37,6 +37,8 @@ Recorded `default` defaults: frames=81, height=720, width=1280, seed=0.
 
 Runner status is Runner parity pending: the model-specific pipeline exposes generated_video through execute=True and no longer emits request-plan artifacts on default calls. Stage the Wan2.2 base weights plus the Pusa LoRA before running.
 
+The supported `runner_version` is `v1`, backed by the Pusa high- and low-noise LoRAs and Wan2.2. Requests for `v0` raise an error; both V1 LoRA files must be staged before execution.
+
 ## Running in WorldFoundry
 
 The catalog launch is `wf run pusa-vidgen --pipeline.task-profile default`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.

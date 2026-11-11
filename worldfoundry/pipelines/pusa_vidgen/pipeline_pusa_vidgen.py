@@ -193,7 +193,7 @@ class PusaVidGenPipeline(PipelineABC):
             "artifact_kind": "generated_video",
             "artifact_path": resolved_artifact_path,
             "artifact_files": generated_files,
-            "runtime": "worldfoundry.synthesis.visual_generation.pusa_vidgen.official_runner",
+            "runtime": "worldfoundry.synthesis.visual_generation.pusa_vidgen.pusa_v1_runner",
             "backend_quality": "public_runner_official_runner",
             "metadata_path": run_result.get("metadata_path") or str(report_path),
             "request": request,

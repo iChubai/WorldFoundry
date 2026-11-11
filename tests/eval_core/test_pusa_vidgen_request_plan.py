@@ -31,25 +31,24 @@ def test_pusa_catalog_and_runtime_profile_document_generated_video_runner() -> N
     assert entry.output_artifacts == ("generated_video",)
     assert profile.artifact_kind == "generated_video"
     assert profile.artifact_filename == "pusa_vidgen_public_runner.mp4"
-    assert profile.runtime_status == "in_tree_pusa_vidgen_public_runner_gpu_validation_verified"
+    assert profile.runtime_status == "integrated"
     assert profile.backend_stage == "in_tree_runtime"
     assert any(
-        checkpoint.get("repo_id") == "RaphaelLiu/Pusa-V0.5"
-        and checkpoint.get("role") == "official_pusa_v0p5_mochi_checkpoint"
-        and checkpoint.get("status") == "local_checkpoint_staged_public_runner_gpu_validation_verified"
+        checkpoint.get("repo_id") == "RaphaelLiu/Pusa-Wan2.2-V1"
+        and checkpoint.get("role") == "official_pusa_v1_lora_checkpoint"
+        and checkpoint.get("status") == "required"
         for checkpoint in profile.checkpoints
     )
     assert any(
         checkpoint.get("repo_id") == "Wan-AI/Wan2.2-T2V-A14B"
-        and checkpoint.get("status") == "local_checkpoint_staged_optional_not_used_in_verified_pusa_v0p5_smoke"
+        and checkpoint.get("status") == "required"
         for checkpoint in profile.checkpoints
     )
     assert any(
         checkpoint.get("repo_id") == "lightx2v/Wan2.2-Lightning"
-        and checkpoint.get("status") == "local_checkpoint_staged_optional_not_used_in_verified_pusa_v0p5_smoke"
+        and checkpoint.get("status") == "optional"
         for checkpoint in profile.checkpoints
     )
-    assert any("pusa_vidgen_public_runner_execute_20260521_193000" in note for note in profile.notes)
 
 
 def test_pusa_pipeline_default_call_rejects_request_plan(tmp_path: Path) -> None:
@@ -97,7 +96,7 @@ def test_pusa_pipeline_execute_path_records_generated_video(tmp_path: Path) -> N
     generated.parent.mkdir()
     generated.write_bytes(b"mp4")
     plan = PusaVidGenRuntimePlan(
-        command=("python", "-m", "worldfoundry.synthesis.visual_generation.pusa_vidgen.official_runner"),
+        command=("python", "-m", "worldfoundry.synthesis.visual_generation.pusa_vidgen.pusa_v1_runner"),
         env={},
         workdir=str(tmp_path),
         checkpoint_root=str(tmp_path / "Pusa"),
@@ -132,6 +131,7 @@ def test_pusa_pipeline_execute_path_records_generated_video(tmp_path: Path) -> N
     )
 
     assert result["status"] == "success"
+    assert result["runtime"] == "worldfoundry.synthesis.visual_generation.pusa_vidgen.pusa_v1_runner"
     assert result["artifact_kind"] == "generated_video"
     assert result["artifact_path"] == str(generated)
     assert result["backend_quality"] == "public_runner_official_runner"

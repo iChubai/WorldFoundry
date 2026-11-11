@@ -17,7 +17,7 @@ OmniVinci 是英伟达的全模态理解大模型：单一模型同时对图像�
 
 走记录的多模态推理路由时选 `omnivinci`：记录输入进、推理产物出。本卡是推理器而不是生成器时用它。
 
-英伟达将 OmniVinci 描述为具备视觉-音频联合对齐的全模态 LLM（公开发布于 nvidia/omnivinci）。本仓库记录 prompt/image/video 输入契约；参数规模与内部细节仓库未记录。该模型由英伟达（NVIDIA）发布。
+OmniVinci 结合 Qwen2 自回归解码器、Dynamic-S2 SigLIP 视觉编码器与 Qwen2Audio 音频编码器，并使用时间池化和旋转位置编码。WorldFoundry 将 nvidia/omnivinci 的 7b3777b 版本 Apache-2.0 推理组件纳入包内，从本地 checkpoint 数据加载原生 Transformers 骨干。该模型由英伟达（NVIDIA）发布。
 
 catalog 记录的任务包括 多模态推理、音频推理、图像问答、视频问答。别名包括 `nvidia/omnivinci`。
 
@@ -29,9 +29,9 @@ CLI task profile：`multimodal-reasoning`、`audio-reasoning`、`image-question-
 
 系列状态：**Runner 一致性待确认**。
 
-适合用来审视生成条目产出的视频——例如就物理合理性或事件顺序提问——而不是用来生成内容。
+用于图像与视频问答，而非内容生成。 视频请求默认采样 8 帧（max_video_frames 接受 1–128）；load_audio_in_video 默认为 false。 本地 checkpoint 需包含 llm、vision_tower、sound_tower、两个投影器目录、tokenizer 数据和 qwen2.jinja。
 
-Checkpoint 属于外部资产——权重缺失时会在运行时报告，而不会自动下载。
+Checkpoint 是受 NVIDIA OneWay Noncommercial 条款约束的外部资产；缺失权重会在运行时报告。
 
 ## 在 WorldFoundry 中运行
 

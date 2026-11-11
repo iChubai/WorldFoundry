@@ -25354,7 +25354,7 @@
           "diffusers",
           "transformers",
           "imageio",
-          "warp_as_history"
+          "worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history"
         ],
         "notes": [
           "WorldFoundry vendors the official Warp-as-History runtime under worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime.",
@@ -42262,7 +42262,7 @@
               "kind": "path",
               "target": "load",
               "required": true,
-              "default": "/home/ubuntu/.cache/worldfoundry/checkpoints/dino_wm",
+              "default": "/System/Volumes/Data/home/ubuntu/.cache/worldfoundry/checkpoints/dino_wm",
               "choices": [],
               "description": "Checkpoint Base Path used while loading the Dino Wm pipeline."
             },
@@ -85782,60 +85782,67 @@
         "pipelineTarget": "worldfoundry.pipelines.video_official.pipeline_official_video:OmniVinciPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_hf_transformers_runtime",
+        "backendStage": "in_tree_runtime",
         "runtimeStatus": "integrated_checkpoint_required",
-        "environmentId": "_unified",
+        "environmentId": "omnivinci",
         "environmentName": "worldfoundry-unified-cu128",
         "environmentKind": "unified",
         "python": "3.11",
         "cudaProfile": "cu128",
         "cudaLabel": "CUDA 12.8",
-        "driverStatus": "compatible_unified_default",
+        "driverStatus": null,
         "condaPackages": [
-          "python=3.11",
+          "python",
           "pip",
-          "ffmpeg",
-          "setuptools",
-          "wheel"
+          "ffmpeg"
         ],
         "pipPackages": [
           "torch",
           "torchvision",
-          "torchaudio",
-          "xfuser"
+          "transformers",
+          "huggingface_hub",
+          "accelerate",
+          "safetensors",
+          "einops",
+          "numpy",
+          "pillow",
+          "opencv-python",
+          "librosa",
+          "openai-whisper",
+          "decord",
+          "flash-attn"
         ],
         "packageVersions": {
           "torch": "torch",
           "torchvision": "torchvision",
-          "torchaudio": "torchaudio",
-          "xfuser": "xfuser"
+          "transformers": "transformers",
+          "accelerate": "accelerate",
+          "flash-attn": "flash-attn"
         },
         "validationImports": [
-          "torch",
-          "torchvision",
-          "numpy",
-          "transformers",
-          "diffusers",
-          "xfuser",
-          "worldfoundry"
+          "worldfoundry.base_models.llm_mllm_core.mllm.omnivinci.modeling_vila",
+          "worldfoundry.synthesis.visual_generation.omnivinci.omnivinci_runtime.auto_processor",
+          "flash_attn",
+          "whisper",
+          "decord"
         ],
         "notes": [
-          "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
-          "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
-          "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
-          "Runnable GPU models that previously used cu113/cu118/cu124 CUDA buckets are mapped to this tier when they do not carry hard ABI pins requiring isolation."
+          "OmniVinci inference uses in-tree multimodal components and native Transformers backbones.",
+          "The released SigLIP and Qwen2Audio loaders use FlashAttention 2; audio extraction uses Decord and Whisper."
         ]
       },
       "sources": [
         {
           "kind": "source",
           "label": "GitHub",
-          "url": "https://huggingface.co/nvidia/omnivinci"
+          "url": "https://huggingface.co/nvidia/omnivinci",
+          "revision": "7b3777b1c1f7c4e85f7bdef7b765dee1e76c1b7f"
         }
       ],
       "checkpoints": [
         {
           "id": "nvidia/omnivinci",
+          "revision": "7b3777b1c1f7c4e85f7bdef7b765dee1e76c1b7f",
           "role": "model_checkpoint"
         }
       ],
@@ -86488,7 +86495,7 @@
         }
       ],
       "notes": [
-        "WorldFoundry route is complete; missing checkpoint/assets are reported at runtime.",
+        "The in-tree processor and model load the released local component layout; missing checkpoint/assets are reported at runtime.",
         "Checkpoint-backed artifact parity has not been run in this workspace."
       ],
       "docs": {
@@ -86505,16 +86512,16 @@
           "OmniVinci 是英伟达的全模态理解大模型：单一模型同时对图像、视频与音频进行推理。在本 catalog 中它是理解/推理类条目，而非生成器——任务为多模态推理、音频推理与图像/视频问答，产物是 model_response。"
         ],
         "architecture": [
-          "NVIDIA describes OmniVinci as an omni-modal LLM with joint vision-audio alignment (public release at nvidia/omnivinci). This repository records the prompt/image/video input contract; parameter counts and internals are not recorded here."
+          "OmniVinci combines a Qwen2 causal decoder, a Dynamic-S2 SigLIP vision tower and a Qwen2Audio encoder with temporal pooling and rotary embeddings. WorldFoundry packages the Apache-2.0 inference glue from nvidia/omnivinci revision 7b3777b and loads native Transformers backbones from local checkpoint data."
         ],
         "architectureZh": [
-          "英伟达将 OmniVinci 描述为具备视觉-音频联合对齐的全模态 LLM（公开发布于 nvidia/omnivinci）。本仓库记录 prompt/image/video 输入契约；参数规模与内部细节仓库未记录。"
+          "OmniVinci 结合 Qwen2 自回归解码器、Dynamic-S2 SigLIP 视觉编码器与 Qwen2Audio 音频编码器，并使用时间池化和旋转位置编码。WorldFoundry 将 nvidia/omnivinci 的 7b3777b 版本 Apache-2.0 推理组件纳入包内，从本地 checkpoint 数据加载原生 Transformers 骨干。"
         ],
         "usageNotes": [
-          "Runner parity is pending. Use it to interrogate videos produced by generation entries — e.g. asking questions about physical plausibility or event order — rather than to generate content."
+          "Use it to ask questions about images and videos, rather than to generate content. Video requests default to 8 frames (max_video_frames accepts 1–128); load_audio_in_video is false by default. The local checkpoint must include its llm, vision_tower, sound_tower and both projector directories, tokenizer data and qwen2.jinja."
         ],
         "usageNotesZh": [
-          "Runner parity 为 pending。适合用来审视生成条目产出的视频——例如就物理合理性或事件顺序提问——而不是用来生成内容。"
+          "用于图像与视频问答，而非内容生成。视频请求默认采样 8 帧（max_video_frames 接受 1–128）；load_audio_in_video 默认为 false。本地 checkpoint 需包含 llm、vision_tower、sound_tower、两个投影器目录、tokenizer 数据和 qwen2.jinja。"
         ],
         "highlights": [
           "Multimodal Reasoning",
@@ -86544,11 +86551,13 @@
         "benchmarks": [],
         "limitations": [
           "Runner parity is recorded as pending: the WorldFoundry route is wired, but a checkpoint-backed GPU artifact has not been verified in this workspace, so do not treat this page as proof of a validated end-to-end run.",
-          "Checkpoints are external assets — missing weights are reported at runtime rather than downloaded automatically."
+          "Checkpoints are external assets under NVIDIA OneWay Noncommercial terms; missing weights are reported at runtime.",
+          "FlashAttention 2 and CUDA are required by the released encoder loaders. Video audio also requires Decord and OpenAI Whisper."
         ],
         "limitationsZh": [
           "Runner parity 记录为 pending：WorldFoundry 路径已接好，但本工作区尚未完成 checkpoint 加载的 GPU 产物验证，请勿把本页当作端到端跑通的证明。",
-          "Checkpoint 属于外部资产——权重缺失时会在运行时报告，而不会自动下载。"
+          "Checkpoint 是受 NVIDIA OneWay Noncommercial 条款约束的外部资产；缺失权重会在运行时报告。",
+          "发布版编码器加载器需要 FlashAttention 2 与 CUDA。视频音频还需要 Decord 和 OpenAI Whisper。"
         ],
         "paper": null,
         "figures": []

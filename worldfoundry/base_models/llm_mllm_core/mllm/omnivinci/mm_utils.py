@@ -18,12 +18,16 @@
 
 
 import os
+from collections.abc import Sequence
 
 import torch
 from PIL import Image
+from transformers import SiglipImageProcessor
+
+from .configuration_vila import VILAConfig
 
 
-def expand2square(pil_img, background_color):
+def expand2square(pil_img: Image.Image, background_color: tuple[int, ...]) -> Image.Image:
     """
     Expand the given PIL image to a square shape by adding padding.
 
@@ -53,7 +57,9 @@ def expand2square(pil_img, background_color):
         return result
 
 
-def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_size):
+def find_closest_aspect_ratio(
+    aspect_ratio: float, target_ratios: Sequence[tuple[int, int]], width: int, height: int, image_size: int
+) -> tuple[int, int]:
     """Find the closest aspect ratio from target ratios."""
     best_ratio_diff = float("inf")
     best_ratio = (1, 1)
@@ -70,7 +76,9 @@ def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_
     return best_ratio
 
 
-def dynamic_preprocess(image, min_num=1, max_num=12, image_size=384, use_thumbnail=True):
+def dynamic_preprocess(
+    image: Image.Image, min_num: int = 1, max_num: int = 12, image_size: int = 384, use_thumbnail: bool = True
+) -> list[Image.Image]:
     """Dynamically preprocess image into multiple tiles based on aspect ratio."""
     orig_width, orig_height = image.size
     aspect_ratio = orig_width / orig_height
@@ -113,7 +121,9 @@ def dynamic_preprocess(image, min_num=1, max_num=12, image_size=384, use_thumbna
     return processed_images
 
 
-def dynamic_s2_preprocess(image, s2_scales=(384, 768, 1152), max_num=12, image_size=384):
+def dynamic_s2_preprocess(
+    image: Image.Image, s2_scales: Sequence[int] = (384, 768, 1152), max_num: int = 12, image_size: int = 384
+) -> tuple[list[Image.Image], tuple[int, int]]:
     """Dynamically preprocess image with multi-scale S2 strategy."""
     orig_width, orig_height = image.size
     aspect_ratio = orig_width / orig_height
@@ -178,8 +188,13 @@ def dynamic_s2_preprocess(image, s2_scales=(384, 768, 1152), max_num=12, image_s
 
 
 def process_image(
-    image_file, data_args, image_folder, enable_dynamic_res=False, enable_dynamic_s2=False, max_tiles=None
-):
+    image_file: str | Image.Image,
+    data_args: VILAConfig,
+    image_folder: str | None,
+    enable_dynamic_res: bool = False,
+    enable_dynamic_s2: bool = False,
+    max_tiles: int | None = None,
+) -> torch.Tensor | tuple[torch.Tensor, tuple[int, int]]:
     processor = data_args.image_processor
     if isinstance(image_file, str):
         if image_folder is not None:
@@ -226,7 +241,13 @@ def process_image(
     return image
 
 
-def process_images(images, image_processor, model_cfg, enable_dynamic_res=False, max_tiles=None):
+def process_images(
+    images: list[Image.Image],
+    image_processor: SiglipImageProcessor,
+    model_cfg: VILAConfig,
+    enable_dynamic_res: bool = False,
+    max_tiles: int | None = None,
+) -> torch.Tensor:
     """Process a batch of images using the model's image processor."""
     model_cfg.image_processor = image_processor
     new_images = [

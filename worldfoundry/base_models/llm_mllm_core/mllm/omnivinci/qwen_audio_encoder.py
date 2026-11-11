@@ -15,22 +15,19 @@
 
 
 import torch
+from torch import nn
 from transformers import PretrainedConfig, Qwen2AudioEncoder
 
-from .audio_encoder import AudioTower
 
-
-class Qwen2AudioTower(AudioTower):
-    def __init__(self, model_name_or_path: str, config: PretrainedConfig):
-        super().__init__(model_name_or_path, config)
+class Qwen2AudioTower(nn.Module):
+    def __init__(self, model_name_or_path: str, config: PretrainedConfig) -> None:
+        super().__init__()
         self.audio_tower = Qwen2AudioEncoder.from_pretrained(
-            model_name_or_path, attn_implementation="flash_attention_2"
+            model_name_or_path, attn_implementation="flash_attention_2", local_files_only=True
         )
-        self.is_loaded = True
-        self.audio_chunk_unit_duration = 30
         self.audio_chunk_unit_length = 3000
 
-    def forward(self, sounds):
+    def forward(self, sounds: list[torch.Tensor | dict[str, torch.Tensor]]) -> tuple[torch.Tensor, list[int]]:
         if type(sounds) is list:
             sound_features = []
             audio_output_lengths = []
@@ -49,7 +46,7 @@ class Qwen2AudioTower(AudioTower):
 
         return sound_features, audio_output_lengths
 
-    def forward_audio_tower_batch(self, inp):
+    def forward_audio_tower_batch(self, inp: torch.Tensor) -> torch.Tensor:
         """
         Process long audio input by splitting into fixed-size chunks (30 seconds),
         padding if needed, batching them together, and processing through the audio tower.

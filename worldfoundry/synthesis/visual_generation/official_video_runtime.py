@@ -947,12 +947,14 @@ class OfficialVideoRuntime:
             raise TypeError("OmniVinci load_audio_in_video must be a bool")
 
         import torch
-        from transformers import AutoModel, AutoProcessor
 
-        processor = AutoProcessor.from_pretrained(str(checkpoint_path), trust_remote_code=True, local_files_only=True)
-        model = AutoModel.from_pretrained(
+        from worldfoundry.base_models.llm_mllm_core.mllm.omnivinci.modeling_vila import VILAForCausalLM
+
+        from .omnivinci.omnivinci_runtime.auto_processor import VILAProcessor
+
+        processor = VILAProcessor.from_pretrained(str(checkpoint_path), local_files_only=True)
+        model = VILAForCausalLM.from_pretrained(
             str(checkpoint_path),
-            trust_remote_code=True,
             torch_dtype=getattr(torch, str(self.runtime.get("torch_dtype") or "float16")),
             device_map=self.runtime.get("device_map") or "auto",
             local_files_only=True,

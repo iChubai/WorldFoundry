@@ -15,111 +15,37 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-import torch.nn as nn
-from einops import rearrange
+from __future__ import annotations
+
+from typing import Any
+
+import torch
+from torch import nn
 from transformers import PretrainedConfig, PreTrainedModel
 
 
 class SoundMultimodalProjectorConfig(PretrainedConfig):
-    """Configuration for sound multimodal projector."""
-
     model_type = "sound_mm_projector"
 
-    def __init__(self, sound_mm_projector_type: str | None = None, **kwargs):
-        super().__init__()
+    def __init__(self, sound_mm_projector_type: str = "mlp", **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self.sound_mm_projector_type = sound_mm_projector_type
-
-
-class AudioDownSampleBlock(nn.Module):
-    """Downsample audio features using 1D convolution."""
-
-    def __init__(self, embed_dim):
-        super().__init__()
-        self.conv1 = nn.Conv1d(embed_dim, embed_dim, kernel_size=3, stride=2, padding=1)
-
-    def forward(self, x):
-        x = rearrange(x, "b t c -> b c t")
-        x = self.conv1(x)
-        x = rearrange(x, "b c t -> b t c")
-        return x
-
-
-class AudioDownSamplePoolBlock(nn.Module):
-    """Downsample audio features using average pooling."""
-
-    def __init__(self, embed_dim):
-        super().__init__()
-        self.pool = nn.AvgPool1d(kernel_size=2)
-
-    def forward(self, x):
-        x = rearrange(x, "b t c -> b c t")
-        x = self.pool(x)
-        x = rearrange(x, "b c t -> b t c")
-        return x
-
-
-class AudioDownSampleMaxPoolBlock(nn.Module):
-    """Downsample audio features using max pooling."""
-
-    def __init__(self, embed_dim):
-        super().__init__()
-        self.pool = nn.MaxPool1d(kernel_size=2)
-
-    def forward(self, x):
-        x = rearrange(x, "b t c -> b c t")
-        x = self.pool(x)
-        x = rearrange(x, "b c t -> b t c")
-        return x
 
 
 class SoundMultimodalProjector(PreTrainedModel):
-    """Sound multimodal projector for mapping audio features to LLM space."""
+    """Project Qwen2Audio features into the released Qwen2 hidden dimension."""
 
     config_class = SoundMultimodalProjectorConfig
 
-    def __init__(self, sound_mm_projector_cfg: SoundMultimodalProjectorConfig, config: PretrainedConfig):
+    def __init__(self, sound_mm_projector_cfg: SoundMultimodalProjectorConfig, config: PretrainedConfig) -> None:
         super().__init__(sound_mm_projector_cfg)
-        if hasattr(config, "sound_mm_projector"):
-            sound_mm_projector_type = config.sound_mm_projector
-        else:
-            sound_mm_projector_type = sound_mm_projector_cfg.sound_mm_projector_type
-        self.sound_mm_projector_type = sound_mm_projector_type
-        self.config.sound_mm_projector_type = sound_mm_projector_type
+        if sound_mm_projector_cfg.sound_mm_projector_type != "mlp":
+            raise ValueError(f"Unsupported OmniVinci sound projector: {sound_mm_projector_cfg.sound_mm_projector_type}")
+        self.layers = nn.Sequential(
+            nn.Linear(config.sound_hidden_size, config.hidden_size),
+            nn.GELU(),
+            nn.Linear(config.hidden_size, config.hidden_size),
+        )
 
-        if hasattr(config, "sound_mm_projector_cfg") and type(config.sound_mm_projector_cfg) is dict:
-            config.sound_mm_projector_cfg["sound_mm_projector_type"] = sound_mm_projector_type
-
-        if sound_mm_projector_type == "mlp":
-            self.layers = nn.Sequential(
-                nn.Linear(config.sound_hidden_size, config.hidden_size),
-                nn.GELU(),
-                nn.Linear(config.hidden_size, config.hidden_size),
-            )
-        elif sound_mm_projector_type == "mlp_downsample":
-            self.downsample_block = AudioDownSampleBlock(config.sound_hidden_size)
-            self.layers = nn.Sequential(
-                nn.Linear(config.sound_hidden_size, config.hidden_size),
-                nn.GELU(),
-                nn.Linear(config.hidden_size, config.hidden_size),
-            )
-        elif sound_mm_projector_type == "mlp_downsample_pool":
-            self.downsample_block = AudioDownSamplePoolBlock(config.sound_hidden_size)
-            self.layers = nn.Sequential(
-                nn.Linear(config.sound_hidden_size, config.hidden_size),
-                nn.GELU(),
-                nn.Linear(config.hidden_size, config.hidden_size),
-            )
-        elif sound_mm_projector_type == "mlp_downsample_pool_max":
-            self.downsample_block = AudioDownSampleMaxPoolBlock(config.sound_hidden_size)
-            self.layers = nn.Sequential(
-                nn.Linear(config.sound_hidden_size, config.hidden_size),
-                nn.GELU(),
-                nn.Linear(config.hidden_size, config.hidden_size),
-            )
-        else:
-            raise ValueError(f"Unknown projector type: {sound_mm_projector_type}")
-
-    def forward(self, x, *args, **kwargs):
-        if self.sound_mm_projector_type in ["mlp_downsample", "mlp_downsample_pool", "mlp_downsample_pool_max"]:
-            x = self.downsample_block(x)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.layers(x)

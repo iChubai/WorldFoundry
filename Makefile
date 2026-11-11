@@ -151,6 +151,8 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_image_request_batching.py \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
+	tests/base_models/test_omnivinci_components.py \
+	tests/synthesis/test_omnivinci_runtime.py \
 	tests/synthesis/test_spatia_runtime.py \
 	tests/synthesis/test_versecrafter_runtime.py \
 	tests/synthesis/test_uni3c_synthesis.py \

@@ -20,8 +20,9 @@ import numpy as np
 import torch
 from einops import rearrange
 from plyfile import PlyData, PlyElement
-from src.models.utils.data import ray_condition
-from src.models.utils.token_pruning import process_tensors
+
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.data import ray_condition
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.token_pruning import process_tensors
 
 
 def get_plucker_embedding_and_rays(

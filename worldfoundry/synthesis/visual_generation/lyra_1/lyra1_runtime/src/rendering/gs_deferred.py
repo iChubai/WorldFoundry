@@ -19,8 +19,11 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from gsplat.rendering import rasterization
-from src.models.utils.render import downscale_intrinsics
-from src.rendering.gs_deferred_patch import DeferredBPPatch
+
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.render import downscale_intrinsics
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.rendering.gs_deferred_patch import (
+    DeferredBPPatch,
+)
 
 
 class DeferredBP(torch.autograd.Function):

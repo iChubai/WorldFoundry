@@ -19,9 +19,12 @@ import einops
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from src.models.utils.attention import Block
-from src.models.utils.cosmos_1_tokenizer import load_cosmos_1_tokenizer
-from src.models.utils.mamba2 import Mamba2Block
+
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.attention import Block
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.cosmos_1_tokenizer import (
+    load_cosmos_1_tokenizer,
+)
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.mamba2 import Mamba2Block
 
 
 def load_vae(vae_backbone, vae_path):

@@ -20,14 +20,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange, repeat
-from src.models.utils.attention import PatchEmbed3D
-from src.models.utils.cosmos_1_tokenizer import load_cosmos_1_decoder
-from src.models.utils.render import subsample_x_and_rays
-from src.rendering.gs import GaussianRenderer
-from src.rendering.gs_deferred import GaussianRendererDeferred
+
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.attention import PatchEmbed3D
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.cosmos_1_tokenizer import (
+    load_cosmos_1_decoder,
+)
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.render import subsample_x_and_rays
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.rendering.gs import GaussianRenderer
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.rendering.gs_deferred import (
+    GaussianRendererDeferred,
+)
 
 # isort: split
-from src.models.utils.model import (
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.model import (
     ConvTranspose3dFactorized,
     ConvTranspose3dReduced,
     MultiStageConvTranspose3d,

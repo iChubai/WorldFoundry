@@ -23,19 +23,29 @@ import torchvision.transforms as transforms
 from torch.utils.data.dataset import Dataset
 
 # isort: split
-from src.models.utils.model import timestep_embedding
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.model import timestep_embedding
 
 # isort: split
-from src.models.utils.data import ImageTransform, merge_input_target_data_dicts, mirror_frame_indices, weighted_sample
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.data import (
+    ImageTransform,
+    merge_input_target_data_dicts,
+    mirror_frame_indices,
+    weighted_sample,
+)
 
 # isort: split
-from src.models.eval_inputs.registry import dataset_registry
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.registry import (
+    dataset_registry,
+)
 
 # isort: split
-from src.models.utils.cosmos_1_tokenizer import denormalize_latents, load_cosmos_latent_statistics
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.cosmos_1_tokenizer import (
+    denormalize_latents,
+    load_cosmos_latent_statistics,
+)
 
 # isort: split
-from src.models.eval_inputs.datafield import DataField
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.datafield import DataField
 
 # isort: split
 

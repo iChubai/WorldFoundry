@@ -199,7 +199,7 @@ class VerseCrafterRuntime:
             "depth",
             [
                 self.python_executable,
-                "inference/moge-v2_infer.py",
+                "inference/moge_v2_infer.py",
                 "--input",
                 image,
                 "--output",

@@ -8,14 +8,15 @@ from diffusers.models import AutoencoderKLWan
 from diffusers.schedulers import UniPCMultistepScheduler
 from diffusers.utils import export_to_video
 from omegaconf import OmegaConf
-from src.dataset import load_dataset
-from src.fsdp import shard_model
-from src.models.controlnet import WanAttnProcessorSP
-from src.models.pcd_controller import PCDController
-from src.pipelines.pipeline_pcd import PCDControllerPipeline
-from src.utils import create_logger, is_main_process
-from src.xfuser_compat import get_sequence_parallel_world_size, require_xfuser
 from transformers import AutoTokenizer, CLIPImageProcessor, CLIPVisionModel, UMT5EncoderModel
+
+from .src.dataset import load_dataset
+from .src.fsdp import shard_model
+from .src.models.controlnet import WanAttnProcessorSP
+from .src.models.pcd_controller import PCDController
+from .src.pipelines.pipeline_pcd import PCDControllerPipeline
+from .src.utils import create_logger, is_main_process
+from .src.xfuser_compat import get_sequence_parallel_world_size, require_xfuser
 
 if __name__ == "__main__":
     torch.set_grad_enabled(False)

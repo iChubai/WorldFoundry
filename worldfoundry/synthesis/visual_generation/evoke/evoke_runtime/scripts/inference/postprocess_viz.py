@@ -39,7 +39,7 @@ def _apply_joystick_hud(video_np: np.ndarray, p: dict) -> np.ndarray:
     if not npy or not Path(npy).is_file():
         return video_np
     try:
-        from evoke.utils.ev_validation import add_joystick_overlay_from_c2ws
+        from ...evoke.utils.ev_validation import add_joystick_overlay_from_c2ws
 
         c2ws = np.load(npy)
         # pred frame 0 == first frame after the ref prefix (ref_pix = 0 for i2v/t2v)
@@ -166,7 +166,7 @@ def _append_warp_mask_columns(output_dir: Path, combined: list) -> list:
 
 def _write_combined(output_dir: Path, video_np: np.ndarray, p: dict) -> None:
     """Build + write the GT|Pred|Warp|WarpMask side-by-side joystick-HUD video."""
-    from evoke.utils.ev_validation import combine_gt_pred_with_cam_viz  # REPO_ROOT: module top
+    from ...evoke.utils.ev_validation import combine_gt_pred_with_cam_viz  # REPO_ROOT: module top
 
     _t_combine = time.time()
     print("[postproc] combining GT|Pred + joystick HUD ...", flush=True)

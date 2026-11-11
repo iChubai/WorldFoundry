@@ -9,9 +9,9 @@ from diffusers.models.modeling_outputs import Transformer2DModelOutput
 from diffusers.models.transformers.transformer_wan import WanRotaryPosEmbed, WanTransformer3DModel
 from diffusers.utils import USE_PEFT_BACKEND, logging, scale_lora_layers, unscale_lora_layers
 
-from src.models.controlnet import WanXControlNet, zero_module
-from src.models.rotary_compat import split_rotary_embedding
-from src.xfuser_compat import get_sequence_parallel_rank, get_sp_group
+from ..xfuser_compat import get_sequence_parallel_rank, get_sp_group
+from .controlnet import WanXControlNet, zero_module
+from .rotary_compat import split_rotary_embedding
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

@@ -124,7 +124,7 @@ def load_pose_for_v2v(
     """
     import numpy as np
 
-    from evoke.utils.inference_geometry import (
+    from .inference_geometry import (
         resolve_intrinsic_source_resolution,
         transform_intrinsic_for_crop_resize,
     )

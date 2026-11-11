@@ -25,20 +25,6 @@ project_roots = [
 for project_root in project_roots:
     sys.path.insert(0, project_root) if project_root not in sys.path else None
 
-from videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the sys.path setup.
-    convert_model_weight_to_float8,
-    convert_weight_dtype_wrapper,
-    replace_parameters_by_name,
-)
-from videox_fun.utils.lora_utils import merge_lora, unmerge_lora  # noqa: E402 - Follows the sys.path setup.
-from videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
-    filter_kwargs,
-    get_image_latent,
-    get_image_to_video_latent,
-    get_video_to_video_latent,
-    save_videos_grid,
-)
-
 from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (  # noqa: E402 - Follows the sys.path setup.
     load_wan_transformer,
 )
@@ -62,9 +48,25 @@ from worldfoundry.core.distributed.sequence_parallel.runtime import (  # noqa: E
 )
 from worldfoundry.core.distributed.sharding.block_fsdp import shard_model  # noqa: E402 - Follows the sys.path setup.
 from worldfoundry.core.io.paths import resolve_data_path  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the sys.path setup.
+    convert_model_weight_to_float8,
+    convert_weight_dtype_wrapper,
+    replace_parameters_by_name,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.lora_utils import (  # noqa: E402 - Follows the sys.path setup.
+    merge_lora,
+    unmerge_lora,
+)
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
+    filter_kwargs,
+    get_image_latent,
+    get_image_to_video_latent,
+    get_video_to_video_latent,
+    save_videos_grid,
+)
 
 # isort: split
-from versecrafter.pipeline import WanVerseCrafterPipeline  # noqa: E402 - Follows the sys.path setup.
+from ..versecrafter.pipeline import WanVerseCrafterPipeline  # noqa: E402 - Follows the sys.path setup.
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Video generation inference script")

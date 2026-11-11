@@ -38,13 +38,13 @@ from diffusers.utils import (
     unscale_lora_layers,
 )
 
-from src.models.pcd_controller import MaskCamEmbed, WanXControlNet
-from src.xfuser_compat import (
+from ..xfuser_compat import (
     get_sequence_parallel_rank,
     get_sequence_parallel_world_size,
     get_sp_group,
     long_context_attention,
 )
+from .pcd_controller import MaskCamEmbed, WanXControlNet
 
 try:
     from diffusers.models.controlnet import zero_module

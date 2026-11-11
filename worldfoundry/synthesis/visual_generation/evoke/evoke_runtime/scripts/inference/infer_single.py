@@ -37,7 +37,7 @@ if os.environ.get("EVOKE_CPU_THREADS"):
 # Import is safe here -- da3_cloud's module scope is numpy/torch/pathlib only, no DA3/ViGeo weight load.
 import contextlib  # noqa: E402 - Follows the environment setup.
 
-from evoke.modules.geometric_state.da3_cloud import (  # noqa: E402 - Follows the environment setup.
+from ...evoke.modules.geometric_state.da3_cloud import (  # noqa: E402 - Follows the environment setup.
     CHUNK0_TARGET_DISPARITY_PX_DEFAULT as _CHUNK0_TARGET_DISPARITY_PX_DEFAULT,
 )
 
@@ -1035,7 +1035,7 @@ def _check_prereqs(args):
     # per-window try, so a bad path would otherwise be reported as a degenerate window and the run
     # would finish "successfully" with an all-black warp.
     if args.use_geometric_state:
-        from evoke.modules.geometric_state.depth_backend import check_assets
+        from ...evoke.modules.geometric_state.depth_backend import check_assets
 
         try:
             check_assets(args.geo_depth_backend, weights=args.geo_vigeo_weights, src=args.geo_vigeo_src)
@@ -1119,7 +1119,7 @@ def _load_lingbot_pose(args):
     Returns:
         (Ks, c2ws): Ks [4] intrinsics, c2ws [F_pix, 4, 4] camera-to-world (cpu fp32, no batch dim).
     """
-    from evoke.utils.ev_validation import load_pose_for_v2v  # REPO_ROOT is on sys.path (module top)
+    from ...evoke.utils.ev_validation import load_pose_for_v2v  # REPO_ROOT is on sys.path (module top)
 
     # compute required pose length to cover ref + generation frames
     _W = 9  # latent_window_size
@@ -1278,12 +1278,13 @@ def build_pipe(args):
         print("[geo-infer] reusing the already-loaded pipeline (weights are not re-read)", flush=True)
         return hit
     from diffusers import AutoencoderKLWan
-    from evoke.pipelines.pipeline_evoke import EvokePipeline
 
     from worldfoundry.base_models.diffusion_model.models.networks.evoke.model import EvokeTransformer3DModel
 
     # use diffusers-fork scheduler to accept mu kwarg
     from worldfoundry.base_models.diffusion_model.schedulers.evoke import EvokeScheduler
+
+    from ...evoke.pipelines.pipeline_evoke import EvokePipeline
 
     # output_dir is created in main(): it is per-case, and on a cache hit this function returns above,
     # so leaving the mkdir here would silently skip every later case's directory.
@@ -1585,7 +1586,7 @@ def build_pipe(args):
     if args.partial_path:
         from argparse import Namespace
 
-        from evoke.utils.inference_utils import load_extra_components
+        from ...evoke.utils.inference_utils import load_extra_components
 
         # build minimal fake args required by load_extra_components gates
         _fake_args = Namespace(
@@ -1704,7 +1705,7 @@ def main(argv=None):
     video_input = None
     if args.video_path:
         # load ref video with start_seconds offset and source→target fps resample
-        from evoke.utils.ev_validation import load_ref_video_for_v2v
+        from ...evoke.utils.ev_validation import load_ref_video_for_v2v
 
         video_input = load_ref_video_for_v2v(
             args.video_path,
@@ -1741,7 +1742,7 @@ def main(argv=None):
 
         # Pose control smoothing: low-pass the target-segment c2w to suppress high-frequency vipe jitter (before the cap, so the raw trajectory is de-jittered).
         if args.pose_smooth_win and args.pose_smooth_win > 1:
-            from evoke.utils.trajectory_capping import smooth_c2w_trajectory
+            from ...evoke.utils.trajectory_capping import smooth_c2w_trajectory
 
             _ref_pix_for_sm = max(0, int(round(float(args.ref_seconds) * 24)))  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
             lingbot_c2ws, _sm_info = smooth_c2w_trajectory(
@@ -1753,7 +1754,7 @@ def main(argv=None):
 
         # Per-chunk trajectory cap: limit camera rotation/translation so the warp stays in-distribution.
         if args.max_deg_per_chunk > 0 or args.max_trans_per_chunk > 0:
-            from evoke.utils.trajectory_capping import (
+            from ...evoke.utils.trajectory_capping import (
                 analyze_per_chunk,
                 cap_target_per_chunk_rotation,
                 clamp_target_per_chunk_motion,
@@ -1840,7 +1841,7 @@ def main(argv=None):
                 flush=True,
             )
         else:
-            from evoke.utils.ev_validation import _load_gt_video_rgb_for_viz, add_joystick_overlay_from_c2ws
+            from ...evoke.utils.ev_validation import _load_gt_video_rgb_for_viz, add_joystick_overlay_from_c2ws
 
             segments_dir = output_dir / "segments"
             segments_dir.mkdir(parents=True, exist_ok=True)
@@ -1855,7 +1856,7 @@ def main(argv=None):
                 # compute global scale once so all chunks share the same normalisation.
                 # When the trajectory cap is active, use cap as joystick full-deflection (±1 == cap maxed);
                 # uncapped dims fall back to clip p90 auto.
-                from evoke.utils.ev_validation import resolve_joystick_scale_with_cap
+                from ...evoke.utils.ev_validation import resolve_joystick_scale_with_cap
 
                 _global_move_scale, _global_rot_scale = resolve_joystick_scale_with_cap(
                     lingbot_c2ws,
@@ -2262,7 +2263,7 @@ def main(argv=None):
     # Streaming (very long video): the pipeline holds no full frame array, so the complete video is stitched from per-chunk segments (constant memory).
     if args.stream_long_video:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
-        from postprocess_viz import assemble_from_segments
+        from .postprocess_viz import assemble_from_segments
 
         _asm = assemble_from_segments(output_dir, fps=int(args.fps))
         if _asm.get("pred") is None:
@@ -2292,7 +2293,7 @@ def main(argv=None):
     # CPU-bound and GPU-idle, so with --bg_postprocess we hand it to a detached worker and
     # exit immediately, letting the next sample's GPU inference overlap this encode.
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from postprocess_viz import run_postprocess
+    from .postprocess_viz import run_postprocess
 
     _pp_params = {
         "fps": int(args.fps),
@@ -2317,7 +2318,7 @@ def main(argv=None):
     #   (The STREAM_LONG path never reaches here -- it stitches geo_pred.mp4 from the per-chunk
     #   segments, which already have the HUD burned in.)
     if (_hud_on or _hud_dual) and lingbot_c2ws is not None:
-        from evoke.utils.ev_validation import resolve_joystick_scale_with_cap
+        from ...evoke.utils.ev_validation import resolve_joystick_scale_with_cap
 
         _ms, _rs = resolve_joystick_scale_with_cap(
             lingbot_c2ws,

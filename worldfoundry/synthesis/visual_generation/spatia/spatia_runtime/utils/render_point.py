@@ -8,12 +8,13 @@ import open3d as o3d
 import torch
 from diffusers.utils import export_to_video
 from PIL import Image
-from render_point_torch3d import render_multi_view_pointcloud
 
 from worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.camera_io import (
     read_intrinsics_from_txt,
     read_w2cs_from_txt,
 )
+
+from .render_point_torch3d import render_multi_view_pointcloud
 
 
 def get_args():

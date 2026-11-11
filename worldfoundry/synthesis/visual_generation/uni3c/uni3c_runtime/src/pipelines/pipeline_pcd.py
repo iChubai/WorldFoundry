@@ -30,7 +30,7 @@ from diffusers.utils.torch_utils import randn_tensor
 from diffusers.video_processor import VideoProcessor
 from transformers import AutoTokenizer, CLIPImageProcessor, CLIPVisionModel, UMT5EncoderModel
 
-from src.models.pcd_controller import PCDController
+from ..models.pcd_controller import PCDController
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm

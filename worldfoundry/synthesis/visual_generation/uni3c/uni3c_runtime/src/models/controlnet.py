@@ -4,8 +4,8 @@ import torch.nn.functional as F
 from diffusers.models import ModelMixin
 from diffusers.models.attention_processor import Attention
 
-from src.models.rotary_compat import apply_rotary_embedding_bhld
-from src.xfuser_compat import long_context_attention
+from ..xfuser_compat import long_context_attention
+from .rotary_compat import apply_rotary_embedding_bhld
 
 
 def zero_module(module):

@@ -5,14 +5,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from mmaudio.ext.autoencoder import AutoEncoderModule
-from mmaudio.ext.mel_converter import get_mel_converter
-from mmaudio.ext.synchformer import Synchformer
-from mmaudio.model.utils.distributions import DiagonalGaussianDistribution
 from open_clip import create_model_from_pretrained
 from torchvision.transforms import Normalize
 
 from worldfoundry.synthesis.visual_generation.mmaudio.checkpoints import dfn5b_open_clip_ref
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.autoencoder import AutoEncoderModule
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.mel_converter import get_mel_converter
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.synchformer import Synchformer
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.utils.distributions import (
+    DiagonalGaussianDistribution,
+)
 
 
 def patch_clip(clip_model):

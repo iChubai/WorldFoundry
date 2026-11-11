@@ -1,11 +1,15 @@
 import torch
 
 # isort: split
-from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
+from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.utils.wan_wrapper import (
+    WanDiffusionWrapper,
+    WanTextEncoder,
+    WanVAEWrapper,
+)
 
 # isort: split
 
-from runtime_utils.memory import (
+from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.runtime_utils.memory import (
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,

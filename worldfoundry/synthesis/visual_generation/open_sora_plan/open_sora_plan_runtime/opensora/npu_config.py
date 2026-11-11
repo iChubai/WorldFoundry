@@ -8,7 +8,9 @@ import subprocess
 import numpy as np
 import torch
 
-from opensora.adaptor.zp_manager import zp_manager
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.adaptor.zp_manager import (
+    zp_manager,
+)
 
 try:
     import torch_npu
@@ -93,25 +95,33 @@ class NPUConfig:
 
             import deepspeed.runtime.utils as utils
 
-            from opensora.adaptor.utils import all_gather_dp_groups
+            from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.adaptor.utils import (
+                all_gather_dp_groups,
+            )
 
             utils.all_gather_dp_groups = all_gather_dp_groups
 
             import deepspeed.runtime.bf16_optimizer as bf16_optimizer
 
-            from opensora.adaptor.bf16_optimizer import BF16_Optimizer
+            from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.adaptor.bf16_optimizer import (
+                BF16_Optimizer,
+            )
 
             self.replace_methods(bf16_optimizer.BF16_Optimizer, BF16_Optimizer)
 
             import deepspeed.runtime.zero.stage_1_and_2 as stage_1_and_2
 
-            from opensora.adaptor.stage_1_and_2 import DeepSpeedZeroOptimizer
+            from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.adaptor.stage_1_and_2 import (
+                DeepSpeedZeroOptimizer,
+            )
 
             self.replace_methods(stage_1_and_2.DeepSpeedZeroOptimizer, DeepSpeedZeroOptimizer, ["_has_inf_or_nan"])
 
             import deepspeed.runtime.engine as engine
 
-            from opensora.adaptor.engine import DeepSpeedEngine
+            from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.adaptor.engine import (
+                DeepSpeedEngine,
+            )
 
             self.replace_methods(
                 engine.DeepSpeedEngine,

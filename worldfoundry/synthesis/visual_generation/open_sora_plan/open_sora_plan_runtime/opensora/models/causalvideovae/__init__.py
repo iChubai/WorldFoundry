@@ -7,7 +7,9 @@ from .model.vae import CausalVAEModel, WFVAEModel
 try:
     import torch_npu
 
-    from opensora.npu_config import npu_config
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+    )
 except BaseException:
     torch_npu = None
     npu_config = None

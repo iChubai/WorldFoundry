@@ -1,7 +1,10 @@
 import torch
 import torch.distributed as dist
 from einops import rearrange
-from opensora.utils.parallel_states import nccl_info
+
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+    nccl_info,
+)
 
 
 def broadcast(input_: torch.Tensor):

@@ -14,11 +14,11 @@
 
 
 import torch
-from inference.common.config import MagiConfig
-from inference.model.dit import get_dit
 
 from worldfoundry.core import print_rank_0, set_random_seed
 from worldfoundry.core.distributed import dist_init
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.common.config import MagiConfig
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.model.dit import get_dit
 
 from .prompt_process import get_txt_embeddings
 from .video_generate import generate_per_chunk

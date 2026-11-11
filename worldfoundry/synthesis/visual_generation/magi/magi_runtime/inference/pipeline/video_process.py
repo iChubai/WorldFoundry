@@ -19,11 +19,15 @@ from typing import ClassVar
 import ffmpeg
 import torch
 from einops import rearrange
-from inference.common.config import MagiConfig
-from inference.model.vae import AutoModel, DiagonalGaussianDistribution, VideoTokenizerABC
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core.observability.rank_logging import distributed_logger as magi_logger
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.common.config import MagiConfig
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.model.vae import (
+    AutoModel,
+    DiagonalGaussianDistribution,
+    VideoTokenizerABC,
+)
 
 
 ############################################

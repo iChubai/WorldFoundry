@@ -26,10 +26,13 @@ from pydantic import BaseModel, ConfigDict
 from torch import Tensor
 from tqdm import tqdm
 
-from mira.data.batch import VideoActionBatch
-from mira.world_model.actions_config import ActionTensors
-from mira.world_model.config import LatentWorldModelConfig, WorldModelInferenceConfig
-from mira.world_model.latent_world_model import (
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.data.batch import VideoActionBatch
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.actions_config import ActionTensors
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.config import (
+    LatentWorldModelConfig,
+    WorldModelInferenceConfig,
+)
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.latent_world_model import (
     InferenceOutputs,
     LatentWorldModel,
     _config_dict_from_yaml,
@@ -276,7 +279,7 @@ class MultiWrapperWorldModel(nn.Module):
             ``{"viz_video": ..., "pred_video": ...}`` uint8 tensors of shape ``(B, T, C, P*H, W)``.
         """
         # Imported here (not at module load) to keep the model independent of the training package.
-        from mira.inference_support.visualization import (
+        from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.inference_support.visualization import (
             add_prediction_border,
             video_to_uint8,
             visualize_batch,

@@ -11,7 +11,11 @@ import torch.nn.functional as F
 from einops import rearrange
 from torch import Tensor, nn
 
-from mira.ml.attention import AdaptiveLayerNorm, SelfAttention, SelfAttentionConfig
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.ml.attention import (
+    AdaptiveLayerNorm,
+    SelfAttention,
+    SelfAttentionConfig,
+)
 
 
 class FeedForward(nn.Module):

@@ -8,7 +8,9 @@ from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
     import torch
 
-    from mira.world_model.latent_world_model import LatentWorldModel
+    from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.latent_world_model import (
+        LatentWorldModel,
+    )
 
 
 def load_world_model(checkpoint_path: Path, device: str | torch.device) -> tuple[LatentWorldModel, Any]:
@@ -21,8 +23,12 @@ def load_world_model(checkpoint_path: Path, device: str | torch.device) -> tuple
     """
     from omegaconf import OmegaConf  # optional dep, used only on the real path
 
-    from mira.world_model.latent_world_model import LatentWorldModel
-    from mira.world_model.multi_wrapper_world_model import MultiWrapperWorldModel
+    from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.latent_world_model import (
+        LatentWorldModel,
+    )
+    from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.multi_wrapper_world_model import (
+        MultiWrapperWorldModel,
+    )
 
     config_path = LatentWorldModel._find_config(checkpoint_path)
     if config_path is None:

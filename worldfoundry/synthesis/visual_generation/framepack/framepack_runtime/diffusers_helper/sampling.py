@@ -3,8 +3,11 @@
 import math
 
 import torch
-from diffusers_helper.utils import repeat_to_batch_size
 from tqdm.auto import trange
+
+from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.utils import (
+    repeat_to_batch_size,
+)
 
 
 def append_dims(x, target_dims):

@@ -2,7 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from mmaudio.ext.autoencoder.edm2_utils import MPConv1D, mp_silu, mp_sum, normalize
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.autoencoder.edm2_utils import (
+    MPConv1D,
+    mp_silu,
+    mp_sum,
+    normalize,
+)
 
 
 def nonlinearity(x):

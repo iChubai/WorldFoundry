@@ -7,12 +7,13 @@
 
 import torch
 import torch.nn as nn
-from mmaudio.ext.bigvgan import activations
-from mmaudio.ext.bigvgan.alias_free_torch import *  # noqa: F403 - Upstream star import kept as written.
-from mmaudio.ext.bigvgan.utils import get_padding, init_weights
 from torch.nn import Conv1d, ConvTranspose1d
 from torch.nn.utils.parametrizations import weight_norm
 from torch.nn.utils.parametrize import remove_parametrizations
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan import activations
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan.alias_free_torch import *  # noqa: F403 - Upstream star import kept as written.
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan.utils import get_padding, init_weights
 
 LRELU_SLOPE = 0.1
 

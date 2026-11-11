@@ -5,14 +5,24 @@ from pathlib import Path
 import numpy as np
 import torch
 from colorlog import ColoredFormatter
-from mmaudio.data.av_utils import ImageInfo, VideoInfo, read_frames, reencode_with_audio
-from mmaudio.model.flow_matching import FlowMatching
-from mmaudio.model.networks import MMAudio
-from mmaudio.model.sequence_config import CONFIG_16K, CONFIG_44K, SequenceConfig
-from mmaudio.model.utils.features_utils import FeaturesUtils
-from mmaudio.utils.download_utils import download_model_if_needed
 from PIL import Image
 from torchvision.transforms import v2
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.data.av_utils import (
+    ImageInfo,
+    VideoInfo,
+    read_frames,
+    reencode_with_audio,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.flow_matching import FlowMatching
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.networks import MMAudio
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.sequence_config import (
+    CONFIG_16K,
+    CONFIG_44K,
+    SequenceConfig,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.utils.features_utils import FeaturesUtils
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.utils.download_utils import download_model_if_needed
 
 log = logging.getLogger()
 

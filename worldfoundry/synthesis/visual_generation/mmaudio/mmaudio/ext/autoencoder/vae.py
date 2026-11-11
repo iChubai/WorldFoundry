@@ -2,9 +2,18 @@ import logging
 
 import torch
 import torch.nn as nn
-from mmaudio.ext.autoencoder.edm2_utils import MPConv1D
-from mmaudio.ext.autoencoder.vae_modules import AttnBlock1D, Downsample1D, ResnetBlock1D, Upsample1D, nonlinearity
-from mmaudio.model.utils.distributions import DiagonalGaussianDistribution
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.autoencoder.edm2_utils import MPConv1D
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.autoencoder.vae_modules import (
+    AttnBlock1D,
+    Downsample1D,
+    ResnetBlock1D,
+    Upsample1D,
+    nonlinearity,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.utils.distributions import (
+    DiagonalGaussianDistribution,
+)
 
 log = logging.getLogger()
 

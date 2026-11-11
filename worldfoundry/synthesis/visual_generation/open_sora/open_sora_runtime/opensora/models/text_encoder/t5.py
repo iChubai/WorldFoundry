@@ -29,7 +29,7 @@ import ftfy
 import torch
 from transformers import AutoTokenizer, T5EncoderModel
 
-from opensora.registry import MODELS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import MODELS
 
 
 class T5Embedder:
@@ -171,8 +171,12 @@ class T5Encoder:
     def shardformer_t5(self):
         from colossalai.shardformer import ShardConfig, ShardFormer
 
-        from opensora.acceleration.shardformer.policy.t5_encoder import T5EncoderPolicy
-        from opensora.utils.misc import requires_grad
+        from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.shardformer.policy.t5_encoder import (
+            T5EncoderPolicy,
+        )
+        from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.utils.misc import (
+            requires_grad,
+        )
 
         shard_config = ShardConfig(
             tensor_parallel_process_group=None,

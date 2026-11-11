@@ -9,8 +9,12 @@ from ..modules.ops import video_to_image
 try:
     import torch_npu
 
-    from opensora.npu_config import npu_config
-    from opensora.npu_config import set_run_dtype as set_run_dtype
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        set_run_dtype as set_run_dtype,
+    )
 except Exception:
     torch_npu = None
     npu_config = None

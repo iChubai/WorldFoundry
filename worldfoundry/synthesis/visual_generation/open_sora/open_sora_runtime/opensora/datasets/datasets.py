@@ -6,7 +6,7 @@ import torch
 from PIL import ImageFile
 from torchvision.datasets.folder import IMG_EXTENSIONS, pil_loader
 
-from opensora.registry import DATASETS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import DATASETS
 
 from .read_video import read_video
 from .utils import VID_EXTENSIONS, get_transforms_image, get_transforms_video, read_file, temporal_random_crop

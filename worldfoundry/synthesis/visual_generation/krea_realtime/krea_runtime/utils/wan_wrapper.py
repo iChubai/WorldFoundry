@@ -17,7 +17,10 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.forci
 from worldfoundry.core.nn import FlowMatchScheduler, SchedulerInterface
 
 # isort: split
-from settings import resolve_model_asset, resolve_model_path
+from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.settings import (
+    resolve_model_asset,
+    resolve_model_path,
+)
 
 # isort: split
 

@@ -22,8 +22,13 @@ import xformers.ops
 from einops import rearrange
 from timm.models.vision_transformer import Mlp
 
-from opensora.acceleration.communications import all_to_all, split_forward_gather_backward
-from opensora.acceleration.parallel_states import get_sequence_parallel_group
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.communications import (
+    all_to_all,
+    split_forward_gather_backward,
+)
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.parallel_states import (
+    get_sequence_parallel_group,
+)
 
 
 def approx_gelu():

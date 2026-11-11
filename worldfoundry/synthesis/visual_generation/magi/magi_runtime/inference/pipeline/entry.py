@@ -15,7 +15,7 @@
 import argparse
 import sys
 
-from inference.pipeline import MagiPipeline
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.pipeline import MagiPipeline
 
 
 def parse_arguments():

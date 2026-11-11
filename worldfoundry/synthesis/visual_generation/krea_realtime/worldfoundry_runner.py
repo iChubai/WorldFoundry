@@ -85,8 +85,8 @@ def main() -> None:
     old_cwd = Path.cwd()
     os.chdir(repo_root)
     try:
-        import sample
-        from release_server import GenerateParams
+        from .krea_runtime import sample
+        from .krea_runtime.release_server import GenerateParams
 
         sample.save_video_direct = _save_video_cv2
         sample.save_video_ffmpeg_pipe = _save_video_cv2

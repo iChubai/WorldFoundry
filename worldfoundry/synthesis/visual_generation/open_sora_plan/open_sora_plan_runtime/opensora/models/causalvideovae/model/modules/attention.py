@@ -9,7 +9,10 @@ from .normalize import Normalize
 try:
     import torch_npu
 
-    from opensora.npu_config import npu_config, set_run_dtype
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+        set_run_dtype,
+    )
 except BaseException:
     torch_npu = None
     npu_config = None

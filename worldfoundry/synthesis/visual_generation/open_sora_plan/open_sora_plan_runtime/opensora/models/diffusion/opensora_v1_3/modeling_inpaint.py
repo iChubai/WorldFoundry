@@ -2,9 +2,15 @@ from diffusers.configuration_utils import register_to_config
 from einops import rearrange
 from torch import nn
 
-from opensora.models.diffusion.common import PatchEmbed2D
-from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3 as OpenSoraT2V
-from opensora.utils.utils import to_2tuple
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.common import (
+    PatchEmbed2D,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.opensora_v1_3.modeling_opensora import (
+    OpenSoraT2V_v1_3 as OpenSoraT2V,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.utils import (
+    to_2tuple,
+)
 
 
 def zero_module(module):

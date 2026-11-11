@@ -43,7 +43,9 @@ from deepspeed.utils import groups, link_hp_params, logger
 from packaging import version as pkg_version
 from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
 
-from opensora.adaptor.zp_manager import zp_manager
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.adaptor.zp_manager import (
+    zp_manager,
+)
 
 # Toggle this to true to enable correctness test
 # with gradient partitioning and without

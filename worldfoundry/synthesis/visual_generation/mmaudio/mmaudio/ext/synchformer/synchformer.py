@@ -2,8 +2,9 @@ from collections.abc import Mapping
 from typing import Any
 
 import torch
-from mmaudio.ext.synchformer.motionformer import MotionFormer
 from torch import nn
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.synchformer.motionformer import MotionFormer
 
 
 class Synchformer(nn.Module):

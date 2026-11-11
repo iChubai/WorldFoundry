@@ -1,9 +1,11 @@
 # Adapted from https://github.com/junjun3518/alias-free-torch under the Apache License 2.0
 #   LICENSE is in incl_licenses directory.
 
-from mmaudio.ext.bigvgan_v2.alias_free_activation.torch.resample import DownSample1d, UpSample1d
-
 import torch.nn as nn
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.resample import (
+    DownSample1d,
+    UpSample1d,
+)
 
 
 class Activation1d(nn.Module):

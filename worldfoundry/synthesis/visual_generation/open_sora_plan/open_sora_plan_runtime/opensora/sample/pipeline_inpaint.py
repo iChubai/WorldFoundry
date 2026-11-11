@@ -16,15 +16,23 @@ from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.models import AutoencoderKL
 from diffusers.schedulers import DDPMScheduler
 from diffusers.utils import logging
-from opensora.models.diffusion.opensora_v1_3.modeling_inpaint import OpenSoraInpaint_v1_3
-from opensora.sample.input_transforms import (
+from torchvision.transforms import Compose, Lambda
+
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.opensora_v1_3.modeling_inpaint import (
+    OpenSoraInpaint_v1_3,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.sample.input_transforms import (
     CenterCropResizeVideo,
     SpatialStrideCropVideo,
     ToTensorAfterResize,
     maxhwresize,
 )
-from opensora.sample.pipeline_opensora import OpenSoraPipeline, OpenSoraPipelineOutput, rescale_noise_cfg
-from opensora.utils.mask_utils import (
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.sample.pipeline_opensora import (
+    OpenSoraPipeline,
+    OpenSoraPipelineOutput,
+    rescale_noise_cfg,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.mask_utils import (
     STR_TO_TYPE,
     TYPE_TO_STR,
     GaussianNoiseAdder,
@@ -32,16 +40,24 @@ from opensora.utils.mask_utils import (
     MaskProcessor,
     MaskType,
 )
-from torchvision.transforms import Compose, Lambda
 
 try:
     import torch_npu
-    from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info
-    from opensora.npu_config import npu_config
+
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.parallel_states import (
+        get_sequence_parallel_state,
+        hccl_info,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+    )
 except BaseException:
     torch_npu = None
     npu_config = None
-    from opensora.utils.parallel_states import get_sequence_parallel_state, nccl_info
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+        get_sequence_parallel_state,
+        nccl_info,
+    )
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

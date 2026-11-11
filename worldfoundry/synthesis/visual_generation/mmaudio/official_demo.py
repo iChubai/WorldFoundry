@@ -4,10 +4,18 @@ from pathlib import Path
 
 import torch
 import torchaudio
-from mmaudio.eval_utils import ModelConfig, all_model_cfg, generate, load_video, make_video, setup_eval_logging
-from mmaudio.model.flow_matching import FlowMatching
-from mmaudio.model.networks import MMAudio, get_my_mmaudio
-from mmaudio.model.utils.features_utils import FeaturesUtils
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.eval_utils import (
+    ModelConfig,
+    all_model_cfg,
+    generate,
+    load_video,
+    make_video,
+    setup_eval_logging,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.flow_matching import FlowMatching
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.networks import MMAudio, get_my_mmaudio
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.utils.features_utils import FeaturesUtils
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True

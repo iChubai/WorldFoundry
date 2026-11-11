@@ -5,26 +5,40 @@ from pprint import pformat
 import torch
 import torch.distributed as dist
 from mmengine.runner import set_random_seed
-from opensora.acceleration.parallel_states import set_sequence_parallel_group
 from tqdm import tqdm
 
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.parallel_states import (
+    set_sequence_parallel_group,
+)
+
 # isort: split
-from opensora.datasets import save_sample
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.datasets import save_sample
 
 # isort: split
 # isort: split
-from opensora.datasets.aspect import get_image_size, get_num_frames
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.datasets.aspect import (
+    get_image_size,
+    get_num_frames,
+)
 
 # isort: split
 # isort: split
-from opensora.models.text_encoder.t5 import text_preprocessing
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.models.text_encoder.t5 import (
+    text_preprocessing,
+)
 
 # isort: split
-from opensora.registry import MODELS, SCHEDULERS, build_module
-from opensora.utils.config_utils import parse_configs
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import (
+    MODELS,
+    SCHEDULERS,
+    build_module,
+)
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.utils.config_utils import (
+    parse_configs,
+)
 
 # isort: split
-from opensora.utils.inference_utils import (
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.utils.inference_utils import (
     add_watermark,
     append_generated,
     append_score_to_prompts,
@@ -42,7 +56,13 @@ from opensora.utils.inference_utils import (
 )
 
 # isort: split
-from opensora.utils.misc import all_exists, create_logger, is_distributed, is_main_process, to_torch_dtype
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.utils.misc import (
+    all_exists,
+    create_logger,
+    is_distributed,
+    is_main_process,
+    to_torch_dtype,
+)
 
 
 def main():

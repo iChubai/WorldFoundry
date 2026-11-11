@@ -11,21 +11,31 @@ from einops import rearrange
 from torch import nn
 from torch.nn import functional as F
 
-from opensora.models.diffusion.common import PatchEmbed2D
-from opensora.models.diffusion.opensora_v1_3.modules import Attention, BasicTransformerBlock
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.common import (
+    PatchEmbed2D,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.opensora_v1_3.modules import (
+    Attention,
+    BasicTransformerBlock,
+)
 
 try:
     import torch_npu
 
-    from opensora.acceleration.parallel_states import (  # noqa: F401 - Import checks optional dependency availability.
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.parallel_states import (  # noqa: F401 - Import checks optional dependency availability.
         get_sequence_parallel_state,
         hccl_info,
     )
-    from opensora.npu_config import npu_config
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+    )
 except BaseException:
     torch_npu = None
     npu_config = None
-    from opensora.utils.parallel_states import get_sequence_parallel_state, nccl_info
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+        get_sequence_parallel_state,
+        nccl_info,
+    )
 
 
 class OpenSoraT2V_v1_3(ModelMixin, ConfigMixin):
@@ -332,7 +342,9 @@ OpenSora_v1_3_models_class = {
 }
 
 if __name__ == "__main__":
-    from opensora.models.causalvideovae import ae_stride_config
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.causalvideovae import (
+        ae_stride_config,
+    )
 
     args = type(
         "args",

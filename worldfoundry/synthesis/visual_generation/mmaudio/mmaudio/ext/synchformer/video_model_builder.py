@@ -8,8 +8,9 @@ from functools import partial
 
 import torch
 import torch.nn as nn
-from mmaudio.ext.synchformer import vit_helper
 from timm.layers import trunc_normal_
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.synchformer import vit_helper
 
 
 class VisionTransformer(nn.Module):

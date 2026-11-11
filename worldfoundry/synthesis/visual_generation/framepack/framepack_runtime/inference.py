@@ -6,8 +6,22 @@ import traceback
 
 import torch
 from diffusers import AutoencoderKLHunyuanVideo
-from diffusers_helper.hunyuan import encode_prompt_conds, vae_decode, vae_encode
-from diffusers_helper.memory import (
+from PIL import Image
+from transformers import (
+    CLIPTextModel,
+    CLIPTokenizer,
+    LlamaModel,
+    LlamaTokenizerFast,
+    SiglipImageProcessor,
+    SiglipVisionModel,
+)
+
+from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.hunyuan import (
+    encode_prompt_conds,
+    vae_decode,
+    vae_encode,
+)
+from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.memory import (
     DynamicSwapInstaller,
     fake_diffusers_current_device,
     get_cuda_free_memory_gb,
@@ -17,9 +31,14 @@ from diffusers_helper.memory import (
     offload_model_from_device_for_memory_preservation,
     unload_complete_models,
 )
-from diffusers_helper.model import HunyuanVideoTransformer3DModelPacked, enable_framepack_global_patches
-from diffusers_helper.sampling import sample_hunyuan
-from diffusers_helper.utils import (
+from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.model import (
+    HunyuanVideoTransformer3DModelPacked,
+    enable_framepack_global_patches,
+)
+from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.sampling import (
+    sample_hunyuan,
+)
+from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.utils import (
     AsyncStream,
     async_run,
     crop_or_pad_yield_mask,
@@ -29,15 +48,6 @@ from diffusers_helper.utils import (
     resize_and_center_crop,
     save_bcthw_as_mp4,
     soft_append_bcthw,
-)
-from PIL import Image
-from transformers import (
-    CLIPTextModel,
-    CLIPTokenizer,
-    LlamaModel,
-    LlamaTokenizerFast,
-    SiglipImageProcessor,
-    SiglipVisionModel,
 )
 
 # Modified by WorldFoundry: FramePack's process-global norm/accelerate patches are no

@@ -5,10 +5,16 @@ from pathlib import Path
 import numpy as np
 import torch
 import torchvision.transforms.functional as TF
-from release_server import GenerateParams, GenerationSession, Models, load_all, load_merge_config
 from tqdm import tqdm
 
 from worldfoundry.core.io.paths import package_data_path
+from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.release_server import (
+    GenerateParams,
+    GenerationSession,
+    Models,
+    load_all,
+    load_merge_config,
+)
 
 torch.set_grad_enabled(False)
 

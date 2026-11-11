@@ -19,14 +19,24 @@ from diffusers.pipelines.pipeline_utils import DiffusionPipeline
 from diffusers.schedulers import DDPMScheduler, FlowMatchEulerDiscreteScheduler
 from diffusers.utils import BaseOutput, logging
 from diffusers.utils.torch_utils import randn_tensor
-from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3
+
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.opensora_v1_3.modeling_opensora import (
+    OpenSoraT2V_v1_3,
+)
 
 try:
     import torch_npu
-    from opensora.acceleration.parallel_states import get_sequence_parallel_state, hccl_info
+
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.parallel_states import (
+        get_sequence_parallel_state,
+        hccl_info,
+    )
 except BaseException:
     torch_npu = None
-    from opensora.utils.parallel_states import get_sequence_parallel_state, nccl_info
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+        get_sequence_parallel_state,
+        nccl_info,
+    )
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

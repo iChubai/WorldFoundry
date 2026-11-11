@@ -36,13 +36,13 @@ try:
 except BaseException:
     flex_attention = None
 
-from inference.common.config import EngineConfig, ModelConfig
 from torch import Tensor
 from torch.nn import Parameter
 
 from worldfoundry.core import InferenceParams, ModelMetaArgs, PackedCrossAttnParams, divide
 from worldfoundry.core.attention import CSOHelper, UlyssesScheduler, cso_communication
 from worldfoundry.core.distributed.model_parallel import groups as parallel_state
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.common.config import EngineConfig, ModelConfig
 
 
 ##########################################################

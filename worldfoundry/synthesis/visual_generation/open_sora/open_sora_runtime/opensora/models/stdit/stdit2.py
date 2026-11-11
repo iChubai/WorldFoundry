@@ -9,8 +9,10 @@ from timm.models.layers import DropPath
 from timm.models.vision_transformer import Mlp
 from transformers import PretrainedConfig, PreTrainedModel
 
-from opensora.acceleration.checkpoint import auto_grad_checkpoint
-from opensora.models.layers.blocks import (
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.checkpoint import (
+    auto_grad_checkpoint,
+)
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.models.layers.blocks import (
     Attention,
     CaptionEmbedder,
     MultiHeadCrossAttention,
@@ -24,8 +26,10 @@ from opensora.models.layers.blocks import (
     get_layernorm,
     t2i_modulate,
 )
-from opensora.registry import MODELS
-from opensora.utils.ckpt_utils import load_checkpoint
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import MODELS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.utils.ckpt_utils import (
+    load_checkpoint,
+)
 
 
 class STDiT2Block(nn.Module):

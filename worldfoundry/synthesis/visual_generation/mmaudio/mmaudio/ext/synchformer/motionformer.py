@@ -3,13 +3,17 @@ from pathlib import Path
 
 import einops
 import torch
-from mmaudio.ext.synchformer.utils import check_if_file_exists_else_download
-from mmaudio.ext.synchformer.video_model_builder import VisionTransformer
 from omegaconf import OmegaConf
 from timm.layers import trunc_normal_
 from torch import nn
 
 from worldfoundry.core.io.paths import package_data_path
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.synchformer.utils import (
+    check_if_file_exists_else_download,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.synchformer.video_model_builder import (
+    VisionTransformer,
+)
 
 FILE2URL = {
     # cfg

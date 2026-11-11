@@ -1,7 +1,7 @@
 import importlib
 
 Module = str
-MODULES_BASE = "opensora.models.causalvideovae.model.modules."
+MODULES_BASE = "worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.causalvideovae.model.modules."
 
 
 def resolve_str_to_obj(str_val, append=True):

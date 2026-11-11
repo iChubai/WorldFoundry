@@ -1,11 +1,11 @@
 """Legacy checkpoint loading around the shared InSpatio causal sampler."""
 
-from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
-
 from worldfoundry.base_models.diffusion_model.runners.inspatio_world import (
     InspatioCausalRollout,
     denoise_block,
 )
+
+from ..utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 
 class CausalInferencePipeline(InspatioCausalRollout):

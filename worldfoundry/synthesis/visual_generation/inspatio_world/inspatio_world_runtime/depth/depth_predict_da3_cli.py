@@ -25,10 +25,11 @@ _code_dir = os.path.join(os.path.dirname(__file__), "..")
 if _code_dir not in sys.path:
     sys.path.insert(0, _code_dir)
 
-from depth.depth_predict_da3 import DepthPredictDA3  # noqa: E402 - Follows the sys.path setup.
 from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.reproducibility import (  # noqa: E402 - Follows the sys.path setup.
     initialize_reproducibility,
 )
+
+from .depth_predict_da3 import DepthPredictDA3  # noqa: E402 - Follows the sys.path setup.
 
 logging.basicConfig(
     level=logging.INFO,

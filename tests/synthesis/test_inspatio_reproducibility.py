@@ -145,7 +145,9 @@ def test_leaf_entrypoints_initialize_before_work(monkeypatch, tmp_path, leaf):
         argv = [str(source), "--root_dir", str(tmp_path)]
     elif leaf == "depth":
         source = RUNTIME / "depth/depth_predict_da3_cli.py"
-        depth = types.ModuleType("depth.depth_predict_da3")
+        module_name = "worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.depth.depth_predict_da3_cli"
+        depth_module_name = module_name.removesuffix("_cli")
+        depth = types.ModuleType(depth_module_name)
 
         class FakeDepth:
             def __init__(self, config):
@@ -155,7 +157,7 @@ def test_leaf_entrypoints_initialize_before_work(monkeypatch, tmp_path, leaf):
                 return True
 
         depth.DepthPredictDA3 = FakeDepth
-        monkeypatch.setitem(sys.modules, "depth.depth_predict_da3", depth)
+        monkeypatch.setitem(sys.modules, depth_module_name, depth)
         video = tmp_path / "input.mp4"
         video.touch()
         argv = [str(source), "--input", str(video), "--output", str(tmp_path / "output")]

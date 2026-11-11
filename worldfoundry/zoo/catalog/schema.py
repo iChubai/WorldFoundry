@@ -46,12 +46,19 @@ _OPEN_SOURCE_ALIASES = frozenset(
         "source_available",
         "confirmed_official_github",
         "confirmed_public_hf",
+        # Runtime-provenance labels a few catalog entries carry in source_status;
+        # the models themselves record open (apache-2.0, non-gated) weights, so
+        # they normalize to open_source.
+        "ported_from_sandai",
+        "ported_from_sglang",
     }
 )
 _UNKNOWN_SOURCE_ALIASES = frozenset(
     {
         "blocked_project_page_only",
+        "code_and_weights_restricted",
         "confirmed_general_official_github_model_specific_source_pending",
+        "open_source_noncommercial",
         "open_weights_restricted",
         "paper_only",
         "unconfirmed",
@@ -150,6 +157,15 @@ _PENDING_DEMO_ALIASES = frozenset(
         "static_runtime_verified",
         "static_runtime_verified_checkpoint_assets_staged",
         "structural_validation_passed",
+        # Further partial/qualified demo states from the checked-in catalog:
+        # implemented-but-checkpoint-gated, a single-GPU or configuration-only
+        # check, inference-only validation, or a flagged quality concern.  None
+        # asserts a completed end-to-end parity run, so they stay ``pending``.
+        "implemented_checkpoint_required",
+        "local_gpu_quality_concern",
+        "short_single_gpu_verified_official_8gpu_pending",
+        "verified_configuration",
+        "verified_inference_only",
     }
 )
 # Demo states that record a completed checkpoint-backed GPU demo/parity run in
@@ -166,6 +182,7 @@ _VERIFIED_DEMO_ALIASES = frozenset(
         "selected_checkpoint_gpu_validated",
         "all_declared_variants_checkpoint_gpu_validated",
         "all_released_checkpoints_gpu_validated",
+        "robocasa_and_robotwin_checkpoint_gpu_validated",
         "robotwin_and_umi_checkpoints_gpu_validated",
         "converted_checkpoint_strict_restore_and_gpu_action_probe_validated",
     }

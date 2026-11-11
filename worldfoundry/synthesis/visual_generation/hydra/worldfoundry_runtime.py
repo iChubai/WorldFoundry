@@ -8,9 +8,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
-
-_PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 
 class HydraRuntime:
@@ -93,48 +92,49 @@ class HydraRuntime:
         input_dir.mkdir(parents=True, exist_ok=True)
         caption = input_dir / "caption.txt"
         caption.write_text(prompt.strip() + "\n", encoding="utf-8")
-        command = [
-            self.python_executable,
-            "infer_hydra.py",
-            "--cond_video",
-            video,
-            "--cond_json",
-            camera,
-            "--caption_txt",
-            caption,
-            "--ckpt_path",
-            checkpoint,
-            "--base_dit_path",
-            base / "diffusion_pytorch_model.safetensors",
-            "--base_text_encoder_path",
-            base / "models_t5_umt5-xxl-enc-bf16.pth",
-            "--base_vae_path",
-            base / "Wan2.1_VAE.pth",
-            "--output_path",
-            output,
-            "--device",
-            self.device,
-            "--height",
-            str(height),
-            "--width",
-            str(width),
-            "--cond_frames",
-            str(num_frames),
-            "--fps",
-            str(fps),
-            "--num_inference_steps",
-            str(num_inference_steps),
-            "--cfg_scale",
-            str(cfg_scale),
-            "--seed",
-            str(seed),
-        ]
+        command = package_module_command(
+            "worldfoundry.synthesis.visual_generation.hydra.hydra_runtime.infer_hydra",
+            [
+                "--cond_video",
+                video,
+                "--cond_json",
+                camera,
+                "--caption_txt",
+                caption,
+                "--ckpt_path",
+                checkpoint,
+                "--base_dit_path",
+                base / "diffusion_pytorch_model.safetensors",
+                "--base_text_encoder_path",
+                base / "models_t5_umt5-xxl-enc-bf16.pth",
+                "--base_vae_path",
+                base / "Wan2.1_VAE.pth",
+                "--output_path",
+                output,
+                "--device",
+                self.device,
+                "--height",
+                str(height),
+                "--width",
+                str(width),
+                "--cond_frames",
+                str(num_frames),
+                "--fps",
+                str(fps),
+                "--num_inference_steps",
+                str(num_inference_steps),
+                "--cfg_scale",
+                str(cfg_scale),
+                "--seed",
+                str(seed),
+            ],
+            python_executable=self.python_executable,
+        )
         result = execute_in_tree(
             command,
             cwd=self.repo_root,
             output_path=output,
             env=self.env,
-            python_paths=(_PROJECT_ROOT, self.repo_root),
         )
         return result if return_dict else result.get("video")
 

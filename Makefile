@@ -164,6 +164,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_kairos_config.py \
 	tests/synthesis/test_moverse_runtime.py \
 	tests/synthesis/test_mira_dino.py \
+	tests/synthesis/test_easyanimate_runtime.py \
 	tests/synthesis/test_bernini_runtime.py \
 	tests/synthesis/test_allegro_runtime.py \
 	tests/synthesis/test_adaworld_runtime.py \

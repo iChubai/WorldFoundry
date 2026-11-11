@@ -38,10 +38,19 @@ def load_easyanimate_components() -> EasyAnimateComponents:
         sys.path.insert(0, runtime_root_str)
 
     try:
-        from easyanimate.models import name_to_autoencoder_magvit, name_to_transformer3d
-        from easyanimate.pipeline.pipeline_easyanimate_inpaint import EasyAnimateInpaintPipeline
-        from easyanimate.utils.fp8_optimization import convert_weight_dtype_wrapper
-        from easyanimate.utils.utils import get_image_to_video_latent
+        from worldfoundry.synthesis.visual_generation.easyanimate.easyanimate_runtime.easyanimate.models import (
+            name_to_autoencoder_magvit,
+            name_to_transformer3d,
+        )
+        from worldfoundry.synthesis.visual_generation.easyanimate.easyanimate_runtime.easyanimate.pipeline.pipeline_easyanimate_inpaint import (
+            EasyAnimateInpaintPipeline,
+        )
+        from worldfoundry.synthesis.visual_generation.easyanimate.easyanimate_runtime.easyanimate.utils.fp8_optimization import (
+            convert_weight_dtype_wrapper,
+        )
+        from worldfoundry.synthesis.visual_generation.easyanimate.easyanimate_runtime.easyanimate.utils.utils import (
+            get_image_to_video_latent,
+        )
     except ImportError as exc:
         raise RuntimeError(EASYANIMATE_RUNTIME_UNAVAILABLE) from exc
 

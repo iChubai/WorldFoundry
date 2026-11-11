@@ -2,18 +2,30 @@ import argparse
 from pathlib import Path
 
 import torch
-from agent import Agent
-from coroutines.collector import NumToCollect, make_collector
-from envs import WorldModelEnv, make_atari_env
-from eval_inputs import BatchSampler, Dataset, collate_segments_to_batch
-from game import ActionNames, DatasetEnv, Game, Keymap, NamedEnv, PlayEnv, get_keymap_and_action_names
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader
-from utils import get_path_agent_ckpt, prompt_atari_game
 
 from worldfoundry.core.io.paths import checkpoint_root_path, resolve_data_path
+from worldfoundry.synthesis.visual_generation.diamond.agent import Agent
+from worldfoundry.synthesis.visual_generation.diamond.coroutines.collector import NumToCollect, make_collector
+from worldfoundry.synthesis.visual_generation.diamond.envs import WorldModelEnv, make_atari_env
+from worldfoundry.synthesis.visual_generation.diamond.eval_inputs import (
+    BatchSampler,
+    Dataset,
+    collate_segments_to_batch,
+)
+from worldfoundry.synthesis.visual_generation.diamond.game import (
+    ActionNames,
+    DatasetEnv,
+    Game,
+    Keymap,
+    NamedEnv,
+    PlayEnv,
+    get_keymap_and_action_names,
+)
+from worldfoundry.synthesis.visual_generation.diamond.utils import get_path_agent_ckpt, prompt_atari_game
 
 OmegaConf.register_new_resolver("eval", eval)
 

@@ -3,12 +3,17 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
-from coroutines import coroutine
-from models.diffusion import Denoiser, DiffusionSampler, DiffusionSamplerConfig
-from models.rew_end_model import RewEndModel
 from torch import Tensor
 from torch.distributions.categorical import Categorical
 from torch.utils.data import DataLoader
+
+from worldfoundry.synthesis.visual_generation.diamond.coroutines import coroutine
+from worldfoundry.synthesis.visual_generation.diamond.models.diffusion import (
+    Denoiser,
+    DiffusionSampler,
+    DiffusionSamplerConfig,
+)
+from worldfoundry.synthesis.visual_generation.diamond.models.rew_end_model import RewEndModel
 
 ResetOutput = tuple[torch.FloatTensor, dict[str, Any]]
 StepOutput = tuple[Tensor, Tensor, Tensor, Tensor, dict[str, Any]]

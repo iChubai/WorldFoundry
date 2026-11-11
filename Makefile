@@ -164,6 +164,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_mira_dino.py \
 	tests/synthesis/test_show_o_runtime.py \
 	tests/synthesis/test_mineworld_runtime.py \
+	tests/synthesis/test_diamond_runtime.py \
 	tests/synthesis/test_scope_runtime.py \
 	tests/synthesis/test_scope_device_routing.py \
 	tests/synthesis/test_hydra_runtime.py \

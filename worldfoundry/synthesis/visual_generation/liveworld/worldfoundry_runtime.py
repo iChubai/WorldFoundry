@@ -9,6 +9,7 @@ from typing import Any
 
 import yaml
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import checkpoint_root_candidates, hfd_root_path, package_data_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 
@@ -232,18 +233,20 @@ class LiveWorldRuntime:
             seed=seed,
         )
         native_output = input_dir / "outputs"
-        command = [
-            self.python_executable,
-            "scripts/infer.py",
-            "--config",
-            sample_path,
-            "--system-config",
-            system_path,
-            "--output-root",
-            native_output,
-            "--device",
-            self.device,
-        ]
+        command = package_module_command(
+            "worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.scripts.infer",
+            [
+                "--config",
+                sample_path,
+                "--system-config",
+                system_path,
+                "--output-root",
+                native_output,
+                "--device",
+                self.device,
+            ],
+            python_executable=self.python_executable,
+        )
         result = execute_in_tree(
             command,
             cwd=self.repo_root,
@@ -251,7 +254,6 @@ class LiveWorldRuntime:
             search_roots=(native_output,),
             preferred_names=("final_video.mp4",),
             env=self.env,
-            python_paths=(self.repo_root,),
         )
         return result if return_dict else result.get("video")
 

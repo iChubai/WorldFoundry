@@ -34,7 +34,7 @@ from .logger import logger
 
 
 def get_project_root() -> str:
-    """Return the repository root for local imports."""
+    """Return the runtime root for relative config lookup."""
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 

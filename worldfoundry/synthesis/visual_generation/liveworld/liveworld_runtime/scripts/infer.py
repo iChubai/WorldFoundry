@@ -10,26 +10,18 @@ config gets a fresh pipeline instance that reuses those shared models.
 
 from __future__ import annotations
 
+import argparse
 import os
-import sys
 from pathlib import Path
 
-# Ensure project root is on sys.path so that `scripts.*`, `scripts.dataset_preparation.*`,
-# etc. are importable when running `python scripts/infer.py` directly.
-_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-if _PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, _PROJECT_ROOT)
-
-import argparse  # noqa: E402 - Follows the sys.path setup.
-
-from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.monitor_centric import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.monitor_centric import (
     MonitorCentricEvolutionPipeline,
     load_monitor_centric_config,
 )
-from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.monitor_centric.shared_models import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.monitor_centric.shared_models import (
     create_shared_models,
 )
-from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.utils import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.utils import (
     set_seed,
 )
 

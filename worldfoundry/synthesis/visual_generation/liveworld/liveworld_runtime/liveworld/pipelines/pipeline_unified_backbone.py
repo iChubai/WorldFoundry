@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import time as _time
 import traceback
 from dataclasses import dataclass, field
@@ -955,11 +954,6 @@ class UnifiedBackbonePipeline:
 # =============================================================================
 
 
-def _get_project_root() -> str:
-    """Return the repository root for local imports."""
-    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
 def load_frame_from_image(image_path: str, target_size: tuple[int, int]) -> Image.Image:
     """Load the first frame from an image file.
 
@@ -1338,10 +1332,6 @@ def generate_scene_projection_with_handler(
         (scene_proj_latent, points_world, colors, first_frame,
          intrinsics, alignment_transform, intrinsics_size)
     """
-    project_root = _get_project_root()
-    if project_root not in sys.path:
-        sys.path.insert(0, project_root)
-
     if not os.path.exists(first_frame_image):
         raise FileNotFoundError(f"First frame image not found: {first_frame_image}")
 

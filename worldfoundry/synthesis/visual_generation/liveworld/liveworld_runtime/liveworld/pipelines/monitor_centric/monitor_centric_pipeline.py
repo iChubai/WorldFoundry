@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import os
 import random
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -85,7 +84,6 @@ from .shared_models import SharedModels
 # isort: split
 # isort: split
 from .helpers import (
-    get_project_root,
     load_frame_from_image,
     load_geometry_poses,
     load_unified_backbone_pipeline,
@@ -188,11 +186,6 @@ class MonitorCentricEvolutionPipeline:
 
         device_str = self.runtime.device
         device = torch.device(device_str)
-
-        # Ensure project root is on sys.path for local imports (Qwen, SAM3).
-        project_root = get_project_root()
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
 
         event_cfg = config["event"]
         projection_cfg = event_cfg.get("projection", {})

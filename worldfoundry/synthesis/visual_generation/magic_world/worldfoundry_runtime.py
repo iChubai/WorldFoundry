@@ -10,10 +10,9 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import checkpoint_root_candidates, resolve_data_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
-
-_PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 
 def _resolve_local_checkpoint_alias(value: Any) -> Path:
@@ -150,21 +149,6 @@ class MagicWorldRuntime:
     def bundled_repo_root() -> Path:
         return Path(__file__).resolve().parent / "magic_world_runtime"
 
-    @staticmethod
-    def video_x_fun_root() -> Path:
-        worldfoundry_root = Path(__file__).resolve().parents[3]
-        return worldfoundry_root / "synthesis" / "visual_generation" / "video_x_fun" / "video_x_fun_runtime"
-
-    @staticmethod
-    def uni3c_root() -> Path:
-        worldfoundry_root = Path(__file__).resolve().parents[3]
-        return worldfoundry_root / "base_models" / "three_dimensions" / "general_3d" / "uni3c"
-
-    @staticmethod
-    def depth_pro_root() -> Path:
-        worldfoundry_root = Path(__file__).resolve().parents[3]
-        return worldfoundry_root / "base_models" / "three_dimensions" / "depth" / "depth_pro"
-
     @classmethod
     def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> MagicWorldRuntime:
         return cls(checkpoint_path=pretrained_model_path, **kwargs)
@@ -237,8 +221,6 @@ class MagicWorldRuntime:
             ),
         }
         command = [
-            self.python_executable,
-            "inference/inference_magicworld_fast.py",
             "--config_path",
             resolve_data_path("models", "runtime", "configs", "magic_world", "reward_forcing_switch.yaml"),
             "--checkpoint_path",
@@ -258,18 +240,15 @@ class MagicWorldRuntime:
             "--i2v",
         ]
         result = execute_in_tree(
-            command,
+            package_module_command(
+                "worldfoundry.synthesis.visual_generation.magic_world.magic_world_runtime.inference.inference_magicworld_fast",
+                command,
+                python_executable=self.python_executable,
+            ),
             cwd=self.repo_root,
             output_path=output,
             search_roots=(native_output,),
             env=env,
-            python_paths=(
-                _PROJECT_ROOT,
-                self.repo_root,
-                self.video_x_fun_root(),
-                self.uni3c_root().parent,
-                self.depth_pro_root().parent,
-            ),
         )
         return result if return_dict else result.get("video")
 

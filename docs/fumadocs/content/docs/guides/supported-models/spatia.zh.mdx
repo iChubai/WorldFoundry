@@ -2,7 +2,7 @@
 title: "Spatia"
 description: "Spatia：相机可控视频、视频到视频；已验证。"
 modelId: "spatia"
-pageSource: generated
+pageSource: authored
 ---
 
 Spatia 是相机控制的 video-to-video 世界模型：给定源视频与目标相机轨迹，沿新视角路径重新渲染场景。WorldFoundry 已将官方源码内置树内（revision f75b10c9），通过共享 pipeline runner 暴露， checkpoint 引用为 Jinjing713/Spatia，以 Apache-2.0 许可发布。
@@ -36,6 +36,8 @@ CLI task profile：`default`。绑定的 pipeline 类是 `SpatiaPipeline`。
 `default` 记录默认值：frames=121, fps=24, height=704, width=1248, seed=20917。
 
 提供源图像或视频及逐帧稠密 W2C 相机轨迹。 可选 mask_path 将一张与原始源帧尺寸一致的前景掩码传入重建阶段；改变缓存输入时设置 force_rebuild_intermediate。 本地图像输入已完成 832x480、40 步、17 帧推理；相机轨迹遵循性尚未确立。
+
+Spatia 推理、MapAnything 重建与点渲染均启动已安装的 WorldFoundry 包模块。相对资源从固定包工作目录解析，模型权重与输入路径仍可配置。缓存的重建/渲染产物及 `force_rebuild_intermediate` 保持原有行为，且不依赖源码路径注入。
 
 ## 在 WorldFoundry 中运行
 

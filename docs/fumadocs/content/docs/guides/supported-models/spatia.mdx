@@ -2,7 +2,7 @@
 title: "Spatia"
 description: "Spatia: camera-controlled-video and video-to-video; Verified."
 modelId: "spatia"
-pageSource: generated
+pageSource: authored
 ---
 
 Spatia is a camera-controlled video-to-video world model: given source video and a target camera trajectory it re-renders the scene along the new viewpoint path. WorldFoundry vendors the official source in-tree (revision f75b10c9) and exposes it through the shared pipeline runner with the Jinjing713/Spatia checkpoint reference, released under Apache-2.0.
@@ -36,6 +36,8 @@ Family status: **Verified**.
 Recorded `default` defaults: frames=121, fps=24, height=704, width=1248, seed=20917.
 
 Provide a source image or video and a dense per-frame W2C camera trajectory. Optional mask_path passes one foreground mask matching the original source-frame size to reconstruction; set force_rebuild_intermediate when changing cached inputs. A local image-input run completed 17 frames at 832x480 and 40 steps; camera adherence has not been established.
+
+Spatia inference, MapAnything reconstruction and point rendering launch installed WorldFoundry package modules. Relative assets resolve from the fixed package working directory; model weights and input paths remain configurable. Cached reconstruction/render outputs and `force_rebuild_intermediate` retain the same behavior, without source-path injection.
 
 ## Running in WorldFoundry
 

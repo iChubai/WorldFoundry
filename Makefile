@@ -153,6 +153,7 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_official_runtime_launches.py \
 	tests/synthesis/test_unianimate_worldfoundry_runner.py \
+	tests/synthesis/test_kairos_config.py \
 	tests/synthesis/test_mira_dino.py \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
 	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \

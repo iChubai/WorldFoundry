@@ -11,6 +11,7 @@ from PIL import Image
 
 import worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.apis.kairos_embodied_api  # noqa: F401 - registers KairosEmbodiedAPI
 from worldfoundry.core.io.paths import package_data_path
+from worldfoundry.synthesis.visual_generation.kairos.config import load_kairos_config
 from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.apis.builder import build_model_pipeline
 from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (
     parallel_state,
@@ -99,7 +100,7 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
     save_path = f"{output_dir}/output.mp4"
 
-    cfg = Config.fromfile(cfg_path)
+    cfg = Config(load_kairos_config(cfg_path))
 
     use_prompt_rewriter = input_args_d["use_prompt_rewriter"]
     if rank == 0 and use_prompt_rewriter:

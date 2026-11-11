@@ -878,7 +878,6 @@ def _kairos_sensenova_default_ref() -> str:
 def _kairos_sensenova_default_load_kwargs() -> dict[str, Any]:
     model_root = Path(_kairos_sensenova_default_ref())
     return {
-        "runtime_root": "",
         "models_root": str(model_root),
         "variant": "pretrained",
         "pretrained_dit": str(model_root / "kairos-common-4B-480P.safetensors"),
@@ -3464,7 +3463,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "save_fps",
             "nproc_per_node",
             "master_port",
-            "run_manage_libs",
         ),
         "tags": ("robot-video", "official-runtime"),
     },

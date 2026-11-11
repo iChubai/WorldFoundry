@@ -2,7 +2,7 @@
 title: "Kairos Sensenova"
 description: "Kairos Sensenova（SenseTime (SenseNova)）：文生视频、图生视频；已验证; 独立环境 `kairos-sensenova`。"
 modelId: "kairos-sensenova"
-pageSource: generated
+pageSource: authored
 ---
 
 Kairos Sensenova 是商汤的具身世界模型视频生成器：4B 模型覆盖文生、图生与文+图生视频，并有面向机器人的蒸馏配方。本 catalog 中集成与 runner 均已验证——默认的 robot 4B 480P DMD 文生视频配方经树内 Apache-2.0 torchrun 运行时以 8 rank 运行。
@@ -36,6 +36,15 @@ CLI task profile：`default`。绑定的 pipeline 类是 `KairosPipeline`。
 `default` 记录默认值：frames=81, height=480, width=640, seed=0。
 
 将 WORLDFOUNDRY_KAIROS_MODELS_ROOT（或 models_root）指向符合官方配置布局的目录。 720P 与非蒸馏 variant 需要对应的 checkpoint 路径与配置覆盖。
+
+worker 加载已安装的 WorldFoundry 包。`config_path` 接受 JSON 或 Python 数据赋值（字面量、已定义名称与普通 f-string）；随包提供的 `.py` 配方文件名保持不变。checkpoint 覆盖在启动前以数据形式应用。`master_port`、`nproc_per_node`、Python/torchrun 可执行文件覆盖与所有推理选项的行为保持不变。
+
+推理前先准备独立环境。Kairos 使用固定版本的 SageAttention 20260228 分支；先安装 PyTorch，再使用主机 CUDA 工具链编译：
+
+```bash
+python -m pip install --no-build-isolation \
+  "sageattention @ git+https://github.com/kairos-agi/kairos-sensenova.git@40d3fcb518c3ff894501bf4b080ccaa589363adc#subdirectory=kairos/third_party/SageAttention"
+```
 
 ## 在 WorldFoundry 中运行
 

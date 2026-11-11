@@ -12209,6 +12209,7 @@
         ],
         "pipPackages": [
           "torch==2.12.0",
+          "sageattention @ git+https://github.com/kairos-agi/kairos-sensenova.git@40d3fcb518c3ff894501bf4b080ccaa589363adc#subdirectory=kairos/third_party/SageAttention",
           "torchvision",
           "einops",
           "flash-linear-attention",
@@ -12241,7 +12242,8 @@
           "The default variant uses the in-tree official Kairos torchrun runtime and the robot 4B 480P distilled checkpoint.",
           "Override models_root, config_path, and checkpoint paths for 720P or non-distilled variants.",
           "Kairos upstream recommends Python >=3.10, PyTorch >=2.6, and CUDA >=12.6. WorldFoundry ships the official inference runtime in tree and launches it through torchrun.",
-          "The local validated profile uses Python 3.10.20, torch 2.12.0+cu126, mmengine 0.10.7, transformers 4.57.1, and sageattention 20260228. Use this dedicated environment when the unified CUDA environment does not provide the Kairos native attention stack."
+          "The local validated profile uses Python 3.10.20, torch 2.12.0+cu126, mmengine 0.10.7, transformers 4.57.1, and sageattention 20260228. Use this dedicated environment when the unified CUDA environment does not provide the Kairos native attention stack.",
+          "Build the pinned Kairos SageAttention 20260228 fork after installing torch, with --no-build-isolation and the host CUDA toolkit, using the setup command in this manifest."
         ]
       },
       "sources": [
@@ -12432,17 +12434,6 @@
               "default": null,
               "choices": [],
               "description": "Master Port passed to the pipeline for every generated sample."
-            },
-            {
-              "field": "run-manage-libs",
-              "option": "--pipeline.run-manage-libs",
-              "detail": "Optional",
-              "kind": "string",
-              "target": "call",
-              "required": false,
-              "default": null,
-              "choices": [],
-              "description": "Run Manage Libs passed to the pipeline for every generated sample."
             }
           ],
           "artifacts": [

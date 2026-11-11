@@ -4,13 +4,18 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from allegro.models.vae.modules import DownEncoderBlock3D, UNetMidBlock3DConv, UpDecoderBlock3D
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.attention_processor import SpatialNorm
 from diffusers.models.autoencoders.vae import DecoderOutput, DiagonalGaussianDistribution
 from diffusers.models.modeling_outputs import AutoencoderKLOutput
 from diffusers.models.modeling_utils import ModelMixin
 from einops import rearrange
+
+from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.vae.modules import (
+    DownEncoderBlock3D,
+    UNetMidBlock3DConv,
+    UpDecoderBlock3D,
+)
 
 
 def _pad_to_tiling_grid(tensor, kernel, stride):

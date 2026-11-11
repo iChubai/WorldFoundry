@@ -38,10 +38,12 @@ from transformers import T5EncoderModel, T5Tokenizer
 
 logger = logging.get_logger(__name__)
 
-from allegro.models.transformers.transformer_3d_allegro_ti2v import (  # noqa: E402 - Follows the logging setup.
+from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.transformers.transformer_3d_allegro_ti2v import (  # noqa: E402 - Follows the logging setup.
     AllegroTransformerTI2V3DModel,
 )
-from allegro.models.vae.vae_allegro import AllegroAutoencoderKL3D  # noqa: E402 - Follows the logging setup.
+from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.vae.vae_allegro import (  # noqa: E402 - Follows the logging setup.
+    AllegroAutoencoderKL3D,
+)
 
 
 @dataclass

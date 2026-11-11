@@ -37,15 +37,19 @@ def load_allegro_components() -> AllegroComponents:
         sys.path.insert(0, runtime_root_str)
 
     try:
-        from allegro.models.transformers.transformer_3d_allegro_ti2v import (
+        from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.transformers.transformer_3d_allegro_ti2v import (
             AllegroTransformerTI2V3DModel,
         )
-        from allegro.models.vae.vae_allegro import AllegroAutoencoderKL3D
-        from allegro.pipelines.data_process import (
+        from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.vae.vae_allegro import (
+            AllegroAutoencoderKL3D,
+        )
+        from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.pipelines.data_process import (
             CenterCropResizeVideo,
             ToTensorVideo,
         )
-        from allegro.pipelines.pipeline_allegro_ti2v import AllegroTI2VPipeline
+        from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.pipelines.pipeline_allegro_ti2v import (
+            AllegroTI2VPipeline,
+        )
     except ImportError as exc:
         raise RuntimeError(ALLEGRO_RUNTIME_UNAVAILABLE) from exc
 

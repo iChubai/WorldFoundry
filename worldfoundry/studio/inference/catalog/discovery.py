@@ -1099,7 +1099,7 @@ def _build_entry(info: _AstPipelineInfo) -> CatalogEntry:
         "summary",
         _summary_from_category(category, display_name, supports_stream),
     )
-    if category == "Video Generation":
+    if category in {"Video Generation", "Remote API"}:
         inferred_prompt = "A slow exploratory camera move through a believable scene with stable geometry and lighting."
     elif category in {"Embodied Action", "Visual Action"}:
         inferred_prompt = "Follow the instruction and predict the next executable action chunk."

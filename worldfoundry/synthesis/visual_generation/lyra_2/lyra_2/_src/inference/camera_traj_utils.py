@@ -6,7 +6,8 @@
 import argparse
 
 import torch
-from lyra_2._src.inference.camera_utils import (  # type: ignore
+
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.camera_utils import (  # type: ignore
     create_back_trajectory,
     create_dolly_zoom_trajectory,
     create_horizontal_trajectory,

@@ -1,10 +1,10 @@
 from hydra.core.config_store import ConfigStore
-from lyra_2._src.models.lyra2_model import (
+
+from worldfoundry.core.configuration.lazy_config import LazyCall as L
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.models.lyra2_model import (
     Lyra2Model,
     Lyra2T2VConfig,
 )
-
-from worldfoundry.core.configuration.lazy_config import LazyCall as L
 
 fsdp_wan2pt1_lyra2_spatial_config = {
     "model": L(Lyra2Model)(

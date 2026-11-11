@@ -21,13 +21,13 @@ from contextlib import nullcontext
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from lyra_2._src.tokenizers.interface import VideoTokenizerInterface
 
 from worldfoundry.core.configuration.lazy_config import LazyCall as L
 from worldfoundry.core.configuration.lazy_config import LazyDict
 from worldfoundry.core.distributed.runtime.torch_process_group import broadcast, get_rank, sync_model_states
 from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.data.io import easy_io
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.tokenizers.interface import VideoTokenizerInterface
 
 __all__ = [
     "WanVAE",

@@ -19,16 +19,6 @@ import torch
 import torch.amp as amp
 import torch.nn as nn
 from einops import rearrange, repeat
-from lyra_2._src.networks.wan2pt1 import (
-    WAN_CROSSATTENTION_CLASSES,
-    Head,
-    MLPProj,
-    VideoRopePosition3DEmb,
-    VideoSize,
-    WanLayerNorm,
-    WanSelfAttention,
-    sinusoidal_embedding_1d,
-)
 from torch.distributed import ProcessGroup, get_process_group_ranks
 from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import checkpoint_wrapper as ptd_checkpoint_wrapper
@@ -40,6 +30,16 @@ from worldfoundry.core.distributed.model_parallel.context import (
 )
 from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
 from worldfoundry.core.observability.rank_logging import log
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.networks.wan2pt1 import (
+    WAN_CROSSATTENTION_CLASSES,
+    Head,
+    MLPProj,
+    VideoRopePosition3DEmb,
+    VideoSize,
+    WanLayerNorm,
+    WanSelfAttention,
+    sinusoidal_embedding_1d,
+)
 
 
 class Lyra2AttentionBlock(nn.Module):

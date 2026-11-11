@@ -57,13 +57,6 @@ except ImportError:
     _find_minimal_target_modules = None
     BaseTunerLayer = None
 
-from lyra_2._src.models.utils import (
-    _convert_musubi_wan_lora_to_non_diffusers_wan,
-    _convert_non_diffusers_wan_lora_to_diffusers,
-)
-from lyra_2._src.modules.conditioner import DataType, T2VCondition
-from lyra_2._src.utils.resolution import VIDEO_RES_SIZE_INFO
-
 from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import FlowUniPCMultistepScheduler
 from worldfoundry.core.configuration.lazy_config import LazyDict
 from worldfoundry.core.configuration.lazy_config import instantiate as lazy_instantiate
@@ -79,6 +72,12 @@ from worldfoundry.core.model_loading import InferenceModel, load_state_dict, non
 from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.core.observability.time import CudaSyncTimer as sync_timer
 from worldfoundry.core.utils import count_params
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.models.utils import (
+    _convert_musubi_wan_lora_to_non_diffusers_wan,
+    _convert_non_diffusers_wan_lora_to_diffusers,
+)
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.modules.conditioner import DataType, T2VCondition
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.utils.resolution import VIDEO_RES_SIZE_INFO
 
 IS_PREPROCESSED_KEY = "is_preprocessed"
 NUM_EMBEDDING_PADDING_TOKENS = 512

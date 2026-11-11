@@ -7,12 +7,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+from worldfoundry.core.execution.process import package_module_command
+
 RUNTIME_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _run(python: str, script: str, *arguments: object) -> None:
+def _run(python: str, module: str, *arguments: object) -> None:
     subprocess.run(
-        [python, str(RUNTIME_ROOT / script), *(str(argument) for argument in arguments)],
+        package_module_command(module, [str(argument) for argument in arguments], python_executable=python),
         cwd=RUNTIME_ROOT,
         check=True,
     )
@@ -64,7 +66,11 @@ def main() -> None:
     ]
     if args.back_prompt:
         panorama_args.extend(["--back_prompt", args.back_prompt])
-    _run(args.python_executable, "pano_gen/inference.py", *panorama_args)
+    _run(
+        args.python_executable,
+        "worldfoundry.synthesis.visual_generation.moverse.moverse_runtime.pano_gen.inference",
+        *panorama_args,
+    )
 
     panorama = output_dir / f"{stem}_pano.png"
     depth = output_dir / "depth.npy"
@@ -73,7 +79,7 @@ def main() -> None:
 
     _run(
         args.python_executable,
-        "gaussian_gen/infer_da3.py",
+        "worldfoundry.synthesis.visual_generation.moverse.moverse_runtime.gaussian_gen.infer_da3",
         "--path",
         panorama,
         "--output_dir",
@@ -83,7 +89,7 @@ def main() -> None:
     )
     _run(
         args.python_executable,
-        "gaussian_gen/infer_pano.py",
+        "worldfoundry.synthesis.visual_generation.moverse.moverse_runtime.gaussian_gen.infer_pano",
         "--image",
         panorama,
         "--depth",
@@ -95,7 +101,7 @@ def main() -> None:
     )
     _run(
         args.python_executable,
-        "scripts/run_pipeline.py",
+        "worldfoundry.synthesis.visual_generation.moverse.moverse_runtime.scripts.run_pipeline",
         "--scene",
         scene,
         "--traj",

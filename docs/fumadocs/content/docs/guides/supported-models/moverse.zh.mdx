@@ -2,7 +2,7 @@
 title: "MoVerse"
 description: "MoVerse：相机可控视频；Runner 一致性待确认; 独立环境 `moverse`。"
 modelId: "moverse"
-pageSource: generated
+pageSource: authored
 ---
 
 MoVerse 把一张图变成可游走的世界：从输入构建全景高斯脚手架，并在移动过程中生成相机可控视频。本 catalog 中其无头推理闭包已在树内、checkpoint 仅本地解析；本地 H100 已验证完整 161 帧路径；完整上游产物一致性及标定相机精度仍未验证。
@@ -36,6 +36,8 @@ CLI task profile：`default`。绑定的 pipeline 类是 `MoVersePipeline`。
 `default` 记录默认值：frames=161, fps=16。
 
 执行为离线模式，需要预先就位四个 Hugging Face snapshot，另加 ffmpeg、gsplat 与兼容的 CUDA 内核。 运行时规划与缺失资产诊断无需导入重量级模型栈。
+
+编排器及全景、深度、高斯与视频阶段均通过所选 Python 环境中已安装的 WorldFoundry 包模块运行。规划检查已就位的 checkpoint 与 YAML 配置；模型代码由包导入解析。checkpoint/数据路径、相机轨迹、精度与采样选项保持不变。
 
 ## 在 WorldFoundry 中运行
 

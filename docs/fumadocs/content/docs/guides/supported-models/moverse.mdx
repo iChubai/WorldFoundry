@@ -39,6 +39,8 @@ The headless inference closure is integrated in-tree with local-only checkpoint 
 
 Execution is offline and requires four pre-staged Hugging Face snapshots plus ffmpeg, gsplat, and compatible CUDA kernels.
 
+The orchestrator and its panorama, depth, Gaussian and video stages run as installed WorldFoundry package modules in the selected Python environment. Plans validate the staged checkpoints and YAML configs; model code is resolved by package imports. The checkpoint/data paths, camera trajectory, precision and sampling options are unchanged.
+
 ## Running in WorldFoundry
 
 The catalog launch is `wf run moverse --pipeline.task-profile default`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.

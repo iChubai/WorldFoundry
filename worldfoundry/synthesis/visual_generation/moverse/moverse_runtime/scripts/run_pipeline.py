@@ -5,28 +5,17 @@ import math
 import os
 import shutil
 import subprocess
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 import torch
+from omegaconf import OmegaConf
+from PIL import Image
 
-# ── Path setup ──────────────────────────────────────────────────────────
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if ROOT_DIR not in sys.path:
-    sys.path.insert(0, ROOT_DIR)
-# Add scripts/ to path for traj_to_extrinsics import
-SCRIPTS_DIR = os.path.join(ROOT_DIR, "scripts")
-if SCRIPTS_DIR not in sys.path:
-    sys.path.insert(0, SCRIPTS_DIR)
-
-from omegaconf import OmegaConf  # noqa: E402 - Follows the sys.path setup.
-from PIL import Image  # noqa: E402 - Follows the sys.path setup.
-
-from ..pipeline import CausalInferencePipeline  # noqa: E402 - Follows the sys.path setup.
-from ..rendering.gaussian_renderer import GaussianRenderer, load_gaussians  # noqa: E402 - Follows the sys.path setup.
-from .traj_to_extrinsics import load_trajectory, trajectory_to_w2cs  # noqa: E402 - Follows the sys.path setup.
+from ..pipeline import CausalInferencePipeline
+from ..rendering.gaussian_renderer import GaussianRenderer, load_gaussians
+from .traj_to_extrinsics import load_trajectory, trajectory_to_w2cs
 
 
 def parse_args():
@@ -351,7 +340,6 @@ def main():
     args = parse_args()
 
     # ── Load config ───────────────────────────────────────────────────────
-    print(f"[init] ROOT_DIR = {ROOT_DIR}")
     print(f"[init] Loading config: {args.config_path}")
     config = OmegaConf.load(args.config_path)
     default_cfg = OmegaConf.load(args.default_config_path)

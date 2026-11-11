@@ -25,6 +25,8 @@ Score on [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench).
 
 Required: `image` and `prompt`. Optional: `video`. Actions: action_parquet. Artifacts: `generated_video` and `scope.mp4`. Status: **Verified**. SCOPEPipeline fails fast unless execute=True is supplied, then invokes the in-tree native assembly. Weights stay external HF assets injected through model_dir/checkpoint_root or SCOPE_MODEL_DIR.
 
+Execution uses the installed `worldfoundry.synthesis.visual_generation.scope.scope_runtime.inference` module in the selected Python environment.
+
 ## Running in WorldFoundry
 
 Run in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8). Stage `zizhaotong/SCOPE` locally — the runtime does not download weights. Launch `wf run scope`.

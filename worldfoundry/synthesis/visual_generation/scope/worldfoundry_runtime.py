@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core import jsonable
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import package_module_root as package_root
 
 DEFAULT_MODEL_DIR_CANDIDATES = (
@@ -38,14 +39,6 @@ def _project_root() -> Path:
         if (parent / "pyproject.toml").is_file():
             return parent
     return current.parents[6]
-
-
-def _repo_src_root() -> Path:
-    project = _project_root()
-    src_root = project / "src"
-    if (src_root / "worldfoundry").is_dir():
-        return src_root
-    return project
 
 
 def _expand_path_tokens(value: str | Path | None) -> str | None:
@@ -179,12 +172,7 @@ class SCOPERuntime:
         return path.resolve()
 
     def _subprocess_env(self) -> dict[str, str]:
-        pythonpath_parts = [str(runtime_root()), str(_repo_src_root())]
-        existing = os.environ.get("PYTHONPATH")
-        if existing:
-            pythonpath_parts.append(existing)
         env = os.environ.copy()
-        env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
         env.setdefault("TOKENIZERS_PARALLELISM", "false")
         if self.device.startswith("cuda:"):
             cuda_index = self.device.split(":", 1)[1].strip()
@@ -221,30 +209,32 @@ class SCOPERuntime:
         num_inference_steps: int,
         seed: int,
     ) -> list[str]:
-        return [
-            self.python_executable,
-            str(runtime_root() / "inference.py"),
-            "--model_dir",
-            str(self.model_dir),
-            "--input_image",
-            str(image_path),
-            "--action_path",
-            str(action_path),
-            "--prompt",
-            prompt,
-            "--output_dir",
-            str(output_dir),
-            "--height",
-            str(int(height)),
-            "--width",
-            str(int(width)),
-            "--max_frames",
-            str(int(max_frames)),
-            "--num_inference_steps",
-            str(int(num_inference_steps)),
-            "--seed",
-            str(int(seed)),
-        ]
+        return package_module_command(
+            "worldfoundry.synthesis.visual_generation.scope.scope_runtime.inference",
+            [
+                "--model_dir",
+                str(self.model_dir),
+                "--input_image",
+                str(image_path),
+                "--action_path",
+                str(action_path),
+                "--prompt",
+                prompt,
+                "--output_dir",
+                str(output_dir),
+                "--height",
+                str(int(height)),
+                "--width",
+                str(int(width)),
+                "--max_frames",
+                str(int(max_frames)),
+                "--num_inference_steps",
+                str(int(num_inference_steps)),
+                "--seed",
+                str(int(seed)),
+            ],
+            python_executable=self.python_executable,
+        )
 
     def predict(
         self,

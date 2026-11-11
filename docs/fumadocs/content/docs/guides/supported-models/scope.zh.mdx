@@ -25,6 +25,8 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 必填：`image`、`prompt`。 可选：`video`。 动作字段：action_parquet。 产物：`generated_video`、`scope.mp4`。 状态：**Verified**。 SCOPEPipeline 在未提供 execute=True 时快速失败，提供后调用树内原生组装。权重保持为外部 HF 资产，通过 model_dir/checkpoint_root 或 SCOPE_MODEL_DIR 注入。
 
+执行时在选定的 Python 环境中启动已安装的 `worldfoundry.synthesis.visual_generation.scope.scope_runtime.inference` 模块。
+
 ## 在 WorldFoundry 中运行
 
 跑在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。 把 `zizhaotong/SCOPE` 就位到本地——运行时不代下权重。 启动 `wf run scope`，任务 profile 为 `interactive-world-model`。

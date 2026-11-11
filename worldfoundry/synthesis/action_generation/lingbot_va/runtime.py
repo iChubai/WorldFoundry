@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path, worldfoundry_path_tokens
 from worldfoundry.synthesis.action_generation.wan_va import RUNTIME_ROOT, WAN_VA_PACKAGE, WAN_VA_ROOT
 
@@ -291,15 +292,7 @@ def build_server_command(
     Returns:
         A list of strings representing the command and its arguments suitable for `subprocess.run`.
     """
-    runner = torchrun or python
-    command = [
-        runner,
-        "--nproc_per_node",
-        str(config.nproc_per_node),
-        "--master_port",
-        str(config.master_port),
-        "-m",
-        f"{WAN_VA_PACKAGE}.runtime",
+    args = [
         "--config-name",
         config.config_name,
         "--port",
@@ -309,10 +302,14 @@ def build_server_command(
         "--checkpoint-dir",
         str(config.checkpoint_dir),
     ]
-    # If torchrun is not used directly, prepend `python -m torch.distributed.run`.
-    if runner == python:
-        command[1:1] = ["-m", "torch.distributed.run"]
-    return command
+    return package_module_command(
+        f"{WAN_VA_PACKAGE}.runtime",
+        args,
+        python_executable=python,
+        nproc_per_node=config.nproc_per_node,
+        launcher_options=("--master_port", str(config.master_port)),
+        launcher=[torchrun] if torchrun and torchrun != python else None,
+    )
 
 
 def write_action_trace(

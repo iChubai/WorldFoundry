@@ -3,14 +3,7 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
-
-
-def _ensure_vendored_runtime_importable() -> None:
-    runtime_root = str(Path(__file__).resolve().parent / "tesseract_runtime")
-    if runtime_root not in sys.path:
-        sys.path.insert(0, runtime_root)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -147,7 +140,6 @@ def _conditioning_tensor(args: argparse.Namespace):
 def run(args: argparse.Namespace) -> Path:
     """Generate a TesserAct RGB/depth/normal rollout with the official model classes."""
     _validate_args(args)
-    _ensure_vendored_runtime_importable()
 
     import numpy as np
     import torch

@@ -216,13 +216,14 @@ def run(args: argparse.Namespace) -> Path:
     import torch
     from diffusers import FlowMatchEulerDiscreteScheduler
     from einops import rearrange
-    from models.ltx_models.autoencoder_kl_ltx import AutoencoderKLLTXVideo
-    from models.ltx_models.transformer_ltx_multiview import LTXVideoTransformer3DModel
-    from models.pipeline.custom_pipeline import CustomPipeline
     from safetensors.torch import load_file
     from transformers import T5EncoderModel, T5Tokenizer
 
     from worldfoundry.core.media.codecs.video import save_video_h264
+
+    from .genie_envisioner_runtime.models.ltx_models.autoencoder_kl_ltx import AutoencoderKLLTXVideo
+    from .genie_envisioner_runtime.models.ltx_models.transformer_ltx_multiview import LTXVideoTransformer3DModel
+    from .genie_envisioner_runtime.models.pipeline.custom_pipeline import CustomPipeline
 
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; Genie Envisioner inference cannot run")

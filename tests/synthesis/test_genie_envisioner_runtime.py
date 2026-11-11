@@ -7,9 +7,9 @@ import numpy as np
 from PIL import Image
 
 from worldfoundry.pipelines.world_model.pipeline_runtime_manifest import GenieEnvisionerPipeline
+from worldfoundry.synthesis.visual_generation import runtime_manifest
 from worldfoundry.synthesis.visual_generation.genie_envisioner import infer
 from worldfoundry.synthesis.visual_generation.genie_envisioner import worldfoundry_runtime as runtime
-from worldfoundry.synthesis.visual_generation import runtime_manifest
 
 
 def _write_fixture(path: Path) -> None:
@@ -183,9 +183,9 @@ def test_explicit_views_preserve_three_distinct_camera_inputs(tmp_path) -> None:
 def test_launcher_imports_current_diffusers_runtime() -> None:
     import importlib
 
-    infer._ensure_vendored_runtime_importable()
-    pipeline_module = importlib.import_module("models.pipeline.custom_pipeline")
-    transformer_module = importlib.import_module("models.ltx_models.transformer_ltx_multiview")
+    runtime_package = "worldfoundry.synthesis.visual_generation.genie_envisioner.genie_envisioner_runtime"
+    pipeline_module = importlib.import_module(f"{runtime_package}.models.pipeline.custom_pipeline")
+    transformer_module = importlib.import_module(f"{runtime_package}.models.ltx_models.transformer_ltx_multiview")
 
     assert pipeline_module.CustomPipeline.__name__ == "CustomPipeline"
     assert transformer_module.LTXVideoTransformer3DModel.__name__ == "LTXVideoTransformer3DModel"

@@ -13,6 +13,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import checkpoint_root_path, hfd_root_path
 from worldfoundry.core.media.codecs.video import load_video_frames, save_image_or_video_tensor
 from worldfoundry.core.media.processing.postprocess import VideoChunk
@@ -291,7 +292,6 @@ class LingBotWorldV2Runtime:
 
     def _subprocess_env(self) -> dict[str, str]:
         env = os.environ.copy()
-        env["PYTHONPATH"] = os.pathsep.join(value for value in (str(SOURCE_ROOT), env.get("PYTHONPATH")) if value)
         env.setdefault("TOKENIZERS_PARALLELISM", "false")
         env.setdefault("PYTHONUNBUFFERED", "1")
         env.setdefault("PYTHONDONTWRITEBYTECODE", "1")
@@ -369,14 +369,6 @@ class LingBotWorldV2Runtime:
         options = self._validated_options(options)
         nproc = int(options["nproc_per_node"])
         command = [
-            self.python_executable,
-            "-m",
-            "torch.distributed.run",
-            "--standalone",
-            "--nproc_per_node",
-            str(nproc),
-            "-m",
-            RUNNER_MODULE,
             "--checkpoint-dir",
             str(checkpoint_dir),
             "--image",
@@ -421,7 +413,12 @@ class LingBotWorldV2Runtime:
         if options.get("vae_streaming_compile"):
             command.append("--vae-streaming-compile")
         command.append("--offload-model" if options.get("offload_model") else "--no-offload-model")
-        return command
+        return package_module_command(
+            RUNNER_MODULE,
+            command,
+            python_executable=self.python_executable,
+            nproc_per_node=nproc,
+        )
 
     @staticmethod
     def _initialized_distributed_context() -> tuple[Any, Any, int, int] | None:

@@ -95,7 +95,6 @@ denoiser:
     weight_decay: 1e-2
     eps: 1e-8
   sigma_distribution:
-    _target_: models.diffusion.SigmaDistributionConfig
     loc: -0.4
     scale: 1.2
     sigma_min: 2e-3
@@ -128,7 +127,6 @@ actor_critic:
     lr_warmup_steps: 100
     max_grad_norm: 100.0
   actor_critic_loss:
-    _target_: models.actor_critic.ActorCriticLossConfig
     backup_every: 15
     gamma: 0.985
     lambda_: 0.95

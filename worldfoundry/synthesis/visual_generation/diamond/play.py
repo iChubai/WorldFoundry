@@ -26,6 +26,7 @@ from worldfoundry.synthesis.visual_generation.diamond.game import (
     get_keymap_and_action_names,
 )
 from worldfoundry.synthesis.visual_generation.diamond.utils import get_path_agent_ckpt, prompt_atari_game
+from worldfoundry.synthesis.visual_generation.diamond.worldfoundry_runtime import use_package_config_targets
 
 OmegaConf.register_new_resolver("eval", eval)
 
@@ -137,6 +138,8 @@ def prepare_play_mode(cfg: DictConfig, args: argparse.Namespace) -> tuple[PlayEn
         path_ckpt = Path(args.checkpoint).expanduser().resolve()
     else:
         path_ckpt = get_path_agent_ckpt("checkpoints", epoch=-1)
+
+    use_package_config_targets(cfg)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

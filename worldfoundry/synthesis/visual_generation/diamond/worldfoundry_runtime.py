@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import checkpoint_root_path, resolve_data_path
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "play.py"
@@ -110,12 +115,29 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
     return missing
 
 
+def use_package_config_targets(config: DictConfig) -> None:
+    """Resolve the released Atari config identifiers at the inference load site."""
+    from omegaconf import OmegaConf
+
+    targets = {
+        "agent": "agent.AgentConfig",
+        "agent.denoiser": "models.diffusion.DenoiserConfig",
+        "agent.denoiser.inner_model": "models.diffusion.InnerModelConfig",
+        "agent.rew_end_model": "models.rew_end_model.RewEndModelConfig",
+        "agent.actor_critic": "models.actor_critic.ActorCriticConfig",
+        "world_model_env": "envs.WorldModelEnvConfig",
+        "world_model_env.diffusion_sampler": "models.diffusion.DiffusionSamplerConfig",
+    }
+    for node, target in targets.items():
+        key = f"{node}._target_"
+        if OmegaConf.select(config, key) == target:
+            OmegaConf.update(config, key, f"worldfoundry.synthesis.visual_generation.diamond.{target}")
+
+
 def build_command(context):
     options = dict(context.get("options") or {})
     if _is_csgo(options):
-        command = [
-            context["python"],
-            str(RUNTIME_DIR / "csgo_inference.py"),
+        args = [
             "--pretrained-dir",
             str(options.get("pretrained_dir") or DEFAULT_PRETRAINED_DIR),
             "--spawn-id",
@@ -137,14 +159,16 @@ def build_command(context):
         ]
         checkpoint = options.get("checkpoint") or options.get("checkpoint_path") or options.get("model_path")
         if checkpoint:
-            command.extend(("--checkpoint", str(checkpoint)))
+            args.extend(("--checkpoint", str(checkpoint)))
         for name in ("spawn_dir", "actions_path"):
             if options.get(name):
-                command.extend(("--" + name.replace("_", "-"), str(options[name])))
-        return command
-    command = [
-        context["python"],
-        context["entrypoint"],
+                args.extend(("--" + name.replace("_", "-"), str(options[name])))
+        return package_module_command(
+            "worldfoundry.synthesis.visual_generation.diamond.csgo_inference",
+            args,
+            python_executable=context["python"],
+        )
+    args = [
         "--config-dir",
         str(options.get("config_dir") or CONFIG_DIR),
         "--fps",
@@ -157,24 +181,24 @@ def build_command(context):
     ]
     checkpoint = options.get("checkpoint") or options.get("checkpoint_path") or options.get("model_path")
     if bool(options.get("pretrained", False)):
-        command.append("--pretrained")
+        args.append("--pretrained")
         game = options.get("pretrained_game") or options.get("game") or "Pong"
-        command.extend(["--pretrained-game", str(game)])
+        args.extend(["--pretrained-game", str(game)])
         pretrained_dir = Path(str(options.get("pretrained_dir") or DEFAULT_PRETRAINED_DIR)).expanduser()
         if pretrained_dir.is_dir() or options.get("pretrained_dir"):
-            command.extend(["--pretrained-dir", str(pretrained_dir)])
+            args.extend(["--pretrained-dir", str(pretrained_dir)])
     elif checkpoint:
-        command.extend(["--checkpoint", str(checkpoint)])
+        args.extend(["--checkpoint", str(checkpoint)])
     if bool(options.get("record", False)):
-        command.append("--record")
+        args.append("--record")
     if bool(options.get("store_denoising_trajectory", False)):
-        command.append("--store-denoising-trajectory")
+        args.append("--store-denoising-trajectory")
     if bool(options.get("store_original_obs", False)):
-        command.append("--store-original-obs")
+        args.append("--store-original-obs")
     headless_steps = int(options.get("headless_steps", options.get("frames", 0)) or 0)
     if headless_steps:
         dataset_dir = options.get("dataset_dir") or str(Path(context["output_dir"]) / "initialization_dataset")
-        command.extend(
+        args.extend(
             [
                 "--headless-steps",
                 str(headless_steps),
@@ -184,7 +208,11 @@ def build_command(context):
                 str(dataset_dir),
             ]
         )
-    return command
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.diamond.play",
+        args,
+        python_executable=context["python"],
+    )
 
 
 __all__ = [

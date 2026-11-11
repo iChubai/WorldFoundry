@@ -164,6 +164,8 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_kairos_config.py \
 	tests/synthesis/test_moverse_runtime.py \
 	tests/synthesis/test_mira_dino.py \
+	tests/synthesis/test_official_policy_runtime.py \
+	tests/synthesis/test_official_policy_dispatch.py \
 	tests/synthesis/test_molmobot_runtime.py \
 	tests/synthesis/test_molmobot_llm.py \
 	tests/synthesis/test_lingbot_va_runtime.py \

@@ -236,7 +236,7 @@ class OfficialPolicyRuntimeConfig:
         checkpoint_path: The resolved Path to the model's checkpoint.
         device: The computational device to use (e.g., "cuda", "cpu").
         torch_dtype: The PyTorch data type to use for model weights (e.g., "bfloat16", "float32").
-        trust_remote_code: Whether to trust remote code when loading models from Hugging Face.
+        trust_remote_code: False for in-tree model loading; remote checkpoint code is forbidden.
         require_checkpoint: Whether a checkpoint path is strictly required for this policy.
         policy_target: The import path string for the policy class/function (e.g., "my_module:PolicyClass").
         processor_target: The import path string for the processor class/function, if separate.
@@ -480,7 +480,7 @@ class OfficialPolicyRuntime:
             "checkpoint_location": "" if self.config.checkpoint_location is None else self.config.checkpoint_location,
             "device": self.config.device,
             "torch_dtype": self.config.torch_dtype,
-            "trust_remote_code": self.config.trust_remote_code,
+            "trust_remote_code": False,
             "require_checkpoint": self.config.require_checkpoint,
             "policy_target": self.config.policy_target,
             "processor_target": self.config.processor_target,

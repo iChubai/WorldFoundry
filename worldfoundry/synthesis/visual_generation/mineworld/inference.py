@@ -7,14 +7,17 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
-from action_tokenizer import MinecraftActionTokenizer
 from einops import rearrange
 from omegaconf import OmegaConf
 from rich import print
 from torch import autocast
 from torchvision import transforms
 from tqdm import tqdm
-from utils import load_model
+
+from worldfoundry.synthesis.visual_generation.mineworld.action_tokenizer import (
+    MinecraftActionTokenizer,
+)
+from worldfoundry.synthesis.visual_generation.mineworld.utils import load_model
 
 torch.backends.cuda.matmul.allow_tf32 = False
 

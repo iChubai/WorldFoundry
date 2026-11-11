@@ -8,7 +8,17 @@ import sys
 
 import torch
 import torch.utils.checkpoint
-from diagonal_decoding import (
+from torch import nn
+from transformers import LlamaConfig
+from transformers.activations import ACT2FN
+from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
+from transformers.modeling_utils import PreTrainedModel
+from transformers.utils import logging
+
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
+from worldfoundry.synthesis.visual_generation.mineworld.diagonal_decoding import (
     decode_n_tokens,
     decode_one_token,
     decode_some_token,
@@ -16,15 +26,10 @@ from diagonal_decoding import (
     prefill,
     video_diagd_decode_n_tokens,
 )
-from torch import nn
-from transformers import LlamaConfig
-from transformers.activations import ACT2FN
-from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
-from transformers.modeling_utils import PreTrainedModel
-from transformers.utils import logging
-from utils import get_obj_from_str, instantiate_from_config
-
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.synthesis.visual_generation.mineworld.utils import (
+    get_obj_from_str,
+    instantiate_from_config,
+)
 
 torch.backends.cuda.matmul.allow_tf32 = False
 

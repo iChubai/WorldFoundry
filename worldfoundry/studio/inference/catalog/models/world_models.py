@@ -388,6 +388,7 @@ def _solaris_default_ref() -> str:
 
 
 def _solaris_default_load_kwargs() -> dict[str, Any]:
+    # Keep the default data/work base; inference code is loaded from the installed package.
     runtime_root = str(
         resolve._project_root() / "worldfoundry" / "synthesis" / "visual_generation" / "solaris" / "solaris_runtime"
     )
@@ -2474,6 +2475,7 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "show_progress",
         ),
         "tags": ("world-model", "official-runtime"),
+        "notes": "Uses the installed Solaris package; required_components.runtime_root anchors relative data paths and the working directory.",
     },
     "spatia": {
         "display_name": "Spatia",

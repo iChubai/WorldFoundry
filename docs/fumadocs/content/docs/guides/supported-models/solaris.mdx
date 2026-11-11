@@ -33,7 +33,7 @@ CLI task profiles: `default`. WorldFoundry binds `SolarisPipeline`.
 
 Family status: **Verified**.
 
-Inference launches one sample per visible GPU — eval_num_samples must be a multiple of the visible GPU count. Official weights and eval datasets resolve from HF or a same-layout local mirror.
+Inference uses the installed Solaris package module. runtime_root anchors relative asset paths and the working directory. Inference launches one sample per visible GPU — eval_num_samples must be a multiple of the visible GPU count. Official weights and eval datasets resolve from HF or a same-layout local mirror.
 
 In-tree inference-only Solaris runtime is packaged under worldfoundry/synthesis/visual_generation/solaris/solaris_runtime.
 

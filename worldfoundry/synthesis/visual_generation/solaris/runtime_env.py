@@ -74,46 +74,6 @@ def project_root() -> Path:
     return current.parents[5]
 
 
-def _candidate_runtime(path_value: Path) -> Path | None:
-    """Checks if a given path is a valid Solaris runtime root.
-
-    A path is considered a valid runtime root if it contains specific sentinel
-    files, either directly or within a nested 'solaris' subdirectory.
-
-    Args:
-        path_value (Path): The path to check.
-
-    Returns:
-        Optional[Path]: The validated runtime root path if found, otherwise None.
-    """
-    # Sentinel files expected in a valid Solaris runtime directory.
-    sentinels = [
-        ("src", "inference.py"),
-    ]
-    # Check if the sentinels exist directly under path_value.
-    if all(path_value.joinpath(*parts).is_file() for parts in sentinels):
-        return path_value
-    # If not found directly, check if they exist under a 'solaris' subdirectory.
-    nested = path_value / "solaris"
-    if all(nested.joinpath(*parts).is_file() for parts in sentinels):
-        return nested
-    return None
-
-
-def local_runtime_candidates() -> list[Path]:
-    """Generates a list of candidate paths for the Solaris runtime on the local system.
-
-    WorldFoundry ships the inference-only Solaris runtime in-tree.
-
-    Returns:
-        list[Path]: A list of potential Solaris runtime root paths.
-    """
-    in_tree_runtime = Path(__file__).resolve().parent / "solaris_runtime"
-    return [
-        in_tree_runtime,
-    ]
-
-
 def _resolve_env_path(env_keys: Iterable[str]) -> Path | None:
     """Resolves a file system path from a list of environment variable keys.
 
@@ -135,54 +95,15 @@ def _resolve_env_path(env_keys: Iterable[str]) -> Path | None:
 
 
 def resolve_runtime_root(runtime_root: str | None = None) -> str:
-    """Resolves the root directory of the Solaris inference runtime.
-
-    It checks for a provided `runtime_root` argument, then environment variables,
-    and finally common local candidate paths. The first valid path found is returned.
-
-    Args:
-        runtime_root (Optional[str], optional): An explicitly provided path to the
-                                                runtime root. Defaults to None.
-
-    Returns:
-        str: The absolute path to the resolved Solaris runtime root directory.
-
-    Raises:
-        FileNotFoundError: If no valid Solaris runtime root can be found.
-    """
-    candidates: list[Path] = []
-    # Add an explicitly provided runtime_root to the candidates if available.
-    if runtime_root:
-        candidates.append(Path(runtime_root).expanduser())
-    # Add candidate paths from environment variables.
-    env_candidate = _resolve_env_path(
-        [
-            "WORLDFOUNDRY_SOLARIS_RUNTIME_ROOT",
-            "SOLARIS_RUNTIME_ROOT",
-        ]
+    """Resolve the data/work base independently of the installed inference code."""
+    candidate = (
+        Path(runtime_root).expanduser()
+        if runtime_root
+        else _resolve_env_path(["WORLDFOUNDRY_SOLARIS_RUNTIME_ROOT", "SOLARIS_RUNTIME_ROOT"])
     )
-    if env_candidate is not None:
-        candidates.append(env_candidate)
-    # Add common local runtime candidates.
-    candidates.extend(local_runtime_candidates())
-
-    for candidate in candidates:
-        # Check if the candidate path (or its 'solaris' subdirectory) is a valid runtime.
-        resolved = _candidate_runtime(candidate)
-        if resolved is not None and resolved.is_dir():
-            return str(resolved.resolve())
-
-    # If no runtime root was found after checking all candidates, raise an error.
-    if runtime_root:
-        raise FileNotFoundError(
-            f"Solaris runtime not found at '{runtime_root}'. "
-            "Expected a directory containing 'src/inference.py'; bundled configs are under worldfoundry/data/models/runtime/configs/solaris."
-        )
-    raise FileNotFoundError(
-        "Unable to locate the Solaris inference runtime. Expected the in-tree "
-        "worldfoundry/synthesis/visual_generation/solaris/solaris_runtime directory "
-        "or an explicit required_components['runtime_root'] override."
-    )
+    if candidate is None:
+        candidate = Path(__file__).resolve().parent / "solaris_runtime"
+    return str(candidate.resolve())
 
 
 def _resolve_path_under_runtime(

@@ -1,11 +1,12 @@
 import torch
-from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 from worldfoundry.core.vram import (
     get_cuda_free_memory_gb,
     gpu,
     move_model_to_device_with_memory_preservation,
 )
+
+from ..utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 
 def cond_current(conditional_dict, current_start_frame, num_frame_per_block):

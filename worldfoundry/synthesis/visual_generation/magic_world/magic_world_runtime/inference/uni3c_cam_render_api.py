@@ -22,8 +22,8 @@ except ImportError:
             self.points_per_pixel = points_per_pixel
 
 
-import depth_pro
-from uni3c.pointcloud import point_rendering
+from worldfoundry.base_models.three_dimensions.depth import depth_pro
+from worldfoundry.base_models.three_dimensions.general_3d.uni3c.pointcloud import point_rendering
 
 warnings.filterwarnings("ignore")
 

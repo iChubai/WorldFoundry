@@ -10,7 +10,7 @@ if _RUNTIME_ROOT in sys.path:
     sys.path.remove(_RUNTIME_ROOT)
 sys.path.insert(0, _RUNTIME_ROOT)
 
-from uni3c_cam_render_api import render_from_image_and_traj  # noqa: E402 - Follows the sys.path setup.
+from .uni3c_cam_render_api import render_from_image_and_traj  # noqa: E402 - Follows the sys.path setup.
 
 # isort: split
 
@@ -20,12 +20,9 @@ import torchvision.transforms.functional as TF  # noqa: E402 - Follows the sys.p
 from einops import rearrange  # noqa: E402 - Follows the sys.path setup.
 from omegaconf import OmegaConf  # noqa: E402 - Follows the sys.path setup.
 from PIL import Image  # noqa: E402 - Follows the sys.path setup.
-from pipeline import CausalInferencePipeline  # noqa: E402 - Follows the sys.path setup.
 from torch.utils.data import DataLoader, Dataset, SequentialSampler  # noqa: E402 - Follows the sys.path setup.
 from torch.utils.data.distributed import DistributedSampler  # noqa: E402 - Follows the sys.path setup.
 from torchvision import transforms  # noqa: E402 - Follows the sys.path setup.
-from utils.camera_pose import process_pose_file  # noqa: E402 - Follows the sys.path setup.
-from videox_fun.utils.utils import get_video_to_video_render_latent  # noqa: E402 - Follows the sys.path setup.
 
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.video_x_fun import (  # noqa: E402 - Follows the sys.path setup.
     CLIPModel,
@@ -41,6 +38,12 @@ from worldfoundry.core.vram import (  # noqa: E402 - Follows the sys.path setup.
     DynamicSwapInstaller,
     get_cuda_free_memory_gb,
 )
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
+    get_video_to_video_render_latent,
+)
+
+from ..pipeline import CausalInferencePipeline  # noqa: E402 - Follows the sys.path setup.
+from ..utils.camera_pose import process_pose_file  # noqa: E402 - Follows the sys.path setup.
 
 
 # -------------------------

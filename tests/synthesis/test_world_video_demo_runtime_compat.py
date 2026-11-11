@@ -235,31 +235,20 @@ def test_step_video_loads_trusted_local_legacy_bert_checkpoint(monkeypatch, tmp_
     assert loaded.pooler is not None
 
 
-def test_unianimate_runner_passes_requested_frame_count_to_pipeline():
-    from worldfoundry.synthesis.visual_generation.unianimate_dit.worldfoundry_runner import (
-        _rewrite_demo_script,
+def test_unianimate_runner_passes_requested_frame_count_to_pipeline(monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+
+    from worldfoundry.synthesis.visual_generation.unianimate_dit.unianimate_dit_runtime.examples.unianimate_wan import (
+        inference_unianimate_wan_480p as worker,
     )
 
-    source = """max_frames = 81
-video = pipe(
-        prompt=\"dance\",
-        input_image=ref_frame,
-        num_inference_steps=50,
-)
-"""
-    rewritten = _rewrite_demo_script(
-        source,
-        max_frames=9,
-        steps=1,
-        height=256,
-        width=448,
-        seed=0,
-        use_usp=False,
-    )
+    captured = {}
+    monkeypatch.setattr(worker, "run_inference", lambda **kwargs: captured.update(kwargs))
+    monkeypatch.setattr(sys, "argv", ["unianimate", "--max-frames", "9", "--num-inference-steps", "1"])
+    worker.main()
 
-    assert "max_frames = 9" in rewritten
-    assert "num_frames=max_frames" in rewritten
-    assert "num_inference_steps=1" in rewritten
+    assert captured["max_frames"] == 9
+    assert captured["steps"] == 1
 
 
 def test_wan_vace_adapter_normalizes_standard_generation_kwargs(monkeypatch):

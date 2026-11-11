@@ -35,6 +35,8 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `UniAnimateDi
 
 已通过真实权重的短片 GPU 冒烟验证；完整 runner parity 仍待验证。 为获得最佳效果，请准备干净的人物照片与驱动姿态序列。
 
+姿态对齐与生成均通过已安装的 WorldFoundry 包模块执行。输出目录中的 `unianimate_dit_workspace/` 链接到已准备的数据和 checkpoint。`use_usp=true` 保留由 `nproc_per_node` 指定的多 GPU 序列并行 worker，需要匹配的 CUDA 与 xfuser 环境。
+
 ## 在 WorldFoundry 中运行
 
 catalog 启动命令是 `wf run unianimate-dit --pipeline.task-profile interactive-video`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。

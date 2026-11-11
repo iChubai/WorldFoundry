@@ -35,6 +35,8 @@ Recorded `interactive-video` defaults: height=832, width=480, seed=0.
 
 Prepare a clean subject photo and a driving pose sequence for best results.
 
+Pose alignment and generation run as installed WorldFoundry package modules. The output directory contains `unianimate_dit_workspace/` with links to the staged data and checkpoints. `use_usp=true` retains the multi-GPU sequence-parallel worker selected by `nproc_per_node`; it requires the matching CUDA and xfuser environment.
+
 ## Running in WorldFoundry
 
 The catalog launch is `wf run unianimate-dit --pipeline.task-profile interactive-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.

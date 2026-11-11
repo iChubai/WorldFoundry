@@ -1449,7 +1449,7 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
         prompt: str | list[str],
         aspect_ratio: str,
         video_length: int,
-        prompt_rewrite: bool = True,
+        prompt_rewrite: bool = False,
         num_inference_steps: int = 50,
         guidance_scale: float | None = None,
         enable_sr: bool = True,
@@ -1579,16 +1579,9 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
             semantic_images_np = None
 
         if prompt_rewrite:
-            from worldfoundry.synthesis.visual_generation.hunyuan_world.hunyuan_worldplay.utils.rewrite.rewrite_utils import (
-                run_prompt_rewrite,
-            )
-
             if not dist.is_initialized() or get_parallel_state().sp_rank == 0:
-                try:
-                    prompt = run_prompt_rewrite(user_prompt, reference_image, task_type)
-                except Exception as e:
-                    loguru.logger.warning(f"Failed to rewrite prompt: {e}")
-                    prompt = user_prompt
+                loguru.logger.warning("HY-WorldPlay prompt rewriting is unavailable in this build; using the raw prompt")
+                prompt = user_prompt
 
             if dist.is_initialized() and get_parallel_state().sp_enabled:
                 obj_list = [prompt]

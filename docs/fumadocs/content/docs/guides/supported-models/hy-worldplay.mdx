@@ -27,6 +27,8 @@ Recorded evaluation entry points include [WorldModelBench](/docs/evaluation/benc
 
 ## Runtime contract
 
+Prompts are used as supplied by default. The `prompt_rewrite` option remains accepted; this build does not include the optional rewrite service, so enabling it emits a warning and keeps the raw prompt.
+
 Optional `image`, `prompt`, `interactions`, `num_frames`, and `fps`; artifacts `hy-worldplay.mp4`.
 
 CLI task profiles: `official-image-pose-video`. WorldFoundry binds `HunyuanWorldPlayPipeline`.

@@ -29,6 +29,8 @@ HY-WorldPlay 交互回放。不是 HY-World 2.0。
 
 ## 运行时契约
 
+默认直接使用原始提示词。`prompt_rewrite` 仍可传入；本构建不包含可选提示词重写服务，启用时会给出警告并继续使用原始提示词。
+
 可选 `image`、`prompt`、`interactions`、`num_frames`、`fps`；产物 `hy-worldplay.mp4`。
 
 CLI task profile：`official-image-pose-video`。绑定的 pipeline 类是 `HunyuanWorldPlayPipeline`。

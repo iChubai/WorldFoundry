@@ -33,7 +33,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `VMemPipeline
 
 系列状态：**已验证**。
 
-video 类别中少数完整验证过的交互式路径之一——树内 Studio/API 路径已于 2026-06-27 产出并通过视觉验证官方风格导航 demo。 输入覆盖 prompt/image/video/actions；输出为 generated_video 产物。
+video 类别中少数完整验证过的交互式路径之一——树内 Studio/API 路径已于 2026-06-27 产出并通过视觉验证官方风格导航 demo。 输入覆盖 prompt/image/video/actions；输出为 generated_video 产物。 runtime_root（或 VMEM_RUNTIME_ROOT）仅选择配置/数据目录，先查找其中的 configs/inference/inference.yaml，再回退到包内默认配置；config_path 可直接指定配置文件。 Python 代码始终来自已安装的包。
 
 需要同时在本地就位 VMem 与 CUT3R checkpoint。
 

@@ -23050,10 +23050,10 @@
           "VMem 以面元（surfel）索引历史视图，检索相关视图作为下一视角生成的条件（见论文 arXiv 2506.18903）。该路径以 CUT3R 为几何主干；两组 checkpoint 均需就位。"
         ],
         "usageNotes": [
-          "One of the few fully verified interactive routes in the video category — the in-tree Studio/API route produced and visually validated the official-style navigation demo on 2026-06-27. Inputs cover prompt/image/video/actions; outputs are generated_video artifacts."
+          "One of the few fully verified interactive routes in the video category — the in-tree Studio/API route produced and visually validated the official-style navigation demo on 2026-06-27. Inputs cover prompt/image/video/actions; outputs are generated_video artifacts. runtime_root (or VMEM_RUNTIME_ROOT) selects only a configuration/data directory, searched for configs/inference/inference.yaml before the packaged default; config_path selects a file directly. Python code always comes from the installed package."
         ],
         "usageNotesZh": [
-          "video 类别中少数完整验证过的交互式路径之一——树内 Studio/API 路径已于 2026-06-27 产出并通过视觉验证官方风格导航 demo。输入覆盖 prompt/image/video/actions；输出为 generated_video 产物。"
+          "video 类别中少数完整验证过的交互式路径之一——树内 Studio/API 路径已于 2026-06-27 产出并通过视觉验证官方风格导航 demo。输入覆盖 prompt/image/video/actions；输出为 generated_video 产物。runtime_root（或 VMEM_RUNTIME_ROOT）仅选择配置/数据目录，先查找其中的 configs/inference/inference.yaml，再回退到包内默认配置；config_path 可直接指定配置文件。Python 代码始终来自已安装的包。"
         ],
         "highlights": [
           "Video Generation",

@@ -8,10 +8,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from worldfoundry.synthesis.visual_generation.vmem.runtime_env import (
-    default_config_path,
-    ensure_vmem_runtime,
-)
+from worldfoundry.synthesis.visual_generation.vmem.runtime_env import default_config_path
 
 DEFAULT_VMEM_REPO = "liguang0115/vmem"
 DEFAULT_VMEM_SURFEL_REPO = "liguang0115/cut3r"
@@ -85,8 +82,6 @@ class VMemRuntime:
         visualization_dir: str | None = None,
         **kwargs,
     ) -> VMemRuntime:
-        ensure_vmem_runtime(runtime_root)
-
         from omegaconf import OmegaConf
 
         from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.modeling.pipeline import (

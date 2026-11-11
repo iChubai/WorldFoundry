@@ -24,10 +24,7 @@ pipeline = VMemPipeline.from_pretrained(
     model_path="liguang0115/vmem",
     required_components={
         "surfel_model_path": "liguang0115/cut3r",
-        "runtime_root": os.getenv(
-            "VMEM_RUNTIME_ROOT",
-            "./worldfoundry/synthesis/visual_generation/vmem/vmem_runtime",
-        ),
+        "runtime_root": os.getenv("VMEM_RUNTIME_ROOT"),
     },
     device="cuda",
 )

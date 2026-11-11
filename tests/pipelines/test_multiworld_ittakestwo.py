@@ -136,6 +136,8 @@ def test_multiworld_default_runtime_uses_in_tree_runtime(monkeypatch, tmp_path: 
     monkeypatch.setenv("WORLDFOUNDRY_GITHUB_REPOS_ROOT", str(tmp_path / "github_repos"))
 
     source = Path(runtime_env.__file__).read_text(encoding="utf-8")
+    assert "PYTHONPATH" not in source
+    assert "build_subprocess_env" not in runtime_env.__all__
     assert "official_runtime_repo_path" not in source
     assert "github_repos" not in source
     assert "WORLDFOUNDRY_MODEL_SOURCE_DIR" not in source

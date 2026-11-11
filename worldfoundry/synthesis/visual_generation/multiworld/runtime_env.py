@@ -375,45 +375,11 @@ def resolve_checkpoint_path(checkpoint_path: str | Path | None, runtime_root: st
     return str(resolved)
 
 
-def build_subprocess_env(runtime_root: str | Path) -> dict[str, str]:
-    """
-    Builds a modified environment dictionary suitable for running MultiWorld
-    subprocesses.
-
-    It copies the current environment, modifies the `PYTHONPATH` to include
-    necessary project roots and the MultiWorld runtime root, and sets default
-    Hugging Face environment variables.
-
-    Args:
-        runtime_root (str | Path): The MultiWorld runtime root directory.
-
-    Returns:
-        dict[str, str]: A dictionary representing the environment variables
-                        for a subprocess.
-    """
-    env = os.environ.copy()
-    pythonpath_entries = [
-        str(project_root().resolve()),
-        str(Path(runtime_root).expanduser().resolve()),
-    ]
-    # Append existing PYTHONPATH entries to maintain current environment's Python paths.
-    existing = env.get("PYTHONPATH")
-    if existing:
-        pythonpath_entries.append(existing)
-    env["PYTHONPATH"] = os.pathsep.join(pythonpath_entries)
-    # Set default Hugging Face cache directory if not already set.
-    env.setdefault("HF_HOME", str((project_root().parent / "ckpt" / "huggingface").resolve()))
-    # Disable XET for Hugging Face Hub to prevent potential issues with certain file systems.
-    env.setdefault("HF_HUB_DISABLE_XET", "1")
-    return env
-
-
 __all__ = [
     "DEFAULT_ITTAKESTWO_CHECKPOINT_RELATIVE_PATH",
     "DEFAULT_ITTAKESTWO_CONFIG_RELATIVE_PATH",
     "MULTIWORLD_CONFIG_DIR",
     "WAN_TI2V_DIT_FILENAMES",
-    "build_subprocess_env",
     "default_runtime_root",
     "local_runtime_candidates",
     "project_root",

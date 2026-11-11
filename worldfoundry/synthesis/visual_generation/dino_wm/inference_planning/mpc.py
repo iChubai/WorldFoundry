@@ -2,7 +2,8 @@ import hydra
 import numpy as np
 import torch
 from einops import rearrange
-from utils import slice_trajdict_with_t
+
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import slice_trajdict_with_t
 
 from .base_planner import BasePlanner
 

@@ -83,7 +83,10 @@ class R3M(nn.Module):
         ## Language Reward
         if self.langweight > 0.0:
             ## Pretrained DistilBERT Sentence Encoder
-            from r3m.models.models_language import LangEncoder, LanguageReward
+            from worldfoundry.synthesis.visual_generation.dino_wm.models.encoder.r3m.models.models_language import (
+                LangEncoder,
+                LanguageReward,
+            )
 
             self.lang_enc = LangEncoder(self.device, 0, 0)
             self.lang_rew = LanguageReward(None, self.outdim, hidden_dim, self.lang_enc.lang_size, simfunc=self.sim)

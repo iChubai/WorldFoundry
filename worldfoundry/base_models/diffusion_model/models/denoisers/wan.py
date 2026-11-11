@@ -217,7 +217,9 @@ def _validated_wan_peft_adapter(
 
 
 def _merge_wan_peft_adapter(model: torch.nn.Module, adapter_path: Path) -> None:
-    from worldfoundry.core.model_loading.peft import audit_wan_lora_targets, merge_peft_adapter
+    from worldfoundry.core.model_loading.peft import merge_peft_adapter
+
+    from ..networks.wan.lora import audit_wan_lora_targets
 
     config = _read_wan_peft_config(adapter_path)
     target_modules = config.get("target_modules")

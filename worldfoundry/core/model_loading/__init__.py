@@ -16,7 +16,6 @@ from typing import Any
 # ──────────────────────────────────────────────────────────────────────────
 
 _EXPORT_MODULES = {
-    "audit_wan_lora_targets": "worldfoundry.core.model_loading.peft",
     "merge_peft_adapter": "worldfoundry.core.model_loading.peft",
     "GeneralLoRALoader": "worldfoundry.core.model_loading.lora",
     "LightX2VLoRALoader": "worldfoundry.core.model_loading.lora",

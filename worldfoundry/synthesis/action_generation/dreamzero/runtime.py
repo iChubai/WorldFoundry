@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path
 from worldfoundry.synthesis.action_generation.dreamzero import runtime_root as dreamzero_runtime_root
 from worldfoundry.synthesis.action_generation.runtime_config import load_vla_va_wam_runtime_config
@@ -357,24 +358,15 @@ def build_official_server_command(
     """
     del repo_root  # repo_root is deprecated and ignored for in-tree execution.
 
-    command = [
-        python,
-        "-m",
-        "torch.distributed.run",
-        "--standalone",
-        "--nproc_per_node",
-        str(nproc_per_node),
-        "--module",
-        OFFICIAL_SERVER_MODULE,
-        "--port",
-        str(port),
-    ]
+    args = ["--port", str(port)]
     if enable_dit_cache:
-        command.append("--enable-dit-cache")
-    command.extend(["--model-path", str(checkpoint_dir)])
+        args.append("--enable-dit-cache")
+    args.extend(["--model-path", str(checkpoint_dir)])
     if max_chunk_size is not None:
-        command.extend(["--max-chunk-size", str(max_chunk_size)])
-    return command
+        args.extend(["--max-chunk-size", str(max_chunk_size)])
+    return package_module_command(
+        OFFICIAL_SERVER_MODULE, args, python_executable=python, nproc_per_node=nproc_per_node
+    )
 
 
 def build_server_command(

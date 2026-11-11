@@ -28,6 +28,45 @@ canonical_model_id() {
     solarwm-wan22|solarwm-wan22-5b|solarwm-wan2.2-5b|solarwm-wan2.2-14b)
       printf '%s\n' "solarwm"
       ;;
+    dreamzero-droid)
+      printf '%s\n' "dreamzero"
+      ;;
+    gamma-world-causal-few-step)
+      printf '%s\n' "gamma-world"
+      ;;
+    hy-embodied-vla-umi)
+      printf '%s\n' "hy-embodied-vla"
+      ;;
+    kandinsky6-lite|kandinsky6-lite-distill|kandinsky6-lite-pretrain|kandinsky6-pro|kandinsky6-pro-distill|kandinsky6-pro-pretrain)
+      printf '%s\n' "kandinsky6"
+      ;;
+    lapa-7b-openx)
+      printf '%s\n' "lapa"
+      ;;
+    lingbot-va-base)
+      printf '%s\n' "lingbot-va"
+      ;;
+    lingbot-vla-4b)
+      printf '%s\n' "lingbot-vla"
+      ;;
+    lingbot-vla-v2-6b)
+      printf '%s\n' "lingbot-vla-v2"
+      ;;
+    lingbot-world-act)
+      printf '%s\n' "lingbot-world"
+      ;;
+    local-checkpoint)
+      printf '%s\n' "mira"
+      ;;
+    matrix-game-3.5-first-person)
+      printf '%s\n' "matrix-game-3.5"
+      ;;
+    spatial-forcing-libero-spatial)
+      printf '%s\n' "spatial-forcing"
+      ;;
+    x-wam-robocasa-sft)
+      printf '%s\n' "x-wam"
+      ;;
     *)
       printf '%s\n' "$1"
       ;;

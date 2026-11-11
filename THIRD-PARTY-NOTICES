@@ -16,6 +16,30 @@ Copyright and SPDX notices in source files remain applicable and are retained.
 Separately installed upstream checkouts and downloaded artifacts retain their
 own license bundles and terms. This file is included in wheels and sdists.
 
+HyperFlow canonical MiniMax-H3 inference
+---------------------------------------
+Source: https://github.com/Video-Rebirth/hyperflow
+Source revision: 1dd2f342aba5ab51da02b62885939655e8e268da
+H3 conversion and inference reference: https://github.com/huggingface/diffusers
+Reference revision: d035dcd7cc7c88e0a154609b62887d50bba9fdc2 (v0.40.0)
+Copyright: 2026 The HyperFlow authors; 2025-2026 The MiniMax authors and
+           The HuggingFace Team.
+License: Apache License 2.0; the complete license text is retained below.
+Files: worldfoundry/base_models/diffusion_model/models/networks/minimax_h3/variants/hyperflow/,
+       worldfoundry/base_models/diffusion_model/models/denoisers/hyperflow.py,
+       worldfoundry/base_models/diffusion_model/models/autoencoders/minimax_h3_hyperflow.py,
+       worldfoundry/base_models/diffusion_model/schedulers/hyperflow.py,
+       worldfoundry/synthesis/visual_generation/hyperflow/.
+
+HyperFlow's two-time conditioning, unmerged LoRA, eight-step grid and Sol-Attn
+policy reuse WorldFoundry's canonical MiniMax-H3 transformer, Qwen3-VL feature
+encoder and video/audio VAEs. The two-time formulation follows AnyFlow
+(https://github.com/NVlabs/AnyFlow; Gu et al., 2026). The optional Sol-Attn kernel
+is separately installed from NVlabs/Sana, revision
+9bfca5c4bf35774a1d44c27b0c3c91041fb8dad0, under Apache-2.0.
+The H3 base and HyperFlow adapter weights are separate downloads governed by
+the MiniMax H3 Community License Agreement, not the source-code license.
+
 OmniVinci multimodal inference components
 ----------------------------------------
 Source: https://huggingface.co/nvidia/omnivinci

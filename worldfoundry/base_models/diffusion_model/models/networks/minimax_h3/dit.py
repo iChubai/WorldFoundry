@@ -685,17 +685,14 @@ class MiniMaxH3DiTModel(nn.Module):
         if block_combined is None:
             block_combined = torch.add(block_token_tags, inverse_indices, alpha=MINIMAX_H3_ADALN_MODALITY_NUM)
 
-        hidden = decoder_input
-        cu_seqlens = cu_seqlens.to(device)
-        for block in self.blocks:
-            hidden = block(
-                hidden,
-                adaln_input=adaln_input,
-                combined_indices=block_combined,
-                rope_cache=rope_cache,
-                cu_seqlens=cu_seqlens,
-            )
-        video_logits, audio_logits = self.final_layer(hidden, adaln_input=adaln_input, inverse_indices=inverse_indices)
+        video_logits, audio_logits = self.forward_blocks(
+            decoder_input,
+            adaln_input=adaln_input,
+            combined_indices=block_combined,
+            rope_cache=rope_cache,
+            cu_seqlens=cu_seqlens.to(device),
+            inverse_indices=inverse_indices,
+        )
 
         video_logits = video_logits.index_select(0, infer_out_pos.to(device))
         audio_logits = audio_logits.index_select(0, audio_pos.to(device))
@@ -708,6 +705,27 @@ class MiniMaxH3DiTModel(nn.Module):
             if update_audio_mask is not None:
                 audio_logits = audio_logits * update_audio_mask.view(-1).unsqueeze(-1)
         return video_logits, audio_logits
+
+    def forward_blocks(
+        self,
+        hidden: torch.Tensor,
+        *,
+        adaln_input: torch.Tensor,
+        combined_indices: torch.Tensor,
+        rope_cache: tuple[torch.Tensor, torch.Tensor],
+        cu_seqlens: torch.Tensor,
+        inverse_indices: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Run the packed residual stream through the shared blocks and output heads."""
+        for block in self.blocks:
+            hidden = block(
+                hidden,
+                adaln_input=adaln_input,
+                combined_indices=combined_indices,
+                rope_cache=rope_cache,
+                cu_seqlens=cu_seqlens,
+            )
+        return self.final_layer(hidden, adaln_input=adaln_input, inverse_indices=inverse_indices)
 
 
 __all__ = [

@@ -16,6 +16,22 @@ Copyright and SPDX notices in source files remain applicable and are retained.
 Separately installed upstream checkouts and downloaded artifacts retain their
 own license bundles and terms. This file is included in wheels and sdists.
 
+OmniVinci multimodal inference components
+----------------------------------------
+Source: https://huggingface.co/nvidia/omnivinci
+Source revision: 7b3777b1c1f7c4e85f7bdef7b765dee1e76c1b7f
+Copyright: 2024-2025 NVIDIA CORPORATION & AFFILIATES.
+License: Apache License 2.0; the complete license text is retained below.
+Files: worldfoundry/base_models/llm_mllm_core/mllm/omnivinci/,
+       worldfoundry/synthesis/visual_generation/omnivinci/.
+
+The inference implementation includes OmniVinci's vision/audio projectors,
+dynamic-resolution image processing, temporal media embeddings, and multimodal
+processor. SigLIP, Qwen2 and Qwen2Audio backbones use the native Transformers
+implementations. Image tiling retains the upstream InternVL attribution.
+Released weights are separate assets under NVIDIA's OneWay Noncommercial
+License and are not included in the source distribution.
+
 Hy-Nomas native inference components
 ------------------------------------
 Source: https://github.com/Tencent-Hunyuan/Hy-Nomas

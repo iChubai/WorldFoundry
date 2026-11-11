@@ -43,6 +43,8 @@ Pick the checkpoint matching your benchmark: libero-db-cogact, calvin-db-cogact,
 
 WorldFoundry records the Dexbotic v1 inference contract with an independent DB-CogACT synthesis entrypoint.
 
+The released checkpoints use the native Transformers Qwen2 tokenizer. `trust_remote_code` defaults to `false`; requests that enable it are rejected before model/tokenizer cache lookup. Stage the tokenizer assets alongside the checkpoint.
+
 ## Running in WorldFoundry
 
 Launch `wf run db-cogact-libero --pipeline.task-profile default` to execute the policy. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.

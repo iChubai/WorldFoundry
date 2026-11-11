@@ -45,6 +45,8 @@ WorldFoundry records the Dexbotic v1 inference contract with an independent DB-C
 
 Workspace 的 LIBERO 路径用了 `Dexmal/libero-db-cogact`，写出形状 **`[1, 16, 7]`** 的有限轨迹。这是已记录的 GPU action-trace 检查。CALVIN / SimplerEnv 专家是接线好的 checkpoint，不是额外已验证轨迹。
 
+已发布权重使用 Transformers 原生 Qwen2 tokenizer。`trust_remote_code` 默认为 `false`；启用该选项的请求会在查询模型与 tokenizer 缓存之前报错。请将 tokenizer 资产与权重一起就位。
+
 ## 在 WorldFoundry 中运行
 
 启动 `wf run db-cogact-libero --pipeline.task-profile default` 执行策略。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。

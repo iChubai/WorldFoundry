@@ -1,8 +1,6 @@
 import os
-
-os.environ["HF_HOME"] = os.path.abspath(os.path.realpath(os.path.join(os.path.dirname(__file__), "./hf_download")))
-
 import traceback
+from pathlib import Path
 
 import torch
 from diffusers import AutoencoderKLHunyuanVideo
@@ -50,79 +48,88 @@ from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffus
     soft_append_bcthw,
 )
 
-# Modified by WorldFoundry: FramePack's process-global norm/accelerate patches are no
-# longer applied when diffusers_helper.model is merely imported; this official runtime
-# entry activates them explicitly before any model is constructed.
-enable_framepack_global_patches()
-f1_mode = os.environ.get("WORLDFOUNDRY_FRAMEPACK_VARIANT") == "f1"
 
-free_mem_gb = get_cuda_free_memory_gb(gpu)
-high_vram = free_mem_gb > 60
+def initialize(
+    *,
+    checkpoint_path: str | Path,
+    output_dir: str | Path,
+    hunyuan_root: str | None,
+    flux_redux_root: str | None,
+) -> None:
+    """Load the official inference components from the runner's resolved asset paths."""
+    global f1_mode, high_vram, text_encoder, text_encoder_2, tokenizer, tokenizer_2
+    global vae, feature_extractor, image_encoder, transformer, stream, outputs_folder
+    hunyuan_model = hunyuan_root or "hunyuanvideo-community/HunyuanVideo"
+    redux_model = flux_redux_root or "lllyasviel/flux_redux_bfl"
+    # Modified by WorldFoundry: FramePack's process-global norm/accelerate patches are no
+    # longer applied when diffusers_helper.model is merely imported; this official runtime
+    # entry activates them explicitly before any model is constructed.
+    enable_framepack_global_patches()
+    f1_mode = os.environ.get("WORLDFOUNDRY_FRAMEPACK_VARIANT") == "f1"
 
-print(f"Free VRAM {free_mem_gb} GB")
-print(f"High-VRAM Mode: {high_vram}")
+    free_mem_gb = get_cuda_free_memory_gb(gpu)
+    high_vram = free_mem_gb > 60
 
-text_encoder = LlamaModel.from_pretrained(
-    "hunyuanvideo-community/HunyuanVideo", subfolder="text_encoder", torch_dtype=torch.float16
-).cpu()
-text_encoder_2 = CLIPTextModel.from_pretrained(
-    "hunyuanvideo-community/HunyuanVideo", subfolder="text_encoder_2", torch_dtype=torch.float16
-).cpu()
-tokenizer = LlamaTokenizerFast.from_pretrained("hunyuanvideo-community/HunyuanVideo", subfolder="tokenizer")
-tokenizer_2 = CLIPTokenizer.from_pretrained("hunyuanvideo-community/HunyuanVideo", subfolder="tokenizer_2")
-vae = AutoencoderKLHunyuanVideo.from_pretrained(
-    "hunyuanvideo-community/HunyuanVideo", subfolder="vae", torch_dtype=torch.float16
-).cpu()
+    print(f"Free VRAM {free_mem_gb} GB")
+    print(f"High-VRAM Mode: {high_vram}")
 
-feature_extractor = SiglipImageProcessor.from_pretrained("lllyasviel/flux_redux_bfl", subfolder="feature_extractor")
-image_encoder = SiglipVisionModel.from_pretrained(
-    "lllyasviel/flux_redux_bfl", subfolder="image_encoder", torch_dtype=torch.float16
-).cpu()
+    text_encoder = LlamaModel.from_pretrained(hunyuan_model, subfolder="text_encoder", torch_dtype=torch.float16).cpu()
+    text_encoder_2 = CLIPTextModel.from_pretrained(hunyuan_model, subfolder="text_encoder_2", torch_dtype=torch.float16).cpu()
+    tokenizer = (
+        LlamaTokenizerFast.from_pretrained(str(Path(hunyuan_root) / "tokenizer"))
+        if hunyuan_root
+        else LlamaTokenizerFast.from_pretrained(hunyuan_model, subfolder="tokenizer")
+    )
+    tokenizer_2 = CLIPTokenizer.from_pretrained(hunyuan_model, subfolder="tokenizer_2")
+    vae = AutoencoderKLHunyuanVideo.from_pretrained(hunyuan_model, subfolder="vae", torch_dtype=torch.float16).cpu()
 
-transformer = HunyuanVideoTransformer3DModelPacked.from_pretrained(
-    "lllyasviel/FramePackI2V_HY", torch_dtype=torch.bfloat16
-).cpu()
+    feature_extractor = SiglipImageProcessor.from_pretrained(redux_model, subfolder="feature_extractor")
+    image_encoder = SiglipVisionModel.from_pretrained(
+        redux_model, subfolder="image_encoder", torch_dtype=torch.float16
+    ).cpu()
 
-vae.eval()
-text_encoder.eval()
-text_encoder_2.eval()
-image_encoder.eval()
-transformer.eval()
+    transformer = HunyuanVideoTransformer3DModelPacked.from_pretrained(str(checkpoint_path), torch_dtype=torch.bfloat16).cpu()
 
-if not high_vram:
-    vae.enable_slicing()
-    vae.enable_tiling()
+    vae.eval()
+    text_encoder.eval()
+    text_encoder_2.eval()
+    image_encoder.eval()
+    transformer.eval()
 
-transformer.high_quality_fp32_output_for_inference = True
-print("transformer.high_quality_fp32_output_for_inference = True")
+    if not high_vram:
+        vae.enable_slicing()
+        vae.enable_tiling()
 
-transformer.to(dtype=torch.bfloat16)
-vae.to(dtype=torch.float16)
-image_encoder.to(dtype=torch.float16)
-text_encoder.to(dtype=torch.float16)
-text_encoder_2.to(dtype=torch.float16)
+    transformer.high_quality_fp32_output_for_inference = True
+    print("transformer.high_quality_fp32_output_for_inference = True")
 
-vae.requires_grad_(False)
-text_encoder.requires_grad_(False)
-text_encoder_2.requires_grad_(False)
-image_encoder.requires_grad_(False)
-transformer.requires_grad_(False)
+    transformer.to(dtype=torch.bfloat16)
+    vae.to(dtype=torch.float16)
+    image_encoder.to(dtype=torch.float16)
+    text_encoder.to(dtype=torch.float16)
+    text_encoder_2.to(dtype=torch.float16)
 
-if not high_vram:
-    # DynamicSwapInstaller is same as huggingface's enable_sequential_offload but 3x faster
-    DynamicSwapInstaller.install_model(transformer, device=gpu)
-    DynamicSwapInstaller.install_model(text_encoder, device=gpu)
-else:
-    text_encoder.to(gpu)
-    text_encoder_2.to(gpu)
-    image_encoder.to(gpu)
-    vae.to(gpu)
-    transformer.to(gpu)
+    vae.requires_grad_(False)
+    text_encoder.requires_grad_(False)
+    text_encoder_2.requires_grad_(False)
+    image_encoder.requires_grad_(False)
+    transformer.requires_grad_(False)
 
-stream = AsyncStream()
+    if not high_vram:
+        # DynamicSwapInstaller is same as huggingface's enable_sequential_offload but 3x faster
+        DynamicSwapInstaller.install_model(transformer, device=gpu)
+        DynamicSwapInstaller.install_model(text_encoder, device=gpu)
+    else:
+        text_encoder.to(gpu)
+        text_encoder_2.to(gpu)
+        image_encoder.to(gpu)
+        vae.to(gpu)
+        transformer.to(gpu)
 
-outputs_folder = "./outputs/"
-os.makedirs(outputs_folder, exist_ok=True)
+    stream = AsyncStream()
+
+    outputs_folder = str(Path(output_dir) / ".framepack_outputs")
+    os.makedirs(outputs_folder, exist_ok=True)
 
 
 @torch.no_grad()

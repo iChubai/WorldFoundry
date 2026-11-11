@@ -4,7 +4,6 @@ import inspect
 import json
 import os
 import shutil
-import socket
 import subprocess
 import sys
 import time
@@ -15,6 +14,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io import load_serialized, resolve_data_path
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 
@@ -59,14 +59,12 @@ def _first_existing(items: Any) -> Path | None:
 def _missing_required_paths(
     items: Any,
     *,
-    repo_root: Path | None,
     checkpoint_path: Path | None,
 ) -> list[str]:
     if not isinstance(items, list):
         return []
 
     variables = {
-        "repo_root": str(repo_root or ""),
         "checkpoint_path": str(checkpoint_path or ""),
     }
     missing: list[str] = []
@@ -85,13 +83,8 @@ def _missing_required_paths(
             continue
         rendered = str(_expand_value(raw_path)).format(**variables)
         candidate = Path(rendered).expanduser()
-        if not candidate.is_absolute():
-            if base == "repo":
-                candidate = (repo_root / candidate) if repo_root else candidate
-            elif base == "cwd":
-                candidate = candidate
-            else:
-                candidate = (checkpoint_path / candidate) if checkpoint_path else candidate
+        if not candidate.is_absolute() and base != "cwd" and checkpoint_path:
+            candidate = checkpoint_path / candidate
         if not candidate.exists():
             prefix = f"{label}: " if label else ""
             suffix = f"; {hint}" if hint else ""
@@ -103,7 +96,6 @@ def _first_complete_checkpoint(
     items: Any,
     *,
     required_paths: Any,
-    repo_root: Path | None,
 ) -> Path | None:
     """Prefer a candidate that satisfies the runtime's required asset layout."""
 
@@ -119,7 +111,6 @@ def _first_complete_checkpoint(
             first_existing = candidate
         if not _missing_required_paths(
             required_paths,
-            repo_root=repo_root,
             checkpoint_path=candidate,
         ):
             return candidate
@@ -138,12 +129,6 @@ def _format_command(items: list[str], variables: Mapping[str, Any]) -> list[str]
             variables.get("pyramid_num_inference_steps_list"), (list, tuple)
         ):
             rendered.extend(str(part) for part in variables["pyramid_num_inference_steps_list"])
-            continue
-        if str(item).strip() == "{torchrun}" and isinstance(variables.get("torchrun"), (list, tuple)):
-            python = str(variables.get("python") or "")
-            if python and (not rendered or rendered[-1] != python):
-                rendered.append(python)
-            rendered.extend(str(part) for part in variables["torchrun"])
             continue
         rendered.append(str(item).format(**format_variables))
     return rendered
@@ -176,7 +161,6 @@ def _normalize_cli_path_variables(variables: Mapping[str, Any]) -> dict[str, Any
     normalized = dict(variables)
     for key, value in tuple(normalized.items()):
         if key in {
-            "repo_root",
             "checkpoint_path",
             "checkpoint_parent",
             "output_path",
@@ -216,17 +200,6 @@ def _with_cli_aliases(defaults: Mapping[str, Any], extra: Mapping[str, Any]) -> 
     return values
 
 
-def _torchrun_executable() -> tuple[str, str]:
-    return ("-m", "torch.distributed.run")
-
-
-def _find_free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("", 0))
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return int(sock.getsockname()[1])
-
-
 def _normalize_visible_devices(value: Any) -> str:
     if value in {None, ""}:
         return ""
@@ -238,7 +211,6 @@ def _normalize_visible_devices(value: Any) -> str:
 @dataclass(frozen=True)
 class RuntimeRequirementReport:
     missing: tuple[str, ...]
-    repo_root: Path | None
     checkpoint_path: Path | None
 
     @property
@@ -249,13 +221,16 @@ class RuntimeRequirementReport:
 class OfficialVideoRuntime:
     """Data-backed runtime adapter for official video-family inference paths.
 
-    The config decides whether a model uses an official CLI checkout, a diffusers
+    The config decides whether a model uses an in-tree CLI module, a diffusers
     pipeline, a Hugging Face transformers model, or an API endpoint. This class
     performs real execution for those backends and returns a structured blocked
     result when required local assets are absent.
     """
 
     def __init__(self, *, model_id: str, runtime_config_path: str, device: str = "cuda", **overrides: Any) -> None:
+        removed_options = {"repo_root", "repo_root_candidates"}.intersection(overrides)
+        if removed_options:
+            raise TypeError(f"{model_id} does not accept source-root options: {', '.join(sorted(removed_options))}")
         self.model_id = model_id
         self.device = device
         self.runtime_config_path = runtime_config_path
@@ -305,18 +280,13 @@ class OfficialVideoRuntime:
 
     def _requirement_report(self, *, extra: Mapping[str, Any] | None = None) -> RuntimeRequirementReport:
         missing: list[str] = []
-        repo_sources = self.runtime.get("repo_root") or self.runtime.get("repo_root_candidates")
         checkpoint_sources = self.runtime.get("checkpoint_path") or self.runtime.get("checkpoint_candidates")
-        repo_root = _first_existing(repo_sources)
         checkpoint_path = _first_complete_checkpoint(
             checkpoint_sources,
             required_paths=self.runtime.get("required_paths"),
-            repo_root=repo_root,
         )
 
         kind = str(self.runtime.get("kind") or "")
-        if kind == "official_cli" and repo_root is None:
-            missing.append(f"official repo checkout not found; checked {repo_sources}")
         checkpoint_optional = bool(self.runtime.get("checkpoint_optional", False))
         if (
             kind in {"official_cli", "diffusers_pipeline", "transformers_generation"}
@@ -326,7 +296,6 @@ class OfficialVideoRuntime:
             missing.append(f"checkpoint/assets not found; checked {checkpoint_sources}")
         for path in _missing_required_paths(
             self.runtime.get("required_paths"),
-            repo_root=repo_root,
             checkpoint_path=checkpoint_path,
         ):
             missing.append(f"required runtime path not found: {path}")
@@ -346,7 +315,7 @@ class OfficialVideoRuntime:
             env_name = str(self.runtime.get("api_key_env") or "")
             if env_name and not os.environ.get(env_name):
                 missing.append(f"API key environment variable is not set: {env_name}")
-        return RuntimeRequirementReport(tuple(missing), repo_root, checkpoint_path)
+        return RuntimeRequirementReport(tuple(missing), checkpoint_path)
 
     def prepare(self) -> None:
         """Eagerly load reusable in-process backends during pipeline loading.
@@ -425,9 +394,6 @@ class OfficialVideoRuntime:
         default_variables = dict(defaults) if isinstance(defaults, Mapping) else {}
         variables = {
             "python": sys.executable,
-            "torchrun": _torchrun_executable(),
-            "master_port": _find_free_port(),
-            "repo_root": report.repo_root or "",
             "checkpoint_path": report.checkpoint_path or "",
             "checkpoint_parent": report.checkpoint_path.parent if report.checkpoint_path else "",
             "output_path": output_path or "",
@@ -440,16 +406,16 @@ class OfficialVideoRuntime:
             **_with_cli_aliases(default_variables, extra or {}),
         }
         variables = _normalize_cli_path_variables(variables)
-        command = self.runtime.get("command")
         return {
             "model_id": self.model_id,
             "runtime": self.runtime.get("kind"),
             "backend_quality": self.runtime.get("backend_quality", "official_runtime_bridge"),
             "ready": report.ready,
             "missing": list(report.missing),
-            "repo_root": str(report.repo_root) if report.repo_root else None,
             "checkpoint_path": str(report.checkpoint_path) if report.checkpoint_path else None,
-            "command": _format_command(command, variables) if isinstance(command, list) else None,
+            "command": (
+                self._official_cli_command(variables) if self.runtime.get("kind") == "official_cli" else None
+            ),
             "notes": list(self.config.get("notes") or ()),
         }
 
@@ -528,7 +494,6 @@ class OfficialVideoRuntime:
                 output_path=output,
                 image_path=image_path,
                 video_path=video_path,
-                repo_root=report.repo_root,
                 checkpoint_path=report.checkpoint_path,
                 extra=kwargs,
             )
@@ -575,12 +540,7 @@ class OfficialVideoRuntime:
                     checkpoint_path=report.checkpoint_path,
                     extra=kwargs,
                 )
-            return self._run_transformers_text(
-                prompt=prompt,
-                output_path=output,
-                checkpoint_path=report.checkpoint_path,
-                extra=kwargs,
-            )
+            raise ValueError(f"Unsupported transformers model for official video runtime: {self.model_id!r}")
         if kind == "api_endpoint":
             return self._blocked_result(
                 output_path=output,
@@ -636,6 +596,19 @@ class OfficialVideoRuntime:
             raise RuntimeError(f"official CLI produced no materializable artifact: {produced}")
         return primary, tuple(materialized)
 
+    def _official_cli_command(self, variables: Mapping[str, Any]) -> list[str]:
+        module = self.runtime.get("module")
+        arguments = self.runtime.get("args")
+        if not isinstance(module, str) or not module or not isinstance(arguments, list):
+            raise ValueError(f"{self.model_id} official_cli runtime requires module and args.")
+        nproc = self.runtime.get("nproc_per_node")
+        return package_module_command(
+            module,
+            _format_command(arguments, variables),
+            python_executable=str(variables["python"]),
+            nproc_per_node=int(str(nproc).format(**variables)) if nproc is not None else None,
+        )
+
     def _run_official_cli(
         self,
         *,
@@ -643,21 +616,14 @@ class OfficialVideoRuntime:
         output_path: Path,
         image_path: str | Path | None,
         video_path: str | Path | None,
-        repo_root: Path | None,
         checkpoint_path: Path | None,
         extra: Mapping[str, Any],
     ) -> dict[str, Any]:
-        command = self.runtime.get("command")
-        if not isinstance(command, list) or not command:
-            raise ValueError(f"{self.model_id} official_cli runtime requires a command list.")
         output_path.parent.mkdir(parents=True, exist_ok=True)
         defaults = self.runtime.get("defaults")
         default_variables = dict(defaults) if isinstance(defaults, Mapping) else {}
         variables = {
             "python": sys.executable,
-            "torchrun": _torchrun_executable(),
-            "master_port": _find_free_port(),
-            "repo_root": repo_root or "",
             "checkpoint_path": checkpoint_path or "",
             "checkpoint_parent": checkpoint_path.parent if checkpoint_path else "",
             "output_path": output_path,
@@ -670,23 +636,12 @@ class OfficialVideoRuntime:
             **_with_cli_aliases(default_variables, extra),
         }
         variables = _normalize_cli_path_variables(variables)
-        rendered = _format_command(command, variables)
+        rendered = self._official_cli_command(variables)
         cwd_template = self.runtime.get("cwd")
-        cwd = str(repo_root) if repo_root else None
+        cwd = str(output_path.parent)
         if isinstance(cwd_template, str) and cwd_template.strip():
             cwd = str(Path(cwd_template.format(**{name: str(item) for name, item in variables.items()})).expanduser())
         env = os.environ.copy()
-        src_root = Path(__file__).resolve().parents[3]
-        prepend_repo_root = bool(self.runtime.get("prepend_repo_root_to_pythonpath", True))
-        env["PYTHONPATH"] = os.pathsep.join(
-            item
-            for item in (
-                str(repo_root) if repo_root and prepend_repo_root else "",
-                str(src_root),
-                env.get("PYTHONPATH", ""),
-            )
-            if item
-        )
         visible_devices = ""
         for source in (extra, self.runtime):
             if not isinstance(source, Mapping):
@@ -1402,41 +1357,6 @@ class OfficialVideoRuntime:
                 "input_kind": "video_text" if video is not None else "image_text" if image is not None else "text",
             },
         )
-
-    def _run_transformers_text(
-        self,
-        *,
-        prompt: str,
-        output_path: Path,
-        checkpoint_path: Path | None,
-        extra: Mapping[str, Any],
-    ) -> dict[str, Any]:
-        import torch
-        from transformers import AutoModelForCausalLM, AutoProcessor, AutoTokenizer
-
-        trust_remote_code = bool(self.runtime.get("trust_remote_code", True))
-        processor = None
-        try:
-            processor = AutoProcessor.from_pretrained(str(checkpoint_path), trust_remote_code=trust_remote_code)
-        except Exception:
-            processor = AutoTokenizer.from_pretrained(str(checkpoint_path), trust_remote_code=trust_remote_code)
-        model = AutoModelForCausalLM.from_pretrained(
-            str(checkpoint_path),
-            trust_remote_code=trust_remote_code,
-            torch_dtype=getattr(torch, str(self.runtime.get("torch_dtype") or "float16")),
-            device_map=self.runtime.get("device_map") or "auto",
-        )
-        inputs = processor(prompt, return_tensors="pt")
-        if hasattr(inputs, "to"):
-            inputs = inputs.to(model.device)
-        output_ids = model.generate(**inputs, max_new_tokens=int(extra.get("max_new_tokens") or 128))
-        text = processor.batch_decode(output_ids, skip_special_tokens=True)[0]
-        output_path = output_path.with_suffix(".json")
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            json.dumps({"prompt": prompt, "text": text}, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
-        return self._success_result(output_path, metadata={"checkpoint_path": str(checkpoint_path)})
 
 
 __all__ = ["OfficialVideoRuntime"]

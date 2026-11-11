@@ -67,7 +67,7 @@ def test_framepack_workspace_uses_official_full_quality_defaults() -> None:
     tunable = {"cfg", "gs", "rs", "use_teacache", "mp4_crf"}
     assert tunable.issubset(entry.call_params)
 
-    command = runtime.runtime["command"]
+    command = runtime.runtime["args"]
     expected_cli_values = {
         "--cfg": "{cfg}",
         "--gs": "{gs}",
@@ -92,8 +92,8 @@ def test_krea_runtime_accepts_normalized_hugging_face_checkpoint_directory() -> 
     runtime = OfficialVideoRuntime.from_model_id("krea-realtime-video")
 
     assert any(str(path).endswith("/krea--krea-realtime-video") for path in runtime.runtime["checkpoint_candidates"])
-    model_folder_flag = runtime.runtime["command"].index("--model-folder")
-    assert runtime.runtime["command"][model_folder_flag + 1] == "{checkpoint_parent}"
+    model_folder_flag = runtime.runtime["args"].index("--model-folder")
+    assert runtime.runtime["args"][model_folder_flag + 1] == "{checkpoint_parent}"
 
 
 def test_wan_fun_camera_workspace_uses_upstream_full_demo_defaults() -> None:

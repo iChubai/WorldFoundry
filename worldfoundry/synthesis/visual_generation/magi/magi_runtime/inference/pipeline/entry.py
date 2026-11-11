@@ -14,8 +14,7 @@
 
 import argparse
 import sys
-
-from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.pipeline import MagiPipeline
+from typing import Any
 
 
 def parse_arguments():
@@ -31,8 +30,18 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def _wrap_triton(kernel: Any) -> Any:
+    return kernel
+
+
 def main():
     args = parse_arguments()
+    import torch
+
+    if not hasattr(torch.library, "wrap_triton"):
+        torch.library.wrap_triton = _wrap_triton
+
+    from .pipeline import MagiPipeline
 
     pipeline = MagiPipeline(args.config_file)
 

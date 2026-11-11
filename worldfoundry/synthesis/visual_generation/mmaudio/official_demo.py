@@ -24,7 +24,7 @@ log = logging.getLogger()
 
 
 @torch.inference_mode()
-def main():
+def main(argv: list[str] | None = None) -> None:
     setup_eval_logging()
 
     parser = ArgumentParser()
@@ -45,7 +45,7 @@ def main():
     parser.add_argument("--skip_video_composite", action="store_true")
     parser.add_argument("--full_precision", action="store_true")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.variant not in all_model_cfg:
         raise ValueError(f"Unknown model variant: {args.variant}")

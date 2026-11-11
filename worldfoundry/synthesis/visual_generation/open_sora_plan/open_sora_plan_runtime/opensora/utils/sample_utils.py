@@ -202,15 +202,9 @@ def prepare_pipeline(args, dtype, device):
         if args.model_type == "inpaint" or args.model_type == "i2v":
             raise NotImplementedError("Inpainting model is not available in v1_5")
         else:
-            from opensora.models.diffusion.opensora_v1_5.modeling_opensora import OpenSoraT2V_v1_5
-
-            transformer_model = OpenSoraT2V_v1_5.from_pretrained(
-                args.model_path,
-                subfolder=model_subdir,
-                cache_dir=cache_dir,
-                # device_map=None,
-                torch_dtype=weight_dtype,
-            ).eval()
+            raise NotImplementedError(
+                "Open-Sora-Plan v1.5 is not available in this in-tree build; the shipped route is v1.3"
+            )
 
     scheduler = get_scheduler(args)
     pipeline_class = (

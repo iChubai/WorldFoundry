@@ -29,7 +29,7 @@ catalog 记录的任务包括 action-conditioned-world-model、multiplayer-game-
 
 可选 `load.checkpoint_path`、`load.dataset_path`、`plan_only`、`timeout_seconds`；产物 `generated_video`、`mira.mp4`。
 
-CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPipeline`。
+CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPipeline`。工作进程运行 `worldfoundry.synthesis.visual_generation.mira_wm.infer` 包模块，复用树内统一的 DINOv3 骨干。冻结骨干从 codec checkpoint 恢复；独立预训练权重可通过 `RS_DINO_WEIGHTS_DIR` 提供。
 
 系列状态：**Runner 一致性待确认**。
 

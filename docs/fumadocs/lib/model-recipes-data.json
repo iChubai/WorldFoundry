@@ -78579,6 +78579,7 @@
           "torch": "torch==2.8.0+cu128"
         },
         "validationImports": [
+          "worldfoundry.synthesis.visual_generation.mira_wm.src.mira.inference.loading",
           "torch>=2.8,<2.9",
           "torchcodec==0.7.0",
           "numpy",
@@ -140125,8 +140126,7 @@
         "notes": [
           "Vid2World official evaluation route is registered; checkpoints/config assets are runtime-gated.",
           "Missing checkpoints/assets are reported by the runtime plan and are not catalog blockers.",
-          "WorldFoundry tracks upstream source and checkpoint metadata only; no runnable pipeline is registered.",
-          "Official source is bound from ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/Vid2World at ae24077adbd0783bc6e1b79f705d9b8fad5888ce.",
+          "The in-tree inference module is worldfoundry.synthesis.visual_generation.vid2world.main.inference; only checkpoint, dataset and config assets are external. Source revision is ae24077adbd0783bc6e1b79f705d9b8fad5888ce.",
           "Default unified WorldFoundry runtime for modern NVIDIA hosts. Install with `bash scripts/setup/unified_install.sh`.",
           "Override tier with `--cuda cu124` or `--cuda cu121` when an upstream model still pins an older CUDA wheel bucket.",
           "Source the environment file emitted by `scripts/setup/unified_install.sh` so WORLDFOUNDRY_USE_UNIFIED_ENV=1 routes compatible profiles here.",
@@ -140280,8 +140280,7 @@
         "Vid2World official evaluation route is registered; checkpoints/config assets are runtime-gated.",
         "resolve_model_zoo_config and pipeline import are expected to pass; real generation emits a runtime plan until required checkpoints/assets are staged.",
         "Missing checkpoints/assets are reported by the runtime plan and are not catalog blockers.",
-        "WorldFoundry tracks upstream source and checkpoint metadata only; no runnable pipeline is registered.",
-        "Official source is bound from ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/Vid2World at ae24077adbd0783bc6e1b79f705d9b8fad5888ce."
+        "The in-tree inference module is worldfoundry.synthesis.visual_generation.vid2world.main.inference; only checkpoint, dataset and config assets are external. Source revision is ae24077adbd0783bc6e1b79f705d9b8fad5888ce."
       ],
       "docs": {
         "curated": true,

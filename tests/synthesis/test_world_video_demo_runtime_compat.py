@@ -9,16 +9,16 @@ from worldfoundry.synthesis.visual_generation.video_x_fun.worldfoundry_runtime i
 )
 
 
-def test_official_video_runtime_resolves_repo_relative_checkout_from_tmp(monkeypatch, tmp_path):
+def test_official_video_runtime_resolves_package_relative_config_from_tmp(monkeypatch, tmp_path):
     from worldfoundry.synthesis.visual_generation.official_video_runtime import (
         _existing_path,
     )
 
     monkeypatch.chdir(tmp_path)
-    resolved = _existing_path("worldfoundry/synthesis/visual_generation/krea_realtime/krea_runtime")
+    resolved = _existing_path("worldfoundry/data/models/runtime/configs/video_official/krea-realtime-video.yaml")
 
     assert resolved is not None
-    assert resolved.name == "krea_runtime"
+    assert resolved.name == "krea-realtime-video.yaml"
 
 
 def test_official_video_runtime_skips_incomplete_checkpoint_candidate(tmp_path):
@@ -26,8 +26,6 @@ def test_official_video_runtime_skips_incomplete_checkpoint_candidate(tmp_path):
         OfficialVideoRuntime,
     )
 
-    repo_root = tmp_path / "runtime"
-    repo_root.mkdir()
     incomplete = tmp_path / "legacy-checkpoint"
     incomplete.mkdir()
     complete = tmp_path / "normalized-checkpoint"
@@ -37,7 +35,6 @@ def test_official_video_runtime_skips_incomplete_checkpoint_candidate(tmp_path):
     runtime = OfficialVideoRuntime.from_model_id("helios")
     runtime.runtime.update(
         {
-            "repo_root": str(repo_root),
             "checkpoint_candidates": [str(incomplete), str(complete)],
             "required_paths": [
                 {"id": "transformer", "path": "transformer"},

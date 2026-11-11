@@ -34,9 +34,7 @@ if __name__ == "__main__":
 
     device = torch.cuda.current_device()
     if args.num_frames != 1 and args.enhance_video is not None:
-        from opensora.sample.VEnhancer.enhance_a_video import VEnhancer
-
-        enhance_video_model = VEnhancer(model_path=args.enhance_video, version="v2", device=device)
+        raise NotImplementedError("Video enhancement is not available in this in-tree build; the shipped route is v1.3")
     else:
         enhance_video_model = None
     pipeline = prepare_pipeline(args, dtype, device)

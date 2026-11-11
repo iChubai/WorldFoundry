@@ -186,7 +186,6 @@ def _ensure_demo_pose(workspace_root: Path, source_repo_root: Path, reference_im
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="WorldFoundry UniAnimate-DiT official-demo runner")
-    parser.add_argument("--repo-root", required=True)
     parser.add_argument("--checkpoint-dir", required=True)
     parser.add_argument("--wan-root", required=True)
     parser.add_argument("--prompt", default="")
@@ -204,7 +203,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    repo_root = Path(args.repo_root).expanduser().resolve()
+    repo_root = package_root("worldfoundry.synthesis.visual_generation.unianimate_dit.unianimate_dit_runtime")
     output_path = Path(args.output_path).expanduser().resolve()
     source_script = repo_root / "examples" / "unianimate_wan" / "inference_unianimate_wan_480p.py"
     if not source_script.is_file():

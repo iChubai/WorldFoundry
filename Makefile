@@ -151,6 +151,8 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_image_request_batching.py \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
+	tests/synthesis/test_official_runtime_launches.py \
+	tests/synthesis/test_mira_dino.py \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
 	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
 	tests/base_models/test_vqascore_llama32_molmo_gemini.py \

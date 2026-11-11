@@ -29,7 +29,7 @@ Recorded evaluation entry points include [WorldModelBench](/docs/evaluation/benc
 
 Optional `load.checkpoint_path`, `load.dataset_path`, `plan_only`, and `timeout_seconds`; artifacts `generated_video` and `mira.mp4`.
 
-CLI task profiles: `rocket-science-rollout`. WorldFoundry binds `MIRAPipeline`.
+CLI task profiles: `rocket-science-rollout`. WorldFoundry binds `MIRAPipeline`. The worker runs as `worldfoundry.synthesis.visual_generation.mira_wm.infer` and uses the canonical in-tree DINOv3 backbone. The frozen backbone is restored from the codec checkpoint; standalone pretrained weights can be supplied through `RS_DINO_WEIGHTS_DIR`.
 
 Family status: **Runner parity pending**.
 

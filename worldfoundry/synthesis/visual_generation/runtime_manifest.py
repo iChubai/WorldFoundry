@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.io.paths import project_root
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
@@ -29,7 +28,6 @@ class WorldModelRuntimeSpec:
     entrypoint_relative: str | None = None
     command_builder_attr: str | None = "build_command"
     missing_requirements_attr: str | None = "missing_requirements"
-    pythonpath_builder_attr: str | None = "pythonpath_entries"
     blocked_reason_attr: str | None = "BLOCKED_REASON"
     blocked_reason: str | None = None
     source_dir_names: tuple[str, ...] = ()
@@ -605,19 +603,10 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
         hook = self._module_hook(self.profile.command_builder_attr)
         if hook is not None:
             return [str(item) for item in hook(context)]
-        if self.entrypoint is None:
-            return []
-        return [sys.executable, str(self.entrypoint)]
+        return []
 
     def _subprocess_env(self, *, output_path: Path, prompt: str, plan_path: Path) -> dict[str, str]:
         env = os.environ.copy()
-        pythonpath_entries: list[str] = []
-        hook = self._module_hook(self.profile.pythonpath_builder_attr)
-        if hook is not None:
-            extra_entries = hook(runtime_root=self.runtime_root, options=self.options, profile=self.runtime_profile)
-            pythonpath_entries.extend(str(item) for item in extra_entries or ())
-        pythonpath_entries.extend([str(self.runtime_root), str(project_root(__file__)), env.get("PYTHONPATH", "")])
-        env["PYTHONPATH"] = os.pathsep.join(item for item in pythonpath_entries if item)
         env["WORLDFOUNDRY_MODEL_ID"] = self.model_id
         env["WORLDFOUNDRY_OUTPUT_PATH"] = str(output_path)
         env["WORLDFOUNDRY_OUTPUT_DIR"] = str(output_path.parent)

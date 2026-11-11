@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import FLAGS_KAIROS_CUDA_SM
 
 
 def _find_thirdparty_root() -> Path:

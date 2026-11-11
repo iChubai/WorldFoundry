@@ -40,7 +40,9 @@ IS_CUDA = torch.cuda.is_available()
 if not IS_CUDA:
     os.environ["TORCHDYNAMO_DISABLE"] = "1"
 
-from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM  # noqa: E402 - Follows the environment setup.
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (  # noqa: E402 - Follows the environment setup.
+    FLAGS_KAIROS_CUDA_SM,
+)
 
 SUPPORTED_ARCHS = {80, 89, 120, 121}
 if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
@@ -57,17 +59,20 @@ if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
 import torch.distributed as dist  # noqa: E402 - Follows the conditional setup block.
 from fla.layers import GatedDeltaNet  # noqa: E402 - Follows the conditional setup block.
 from fla.models.utils import Cache as FlaCache  # noqa: E402 - Follows the conditional setup block.
-from kairos.apis.builder import DITS  # noqa: E402 - Follows the conditional setup block.
+
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.apis.builder import (  # noqa: E402 - Follows the conditional setup block.
+    DITS,
+)
 
 # isort: split
-from kairos.modules.utils import (  # noqa: E402 - Follows the conditional setup block.
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (  # noqa: E402 - Follows the conditional setup block.
     FLAGS_KAIROS_IS_METAX,
     parallel_state,
 )
 
 # isort: split
 # isort: split
-from kairos.modules.utils.tp_utils import (  # noqa: E402 - Follows the conditional setup block.
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils.tp_utils import (  # noqa: E402 - Follows the conditional setup block.
     all2all_head_to_seq,
     all2all_seq_to_head,
     build_tp_chunk_list,

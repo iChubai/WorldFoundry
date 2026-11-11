@@ -39,7 +39,7 @@ def test_kairos_dit_import_and_pytorch_attention_fallback() -> None:
         import math
         import torch
         import torch.nn.functional as F
-        from kairos.modules.dits import kairos_dit as module
+        from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.dits import kairos_dit as module
 
         norm = module.FusedRMSNorm(8, eps=1e-6)
         assert norm(torch.ones(2, 8)).shape == (2, 8)

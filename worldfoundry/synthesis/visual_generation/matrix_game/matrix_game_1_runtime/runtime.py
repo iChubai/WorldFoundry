@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core import jsonable
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import (
     conda_envs_root_path,
     conda_root_path,
@@ -21,6 +22,7 @@ from worldfoundry.core.io.paths import (
 from worldfoundry.runtime.env import resolve_ckpt_dir, resolve_hfd_root
 
 RUNTIME_ROOT = Path(__file__).resolve().parent
+RUNNER_MODULE = "worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_1_runtime.inference_bench"
 REPO_ROOT = project_root(RUNTIME_ROOT)
 DEFAULT_CHECKPOINT_DIR = Path(
     os.environ.get(
@@ -150,14 +152,12 @@ class MatrixGame1Runtime:
         model_id: str = MODEL_ID,
         checkpoint_dir: str | Path | None = None,
         conda_dir: str | Path | None = None,
-        runtime_root: str | Path | None = None,
     ) -> None:
         """Initialize runtime paths without importing heavy ML dependencies.
 
         Args:
             checkpoint_dir: Directory containing Skywork/Matrix-Game assets.
             conda_dir: Optional Matrix-Game-1 conda prefix.
-            runtime_root: Optional vendored runtime root override.
         """
         self.model_id = model_id
         self.model_name = self.DISPLAY_NAME
@@ -170,7 +170,7 @@ class MatrixGame1Runtime:
         self.conda_dir = _expand_runtime_path(conda_dir) if conda_dir is not None else None
         if self.conda_dir is None and DEFAULT_CONDA_DIR is not None:
             self.conda_dir = _expand_runtime_path(DEFAULT_CONDA_DIR)
-        self.runtime_root = _expand_runtime_path(runtime_root) if runtime_root is not None else RUNTIME_ROOT
+        self.runtime_root = RUNTIME_ROOT
 
     @classmethod
     def from_pretrained(
@@ -191,7 +191,6 @@ class MatrixGame1Runtime:
             device=str(device or options.get("device") or "cuda"),
             checkpoint_dir=options.get("checkpoint_dir") or options.get("model_dir"),
             conda_dir=options.get("conda_dir") or options.get("python_env_dir"),
-            runtime_root=options.get("runtime_root"),
         )
 
     @property
@@ -355,7 +354,6 @@ class MatrixGame1Runtime:
             interactions: Ordered keyboard/camera command segments.
             extra_env: Additional environment variables.
         """
-        python_executable = self.python_executable or Path("python")
         resolved_image_path = _expand_runtime_path(image_path) or Path(image_path).expanduser()
         if not resolved_image_path.is_absolute():
             resolved_image_path = resolved_image_path.resolve()
@@ -363,9 +361,7 @@ class MatrixGame1Runtime:
         resolved_output_dir = Path(output_dir).expanduser()
         if not resolved_output_dir.is_absolute():
             resolved_output_dir = resolved_output_dir.resolve()
-        command = [
-            str(python_executable),
-            str(self.runtime_root / "inference_bench.py"),
+        arguments = [
             "--dit_path",
             str(self.checkpoint_dir / "dit"),
             "--textenc_path",
@@ -388,32 +384,27 @@ class MatrixGame1Runtime:
             str(max_conditions),
         ]
         if gpu_id:
-            command.extend(["--gpu_id", str(gpu_id)])
+            arguments.extend(["--gpu_id", str(gpu_id)])
         if bfloat16:
-            command.append("--bfloat16")
+            arguments.append("--bfloat16")
         if resolution is not None:
             width, height = tuple(resolution)
-            command.extend(["--resolution", str(width), str(height)])
+            arguments.extend(["--resolution", str(width), str(height)])
         if video_length is not None:
-            command.extend(["--video_length", str(video_length)])
+            arguments.extend(["--video_length", str(video_length)])
         if num_pre_frames is not None:
-            command.extend(["--num_pre_frames", str(num_pre_frames)])
+            arguments.extend(["--num_pre_frames", str(num_pre_frames)])
         if i2v_type is not None:
-            command.extend(["--i2v_type", str(i2v_type)])
+            arguments.extend(["--i2v_type", str(i2v_type)])
         if interactions:
             from .condtions import interaction_condition
 
             interaction_condition(interactions, video_length or 65)
-            command.extend(["--interactions", *interactions])
-        extra_env_dict = dict(extra_env or {})
-        existing_pythonpath = extra_env_dict.pop("PYTHONPATH", None) or os.environ.get("PYTHONPATH", "")
-        pythonpath_entries = [str(REPO_ROOT), str(self.runtime_root)]
-        if existing_pythonpath:
-            pythonpath_entries.append(str(existing_pythonpath))
+            arguments.extend(["--interactions", *interactions])
+        command = package_module_command(RUNNER_MODULE, arguments, python_executable=self.python_executable)
         env = {
-            "PYTHONPATH": os.pathsep.join(pythonpath_entries),
             "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
-            **extra_env_dict,
+            **dict(extra_env or {}),
         }
         return MatrixGame1RuntimePlan(
             command=tuple(command),

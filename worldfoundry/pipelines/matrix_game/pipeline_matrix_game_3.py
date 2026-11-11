@@ -26,17 +26,6 @@ DEFAULT_MATRIX_GAME3_COMPONENTS: dict[str, Any] = {
 }
 
 
-def _looks_like_matrix_game3_code_path(path_value: str | None) -> bool:
-    if path_value is None:
-        return False
-    candidate = Path(str(path_value)).expanduser()
-    return (
-        (candidate / "generate.py").is_file()
-        and (candidate / "pipeline" / "inference_pipeline.py").is_file()
-        and (candidate / "wan" / "__init__.py").is_file()
-    )
-
-
 class MatrixGame3Pipeline(PipelineABC):
     """Pipeline implementation for MatrixGame3 visual generation."""
 
@@ -71,7 +60,7 @@ class MatrixGame3Pipeline(PipelineABC):
         """Load the pipeline from pretrained checkpoints and configurations."""
         required_components = {**DEFAULT_MATRIX_GAME3_COMPONENTS, **(required_components or {})}
         checkpoint_dir = required_components.get("checkpoint_dir")
-        if model_path is not None and not _looks_like_matrix_game3_code_path(model_path):
+        if model_path is not None:
             checkpoint_dir = model_path
         synthesis_model = MatrixGame3Synthesis.from_pretrained(
             pretrained_model_path=checkpoint_dir,

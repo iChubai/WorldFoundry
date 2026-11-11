@@ -170,18 +170,17 @@ class MatrixGame3Synthesis(BaseSynthesis):
         return _runtime_module().resolve_checkpoint_dir(path_value)
 
     @staticmethod
-    def build_subprocess_env(runtime_path: str, device: str | None = None) -> dict:
+    def build_subprocess_env(device: str | None = None) -> dict:
         """
         Builds the environment variables necessary for a subprocess using the runtime's logic.
 
         Args:
-            runtime_path (str): The path to the runtime configuration or model.
             device (str | None): The device string (e.g., "cuda", "cpu") to include in the environment.
 
         Returns:
             dict: A dictionary of environment variables suitable for a subprocess.
         """
-        return _runtime_module().build_subprocess_env(runtime_path, device)
+        return _runtime_module().build_subprocess_env(device)
 
     def predict(self, *args: Any, **kwargs: Any):
         """

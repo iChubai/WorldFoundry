@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import subprocess
-import sys
 import tempfile
 import time
 from collections.abc import Sequence
@@ -14,6 +13,7 @@ import numpy as np
 import torch
 
 from worldfoundry.core import cuda_visible_devices_from_device, load_pil_image, load_video_frames
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
@@ -36,6 +36,7 @@ DEFAULT_MATRIX_GAME3_ALIASES = {
 }
 
 
+RUNNER_MODULE = "worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_3_runtime.worldfoundry_runner"
 DEFAULT_MATRIX_GAME3_CHECKPOINT_DIR = resolve_hfd_root() / "Skywork--Matrix-Game-3.0"
 DEFAULT_MATRIX_GAME3_ASSET_ROOT = package_data_path(
     "models",
@@ -160,13 +161,8 @@ def _wait_for_video_readable(video_path: Path, timeout: float = 180.0, interval:
     raise FileNotFoundError(f"Matrix-Game-3 output video not found: {video_path}")
 
 
-def build_subprocess_env(runtime_path: str, device: str | None = None) -> dict:
+def build_subprocess_env(device: str | None = None) -> dict:
     env = os.environ.copy()
-    pythonpath_entries = [str(project_root() / "src"), runtime_path]
-    existing = env.get("PYTHONPATH")
-    if existing:
-        pythonpath_entries.append(existing)
-    env["PYTHONPATH"] = os.pathsep.join(pythonpath_entries)
     visible_device = cuda_visible_devices_from_device(device)
     if visible_device is not None:
         env["CUDA_VISIBLE_DEVICES"] = visible_device
@@ -179,12 +175,11 @@ class MatrixGame3Runtime:
 
     def __init__(
         self,
-        runtime_path: str,
         checkpoint_dir: str,
         device: str = "cuda",
         defaults: dict | None = None,
     ):
-        self.runtime_root = runtime_path
+        self.runtime_root = str(_validate_runtime_root(runtime_root()))
         self.checkpoint_dir = checkpoint_dir
         self.device = device
         self.defaults = defaults or {}
@@ -200,7 +195,6 @@ class MatrixGame3Runtime:
         **kwargs,
     ) -> MatrixGame3Runtime:
         del args
-        runtime_path = str(_validate_runtime_root(runtime_root()))
         checkpoint_source = checkpoint_dir
         if checkpoint_source is None and pretrained_model_path is not None:
             model_ref = str(pretrained_model_path).strip()
@@ -208,7 +202,6 @@ class MatrixGame3Runtime:
                 checkpoint_source = model_ref
         resolved_checkpoint_dir = resolve_checkpoint_dir(checkpoint_source)
         return cls(
-            runtime_path=runtime_path,
             checkpoint_dir=resolved_checkpoint_dir,
             device=device or "cuda",
             defaults=kwargs,
@@ -268,12 +261,7 @@ class MatrixGame3Runtime:
             )
 
         size_value = self._normalize_size(size)
-        command = [
-            sys.executable,
-            "-m",
-            "worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_3_runtime.worldfoundry_runner",
-            "--runtime_root",
-            self.runtime_root,
+        arguments = [
             "--ckpt_dir",
             resolved_checkpoint_dir,
             "--actions_json",
@@ -317,18 +305,18 @@ class MatrixGame3Runtime:
         ]
         resolved_fa_version = fa_version if fa_version is not None else self.defaults.get("fa_version")
         if resolved_fa_version is not None:
-            command.extend(["--fa_version", str(resolved_fa_version)])
+            arguments.extend(["--fa_version", str(resolved_fa_version)])
         if sample_shift is not None or self.defaults.get("sample_shift") is not None:
-            command.extend(
+            arguments.extend(
                 [
                     "--sample_shift",
                     str(float(sample_shift if sample_shift is not None else self.defaults["sample_shift"])),
                 ]
             )
         if lightvae_pruning_rate is not None:
-            command.extend(["--lightvae_pruning_rate", str(float(lightvae_pruning_rate))])
+            arguments.extend(["--lightvae_pruning_rate", str(float(lightvae_pruning_rate))])
         elif self.defaults.get("lightvae_pruning_rate") is not None:
-            command.extend(["--lightvae_pruning_rate", str(float(self.defaults["lightvae_pruning_rate"]))])
+            arguments.extend(["--lightvae_pruning_rate", str(float(self.defaults["lightvae_pruning_rate"]))])
 
         for flag_name, flag_value in [
             ("--visualize_ops", visualize_ops),
@@ -349,17 +337,18 @@ class MatrixGame3Runtime:
             ),
         ]:
             if flag_value:
-                command.append(flag_name)
+                arguments.append(flag_name)
 
         async_vae_warmup_iters = (
             self.defaults.get("async_vae_warmup_iters", 0) if async_vae_warmup_iters is None else async_vae_warmup_iters
         )
         if int(async_vae_warmup_iters) > 0:
-            command.extend(["--async_vae_warmup_iters", str(int(async_vae_warmup_iters))])
+            arguments.extend(["--async_vae_warmup_iters", str(int(async_vae_warmup_iters))])
 
+        command = package_module_command(RUNNER_MODULE, arguments)
         stdout = None if show_progress else subprocess.DEVNULL
         stderr = None if show_progress else subprocess.STDOUT
-        env = build_subprocess_env(self.runtime_root, self.device)
+        env = build_subprocess_env(self.device)
         subprocess.run(
             command,
             check=True,
@@ -418,10 +407,6 @@ class MatrixGame3Runtime:
                 f"processes; got world_size={world_size}."
             )
 
-        runtime_path = str(Path(self.runtime_root).expanduser().resolve())
-        if runtime_path in sys.path:
-            sys.path.remove(runtime_path)
-        sys.path.insert(0, runtime_path)
         from .worldfoundry_runner import patch_torch_dynamo_config_aliases
 
         patch_torch_dynamo_config_aliases()

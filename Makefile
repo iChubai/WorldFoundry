@@ -250,6 +250,8 @@ INFER_TENSOR_CONTRACTS = \
 	tests/pipelines/test_sana_integration.py \
 	tests/operators/test_worldfm_operator.py \
 	tests/pipelines/test_matrix_game_batch_outputs.py \
+	tests/pipelines/test_matrix_game_1.py \
+	tests/synthesis/test_matrix_game_3p5_runtime_assets.py \
 	tests/pipelines/test_matrix_game_2_seed_repro.py \
 	tests/pipelines/test_worldfm_contracts.py \
 	tests/pipelines/test_lingbot_distributed_loading.py \

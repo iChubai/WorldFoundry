@@ -54,7 +54,6 @@ def patch_torch_dynamo_config_aliases():
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Matrix-Game-3 subprocess runner with custom actions.")
-    parser.add_argument("--runtime_root", required=True, type=str)
     parser.add_argument("--ckpt_dir", required=True, type=str)
     parser.add_argument("--actions_json", required=True, type=str)
     parser.add_argument("--image_path", required=True, type=str)
@@ -178,12 +177,6 @@ def build_runtime_args(args):
 
 def main():
     args = parse_args()
-    runtime_root = Path(args.runtime_root).expanduser().resolve()
-    for import_root in (runtime_root,):
-        root_str = str(import_root)
-        if root_str in sys.path:
-            sys.path.remove(root_str)
-        sys.path.insert(0, root_str)
     patch_torch_dynamo_config_aliases()
 
     with open(args.actions_json, encoding="utf-8") as file:

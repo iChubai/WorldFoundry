@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.pipelines.matrix_game.pipeline_matrix_game_1 import MatrixGame1Pipeline
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.studio.inference.catalog import discover_catalog, find_entry
@@ -218,3 +219,27 @@ def test_matrix_game_1_runtime_profile_documents_world_model_runner_smoke() -> N
     assert profile.backend_stage == "in_tree_runtime"
     assert assets.assets[0].repo_id == "Skywork/Matrix-Game"
     assert any("never routes through Matrix-Game-2" in note for note in profile.notes)
+
+
+@pytest.mark.unit
+def test_matrix_game_1_plan_launches_the_packaged_runner_without_pythonpath(tmp_path: Path) -> None:
+    runtime = MatrixGame1Runtime(checkpoint_dir=tmp_path / "checkpoint", conda_dir=tmp_path / "env")
+    plan = runtime.build_plan(
+        image_path=str(tmp_path / "input.png"),
+        output_dir=tmp_path / "output",
+        inference_steps=3,
+        resolution=(832, 480),
+        video_length=65,
+        interactions=["forward"],
+        gpu_id="2",
+        extra_env={"CUDA_VISIBLE_DEVICES": "2"},
+    )
+
+    module = "worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_1_runtime.inference_bench"
+    assert list(plan.command[:3]) == package_module_command(module, python_executable=runtime.python_executable)
+    assert plan.command[plan.command.index("--inference_steps") + 1] == "3"
+    assert plan.command[plan.command.index("--resolution") + 1 : plan.command.index("--resolution") + 3] == ("832", "480")
+    assert plan.command[plan.command.index("--interactions") + 1 :] == ("forward",)
+    assert "--bfloat16" in plan.command
+    assert plan.env == {"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True", "CUDA_VISIBLE_DEVICES": "2"}
+    assert plan.workdir == str(RUNTIME_ROOT)

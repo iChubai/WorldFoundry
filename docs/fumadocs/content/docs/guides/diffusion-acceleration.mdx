@@ -1,28 +1,9 @@
 ---
 title: Pluggable diffusion acceleration
-description: Native plugin contracts, the Sol-Engine and FlashDreams comparison, and measured H100 results.
+description: Native plugin contracts, correctness boundaries, and measured H100 results.
 ---
 
 Native-precision Wan MHA fusion preserves final latents and RGB bit for bit on two H100 test seeds: **1.19%–1.42%** speedup at 17 frames and **0.60%–0.66%** at 41 frames. Plugins are configured per model, support removal, and default off.
-
-## Upstream comparison
-
-The comparison uses [FlashDreams `91c906b`](https://github.com/NVIDIA/flashdreams/tree/91c906b69992f63fb19907a25cd805fb783d314a) and [Sana Sol-Engine `670482d`](https://github.com/NVlabs/Sana/tree/670482d8a857d578ac8a2ea89b052d0fb47badba). The table separates callable native integrations from optional packages and forwarded flags.
-
-| Technique | Upstream approach | WorldFoundry support |
-| --- | --- | --- |
-| Attention kernels | FlashDreams Triton FA2/TMA, cuDNN and native FP8; Sol Flash/cuDNN and Sol-Attn | SDPA, FA2/3/4, Sage/Sage3, xFormers, TMA and native cuDNN FP8, plus a shared Sol dispatcher and independent Wan self/cross policies. |
-| Block fusion | AdaLN, residual gates, QK norm/RoPE, projection and FFN glue | Common kernels and Wan QKV/RoPE/FFN transforms, plus removable SANA adapters; defaults retain native normalization and token strides. |
-| Invariant/history reuse | Text cross-KV, streaming KV and stable cache layouts | Wan cross-KV and several autoregressive caches, plus removable cross-KV projection fusion with derived packed weights and static-cache miss support. Raw KV, rotated KV and recurrent linear-attention states retain separate contracts. |
-| Feature cache | Sol EasyCache, TeaCache and model-specific controllers | Tea/Ada/Mag/Taylor/block caches, mostly Wan, plus native EasyCache for stateless SanaMS/SanaMSVideo and WanModel, plus locally tested global-to-local schedules for resident Wan2.2 dual experts. |
-| Quantization | FlashDreams separate projection/attention precision; Sol documents FP8 and SVDQuant/Nunchaku | FP8, INT8, INT4, NVFP4 paths (some low-bit modes dequantize into dense GEMMs), plus reversible selective FP8, calibrated native packed SVDQuant, and independent Wan self/cross MHA schedules. The SVDQuant weight format is independent and not Nunchaku binary-compatible. |
-| Lightweight codec | FlashDreams uses a matched pruned Wan2.1 LightVAE encoder and calibrated native FP8 implementation | The matched native base24/16-latent architecture, strict checkpoint admission and calibrated FP8 encoder convolutions using an independent Triton implicit GEMM. Norms, caches and decoding remain FP32. |
-| Compile, graphs, parallelism | Regional compile, stable-shape capture and model-specific pipelines | Compile/cache, CUDA Graph, SP/CFG/VAE parallelism and offload. Plugins preserve the cache/Graph/SP restrictions. |
-| Composition search | Sol model/hardware/quality-budget search | Operator autotuning, plus fixed-candidate native SANA/Wan generation search, scoped to the tested prompt, seeds, geometry and device. |
-
-HyperFlow forwards `--sol-attn` upstream, and WorldGen has an optional Flux/Nunchaku path; neither provides shared native Wan/SANA support. Native packed SVDQuant, independent MHA precision/kernel schedules and calibrated FP8 encoder execution are integrated with restricted contracts. Nunchaku checkpoint compatibility, FP8 TMA, streaming KV and steady-state graph combinations remain unsupported.
-
-Sources: [FlashDreams accelerated](https://github.com/NVIDIA/flashdreams/blob/91c906b69992f63fb19907a25cd805fb783d314a/docs/source/developer_guides/flashdreams_accelerated.md), Sol [kernel](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/kernel.md), [cache](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/cache.md), [quant](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/quant.md), and [Sol-Attn](https://github.com/NVlabs/Sana/blob/670482d8a857d578ac8a2ea89b052d0fb47badba/site_docs/techniques/sparse/sol_attn.md). The EasyCache controller independently implements the [upstream algorithm](https://github.com/H-EmbodVis/EasyCache/tree/bfc63232cfae8c77e2dccf9d72b8f2f56bd995b8).
 
 ## Ownership and lifecycle
 
@@ -179,7 +160,7 @@ All these plugins default off. Numerical providers live under `core/acceleration
 | `svdquant: {artifact: path}` | Offline channel calibration, smoothing, deterministic low-rank decomposition and group-64 packed W4A4 residuals; integer register unpacking feeds INT8 tensor-core dots; separate low-rank down GEMM with up projection fused into the epilogue | Selected native Wan/SANA linears; CUDA SM80+, FP16/BF16, eager no-grad. No dense residual-weight expansion or silent dense fallback. Original modules stay resident for removal, so total weight-memory savings are not claimed. |
 | `optimized_mha` | Independent Wan self/cross fusion, projection/output precision and SDPA; original RMSNorm, RoPE, image/text split and canonical parameters | Fusion `none/kv/qkv`; cross qkv means separate Q plus fused KV. Precision `native/fp8_e4m3/fp8_e5m2/int8`; E5M2 uses a separate Triton GEMM. |
 | MHA SDPA | `torch/cudnn/fa2`; explicit `quantized_sdpa=True` casts raw unscaled E4M3 Q/K/V; pointer FA2 also quantizes P in P@V | FP8 SDPA uses pointer FA2 or optional cuDNN Frontend. TMA supports native-precision FA2 only and requires Triton ≥3.5. Older Triton pointer FA2 uses a validated fixed tile to avoid Hopper compiler-abort configurations. |
-| Codec `fp8_calibration=path` | Calibrated E4M3 implicit GEMM for selected matched Wan21 LightVAE encoder Conv2d/Conv3d; original `CausalConv3d.forward` and caching | SM90+, resident FP32, untiled. Decoder, normalization, SDPA math and caches remain FP32; selected attention convolution projections are quantized. This is not a port of the entire FlashDreams C++ codec. |
+| Codec `fp8_calibration=path` | Calibrated E4M3 implicit GEMM for selected matched Wan21 LightVAE encoder Conv2d/Conv3d; original `CausalConv3d.forward` and caching | SM90+, resident FP32, untiled. Decoder, normalization, SDPA math and caches remain FP32; selected attention convolution projections are quantized. The implementation covers only the native encoder convolution path, not a complete C++ codec. |
 
 MHA receipts distinguish actual low-precision kernels from dense/fallback projection calls. Existing providers may retain dense execution for small GEMMs; diagnostics require every configured module and projection to execute and reject any dense/fallback calls in requested quantized projections.
 

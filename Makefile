@@ -205,6 +205,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/pipelines/test_gen3c_workspace_contract.py \
 	tests/studio/test_trajectory_output_dispatch.py \
 	tests/studio/test_lyra1_catalog.py \
+	tests/eval_core/test_lyra1_reconstruction.py \
 	tests/synthesis/test_lyra2_output_contracts.py \
 	tests/synthesis/test_lyra2_runtime_paths.py \
 	tests/synthesis/test_visual_frame_memory_outputs.py \

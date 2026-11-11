@@ -35,7 +35,7 @@ CLI task profile：`image-to-video`。绑定的 pipeline 类是 `AlayaWorldV11Pi
 
 ## 在 WorldFoundry 中运行
 
-运行 `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video` 沿相机路径生成视频。
+运行 `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video --pipeline.input-path VALUE --pipeline.load.base-checkpoint VALUE --pipeline.load.gemma-path VALUE --pipeline.load.vigeo-checkpoint VALUE` 沿相机路径生成视频。
 
 运行环境：独立环境 `alayaworld-v1.1`（Python 3.11，CUDA 12.8，torch>=2.6）。
 

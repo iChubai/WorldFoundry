@@ -70,6 +70,37 @@ def test_published_model_launch_commands_parse(recipes):
     assert failures == []
 
 
+def test_launch_commands_preserve_full_recipe_commands(recipes, generators):
+    prose, _ = generators
+    failures = []
+    for recipe in recipes:
+        run = recipe["commands"]["run"]
+        expected = " ".join(line.strip().rstrip("\\").strip() for line in run.splitlines())
+        expected = expected.removesuffix(" --json")
+        actual = prose.launch_command(recipe)
+        if actual != expected:
+            failures.append((recipe["id"], expected, actual))
+    assert failures == []
+
+
+def test_launch_command_retains_fallback_without_a_recipe_command(generators):
+    prose, _ = generators
+    recipe = {
+        "id": "fallback-model",
+        "tasks": ["default"],
+        "variants": [{"id": "fallback-model"}],
+        "commands": {"run": "  "},
+    }
+    assert prose.launch_command(recipe) == "wf run fallback-model --pipeline.task-profile default"
+
+
+def test_launch_options_do_not_suppress_weight_repository_details(recipes, generators):
+    prose, _ = generators
+    recipe = next(item for item in recipes if item["id"] == "alayaworld-v1.1")
+    paragraphs = prose.run_paragraphs(recipe, recipe["docs"], "en")
+    assert any(item.startswith("Weights: `AlayaLab/AlayaWorld-v1.1-stage2b`") for item in paragraphs)
+
+
 def test_opening_uses_the_selected_variant_capability(recipes, generators):
     prose, _ = generators
     sana = next(recipe for recipe in recipes if recipe["id"] == "sana")

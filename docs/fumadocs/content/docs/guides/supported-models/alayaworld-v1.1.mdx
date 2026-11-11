@@ -35,7 +35,7 @@ Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weigh
 
 ## Running in WorldFoundry
 
-Run `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video` to follow the camera path.
+Run `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video --pipeline.input-path VALUE --pipeline.load.base-checkpoint VALUE --pipeline.load.gemma-path VALUE --pipeline.load.vigeo-checkpoint VALUE` to follow the camera path.
 
 It runs in the dedicated environment `alayaworld-v1.1` (Python 3.11, CUDA 12.8, torch>=2.6).
 

@@ -1433,8 +1433,11 @@ def run_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) ->
 
     launch = run_command_sentence(recipe, locale)
     builder = builder_sentence(recipe, locale)
+    launch_prose = join_prose([launch, builder], locale)
+    launch_added = False
     if launch and not mentions(blob, "wf run"):
-        add(join_prose([launch, builder], locale))
+        add(launch_prose)
+        launch_added = launch_prose in parts
     elif not mentions(blob, "command builder", "命令构建器"):
         add(builder)
 
@@ -1455,7 +1458,11 @@ def run_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) ->
         *checkpoint_ids(recipe)[:3],
     )
     ckpt_parts: list[str] = []
-    if ckpt and not mentions(blob, *ckpt_needles):
+    checkpoint_blob = blob
+    if launch_added:
+        fallback_launch = launch_prose.replace(launch_command(recipe), _fallback_launch_command(recipe))
+        checkpoint_blob = blob.replace(launch_prose, fallback_launch)
+    if ckpt and not mentions(checkpoint_blob, *ckpt_needles):
         ckpt_parts.append(ckpt)
     if prepare and not mentions(blob, "prepare_model_infer"):
         ckpt_parts.append(prepare)
@@ -1560,7 +1567,7 @@ def classify_tasks(tasks: list[str]) -> dict[str, bool]:
     }
 
 
-def launch_command(recipe: dict[str, Any]) -> str:
+def _fallback_launch_command(recipe: dict[str, Any]) -> str:
     run_id, task = run_identity(recipe)
     launch = run_id or preferred_variant(recipe) or str(recipe.get("id") or "")
     if not launch:
@@ -1572,6 +1579,14 @@ def launch_command(recipe: dict[str, Any]) -> str:
         else:
             cmd += f" --pipeline.task-profile {task}"
     return cmd
+
+
+def launch_command(recipe: dict[str, Any]) -> str:
+    run = str((recipe.get("commands") or {}).get("run") or "")
+    if run.strip():
+        joined = " ".join(line.strip().rstrip("\\").strip() for line in run.splitlines())
+        return re.sub(r"\s+--json$", "", joined)
+    return _fallback_launch_command(recipe)
 
 
 def voice_index(model_id: str, n: int) -> int:

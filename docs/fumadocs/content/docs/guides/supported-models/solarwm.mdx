@@ -39,7 +39,7 @@ Only the infer action is exposed. Training, preencoding and data-engine commands
 
 ## Running in WorldFoundry
 
-Run `wf run solarwm-wan2.2-5b --pipeline.task-profile indexed-inference` to generate the world.
+Run `wf run solarwm-wan2.2-5b --pipeline.task-profile indexed-inference --pipeline.load.base-path VALUE --pipeline.load.data-root VALUE` to generate the world.
 
 It runs in the dedicated environment `worldfoundry-solarwm-wan22-cu124` (Python 3.10, CUDA 12.4, torch==2.5.1+cu124).
 

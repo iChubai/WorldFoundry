@@ -26,7 +26,6 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
 )
 from worldfoundry.core.attention.cache.context import ContextAttentionCache
 
-
 KeyframesEmbeddingProvider = Callable[[], torch.Tensor | None]
 
 

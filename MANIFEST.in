@@ -150,7 +150,6 @@ recursive-include worldfoundry/synthesis/visual_generation/hunyuan_world/gamecra
 recursive-include worldfoundry/synthesis/visual_generation/alayaworld_v11/alayaworld_v11_runtime PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/astronex_world/astronex_world_runtime PROVENANCE.md
 recursive-include worldfoundry/synthesis/visual_generation/solarwm/solarwm_runtime PROVENANCE.md *.json *.txt
-recursive-include worldfoundry/synthesis/visual_generation/ltx25/ltx25_runtime PROVENANCE.md
 recursive-include worldfoundry/base_models/diffusion_model/models/encoders/ltx/prompts *.txt
 recursive-include worldfoundry/synthesis/visual_generation/joyai_echo/echo_wm_runtime PROVENANCE.md *.txt
 recursive-include worldfoundry/synthesis/visual_generation/joyai_echo/echo_longvideo_runtime PROVENANCE.md *.txt

@@ -793,9 +793,6 @@ include-package-data = true
 "worldfoundry.synthesis.visual_generation.solarwm" = [
     "solarwm_runtime/**/*",
 ]
-"worldfoundry.synthesis.visual_generation.ltx25" = [
-    "ltx25_runtime/**/*",
-]
 "worldfoundry.synthesis.visual_generation.joyai_echo" = [
     "echo_wm_runtime/**/*",
     "echo_longvideo_runtime/**/*",

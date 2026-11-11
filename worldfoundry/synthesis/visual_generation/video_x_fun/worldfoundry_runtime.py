@@ -282,7 +282,7 @@ class _WanFunCameraRuntime:
 class Wan21Fun1P3BCameraRuntime(_WanFunCameraRuntime):
     MODEL_ID = "wan21-fun-1p3b-cam"
     CHECKPOINT_REPO = "alibaba-pai--Wan2.1-Fun-V1.1-1.3B-Control-Camera"
-    ENTRYPOINT = "examples/wan2.1_fun/predict_v2v_control_ref.py"
+    ENTRYPOINT = "examples/wan21_fun/predict_v2v_control_ref.py"
     CONFIG = "wan2.1/wan_civitai.yaml"
     BASE_COMPONENT_REPO = "Wan-AI/Wan2.1-T2V-1.3B"
     IMAGE_ENCODER_COMPONENT_REPO = "Wan-AI/Wan2.1-I2V-14B-480P"
@@ -299,14 +299,14 @@ class Wan21Fun1P3BCameraRuntime(_WanFunCameraRuntime):
 class Wan21Fun14BCameraRuntime(_WanFunCameraRuntime):
     MODEL_ID = "wan21-fun-14b-cam"
     CHECKPOINT_REPO = "alibaba-pai--Wan2.1-Fun-V1.1-14B-Control-Camera"
-    ENTRYPOINT = "examples/wan2.1_fun/predict_v2v_control_ref.py"
+    ENTRYPOINT = "examples/wan21_fun/predict_v2v_control_ref.py"
     CONFIG = "wan2.1/wan_civitai.yaml"
 
 
 class Wan22Fun5BCameraRuntime(_WanFunCameraRuntime):
     MODEL_ID = "wan22-fun-5b-cam"
     CHECKPOINT_REPO = "alibaba-pai--Wan2.2-Fun-5B-Control-Camera"
-    ENTRYPOINT = "examples/wan2.2_fun/predict_v2v_control_ref_5b.py"
+    ENTRYPOINT = "examples/wan22_fun/predict_v2v_control_ref_5b.py"
     CONFIG = "wan2.2/wan_civitai_5b.yaml"
     REQUIRED_COMPONENT_FILES = WAN22_5B_CAMERA_COMPONENT_FILES
 
@@ -314,7 +314,7 @@ class Wan22Fun5BCameraRuntime(_WanFunCameraRuntime):
 class Wan22FunA14BCameraRuntime(_WanFunCameraRuntime):
     MODEL_ID = "wan22-fun-a14b-cam"
     CHECKPOINT_REPO = "alibaba-pai--Wan2.2-Fun-A14B-Control-Camera"
-    ENTRYPOINT = "examples/wan2.2_fun/predict_v2v_control_ref.py"
+    ENTRYPOINT = "examples/wan22_fun/predict_v2v_control_ref.py"
     CONFIG = "wan2.2/wan_civitai_i2v.yaml"
     REQUIRED_COMPONENT_FILES = WAN22_A14B_CAMERA_COMPONENT_FILES
 

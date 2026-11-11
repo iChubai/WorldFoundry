@@ -2,9 +2,35 @@
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
+
+
+def _qualify_open_magvit2_config(config: DictConfig) -> DictConfig:
+    """Resolve released YAML class paths to their in-tree owners on a copy."""
+    from omegaconf import DictConfig, ListConfig
+
+    resolved = copy.deepcopy(config)
+
+    def qualify(value: Any) -> None:
+        if isinstance(value, DictConfig):
+            for key in ("target", "class_path"):
+                target = value.get(key)
+                if isinstance(target, str) and target.startswith("src.Open_MAGVIT2."):
+                    value[key] = "worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime." + target
+            for child in value.values():
+                qualify(child)
+        elif isinstance(value, ListConfig):
+            for child in value:
+                qualify(child)
+
+    qualify(resolved)
+    return resolved
 
 
 def load_model(config_path: str | Path, checkpoint_path: str | Path, device: str = "cuda"):
@@ -19,13 +45,9 @@ def load_model(config_path: str | Path, checkpoint_path: str | Path, device: str
     import torch
     from omegaconf import OmegaConf
 
-    # isort: split
-    from . import src as _src  # noqa: F401
-
-    # isort: split
     from worldfoundry.core.configuration.factory import instantiate_from_config
 
-    config = OmegaConf.load(str(config_path))
+    config = _qualify_open_magvit2_config(cast("DictConfig", OmegaConf.load(str(config_path))))
     payload = torch.load(str(checkpoint_path), map_location="cpu")
     model = instantiate_from_config(config.model)
     model.load_state_dict(payload.get("state_dict"), strict=False)

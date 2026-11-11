@@ -35,6 +35,8 @@ Runner status is Verified — this route actually ran on GPU with the TencentARC
 
 Runtime source is vendored in-tree and the CUDA generation wrapper is wired.
 
+Configuration `class_path` and `target` entries from the released `src.Open_MAGVIT2` namespace resolve to the installed in-tree classes at model load time. Checkpoint paths and sampling parameters keep their configured values.
+
 ## Running in WorldFoundry
 
 The catalog launch is `wf run open-magvit2 --pipeline.task-profile interactive-video`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.

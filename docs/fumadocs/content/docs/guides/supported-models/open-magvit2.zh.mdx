@@ -35,6 +35,8 @@ runner 状态为 已验证——该路径确实用 TencentARC/Open-MAGVIT2 权�
 
 可运行路径仅支持类条件图像生成——没有自由提示词，也没有视频输出。
 
+加载模型时，已发布配置中 `src.Open_MAGVIT2` 命名空间下的 `class_path` 和 `target` 会解析到已安装的树内类。权重路径与采样参数保持配置值。
+
 ## 在 WorldFoundry 中运行
 
 catalog 启动命令是 `wf run open-magvit2 --pipeline.task-profile interactive-video`。上方命令构建器按已记录任务切换 `--pipeline.task-profile`，发出的仍是 `wf run`。

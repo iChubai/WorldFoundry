@@ -208,7 +208,7 @@ def _absolute_pose_action_rollout(initial_pose: list[float] | tuple[float, ...],
     import torch
 
     _ensure_vendored_runtime_importable()
-    from models.utils import key_board_control
+    from .ctrl_world_runtime.models.utils import key_board_control
 
     pose = np.asarray(initial_pose, dtype=np.float64)
     if pose.shape != (ACTION_DIM,) or not np.isfinite(pose).all():
@@ -257,12 +257,13 @@ def run(args: argparse.Namespace) -> Path:
 
     import numpy as np
     import torch
-    from models.ctrl_world import CrtlWorld
-    from models.pipeline_ctrl_world import CtrlWorldDiffusionPipeline
-    from models.utils import split_ctrl_world_latents
 
     from worldfoundry.core.media.codecs.video import save_video_h264
     from worldfoundry.core.model_loading import load_torch_checkpoint
+
+    from .ctrl_world_runtime.models.ctrl_world import CrtlWorld
+    from .ctrl_world_runtime.models.pipeline_ctrl_world import CtrlWorldDiffusionPipeline
+    from .ctrl_world_runtime.models.utils import split_ctrl_world_latents
 
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; Ctrl-World inference cannot run")

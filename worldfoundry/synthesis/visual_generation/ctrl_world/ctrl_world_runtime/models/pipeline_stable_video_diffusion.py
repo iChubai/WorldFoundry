@@ -29,8 +29,9 @@ from diffusers.schedulers import EulerDiscreteScheduler
 from diffusers.utils import BaseOutput, is_torch_xla_available, logging, replace_example_docstring
 from diffusers.utils.torch_utils import is_compiled_module, randn_tensor
 from diffusers.video_processor import VideoProcessor
-from models.unet_spatio_temporal_condition import UNetSpatioTemporalConditionModel
 from transformers import CLIPImageProcessor, CLIPVisionModelWithProjection
+
+from .unet_spatio_temporal_condition import UNetSpatioTemporalConditionModel
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm

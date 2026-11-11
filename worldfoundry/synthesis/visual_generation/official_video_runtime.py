@@ -413,9 +413,7 @@ class OfficialVideoRuntime:
             "ready": report.ready,
             "missing": list(report.missing),
             "checkpoint_path": str(report.checkpoint_path) if report.checkpoint_path else None,
-            "command": (
-                self._official_cli_command(variables) if self.runtime.get("kind") == "official_cli" else None
-            ),
+            "command": (self._official_cli_command(variables) if self.runtime.get("kind") == "official_cli" else None),
             "notes": list(self.config.get("notes") or ()),
         }
 

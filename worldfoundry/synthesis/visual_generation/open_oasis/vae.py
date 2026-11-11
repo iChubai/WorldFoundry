@@ -8,12 +8,12 @@ import functools
 
 import torch
 import torch.nn as nn
-from dit import PatchEmbed
 from einops import rearrange
-from rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
 from timm.models.vision_transformer import Mlp
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.synthesis.visual_generation.open_oasis.dit import PatchEmbed
+from worldfoundry.synthesis.visual_generation.open_oasis.rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
 
 
 class DiagonalGaussianDistribution:

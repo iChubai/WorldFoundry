@@ -4,10 +4,10 @@ Based on https://github.com/buoyancy99/diffusion-forcing/blob/main/algorithms/di
 
 import torch
 from einops import rearrange
-from rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
 from torch import nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.synthesis.visual_generation.open_oasis.rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
 
 
 class TemporalAxialAttention(nn.Module):

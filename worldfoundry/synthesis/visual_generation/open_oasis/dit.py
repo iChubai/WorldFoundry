@@ -8,12 +8,13 @@ References:
 import math
 
 import torch
-from attention import SpatialAxialAttention, TemporalAxialAttention
 from einops import rearrange
-from rotary_embedding_torch import RotaryEmbedding
 from timm.layers.helpers import to_2tuple
 from timm.models.vision_transformer import Mlp
 from torch import nn
+
+from worldfoundry.synthesis.visual_generation.open_oasis.attention import SpatialAxialAttention, TemporalAxialAttention
+from worldfoundry.synthesis.visual_generation.open_oasis.rotary_embedding_torch import RotaryEmbedding
 
 
 def modulate(x, shift, scale):

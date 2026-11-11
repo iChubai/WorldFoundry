@@ -179,7 +179,12 @@ def _is_python(node: ast.AST) -> bool:
     text = _text(node)
     if text is not None:
         return re.fullmatch(r"(?:.*/)?python[0-9.]*", text) is not None
-    return "python" in _dotted(node).lower() or _dotted(node) == "sys.executable"
+    dotted = _dotted(node)
+    if dotted == "sys.executable":
+        return True
+    # The interpreter is named by the terminal component; ``python_path.parent``/``.parents`` and other
+    # path navigations derive a directory, not the interpreter, so match only the last dotted name.
+    return "python" in dotted.rsplit(".", 1)[-1].lower()
 
 
 def _is_environment(node: ast.AST) -> bool:

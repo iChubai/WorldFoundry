@@ -39,6 +39,8 @@ Inputs are prompt, image, and trajectory (native motion tokens). Stage the HY15 
 
 Official source is vendored at revision df522a26cd4409d3e3e8f269cc98eac069b5df47.
 
+Both minWM Action2V routes launch installed WorldFoundry package modules under torchrun. HY uses one process; Wan retains its `sp_size` process count and optional `master_port` rendezvous. The workers inherit the caller’s environment without changing `PYTHONPATH`; checkpoint and input paths remain explicit.
+
 ## Running in WorldFoundry
 
 The catalog launch is `wf run minwm-hy-action2v --pipeline.task-profile default`. The command builder above switches `--pipeline.task-profile` among recorded tasks and still emits `wf run`.

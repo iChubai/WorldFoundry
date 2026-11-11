@@ -26,6 +26,7 @@ from worldfoundry.synthesis.visual_generation.dino_wm.custom_resolvers import (
 )
 
 # isort: split
+from worldfoundry.synthesis.visual_generation.dino_wm.checkpoint import load_checkpoint, model_config
 from worldfoundry.synthesis.visual_generation.dino_wm.inference_planning.evaluator import PlanEvaluator
 from worldfoundry.synthesis.visual_generation.dino_wm.preprocessor import Preprocessor
 from worldfoundry.synthesis.visual_generation.dino_wm.utils import cfg_to_dict, seed
@@ -359,8 +360,7 @@ class PlanWorkspace:
 
 
 def load_ckpt(snapshot_path, device):
-    with snapshot_path.open("rb") as f:
-        payload = torch.load(f, map_location=device)
+    payload = load_checkpoint(snapshot_path, map_location=device)
     loaded_keys = []
     result = {}
     for k, v in payload.items():
@@ -372,6 +372,7 @@ def load_ckpt(snapshot_path, device):
 
 
 def load_model(model_ckpt, train_cfg, num_action_repeat, device):
+    train_cfg = model_config(train_cfg)
     result = {}
     if model_ckpt.exists():
         result = load_ckpt(model_ckpt, device)
@@ -388,11 +389,11 @@ def load_model(model_ckpt, train_cfg, num_action_repeat, device):
         base_path = os.path.dirname(os.path.abspath(__file__))
         if train_cfg.env.decoder_path is not None:
             decoder_path = os.path.join(base_path, train_cfg.env.decoder_path)
-            ckpt = torch.load(decoder_path)
+            ckpt = load_checkpoint(decoder_path)
             if isinstance(ckpt, dict):
                 result["decoder"] = ckpt["decoder"]
             else:
-                result["decoder"] = torch.load(decoder_path)
+                result["decoder"] = ckpt
         else:
             raise ValueError(
                 "Decoder path not found in model checkpoint \

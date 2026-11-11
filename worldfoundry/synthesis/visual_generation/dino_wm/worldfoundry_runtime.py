@@ -4,6 +4,7 @@ import importlib.util
 import os
 from pathlib import Path
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import resolve_data_path
 
 RUNTIME_DIR = Path(__file__).resolve().parent
@@ -163,8 +164,6 @@ def build_command(context):
     model_name = options.get("model_name") or options.get("run_name") or ""
     config = Path(str(options.get("config") or options.get("config_path") or DEFAULT_CONFIG)).expanduser().resolve()
     command = [
-        context["python"],
-        context["entrypoint"],
         "--config",
         str(config),
         "--ckpt-base-path",
@@ -187,7 +186,11 @@ def build_command(context):
     ):
         if option_key in options and options[option_key] not in (None, ""):
             command.extend([flag, str(options[option_key])])
-    return command
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.dino_wm.infer",
+        command,
+        python_executable=context["python"],
+    )
 
 
 __all__ = [

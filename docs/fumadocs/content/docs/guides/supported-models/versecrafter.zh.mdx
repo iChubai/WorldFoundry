@@ -2,7 +2,7 @@
 title: "VerseCrafter"
 description: "VerseCrafter（Tencent ARC Lab）：相机可控视频、图生视频；已验证。"
 modelId: "versecrafter"
-pageSource: generated
+pageSource: authored
 ---
 
 腾讯 ARC 的 VerseCrafter 是基于 4D 控制的相机可控图生视频世界模型：几何感知渲染阶段产出 4D 控制信号，引导扩散阶段沿指定相机路径生成。WorldFoundry 将官方源码（revision 008693b5）与精确的 VideoX-Fun 子模块（revision 246a0e3a）内置树内，checkpoint 引用为 TencentARC/VerseCrafter。
@@ -36,6 +36,8 @@ CLI task profile：`default`。绑定的 pipeline 类是 `VerseCrafterPipeline`�
 `default` 记录默认值：frames=81, fps=16, height=480, width=832, seed=2025。
 
 部署前务必注意许可：上游为仅研究、非商用，且排除面向欧盟的使用。 本地真实权重短视频已验证，但后段有可见伪影；尚未测量与官方输出的一致性。
+
+深度估计、4D 控制渲染与扩散分别通过已安装的 WorldFoundry 包模块运行；扩散采用单进程独立 torchrun 会合。工作进程通过完整包路径导入 VideoX-Fun 工具，并保留全部五种 GPU 显存模式、显式权重路径及用于相对资源定位的包工作目录。
 
 ## 在 WorldFoundry 中运行
 

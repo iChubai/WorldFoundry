@@ -1,11 +1,6 @@
+import argparse
 import os
-import sys
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(current_dir)
-
-import argparse  # noqa: E402 - Follows module-level setup, as upstream.
-import warnings  # noqa: E402 - Follows module-level setup, as upstream.
+import warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -16,48 +11,41 @@ from omegaconf import OmegaConf  # noqa: E402 - Follows the warnings configurati
 from PIL import Image  # noqa: E402 - Follows the warnings configuration.
 from transformers import AutoTokenizer  # noqa: E402 - Follows the warnings configuration.
 
-current_file_path = os.path.abspath(__file__)
-project_roots = [
-    os.path.dirname(current_file_path),
-    os.path.dirname(os.path.dirname(current_file_path)),
-    os.path.dirname(os.path.dirname(os.path.dirname(current_file_path))),
-]
-for project_root in project_roots:
-    sys.path.insert(0, project_root) if project_root not in sys.path else None
-
-from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.diffusion_model.loaders.wan_variant import (  # noqa: E402 - Follows the warnings configuration.
     load_wan_transformer,
 )
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.video_x_fun import (  # noqa: E402 - Follows the warnings configuration.
     AutoencoderKLWan,
 )
-from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (  # noqa: E402 - Follows the warnings configuration.
     WanT5EncoderModel,
 )
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.versecrafter import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.versecrafter import (  # noqa: E402 - Follows the warnings configuration.
     VerseCrafterWanTransformer3DModel,
 )
-from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (  # noqa: E402 - Follows the warnings configuration.
     FlowDPMSolverMultistepScheduler,
 )
-from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import (  # noqa: E402 - Follows the warnings configuration.
     FlowUniPCMultistepScheduler,
 )
-from worldfoundry.core.distributed.sequence_parallel.runtime import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.core.distributed.sequence_parallel.runtime import (  # noqa: E402 - Follows the warnings configuration.
     set_multi_gpus_devices,
 )
-from worldfoundry.core.distributed.sharding.block_fsdp import shard_model  # noqa: E402 - Follows the sys.path setup.
-from worldfoundry.core.io.paths import resolve_data_path  # noqa: E402 - Follows the sys.path setup.
-from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.core.distributed.sharding.block_fsdp import (  # noqa: E402 - Follows the warnings configuration.
+    shard_model,
+)
+from worldfoundry.core.io.paths import resolve_data_path  # noqa: E402 - Follows the warnings configuration.
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.fp8_optimization import (  # noqa: E402 - Follows the warnings configuration.
     convert_model_weight_to_float8,
     convert_weight_dtype_wrapper,
     replace_parameters_by_name,
 )
-from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.lora_utils import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.lora_utils import (  # noqa: E402 - Follows the warnings configuration.
     merge_lora,
     unmerge_lora,
 )
-from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (  # noqa: E402 - Follows the warnings configuration.
     filter_kwargs,
     get_image_latent,
     get_image_to_video_latent,
@@ -66,7 +54,7 @@ from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.vi
 )
 
 # isort: split
-from ..versecrafter.pipeline import WanVerseCrafterPipeline  # noqa: E402 - Follows the sys.path setup.
+from ..versecrafter.pipeline import WanVerseCrafterPipeline  # noqa: E402 - Follows the warnings configuration.
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Video generation inference script")

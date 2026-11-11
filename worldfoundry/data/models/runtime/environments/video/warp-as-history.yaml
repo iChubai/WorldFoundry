@@ -27,7 +27,7 @@ validation_imports:
 - diffusers
 - transformers
 - imageio
-- warp_as_history
+- worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history
 notes:
 - Route Warp-as-History to its dedicated upstream-compatible environment; the local env has torch 2.5.0+cu121 and the runtime
   code is vendored in tree under worldfoundry/synthesis/visual_generation/warp_as_history.

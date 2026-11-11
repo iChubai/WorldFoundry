@@ -354,7 +354,7 @@ class WarpAsHistoryRuntime:
         enable_optional_attention: bool,
     ) -> dict[str, Any]:
         self._ensure_runtime_importable()
-        from warp_as_history.infer import infer_plan_kwargs
+        from .warp_as_history_runtime.warp_as_history.infer import infer_plan_kwargs
 
         return infer_plan_kwargs(
             csv_path=csv_path,
@@ -374,7 +374,7 @@ class WarpAsHistoryRuntime:
 
     def _run_infer(self, infer_kwargs: dict[str, Any], target: Path) -> dict[str, Any]:
         self._ensure_runtime_importable()
-        from warp_as_history.infer import run_infer_from_csv
+        from .warp_as_history_runtime.warp_as_history.infer import run_infer_from_csv
 
         payload = dict(infer_kwargs)
         payload["csv_path"] = Path(payload["csv_path"])

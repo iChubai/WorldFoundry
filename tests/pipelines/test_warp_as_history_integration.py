@@ -140,8 +140,9 @@ def test_warp_as_history_catalog_resolves_all_local_checkpoint_roles(tmp_path, m
 
 
 def test_warp_as_history_local_lora_file_sets_explicit_weight_name(tmp_path, monkeypatch):
-    monkeypatch.syspath_prepend(str(runtime_root()))
-    from warp_as_history.pipeline import _diffusers_lora_source
+    from worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history.pipeline import (
+        _diffusers_lora_source,
+    )
 
     lora_path = tmp_path / "visible_lora_state_step1000.safetensors"
     lora_path.write_bytes(b"lora")
@@ -153,9 +154,11 @@ def test_warp_as_history_local_lora_file_sets_explicit_weight_name(tmp_path, mon
 
 
 def test_warp_as_history_ignores_only_incompatible_optional_torchao(monkeypatch):
-    monkeypatch.syspath_prepend(str(runtime_root()))
     from peft.tuners.lora import torchao as peft_torchao
-    from warp_as_history.pipeline import _ignore_incompatible_optional_torchao
+
+    from worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history.pipeline import (
+        _ignore_incompatible_optional_torchao,
+    )
 
     def incompatible():
         raise ImportError("unsupported torchao")

@@ -284,7 +284,7 @@ def run_infer_from_csv(
 
     import torch
 
-    from warp_as_history import WarpAsHistoryPipeline
+    from . import WarpAsHistoryPipeline
 
     torch_dtype = torch_dtype_from_arg(dtype, device)
     generator = torch.Generator(device=device).manual_seed(int(seed)) if device.startswith("cuda") else None

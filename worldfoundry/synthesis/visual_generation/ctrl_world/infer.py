@@ -6,7 +6,6 @@ import argparse
 import gc
 import json
 import math
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -35,29 +34,6 @@ OFFICIAL_KEYBOARD_ACTIONS = {
     "close": "c",
 }
 OFFICIAL_ACTION_STATS = Path(__file__).resolve().parent / "action_stats.json"
-
-
-def _clear_conflicting_models_namespace(runtime_root: Path) -> None:
-    package = sys.modules.get("models")
-    package_file = getattr(package, "__file__", None) if package is not None else None
-    if package_file is not None:
-        try:
-            belongs_to_runtime = Path(package_file).resolve().is_relative_to(runtime_root)
-        except OSError:
-            belongs_to_runtime = False
-        if belongs_to_runtime:
-            return
-    for module_name in tuple(sys.modules):
-        if module_name == "models" or module_name.startswith("models."):
-            sys.modules.pop(module_name, None)
-
-
-def _ensure_vendored_runtime_importable() -> None:
-    runtime_root = (Path(__file__).resolve().parent / "ctrl_world_runtime").resolve()
-    _clear_conflicting_models_namespace(runtime_root)
-    runtime_entry = str(runtime_root)
-    sys.path[:] = [entry for entry in sys.path if entry != runtime_entry]
-    sys.path.insert(0, runtime_entry)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -207,7 +183,6 @@ def _absolute_pose_action_rollout(initial_pose: list[float] | tuple[float, ...],
     import numpy as np
     import torch
 
-    _ensure_vendored_runtime_importable()
     from .ctrl_world_runtime.models.utils import key_board_control
 
     pose = np.asarray(initial_pose, dtype=np.float64)
@@ -253,7 +228,6 @@ def _model_args(args: argparse.Namespace, dtype) -> SimpleNamespace:
 def run(args: argparse.Namespace) -> Path:
     """Generate a three-camera Ctrl-World rollout with the released checkpoint."""
     _validate_args(args)
-    _ensure_vendored_runtime_importable()
 
     import numpy as np
     import torch

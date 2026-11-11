@@ -13,7 +13,7 @@ Ctrl-World 是面向机器人操作的可控生成式世界模型：以机器人
 
 本卡片没有记录论文 URL。代码：[Robert-gyj/Ctrl-World](https://github.com/Robert-gyj/Ctrl-World)。权重：`yjguo/Ctrl-World`，外加 `stabilityai/stable-video-diffusion-img2vid` 和 `openai/clip-vit-base-patch32`。发布方：清华 / 斯坦福。catalog 未记许可证。
 
-兼容启动器会用本地 SVD 和 CLIP 跑发布的 checkpoint。默认视角是同步的 **ALOHA** 高位 / 左腕 / 右腕——运行时**不会**合成相机。要动作质量对齐，仍需要与 checkpoint 匹配的 **DROID** 视角和动作。这些资产就位之前，pipeline 返回 **blocked** 诊断。
+包模块 `worldfoundry.synthesis.visual_generation.ctrl_world.infer` 使用本地 SVD 和 CLIP 运行发布的 checkpoint。默认视角是同步的 **ALOHA** 高位 / 左腕 / 右腕——运行时**不会**合成相机。要动作质量对齐，仍需要与 checkpoint 匹配的 **DROID** 视角和动作。这些资产就位之前，pipeline 返回 **blocked** 诊断。
 
 <ModelCommandBuilder modelId="ctrl-world" locale="zh" />
 

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+from types import ModuleType
 
 import numpy as np
+import pytest
 from PIL import Image
 
 from worldfoundry.pipelines.world_model.pipeline_runtime_manifest import CtrlWorldPipeline
@@ -136,6 +139,9 @@ def test_build_command_expands_paths_and_plan_options(tmp_path, monkeypatch) -> 
         }
     )
 
+    assert command[:3] == ["python", "-m", "worldfoundry.synthesis.visual_generation.ctrl_world.infer"]
+    parsed = infer._parser().parse_args(command[3:])
+    assert parsed.checkpoint_path == checkpoint
     assert command[command.index("--checkpoint-path") + 1] == str(checkpoint)
     assert command[command.index("--base-model-dir") + 1] == str(base)
     assert command[command.index("--clip-model-dir") + 1] == str(clip)
@@ -322,3 +328,16 @@ def test_launcher_rejects_cpu_execution(tmp_path) -> None:
         assert "CUDA" in str(exc)
     else:
         raise AssertionError("CPU execution was accepted")
+
+
+@pytest.mark.unit
+def test_ctrl_world_actions_preserve_the_callers_import_namespace(monkeypatch: pytest.MonkeyPatch) -> None:
+    unrelated_models = ModuleType("models")
+    monkeypatch.setitem(sys.modules, "models", unrelated_models)
+    original_path = list(sys.path)
+
+    actions = infer._absolute_pose_action_rollout([0.4, 0.0, 0.4, 3.1, 0.0, 0.0, 0.0], "right", 0.08)
+
+    assert tuple(actions.shape) == (1, 11, 7)
+    assert sys.modules["models"] is unrelated_models
+    assert sys.path == original_path

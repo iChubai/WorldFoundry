@@ -67,7 +67,10 @@ def save_class_image(
     import torch
     from einops import repeat
     from PIL import Image
-    from src.Open_MAGVIT2.modules.transformer.gpt import sample_Open_MAGVIT2
+
+    from worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime.src.Open_MAGVIT2.modules.transformer.gpt import (
+        sample_Open_MAGVIT2,
+    )
 
     steps = int(steps or config.model.init_args.transformer_config.params.block_size)
     dim_z = int(config.model.init_args.first_stage_config.params.embed_dim)

@@ -2,8 +2,14 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
-from src.Open_MAGVIT2.modules.diffusionmodules.improved_model import Decoder, Encoder
-from src.Open_MAGVIT2.modules.vqvae.lookup_free_quantize import LFQ
+
+from worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime.src.Open_MAGVIT2.modules.diffusionmodules.improved_model import (
+    Decoder,
+    Encoder,
+)
+from worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime.src.Open_MAGVIT2.modules.vqvae.lookup_free_quantize import (
+    LFQ,
+)
 
 
 class VQModel(nn.Module):

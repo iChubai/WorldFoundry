@@ -7,9 +7,11 @@ https://github.com/FoundationVision/VAR
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from src.Open_MAGVIT2.modules.util import SOSProvider
 
 from worldfoundry.core.configuration.factory import instantiate_from_config
+from worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime.src.Open_MAGVIT2.modules.util import (
+    SOSProvider,
+)
 
 
 def disabled_train(self, mode=True):
@@ -43,7 +45,9 @@ class Net2NetTransformer(nn.Module):
         self.init_first_stage_from_ckpt(first_stage_config)
         self.init_cond_stage_from_ckpt(cond_stage_config)
         if permuter_config is None:
-            permuter_config = {"target": "src.Open_MAGVIT2.modules.transformer.permuter.Identity"}
+            permuter_config = {
+                "target": "worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime.src.Open_MAGVIT2.modules.transformer.permuter.Identity"
+            }
         self.permuter = instantiate_from_config(config=permuter_config)
         self.transformer = instantiate_from_config(config=transformer_config)
 

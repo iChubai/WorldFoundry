@@ -4,6 +4,7 @@ import importlib.util
 import os
 from pathlib import Path
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import resolve_data_path, resolve_worldfoundry_path
 
 RUNTIME_DIR = Path(__file__).resolve().parent
@@ -102,8 +103,6 @@ def build_command(context):
     if output_path.suffix.lower() in {".mp4", ".mov", ".webm", ".gif"}:
         artifact_path = output_path.with_suffix(".result.json")
     command = [
-        context["python"],
-        context["entrypoint"],
         "--config-dir",
         str(resolve_worldfoundry_path(str(options.get("config_dir") or CONFIG_DIR))),
         "--config-name",
@@ -131,7 +130,9 @@ def build_command(context):
             if option_key in {"cache_dir", "dataset_name"}:
                 value = resolve_worldfoundry_path(str(value))
             command.extend([flag, str(value)])
-    return command
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.le_wm.infer", command, python_executable=context["python"]
+    )
 
 
 __all__ = [

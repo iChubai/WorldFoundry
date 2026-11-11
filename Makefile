@@ -251,6 +251,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/test_midas_checkpoint_compat.py \
 	tests/base_models/test_vggsfm_dino_loading.py \
 	tests/base_models/test_open_flamingo_imports.py \
+	tests/base_models/test_vipe_native_extension.py \
 	tests/core/test_vit_qkv.py \
 	tests/synthesis/test_wonderworld_stages.py \
 	tests/core/test_gaussian_surfels.py \

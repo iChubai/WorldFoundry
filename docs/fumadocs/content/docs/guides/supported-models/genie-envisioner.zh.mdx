@@ -39,7 +39,7 @@ CLI task profile：`robot-multiview-video`。绑定的 pipeline 类是 `GenieEnv
 
 `robot-multiview-video` 记录的冒烟默认值：height=192, width=256, num_inference_steps=5, guidance_scale=1.0, fps=8, seed=42。发布的 GE-base-fast 样例使用 50 步、5 fps。
 
-pipeline 解析内置推理入口，在 checkpoint 与任务资产就位前返回 blocked 运行时诊断。 提交任务前请就位两套记录的 checkpoint。
+pipeline 以已安装的 Python 模块 `worldfoundry.synthesis.visual_generation.genie_envisioner.infer` 启动推理，在 checkpoint 与任务资产就位前返回 blocked 运行时诊断。 提交任务前请就位两套记录的 checkpoint。
 
 ## 在 WorldFoundry 中运行
 

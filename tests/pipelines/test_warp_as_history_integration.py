@@ -3,6 +3,7 @@ import importlib
 import pkgutil
 import sys
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -18,6 +19,7 @@ from worldfoundry.synthesis.visual_generation.warp_as_history.variants import (
     get_warp_as_history_variant,
     runtime_root,
 )
+from worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_synthesis import WarpAsHistorySynthesis
 from worldfoundry.zoo.catalog import load_model_zoo_registry
 
 
@@ -180,7 +182,7 @@ def test_warp_as_history_filters_evaluator_metadata(tmp_path):
             return {"artifact_path": str(tmp_path / "warp.mp4")}
 
     synthesis = Synthesis()
-    pipeline = WarpAsHistoryPipeline(synthesis_model=synthesis)
+    pipeline = WarpAsHistoryPipeline(synthesis_model=cast(WarpAsHistorySynthesis, synthesis))
     pipeline(
         prompt="test",
         images="input.png",
@@ -191,6 +193,7 @@ def test_warp_as_history_filters_evaluator_metadata(tmp_path):
         return_dict=True,
     )
 
+    assert synthesis.kwargs is not None
     assert "ref_image_path" not in synthesis.kwargs
     assert "sample_id" not in synthesis.kwargs
     assert "task_name" not in synthesis.kwargs
@@ -204,7 +207,7 @@ def test_camera_warp_imports_canonical_pi3(monkeypatch: pytest.MonkeyPatch) -> N
     from worldfoundry.synthesis.visual_generation.warp_as_history.worldfoundry_runtime import WarpAsHistoryRuntime
 
     monkeypatch.setattr(sys, "path", list(sys.path))
-    WarpAsHistoryRuntime(device="cpu")._ensure_runtime_importable()
+    WarpAsHistoryRuntime(device="cpu")._configure_runtime_environment()
     from worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history.camera_warp import (
         _import_pi3,
     )

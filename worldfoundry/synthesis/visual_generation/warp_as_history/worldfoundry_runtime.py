@@ -98,16 +98,6 @@ class WarpAsHistoryRuntime:
     def _runtime_root() -> Path:
         return runtime_root().resolve()
 
-    @staticmethod
-    def _repo_src_root() -> Path:
-        root = WarpAsHistoryRuntime._project_root()
-        src_root = root / "src"
-        if (src_root / "worldfoundry").is_dir():
-            return src_root
-        if (root / "worldfoundry").is_dir():
-            return root
-        return Path(__file__).resolve().parents[5]
-
     def _resolve_runtime_path(self, value: str | Path) -> Path:
         path = Path(str(value)).expanduser()
         if path.is_absolute():
@@ -327,13 +317,7 @@ class WarpAsHistoryRuntime:
             writer.writerow({key: row.get(key, "") for key in fieldnames})
         return csv_path
 
-    def _ensure_runtime_importable(self) -> None:
-        root = str(self._runtime_root())
-        if root not in sys.path:
-            sys.path.insert(0, root)
-        repo_src = str(self._repo_src_root())
-        if repo_src not in sys.path:
-            sys.path.insert(0, repo_src)
+    def _configure_runtime_environment(self) -> None:
         os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
         if self.pi3x_ckpt_path:
             os.environ["WAH_PI3X_CKPT_PATH"] = self.pi3x_ckpt_path
@@ -353,7 +337,7 @@ class WarpAsHistoryRuntime:
         warp_debug_dir: str | Path | None,
         enable_optional_attention: bool,
     ) -> dict[str, Any]:
-        self._ensure_runtime_importable()
+        self._configure_runtime_environment()
         from .warp_as_history_runtime.warp_as_history.infer import infer_plan_kwargs
 
         return infer_plan_kwargs(
@@ -373,7 +357,7 @@ class WarpAsHistoryRuntime:
         )
 
     def _run_infer(self, infer_kwargs: dict[str, Any], target: Path) -> dict[str, Any]:
-        self._ensure_runtime_importable()
+        self._configure_runtime_environment()
         from .warp_as_history_runtime.warp_as_history.infer import run_infer_from_csv
 
         payload = dict(infer_kwargs)

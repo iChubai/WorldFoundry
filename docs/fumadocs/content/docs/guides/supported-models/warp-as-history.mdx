@@ -25,6 +25,8 @@ Camera-pose warping uses WorldFoundry’s in-tree Pi3X model and geometry helper
 
 ## Runtime contract
 
+WorldFoundry calls `worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history.infer` in process through its package imports.
+
 Dedicated environment only: `warp-as-history` pins **Python 3.10**, **CUDA 12.1**, **torch==2.5.0**. Do not run this in the unified env. Backend stage is `in_tree_official_cli`. Camera paths far from the input viewpoint degrade the warp history and the clip.
 
 ## Running in WorldFoundry

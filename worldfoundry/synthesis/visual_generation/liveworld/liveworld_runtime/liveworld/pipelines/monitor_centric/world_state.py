@@ -9,7 +9,9 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from liveworld.geometry_utils import transform_points
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
+    transform_points,
+)
 
 from .event_types import EventID, EventPointCloud
 

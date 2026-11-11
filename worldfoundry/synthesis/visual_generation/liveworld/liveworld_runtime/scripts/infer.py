@@ -22,14 +22,16 @@ if _PROJECT_ROOT not in sys.path:
 
 import argparse  # noqa: E402 - Follows the sys.path setup.
 
-from liveworld.pipelines.monitor_centric import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.monitor_centric import (  # noqa: E402 - Follows the sys.path setup.
     MonitorCentricEvolutionPipeline,
     load_monitor_centric_config,
 )
-from liveworld.pipelines.monitor_centric.shared_models import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.monitor_centric.shared_models import (  # noqa: E402 - Follows the sys.path setup.
     create_shared_models,
 )
-from liveworld.utils import set_seed  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.utils import (  # noqa: E402 - Follows the sys.path setup.
+    set_seed,
+)
 
 
 def _prepare_config(config_path: str, output_root: str, device: str | None, system_config: str | None = None) -> dict:

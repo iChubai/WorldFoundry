@@ -17,7 +17,7 @@ import cv2
 import numpy as np
 import torch
 
-from liveworld.geometry_utils import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
     _limit_points_by_density,
     _safe_frame_index,
     render_projection,

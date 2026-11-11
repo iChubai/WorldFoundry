@@ -17,8 +17,14 @@ from peft import LoraConfig, get_peft_model, set_peft_model_state_dict
 from PIL import Image
 from safetensors.torch import load_file
 
-from liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
-from liveworld.wrapper import BidirectionalWanWrapperSP, WanTextEncoder, WanVAEWrapper
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pipeline_unified_backbone import (
+    UnifiedBackbonePipeline,
+)
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.wrapper import (
+    BidirectionalWanWrapperSP,
+    WanTextEncoder,
+    WanVAEWrapper,
+)
 
 from .logger import logger
 

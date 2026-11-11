@@ -11,7 +11,9 @@ import numpy as np
 import torch
 from PIL import Image
 
-from liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pipeline_unified_backbone import (
+    UnifiedBackbonePipeline,
+)
 
 
 @dataclass

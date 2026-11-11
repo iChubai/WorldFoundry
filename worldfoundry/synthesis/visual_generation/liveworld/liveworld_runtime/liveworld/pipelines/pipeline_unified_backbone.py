@@ -10,7 +10,7 @@ This pipeline handles:
 6. Multi-iteration video generation
 
 Usage:
-    from liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
+    from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
     pipeline = UnifiedBackbonePipeline(config, device, generator, text_encoder, vae)
     video = pipeline.run_single_iteration(...)
     # or for multi-iteration:
@@ -34,10 +34,16 @@ from einops import rearrange
 from PIL import Image
 from tqdm import tqdm
 
-from liveworld.pipelines.pointcloud_updater import ReconstructionResult, create_pointcloud_updater
-from liveworld.utils import FlowMatchScheduler, set_seed
 from worldfoundry.base_models.perception_core.general_perception.qwen3_vl_entity import (
     Qwen3VLEntityExtractor,
+)
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
+    ReconstructionResult,
+    create_pointcloud_updater,
+)
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.utils import (
+    FlowMatchScheduler,
+    set_seed,
 )
 
 from ..geometry_utils import (

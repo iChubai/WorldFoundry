@@ -36,7 +36,7 @@ from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter impor
 )
 
 # isort: split
-from liveworld.geometry_utils import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
     BackboneInferenceOptions,
     _get_visible_points_and_coverage_gpu,
     compute_iteration_plan,
@@ -45,20 +45,24 @@ from liveworld.geometry_utils import (
 )
 
 # isort: split
-from liveworld.pipelines.pipeline_unified_backbone import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pipeline_unified_backbone import (
     generate_scene_projection_from_pointcloud,
     retrieve_reference_frames,
 )
 
 # isort: split
-from liveworld.geometry_utils import scale_intrinsics
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
+    scale_intrinsics,
+)
 
 # isort: split
-from liveworld.pipelines.pointcloud_updater import create_pointcloud_updater
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
+    create_pointcloud_updater,
+)
 
 # isort: split
 # isort: split
-from liveworld.pipelines.pointcloud_updater import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
     ReconstructionResult,
 )
 
@@ -103,7 +107,10 @@ from .io_utils import (
 from .observer_adapter import ObserverAdapter, ObserverIterationInput
 
 # isort: split
-from liveworld.geometry_utils import project_points, transform_points
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
+    project_points,
+    transform_points,
+)
 
 from .event_types import EventObservation, EventVideo, make_event_id
 from .projection_compositor import ProjectionCompositor, overlay_fg_on_scene

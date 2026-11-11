@@ -38,7 +38,10 @@ from .logger import logger
 
 # isort: split
 # isort: split
-from liveworld.pipelines.pointcloud_updater import PointCloudUpdater, create_pointcloud_updater
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
+    PointCloudUpdater,
+    create_pointcloud_updater,
+)
 
 
 @dataclass

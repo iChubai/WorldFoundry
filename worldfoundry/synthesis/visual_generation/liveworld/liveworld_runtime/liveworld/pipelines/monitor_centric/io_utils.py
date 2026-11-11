@@ -10,7 +10,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from liveworld.utils import save_video_h264
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.utils import save_video_h264
 
 
 def ensure_dir(path: str | Path) -> Path:

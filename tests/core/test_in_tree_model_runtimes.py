@@ -94,12 +94,14 @@ EVALUATION_ONLY = (
 MODEL_CALLERS = (*MODEL_PACKAGES, "cli", "core", "mcp", "runtime", "studio", "training")
 
 _SYS_PATH_MUTATORS = {"insert", "append", "extend", "remove", "pop", "clear", "__setitem__", "__delitem__", "__iadd__"}
+# File loaders that execute code addressed by path. ``ExtensionFileLoader`` is excluded: it loads only
+# compiled extension modules (``.so``/``.pyd``), which the goal permits like any compiled extension, and
+# cannot execute Python source. Loading Python source by path stays forbidden.
 _FILE_LOADERS = {
     "run_path",
     "spec_from_file_location",
     "SourceFileLoader",
     "SourcelessFileLoader",
-    "ExtensionFileLoader",
     "load_source",
     "execfile",
 }
@@ -768,6 +770,8 @@ def test_guard_detects_absolute_imports_of_vendored_packages(
         "owner = 'worldfoundry/base_models/capabilities.py'",
         "encoder = hub.load('https://tfhub.dev/google/universal-sentence-encoder-large/5')",
         "python_rng, numpy_rng = random.getstate(), np.random.get_state()",
+        "loader = ExtensionFileLoader(name, str(compiled_so))",
+        "spec = spec_from_loader(name, ExtensionFileLoader(name, str(cached_ext)))",
     ],
 )
 def test_guard_accepts_in_tree_forms(source: str) -> None:

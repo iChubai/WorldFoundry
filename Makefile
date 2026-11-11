@@ -166,6 +166,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_ctrl_world_runtime.py \
 	tests/synthesis/test_warp_as_history_runtime.py \
 	tests/synthesis/test_magic_world_runtime.py \
+	tests/synthesis/test_video_x_fun_runtime.py \
 	tests/synthesis/test_longcat_video_runtime.py \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
 	tests/pipelines/test_ac3d_integration.py \

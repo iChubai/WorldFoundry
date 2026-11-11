@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, ClassVar
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import resolve_data_path, resolve_local_hf_model_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
+
+from .runtime_request import CameraInferenceRequest
 
 WAN21_CAMERA_COMPONENT_FILES = (
     "config.json",
@@ -44,26 +46,6 @@ WAN22_A14B_CAMERA_COMPONENT_FILES = (
     "google/umt5-xxl/tokenizer.json",
     "google/umt5-xxl/tokenizer_config.json",
 )
-
-
-def _replace_assignment(source: str, name: str, value: Any) -> str:
-    pattern = re.compile(rf"(?m)^{re.escape(name)}\s*=.*$")
-    replacement = f"{name:<24}= {value!r}"
-    rendered, count = pattern.subn(lambda _match: replacement, source, count=1)
-    if count != 1:
-        raise RuntimeError(f"VideoX-Fun entrypoint does not expose top-level assignment {name!r}")
-    return rendered
-
-
-def _replace_assignment_expression(source: str, name: str, expression: str) -> str:
-    """Replace a generated-script assignment without quoting Python code."""
-
-    pattern = re.compile(rf"(?m)^{re.escape(name)}\s*=.*$")
-    replacement = f"{name:<24}= {expression}"
-    rendered, count = pattern.subn(lambda _match: replacement, source, count=1)
-    if count != 1:
-        raise RuntimeError(f"VideoX-Fun entrypoint does not expose top-level assignment {name!r}")
-    return rendered
 
 
 class _WanFunCameraRuntime:
@@ -112,7 +94,7 @@ class _WanFunCameraRuntime:
             "inputs": {key: str(value) for key, value in kwargs.items()},
         }
 
-    def _configured_entrypoint(
+    def _write_request(
         self,
         destination: Path,
         *,
@@ -129,9 +111,7 @@ class _WanFunCameraRuntime:
         seed: int,
         enable_teacache: bool,
     ) -> Path:
-        upstream = require_path(self.repo_root / self.ENTRYPOINT, f"{self.MODEL_ID} entrypoint", kind="file")
-        source = upstream.read_text(encoding="utf-8")
-        values = {
+        values: CameraInferenceRequest = {
             "GPU_memory_mode": self.gpu_memory_mode,
             "config_path": str(resolve_data_path("models", "runtime", "configs", "video_x_fun", self.CONFIG)),
             "model_name": str(checkpoint),
@@ -152,18 +132,7 @@ class _WanFunCameraRuntime:
             "enable_teacache": bool(enable_teacache),
             "save_path": str(native_output),
         }
-        for name, value in values.items():
-            source = _replace_assignment(source, name, value)
-        # BF16 is the preferred inference format on Ampere, Hopper and newer
-        # architectures.  Turing/Volta GPUs do not implement native BF16, so
-        # generating the selection in the child process keeps those common
-        # cards on the supported FP16 path without weakening H100 throughput.
-        source = _replace_assignment_expression(
-            source,
-            "weight_dtype",
-            "torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16",
-        )
-        destination.write_text(source, encoding="utf-8")
+        destination.write_text(json.dumps(values, indent=2) + "\n", encoding="utf-8")
         return destination
 
     @staticmethod
@@ -250,8 +219,8 @@ class _WanFunCameraRuntime:
         native_output = input_dir / "outputs"
         input_dir.mkdir(parents=True, exist_ok=True)
         checkpoint = self._materialize_checkpoint_view(input_dir / "checkpoint", checkpoint)
-        configured = self._configured_entrypoint(
-            input_dir / "predict.py",
+        request_path = self._write_request(
+            input_dir / "request.json",
             checkpoint=checkpoint,
             image=image,
             pose=pose,
@@ -269,12 +238,15 @@ class _WanFunCameraRuntime:
         if self.device.startswith("cuda:") and "CUDA_VISIBLE_DEVICES" not in env:
             env["CUDA_VISIBLE_DEVICES"] = self.device.split(":", 1)[1]
         result = execute_in_tree(
-            [self.python_executable, configured],
+            package_module_command(
+                f"{__package__}.video_x_fun_runtime.{self.ENTRYPOINT.removesuffix('.py').replace('/', '.')}",
+                ["--request", request_path],
+                python_executable=self.python_executable,
+            ),
             cwd=self.repo_root,
             output_path=output,
             search_roots=(native_output,),
             env=env,
-            python_paths=(self.repo_root,),
         )
         return result if return_dict else result.get("video")
 

@@ -118,7 +118,7 @@ This keeps family packages thin: a model directory contains checkpoint-compatibl
 
 Core subpackages form a fixed stack. A module imports from its own layer or lower layers, and modules in one layer never import each other in a cycle. From the bottom up:
 
-1. `utils` and the root modules `registry`, `contracts`, `env_registry`, `prompting`, `action_normalization`
+1. `utils`, the root modules `registry`, `contracts`, `env_registry`, `prompting`, `action_normalization`, and the independent leaves `execution.deadline`, `model_loading.policy`
 2. `observability`
 3. `io`
 4. `configuration`, `platform`

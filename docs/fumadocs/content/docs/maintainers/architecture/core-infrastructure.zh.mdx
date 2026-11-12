@@ -118,7 +118,7 @@ description: worldfoundry/core 共享层 —— 加载、attention、分布式�
 
 core 的子包按固定顺序分层：模块只 import 本层或更低层，同一层内的模块不能互相成环。自底向上依次是：
 
-1. `utils` 及根目录模块 `registry`、`contracts`、`env_registry`、`prompting`、`action_normalization`
+1. `utils`、根目录模块 `registry`、`contracts`、`env_registry`、`prompting`、`action_normalization`，以及独立的叶模块 `execution.deadline`、`model_loading.policy`
 2. `observability`
 3. `io`
 4. `configuration`、`platform`

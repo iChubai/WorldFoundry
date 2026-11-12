@@ -28,7 +28,8 @@ quantization, media IO — lives here exactly once; model packages must not reim
 | `contracts.py`, `registry.py`, `env_registry.py`, `prompting.py`, `action_normalization.py` | Shared contracts, registries, prompt and action helpers |
 
 Subpackages are layered: a module imports only its own layer or the ones below it, from
-`utils` and the root modules at the bottom up through `observability`, `io`,
+`utils`, the root modules, and the independent `execution.deadline`/`model_loading.policy`
+leaves at the bottom up through `observability`, `io`,
 `configuration`/`platform`, `distributed`, `media`/`geometry`/`kernels`, `attention`, `nn`,
 `model_loading/checkpoints`, `acceleration`/`vram`, `model_loading`, and finally
 `execution`/`memory`/`safety`. `tests/core/test_core_module_boundaries.py` enforces the order.

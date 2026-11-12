@@ -29,6 +29,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
+from worldfoundry.core.attention.rotary.embedding import rotate_half_chunked as _rotate_half
+
 _BF16 = torch.bfloat16
 _FP32 = torch.float32
 
@@ -141,11 +143,6 @@ def apply_qk_norm(
 # --------------------------------------------------------------------------- #
 # 3D RoPE (concat-doubled half frequencies, NeoX rotate_half).
 # --------------------------------------------------------------------------- #
-def _rotate_half(x: torch.Tensor) -> torch.Tensor:
-    x1, x2 = torch.chunk(x, 2, dim=-1)
-    return torch.cat((-x2, x1), dim=-1)
-
-
 def rope_cos_sin_cache(freqs: torch.Tensor, *, dtype: torch.dtype) -> torch.Tensor:
     """Build the ``[S, rot_dim]`` cos|sin cache from ``[S, rot_dim]`` freqs.
 

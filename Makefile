@@ -189,6 +189,11 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/nn/blocks/test_normalization.py \
 	tests/core/nn/diffusion/test_utils.py \
 	tests/core/attention/rotary/test_interleaved.py \
+	tests/core/attention/rotary/test_rope_nd.py \
+	tests/core/attention/rotary/test_embedding.py \
+	tests/base_models/three_dimensions/point_clouds/pi3_inference/test_prope.py \
+	tests/base_models/three_dimensions/point_clouds/hyworldmirror_2p0/test_inference_helpers.py \
+	tests/base_models/diffusion_model/models/networks/gamma_world/test_multiagent_rope.py \
 	tests/core/media/processing/test_video_transforms.py \
 	tests/core/utils/tensors/test_torch.py \
 	tests/base_models/test_hyperflow_components.py \

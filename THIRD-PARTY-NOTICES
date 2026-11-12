@@ -7271,3 +7271,17 @@ initializer in models/networks/helios/normalization.py. Shared history visibilit
 helpers retain AlayaLab/Evoke attribution (74d268516d95c8fceadd2378f91a73f9f187042b;
 The Evoke Team; Apache-2.0). Existing family model and checkpoint licenses remain
 unchanged; the Apache-2.0 license text is reproduced above.
+
+Shared native rotary and camera tensor helpers
+---------------------------------------------
+Sana and LingBot-Map reuse get_1d_rotary_pos_embed_linear in core/attention/rotary/rope_nd.py
+(NVIDIA Sana/Hugging Face Diffusers, Apache-2.0). The separately scaled native policy
+retains its direct NTK multiplier, linear divisor and real/complex frequency modes.
+Core rotary embedding also owns the MiniMax H3 chunk-based half rotation (SGLang,
+Apache-2.0). Existing canonical rotary contracts remain unchanged.
+
+Sana and MinWM reuse the unchanged MIT PRoPE block-diagonal/SE3 helpers in Pi3;
+the PRoPE authors' MIT notice remains in that owner. ReCamMaster reuses Gamma-World's
+unchanged complex RoPE helpers (NVIDIA, Apache-2.0). HY-World reuses HunyuanWorld-Mirror
+special-token expansion and image padding under their existing model terms. These
+imports do not change family model/checkpoint licenses.

@@ -36,10 +36,6 @@ def _floor_to_multiple(value: int, multiple: int) -> int:
     return max(multiple, int(value) // multiple * multiple)
 
 
-def _is_module(value: Any) -> bool:
-    return isinstance(value, torch.nn.Module)
-
-
 def _resolve_ffmpeg() -> str | None:
     """Locate ffmpeg robustly (PATH, interpreter bin, imageio-ffmpeg)."""
 
@@ -334,7 +330,7 @@ class NativeMagi2Pipeline(PipelineABC):
         # Denoising is the peak-memory stage. Keep the video/audio decoders on
         # CPU until the preview DiT has finished streaming all of its layers.
         for decoder in (self.turbo_decoder, self.video_vae, self.audio_vae):
-            if _is_module(decoder):
+            if isinstance(decoder, torch.nn.Module):
                 decoder.to("cpu")
         self._ensure_components(load_decoders=False)
         if self.preview_transformer is None:
@@ -354,7 +350,7 @@ class NativeMagi2Pipeline(PipelineABC):
         if negative_prompt is None:
             negative_prompt = DEFAULT_NEGATIVE_PROMPT
         null_context = self._encode_prompt(negative_prompt) if negative_prompt else torch.zeros_like(context[:, :0])
-        if _is_module(self.preview_transformer):
+        if isinstance(self.preview_transformer, torch.nn.Module):
             # A previous call offloaded these after denoising.
             self.preview_transformer.pre_adapter.to(device)
             self.preview_transformer.post_adapter.to(device)
@@ -405,7 +401,7 @@ class NativeMagi2Pipeline(PipelineABC):
 
         # Every streamed MoE layer is back on CPU after ``sample``. Move the
         # small resident adapters as well, then materialize only the decoders.
-        if _is_module(self.preview_transformer):
+        if isinstance(self.preview_transformer, torch.nn.Module):
             self.preview_transformer.pre_adapter.to("cpu")
             self.preview_transformer.post_adapter.to("cpu")
         torch.cuda.empty_cache()
@@ -438,13 +434,13 @@ class NativeMagi2Pipeline(PipelineABC):
 
         self._ensure_components(load_preview=False, load_decoders=True)
         for decoder in (self.turbo_decoder, self.video_vae, self.audio_vae):
-            if _is_module(decoder):
+            if isinstance(decoder, torch.nn.Module):
                 decoder.to(device)
-        if _is_module(self.turbo_decoder):
+        if isinstance(self.turbo_decoder, torch.nn.Module):
             result["video"] = self.turbo_decoder.decode(video_latent)
-        elif _is_module(self.video_vae) and hasattr(self.video_vae, "decode"):
+        elif isinstance(self.video_vae, torch.nn.Module) and hasattr(self.video_vae, "decode"):
             result["video"] = self.video_vae.decode(video_latent)
-        if _is_module(self.audio_vae):
+        if isinstance(self.audio_vae, torch.nn.Module):
             from scipy.signal import resample
 
             # audio latent [1, L, 64] -> [1, 64, L] for the VAE decode contract.

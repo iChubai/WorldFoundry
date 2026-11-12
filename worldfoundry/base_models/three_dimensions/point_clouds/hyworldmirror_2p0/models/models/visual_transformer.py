@@ -5,6 +5,9 @@ import torch.distributed as dist
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.models.visual_transformer import (
+    expand_and_flatten_special_tokens as expand_and_flatten_special_tokens,
+)
 from worldfoundry.core.nn.blocks.layers import PatchEmbed, PatchEmbed_Mlp
 
 from ...comm.communication import _Allgather
@@ -588,25 +591,3 @@ class VisualGeometryTransformer(nn.Module):
             )
 
         return tokens.reshape(*token_shape)
-
-
-def expand_and_flatten_special_tokens(token_tensor, b, seq_len):
-    """
-    Processes specialized tokens with shape (1, 2, X, C) for multi-frame processing.
-    Uses first position for frame 0, second position for remaining frames.
-
-    Args:
-        token_tensor: Input tensor with shape (1, 2, X, C)
-        b: Batch size
-        seq_len: Sequence length
-
-    Returns:
-        torch.Tensor: Processed tokens with shape (B*S, X, C)
-    """
-    # First frame uses position 0, remaining frames use position 1
-    first_frame_tokens = token_tensor[:, 0:1, ...].expand(b, 1, *token_tensor.shape[2:])
-    remaining_frame_tokens = token_tensor[:, 1:, ...].expand(b, seq_len - 1, *token_tensor.shape[2:])
-
-    # Concatenate and flatten
-    combined_tokens = torch.cat([first_frame_tokens, remaining_frame_tokens], dim=1)
-    return combined_tokens.reshape(b * seq_len, *combined_tokens.shape[2:])

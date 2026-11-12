@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from typing import cast
 
+import numpy as np
 import torch
 
 from worldfoundry.core.attention.rotary.rope import apply_rotary_embedding
@@ -269,6 +270,51 @@ def get_1d_rotary_pos_embed(
     return torch.polar(torch.ones_like(freqs), freqs)
 
 
+def get_1d_rotary_pos_embed_linear(
+    dim: int,
+    pos: torch.Tensor | np.ndarray | int,
+    theta: float = 10000.0,
+    use_real: bool = False,
+    linear_factor: float = 1.0,
+    ntk_factor: float = 1.0,
+    repeat_interleave_real: bool = True,
+    freqs_dtype: torch.dtype = torch.float32,
+) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+    """Build rotary factors with direct NTK multiplication and a separate linear divisor.
+
+    Real factors return FP32 in interleaved or concatenated order. Complex factors
+    retain the requested frequency precision and the position tensor's device.
+    """
+    assert dim % 2 == 0
+
+    if isinstance(pos, int):
+        pos = torch.arange(pos)
+    if isinstance(pos, np.ndarray):
+        pos = torch.from_numpy(pos)  # [S]
+
+    theta = theta * ntk_factor
+    freqs = (
+        1.0
+        / (theta ** (torch.arange(0, dim, 2, dtype=freqs_dtype, device=pos.device)[: (dim // 2)] / dim))
+        / linear_factor
+    )  # [D/2]
+    freqs = torch.outer(pos, freqs)  # [S, D/2]
+    if use_real and repeat_interleave_real:
+        # flux, hunyuan-dit, cogvideox
+        freqs_cos = freqs.cos().repeat_interleave(2, dim=1, output_size=freqs.shape[1] * 2).float()  # [S, D]
+        freqs_sin = freqs.sin().repeat_interleave(2, dim=1, output_size=freqs.shape[1] * 2).float()  # [S, D]
+        return freqs_cos, freqs_sin
+    elif use_real:
+        # stable audio, allegro
+        freqs_cos = torch.cat([freqs.cos(), freqs.cos()], dim=-1).float()  # [S, D]
+        freqs_sin = torch.cat([freqs.sin(), freqs.sin()], dim=-1).float()  # [S, D]
+        return freqs_cos, freqs_sin
+    else:
+        # lumina
+        freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64     # [S, D/2]
+        return freqs_cis
+
+
 def _expand_factor(
     factor: float | list[float],
     length: int,
@@ -288,6 +334,7 @@ def _expand_factor(
 __all__ = [
     "apply_nd_rotary_embedding",
     "get_1d_rotary_pos_embed",
+    "get_1d_rotary_pos_embed_linear",
     "get_meshgrid_nd",
     "get_nd_rotary_pos_embed",
     "reshape_rotary_for_broadcast",

@@ -14,10 +14,11 @@
 #         https://github.com/naver-ai/rope-vit
 
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+from worldfoundry.core.attention.rotary.rope_nd import get_1d_rotary_pos_embed_linear as get_1d_rotary_pos_embed
 
 
 class PositionGetter:
@@ -193,66 +194,6 @@ class RotaryPositionEmbedding2D(nn.Module):
 
         # Combine processed features
         return torch.cat((vertical_features, horizontal_features), dim=-1)
-
-
-def get_1d_rotary_pos_embed(
-    dim: int,
-    pos: np.ndarray | int,
-    theta: float = 10000.0,
-    use_real=False,
-    linear_factor=1.0,
-    ntk_factor=1.0,
-    repeat_interleave_real=True,
-    freqs_dtype=torch.float32,  #  torch.float32, torch.float64 (flux)
-):
-    """Compute 1D rotary position factors with linear and NTK frequency scaling.
-
-    For pair index j, the angular frequency is
-    (theta * ntk_factor) ** (-2*j/dim) / linear_factor.
-
-    Args:
-        dim: Even feature dimension D.
-        pos: Position count (generates 0 through pos-1) or position array [S].
-        theta: Base frequency, default 10000.
-        use_real: Return separate cosine/sine tensors rather than complex factors.
-        linear_factor: Divisor of the angular frequencies for context scaling.
-        ntk_factor: Multiplier of theta for NTK-aware context scaling.
-        repeat_interleave_real: Repeat each real component consecutively if True;
-            otherwise concatenate two copies of each cosine/sine vector.
-        freqs_dtype: Dtype used to construct the angular frequencies.
-
-    Returns:
-        Complex factors [S, D/2], or two float32 tensors [S, D] for cosine and sine.
-    """
-    assert dim % 2 == 0
-
-    if isinstance(pos, int):
-        pos = torch.arange(pos)
-    if isinstance(pos, np.ndarray):
-        pos = torch.from_numpy(pos)  # [S]
-
-    # Apply NTK scaling to the base before constructing pair frequencies.
-    theta = theta * ntk_factor
-
-    freqs = (
-        1.0
-        / (theta ** (torch.arange(0, dim, 2, dtype=freqs_dtype, device=pos.device)[: (dim // 2)] / dim))
-        / linear_factor
-    )  # [D/2]
-
-    freqs = torch.outer(pos, freqs)  # [S, D/2]
-
-    if use_real and repeat_interleave_real:
-        freqs_cos = freqs.cos().repeat_interleave(2, dim=1, output_size=freqs.shape[1] * 2).float()  # [S, D]
-        freqs_sin = freqs.sin().repeat_interleave(2, dim=1, output_size=freqs.shape[1] * 2).float()  # [S, D]
-        return freqs_cos, freqs_sin
-    elif use_real:
-        freqs_cos = torch.cat([freqs.cos(), freqs.cos()], dim=-1).float()  # [S, D]
-        freqs_sin = torch.cat([freqs.sin(), freqs.sin()], dim=-1).float()  # [S, D]
-        return freqs_cos, freqs_sin
-    else:
-        freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64: [S, D/2]
-        return freqs_cis
 
 
 class WanRotaryPosEmbed(nn.Module):

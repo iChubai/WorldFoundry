@@ -21,3 +21,9 @@ def apply_rotary_pos_emb(
     q_embed = (q * cos) + (rotate_half(q) * sin)
     k_embed = (k * cos) + (rotate_half(k) * sin)
     return q_embed, k_embed
+
+
+def rotate_half_chunked(x: torch.Tensor) -> torch.Tensor:
+    """Rotate the two Torch chunks, retaining chunk semantics for odd feature widths."""
+    x1, x2 = torch.chunk(x, 2, dim=-1)
+    return torch.cat((-x2, x1), dim=-1)

@@ -28,6 +28,9 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils
     depth_edge,
     normals_edge,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils.inference_utils import (
+    _apply_padding as _apply_padding,
+)
 from worldfoundry.core.media.artifacts import download_file_from_url, segment_sky
 
 from .save_utils import (
@@ -64,22 +67,6 @@ def _calculate_resize_dims(orig_w, orig_h, max_dim, resize_strategy, patch_size=
         new_h = max_dim
         new_w = round(orig_w * (new_h / orig_h) / patch_size) * patch_size
     return new_w, new_h
-
-
-def _apply_padding(tensor_img, target_dim):
-    """Apply padding to make tensor square."""
-    h_pad = target_dim - tensor_img.shape[1]
-    w_pad = target_dim - tensor_img.shape[2]
-    if h_pad > 0 or w_pad > 0:
-        pad_top, pad_bottom = h_pad // 2, h_pad - h_pad // 2
-        pad_left, pad_right = w_pad // 2, w_pad - w_pad // 2
-        return torch.nn.functional.pad(
-            tensor_img,
-            (pad_left, pad_right, pad_top, pad_bottom),
-            mode="constant",
-            value=1.0,
-        )
-    return tensor_img
 
 
 def prepare_images_to_tensor(file_paths, resize_strategy="crop", target_size=518):

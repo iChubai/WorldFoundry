@@ -64,6 +64,10 @@ from functools import partial  # noqa: E402 - Follows a module-level setup call,
 
 import torch  # noqa: E402 - Follows a module-level setup call, as upstream.
 
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import (  # noqa: E402 - Follows the module declarations.
+    _apply_block_diagonal as _apply_block_diagonal,
+)
+
 
 def prope_qkv(
     q: torch.Tensor,  # (batch, num_heads, seqlen, head_dim)
@@ -210,29 +214,6 @@ def _apply_tiled_projmat(
         matrix,
         feats.reshape((batch, num_heads, cameras, -1, feat_dim // D, D)),
     ).reshape(feats.shape)
-
-
-def _apply_block_diagonal(
-    feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
-) -> torch.Tensor:
-    """Apply a block-diagonal function to an input array.
-
-    Each function is specified as a tuple with form:
-
-        ((Tensor) -> Tensor, int)
-
-    Where the integer is the size of the input to the function.
-    """
-    funcs, block_sizes = zip(*func_size_pairs, strict=False)
-    assert feats.shape[-1] == sum(block_sizes)
-    x_blocks = torch.split(feats, block_sizes, dim=-1)
-    out = torch.cat(
-        [f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)],
-        dim=-1,
-    )
-    assert out.shape == feats.shape, "Input/output shapes should match."
-    return out
 
 
 def _invert_SE3(transforms: torch.Tensor) -> torch.Tensor:

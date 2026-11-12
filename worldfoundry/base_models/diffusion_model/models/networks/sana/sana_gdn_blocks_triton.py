@@ -46,7 +46,6 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.ops import (
     _execution_weight_bias,
 )
 from worldfoundry.base_models.diffusion_model.models.networks.sana.ops.fused_cam_gdn import (
-    _invert_SE3,
     _prepare_ucpe_rope_tables,
     _process_camera_conditions_raymats_only,
     cam_prep_func,
@@ -67,6 +66,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_gdn_bloc
 from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_gdn_camctrl_blocks import (
     BidirectionalGDNUCPESinglePathLiteLA,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import _invert_SE3
 
 
 def _triton_gdn_is_supported(version: str | None = None) -> bool:

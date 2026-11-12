@@ -26,10 +26,6 @@ from .attention import Attention
 XFORMERS_AVAILABLE = False
 
 
-def modulate(x, shift, scale):
-    return x * (1 + scale.unsqueeze(2)) + shift.unsqueeze(2)
-
-
 class Block(VGGTBlock):
     def __init__(
         self,

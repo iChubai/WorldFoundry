@@ -4,6 +4,12 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import (
+    precompute_freqs_cis as precompute_freqs_cis,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import (
+    rope_apply as rope_apply,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
     MLPProj,
     WanRMSNorm,
@@ -36,13 +42,6 @@ except ModuleNotFoundError:
 
 def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor):
     return x * (1 + scale) + shift
-
-
-def rope_apply(x, freqs, num_heads):
-    x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)
-    x_out = torch.view_as_complex(x.to(torch.float64).reshape(x.shape[0], x.shape[1], x.shape[2], -1, 2))
-    x_out = torch.view_as_real(x_out * freqs).flatten(2)
-    return x_out.to(x.dtype)
 
 
 def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False):
@@ -204,14 +203,6 @@ class DiTBlock(nn.Module):
         input_x = modulate(self.norm2(x), shift_mlp, scale_mlp)
         x = x + gate_mlp * self.ffn(input_x)
         return x
-
-
-def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
-    # 1d rope precompute
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].double() / dim))
-    freqs = torch.outer(torch.arange(end, device=freqs.device), freqs)
-    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
-    return freqs_cis
 
 
 def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):

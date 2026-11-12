@@ -5,6 +5,7 @@
 import copy
 import importlib
 import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -249,3 +250,212 @@ def test_echo_connector_preserves_compaction_and_register_free_token_order() -> 
     expected = torch.nn.functional.rms_norm(features, (16,), eps=1e-6)
     torch.testing.assert_close(encoded, expected, rtol=0, atol=0)
     assert torch.all(binary == 1)
+
+
+_WM_ROOT = "worldfoundry.synthesis.visual_generation.joyai_echo.echo_wm_runtime"
+
+
+@pytest.mark.parametrize("with_action", [False, True])
+def test_echo_wm_ledger_loads_native_ltx_graph_and_ucpe(tmp_path: Path, with_action: bool) -> None:
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.attention import Attention
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.transformer import (
+        ActionBlockConfig,
+        EchoWMTransformerBlock,
+    )
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.transformer_args import (
+        EchoWMArgsPreprocessor,
+        EchoWMAVArgsPreprocessor,
+    )
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.wm import EchoWMModel
+
+    configs = importlib.import_module(f"{_WM_ROOT}.ltx_core.model.transformer.model_configurator")
+    ledger_type = importlib.import_module(f"{_WM_ROOT}.ltx_pipelines.utils.model_ledger").ModelLedger
+    config = _echo_config()
+    original_config = copy.deepcopy(config)
+    reference = configs.LTXModelConfigurator.from_config(config).eval()
+    action = None
+    if with_action:
+        action = ActionBlockConfig(
+            block_indices=[0],
+            ucpe_attn_dim=16,
+            ucpe_num_heads=1,
+            ucpe_patches_x=2,
+            ucpe_patches_y=2,
+            ucpe_image_width=64,
+            ucpe_image_height=64,
+        )
+        action.enabled = True
+        reference.enable_action_conditioning(action)
+    with torch.no_grad():
+        for parameter in reference.parameters():
+            parameter.uniform_(-0.05, 0.05)
+    weights = tmp_path / "wm.safetensors"
+    save_file(
+        {f"model.diffusion_model.{key}": value for key, value in reference.state_dict().items()},
+        weights,
+        metadata={"config": json.dumps(config)},
+    )
+    loaded = ledger_type(dtype=torch.float32, device=torch.device("cpu"), checkpoint_path=str(weights)).transformer(
+        action_config=action
+    )
+    model = loaded.velocity_model
+    assert type(model) is EchoWMModel
+    assert config == original_config
+    assert type(model.transformer_blocks[0]) is EchoWMTransformerBlock
+    assert isinstance(model.transformer_blocks[0], BasicAVTransformerBlock)
+    assert isinstance(model.transformer_blocks[0].attn1, Attention)
+    assert model.transformer_blocks[0].action_ucpe_enabled is with_action
+    assert model.rope_type is LTXRopeType.INTERLEAVED
+    model.refresh_preprocessor_bindings()
+    assert type(model.video_args_preprocessor) is EchoWMAVArgsPreprocessor
+    assert type(model.video_args_preprocessor.simple_preprocessor) is EchoWMArgsPreprocessor
+    assert model.video_args_preprocessor.simple_preprocessor.patchify_proj is model.patchify_proj
+    torch.testing.assert_close(model.state_dict(), reference.state_dict(), rtol=0, atol=0)
+    video, audio = _modalities()
+    condition = (
+        {"ucpe_viewmats": torch.eye(4)[None, None], "ucpe_Ks": torch.eye(3)[None, None]} if with_action else None
+    )
+    with torch.no_grad():
+        expected = reference(video, audio, None, action_cond=condition)
+        torch.testing.assert_close(model(video, audio, None, action_cond=condition), expected, rtol=0, atol=0)
+        expected_x0 = tuple(
+            modality.latent - value * modality.timesteps
+            for modality, value in zip((video, audio), expected, strict=True)
+        )
+        torch.testing.assert_close(loaded(video, audio, None, action_cond=condition), expected_x0, rtol=0, atol=0)
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.bfloat16])
+def test_echo_wm_causal_rollout_keeps_bounded_caches_request_local(
+    dtype: torch.dtype, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.transformer import (
+        ActionBlockConfig,
+    )
+
+    configs = importlib.import_module(f"{_WM_ROOT}.ltx_core.model.transformer.model_configurator")
+    caches_module = importlib.import_module(f"{_WM_ROOT}.ltx_causal.cache")
+    wrapper_module = importlib.import_module(f"{_WM_ROOT}.ltx_causal.causal_wrapper")
+    rollout = importlib.import_module(f"{_WM_ROOT}.ltx_causal.rollout").causal_rollout
+    model = configs.LTXModelConfigurator.from_config(_echo_config()).eval()
+    model.enable_action_conditioning(
+        ActionBlockConfig(
+            enabled=True,
+            block_indices=[0],
+            ucpe_attn_dim=16,
+            ucpe_num_heads=1,
+            ucpe_patches_x=1,
+            ucpe_patches_y=1,
+            ucpe_image_width=32,
+            ucpe_image_height=32,
+        )
+    )
+    model.to(dtype=dtype)
+    with torch.no_grad():
+        for parameter in model.parameters():
+            parameter.uniform_(-0.05, 0.05)
+    wrapper = wrapper_module.CausalModelWrapper(
+        model,
+        patches_per_frame=1,
+        cache=caches_module.CausalCacheConfig(video_local_attn_size=4, video_sink_size=1),
+    )
+    allocate = wrapper.init_caches
+    captured: list[list[dict[str, Any]]] = []
+
+    def record_caches(**kwargs: Any) -> list[dict[str, Any]]:
+        caches = allocate(**kwargs)
+        captured.append(caches)
+        return caches
+
+    monkeypatch.setattr(wrapper, "init_caches", record_caches)
+    frames, audio_frames = 7, 52
+    grid = torch.stack([torch.arange(frames), torch.zeros(frames), torch.zeros(frames)])
+    viewmats = torch.eye(4)[None, None].repeat(1, frames, 1, 1)
+    viewmats[:, :, 0, 3] = torch.arange(frames) * 0.5
+    kwargs: dict[str, Any] = {
+        "wrapper": wrapper,
+        "clean_video": torch.zeros(1, frames, 4, dtype=dtype),
+        "clean_audio": torch.zeros(1, audio_frames, 4, dtype=dtype),
+        "video_positions": torch.stack([grid, grid + 1], dim=-1)[None],
+        "audio_positions": torch.stack([torch.arange(audio_frames), torch.arange(audio_frames) + 1], dim=-1)[
+            None, None
+        ].float(),
+        "video_context": torch.randn(1, 3, 16, dtype=dtype),
+        "audio_context": torch.randn(1, 3, 8, dtype=dtype),
+        "context_mask": None,
+        "action_cond": {"ucpe_viewmats": viewmats, "ucpe_Ks": torch.eye(3)[None, None].repeat(1, frames, 1, 1)},
+        "timesteps": (1000,),
+    }
+    first = tuple(t.clone() for t in rollout(**kwargs, seed=17))
+    first_keys = captured[0][0]["video_self"]["k"].clone()
+    second = rollout(**kwargs, seed=29)
+    repeated = rollout(**kwargs, seed=17)
+    assert not torch.equal(first[0], second[0])
+    torch.testing.assert_close(first, repeated, rtol=0, atol=0)
+    torch.testing.assert_close(first_keys, captured[0][0]["video_self"]["k"], rtol=0, atol=0)
+    for layer in (request[0] for request in captured):
+        torch.testing.assert_close(layer["video_self"]["positions"], torch.tensor([0, 4, 5, 6]))
+        torch.testing.assert_close(layer["audio_self"]["positions"], torch.tensor([0, 1, *range(27, 52)]))
+        assert layer["video_text"]["is_init"] and layer["audio_text"]["is_init"]
+        assert layer["video_ucpe"]["bounded_anchor_translation"]
+    assert len({request[0]["video_self"]["k"].data_ptr() for request in captured}) == 3
+
+
+def test_echo_wm_v2a_gradient_scale_preserves_forward_values() -> None:
+    from worldfoundry.base_models.diffusion_model.models.representations.ltx.echo_wm import EchoWMModality
+
+    configs = importlib.import_module(f"{_WM_ROOT}.ltx_core.model.transformer.model_configurator")
+    model = configs.LTXModelConfigurator.from_config(_echo_config()).eval()
+    with torch.no_grad():
+        for parameter in model.parameters():
+            parameter.uniform_(-0.05, 0.05)
+    video, audio = _modalities()
+    outputs, gradients = [], []
+    for scale in (1.0, 0.25, 0.0):
+        vi = replace(EchoWMModality(**vars(video)), latent=video.latent.detach().clone().requires_grad_(True))
+        au = replace(EchoWMModality(**vars(audio)), v2a_grad_scale=scale)
+        _, value = model(vi, au, None)
+        value.square().mean().backward()
+        outputs.append(value.detach().clone())
+        gradients.append(vi.latent.grad)
+    torch.testing.assert_close(outputs[0], outputs[1], rtol=0, atol=0)
+    torch.testing.assert_close(outputs[0], outputs[2], rtol=0, atol=0)
+    assert gradients[0] is not None and gradients[1] is not None
+    torch.testing.assert_close(gradients[0] * 0.25, gradients[1], rtol=0, atol=0)
+    assert gradients[2] is not None
+    torch.testing.assert_close(gradients[2], torch.zeros_like(gradients[0]), rtol=0, atol=0)
+
+
+@pytest.mark.parametrize(
+    ("valid_indices", "copied_tokens", "zero_indices"),
+    [
+        ((126, 127), ((0, 126), (1, 127)), ()),
+        ((0, 1), (), (126, 127)),
+        ((1, 127), ((0, 1),), (126,)),
+    ],
+    ids=["left", "right", "gapped"],
+)
+def test_echo_wm_connector_preserves_boolean_selection_and_flipped_mask(
+    valid_indices: tuple[int, ...], copied_tokens: tuple[tuple[int, int], ...], zero_indices: tuple[int, ...]
+) -> None:
+    from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import (
+        convert_to_additive_mask,
+    )
+    from worldfoundry.base_models.diffusion_model.models.encoders.ltx.variants.echo_wm import (
+        EchoWMEmbeddings1DConnector,
+    )
+
+    configs = importlib.import_module(f"{_WM_ROOT}.ltx_core.text_encoders.gemma.embeddings_connector")
+    connector = configs.Embeddings1DConnectorConfigurator.from_config(_echo_config(connector_num_layers=0))
+    assert type(connector) is EchoWMEmbeddings1DConnector
+    features = torch.randn(1, 128, 16)
+    mask = torch.zeros(1, 128, dtype=torch.bool)
+    mask[0, list(valid_indices)] = True
+    expected = connector.learnable_registers.detach().float()[None].clone()
+    for destination, source in copied_tokens:
+        expected[:, destination] = features[:, source]
+    expected[:, list(zero_indices)] = 0
+    with torch.no_grad():
+        encoded, actual_mask = connector(features, convert_to_additive_mask(mask, torch.float32))
+    torch.testing.assert_close(encoded, torch.nn.functional.rms_norm(expected, (16,), eps=1e-6), rtol=0, atol=0)
+    assert torch.all(actual_mask == 0)

@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import torch
 
-from ..ltx_core.model.transformer.transformer import ActionBlockConfig
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.transformer import (
+    ActionBlockConfig,
+)
+
 from .action_camera import build_action_pt_from_string
 
 _INTERNAL_TRANSLATION_CALIBRATION = 30.0

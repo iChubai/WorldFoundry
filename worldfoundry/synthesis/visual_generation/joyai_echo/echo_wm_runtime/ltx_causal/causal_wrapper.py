@@ -6,8 +6,9 @@ from dataclasses import replace
 
 import torch
 
-from ..ltx_core.guidance.perturbations import BatchedPerturbationConfig
-from ..ltx_core.model.transformer.modality import Modality
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import BatchedPerturbationConfig
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.echo_wm import EchoWMModality as Modality
+
 from ..ltx_core.utils import to_denoised
 from .cache import CausalCacheConfig
 
@@ -37,7 +38,7 @@ class CausalModelWrapper(torch.nn.Module):
         velocity_video, velocity_audio = self.model(
             video=video,
             audio=audio,
-            perturbations=BatchedPerturbationConfig.empty(video.latent.shape[0]),
+            perturbations=BatchedPerturbationConfig.empty(video.latent.shape[0], num_blocks=self.model.num_blocks),
             action_cond=action_cond,
             kv_caches=kv_caches,
             current_video_token_start=video_start_frame * self.patches_per_frame,

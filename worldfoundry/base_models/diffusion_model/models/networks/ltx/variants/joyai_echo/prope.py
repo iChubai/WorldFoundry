@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# SPDX-License-Identifier: MIT
 # MIT License
 #
 # Copyright (c) Authors of
@@ -21,42 +23,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# How to use PRoPE attention for self-attention:
-#
-# 1. Easiest way (fast):
-#    attn = PropeDotProductAttention(...)
-#    o = attn(q, k, v, viewmats, Ks)
-#
-# 2. More flexible way (fast):
-#    attn = PropeDotProductAttention(...)
-#    attn._precompute_and_cache_apply_fns(viewmats, Ks)
-#    q = attn._apply_to_q(q)
-#    k = attn._apply_to_kv(k)
-#    v = attn._apply_to_kv(v)
-#    o = F.scaled_dot_product_attention(q, k, v, **kwargs)
-#    o = attn._apply_to_o(o)
-#
-# 3. The most flexible way (but slower because repeated computation of RoPE coefficients):
-#    o = prope_dot_product_attention(q, k, v, ...)
-#
-# How to use PRoPE attention for cross-attention:
-#
-#    attn_src = PropeDotProductAttention(...)
-#    attn_tgt = PropeDotProductAttention(...)
-#    attn_src._precompute_and_cache_apply_fns(viewmats_src, Ks_src)
-#    attn_tgt._precompute_and_cache_apply_fns(viewmats_tgt, Ks_tgt)
-#    q_src = attn_src._apply_to_q(q_src)
-#    k_tgt = attn_tgt._apply_to_kv(k_tgt)
-#    v_tgt = attn_tgt._apply_to_kv(v_tgt)
-#    o_src = F.scaled_dot_product_attention(q_src, k_tgt, v_tgt, **kwargs)
-#    o_src = attn_src._apply_to_o(o_src)
+"""Echo PRoPE precision and meta-buffer conventions over the canonical camera algebra."""
 
 from collections.abc import Callable
 from functools import partial
+from typing import Any
 
 import torch
 import torch.nn.functional as F
 
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.ucpe.prope import (
+    PropeDotProductAttention as CameraPropeAttention,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.ucpe.prope import (
     _apply_tiled_projmat as _project_camera_features,
 )
@@ -72,13 +50,8 @@ from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models
 )
 
 
-class PropeDotProductAttention(torch.nn.Module):
-    """PRoPE attention with precomputed RoPE coefficients."""
-
-    coeffs_x_0: torch.Tensor
-    coeffs_x_1: torch.Tensor
-    coeffs_y_0: torch.Tensor
-    coeffs_y_1: torch.Tensor
+class EchoPropeAttention(CameraPropeAttention):
+    """Discard unmaterializable meta coefficients and cast projection matrices at application time."""
 
     def __init__(
         self,
@@ -90,51 +63,13 @@ class PropeDotProductAttention(torch.nn.Module):
         freq_base: float = 100.0,
         freq_scale: float = 1.0,
         precompute_coeffs: bool = True,
-    ):
-        super().__init__()
-        self.head_dim = head_dim
-        self.patches_x = patches_x
-        self.patches_y = patches_y
-        self.image_width = image_width
-        self.image_height = image_height
-
-        if precompute_coeffs:
-            coeffs_x: tuple[torch.Tensor, torch.Tensor] = _rope_precompute_coeffs(
-                torch.tile(torch.arange(patches_x), (patches_y,)),
-                freq_base=freq_base,
-                freq_scale=freq_scale,
-                feat_dim=head_dim // 4,
-            )
-            coeffs_y: tuple[torch.Tensor, torch.Tensor] = _rope_precompute_coeffs(
-                torch.repeat_interleave(torch.arange(patches_y), patches_x),
-                freq_base=freq_base,
-                freq_scale=freq_scale,
-                feat_dim=head_dim // 4,
-            )
-            # Model builders instantiate modules on the meta device before
-            # loading weights. Meta buffers cannot later be materialized by a
-            # state dict because these coefficients are intentionally not
-            # persisted, so generate them lazily on the first real forward.
-            if coeffs_x[0].is_meta:
-                coeffs_x = coeffs_y = (None, None)
-            self.register_buffer("coeffs_x_0", coeffs_x[0], persistent=False)
-            self.register_buffer("coeffs_x_1", coeffs_x[1], persistent=False)
-            self.register_buffer("coeffs_y_0", coeffs_y[0], persistent=False)
-            self.register_buffer("coeffs_y_1", coeffs_y[1], persistent=False)
-        else:
-            self.coeffs_x_0 = None
-            self.coeffs_x_1 = None
-            self.coeffs_y_0 = None
-            self.coeffs_y_1 = None
-
-    # override load_state_dict to not load coeffs if they exist (for backward compatibility)
-    def load_state_dict(self, state_dict, strict=True):
-        # remove coeffs from state_dict
-        state_dict.pop("coeffs_x_0", None)
-        state_dict.pop("coeffs_x_1", None)
-        state_dict.pop("coeffs_y_0", None)
-        state_dict.pop("coeffs_y_1", None)
-        super().load_state_dict(state_dict, strict)
+    ) -> None:
+        super().__init__(
+            head_dim, patches_x, patches_y, image_width, image_height, freq_base, freq_scale, precompute_coeffs
+        )
+        if self.coeffs_x_0 is not None and self.coeffs_x_0.is_meta:
+            for name in ("coeffs_x_0", "coeffs_x_1", "coeffs_y_0", "coeffs_y_1"):
+                self.register_buffer(name, None, persistent=False)
 
     def forward(
         self,
@@ -143,7 +78,7 @@ class PropeDotProductAttention(torch.nn.Module):
         v: torch.Tensor,  # (batch, num_heads, seqlen, head_dim)
         viewmats: torch.Tensor,  # (batch, cameras, 4, 4)
         Ks: torch.Tensor | None,  # (batch, cameras, 3, 3)
-        **kwargs,
+        **kwargs: Any,
     ) -> torch.Tensor:
         return prope_dot_product_attention(
             q,
@@ -166,7 +101,7 @@ class PropeDotProductAttention(torch.nn.Module):
         Ks: torch.Tensor | None,
         coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
         coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
-    ):
+    ) -> None:
         (batch, cameras, _, _) = viewmats.shape
         assert viewmats.shape == (batch, cameras, 4, 4)
         assert Ks is None or Ks.shape == (batch, cameras, 3, 3)
@@ -186,30 +121,6 @@ class PropeDotProductAttention(torch.nn.Module):
             coeffs_y=cached_y if coeffs_y is None else coeffs_y,
         )
 
-    def _apply_to_q(self, q: torch.Tensor) -> torch.Tensor:
-        (batch, num_heads, seqlen, head_dim) = q.shape
-        # assert seqlen == self.cameras * self.patches_x * self.patches_y
-        assert head_dim == self.head_dim
-        assert q.shape == (batch, num_heads, seqlen, head_dim)
-        assert self.apply_fn_q is not None
-        return self.apply_fn_q(q)
-
-    def _apply_to_kv(self, kv: torch.Tensor) -> torch.Tensor:
-        (batch, num_heads, seqlen, head_dim) = kv.shape
-        # assert seqlen == self.cameras * self.patches_x * self.patches_y
-        assert head_dim == self.head_dim
-        assert kv.shape == (batch, num_heads, seqlen, head_dim)
-        assert self.apply_fn_kv is not None
-        return self.apply_fn_kv(kv)
-
-    def _apply_to_o(self, o: torch.Tensor) -> torch.Tensor:
-        (batch, num_heads, seqlen, head_dim) = o.shape
-        # assert seqlen == self.cameras * self.patches_x * self.patches_y
-        assert head_dim == self.head_dim
-        assert o.shape == (batch, num_heads, seqlen, head_dim)
-        assert self.apply_fn_o is not None
-        return self.apply_fn_o(o)
-
 
 def prope_dot_product_attention(
     q: torch.Tensor,  # (batch, num_heads, seqlen, head_dim)
@@ -224,7 +135,7 @@ def prope_dot_product_attention(
     image_height: int,  # Height of the image. Used to normalize intrinsics.
     coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
     coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> torch.Tensor:
     """Similar to torch.nn.functional.scaled_dot_product_attention, but applies PRoPE-style
     positional encoding.
@@ -275,8 +186,8 @@ def _prepare_apply_fns(
     patches_y: int,  # How many patches tall is each image?
     image_width: int,  # Width of the image. Used to normalize intrinsics.
     image_height: int,  # Height of the image. Used to normalize intrinsics.
-    coeffs_x: torch.Tensor | None = None,
-    coeffs_y: torch.Tensor | None = None,
+    coeffs_x: tuple[torch.Tensor, torch.Tensor] | None = None,
+    coeffs_y: tuple[torch.Tensor, torch.Tensor] | None = None,
 ) -> tuple[
     Callable[[torch.Tensor], torch.Tensor],
     Callable[[torch.Tensor], torch.Tensor],
@@ -341,17 +252,17 @@ def _prepare_apply_fns(
 
     # Block-diagonal transforms to the inputs and outputs of the attention operator.
     assert head_dim % 4 == 0
-    transforms_q = [
+    transforms_q: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]] = [
         (partial(_apply_tiled_projmat, matrix=P_T), head_dim // 2),
         (partial(_rope_apply_coeffs, coeffs=coeffs_x), head_dim // 4),
         (partial(_rope_apply_coeffs, coeffs=coeffs_y), head_dim // 4),
     ]
-    transforms_kv = [
+    transforms_kv: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]] = [
         (partial(_apply_tiled_projmat, matrix=P_inv), head_dim // 2),
         (partial(_rope_apply_coeffs, coeffs=coeffs_x), head_dim // 4),
         (partial(_rope_apply_coeffs, coeffs=coeffs_y), head_dim // 4),
     ]
-    transforms_o = [
+    transforms_o: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]] = [
         (partial(_apply_tiled_projmat, matrix=P), head_dim // 2),
         (partial(_rope_apply_coeffs, coeffs=coeffs_x, inverse=True), head_dim // 4),
         (partial(_rope_apply_coeffs, coeffs=coeffs_y, inverse=True), head_dim // 4),

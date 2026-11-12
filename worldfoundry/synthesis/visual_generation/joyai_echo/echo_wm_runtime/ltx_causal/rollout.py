@@ -6,7 +6,8 @@ from dataclasses import dataclass
 
 import torch
 
-from ..ltx_core.model.transformer.modality import Modality
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.echo_wm import EchoWMModality as Modality
+
 from .cache import configure_bounded_caches
 from .causal_wrapper import CausalModelWrapper
 from .scheduling import (

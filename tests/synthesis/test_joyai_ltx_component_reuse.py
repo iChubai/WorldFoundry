@@ -78,13 +78,13 @@ def test_joyai_upsampler_uses_canonical_graph(runtime: str) -> None:
 
 
 def test_joyai_prope_preserves_meta_construction_and_feature_dtype() -> None:
-    from worldfoundry.synthesis.visual_generation.joyai_echo.echo_wm_runtime.ltx_core.model.transformer.ucpe_prope import (
-        PropeDotProductAttention,
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.prope import (
+        EchoPropeAttention,
         _apply_tiled_projmat,
     )
 
     with torch.device("meta"):
-        attention = PropeDotProductAttention(16, 2, 2, 8, 8)
+        attention = EchoPropeAttention(16, 2, 2, 8, 8)
     assert attention.coeffs_x_0 is None
     viewmats = torch.eye(4)[None, None].repeat(1, 2, 1, 1)
     viewmats[:, 1, 0, 3] = 0.5

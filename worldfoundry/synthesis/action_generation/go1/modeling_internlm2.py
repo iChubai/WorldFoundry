@@ -26,7 +26,6 @@ import torch.utils.checkpoint
 from einops import rearrange
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from transformers.activations import ACT2FN
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
@@ -40,13 +39,13 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP, repeat_kv
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     QwenRMSNorm as InternLM2RMSNorm,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     get_unpad_data as _get_unpad_data,
 )
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
 from worldfoundry.core.attention import scaled_dot_product_attention
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
@@ -205,23 +204,6 @@ class InternLM2DynamicNTKScalingRotaryEmbedding(InternLM2RotaryEmbedding):
         emb = torch.cat((freqs, freqs), dim=-1)
         self.register_buffer("cos_cached", emb.cos().to(dtype), persistent=False)
         self.register_buffer("sin_cached", emb.sin().to(dtype), persistent=False)
-
-
-class InternLM2MLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.w1 = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.w3 = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.w2 = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.w2(self.act_fn(self.w1(x)) * self.w3(x))
-
-        return down_proj
 
 
 # Modified from transformers.model.llama.modeling_llama.LlamaAttention
@@ -560,7 +542,7 @@ class InternLM2DecoderLayer(nn.Module):
 
         self.attention = INTERNLM2_ATTENTION_CLASSES[config.attn_implementation](config=config)
 
-        self.feed_forward = InternLM2MLP(config)
+        self.feed_forward = QwenMLP(config)
         self.attention_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.ffn_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

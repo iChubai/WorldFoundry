@@ -11,6 +11,7 @@ from torch.nn import CrossEntropyLoss
 from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
 from transformers.utils import logging
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP
 from worldfoundry.core.attention import scaled_dot_product_attention
 
 from .configuration_internlm2 import InternLM2Config
@@ -19,7 +20,6 @@ from .modeling_internlm2 import (
     InternLM2DecoderLayer,
     InternLM2FlashAttention2,
     InternLM2ForCausalLM,
-    InternLM2MLP,
     InternLM2Model,
     InternLM2RMSNorm,
     _import_flash_attn,
@@ -228,7 +228,7 @@ class InternLM2DecoderLayerGO1(InternLM2DecoderLayer):
 
         self.attention = INTERNLM2GO1_ATTENTION_CLASSES[config.attn_implementation](config=config)
 
-        self.feed_forward = InternLM2MLP(config)
+        self.feed_forward = QwenMLP(config)
         self.attention_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.ffn_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

@@ -12,8 +12,8 @@ from torch import nn
 from transformers import PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutputWithPast
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP, repeat_kv
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import get_unpad_data as _get_unpad_data
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
 from worldfoundry.core.attention import scaled_dot_product_attention
 from worldfoundry.core.attention.rotary.rope import rotate_half
 
@@ -22,7 +22,6 @@ from .flash_attn_utils import load_flash_attn
 from .modeling_internlm2 import (
     InternLM2DynamicNTKScalingRotaryEmbedding,
     InternLM2LinearScalingRotaryEmbedding,
-    InternLM2MLP,
     InternLM2RMSNorm,
     InternLM2RotaryEmbedding,
 )
@@ -412,7 +411,7 @@ class ActionExpertDecoderLayer(nn.Module):
         self.hidden_size = config.hidden_size
         self.attention = ACTIONEXPERT_ATTENTION_CLASSES[config.attn_implementation](config=config)
 
-        self.feed_forward = InternLM2MLP(config)
+        self.feed_forward = QwenMLP(config)
         self.attention_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.ffn_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

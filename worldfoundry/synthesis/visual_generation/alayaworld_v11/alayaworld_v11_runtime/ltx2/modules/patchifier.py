@@ -296,31 +296,3 @@ class AudioPatchifier:
 
 # =============================================================================
 # =============================================================================
-
-
-def get_pixel_coords(
-    latent_coords: torch.Tensor,
-    scale_factors: SpatioTemporalScaleFactors,
-    causal_fix: bool = False,
-) -> torch.Tensor:
-    """
-    Convert latent coordinates into pixel coordinates.
-
-    Args:
-        latent_coords: [batch, 3, num_patches, 2] latent boundaries
-        scale_factors: spatio-temporal scale factors
-        causal_fix: correct for causal encoding
-
-    Returns:
-        [batch, 3, num_patches, 2] pixel coordinates
-    """
-    broadcast_shape = [1] * latent_coords.ndim
-    broadcast_shape[1] = -1
-    scale_tensor = torch.tensor(scale_factors, device=latent_coords.device).view(*broadcast_shape)
-
-    pixel_coords = latent_coords * scale_tensor
-
-    if causal_fix:
-        pixel_coords[:, 0, ...] = (pixel_coords[:, 0, ...] + 1 - scale_factors[0]).clamp(min=0)
-
-    return pixel_coords

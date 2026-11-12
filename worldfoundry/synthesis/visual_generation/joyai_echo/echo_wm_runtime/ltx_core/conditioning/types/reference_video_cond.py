@@ -3,8 +3,10 @@
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.attention_masks import update_attention_mask
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+    get_pixel_coords_tuple_order as get_pixel_coords,
+)
 
-from ...components.patchifiers import get_pixel_coords
 from ...tools import VideoLatentTools
 from ...types import LatentState, VideoLatentShape
 from ..item import ConditioningItem

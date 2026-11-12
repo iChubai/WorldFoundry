@@ -274,11 +274,6 @@ def state_with_conditionings(
     return latent_state
 
 
-def post_process_latent(denoised: torch.Tensor, denoise_mask: torch.Tensor, clean: torch.Tensor) -> torch.Tensor:
-    """Blend denoised output with clean state based on mask."""
-    return (denoised * denoise_mask + clean.float() * (1 - denoise_mask)).to(denoised.dtype)
-
-
 def modality_from_latent_state(
     state: LatentState,
     context: torch.Tensor,

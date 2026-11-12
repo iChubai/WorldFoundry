@@ -7195,3 +7195,16 @@ and The HuggingFace Team (Apache-2.0). LongVie retains its optional native xForm
 policy; the independent prior retains its existing SDPA tensor layout. The shared
 owners do not initialize either model family or ViPE's configuration resolvers.
 Checkpoint parameter names, positional buffers and model licenses are unchanged.
+
+Shared LTX coordinate and latent helpers
+---------------------------------------
+representations/ltx/patchifiers.py retains the LTX tuple-axis coordinate contract;
+representations/ltx/conditioning.py owns the masked-latent blend used by Echo and
+SolarWM. These bindings retain Lightricks' LTX-2.x Community License terms
+(LicenseRef-LTX-2.x-Community), reproduced above. Echo and AlayaWorld retain their
+native scale-factor types, and all source and checkpoint licenses are unchanged.
+
+The generic matching-linear constructor in core/acceleration/quantization/checkpoint.py
+and tensor-only PyTorch RMS entry point in core/nn/blocks/normalization.py are
+first-party OpenEnvision code under Apache-2.0. Family FP8 storage, calibration and
+kernel implementations retain their existing terms and checkpoint layouts.

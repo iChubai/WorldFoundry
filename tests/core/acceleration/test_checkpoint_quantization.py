@@ -16,7 +16,7 @@ from safetensors.torch import save_file
 
 from worldfoundry.base_models.diffusion_model.loaders import CheckpointSpec, ModuleLoadSpec, NativeModuleLoader
 from worldfoundry.core.acceleration.quantization.cast_linear import Float8CastLinear
-from worldfoundry.core.acceleration.quantization.checkpoint import prepare_quantized_linears
+from worldfoundry.core.acceleration.quantization.checkpoint import construct_linear_like, prepare_quantized_linears
 from worldfoundry.core.acceleration.quantization.linear import Float8Linear
 from worldfoundry.core.acceleration.quantization.nvfp4 import NVFP4Linear
 from worldfoundry.core.model_loading.optimize import AppliedOptimizations, QuantizationReport
@@ -28,6 +28,18 @@ from worldfoundry.core.model_loading.policy import (
     RuntimePolicy,
 )
 from worldfoundry.core.vram import AutoWrappedModule
+
+
+@pytest.mark.parametrize("bias", [False, True])
+def test_construct_linear_like_preserves_configuration_and_constructor_dtype(bias: bool) -> None:
+    source = torch.nn.Linear(4, 8, bias=bias, dtype=torch.float16)
+    result = construct_linear_like(source, linear_cls=torch.nn.Linear)
+    assert type(result) is torch.nn.Linear
+    assert (result.in_features, result.out_features) == (4, 8)
+    assert (result.bias is not None) is bias
+    assert result.weight.device == source.weight.device
+    assert result.weight.dtype == torch.get_default_dtype()
+    assert result.weight is not source.weight
 
 
 class _OneLinear(torch.nn.Module):

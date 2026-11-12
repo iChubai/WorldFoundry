@@ -6,6 +6,7 @@ import torch
 from torch import nn
 
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.solarwm import SolarWMModel as LTXModel
+from worldfoundry.core.acceleration.quantization.checkpoint import construct_linear_like
 
 from ..loader.fuse_loras import FuseRule, bf16_fuse_rule
 from ..loader.module_ops import ModuleOps
@@ -99,16 +100,6 @@ def quantize_weight_to_fp8_per_tensor(weight: torch.Tensor) -> tuple[torch.Tenso
     return quantized_weight, weight_scale
 
 
-def _linear_to_fp8linear(layer: nn.Linear) -> FP8Linear:
-    """Create an ``FP8Linear`` matching the shape/bias of *layer*."""
-    return FP8Linear(
-        in_features=layer.in_features,
-        out_features=layer.out_features,
-        bias=layer.bias is not None,
-        device=layer.weight.device,
-    )
-
-
 def _swap_linears_to_fp8(model: nn.Module, should_swap: Callable[[str], bool]) -> nn.Module:
     """Replace nn.Linear layers with FP8Linear where ``should_swap(name)`` returns True."""
     replacements: list[tuple[nn.Module, str, nn.Linear]] = []
@@ -129,7 +120,7 @@ def _swap_linears_to_fp8(model: nn.Module, should_swap: Callable[[str], bool]) -
         replacements.append((parent, attr_name, module))
 
     for parent, attr_name, linear in replacements:
-        setattr(parent, attr_name, _linear_to_fp8linear(linear))
+        setattr(parent, attr_name, construct_linear_like(linear, linear_cls=FP8Linear))
 
     return model
 

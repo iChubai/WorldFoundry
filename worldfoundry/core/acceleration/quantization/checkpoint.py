@@ -9,8 +9,9 @@ lazy mapping so the same plan supports resident, CPU and disk placement.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from functools import partial
+from typing import TypeVar
 
 import torch
 from torch import nn
@@ -22,6 +23,18 @@ from worldfoundry.core.model_loading.checkpoints.transforms import (
     checkpoint_tensor_metadata,
 )
 from worldfoundry.core.model_loading.policy import QuantizationMode
+
+LinearModule = TypeVar("LinearModule", bound=nn.Module)
+
+
+def construct_linear_like(layer: nn.Linear, *, linear_cls: Callable[..., LinearModule]) -> LinearModule:
+    """Construct the selected linear type with matching dimensions, bias presence and device."""
+    return linear_cls(
+        in_features=layer.in_features,
+        out_features=layer.out_features,
+        bias=layer.bias is not None,
+        device=layer.weight.device,
+    )
 
 
 def _cast_fp8(value: torch.Tensor) -> torch.Tensor:

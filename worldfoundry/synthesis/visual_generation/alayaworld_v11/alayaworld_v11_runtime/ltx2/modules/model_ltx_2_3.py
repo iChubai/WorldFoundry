@@ -338,7 +338,11 @@ class LTX23Model(AlayaWorldLTXModel, ModelMixin, ConfigMixin):
         perturbations: "BatchedPerturbationConfig | None" = None,
         **kwargs,
     ):
-        from .patchifier import SpatioTemporalScaleFactors, VideoLatentPatchifier, VideoLatentShape, get_pixel_coords
+        from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+            get_pixel_coords_tuple_order as get_pixel_coords,
+        )
+
+        from .patchifier import SpatioTemporalScaleFactors, VideoLatentPatchifier, VideoLatentShape
 
         device = self.patchify_proj.weight.device
         dtype = self.patchify_proj.weight.dtype

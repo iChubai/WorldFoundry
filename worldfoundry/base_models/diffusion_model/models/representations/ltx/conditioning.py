@@ -17,6 +17,11 @@ from .tools import VideoLatentTools
 from .types import VideoLatentShape
 
 
+def post_process_latent(denoised: torch.Tensor, denoise_mask: torch.Tensor, clean: torch.Tensor) -> torch.Tensor:
+    """Blend LTX latents while retaining the denoised product's input-precision rounding."""
+    return (denoised * denoise_mask + clean.float() * (1 - denoise_mask)).to(denoised.dtype)
+
+
 def inject_ltx_image(
     state: ModalityState,
     tools: VideoLatentTools,

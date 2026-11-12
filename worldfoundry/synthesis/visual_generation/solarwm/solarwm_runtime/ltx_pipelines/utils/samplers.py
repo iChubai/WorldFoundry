@@ -7,6 +7,7 @@ import torch
 from tqdm import tqdm
 
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import X0Model
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.conditioning import post_process_latent
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import DiffusionStepProtocol
 from worldfoundry.base_models.diffusion_model.schedulers.res2s import get_res2s_coefficients
 
@@ -17,7 +18,7 @@ from ...ltx_core.components.diffusion_steps import (
 )
 from ...ltx_core.devices import highest_precision_float
 from ...ltx_core.utils import to_denoised, to_velocity
-from .helpers import post_process_latent, timesteps_from_mask
+from .helpers import timesteps_from_mask
 from .types import DenoisedLatentResult, Denoiser, LatentState
 
 logger = logging.getLogger(__name__)

@@ -26,8 +26,11 @@ from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations 
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.model import (
     JoyAIEchoModel as LTXModel,
 )
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+    get_pixel_coords_tuple_order as get_pixel_coords,
+)
 
-from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier, get_pixel_coords
+from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier
 from ...ltx_core.loader import LoraPathStrengthAndSDOps
 from ...ltx_core.loader.registry import Registry
 from ...ltx_core.quantization import QuantizationPolicy

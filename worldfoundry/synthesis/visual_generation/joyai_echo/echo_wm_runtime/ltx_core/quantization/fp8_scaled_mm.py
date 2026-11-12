@@ -4,6 +4,7 @@ import torch
 from torch import nn
 
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.wm import EchoWMModel as LTXModel
+from worldfoundry.core.acceleration.quantization.checkpoint import construct_linear_like
 
 from ..loader.module_ops import ModuleOps
 from ..loader.sd_ops import KeyValueOperationResult, SDOps
@@ -127,22 +128,6 @@ EXCLUDED_LAYER_SUBSTRINGS = (
 )
 
 
-def _linear_to_fp8linear(layer: nn.Linear) -> FP8Linear:
-    """
-    Create an FP8Linear layer from an nn.Linear layer.
-    Args:
-        layer: The nn.Linear layer to convert (typically on meta device)
-    Returns:
-        A new FP8Linear with the same configuration
-    """
-    return FP8Linear(
-        in_features=layer.in_features,
-        out_features=layer.out_features,
-        bias=layer.bias is not None,
-        device=layer.weight.device,
-    )
-
-
 def _apply_fp8_prepare_to_model(model: nn.Module, excluded_layer_substrings: tuple[str, ...]) -> nn.Module:
     """Replace nn.Linear layers with FP8Linear in the module tree."""
     replacements: list[tuple[nn.Module, str, nn.Linear]] = []
@@ -164,7 +149,7 @@ def _apply_fp8_prepare_to_model(model: nn.Module, excluded_layer_substrings: tup
         replacements.append((parent, attr_name, module))
 
     for parent, attr_name, linear in replacements:
-        setattr(parent, attr_name, _linear_to_fp8linear(linear))
+        setattr(parent, attr_name, construct_linear_like(linear, linear_cls=FP8Linear))
 
     return model
 

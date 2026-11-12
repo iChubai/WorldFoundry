@@ -2,14 +2,11 @@
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
-import math
-from typing import Any as Any
 
-import numpy as np  # noqa: F401 - Re-exported under this name.
 import torch
-import torch.nn.functional as F
 from torch import nn
-from transformers.activations import ACT2FN as ACT2FN
+
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.embodiment_mlp import swish
 
 
 class ProprioProjector(nn.Module):
@@ -34,126 +31,6 @@ class ProprioProjector(nn.Module):
         projected_features = self.act_fn1(projected_features)
         projected_features = self.fc2(projected_features)
         return projected_features
-
-
-class SinusoidalPositionalEncoding(nn.Module):
-    """
-    Sine- and cosine-based positional encoding that produces embeddings of a batch of timesteps.
-
-    For example, at train time, the input might be a batch of 32 randomly sampled diffusion timesteps -> shape (32,)
-    Then the output would be a batch of 32 timestep embeddings -> shape (32, D)
-
-    Adapted from: https://github.com/real-stanford/diffusion_policy/blob/main/diffusion_policy/model/diffusion/positional_embedding.py
-    """
-
-    def __init__(self, dim):
-        super().__init__()
-        self.dim = dim  # dimensionality of the positional encoding
-
-    def forward(self, x):
-        # x: (batch_size,)
-        device = x.device
-        assert self.dim % 2 == 0, f"# dimensions must be even but got {self.dim}"
-        half_dim = self.dim // 2
-        exponent = torch.arange(half_dim, device=device) * -math.log(10000) / (half_dim - 1)  # shape: (D/2,)
-        emb = torch.exp(exponent)  # shape: (D/2,)
-        emb = x[:, None] * emb[None, :]  # shape: (batch_size, 1) * (1, D/2) -> (batch_size, D/2)
-        emb = torch.cat((emb.sin(), emb.cos()), dim=-1)  # shape: (batch_size, D)
-        return emb
-
-
-class FlowMatchingHead(nn.Module):
-    def __init__(self, condition_dim: int, action_dim: int, hidden_dim: int):
-        super().__init__()
-        self.action_dim = action_dim
-
-        self.time_encoder = SinusoidalPositionalEncoding(dim=hidden_dim)
-
-        # 1. Define fusion layer
-        # Input dimension is the sum of three feature dimensions: condition + action + time
-        fusion_input_dim = condition_dim + action_dim + hidden_dim
-        self.fusion_layer = nn.Linear(fusion_input_dim, hidden_dim)
-
-        # 2. Core network
-        self.model = nn.Sequential(
-            nn.ReLU(),  # Apply activation immediately after fusion
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, action_dim),
-        )
-
-        # (Optional but recommended) Add layer normalization after fusion to stabilize training
-        self.layer_norm = nn.LayerNorm(hidden_dim)
-
-    def forward(self, noisy_action: torch.Tensor, time: torch.Tensor, condition: torch.Tensor) -> torch.Tensor:
-        # 1. Encode timestep t
-        time_embed = self.time_encoder(time).to(noisy_action.dtype).to(noisy_action.device)
-
-        if noisy_action.ndim == 3 and time_embed.ndim == 2:
-            time_embed = time_embed.unsqueeze(1).expand(-1, noisy_action.shape[1], -1)
-
-        # 2. Concatenate all features
-        # Note: Here we directly use the original noisy_action and condition without pre-projection
-        concatenated_features = torch.cat([condition, noisy_action, time_embed], dim=-1)
-
-        # 3. Project and fuse through the fusion layer
-        fused_features = self.fusion_layer(concatenated_features)
-
-        # (Optional but recommended) Apply layer normalization
-        fused_features = self.layer_norm(fused_features)
-
-        # 4. Predict through the core network
-        predicted_velocity = self.model(fused_features)
-
-        return predicted_velocity
-
-
-class MLPResNetBlock(nn.Module):
-    """One MLP ResNet block with a residual connection."""
-
-    def __init__(self, dim):
-        super().__init__()
-        self.dim = dim
-        self.ffn = nn.Sequential(  # feedforward network, similar to the ones in Transformers
-            nn.LayerNorm(dim),
-            nn.Linear(dim, dim),
-            nn.ReLU(),
-        )
-
-    def forward(self, x):
-        # x: (batch_size, hidden_dim)
-        # We follow the module ordering of "Pre-Layer Normalization" feedforward networks in Transformers as
-        # described here: https://arxiv.org/pdf/2002.04745.pdf
-        identity = x
-        x = self.ffn(x)
-        x = x + identity
-        return x
-
-
-class MLPResNet(nn.Module):
-    """MLP with residual connection blocks."""
-
-    def __init__(self, num_blocks, input_dim, hidden_dim, output_dim):
-        super().__init__()
-        self.layer_norm1 = nn.LayerNorm(input_dim)
-        self.fc1 = nn.Linear(input_dim, hidden_dim)
-        self.relu = nn.ReLU()
-        self.mlp_resnet_blocks = nn.ModuleList()
-        for _ in range(num_blocks):
-            self.mlp_resnet_blocks.append(MLPResNetBlock(dim=hidden_dim))
-        self.layer_norm2 = nn.LayerNorm(hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, x):
-        # x: (batch_size, input_dim)
-        x = self.layer_norm1(x)  # shape: (batch_size, input_dim)
-        x = self.fc1(x)  # shape: (batch_size, hidden_dim)
-        x = self.relu(x)  # shape: (batch_size, hidden_dim)
-        for block in self.mlp_resnet_blocks:
-            x = block(x)  # shape: (batch_size, hidden_dim)
-        x = self.layer_norm2(x)  # shape: (batch_size, hidden_dim)
-        x = self.fc2(x)  # shape: (batch_size, output_dim)
-        return x
 
 
 class InternVLConnector(nn.Module):
@@ -181,11 +58,7 @@ class InternVLConnector(nn.Module):
         return self.mlp1(x)
 
 
-def swish(x):
-    return x * torch.sigmoid(x)
-
-
-class SinusoidalPositionalEncoding(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
+class SinusoidalPositionalEncoding(nn.Module):
     def __init__(self, embedding_dim):
         super().__init__()
         self.embedding_dim = embedding_dim
@@ -236,18 +109,6 @@ class CategorySpecificLinear(nn.Module):
         return output
 
 
-class CategorySpecificMLP(nn.Module):
-    def __init__(self, num_categories, input_dim, hidden_dim, output_dim):
-        super().__init__()
-        self.num_categories = num_categories
-        self.layer1 = CategorySpecificLinear(num_categories, input_dim, hidden_dim)
-        self.layer2 = CategorySpecificLinear(num_categories, hidden_dim, output_dim)
-
-    def forward(self, x, cat_ids):
-        hidden = F.relu(self.layer1(x, cat_ids))
-        return self.layer2(hidden, cat_ids)
-
-
 class MultiEmbodimentActionEncoder(nn.Module):
     def __init__(self, action_dim, hidden_size, num_embodiments):
         super().__init__()
@@ -286,31 +147,6 @@ class MultiEmbodimentActionEncoder(nn.Module):
         # 5. Final projection
         x = self.W3(x, cat_ids)
         return x
-
-
-class SimpleMLP(nn.Module):
-    """
-    A simple two-layer MLP using standard torch.nn.Linear layers.
-    This is the standard version of CategorySpecificMLP.
-    """
-
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super().__init__()
-        # Use standard linear layers where all inputs share the same weights
-        self.layer1 = nn.Linear(input_dim, hidden_dim)
-        self.layer2 = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, x):
-        """
-        Args:
-            x (torch.Tensor): Input tensor, shape can be (B, D_in) or (B, T, D_in).
-
-        Returns:
-            torch.Tensor: Output tensor, shape is (B, D_out) or (B, T, D_out).
-        """
-        # No longer requires cat_ids parameter
-        hidden = F.relu(self.layer1(x))
-        return self.layer2(hidden)
 
 
 class ActionEncoder(nn.Module):

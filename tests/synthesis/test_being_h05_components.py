@@ -46,3 +46,54 @@ def test_being_vision_registry_loads_canonical_checkpoint(tmp_path: Path, norm_t
         actual = reloaded(pixels).last_hidden_state
     torch.testing.assert_close(actual, expected, atol=0, rtol=0)
     assert actual.shape == (1, 37, 16)
+
+
+@pytest.mark.parametrize("flow_matching", [False, True])
+def test_being_action_heads_use_canonical_mlp(flow_matching: bool) -> None:
+    from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.embodiment_mlp import SmallMLP
+    from worldfoundry.synthesis.action_generation.being_h05.modeling.beingvla import BeingH, BeingHConfig
+    from worldfoundry.synthesis.action_generation.being_h05.modeling.layers import InternVLConnector
+    from worldfoundry.synthesis.action_generation.being_h05.preprocessing.constants import (
+        LLM_MODEL_ARCH,
+        VIT_MODEL_ARCH,
+    )
+    from worldfoundry.synthesis.action_generation.being_h05.preprocessing.conversation import conv_templates
+
+    llm_config_class, llm_class, _ = LLM_MODEL_ARCH["Qwen2ForCausalLM"]
+    vit_config_class, vit_class = VIT_MODEL_ARCH["InternVisionModel"]
+    llm_config = llm_config_class(
+        hidden_size=16,
+        intermediate_size=32,
+        num_hidden_layers=1,
+        num_attention_heads=4,
+        num_key_value_heads=2,
+        vocab_size=64,
+        use_expert=False,
+        use_moe=False,
+        layer_module="Qwen2DecoderLayer",
+        qk_norm=False,
+        freeze_und=False,
+    )
+    vit_config = vit_config_class(
+        image_size=8,
+        patch_size=2,
+        hidden_size=16,
+        intermediate_size=32,
+        num_hidden_layers=1,
+        num_attention_heads=4,
+        use_flash_attn=False,
+    )
+    config = BeingHConfig(
+        llm_config=llm_config,
+        vit_config=vit_config,
+        use_expert=False,
+        use_flow_matching=flow_matching,
+        template=next(iter(conv_templates)),
+    )
+    model = BeingH(
+        llm_class(llm_config), vit_class(vit_config), InternVLConnector(16, 16, 0.5), config, use_flash_attn=False
+    )
+    assert type(model.proprio_encoder_robot) is SmallMLP
+    assert type(model.action_decoder) is SmallMLP
+    assert model.state_dict()["proprio_encoder_robot.layer1.weight"].shape == (16, 200)
+    assert model.state_dict()["action_decoder.layer2.weight"].shape == (200, 16)

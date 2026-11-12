@@ -23,8 +23,8 @@ class WanTextEncoder:
     def __init__(self, weights: str | Path, tokenizer: str | Path) -> None:
         import torch
 
-        from .modeling.t5 import umt5_xxl
-        from .modeling.tokenizers import HuggingfaceTokenizer
+        from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
+        from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
 
         self.module = (
             umt5_xxl(
@@ -169,7 +169,7 @@ class Wan5BVAE:
     def __init__(self, weights: str | Path) -> None:
         import torch
 
-        from .modeling.vae import _video_vae
+        from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_22 import _video_vae
 
         self._mean = torch.tensor(self.mean, dtype=torch.float32)
         self._std = torch.tensor(self.std, dtype=torch.float32)

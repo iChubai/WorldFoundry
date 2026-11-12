@@ -33,6 +33,7 @@ from worldfoundry.core.attention.cache.kv_cache_policy import SlidingWindowPolic
 from worldfoundry.core.configuration.lazy_config import LazyCall as L
 from worldfoundry.core.configuration.lazy_config import LazyDict, instantiate
 from worldfoundry.core.observability.rank_logging import log
+from worldfoundry.core.vram.initialization import init_weights_on_device
 from worldfoundry.synthesis.visual_generation.rcm.kv_cache_plan import make_kv_cache_plan
 from worldfoundry.synthesis.visual_generation.rcm.policy_kv_cache import policy_cache_factory
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.datasets.utils import VIDEO_RES_SIZE_INFO
@@ -42,7 +43,6 @@ from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.tokenizers.wan2pt1
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.blockmask import AttnMaskSpec, BlockPattern
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.kv_cache import CausalInferenceState, KVCacheMode
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.model_utils import (
-    init_weights_on_device,
     load_state_dict,
     load_state_dict_from_dcp,
 )

@@ -26,6 +26,7 @@ from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import CheckpointImpl, CheckpointWrapper
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import checkpoint_wrapper as ptd_checkpoint_wrapper
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import sinusoidal_embedding_1d
 from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
 from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.a2a_cp import MinimalA2AAttnOp
@@ -187,18 +188,6 @@ class VideoRopePosition3DEmb(nn.Module):
         if self.seq is not None:
             return self.seq.device
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def sinusoidal_embedding_1d(dim, position):
-    # preprocess
-    assert dim % 2 == 0
-    half = dim // 2
-    position = position.type(torch.float64)
-
-    # calculation
-    sinusoid = torch.outer(position, torch.pow(10000, -torch.arange(half).to(position).div(half)))
-    x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
-    return x
 
 
 class WanRMSNorm(nn.Module):

@@ -7,11 +7,12 @@ from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
+from worldfoundry.core.vram.initialization import init_weights_on_device
+
 from .base_pipeline import BasePipeline, PipelineUnit, PipelineUnitRunner
 
 # isort: split
 from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (
-    init_weights_on_device,
     load_state_dict,
 )
 

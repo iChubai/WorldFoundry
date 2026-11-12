@@ -23,7 +23,6 @@ from __future__ import annotations
 import copy
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import ClassVar
 
 import torch
 from torch import Tensor
@@ -85,7 +84,7 @@ class MultiModalLatentDecoder:
     and receives it as the ``generator`` keyword.
     """
 
-    uses_run_generator: ClassVar[bool] = False
+    uses_run_generator: bool = False
 
     def decode(self, latents, request):
         return self.decode_modalities(latents, request)["video"]
@@ -108,6 +107,7 @@ class MultiStageComponents:
     schedulers: tuple[DiffusionScheduler, ...]
     processor: LatentProcessor | None
     decoder: MultiModalLatentDecoder
+    stage_denoisers: tuple[object, ...] = ()
 
 
 class JointMultiStageDiffusionRunner:
@@ -133,6 +133,8 @@ class JointMultiStageDiffusionRunner:
             raise ValueError("joint multi-stage execution requires one scheduler per stage")
         if any(int(steps) <= 0 for steps in stage_steps):
             raise ValueError("joint multi-stage stage_steps must be positive")
+        if components.stage_denoisers and len(components.stage_denoisers) != len(stage_steps):
+            raise ValueError("joint multi-stage execution requires one denoiser per stage")
         self.model_id = str(model_id)
         self.components = components
         self.stage_steps = tuple(int(steps) for steps in stage_steps)
@@ -162,11 +164,18 @@ class JointMultiStageDiffusionRunner:
         step_index: int,
         total_steps: int,
         guidance_scale: float,
+        stage_index: int = 0,
     ) -> MultiModalDenoiserOutput:
         """Per-modality CFG. At scale==1 or without negative, return the positive branch only."""
 
+        denoiser = (
+            self.components.stage_denoisers[stage_index]
+            if self.components.stage_denoisers
+            else self.components.denoiser
+        )
+
         def call(branch: str) -> MultiModalDenoiserOutput:
-            output = self.components.denoiser(
+            output = denoiser(
                 MultiModalDenoiserInput(
                     modalities=states,
                     timestep=timestep,
@@ -287,6 +296,7 @@ class JointMultiStageDiffusionRunner:
                     step_index=step.index,
                     total_steps=step_count,
                     guidance_scale=request.sampling.guidance_scale,
+                    stage_index=stage_index,
                 )
                 if set(prediction.samples) != set(states):
                     raise ValueError("joint denoiser output modalities must match initialized states")

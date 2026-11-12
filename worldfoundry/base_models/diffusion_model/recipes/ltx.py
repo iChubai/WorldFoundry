@@ -19,6 +19,8 @@ refine.  Distilled checkpoints; no dual-expert CFG routing.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from ..components import ComponentKey, ComponentKind, ComponentSpec, ExecutionSpec
 from ..loaders import CheckpointSpec
 from ..models.autoencoders.ltx import build_ltx_media_decoder, build_ltx_video_media_decoder
@@ -250,6 +252,119 @@ def ltx23_t2v_recipe() -> NativeDiffusionRecipe:
     )
 
 
+def _ltx_ic_lora_recipe(
+    base: NativeDiffusionRecipe,
+    *,
+    model_id: str,
+    lora_repo: str,
+    lora_revision: str,
+    lora_file: str,
+    skip_stage_2: bool,
+) -> NativeDiffusionRecipe:
+    """Reuse LTX components with IC-LoRA in stage one and clean-base refinement."""
+    from ..models.encoders.ltx.component import build_ltx_gemma_prompt_conditioner
+    from ..schedulers.ltx import build_ltx_projected_euler_scheduler
+
+    components = []
+    refinement = ComponentKey(ComponentKind.DENOISER, "stage-2")
+    for component in base.components:
+        kind = component.key.kind
+        if kind is ComponentKind.DENOISER:
+            options = {"split_checkpoint": True, "precision": "weights"}
+            components.append(
+                replace(component, checkpoints={"weights": "model", "ic_lora": "ic_lora"}, options=options)
+            )
+            if not skip_stage_2:
+                components.append(replace(component, key=refinement, options=options))
+        elif kind is ComponentKind.CONDITIONER:
+            components.append(
+                replace(
+                    component,
+                    factory=build_ltx_gemma_prompt_conditioner,
+                    checkpoints={"weights": "model", "text_encoder": "gemma"},
+                    options={},
+                )
+            )
+        elif kind is ComponentKind.LATENT_INITIALIZER:
+            components.append(
+                replace(
+                    component,
+                    checkpoints={"weights": "model", "ic_lora": "ic_lora"},
+                    options={"split_checkpoint": True},
+                )
+            )
+        elif kind is ComponentKind.SCHEDULER:
+            if not skip_stage_2 or component.key.name == "stage-1":
+                components.append(replace(component, factory=build_ltx_projected_euler_scheduler))
+        elif kind is ComponentKind.LATENT_PROCESSOR:
+            if not skip_stage_2:
+                components.append(
+                    replace(component, options={"split_checkpoint": True, "strip_reference_tokens": True})
+                )
+        elif kind is ComponentKind.DECODER:
+            components.append(
+                replace(
+                    component,
+                    options={
+                        **component.options,
+                        "precision": "weights",
+                        "strip_reference_tokens": True,
+                        "spatial_divisor": 2 if skip_stage_2 else 1,
+                        "continue_generator": True,
+                    },
+                )
+            )
+    bindings = dict(base.execution.bindings)
+    checkpoints = {key: value for key, value in base.checkpoints.items() if key != "tokenizer"}
+    if skip_stage_2:
+        bindings.pop("scheduler-2")
+        bindings.pop("processor")
+        checkpoints.pop("upsampler")
+    else:
+        bindings["denoiser-1"] = bindings["denoiser"]
+        bindings["denoiser-2"] = refinement
+    checkpoints["ic_lora"] = CheckpointSpec(repo_id=lora_repo, revision=lora_revision, files=(lora_file,))
+    return replace(
+        base,
+        model_id=model_id,
+        aliases=(),
+        components=tuple(components),
+        execution=ExecutionSpec(
+            strategy="joint-multistage",
+            bindings=bindings,
+            options={"stage_steps": (8,) if skip_stage_2 else (8, 3)},
+        ),
+        checkpoints=checkpoints,
+        capabilities=frozenset({"video-to-video", "joint-audio-video", "ic-lora"})
+        | (frozenset() if skip_stage_2 else {"two-stage-refinement"}),
+        metadata={**base.metadata, "upstream_revision": "a95ab856bf29407b6b066ede0abe1846050db56c"},
+    )
+
+
+def ltx2_v2v_recipe(*, skip_stage_2: bool = False) -> NativeDiffusionRecipe:
+    """LTX-2 Pose-Control IC-LoRA on the canonical joint multi-stage stack."""
+    return _ltx_ic_lora_recipe(
+        ltx2_t2v_recipe(),
+        model_id="ltx-2-v2v",
+        lora_repo="Lightricks/LTX-2-19b-IC-LoRA-Pose-Control",
+        lora_revision="ecdabfb03acd2e807c90ea260ccc136140e7ac80",
+        lora_file="ltx-2-19b-ic-lora-pose-control.safetensors",
+        skip_stage_2=skip_stage_2,
+    )
+
+
+def ltx23_v2v_recipe(*, skip_stage_2: bool = False) -> NativeDiffusionRecipe:
+    """LTX-2.3 Union-Control IC-LoRA, including its checkpoint-declared reference scale."""
+    return _ltx_ic_lora_recipe(
+        ltx23_t2v_recipe(),
+        model_id="ltx-2.3-v2v",
+        lora_repo="Lightricks/LTX-2.3-22b-IC-LoRA-Union-Control",
+        lora_revision="b4d1c4d8c9e544e9bbbd6811bb4363708b6093ff",
+        lora_file="ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+        skip_stage_2=skip_stage_2,
+    )
+
+
 def ltx_video_i2v_recipe() -> NativeDiffusionRecipe:
     """LTX-Video 0.9.8 distilled I2V on ``joint-multistage`` (7 then 3 steps).
 
@@ -383,8 +498,10 @@ __all__ = [
     "LTX_VIDEO_I2V_MODEL_ID",
     "ltx2_i2v_recipe",
     "ltx2_t2v_recipe",
+    "ltx2_v2v_recipe",
     "ltx23_i2v_recipe",
     "ltx23_t2v_recipe",
+    "ltx23_v2v_recipe",
     "ltx_video_i2v_recipe",
 ]
 

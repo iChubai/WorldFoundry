@@ -167,3 +167,41 @@ def test_multistage_deadline_stops_at_the_next_step_and_allows_subsequent_reuse(
     recovered = runner.run(_request(42))
     expected = _runner([]).run(_request(42))
     torch.testing.assert_close(recovered.sample, expected.sample, rtol=0, atol=0)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("stage_specific", [False, True], ids=["single-denoiser", "per-stage-denoisers"])
+def test_multistage_selects_weights_by_stage_and_keeps_default_denoiser(stage_specific: bool) -> None:
+    calls = []
+    runner = _runner([])
+
+    def denoiser(name: str):
+        def predict(inputs: MultiModalDenoiserInput) -> MultiModalDenoiserOutput:
+            calls.append((name, inputs.step_index, inputs.total_steps))
+            return MultiModalDenoiserOutput(samples={key: value.latent for key, value in inputs.modalities.items()})
+
+        return predict
+
+    default = denoiser("default")
+    runner.components = replace(
+        runner.components,
+        denoiser=default,
+        stage_denoisers=(denoiser("adapted"), denoiser("clean")) if stage_specific else (),
+    )
+    runner.run(_request(42))
+    expected_names = ["adapted", "adapted", "clean"] if stage_specific else ["default"] * 3
+    assert calls == list(zip(expected_names, [0, 1, 0], [2, 2, 1], strict=True))
+    assert runner.components.denoiser is default
+
+
+@pytest.mark.unit
+def test_multistage_rejects_incomplete_stage_denoiser_bundle() -> None:
+    runner = _runner([])
+    with pytest.raises(ValueError, match="one denoiser per stage"):
+        JointMultiStageDiffusionRunner(
+            model_id=runner.model_id,
+            components=replace(runner.components, stage_denoisers=(runner.components.denoiser,)),
+            stage_steps=runner.stage_steps,
+            device="cpu",
+            dtype=torch.float32,
+        )

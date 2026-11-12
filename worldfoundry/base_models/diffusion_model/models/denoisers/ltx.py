@@ -278,7 +278,8 @@ def build_ltx_joint_denoiser(
 
     split_checkpoint = bool(context.component_options.get("split_checkpoint"))
     checkpoint_quantization = context.policy.quantization.mode in CHECKPOINT_QUANTIZATION_MODES
-    lazy_state_dict = split_checkpoint or checkpoint_quantization
+    ic_lora_checkpoint = context.checkpoint("ic_lora")
+    lazy_state_dict = split_checkpoint or checkpoint_quantization or ic_lora_checkpoint is not None
     post_load_hook = None
     lora_checkpoint = context.checkpoint("lora")
     if lora_checkpoint is not None:
@@ -307,6 +308,34 @@ def build_ltx_joint_denoiser(
 
         post_load_hook = merge_lora
 
+    state_dict_adapter = (
+        partial(prepare_ltx_quantized_state_dict, policy=context.policy.quantization, device=context.policy.device)
+        if checkpoint_quantization
+        else None
+    )
+    if ic_lora_checkpoint is not None:
+        from worldfoundry.core.vram import DiskMap
+
+        from .ltx_lora import convert_ltx_ic_lora_state_dict, prepare_ltx_ic_lora_state_dict
+
+        materialized = NativeCheckpointResolver().materialize(ic_lora_checkpoint)
+        lora = convert_ltx_ic_lora_state_dict(DiskMap([str(path) for path in materialized.paths], "cpu"))
+        quantization_adapter = state_dict_adapter
+
+        def adapt_ic_lora(
+            module: torch.nn.Module, state_dict: Mapping[str, torch.Tensor]
+        ) -> Mapping[str, torch.Tensor]:
+            fused = prepare_ltx_ic_lora_state_dict(
+                module,
+                state_dict,
+                lora=lora,
+                strength=float(context.component_options.get("lora_strength", 1.0)),
+                device=context.policy.device,
+            )
+            return quantization_adapter(module, fused) if quantization_adapter is not None else fused
+
+        state_dict_adapter = adapt_ic_lora
+
     model = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=module_class,
@@ -319,13 +348,7 @@ def build_ltx_joint_denoiser(
             ),
             lazy_state_dict=lazy_state_dict,
             buffer_aware_offload=lazy_state_dict,
-            state_dict_adapter=(
-                partial(
-                    prepare_ltx_quantized_state_dict, policy=context.policy.quantization, device=context.policy.device
-                )
-                if checkpoint_quantization
-                else None
-            ),
+            state_dict_adapter=state_dict_adapter,
             vram_module_map={
                 LTXModel: AutoWrappedNonRecurseModule,
                 BasicAVTransformerBlock: AutoWrappedModule if lazy_state_dict else AutoWrappedNonRecurseModule,

@@ -331,7 +331,8 @@ def build_joint_multistage_strategy(
 ) -> JointMultiStageDiffusionRunner:
     """Joint-modality multi-stage runner. Bindings declare one scheduler per stage via ``scheduler-*``.
 
-    Required: denoiser / conditioner / latent_initializer / decoder. Optional: processor.
+    Required: denoiser / conditioner / latent_initializer / decoder. Optional: processor
+    and a complete set of denoiser-* bindings for stage-specific weights.
     Missing ``scheduler-*``, a stage_steps length mismatch, or multi-stage without a
     processor all raise :exc:`ValueError`.
     """
@@ -344,8 +345,11 @@ def build_joint_multistage_strategy(
     scheduler_roles = tuple(sorted(role for role in bindings if role.startswith("scheduler-")))
     if not scheduler_roles:
         raise ValueError("joint-multistage execution requires scheduler-* bindings")
+    denoiser_roles = tuple(sorted(role for role in bindings if role.startswith("denoiser-")))
+    if denoiser_roles and tuple(role.replace("denoiser-", "scheduler-") for role in denoiser_roles) != scheduler_roles:
+        raise ValueError("joint-multistage denoiser-* bindings must match scheduler-* bindings")
     optional = {"processor"}
-    unexpected = sorted(set(bindings) - required - optional - set(scheduler_roles))
+    unexpected = sorted(set(bindings) - required - optional - set(scheduler_roles) - set(denoiser_roles))
     if unexpected:
         raise ValueError(f"joint-multistage execution has unsupported bindings: {unexpected}")
     stage_steps = tuple(int(value) for value in context.recipe.execution.options.get("stage_steps", ()))
@@ -363,6 +367,7 @@ def build_joint_multistage_strategy(
             schedulers=tuple(bound[role] for role in scheduler_roles),  # type: ignore[arg-type]
             processor=bound.get("processor"),  # type: ignore[arg-type]
             decoder=bound["decoder"],  # type: ignore[arg-type]
+            stage_denoisers=tuple(bound[role] for role in denoiser_roles),
         ),
         stage_steps=stage_steps,
         device=context.policy.device,

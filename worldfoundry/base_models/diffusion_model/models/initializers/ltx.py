@@ -48,6 +48,9 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
         split_checkpoint: bool = False,
         latent_channels: int = 128,
         default_image_crf: int = 18,
+        reference_video: bool = False,
+        reference_downscale_factor: int = 1,
+        reference_temporal_scale_factor: int = 1,
     ) -> None:
         self.video_encoder = video_encoder
         if not stage_divisors or any(value <= 0 for value in stage_divisors):
@@ -61,6 +64,9 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
         self.split_checkpoint = split_checkpoint
         self.latent_channels = latent_channels
         self.default_image_crf = default_image_crf
+        self.reference_video = reference_video
+        self.reference_downscale_factor = reference_downscale_factor
+        self.reference_temporal_scale_factor = reference_temporal_scale_factor
 
     @staticmethod
     def _round_down_to_vae(value: int) -> int:
@@ -261,8 +267,32 @@ class LTXMultiStageLatentInitializer(MultiStageLatentInitializer):
                 strength=float(request.inputs.get("image_strength", 1.0)),
             )
 
+        if self.reference_video and stage_index == 0:
+            from ..representations.ltx.conditioning import append_ltx_reference_video
+
+            scale = self.reference_downscale_factor
+            if height % scale or width % scale:
+                raise ValueError("LTX stage-one dimensions must be divisible by reference_downscale_factor")
+            reference = load_ltx_reference_video(
+                request.inputs["video"],
+                height=height // scale,
+                width=width // scale,
+                num_frames=request.num_frames,
+                temporal_scale_factor=self.reference_temporal_scale_factor,
+                device=device,
+                dtype=dtype,
+            )
+            video_state = append_ltx_reference_video(
+                video_state,
+                video_tools,
+                self.video_encoder(reference),
+                strength=float(request.inputs.get("control_strength", 1.0)),
+                downscale_factor=scale,
+                temporal_scale_factor=self.reference_temporal_scale_factor,
+            )
+
         noiser = self._add_noise
-        if self.split_checkpoint:
+        if self.split_checkpoint or self.reference_video:
             from ..representations.ltx.conditioning import add_ltx_noise
 
             noiser = add_ltx_noise
@@ -336,8 +366,21 @@ def build_ltx_multistage_latent_initializer(
         match = re.match(r"(\d+)[.-](\d+)", version)
         parsed = tuple(int(value) for value in match.groups()) if match else ()
         default_crf = 18 if parsed >= (2, 4) else 33
+    reference_metadata = {}
+    ic_lora = context.checkpoint("ic_lora")
+    if ic_lora is not None:
+        from safetensors import safe_open
+
+        from ...loaders import NativeCheckpointResolver
+
+        checkpoint = NativeCheckpointResolver().materialize(ic_lora)
+        with safe_open(checkpoint.paths[0], framework="pt", device="cpu") as handle:
+            reference_metadata = handle.metadata() or {}
     return LTXMultiStageLatentInitializer(
         encoder,
+        reference_video=ic_lora is not None,
+        reference_downscale_factor=int(reference_metadata.get("reference_downscale_factor", 1)),
+        reference_temporal_scale_factor=int(reference_metadata.get("reference_temporal_scale_factor", 1)),
         split_checkpoint=split,
         latent_channels=encoder.encoder.per_channel_statistics.get_buffer("mean-of-means").numel() if split else 128,
         default_image_crf=int(context.component_options.get("default_image_crf", default_crf)),
@@ -381,3 +424,39 @@ def enhance_ltx_prompt(encoder: object, prompt: str, images: object) -> str:
         prompt = encoder.enhance_t2v(prompt, seed=42)
     prompt = prompt.translate(str.maketrans("\u2018\u2019\u201c\u201d\u2014\u2013\u00a0\u2032\u2212", "''\"\"-- '-"))
     return next((prompt[index:] for index, char in enumerate(prompt) if char.isalpha()), prompt)
+
+
+def load_ltx_reference_video(
+    path: str | Path,
+    *,
+    height: int,
+    width: int,
+    num_frames: int,
+    temporal_scale_factor: int,
+    device: torch.device,
+    dtype: torch.dtype,
+) -> torch.Tensor:
+    """Read capped SDR frames, center-crop in FP32, and normalize to LTX BCFHW pixels.
+
+    Temporal reference scaling keeps frame zero, then frames 1, 1+S, 1+2S,
+    matching the causal VAE grid used by released IC-LoRA adapters.
+    """
+    import av
+
+    from worldfoundry.core.media.processing.image_conditioning import resize_center_crop_bilinear
+
+    frames = []
+    with av.open(str(path)) as container:
+        stream = container.streams.video[0]
+        for index, frame in enumerate(container.decode(stream)):
+            pixels = torch.tensor(frame.to_rgb().to_ndarray(), dtype=torch.float32, device=device).unsqueeze(0)
+            pixels = resize_center_crop_bilinear(pixels, height, width)
+            frames.append((pixels / 127.5 - 1.0).to(dtype=dtype))
+            if index + 1 == num_frames:
+                break
+    if not frames:
+        raise ValueError("LTX IC-LoRA control video contains no decoded frames")
+    video = torch.cat(frames, dim=2)
+    if temporal_scale_factor > 1:
+        video = video[:, :, [0, *range(1, video.shape[2], temporal_scale_factor)]]
+    return video

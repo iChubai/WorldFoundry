@@ -100,3 +100,39 @@ def add_ltx_noise(state: ModalityState, *, scale: float, generator: torch.Genera
     latent = torch.lerp(state.latent.float(), noise.float(), scale)
     latent = torch.lerp(state.clean_latent.float(), latent, state.denoise_mask)
     return state.with_updates(latent=latent.to(state.latent.dtype))
+
+
+def append_ltx_reference_video(
+    state: ModalityState,
+    tools: VideoLatentTools,
+    encoded: torch.Tensor,
+    *,
+    strength: float,
+    downscale_factor: int = 1,
+    temporal_scale_factor: int = 1,
+) -> ModalityState:
+    """Append IC-LoRA video tokens to an unmasked target with aligned space/time coordinates."""
+    tokens = tools.patchifier.patchify(encoded)
+    coordinates = tools.patchifier.get_patch_grid_bounds(
+        output_shape=VideoLatentShape.from_torch_shape(encoded.shape), device=encoded.device
+    )
+    positions = get_pixel_coords(coordinates, tools.scale_factors, causal_fix=tools.causal_fix).float()
+    positions[:, 0] /= tools.fps / temporal_scale_factor
+    if temporal_scale_factor != 1:
+        target_start = state.positions[:, 0, 0:1, 1:2].float()
+        positions[:, 0] = torch.clamp(positions[:, 0] - (temporal_scale_factor - 1) * target_start, min=0)
+    if downscale_factor != 1:
+        positions[:, 1] *= downscale_factor
+        positions[:, 2] *= downscale_factor
+    mask = torch.full((*tokens.shape[:2], 1), 1.0 - strength, device=encoded.device, dtype=encoded.dtype)
+    return state.with_updates(
+        latent=torch.cat([state.latent, torch.zeros_like(tokens)], dim=1),
+        clean_latent=torch.cat([state.clean_latent, tokens], dim=1),
+        denoise_mask=torch.cat([state.denoise_mask, mask], dim=1),
+        positions=torch.cat([state.positions, positions], dim=2),
+        keyframes_mask=(
+            torch.cat([state.keyframes_mask, torch.zeros_like(mask)], dim=1)
+            if state.keyframes_mask is not None
+            else None
+        ),
+    )

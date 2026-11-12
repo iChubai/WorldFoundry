@@ -226,6 +226,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/test_bt709_audio_video.py \
 	tests/base_models/test_ltx25_canonical_components.py \
 	tests/base_models/test_ltx25_native_recipe.py \
+	tests/base_models/test_ltx_ic_lora.py \
 	tests/base_models/diffusion_model/test_joint_multistage_hooks.py \
 	tests/eval_core/test_ltx25_integration.py \
 	tests/core/geometry/test_geometry_conventions.py \

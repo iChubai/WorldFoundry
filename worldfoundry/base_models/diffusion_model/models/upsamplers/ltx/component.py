@@ -83,6 +83,7 @@ class LTXSpatialLatentProcessor:
         first_stage_scale: float | None = None,
         adain_factor: float = 0.0,
         split_checkpoint: bool = False,
+        strip_reference_tokens: bool = False,
     ) -> None:
         self.upsampler = upsampler
         self.statistics = statistics
@@ -92,6 +93,7 @@ class LTXSpatialLatentProcessor:
         self.first_stage_scale = None if first_stage_scale is None else float(first_stage_scale)
         self.adain_factor = float(adain_factor)
         self.split_checkpoint = split_checkpoint
+        self.strip_reference_tokens = strip_reference_tokens
 
     @staticmethod
     def _round_down_to_vae(value: int) -> int:
@@ -141,7 +143,7 @@ class LTXSpatialLatentProcessor:
         video_shape = VideoLatentShape.from_pixel_shape(stage_one_pixels, latent_channels=channels)
         patchifier = VideoLatentPatchifier(1)
         latent = states["video"].latent
-        if self.split_checkpoint:
+        if self.split_checkpoint or self.strip_reference_tokens:
             latent = latent[:, : patchifier.get_token_count(video_shape)]
         video = patchifier.unpatchify(latent, video_shape)
         raw = self.statistics.statistics.un_normalize(video)
@@ -227,6 +229,7 @@ def build_ltx_spatial_latent_processor(
         first_stage_scale=None if raw_scale is None else float(raw_scale),
         adain_factor=float(context.component_options.get("adain_factor", 0.0)),
         split_checkpoint=split,
+        strip_reference_tokens=bool(context.component_options.get("strip_reference_tokens", False)),
     )
 
 

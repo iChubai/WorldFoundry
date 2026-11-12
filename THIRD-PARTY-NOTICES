@@ -7077,3 +7077,11 @@ residual/interpolation blocks (Intel ISL, MIT), Depth Anything fusion blocks
 (Depth Anything authors, Apache-2.0 source), and VGGT grouped residual/fusion blocks
 (Meta Platforms, Inc. and affiliates, Apache-2.0 source). The existing source and
 checkpoint terms for MiDaS, Depth Anything, VGGT and their variants remain unchanged.
+
+VGGT-Omega DINOv3 components
+----------------------------
+VGGT-Omega's identical DINOv3 attention, feed-forward, normalization and rotary
+components reuse worldfoundry/base_models/perception_core/general_perception/dinov3.
+Its query/key-normalized attention bindings live in dinov3/variants/vggt_omega.py.
+Copyright Meta Platforms, Inc. and affiliates; the DINOv3 License Agreement
+continues to apply. No checkpoint license terms are changed.

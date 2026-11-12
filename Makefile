@@ -274,6 +274,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/geometry/test_shared_rotation_transforms.py \
 	tests/base_models/three_dimensions/depth/midas/test_fusion.py \
 	tests/base_models/perception_core/general_perception/dinov2/test_shared_vision_leaves.py \
+	tests/base_models/perception_core/general_perception/dinov3/test_omega_components.py \
 	tests/runtime/test_geometry_regression.py \
 	tests/synthesis/test_dreamx_world_backend_policy.py \
 	tests/synthesis/test_solarwm_component_reuse.py \

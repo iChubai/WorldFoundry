@@ -18,7 +18,11 @@ import torch
 import torch.nn.init
 from torch import Tensor, nn
 
-from . import LayerScale, Mlp, PatchEmbed, RMSNorm, RopePositionEmbedding, SelfAttentionBlock, SwiGLUFFN
+from worldfoundry.base_models.perception_core.general_perception.dinov3.models.vision_transformer import (
+    init_weights_vit as init_weights_vit,
+)
+
+from . import Mlp, PatchEmbed, RMSNorm, RopePositionEmbedding, SelfAttentionBlock, SwiGLUFFN
 from .utils import named_apply
 
 logger = logging.getLogger("dinov3")
@@ -42,25 +46,6 @@ dtype_dict = {
     "fp16": torch.float16,
     "bf16": torch.bfloat16,
 }
-
-
-def init_weights_vit(module: nn.Module, name: str = ""):
-    if isinstance(module, nn.Linear):
-        torch.nn.init.trunc_normal_(module.weight, std=0.02)
-        if module.bias is not None:
-            nn.init.zeros_(module.bias)
-        if hasattr(module, "bias_mask") and module.bias_mask is not None:
-            o = module.out_features
-            module.bias_mask.fill_(1)
-            module.bias_mask[o // 3 : 2 * o // 3].fill_(0)
-    if isinstance(module, nn.LayerNorm):
-        module.reset_parameters()
-    if isinstance(module, LayerScale):
-        module.reset_parameters()
-    if isinstance(module, PatchEmbed):
-        module.reset_parameters()
-    if isinstance(module, RMSNorm):
-        module.reset_parameters()
 
 
 class DinoVisionTransformer(nn.Module):

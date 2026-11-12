@@ -1,4 +1,5 @@
 """Image processor class for MolmoAct2"""
+
 from typing import ClassVar
 
 import numpy as np

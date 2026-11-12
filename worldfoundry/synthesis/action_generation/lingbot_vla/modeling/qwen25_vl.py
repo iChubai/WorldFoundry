@@ -1,4 +1,5 @@
 """Checkpoint-compatible Qwen2.5-VL inference layers for LingBot-VLA v1."""
+
 import math
 from dataclasses import dataclass
 from typing import Any, ClassVar

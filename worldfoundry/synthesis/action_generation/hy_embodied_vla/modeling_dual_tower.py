@@ -28,6 +28,7 @@ mlp}``, plus the MoT extensions ``input_layernorm_v`` /
 ``post_attention_layernorm_v`` / ``self_attn.{q,k,v,o}_proj_v`` and
 ``mlp_v`` for the modality-aware variant) can be dropped in.
 """
+
 from typing import ClassVar
 
 import torch

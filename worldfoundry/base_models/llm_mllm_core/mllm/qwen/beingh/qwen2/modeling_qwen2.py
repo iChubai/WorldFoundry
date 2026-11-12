@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """PyTorch Qwen2 model."""
+
 import math
 from typing import ClassVar
 

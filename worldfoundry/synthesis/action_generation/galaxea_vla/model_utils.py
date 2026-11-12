@@ -7,5 +7,3 @@ def apply_rotary_pos_emb(x, cos, sin, unsqueeze_dim=1):
     # Apply the formula (34) of the Rotary Positional Encoding paper.
     x = (x * cos) + (rotate_half(x) * sin)
     return x
-
-

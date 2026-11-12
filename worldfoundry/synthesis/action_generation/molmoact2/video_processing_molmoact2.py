@@ -1,4 +1,5 @@
 """Video processor class for MolmoAct2"""
+
 import os
 import warnings
 from collections.abc import Callable

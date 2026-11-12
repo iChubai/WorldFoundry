@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PyTorch InternLM2 model."""
+
 import math
 import queue
 import threading

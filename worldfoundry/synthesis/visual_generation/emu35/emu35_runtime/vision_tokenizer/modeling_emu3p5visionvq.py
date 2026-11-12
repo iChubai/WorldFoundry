@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Emu3p5VisionVQ model"""
+
 import math
 from typing import ClassVar
 

@@ -25,6 +25,7 @@
 # Adapted from https://github.com/huggingface/transformers/blob/52daf4ec768fb9ffe84a0c373834172a7c54aecc/src/transformers/models/llama/modeling_llama.py
 #
 """PyTorch Emu3 model."""
+
 import math
 import warnings
 from typing import ClassVar

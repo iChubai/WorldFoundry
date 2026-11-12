@@ -1,4 +1,5 @@
 """LingBot-VLA v1 observation preprocessing and action postprocessing."""
+
 import json
 from collections import OrderedDict
 

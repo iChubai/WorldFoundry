@@ -2,6 +2,7 @@
 """
 Diffusion polices.
 """
+
 import itertools
 import math
 import time

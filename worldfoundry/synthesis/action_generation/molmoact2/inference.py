@@ -1,4 +1,5 @@
 """Inference utilities for MolmoAct2"""
+
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any

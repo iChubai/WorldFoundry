@@ -140,7 +140,11 @@ class PI0Pytorch(nn.Module):
 
         # Embed timestep using sine-cosine positional encoding with sensitivity in the range [0, 1]
         time_emb = create_sinusoidal_pos_embedding(
-            timestep, self.action_in_proj.out_features, min_period=4e-3, max_period=4.0, device=timestep.device,
+            timestep,
+            self.action_in_proj.out_features,
+            min_period=4e-3,
+            max_period=4.0,
+            device=timestep.device,
             dtype=torch.float64,
         )
         time_emb = time_emb.type(dtype=timestep.dtype)

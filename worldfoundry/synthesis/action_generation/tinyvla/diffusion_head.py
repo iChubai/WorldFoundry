@@ -1,6 +1,7 @@
 """
 Implementation of Diffusion Policy https://diffusion-policy.cs.columbia.edu/ by Cheng Chi
 """
+
 import itertools
 import math
 

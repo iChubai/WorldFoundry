@@ -19,6 +19,7 @@ generation paths while removing language-model loss and label handling. Local
 identifier cleanup and dtype propagation make the retained path lint-clean and
 compatible with both BF16 and FP16 inference.
 """
+
 import logging
 import math
 from collections.abc import Callable

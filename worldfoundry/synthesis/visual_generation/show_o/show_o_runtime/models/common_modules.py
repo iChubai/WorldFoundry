@@ -1,6 +1,7 @@
 """
 Modified from https://github.com/CompVis/taming-transformers/blob/master/taming/modules/diffusionmodules/model.py#L34
 """
+
 import math as math
 from typing import Tuple as Tuple  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 from typing import Union as Union

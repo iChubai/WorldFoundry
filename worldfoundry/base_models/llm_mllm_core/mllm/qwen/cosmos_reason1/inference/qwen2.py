@@ -16,6 +16,7 @@
 """PyTorch Qwen2-VL model.
 https://github.com/huggingface/transformers/blob/794fde7b1c3d041519fc28ea3e1461b0cfcad4e7/src/transformers/models/qwen2_vl/modeling_qwen2_vl.py
 """
+
 import math
 from typing import ClassVar
 

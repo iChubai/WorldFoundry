@@ -1,4 +1,5 @@
 """LingBot-VLA v1 policy architecture for inference."""
+
 from collections.abc import Callable
 from functools import partial
 from typing import ClassVar
@@ -71,8 +72,6 @@ logger = logging.get_logger(__name__)
 
 _CHECKPOINT_FOR_DOC = "meta-qwen2/Qwen2-2-7b-hf"
 _CONFIG_FOR_DOC = "Qwen2Config"
-
-
 
 
 class Qwen2Attention(nn.Module):

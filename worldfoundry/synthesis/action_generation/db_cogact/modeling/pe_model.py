@@ -1,6 +1,7 @@
 # Inference-only DB-CogACT source retained in-tree.
 # SPDX-License-Identifier: Apache-2.0
 """This is basically a copy from perception_models/core/vision_encoder/pe.py"""
+
 from collections import OrderedDict
 from collections.abc import Callable
 from functools import partial

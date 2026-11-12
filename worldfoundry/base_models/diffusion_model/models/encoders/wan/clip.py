@@ -22,6 +22,7 @@ import torch.nn.functional as F
 
 from worldfoundry.core.attention.sequence.varlen import flash_attention
 from worldfoundry.core.model_loading import load_torch_state_dict
+from worldfoundry.core.nn.blocks.layers import QuickGELU as QuickGELU
 
 from .model import HuggingfaceTokenizer
 from .xlm_roberta import XLMRoberta
@@ -54,11 +55,6 @@ def pos_interpolate(pos, seq_len):
             ],
             dim=1,
         )
-
-
-class QuickGELU(nn.Module):
-    def forward(self, x):
-        return x * torch.sigmoid(1.702 * x)
 
 
 class LayerNorm(nn.LayerNorm):

@@ -32,12 +32,6 @@ class LayerNorm(nn.LayerNorm):
         return x.to(orig_type)
 
 
-class QuickGELU(nn.Module):
-    # NOTE This is slower than nn.GELU or nn.SiLU and uses more GPU memory
-    def forward(self, x: torch.Tensor):
-        return x * torch.sigmoid(1.702 * x)
-
-
 class PatchDropout(nn.Module):
     """
     https://arxiv.org/abs/2212.00794

@@ -20,11 +20,8 @@ from contextlib import nullcontext
 import torch
 import torch.nn as nn
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-    CausalConv3d,
-    Encoder3d,
-    count_conv3d,
-)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Encoder3d, count_conv3d
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.rcm import Decoder3d
 from worldfoundry.core.distributed.runtime.torch_process_group import get_rank, sync_model_states
 from worldfoundry.core.io.assets.easy_io import easy_io

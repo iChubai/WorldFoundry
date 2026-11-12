@@ -4,12 +4,10 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d, RMS_norm, Upsample
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import (
     AttentionBlock,
-    CausalConv3d,
     ResidualBlock,
-    RMS_norm,
-    Upsample,
 )
 
 

@@ -39,10 +39,10 @@ from torch import Tensor
 from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video.h15 import (
     CausalConv3d,
     ResnetBlock,
-    RMS_norm,
     forward_with_checkpointing,
     swish,
 )
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import RMS_norm
 from worldfoundry.core.model_loading.model_configuration import (
     NativeConfigMixin,
     register_to_config,

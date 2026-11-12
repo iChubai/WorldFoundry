@@ -7150,3 +7150,19 @@ multiplication (Apache-2.0). Existing core sampling, token-head, RDT, DCR-upsamp
 and module-dtype owners are reused without checkpoint-key changes.
 The complete MIT and Apache-2.0 texts are retained above; model and weight terms
 are unchanged.
+
+Shared Wan codec and CLIP leaves
+--------------------------------
+The matching causal convolutions, RMS normalization, resampling and patch helpers
+reuse autoencoders/wan/model.py and reference_22.py (Copyright 2024-2025 The Alibaba
+Wan Team Authors; Apache-2.0). Kairos and Worldcam share the Wan codec constructors
+while retaining their own tiling and device orchestration. Wan CLIP variants reuse
+encoders/wan/clip.py's text head, positional interpolation and SwiGLU.
+FlashWorld's image projection binds its native-precision normalization to the
+shared Wan image-conditioning graph (The Wan Team and The HuggingFace Team;
+Apache-2.0). LiveWorld reuses the device-coefficient UniPC adapter described above.
+
+The QuickGELU activation in core/nn/blocks/layers.py retains OpenAI CLIP's explicit
+sigmoid approximation (Copyright 2021 OpenAI; MIT), also used by OpenCLIP and Wan.
+The complete MIT and Apache-2.0 texts are retained above. Source and checkpoint
+license terms for the consuming models are unchanged.

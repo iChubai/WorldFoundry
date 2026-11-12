@@ -29,8 +29,8 @@ from diffusers.utils.accelerate_utils import apply_forward_hook
 from worldfoundry.base_models.diffusion_model.models.autoencoders.magi2.turbo_decoder import (
     _turbo_unpatchify as unpatchify,
 )
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import RMS_norm as WanRMS_norm
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Upsample as WanUpsample
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import RMS_norm as WanRMS_norm
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import Upsample as WanUpsample
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name

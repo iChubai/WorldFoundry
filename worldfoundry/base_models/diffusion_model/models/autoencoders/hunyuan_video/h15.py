@@ -29,6 +29,7 @@ from torch import Tensor, nn
 from torch import distributed as dist
 from torch.nn import Conv3d
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import RMS_norm as RMS_norm
 from worldfoundry.core.distributed.model_parallel.sequence_mesh_state import get_parallel_state
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 from worldfoundry.core.nn.latent.distributions import AutoencoderKLOutput, DecoderOutput, DiagonalGaussianDistribution
@@ -98,23 +99,6 @@ class PatchCausalConv3d(nn.Conv3d):
             return output
         else:
             return super().forward(input)
-
-
-class RMS_norm(nn.Module):
-    """Root Mean Square Layer Normalization for Channel-First or Last"""
-
-    def __init__(self, dim, channel_first=True, images=True, bias=False):
-        super().__init__()
-        broadcastable_dims = (1, 1, 1) if not images else (1, 1)
-        shape = (dim, *broadcastable_dims) if channel_first else (dim,)
-
-        self.channel_first = channel_first
-        self.scale = dim**0.5
-        self.gamma = nn.Parameter(torch.ones(shape))
-        self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
-
-    def forward(self, x):
-        return F.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
 
 
 class CausalConv3d(nn.Module):

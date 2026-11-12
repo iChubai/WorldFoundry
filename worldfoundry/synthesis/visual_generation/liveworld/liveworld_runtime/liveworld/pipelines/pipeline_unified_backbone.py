@@ -33,6 +33,9 @@ from einops import rearrange
 from PIL import Image
 from tqdm import tqdm
 
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc_compat import (
+    FlowUniPCMultistepScheduler as FlowUniPCMultistepScheduler,
+)
 from worldfoundry.base_models.perception_core.general_perception.qwen3_vl_entity import (
     Qwen3VLEntityExtractor,
 )
@@ -67,7 +70,6 @@ from ..geometry_utils import (
     scale_intrinsics as scale_intrinsics_from_size,
 )
 from ..utils import save_video_h264
-from ..wan.utils.fm_solvers_unipc import FlowUniPCMultistepScheduler
 
 # isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter import (

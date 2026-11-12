@@ -6,7 +6,7 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from worldfoundry.core.nn.blocks.layers import Mish, inverse_sigmoid
+from worldfoundry.core.nn.blocks.layers import Mish, QuickGELU, inverse_sigmoid
 from worldfoundry.core.nn.diffusion.convolution import zero_module
 
 pytestmark = pytest.mark.unit
@@ -19,6 +19,14 @@ def test_mish_retains_decomposed_low_precision_arithmetic(dtype: torch.dtype) ->
     actual = Mish()(value)
     torch.testing.assert_close(actual, value * torch.tanh(F.softplus(value)), atol=0, rtol=0)
     assert Mish().state_dict() == {}
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float16, torch.bfloat16])
+def test_quick_gelu_retains_clip_multiplication_order(dtype: torch.dtype) -> None:
+    value = torch.linspace(-10, 10, 1000, dtype=dtype)
+    activation = QuickGELU()
+    torch.testing.assert_close(activation(value), value * torch.sigmoid(1.702 * value), rtol=0, atol=0)
+    assert activation.state_dict() == {}
 
 
 @pytest.mark.parametrize("dtype", [torch.float32, torch.float16, torch.bfloat16])

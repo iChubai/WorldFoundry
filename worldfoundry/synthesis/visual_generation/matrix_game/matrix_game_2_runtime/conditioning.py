@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d, RMS_norm
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.action_21 import (
     CACHE_T,
     AttentionBlock,
-    CausalConv3d,
     Encoder3d,
     Resample,
     ResidualBlock,
-    RMS_norm,
 )
 
 

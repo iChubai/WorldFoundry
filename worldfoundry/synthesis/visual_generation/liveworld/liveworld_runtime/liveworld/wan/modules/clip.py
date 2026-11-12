@@ -9,12 +9,12 @@ import torch.nn.functional as F
 import torchvision.transforms as T
 
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import (
-    QuickGELU,
     SelfAttention,
     SwiGLU,
     XLMRobertaWithHead,
     pos_interpolate,
 )
+from worldfoundry.core.nn.blocks.layers import QuickGELU
 
 from .attention import flash_attention
 

@@ -6,11 +6,7 @@ from einops import rearrange
 from PIL import Image
 from tqdm import tqdm
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-    CausalConv3d,
-    RMS_norm,
-    Upsample,
-)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d, RMS_norm, Upsample
 from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanImageEncoder, WanPrompter, WanTextEncoder
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5LayerNorm, T5RelativeEmbedding
 from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (

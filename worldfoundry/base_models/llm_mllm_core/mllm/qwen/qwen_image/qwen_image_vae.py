@@ -3,6 +3,7 @@ import itertools
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import Upsample as QwenImageUpsample
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 CACHE_T = 2
@@ -199,21 +200,6 @@ class QwenImageAttentionBlock(nn.Module):
         x = x.permute(0, 2, 1, 3, 4)
 
         return x + identity
-
-
-class QwenImageUpsample(nn.Upsample):
-    r"""
-    Perform upsampling while ensuring the output tensor has the same data type as the input.
-
-    Args:
-        x (torch.Tensor): Input tensor to be upsampled.
-
-    Returns:
-        torch.Tensor: Upsampled tensor with the same data type as the input.
-    """
-
-    def forward(self, x):
-        return super().forward(x.float()).type_as(x)
 
 
 class QwenImageResample(nn.Module):

@@ -31,13 +31,9 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 
 # Import base components from the canonical Wan autoencoder role.
 try:
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d, RMS_norm, Upsample
     from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
         CACHE_T as WAN_CACHE_T,
-    )
-    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-        CausalConv3d,
-        RMS_norm,
-        Upsample,
     )
 
     # Use CACHE_T from wan_2p1 if available

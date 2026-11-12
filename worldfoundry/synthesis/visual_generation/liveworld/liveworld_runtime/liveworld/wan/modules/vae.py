@@ -4,8 +4,8 @@ import logging
 import torch
 import torch.nn as nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-    CausalConv3d,
     Decoder3d,
     Encoder3d,
     count_conv3d,

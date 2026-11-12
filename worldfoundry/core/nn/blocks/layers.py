@@ -164,6 +164,13 @@ class DropPath(nn.Module):
         return drop_path(x, float(self.drop_prob), self.training, self.scale_by_keep)
 
 
+class QuickGELU(nn.Module):
+    """CLIP's sigmoid approximation, with multiplication in the input dtype."""
+
+    def forward(self, x: Tensor) -> Tensor:
+        return x * torch.sigmoid(1.702 * x)
+
+
 class Mish(nn.Module):
     """Mish with explicit softplus/tanh rounding in the input dtype."""
 

@@ -17,6 +17,8 @@ import torch  # noqa: E402 - Follows the logging setup.
 import torch.nn.functional as F  # noqa: E402 - Follows the logging setup.
 from torch import nn  # noqa: E402 - Follows the logging setup.
 
+from worldfoundry.core.nn.blocks.layers import QuickGELU  # noqa: E402 - Follows the logging setup.
+
 from .hf_model import HFTextEncoder  # noqa: E402 - Follows the logging setup.
 from .modified_resnet import ModifiedResNet  # noqa: E402 - Follows the logging setup.
 from .timm_model import TimmModel  # noqa: E402 - Follows the logging setup.
@@ -24,7 +26,6 @@ from .transformer import (  # noqa: E402 - Follows the logging setup.
     Attention,
     LayerNorm,
     LayerNormFp32,
-    QuickGELU,
     TextTransformer,
     VisionTransformer,
     lock_text_tower,

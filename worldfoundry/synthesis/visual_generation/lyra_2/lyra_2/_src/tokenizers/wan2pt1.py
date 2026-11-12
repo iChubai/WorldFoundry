@@ -35,8 +35,10 @@ __all__ = [
 CACHE_T = 2
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level setup, as upstream.  # noqa: E402 - Follows module-level definitions, as upstream.
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (  # noqa: E402 - Follows module-level setup, as upstream.
     CausalConv3d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level setup, as upstream.
     Decoder3d,
     Encoder3d,
 )

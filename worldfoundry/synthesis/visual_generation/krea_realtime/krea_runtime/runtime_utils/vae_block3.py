@@ -3,12 +3,8 @@ import itertools
 import torch
 import torch.nn as nn
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-    AttentionBlock,
-    CausalConv3d,
-    ResidualBlock,
-    RMS_norm,
-)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d, RMS_norm
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import AttentionBlock, ResidualBlock
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.camera_21 import Resample
 
 

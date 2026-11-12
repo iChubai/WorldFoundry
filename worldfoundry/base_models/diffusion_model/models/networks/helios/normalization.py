@@ -1,17 +1,21 @@
+# SPDX-FileCopyrightText: 2025 The Helios Team and The HuggingFace Team
+# SPDX-License-Identifier: Apache-2.0
+
+"""FP32 RMS normalization without optional accelerator-kernel imports."""
+
 import torch
 import torch.nn as nn
 from diffusers.models.normalization import RMSNorm
 from diffusers.utils import is_torch_npu_available, is_torch_version
 
-# ------------------------------- replace funtion -------------------------------
 
-
-def replace_rmsnorm_with_fp32(model):
+def replace_rmsnorm_with_fp32(model: nn.Module) -> nn.Module:
+    """Bind FP32 forwards in place without replacing modules or parameters."""
     patched_count = 0
     for _name, module in model.named_modules():
         if isinstance(module, (torch.nn.RMSNorm, RMSNorm)):
 
-            def new_forward(self, x):
+            def new_forward(self: nn.Module, x: torch.Tensor) -> torch.Tensor:
                 return FP32RMSNorm.forward(self, x)
 
             module.forward = new_forward.__get__(module, module.__class__)
@@ -20,11 +24,10 @@ def replace_rmsnorm_with_fp32(model):
     return model
 
 
-# ------------------------------- Tiled MLP -------------------------------
-
-
 class FP32RMSNorm(RMSNorm):
-    def forward(self, hidden_states):
+    """Normalize and apply affine parameters in FP32, then restore the input dtype."""
+
+    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         if is_torch_npu_available():
             raise ValueError("FP32RMSNorm is not available on NPU")
 

@@ -7258,3 +7258,16 @@ Pi3X convolutional heads reuse ResidualConvBlock from depth/moge/model/v1.py
 (Microsoft; MIT). The MoGe owner and its existing users are unchanged. Native
 parameter names, group/layer normalization and model license terms are retained;
 the MIT license text is reproduced above.
+
+Shared Helios history and normalization components
+--------------------------------------------------
+The Helios pad/average-pool helpers in core/nn/blocks/volume.py and guidance
+projection in core/nn/diffusion/utils.py retain their Apache-2.0 provenance from
+PKU-YuanGroup/Helios (8f2a2faab3298c8a7630a2c73aea37c01b5bab01; The Helios Team
+and The HuggingFace Team). Evoke and Warp-as-History reuse canonical Helios
+output/attention/conditioning components. FramePack reuses only the dependency-light
+volume helpers. Helios FP32 RMS normalization lives outside its Triton kernel
+initializer in models/networks/helios/normalization.py. Shared history visibility
+helpers retain AlayaLab/Evoke attribution (74d268516d95c8fceadd2378f91a73f9f187042b;
+The Evoke Team; Apache-2.0). Existing family model and checkpoint licenses remain
+unchanged; the Apache-2.0 license text is reproduced above.

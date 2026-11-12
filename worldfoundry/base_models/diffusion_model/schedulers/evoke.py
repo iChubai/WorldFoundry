@@ -13,24 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import math
-from dataclasses import dataclass
 from typing import ClassVar, Literal
 
 import numpy as np
 import torch
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.schedulers.scheduling_utils import SchedulerMixin
-from diffusers.utils import BaseOutput, deprecate
+from diffusers.utils import deprecate
+
+from worldfoundry.base_models.diffusion_model.schedulers.helios import HeliosSchedulerOutput as EvokeSchedulerOutput
 
 from .flow_unipc import FlowUniPCMultistepScheduler
-
-
-@dataclass
-class EvokeSchedulerOutput(BaseOutput):
-    prev_sample: torch.FloatTensor
-    model_outputs: torch.FloatTensor | None = None
-    last_sample: torch.FloatTensor | None = None
-    this_order: int | None = None
 
 
 class EvokeScheduler(SchedulerMixin, ConfigMixin):

@@ -192,3 +192,16 @@ def checkpoint(func, inputs, params, flag):
         return ckpt(func, *inputs, use_reentrant=False)
     else:
         return func(*inputs)
+
+
+def optimized_scale(positive_flat: torch.Tensor, negative_flat: torch.Tensor) -> torch.Tensor:
+    """Return row-wise guidance projection coefficients using FP32 accumulation."""
+    positive_flat = positive_flat.float()
+    negative_flat = negative_flat.float()
+    # Calculate dot production
+    dot_product = torch.sum(positive_flat * negative_flat, dim=1, keepdim=True)
+    # Squared norm of uncondition
+    squared_norm = torch.sum(negative_flat**2, dim=1, keepdim=True) + 1e-8
+    # st_star = v_cond^T * v_uncond / ||v_uncond||^2
+    st_star = dot_product / squared_norm
+    return st_star

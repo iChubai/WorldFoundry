@@ -7,9 +7,21 @@ import pytest
 import torch
 
 from worldfoundry.core.nn.checkpointing.gradient import set_grad_checkpoint
-from worldfoundry.core.nn.diffusion.utils import append_zero, extract_numpy_into_tensor
+from worldfoundry.core.nn.diffusion.utils import append_zero, extract_numpy_into_tensor, optimized_scale
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float16, torch.bfloat16, torch.float64])
+def test_optimized_scale_accumulates_in_float32_with_fixed_epsilon(dtype: torch.dtype) -> None:
+    positive = torch.tensor([[1.5, -2.0, 3.0], [2.0, 5.0, -1.0]], dtype=dtype)
+    negative = torch.tensor([[0.5, -1.0, 4.0], [0.0, 0.0, 0.0]], dtype=dtype)
+    expected = (positive.float() * negative.float()).sum(dim=1, keepdim=True) / (
+        negative.float().square().sum(dim=1, keepdim=True) + 1e-8
+    )
+    actual = optimized_scale(positive, negative)
+    assert actual.dtype == torch.float32
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
 
 
 @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])

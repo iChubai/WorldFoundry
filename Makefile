@@ -258,6 +258,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_solarwm_ltx_component_reuse.py \
 	tests/synthesis/test_joyai_ltx_component_reuse.py \
 	tests/synthesis/test_joyai_ltx_transformer_reuse.py \
+	tests/synthesis/test_alayaworld_v11_ltx_reuse.py \
 	tests/core/test_diffusion_rounding.py \
 	tests/core/test_kernel_dispatch_receipt.py \
 	tests/core/test_diffusion_mutating_kernel.py \

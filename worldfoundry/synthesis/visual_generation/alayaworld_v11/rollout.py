@@ -22,6 +22,12 @@ import torch
 import torch.distributed as dist
 import torch.nn.functional as F
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import (
+    BatchedPerturbationConfig,
+    Perturbation,
+    PerturbationConfig,
+    PerturbationType,
+)
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import VideoLatentPatchifier
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
 from worldfoundry.base_models.diffusion_model.schedulers.ltx_sigma import LinearQuadraticScheduler
@@ -44,12 +50,6 @@ from .alayaworld_v11_runtime.alaya.memory.vigeo_geometry import ViGeoGeometryEst
 from .alayaworld_v11_runtime.alaya.utils.distributed import init_distributed, rank0_print
 from .alayaworld_v11_runtime.alaya.utils.dtype import resolve_dtype
 from .alayaworld_v11_runtime.alaya.utils.seed import seed_everything
-from .alayaworld_v11_runtime.ltx2.modules.perturbations import (
-    BatchedPerturbationConfig,
-    Perturbation,
-    PerturbationConfig,
-    PerturbationType,
-)
 
 
 @dataclass
@@ -608,7 +608,8 @@ class AlayaV11Rollout:
                         )
                     ]
                 )
-            ]
+            ],
+            num_blocks=self.components.transformer.num_blocks,
         )
 
     def _decode_i2v_rollout_chunks_to_video_frames(

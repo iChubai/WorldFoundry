@@ -162,6 +162,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_wan_text_encoder_reuse.py \
 	tests/synthesis/test_wan_vae_component_reuse.py \
 	tests/synthesis/test_wan_transformer_component_reuse.py \
+	tests/synthesis/test_wan_family_components.py \
 	tests/base_models/test_omnivinci_components.py \
 	tests/synthesis/test_omnivinci_runtime.py \
 	tests/synthesis/test_spatia_runtime.py \

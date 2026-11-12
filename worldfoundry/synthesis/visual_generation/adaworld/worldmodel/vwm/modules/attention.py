@@ -9,6 +9,8 @@ import torch.nn.functional as F
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import Normalize
+from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention import GEGLU
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 SDP_IS_AVAILABLE = callable(getattr(F, "scaled_dot_product_attention", None))
@@ -39,16 +41,6 @@ def default(val, d):
         return d() if isfunction(d) else d
 
 
-class GEGLU(nn.Module):
-    def __init__(self, dim_in, dim_out):
-        super().__init__()
-        self.proj = nn.Linear(dim_in, dim_out * 2)
-
-    def forward(self, x):
-        x, gate = self.proj(x).chunk(2, dim=-1)
-        return x * F.gelu(gate)
-
-
 class FeedForward(nn.Module):
     def __init__(self, dim, dim_out=None, mult=4, glu=False, dropout=0.0, zero_init=False):
         super().__init__()
@@ -74,10 +66,6 @@ def zero_module(module):
     for p in module.parameters():
         p.detach().zero_()
     return module
-
-
-def Normalize(in_channels):
-    return nn.GroupNorm(num_groups=32, num_channels=in_channels, eps=1e-6, affine=True)
 
 
 class CrossAttention(nn.Module):  # Not used, never mind

@@ -18,6 +18,7 @@ except BaseException:
     XFORMERS_IS_AVAILABLE = False
     print("No module 'xformers'. Processing without it")
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import Normalize, nonlinearity
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.attention import (
     MemoryEfficientCrossAttention,
@@ -40,15 +41,6 @@ def get_timestep_embedding(timesteps, embedding_dim):
     if embedding_dim % 2 == 1:  # Zero pad
         emb = F.pad(emb, (0, 1, 0, 0))
     return emb
-
-
-def nonlinearity(x):
-    # SiLU
-    return x * torch.sigmoid(x)
-
-
-def Normalize(in_channels, num_groups=32):
-    return nn.GroupNorm(num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True)
 
 
 class Upsample(nn.Module):

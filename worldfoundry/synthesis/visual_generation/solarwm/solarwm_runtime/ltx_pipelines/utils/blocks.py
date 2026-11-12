@@ -18,6 +18,16 @@ import torch
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import (
     decode_audio as vae_decode_audio,
 )
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import (
+    DiffVAEMode,
+    NAttentionKind,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.dsl_kernels.attn import (
+    na_dsl_available,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.video_decoder import (
+    build_diffvae_mode_op,
+)
 
 from ...ltx_core.allocator_trim_strategy import AllocatorTrimStrategy
 from ...ltx_core.batch_split import BatchSplitAdapter
@@ -64,7 +74,6 @@ from ...ltx_core.model.video_vae import (
     is_diffusion_video_vae,
     video_decoder_sd_ops_for_checkpoint,
 )
-from ...ltx_core.model.video_vae.transformer import DiffVAEMode, NAttentionKind, build_diffvae_mode_op, na_dsl_available
 from ...ltx_core.quantization import QuantizationPolicy, fp8_cast_fuse_rule
 from ...ltx_core.text_encoders.gemma import (
     EMBEDDINGS_PROCESSOR_KEY_OPS,

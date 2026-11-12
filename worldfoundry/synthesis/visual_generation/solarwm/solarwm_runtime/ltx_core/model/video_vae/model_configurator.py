@@ -9,12 +9,18 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enum
     NormLayerType,
     PaddingModeType,
 )
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.dsl_kernels.attn import (
+    NA_SOFTMAX_BOUND_BUFFER,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.dsl_kernels.block import (
+    FUSED_CTX_BIAS_BUFFER,
+    FUSED_CTX_WEIGHT_BUFFER,
+)
 
 from ...loader.sd_ops import KeyValueOperationResult, SDOps
 from ...loader.sft_loader import SafetensorsModelStateDictLoader
 from ..model_protocol import ModelConfigurator
-from .transformer.dsl_kernels import FUSED_CTX_BIAS_BUFFER, FUSED_CTX_WEIGHT_BUFFER, NA_SOFTMAX_BOUND_BUFFER
-from .video_vae import ConvVideoDecoder, DiffusionVideoDecoder, VideoDecoder, VideoEncoder
+from .video_vae import ConvVideoDecoder, DiffusionVideoDecoder, VideoEncoder
 
 _CONV_VAE_CLASS_NAME = "CausalVideoAutoencoder"
 
@@ -136,94 +142,6 @@ def _build_diffusion_video_decoder(config: dict) -> DiffusionVideoDecoder:
     )
 
 
-def stage4_channels_from_decoder_config(decoder_config: dict) -> int:
-    """Channels at stage-4 input (= output of deterministic stages 1-3).
-    ``stage_channels[3]`` after the first three upsample hops.
-    """
-    if "stage_channels" not in decoder_config:
-        raise ValueError("VAE decoder config missing stage_channels")
-    channels = decoder_config["stage_channels"]
-    if len(channels) < 4:
-        raise ValueError(f"stage_channels must have length >= 4, got {len(channels)}")
-    dim = int(channels[3])
-    if dim < 1:
-        raise ValueError(f"stage4_channels must be >= 1, got {dim}")
-    return dim
-
-
-def stage5_channels_from_decoder_config(decoder_config: dict) -> int:
-    """Stage-5 feature width from VAE config: ``num_heads * head_dim``.
-    Prefers explicit ``stage5_channels``, else ``stage_channels[-1]``. Both must be
-    divisible by ``head_dim`` (required in config as ``head_dim`` / ``na_head_dim``).
-    """
-    if "head_dim" in decoder_config:
-        head_dim = int(decoder_config["head_dim"])
-    elif "na_head_dim" in decoder_config:
-        head_dim = int(decoder_config["na_head_dim"])
-    else:
-        raise ValueError("VAE decoder config missing head_dim / na_head_dim")
-    if head_dim < 1:
-        raise ValueError(f"head_dim must be >= 1, got {head_dim}")
-    if "stage5_channels" in decoder_config:
-        dim = int(decoder_config["stage5_channels"])
-    elif "stage_channels" in decoder_config:
-        dim = int(decoder_config["stage_channels"][-1])
-    else:
-        raise ValueError("VAE decoder config missing stage5_channels / stage_channels")
-    if dim % head_dim != 0:
-        raise ValueError(f"stage5 dim {dim} is not divisible by head_dim={head_dim}")
-    return (dim // head_dim) * head_dim
-
-
-def diffvae_tiling_geometry_from_vae_config(config: dict) -> dict:
-    """Resolve DiffVAE tiling geometry from a ``vae`` config dict (no module build).
-    Returns kwargs for :func:`ltx_core.model.video_vae.diffusion_tiling.recommended_decode_tiling_config`
-    except resolution / memory fields: ``tile_halos``, ``pixel_scale``, ``min_tile_size_s4``,
-    ``patch_size``, ``stage5_channels``, ``stage4_channels``, ``upsample_strides``,
-    ``natten_trailing_pad_latent_frames``, ``out_channels``.
-    """
-    # Local import: avoid a hard cycle at module import time.
-    from . import diffusion_tiling as dt
-    from . import diffusion_video_decoder as dvd
-
-    decoder_config = config.get("decoder", config)
-    stage_kernels = (
-        tuple(tuple(k) for k in decoder_config["stage_kernels"])
-        if "stage_kernels" in decoder_config
-        else dvd._L_STAGE_KERNELS
-    )
-    stage_depths = (
-        tuple(decoder_config["stage_depths"]) if "stage_depths" in decoder_config else dvd._DIFF_STAGE_DEPTHS_DEFAULT
-    )
-    upsamples = (
-        tuple((tuple(stride), reduction) for stride, reduction in decoder_config["upsamples"])
-        if "upsamples" in decoder_config
-        else dvd._L_UPSAMPLES
-    )
-    stage5_kernel = (
-        tuple(decoder_config["stage5_kernel"]) if "stage5_kernel" in decoder_config else dvd._DIFF_STAGE5_KERNEL_DEFAULT
-    )
-    patch_size = int(decoder_config.get("patch_size", 4))
-    up3_stride = upsamples[3][0]
-    return {
-        "tile_halos": dt.compute_tile_halos(
-            stage_kernels[3],
-            stage_depths[3],
-            stage5_kernel,
-            stage_depths[-1],
-            up3_stride,
-        ),
-        "pixel_scale": dt.stage4_to_pixel_scale_factors(up3_stride, patch_size),
-        "min_tile_size_s4": dt.compute_tile_min_size(stage_kernels[3], stage5_kernel, up3_stride),
-        "patch_size": patch_size,
-        "stage5_channels": stage5_channels_from_decoder_config(decoder_config),
-        "stage4_channels": stage4_channels_from_decoder_config(decoder_config),
-        "upsample_strides": tuple(stride for stride, _reduction in upsamples),
-        "natten_trailing_pad_latent_frames": (stage_kernels[0][0] // 2) * 2,
-        "out_channels": int(decoder_config.get("out_channels", 3)),
-    }
-
-
 def estimate_diffusion_decoder_weight_bytes(checkpoint_path: str | Path) -> int:
     """Sum on-disk bf16-sized nbytes for ``vae.decoder`` / ``decoder`` tensors (header only)."""
     path = Path(checkpoint_path)
@@ -240,11 +158,11 @@ def estimate_diffusion_decoder_weight_bytes(checkpoint_path: str | Path) -> int:
     return total
 
 
-class VideoDecoderConfigurator(ModelConfigurator[VideoDecoder]):
+class VideoDecoderConfigurator(ModelConfigurator[ConvVideoDecoder | DiffusionVideoDecoder]):
     """Configurator for creating a video VAE Decoder from a configuration dictionary."""
 
     @classmethod
-    def from_metadata(cls, metadata: dict) -> VideoDecoder:
+    def from_metadata(cls, metadata: dict) -> ConvVideoDecoder | DiffusionVideoDecoder:
         config = metadata.get("config", {}).get("vae", {})
         if _vae_class_name_from_metadata(metadata) == _CONV_VAE_CLASS_NAME:
             return _build_conv_video_decoder(config)

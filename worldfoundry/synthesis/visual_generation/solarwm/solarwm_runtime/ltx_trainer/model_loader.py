@@ -200,13 +200,16 @@ def load_video_vae_decoder(
     Returns:
         Loaded VideoDecoder
     """
+    from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.video_decoder import (
+        build_cutlass_fna_diffusion_decoder_op,
+    )
+
     from ..ltx_core.loader.single_gpu_model_builder import SingleGPUModelBuilder
     from ..ltx_core.model.video_vae import (
         VideoDecoderConfigurator,
         is_diffusion_video_vae,
         video_decoder_sd_ops_for_checkpoint,
     )
-    from ..ltx_core.model.video_vae.transformer import build_cutlass_fna_diffusion_decoder_op
 
     checkpoint_path = str(checkpoint_path)
 

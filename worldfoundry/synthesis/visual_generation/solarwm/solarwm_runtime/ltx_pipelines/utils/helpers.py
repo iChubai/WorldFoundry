@@ -4,6 +4,14 @@ from collections.abc import Sequence
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import encode_audio
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diffusion_video_decoder import (
+    diffvae_tiling_geometry_from_vae_config,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import DiffVAEMode
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.video_vae.model_configurator import (
+    estimate_diffusion_decoder_weight_bytes,
+    is_diffusion_video_vae,
+)
 
 from ...ltx_core.components.noisers import Noiser
 from ...ltx_core.conditioning import (
@@ -17,12 +25,6 @@ from ...ltx_core.loader.sft_loader import SafetensorsModelStateDictLoader
 from ...ltx_core.model.transformer import Modality
 from ...ltx_core.model.video_vae import AUTO_TILING, AutoTiling, TileSizeConfig, TilingConfig, VideoEncoder
 from ...ltx_core.model.video_vae.diffusion_tiling import recommended_decode_tiling_config
-from ...ltx_core.model.video_vae.model_configurator import (
-    diffvae_tiling_geometry_from_vae_config,
-    estimate_diffusion_decoder_weight_bytes,
-    is_diffusion_video_vae,
-)
-from ...ltx_core.model.video_vae.transformer.config import DiffVAEMode
 from ...ltx_core.text_encoders.gemma import LTXGemmaTextEncoder
 from ...ltx_core.tiling import DimensionSizeConfig
 from ...ltx_core.tools import LatentTools

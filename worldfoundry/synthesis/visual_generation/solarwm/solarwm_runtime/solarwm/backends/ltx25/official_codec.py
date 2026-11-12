@@ -42,8 +42,11 @@ class OfficialDiffVAEDecoder:
     """Chunked-eager owner for the diffusion video VAE."""
 
     def __init__(self, checkpoint_path: str | Path, *, device: torch.device) -> None:
+        from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import (
+            DiffVAEMode,
+        )
+
         from ....ltx_core.model.video_vae import is_diffusion_video_vae
-        from ....ltx_core.model.video_vae.transformer import DiffVAEMode
         from ....ltx_pipelines.utils.blocks import VideoDecoder
 
         self.checkpoint_path = str(checkpoint_path)
@@ -62,8 +65,11 @@ class OfficialDiffVAEDecoder:
         return _qualified_class(self.decoder)
 
     def decode(self, latent: torch.Tensor, *, seed: int) -> torch.Tensor:
+        from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import (
+            DiffVAEMode,
+        )
+
         from ....ltx_core.model.video_vae import AUTO_TILING
-        from ....ltx_core.model.video_vae.transformer import DiffVAEMode
         from ....ltx_core.types import VideoPixelShape
         from ....ltx_pipelines.utils.helpers import ensure_tiling_config, tiling_scale_factors_for_vae
 

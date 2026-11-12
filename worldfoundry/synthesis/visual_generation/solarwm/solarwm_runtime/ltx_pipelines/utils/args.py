@@ -6,9 +6,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, NamedTuple
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import DiffVAEMode
+
 from ...ltx_core.loader import LTXV_LORA_COMFY_RENAMING_MAP, LoraPathStrengthAndSDOps
 from ...ltx_core.model.transformer.compiling import CompilationConfig
-from ...ltx_core.model.video_vae.transformer import DiffVAEMode
 from ...ltx_core.quantization import QuantizationPolicy
 from .constants import (
     DEFAULT_LORA_STRENGTH,

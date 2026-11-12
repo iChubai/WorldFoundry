@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 OpenEnvision
 # SPDX-License-Identifier: Apache-2.0
-"""SolarWM loads its Wan codecs through the canonical checkpoint graphs."""
+"""SolarWM loads its codecs through the canonical checkpoint graphs."""
 
 from pathlib import Path
 from typing import Any
@@ -90,3 +90,89 @@ def test_solarwm_wan_vae_loads_canonical_weights_and_streams(monkeypatch: pytest
         codec.module.clear_cache()
         streamed = torch.cat([codec.decode(chunk, use_cache=True) for chunk in latents.split(1, 1)], dim=1)
     torch.testing.assert_close(streamed, decoded, rtol=0, atol=0)
+
+
+def test_solarwm_diffusion_decoder_loads_canonical_weights(tmp_path: Path) -> None:
+    import json
+
+    from safetensors.torch import save_file
+
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diffusion_video_decoder import (
+        DiffusionVideoDecoder,
+    )
+    from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.single_gpu_model_builder import (
+        SingleGPUModelBuilder,
+    )
+    from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.video_decoder import (
+        build_diffvae_mode_op,
+    )
+    from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.video_vae import (
+        model_configurator,
+    )
+
+    metadata = {
+        "config": {
+            "vae": {
+                "_class_name": "CausalDiffusionVAE",
+                "latent_channels": 16,
+                "decoder": {
+                    "in_channels": 16,
+                    "head_dim": 16,
+                    "stage_channels": [16] * 5,
+                    "stage_depths": [1] * 5,
+                    "stage_kernels": [[1, 1, 1]] * 5,
+                    "stage5_kernel": [1, 1, 1],
+                    "upsamples": [[[1, 1, 1], 1]] * 4,
+                    "t_emb_dim": 16,
+                },
+            }
+        }
+    }
+    reference = model_configurator.VideoDecoderConfigurator.from_metadata(metadata).eval()
+    assert type(reference) is DiffusionVideoDecoder
+    with torch.no_grad():
+        reference.per_channel_statistics.get_buffer("std-of-means").fill_(1)
+        reference.per_channel_statistics.get_buffer("mean-of-means").zero_()
+    state = {f"decoder.{key}": value for key, value in reference.state_dict().items()}
+    for key in list(state):
+        if ".qkv.to_q." not in key:
+            continue
+        state[key.replace(".qkv.to_q.", ".qkv.")] = torch.cat(
+            [state.pop(key.replace(".to_q.", f".to_{axis}.")) for axis in ("q", "k", "v")]
+        )
+    weights = tmp_path / "video.safetensors"
+    save_file(state, weights, metadata={"config": json.dumps(metadata["config"])})
+    ops = model_configurator.video_decoder_sd_ops_for_checkpoint(str(weights))
+    loaded = SingleGPUModelBuilder(
+        model_path=str(weights),
+        model_class_configurator=model_configurator.VideoDecoderConfigurator,
+        model_sd_ops=ops,
+    ).build(device=torch.device("cpu"), dtype=torch.float32)
+    assert type(loaded) is DiffusionVideoDecoder
+    assert loaded.state_dict().keys() == reference.state_dict().keys()
+    for key, value in loaded.state_dict().items():
+        torch.testing.assert_close(value, reference.state_dict()[key], rtol=0, atol=0)
+    from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import DiffVAEMode
+
+    op = build_diffvae_mode_op(DiffVAEMode.CHUNKED_EAGER)
+    assert op.matcher(loaded)
+    op.mutator(loaded)
+    op.mutator(reference)
+    latent = torch.randn(1, 16, 2, 2, 3)
+    with torch.no_grad():
+        actual = tuple(loaded.decode_video(latent, generator=torch.Generator().manual_seed(3)))
+        expected = tuple(reference.decode_video(latent, generator=torch.Generator().manual_seed(3)))
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+
+
+def test_solarwm_disposal_retains_nonpersistent_loader_buffers() -> None:
+    from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.disposable import dispose_model
+
+    module = torch.nn.Linear(4, 4)
+    module.register_buffer("checkpoint_scale", torch.ones(4))
+    scratch = torch.arange(4)
+    module.register_buffer("scratch", scratch, persistent=False)
+    dispose_model(module)
+    assert module.weight.device.type == "meta"
+    assert module.checkpoint_scale.device.type == "meta"
+    assert module.scratch is scratch

@@ -8,6 +8,9 @@ from torch import nn
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.normalization import PixelNorm
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.convolution import make_conv_nd
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diffusion_video_decoder import (
+    DiffusionVideoDecoder,
+)
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enums import (
     LogVarianceType,
     NormLayerType,
@@ -626,7 +629,6 @@ def map_spatial_interval_to_latent(
 
 
 from .conv_video_decoder import ConvVideoDecoder  # noqa: E402
-from .diffusion_video_decoder import DiffusionVideoDecoder  # noqa: E402
 
 __all__ = [
     "ConvVideoDecoder",

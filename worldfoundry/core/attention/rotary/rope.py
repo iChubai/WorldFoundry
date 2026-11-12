@@ -55,7 +55,6 @@ try:
 except ImportError:  # pragma: no cover - selected by the installed torch
     from torch.distributed.device_mesh import DeviceMesh
 
-from worldfoundry.core.attention.rotary.rope_kernel import apply_rotary_pos_emb
 from worldfoundry.core.distributed.model_parallel.context import split_inputs_cp
 from worldfoundry.core.platform.device import get_current_torch_device
 
@@ -663,6 +662,8 @@ def apply_rope_freqs(x: Tensor, freqs: Tensor, interleaved: bool = False) -> Ten
     Returns:
         Rotated tensor of shape ``[B, S, H, D]``, sharing storage with ``x``.
     """
+    from worldfoundry.core.attention.rotary.rope_kernel import apply_rotary_pos_emb
+
     return apply_rotary_pos_emb(x, freqs, interleaved=interleaved, inplace=True)
 
 

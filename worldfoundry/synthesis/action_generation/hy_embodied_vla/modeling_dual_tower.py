@@ -28,13 +28,14 @@ mlp}``, plus the MoT extensions ``input_layernorm_v`` /
 ``post_attention_layernorm_v`` / ``self_attn.{q,k,v,o}_proj_v`` and
 ``mlp_v`` for the modality-aware variant) can be dropped in.
 """
-
 from typing import ClassVar
 
 import torch
 from torch import nn
 from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
 from transformers.cache_utils import Cache
+
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
 from .modeling_hunyuan_vl_mot import (
     HunYuanVLMoTForConditionalGeneration,
@@ -88,34 +89,6 @@ def mask_apply(
             out_flat[i][vis_idx] = fn(hs_v)
 
     return [o.view(B, S, -1) for o in out_flat]
-
-
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-def apply_rotary_pos_emb(q, k, cos, sin, position_ids=None, unsqueeze_dim=1):
-    """Apply Rotary Position Embedding to the query and key tensors.
-
-    Args:
-        q: query tensor.
-        k: key tensor.
-        cos: cosine part of the rotary embedding.
-        sin: sine part of the rotary embedding.
-        position_ids: unused, kept for signature compatibility.
-        unsqueeze_dim: which axis to unsqueeze on for broadcasting.
-
-    Returns:
-        ``(q_rotated, k_rotated)``.
-    """
-    cos = cos.unsqueeze(unsqueeze_dim)
-    sin = sin.unsqueeze(unsqueeze_dim)
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
 
 
 # ---------------------------------------------------------------------------

@@ -1,5 +1,4 @@
 """Qwen2 action expert and routed-MoE inference layers."""
-
 from typing import ClassVar
 
 import torch
@@ -26,6 +25,8 @@ from transformers.models.qwen2.modeling_qwen2 import (
 )
 from transformers.processing_utils import Unpack
 from transformers.utils import auto_docstring, logging
+
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as FixQwen2RMSNorm
 
 logger = logging.get_logger(__name__)
 
@@ -146,30 +147,6 @@ class Qwen2FusedExperts(nn.Module):
             workspace=lambda: self._get_moe_workspace(hidden_states, selected_experts.shape[1]),
             allow_triton=allow_triton,
         )
-
-
-class FixQwen2RMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        """
-        FixQwen2RMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        # print(f'self.weight dtype is {self.weight.dtype}')
-        input_dtype = hidden_states.dtype
-        # print(f'input_dtype is {input_dtype}')
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        # print(f'hidden_states dtype is {hidden_states.dtype}')
-        # print(f'output dtype is {(self.weight * hidden_states.to(input_dtype)).dtype}')
-        return self.weight * hidden_states.to(input_dtype)
-
-    def extra_repr(self):
-        return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
 
 class Qwen2TokenMoeBlock(nn.Module):

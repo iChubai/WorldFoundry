@@ -1,5 +1,4 @@
 """Checkpoint-compatible Qwen2.5-VL inference layers for LingBot-VLA v1."""
-
 import math
 from dataclasses import dataclass
 from typing import Any, ClassVar
@@ -13,6 +12,10 @@ from transformers import (
 )
 from transformers.cache_utils import Cache, DynamicCache, StaticCache
 from transformers.models.qwen2_5_vl.configuration_qwen2_5_vl import Qwen2_5_VLConfig, Qwen2_5_VLVisionConfig
+
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as Qwen2MLP
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as Qwen2RMSNorm
+from worldfoundry.core.attention.rotary.rope import rotate_half
 
 try:
     from transformers.cache_utils import SlidingWindowCache
@@ -111,26 +114,6 @@ class Qwen2_5_VisionRotaryEmbedding(nn.Module):
         return freqs
 
 
-class Qwen2RMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        """
-        Qwen2RMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        return self.weight * hidden_states.to(input_dtype)
-
-    def extra_repr(self):
-        return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
-
-
 class Qwen2_5_VLPatchMerger(nn.Module):
     def __init__(self, dim: int, context_dim: int, spatial_merge_size: int = 2) -> None:
         super().__init__()
@@ -145,14 +128,6 @@ class Qwen2_5_VLPatchMerger(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.mlp(self.ln_q(x).view(-1, self.hidden_size))
         return x
-
-
-def rotate_half(x: torch.Tensor) -> torch.Tensor:
-    """Rotate the two halves of the last dimension for rotary embeddings."""
-
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
 
 
 def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
@@ -832,22 +807,6 @@ class Qwen2_5_VLFlashAttention2(Qwen2_5_VLAttention):
             attn_weights = None
 
         return attn_output, attn_weights, past_key_value
-
-
-class Qwen2MLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-        return down_proj
 
 
 QWEN2_5_VL_ATTENTION_CLASSES = {

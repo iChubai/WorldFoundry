@@ -29,6 +29,8 @@ from transformers.activations import ACT2FN
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 
+from worldfoundry.core.attention.rotary.rope import rotate_half
+
 from .dinov3_configuration import DINOv3ViTConfig
 
 
@@ -173,13 +175,6 @@ class DINOv3ViTRopePositionEmbedding(nn.Module):
 
         dtype = pixel_values.dtype
         return cos.to(dtype=dtype), sin.to(dtype=dtype)
-
-
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
 
 
 def eager_attention_forward(

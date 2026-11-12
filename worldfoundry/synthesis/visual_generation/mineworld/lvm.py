@@ -1,7 +1,6 @@
 """
 Wrap the Huggingface Transformers Llama to PyTorch Lightning Module.
 """
-
 import torch
 import torch.utils.checkpoint
 from torch import nn
@@ -11,9 +10,11 @@ from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as LlamaRMSNorm
 from worldfoundry.core.attention import (
     scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
 )
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 from worldfoundry.synthesis.visual_generation.mineworld.diagonal_decoding import (
     decode_n_tokens,
     decode_one_token,
@@ -31,32 +32,6 @@ torch.backends.cuda.matmul.allow_tf32 = False
 
 logger = logging.get_logger(__name__)
 
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-def apply_rotary_pos_emb(q, k, cos, sin, position_ids):
-    """
-    Apply rotary position embeddings to query and key tensors.
-
-    Args:
-        q (torch.Tensor): Query tensor.
-        k (torch.Tensor): Key tensor.
-        cos (torch.Tensor): Cosine values.
-        sin (torch.Tensor): Sine values.
-
-    Returns:
-        torch.Tensor: Query and key tensors with rotary position embeddings applied.
-    """
-    cos = cos[position_ids].unsqueeze(0).unsqueeze(2)
-    sin = sin[position_ids].unsqueeze(0).unsqueeze(2)
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
-
 
 class LlamaLVM(torch.nn.Module):
     def __init__(
@@ -70,26 +45,6 @@ class LlamaLVM(torch.nn.Module):
         self.transformer = get_obj_from_str(model_class)(self.config)
         if tokenizer_config is not None:
             self.tokenizer = instantiate_from_config(tokenizer_config)
-
-
-class LlamaRMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        """
-        LlamaRMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        return self.weight * hidden_states.to(input_dtype)
-
-    def extra_repr(self):
-        return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
 
 class LlamaRotaryEmbedding(nn.Module):
@@ -205,7 +160,9 @@ class LlamaAttention(nn.Module):
 
         cos, sin = positions_embedding
 
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(
+            query_states, key_states, cos[position_ids].unsqueeze(0), sin[position_ids].unsqueeze(0), unsqueeze_dim=2
+        )
 
         self.cache_k[:bsz, position_ids] = key_states
         self.cache_v[:bsz, position_ids] = value_states

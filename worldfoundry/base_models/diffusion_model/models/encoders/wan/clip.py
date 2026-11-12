@@ -15,6 +15,7 @@ Wan CLIP family, not Hunyuan CLIP or OpenCLIP.
 
 import logging
 import math
+from collections.abc import Callable
 
 import torch
 import torch.nn as nn
@@ -75,7 +76,16 @@ class LayerNorm(nn.LayerNorm):
 
 
 class SelfAttention(nn.Module):
-    def __init__(self, dim, num_heads, causal=False, attn_dropout=0.0, proj_dropout=0.0):
+    def __init__(
+        self,
+        dim,
+        num_heads,
+        causal=False,
+        attn_dropout=0.0,
+        proj_dropout=0.0,
+        *,
+        attention_fn: Callable[..., torch.Tensor] | None = None,
+    ) -> None:
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -84,6 +94,7 @@ class SelfAttention(nn.Module):
         self.causal = causal
         self.attn_dropout = attn_dropout
         self.proj_dropout = proj_dropout
+        self._attention_fn = attention_fn
 
         # layers
         self.to_qkv = nn.Linear(dim, dim * 3)
@@ -100,7 +111,8 @@ class SelfAttention(nn.Module):
 
         # compute attention
         p = self.attn_dropout if self.training else 0.0
-        x = flash_attention(q, k, v, dropout_p=p, causal=self.causal, version=2)
+        attention_fn = flash_attention if self._attention_fn is None else self._attention_fn
+        x = attention_fn(q, k, v, dropout_p=p, causal=self.causal, version=2)
         x = x.reshape(b, s, c)
 
         # output
@@ -138,7 +150,10 @@ class AttentionBlock(nn.Module):
         attn_dropout=0.0,
         proj_dropout=0.0,
         norm_eps=1e-5,
-    ):
+        *,
+        norm_layer: Callable[..., nn.Module] = LayerNorm,
+        attention_layer: Callable[..., nn.Module] = SelfAttention,
+    ) -> None:
         assert activation in ["quick_gelu", "gelu", "swi_glu"]
         super().__init__()
         self.dim = dim
@@ -149,9 +164,9 @@ class AttentionBlock(nn.Module):
         self.norm_eps = norm_eps
 
         # layers
-        self.norm1 = LayerNorm(dim, eps=norm_eps)
-        self.attn = SelfAttention(dim, num_heads, causal, attn_dropout, proj_dropout)
-        self.norm2 = LayerNorm(dim, eps=norm_eps)
+        self.norm1 = norm_layer(dim, eps=norm_eps)
+        self.attn = attention_layer(dim, num_heads, causal, attn_dropout, proj_dropout)
+        self.norm2 = norm_layer(dim, eps=norm_eps)
         if activation == "swi_glu":
             self.mlp = SwiGLU(dim, int(dim * mlp_ratio))
         else:
@@ -173,7 +188,18 @@ class AttentionBlock(nn.Module):
 
 
 class AttentionPool(nn.Module):
-    def __init__(self, dim, mlp_ratio, num_heads, activation="gelu", proj_dropout=0.0, norm_eps=1e-5):
+    def __init__(
+        self,
+        dim,
+        mlp_ratio,
+        num_heads,
+        activation="gelu",
+        proj_dropout=0.0,
+        norm_eps=1e-5,
+        *,
+        norm_layer: Callable[..., nn.Module] = LayerNorm,
+        attention_fn: Callable[..., torch.Tensor] | None = None,
+    ) -> None:
         assert dim % num_heads == 0
         super().__init__()
         self.dim = dim
@@ -182,6 +208,7 @@ class AttentionPool(nn.Module):
         self.head_dim = dim // num_heads
         self.proj_dropout = proj_dropout
         self.norm_eps = norm_eps
+        self._attention_fn = attention_fn
 
         # layers
         gain = 1.0 / math.sqrt(dim)
@@ -189,7 +216,7 @@ class AttentionPool(nn.Module):
         self.to_q = nn.Linear(dim, dim)
         self.to_kv = nn.Linear(dim, dim * 2)
         self.proj = nn.Linear(dim, dim)
-        self.norm = LayerNorm(dim, eps=norm_eps)
+        self.norm = norm_layer(dim, eps=norm_eps)
         self.mlp = nn.Sequential(
             nn.Linear(dim, int(dim * mlp_ratio)),
             QuickGELU() if activation == "quick_gelu" else nn.GELU(),
@@ -208,7 +235,8 @@ class AttentionPool(nn.Module):
         k, v = self.to_kv(x).view(b, s, 2, n, d).unbind(2)
 
         # compute attention
-        x = flash_attention(q, k, v, version=2)
+        attention_fn = flash_attention if self._attention_fn is None else self._attention_fn
+        x = attention_fn(q, k, v, version=2)
         x = x.reshape(b, 1, c)
 
         # output
@@ -238,7 +266,12 @@ class VisionTransformer(nn.Module):
         proj_dropout=0.0,
         embedding_dropout=0.0,
         norm_eps=1e-5,
-    ):
+        *,
+        norm_layer: Callable[..., nn.Module] = LayerNorm,
+        block_layer: Callable[..., nn.Module] = AttentionBlock,
+        pool_layer: Callable[..., nn.Module] = AttentionPool,
+        materialize_embeddings: bool = True,
+    ) -> None:
         if image_size % patch_size != 0:
             print("[WARNING] image_size is not divisible by patch_size", flush=True)
         assert pool_type in ("token", "token_fc", "attn_pool")
@@ -255,6 +288,7 @@ class VisionTransformer(nn.Module):
         self.pool_type = pool_type
         self.post_norm = post_norm
         self.norm_eps = norm_eps
+        self._materialize_embeddings = materialize_embeddings
 
         # embeddings
         gain = 1.0 / math.sqrt(dim)
@@ -267,16 +301,16 @@ class VisionTransformer(nn.Module):
         self.dropout = nn.Dropout(embedding_dropout)
 
         # transformer
-        self.pre_norm = LayerNorm(dim, eps=norm_eps) if pre_norm else None
+        self.pre_norm = norm_layer(dim, eps=norm_eps) if pre_norm else None
         self.transformer = nn.Sequential(
             *[
-                AttentionBlock(
+                block_layer(
                     dim, mlp_ratio, num_heads, post_norm, False, activation, attn_dropout, proj_dropout, norm_eps
                 )
                 for _ in range(num_layers)
             ]
         )
-        self.post_norm = LayerNorm(dim, eps=norm_eps)
+        self.post_norm = norm_layer(dim, eps=norm_eps)
 
         # head
         if pool_type == "token":
@@ -284,7 +318,7 @@ class VisionTransformer(nn.Module):
         elif pool_type == "token_fc":
             self.head = nn.Linear(dim, out_dim)
         elif pool_type == "attn_pool":
-            self.head = AttentionPool(dim, mlp_ratio, num_heads, activation, proj_dropout, norm_eps)
+            self.head = pool_layer(dim, mlp_ratio, num_heads, activation, proj_dropout, norm_eps)
 
     def forward(self, x, interpolation=False, use_31_block=False):
         b = x.size(0)
@@ -292,13 +326,16 @@ class VisionTransformer(nn.Module):
         # embeddings
         x = self.patch_embedding(x).flatten(2).permute(0, 2, 1)
         if self.pool_type in ("token", "token_fc"):
-            cls_embedding = self.cls_embedding.to(device=x.device, dtype=x.dtype)
+            cls_embedding = self.cls_embedding
+            if self._materialize_embeddings:
+                cls_embedding = cls_embedding.to(device=x.device, dtype=x.dtype)
             x = torch.cat([cls_embedding.expand(b, -1, -1), x], dim=1)
         e = pos_interpolate(self.pos_embedding, x.size(1)) if interpolation else self.pos_embedding
         # Direct parameters are not child modules and therefore are not
         # materialized by per-layer VRAM wrappers.  Align them with the patch
         # activation for offloaded Wan image encoders.
-        e = e.to(device=x.device, dtype=x.dtype)
+        if self._materialize_embeddings:
+            e = e.to(device=x.device, dtype=x.dtype)
         x = self.dropout(x + e)
         if self.pre_norm is not None:
             x = self.pre_norm(x)
@@ -363,7 +400,9 @@ class XLMRobertaCLIP(nn.Module):
         proj_dropout=0.0,
         embedding_dropout=0.0,
         norm_eps=1e-5,
-    ):
+        *,
+        vision_layer: Callable[..., nn.Module] = VisionTransformer,
+    ) -> None:
         super().__init__()
         self.embed_dim = embed_dim
         self.image_size = image_size
@@ -386,7 +425,7 @@ class XLMRobertaCLIP(nn.Module):
         self.norm_eps = norm_eps
 
         # models
-        self.visual = VisionTransformer(
+        self.visual = vision_layer(
             image_size=image_size,
             patch_size=patch_size,
             dim=vision_dim,

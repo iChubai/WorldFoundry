@@ -153,6 +153,7 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 INFER_TENSOR_CONTRACTS = \
 	tests/base_models/test_device_coefficient_flow_unipc_scheduler.py \
 	tests/base_models/diffusion_model/models/autoencoders/wan/test_shared_leaves.py \
+	tests/base_models/diffusion_model/models/encoders/wan/test_clip_bindings.py \
 	tests/synthesis/test_navigation_input_contracts.py \
 	tests/synthesis/test_wan_camera_component_reuse.py \
 	tests/synthesis/test_open_magvit2_component_reuse.py \

@@ -7166,3 +7166,13 @@ The QuickGELU activation in core/nn/blocks/layers.py retains OpenAI CLIP's expli
 sigmoid approximation (Copyright 2021 OpenAI; MIT), also used by OpenCLIP and Wan.
 The complete MIT and Apache-2.0 texts are retained above. Source and checkpoint
 license terms for the consuming models are unchanged.
+
+Wan CLIP shared tower bindings
+-----------------------------
+encoders/wan/clip.py owns the common attention, pooling, visual/text tower and
+parameter-group implementations. Its action, linear and LiveWorld bindings
+retain their respective normalization, direct-embedding placement and attention
+kernel policies. LiveWorld's binding is in encoders/wan/variants/liveworld_clip.py;
+its image preprocessing and checkpoint orchestration stay in the runtime.
+These components retain the Wan, OpenAI CLIP and OpenCLIP attributions and the
+Apache-2.0/MIT source terms reproduced above.

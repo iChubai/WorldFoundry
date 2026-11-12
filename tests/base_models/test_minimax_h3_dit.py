@@ -164,9 +164,16 @@ def test_attention_callable_is_instance_local() -> None:
     calls = []
     original = first.attention_fn
 
-    def attend(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, **kwargs: object) -> torch.Tensor:
+    def attend(
+        q: torch.Tensor,
+        k: torch.Tensor,
+        v: torch.Tensor,
+        *,
+        cu_seqlens: torch.Tensor,
+        softmax_scale: float,
+    ) -> torch.Tensor:
         calls.append(q.shape)
-        return original(q, k, v, **kwargs)
+        return original(q, k, v, cu_seqlens=cu_seqlens, softmax_scale=softmax_scale)
 
     first.attention_fn = attend
     x = torch.randn(5, first.qkv_proj.in_features)

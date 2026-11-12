@@ -96,15 +96,6 @@ def transposed(dic):
     return {k: v.swapaxes(1, 2) if v.ndim > 2 else v for k, v in dic.items()}
 
 
-def invalid_to_nans(arr, valid_mask, ndim=999):
-    if valid_mask is not None:
-        arr = arr.clone()
-        arr[~valid_mask] = float("nan")
-    if arr.ndim > ndim:
-        arr = arr.flatten(-2 - (arr.ndim - ndim), -2)
-    return arr
-
-
 def invalid_to_zeros(arr, valid_mask, ndim=999):
     if valid_mask is not None:
         arr = arr.clone()

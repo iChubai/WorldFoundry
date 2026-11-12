@@ -29,12 +29,10 @@ from transformers import AutoProcessor, AutoTokenizer, Blip2ForConditionalGenera
 from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
 from worldfoundry.base_models.three_dimensions.depth.moge.variants.uniworld_view import UniWorldMoGeModel
 from worldfoundry.base_models.three_dimensions.general_3d.uni3c.utils import points_padding
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.pose_enc import (
-    pose_encoding_to_extri_intri,
-)
 
 # STream3R
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.stream3r import STream3R
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import pose_encoding_to_extri_intri
 from worldfoundry.core.geometry.transforms import closed_form_inverse_se3
 
 from .model.pipeline_uniview import WanVACEPipeline

@@ -14,9 +14,15 @@ import torch.nn as nn
 from worldfoundry.base_models.three_dimensions.depth.midas.fusion import custom_interpolate as custom_interpolate
 from worldfoundry.base_models.three_dimensions.depth.midas.fusion import make_grouped_fusion_block as _make_fusion_block
 from worldfoundry.base_models.three_dimensions.depth.midas.fusion import make_scratch as _make_scratch
-
-from .head_act import activate_head
-from .utils import create_uv_grid, position_grid_to_embed
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.head_act import (
+    activate_head as activate_head,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    create_uv_grid as create_uv_grid,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    position_grid_to_embed as position_grid_to_embed,
+)
 
 
 class DPTHead(nn.Module):

@@ -7,7 +7,7 @@
 import numpy as np
 import torch
 
-from .utils.geometry import xy_grid
+from worldfoundry.core.geometry.projection import pixel_coordinate_grid as xy_grid
 
 
 def estimate_focal_knowing_depth(pts3d, pp, focal_mode="median", min_focal=0.0, max_focal=np.inf):

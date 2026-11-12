@@ -66,26 +66,6 @@ def seed_everything(seed: int = 42):
     print(f"Seed set to: {seed}")
 
 
-def invalid_to_nans(arr, valid_mask, ndim=999):
-    """
-    Replace invalid values in an array with NaN values based on a validity mask.
-
-    Parameters:
-    - arr: Input array (typically a PyTorch tensor)
-    - valid_mask: Boolean mask indicating valid elements (True) and invalid elements (False)
-    - ndim: Maximum number of dimensions to keep; flattens dimensions if arr.ndim > ndim
-
-    Returns:
-    - Modified array with invalid values replaced by NaN
-    """
-    if valid_mask is not None:
-        arr = arr.clone()
-        arr[~valid_mask] = float("nan")
-    if arr.ndim > ndim:
-        arr = arr.flatten(-2 - (arr.ndim - ndim), -2)
-    return arr
-
-
 def invalid_to_zeros(arr, valid_mask, ndim=999):
     """
     Replace invalid values in an array with zeros based on a validity mask.

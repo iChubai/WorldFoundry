@@ -21,13 +21,15 @@ from torchvision import transforms
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.camera_utils import (
     vector_to_camera_matrices,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.geometry import (
+    depth_to_world_coords_points as depth_to_world_coords_points,
+)
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.utils.geometry import (
     depth_edge,
     normals_edge,
 )
 from worldfoundry.core.media.artifacts import download_file_from_url, segment_sky
 
-from ..models.utils.geometry import depth_to_world_coords_points
 from .save_utils import (
     save_camera_params,
     save_depth_npy,

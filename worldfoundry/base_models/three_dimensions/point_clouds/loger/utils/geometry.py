@@ -1,5 +1,8 @@
 import torch
 
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    homogenize_points as homogenize_points,
+)
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
     depth_edge as depth_edge,
 )
@@ -10,19 +13,10 @@ from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.
     depthmap_to_camera_coordinates as depthmap_to_camera_coordinates,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
-    geotrf as geotrf,
-)
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
     get_gt_warp as get_gt_warp,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
     get_pixel as get_pixel,
-)
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
-    homogenize_points as homogenize_points,
-)
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
-    inv as inv,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
     opencv_camera_to_plucker as opencv_camera_to_plucker,

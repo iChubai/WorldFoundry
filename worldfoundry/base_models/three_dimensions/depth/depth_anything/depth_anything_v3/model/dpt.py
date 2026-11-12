@@ -21,10 +21,12 @@ from einops import rearrange
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.head_utils import (
     Permute,
-    create_uv_grid,
     custom_interpolate,
-    position_grid_to_embed,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    position_grid_to_embed_fp32 as position_grid_to_embed,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import create_uv_grid
 from addict import Dict
 
 

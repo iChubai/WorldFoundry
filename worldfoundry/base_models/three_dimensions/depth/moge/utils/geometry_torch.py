@@ -8,6 +8,10 @@ import torch.types
 from ....general_3d.eastern_journalist.utils3d.torch import sliding_window, uv_map
 
 # isort: split
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    create_uv_grid as normalized_view_plane_uv,
+)
+
 from .geometry_numpy import solve_optimal_focal_shift, solve_optimal_shift
 
 
@@ -53,25 +57,6 @@ def geometric_mean(
         return weighted_mean(x.add(eps).log(), w, dim=dim, keepdim=keepdim, eps=eps).exp()
 
 
-def normalized_view_plane_uv(
-    width: int, height: int, aspect_ratio: float | None = None, dtype: torch.dtype = None, device: torch.device = None
-) -> torch.Tensor:
-    "UV with left-top corner as (-width / diagonal, -height / diagonal) and right-bottom corner as (width / diagonal, height / diagonal)"
-    if aspect_ratio is None:
-        aspect_ratio = width / height
-
-    span_x = aspect_ratio / (1 + aspect_ratio**2) ** 0.5
-    span_y = 1 / (1 + aspect_ratio**2) ** 0.5
-
-    u = torch.linspace(-span_x * (width - 1) / width, span_x * (width - 1) / width, width, dtype=dtype, device=device)
-    v = torch.linspace(
-        -span_y * (height - 1) / height, span_y * (height - 1) / height, height, dtype=dtype, device=device
-    )
-    u, v = torch.meshgrid(u, v, indexing="xy")
-    uv = torch.stack([u, v], dim=-1)
-    return uv
-
-
 def gaussian_blur_2d(input: torch.Tensor, kernel_size: int, sigma: float) -> torch.Tensor:
     kernel = torch.exp(
         -(torch.arange(-kernel_size // 2 + 1, kernel_size // 2 + 1, dtype=input.dtype, device=input.device) ** 2)
@@ -82,14 +67,6 @@ def gaussian_blur_2d(input: torch.Tensor, kernel_size: int, sigma: float) -> tor
     input = F.pad(input, (kernel_size // 2, kernel_size // 2, kernel_size // 2, kernel_size // 2), mode="replicate")
     input = F.conv2d(input, kernel, groups=input.shape[1])
     return input
-
-
-def focal_to_fov(focal: torch.Tensor):
-    return 2 * torch.atan(0.5 / focal)
-
-
-def fov_to_focal(fov: torch.Tensor):
-    return 0.5 / torch.tan(fov / 2)
 
 
 def angle_diff_vec3(v1: torch.Tensor, v2: torch.Tensor, eps: float = 1e-12):

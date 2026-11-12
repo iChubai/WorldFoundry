@@ -7,8 +7,12 @@ from einops import rearrange, repeat
 from jaxtyping import Bool, Float, Shaped
 from torch import Tensor, nn
 
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    sample_image_grid,
+)
+
 from ....geometry.epipolar_lines import project_rays
-from ....geometry.projection import get_world_rays, sample_image_grid
+from ....geometry.projection import get_world_rays
 from ....misc.heterogeneous_pairings import (
     Index,
     generate_heterogeneous_index,

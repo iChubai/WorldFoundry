@@ -12,7 +12,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .utils import create_uv_grid, position_grid_to_embed
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    create_uv_grid as create_uv_grid,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    position_grid_to_embed as position_grid_to_embed,
+)
 
 
 class DenseHead(nn.Module):

@@ -14,7 +14,11 @@ import torch.version
 from huggingface_hub import hf_hub_download
 
 # isort: split
-from ..utils.geometry_torch import normalized_view_plane_uv, recover_focal_shift
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    create_uv_grid as normalized_view_plane_uv,
+)
+
+from ..utils.geometry_torch import recover_focal_shift
 
 # isort: split
 

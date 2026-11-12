@@ -12,10 +12,11 @@ from einops import einsum, rearrange, repeat
 from jaxtyping import Float
 from torch import Tensor
 
-from ...geometry.projection import (
-    get_fov,
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
     homogenize_points,
 )
+
+from ...geometry.projection import get_fov
 from ..encoder.epipolar.conversions import (
     depth_to_relative_disparity,
 )

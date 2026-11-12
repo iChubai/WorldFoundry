@@ -1,6 +1,13 @@
 import einops
 import torch
 
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    camera_space_to_world_space as camera_space_to_world_space,
+)
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    homogenize_points as homogenize_points,
+)
+
 
 # Calculate the loss mask for the target views in the batch
 @torch.no_grad()
@@ -87,11 +94,6 @@ def calculate_in_frustum_mask(depth_1, intrinsics_1, c2w_1, depth_2, intrinsics_
 
 
 # --- Projections ---
-def homogenize_points(points):
-    """Append a '1' along the final dimension of the tensor (i.e. convert xyz->xyz1)"""
-    return torch.cat([points, torch.ones_like(points[..., :1])], dim=-1)
-
-
 def normalize_homogenous_points(points):
     """Normalize the point vectors"""
     return points / points[..., -1:]
@@ -113,22 +115,6 @@ def pixel_space_to_camera_space(pixel_space_points, depth, intrinsics):
     camera_space_points = torch.einsum("b v i j , h w j -> b v h w i", intrinsics.inverse(), pixel_space_points)
     camera_space_points = camera_space_points * depth
     return camera_space_points
-
-
-def camera_space_to_world_space(camera_space_points, c2w):
-    """
-    Convert camera space points to world space points.
-
-    Args:
-        camera_space_points (torch.Tensor): Camera space points with shape (b, v, h, w, 3)
-        c2w (torch.Tensor): Camera to world extrinsics matrix with shape (b, v, 4, 4)
-
-    Returns:
-        torch.Tensor: World space points with shape (b, v, h, w, 3).
-    """
-    camera_space_points = homogenize_points(camera_space_points)
-    world_space_points = torch.einsum("b v i j , b v h w j -> b v h w i", c2w, camera_space_points)
-    return world_space_points[..., :3]
 
 
 def camera_space_to_pixel_space(camera_space_points, intrinsics):

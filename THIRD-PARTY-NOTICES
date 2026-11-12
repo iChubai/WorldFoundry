@@ -7110,3 +7110,21 @@ Their attention-backend, KV-cache and conditioning variants remain in their
 respective model modules, under their existing source and checkpoint terms.
 worldfoundry/core/attention/rotary/indexed_2d.py retains STream3R/Vigeo's
 Meta-attributed positive-index rotation and shape-only grid cache conventions.
+
+Shared geometry projections and reconstruction head helpers
+-----------------------------------------------------------
+worldfoundry/core/geometry/projection.py implements standard matrix transforms,
+XY pixel grids, depth/focal unprojection and matrix inversion as first-party
+OpenEnvision code under Apache-2.0. The prior in-family copies were distributed
+in CUT3R's DUSt3R-derived utilities (Naver Corporation; CC BY-NC-SA 4.0),
+MapAnything and Pi3. Their remaining vendored implementations retain their
+existing notices and terms.
+
+Reconstruction families share VGGT's activation, camera-pose, image-preprocessing
+and head-position helpers (Meta Platforms, Inc. and affiliates; Apache-2.0 source).
+The normalized view-plane grid retains its MoGe attribution (Microsoft; MIT).
+Depth Anything 3 binds FP32 frequencies; VGGT retains its device-specific defaults.
+Shared homogeneous-coordinate, image-grid and camera-ray composition helpers
+remain in Depth Anything 3's utils/geometry.py (Copyright 2025 ByteDance Ltd.
+and/or its affiliates; Apache-2.0). PixelSplat retains its native inverse and
+coordinate-dtype bindings. Model and checkpoint license terms are unchanged.

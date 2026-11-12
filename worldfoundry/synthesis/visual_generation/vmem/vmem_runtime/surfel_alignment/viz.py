@@ -16,9 +16,9 @@ from scipy.spatial.transform import Rotation
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_numpy
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import (
     depthmap_to_absolute_camera_coordinates,
-    geotrf,
     get_med_dist_between_poses,
 )
+from worldfoundry.core.geometry.projection import transform_points as geotrf
 
 # isort: split
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.image import img_to_arr, rgb

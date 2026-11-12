@@ -8,9 +8,12 @@
 import torch
 import torch.nn as nn
 
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.head_act import (
+    activate_pose as activate_pose,
+)
+
 from ..layers import Mlp
 from ..layers.block import Block
-from .head_act import activate_pose
 
 
 class CameraHead(nn.Module):

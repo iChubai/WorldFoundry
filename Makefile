@@ -272,10 +272,13 @@ INFER_TENSOR_CONTRACTS = \
 	tests/eval_core/test_ltx25_integration.py \
 	tests/core/geometry/test_geometry_conventions.py \
 	tests/core/geometry/test_shared_rotation_transforms.py \
+	tests/core/geometry/test_projection.py \
 	tests/base_models/three_dimensions/depth/midas/test_fusion.py \
+	tests/base_models/three_dimensions/depth/depth_anything/test_geometry_bindings.py \
 	tests/base_models/perception_core/general_perception/dinov2/test_shared_vision_leaves.py \
 	tests/base_models/perception_core/general_perception/dinov3/test_omega_components.py \
 	tests/base_models/three_dimensions/point_clouds/vggt/test_shared_blocks.py \
+	tests/base_models/three_dimensions/point_clouds/vggt/test_head_utils.py \
 	tests/core/attention/test_indexed_2d.py \
 	tests/base_models/perception_core/segment/sam_components/test_heads.py \
 	tests/base_models/perception_core/segment/sam_components/test_mask_ops.py \

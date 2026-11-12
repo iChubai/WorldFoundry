@@ -7,10 +7,13 @@ from einops import rearrange
 from jaxtyping import Float
 from torch import Tensor, nn
 
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    sample_image_grid,
+)
+
 from ...dataset.shims.bounds_shim import apply_bounds_shim
 from ...dataset.shims.patch_shim import apply_patch_shim
 from ...dataset.types import BatchedExample, DataShim
-from ...geometry.projection import sample_image_grid
 from ..types import Gaussians
 from .backbone import Backbone, BackboneCfg, get_backbone
 from .common.gaussian_adapter import GaussianAdapter, GaussianAdapterCfg

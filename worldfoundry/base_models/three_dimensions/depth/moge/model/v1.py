@@ -18,7 +18,11 @@ from ....general_3d.eastern_journalist.utils3d.torch import depth_map_to_point_m
 # isort: split
 from huggingface_hub import hf_hub_download
 
-from ..utils.geometry_torch import normalized_view_plane_uv, recover_focal_shift
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    create_uv_grid as normalized_view_plane_uv,
+)
+
+from ..utils.geometry_torch import recover_focal_shift
 from .utils import (
     wrap_module_with_gradient_checkpointing,
 )

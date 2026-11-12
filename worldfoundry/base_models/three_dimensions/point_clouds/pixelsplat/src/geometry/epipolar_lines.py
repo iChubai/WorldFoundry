@@ -9,13 +9,12 @@ from jaxtyping import Bool, Float
 from torch import Tensor
 from torch.utils.data.dataloader import default_collate
 
-from .projection import (
-    get_world_rays,
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
     homogenize_points,
     homogenize_vectors,
-    intersect_rays,
-    project_camera_space,
 )
+
+from .projection import get_world_rays, intersect_rays, project_camera_space
 
 
 def _is_in_bounds(

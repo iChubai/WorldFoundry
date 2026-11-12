@@ -432,7 +432,7 @@ class PointCloudViewer:
 
     def _connect_client(self, client: viser.ClientHandle):
         from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.inference import inference_step
-        from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import geotrf
+        from worldfoundry.core.geometry.projection import transform_points as geotrf
 
         wxyz_panel = client.gui.add_text("wxyz:", f"{client.camera.wxyz}")
         position_panel = client.gui.add_text("position:", f"{client.camera.position}")

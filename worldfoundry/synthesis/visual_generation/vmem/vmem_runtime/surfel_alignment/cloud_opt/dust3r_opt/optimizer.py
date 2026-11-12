@@ -9,7 +9,8 @@ import torch
 import torch.nn as nn
 
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_cpu, to_numpy
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import geotrf, xy_grid
+from worldfoundry.core.geometry.projection import pixel_coordinate_grid as xy_grid
+from worldfoundry.core.geometry.projection import transform_points as geotrf
 
 from .base_opt import BasePCOptimizer
 

@@ -8,24 +8,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-def normalized_view_plane_uv(
-    width: int, height: int, aspect_ratio: float | None = None, dtype: torch.dtype = None, device: torch.device = None
-) -> torch.Tensor:
-    "UV with left-top corner as (-width / diagonal, -height / diagonal) and right-bottom corner as (width / diagonal, height / diagonal)"
-    if aspect_ratio is None:
-        aspect_ratio = width / height
-
-    span_x = aspect_ratio / (1 + aspect_ratio**2) ** 0.5
-    span_y = 1 / (1 + aspect_ratio**2) ** 0.5
-
-    u = torch.linspace(-span_x * (width - 1) / width, span_x * (width - 1) / width, width, dtype=dtype, device=device)
-    v = torch.linspace(
-        -span_y * (height - 1) / height, span_y * (height - 1) / height, height, dtype=dtype, device=device
-    )
-    u, v = torch.meshgrid(u, v, indexing="xy")
-    uv = torch.stack([u, v], dim=-1)
-    return uv
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.heads.utils import (
+    create_uv_grid as normalized_view_plane_uv,
+)
 
 
 class ResidualConvBlock(nn.Module):

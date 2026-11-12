@@ -20,8 +20,8 @@ from torch import nn
 from transformers import PretrainedConfig
 from transformers.feature_extraction_utils import BatchFeature
 
-from worldfoundry.synthesis.action_generation.gr00t.modeling.dit import DiT
-from worldfoundry.synthesis.action_generation.gr00t.modeling.embodiment_mlp import (
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.dit import DiT
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.embodiment_mlp import (
     CategorySpecificMLP,
     MultiEmbodimentActionEncoder,
 )

@@ -14,6 +14,8 @@ import torch.nn as nn
 from timm.models.layers import DropPath
 from timm.models.vision_transformer import Mlp, PatchEmbed
 
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import TimestepEmbedder
+
 from ...utils.logger import get_root_logger
 from ..builder import MODELS
 from ..utils import auto_grad_checkpoint, to_2tuple
@@ -22,7 +24,6 @@ from .PixArtWorldFM_blocks import (
     CaptionEmbedder,
     MultiHeadCrossAttention,
     T2IFinalLayer,
-    TimestepEmbedder,
     t2i_modulate,
 )
 from .plucker import compute_plucker_rays

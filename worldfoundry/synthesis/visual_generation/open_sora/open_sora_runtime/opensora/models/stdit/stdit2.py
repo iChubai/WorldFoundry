@@ -9,6 +9,9 @@ from timm.models.layers import DropPath
 from timm.models.vision_transformer import Mlp
 from transformers import PretrainedConfig, PreTrainedModel
 
+from worldfoundry.base_models.diffusion_model.models.networks.sana.variants.cpu_frequency import (
+    CpuFrequencySizeEmbedder as SizeEmbedder,
+)
 from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.checkpoint import (
     auto_grad_checkpoint,
 )
@@ -18,7 +21,6 @@ from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.openso
     MultiHeadCrossAttention,
     PatchEmbed3D,
     PositionEmbedding2D,
-    SizeEmbedder,
     T2IFinalLayer,
     TimestepEmbedder,
     approx_gelu,

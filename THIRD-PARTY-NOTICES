@@ -1348,7 +1348,8 @@ the changes.
 UniWorld-View inference runtime
 -------------------------------
 Source: https://github.com/PKU-YuanGroup/UniWorld-View/tree/660212c48bff7c91a2ea5c7d5f3785af581100e2
-Files: worldfoundry/synthesis/visual_generation/uniworld_view/uniworld_view_runtime/**
+Files: worldfoundry/synthesis/visual_generation/uniworld_view/uniworld_view_runtime/**,
+       worldfoundry/base_models/diffusion_model/models/networks/wan/variants/image_embedding.py
 License: Apache License 2.0; the complete license text is retained in this bundle. The runtime
 uses canonical base_models implementations of SAM 2 (facebookresearch/sam2, Copyright
 (c) Meta Platforms, Inc. and affiliates, Apache License 2.0), MoGe (microsoft/MoGe, MIT License,
@@ -6965,3 +6966,13 @@ Files: worldfoundry/base_models/diffusion_model/models/initializers/easyanimate_
 The image-to-video pixel and inpaint-mask preparation routine is shared with
 VideoX-Fun. Model weights are distributed separately.
 The complete Apache-2.0 license text is retained above.
+
+Open-Sora / Open-Oasis CPU-frequency conditioning
+------------------------------------------------
+Sources: https://github.com/hpcaitech/Open-Sora (Apache-2.0),
+         https://github.com/etched-ai/open-oasis (MIT),
+         https://github.com/openai/glide-text2im (MIT)
+File: worldfoundry/base_models/diffusion_model/models/networks/sana/variants/cpu_frequency.py
+The CPU-frequency variant shares the canonical Sana projection graph and retains
+the source runtimes' FP32 CPU frequency construction and explicit dtype behavior.
+The upstream license texts are retained in this bundle.

@@ -1,6 +1,12 @@
 """Audio VAE model components."""
 
-from .audio_vae import AudioDecoder, AudioEncoder, decode_audio, encode_audio
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import decode_audio, encode_audio
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.ops import AudioProcessor
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.audio_vae.audio_vae import (
+    AudioDecoder,
+    AudioEncoder,
+)
+
 from .model_configurator import (
     AUDIO_VAE_DECODER_COMFY_KEYS_FILTER,
     AUDIO_VAE_ENCODER_COMFY_KEYS_FILTER,
@@ -9,7 +15,6 @@ from .model_configurator import (
     AudioEncoderConfigurator,
     VocoderConfigurator,
 )
-from .ops import AudioProcessor
 from .vocoder import Vocoder, VocoderWithBWE
 
 __all__ = [

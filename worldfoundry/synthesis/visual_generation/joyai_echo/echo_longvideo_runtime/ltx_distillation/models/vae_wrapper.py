@@ -7,8 +7,9 @@ from collections.abc import Iterator
 import torch
 import torch.nn as nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import encode_audio
+
 from ...ltx_core.loader.registry import Registry
-from ...ltx_core.model.audio_vae import encode_audio
 from ...ltx_core.model.video_vae.tiling import TilingConfig
 from ...ltx_core.types import Audio
 

@@ -1,7 +1,9 @@
 """Latent upsampler model components."""
 
-from .model import LatentUpsampler, upsample_video
-from .model_configurator import LatentUpsamplerConfigurator
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model import LatentUpsampler, upsample_video
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model_configurator import (
+    LatentUpsamplerConfigurator,
+)
 
 __all__ = [
     "LatentUpsampler",

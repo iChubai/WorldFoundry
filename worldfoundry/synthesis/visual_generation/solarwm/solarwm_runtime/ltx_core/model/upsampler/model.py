@@ -1,11 +1,14 @@
 import torch
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.pixel_shuffle import PixelShuffleND
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.res_block import ResBlock
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.spatial_rational_resampler import (
+    SpatialRationalResampler,
+)
+
 from ..disposable import Disposable
 from ..video_vae import VideoEncoder
-from .pixel_shuffle import PixelShuffleND
-from .res_block import ResBlock
-from .spatial_rational_resampler import SpatialRationalResampler
 
 
 class LatentUpsampler(torch.nn.Module, Disposable):

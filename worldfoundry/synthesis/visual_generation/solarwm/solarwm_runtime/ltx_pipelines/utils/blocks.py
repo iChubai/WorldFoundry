@@ -15,6 +15,10 @@ from typing import TypeVar
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import (
+    decode_audio as vae_decode_audio,
+)
+
 from ...ltx_core.allocator_trim_strategy import AllocatorTrimStrategy
 from ...ltx_core.batch_split import BatchSplitAdapter
 from ...ltx_core.block_streaming import DISK_CPU_SLOTS, StreamingModelBuilder
@@ -39,7 +43,6 @@ from ...ltx_core.model.audio_vae import (
     AudioEncoderConfigurator,
     VocoderConfigurator,
 )
-from ...ltx_core.model.audio_vae import decode_audio as vae_decode_audio
 from ...ltx_core.model.model_protocol import LTXModelProtocol, ModelConfigurator
 from ...ltx_core.model.transformer import LTXV_MODEL_COMFY_RENAMING_MAP, LTXModelConfigurator, X0Model
 from ...ltx_core.model.transformer.attention import AttentionCallable, AttentionFunction

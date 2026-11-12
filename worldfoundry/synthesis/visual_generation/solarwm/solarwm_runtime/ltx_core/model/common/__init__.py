@@ -1,6 +1,10 @@
 """Common model utilities."""
 
-from .normalization import NormType, PixelNorm, build_normalization_layer
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.normalization import (
+    NormType,
+    PixelNorm,
+    build_normalization_layer,
+)
 
 __all__ = [
     "NormType",

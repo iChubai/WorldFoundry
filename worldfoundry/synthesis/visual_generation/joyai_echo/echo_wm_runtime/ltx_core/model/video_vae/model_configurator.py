@@ -1,6 +1,11 @@
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enums import (
+    LogVarianceType,
+    NormLayerType,
+    PaddingModeType,
+)
+
 from ...loader.sd_ops import SDOps
 from ..model_protocol import ModelConfigurator
-from .enums import LogVarianceType, NormLayerType, PaddingModeType
 from .video_vae import VideoDecoder, VideoEncoder
 
 

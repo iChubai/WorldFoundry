@@ -8,6 +8,12 @@ from typing import Literal
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.ops import (
+    PerChannelStatistics,
+    patchify,
+    unpatchify,
+)
+
 from ...devices import cuda_activation_budget_bytes
 from ...tiling import (
     Tile,
@@ -22,7 +28,6 @@ from ...utils import to_velocity
 from ..disposable import Disposable
 from ..transformer.timestep_embedding import PixArtAlphaCombinedTimestepSizeEmbeddings
 from . import diffusion_tiling
-from .ops import PerChannelStatistics, patchify, unpatchify
 from .transformer import AdaLNZero, ChannelLinear, CombinedDiffusionNABlock, LinearPixelShuffleUpsample, NABlock
 from .transformer.config import DiffVAEMode
 from .video_vae import VideoDecoder

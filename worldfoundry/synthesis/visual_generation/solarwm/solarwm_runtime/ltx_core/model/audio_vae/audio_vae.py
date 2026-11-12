@@ -1,58 +1,26 @@
 import torch
 import torch.nn.functional as F
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.attention import AttentionType
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import (
+    build_mid_block,
+    run_mid_block,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.causal_conv_2d import make_conv2d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.causality_axis import CausalityAxis
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.downsample import build_downsampling_path
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.statistics import PerChannelStatistics
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.upsample import build_upsampling_path
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.normalization import (
+    NormType,
+    build_normalization_layer,
+)
+
 from ...components.patchifiers import AudioPatchifier
-from ...types import Audio, AudioLatentShape
-from ..common.normalization import NormType, build_normalization_layer
+from ...types import AudioLatentShape
 from ..disposable import Disposable
-from .attention import AttentionType, make_attn
-from .causal_conv_2d import make_conv2d
-from .causality_axis import CausalityAxis
-from .downsample import build_downsampling_path
-from .ops import AudioProcessor, PerChannelStatistics
-from .resnet import ResnetBlock
-from .upsample import build_upsampling_path
-from .vocoder import Vocoder
 
 LATENT_DOWNSAMPLE_FACTOR = 4
-
-
-def build_mid_block(
-    channels: int,
-    temb_channels: int,
-    dropout: float,
-    norm_type: NormType,
-    causality_axis: CausalityAxis,
-    attn_type: AttentionType,
-    add_attention: bool,
-) -> torch.nn.Module:
-    """Build the middle block with two ResNet blocks and optional attention."""
-    mid = torch.nn.Module()
-    mid.block_1 = ResnetBlock(
-        in_channels=channels,
-        out_channels=channels,
-        temb_channels=temb_channels,
-        dropout=dropout,
-        norm_type=norm_type,
-        causality_axis=causality_axis,
-    )
-    mid.attn_1 = make_attn(channels, attn_type=attn_type, norm_type=norm_type) if add_attention else torch.nn.Identity()
-    mid.block_2 = ResnetBlock(
-        in_channels=channels,
-        out_channels=channels,
-        temb_channels=temb_channels,
-        dropout=dropout,
-        norm_type=norm_type,
-        causality_axis=causality_axis,
-    )
-    return mid
-
-
-def run_mid_block(mid: torch.nn.Module, features: torch.Tensor) -> torch.Tensor:
-    """Run features through the middle block."""
-    features = mid.block_1(features, temb=None)
-    features = mid.attn_1(features)
-    return mid.block_2(features, temb=None)
 
 
 class AudioEncoder(torch.nn.Module, Disposable):
@@ -242,34 +210,6 @@ class AudioEncoder(torch.nn.Module, Disposable):
         latent_patched = self.patchifier.patchify(means)
         latent_normalized = self.per_channel_statistics.normalize(latent_patched)
         return self.patchifier.unpatchify(latent_normalized, latent_shape)
-
-
-def encode_audio(
-    audio: Audio,
-    audio_encoder: AudioEncoder,
-    audio_processor: AudioProcessor | None = None,
-) -> torch.Tensor:
-    """Encode audio waveform into latent representation.
-    Args:
-        audio: Audio container with waveform tensor of shape (batch, channels, samples) and sampling rate.
-        audio_encoder: Audio encoder model
-        audio_processor: Audio processor model (optional, if not provided, it will be created from the audio encoder)
-    """
-    dtype = next(audio_encoder.parameters()).dtype
-    device = next(audio_encoder.parameters()).device
-
-    if audio_processor is None:
-        audio_processor = AudioProcessor(
-            target_sample_rate=audio_encoder.sample_rate,
-            mel_bins=audio_encoder.mel_bins,
-            mel_hop_length=audio_encoder.mel_hop_length,
-            n_fft=audio_encoder.n_fft,
-        ).to(device=device)
-
-    mel_spectrogram = audio_processor.waveform_to_mel(audio.to(device=device))
-
-    latent = audio_encoder(mel_spectrogram.to(dtype=dtype))
-    return latent
 
 
 class AudioDecoder(torch.nn.Module, Disposable):
@@ -490,18 +430,3 @@ class AudioDecoder(torch.nn.Module, Disposable):
         h = self.non_linearity(h)
         h = self.conv_out(h)
         return torch.tanh(h) if self.tanh_out else h
-
-
-def decode_audio(latent: torch.Tensor, audio_decoder: "AudioDecoder", vocoder: "Vocoder") -> Audio:
-    """
-    Decode an audio latent representation using the provided audio decoder and vocoder.
-    Args:
-        latent: Input audio latent tensor.
-        audio_decoder: Model to decode the latent to waveform features.
-        vocoder: Model to convert decoded features to audio waveform.
-    Returns:
-        Decoded audio with waveform and sampling rate.
-    """
-    decoded_audio = audio_decoder(latent)
-    waveform = vocoder(decoded_audio).squeeze(0).float()
-    return Audio(waveform=waveform, sampling_rate=vocoder.output_sampling_rate)

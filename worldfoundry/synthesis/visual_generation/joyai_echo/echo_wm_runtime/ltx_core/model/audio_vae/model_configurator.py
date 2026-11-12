@@ -1,12 +1,13 @@
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.attention import AttentionType
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import AudioDecoder, AudioEncoder
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.causality_axis import CausalityAxis
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.normalization import NormType
+
 from ...loader.sd_ops import KeyValueOperationResult, SDOps
 from ...utils import check_config_value
-from ..common.normalization import NormType
 from ..model_protocol import ModelConfigurator
-from .attention import AttentionType
-from .audio_vae import AudioDecoder, AudioEncoder
-from .causality_axis import CausalityAxis
 from .vocoder import MelSTFT, Vocoder, VocoderWithBWE
 
 

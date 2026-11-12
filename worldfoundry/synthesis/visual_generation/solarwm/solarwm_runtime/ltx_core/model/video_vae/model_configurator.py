@@ -4,10 +4,15 @@ from pathlib import Path
 import safetensors
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enums import (
+    LogVarianceType,
+    NormLayerType,
+    PaddingModeType,
+)
+
 from ...loader.sd_ops import KeyValueOperationResult, SDOps
 from ...loader.sft_loader import SafetensorsModelStateDictLoader
 from ..model_protocol import ModelConfigurator
-from .enums import LogVarianceType, NormLayerType, PaddingModeType
 from .transformer.dsl_kernels import FUSED_CTX_BIAS_BUFFER, FUSED_CTX_WEIGHT_BUFFER, NA_SOFTMAX_BOUND_BUFFER
 from .video_vae import ConvVideoDecoder, DiffusionVideoDecoder, VideoDecoder, VideoEncoder
 

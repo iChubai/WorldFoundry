@@ -253,6 +253,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/runtime/test_geometry_regression.py \
 	tests/synthesis/test_dreamx_world_backend_policy.py \
 	tests/synthesis/test_solarwm_component_reuse.py \
+	tests/synthesis/test_joyai_ltx_component_reuse.py \
 	tests/core/test_diffusion_rounding.py \
 	tests/core/test_kernel_dispatch_receipt.py \
 	tests/core/test_diffusion_mutating_kernel.py \

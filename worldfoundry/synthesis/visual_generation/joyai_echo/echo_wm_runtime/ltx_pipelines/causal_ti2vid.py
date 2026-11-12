@@ -6,6 +6,10 @@ from collections.abc import Iterator
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import (
+    decode_audio as vae_decode_audio,
+)
+
 from ..ltx_causal import (
     DEFAULT_CAUSAL_TIMESTEPS,
     CausalCacheConfig,
@@ -16,7 +20,6 @@ from ..ltx_causal import (
 )
 from ..ltx_core.components.noisers import GaussianNoiser
 from ..ltx_core.loader import LoraPathStrengthAndSDOps
-from ..ltx_core.model.audio_vae import decode_audio as vae_decode_audio
 from ..ltx_core.model.video_vae import decode_video as vae_decode_video
 from ..ltx_core.model.video_vae.tiling import TilingConfig
 from ..ltx_core.quantization import QuantizationPolicy

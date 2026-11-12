@@ -3,6 +3,8 @@ from collections.abc import Sequence
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import encode_audio
+
 from ...ltx_core.components.noisers import Noiser
 from ...ltx_core.conditioning import (
     ConditioningItem,
@@ -12,7 +14,6 @@ from ...ltx_core.conditioning import (
 )
 from ...ltx_core.devices import cleanup_accelerator_memory, cuda_activation_budget_bytes, get_preferred_device
 from ...ltx_core.loader.sft_loader import SafetensorsModelStateDictLoader
-from ...ltx_core.model.audio_vae import encode_audio
 from ...ltx_core.model.transformer import Modality
 from ...ltx_core.model.video_vae import AUTO_TILING, AutoTiling, TileSizeConfig, TilingConfig, VideoEncoder
 from ...ltx_core.model.video_vae.diffusion_tiling import recommended_decode_tiling_config

@@ -2,23 +2,26 @@ from dataclasses import replace
 
 import torch
 
-from ...ltx_core.loader import SDOps
-from ...ltx_core.loader.primitives import LoraPathStrengthAndSDOps
-from ...ltx_core.loader.registry import DummyRegistry, Registry
-from ...ltx_core.loader.single_gpu_model_builder import SingleGPUModelBuilder as Builder
-from ...ltx_core.model.audio_vae import (
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import AudioDecoder, AudioEncoder
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model import LatentUpsampler
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model_configurator import (
+    LatentUpsamplerConfigurator,
+)
+from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.ltx_core.model.audio_vae import (
     AUDIO_VAE_DECODER_COMFY_KEYS_FILTER,
     AUDIO_VAE_ENCODER_COMFY_KEYS_FILTER,
     VOCODER_COMFY_KEYS_FILTER,
-    AudioDecoder,
     AudioDecoderConfigurator,
-    AudioEncoder,
     AudioEncoderConfigurator,
     Vocoder,
     VocoderConfigurator,
 )
+
+from ...ltx_core.loader import SDOps
+from ...ltx_core.loader.primitives import LoraPathStrengthAndSDOps
+from ...ltx_core.loader.registry import DummyRegistry, Registry
+from ...ltx_core.loader.single_gpu_model_builder import SingleGPUModelBuilder as Builder
 from ...ltx_core.model.transformer import LTXV_MODEL_COMFY_RENAMING_MAP, LTXModelConfigurator, X0Model
-from ...ltx_core.model.upsampler import LatentUpsampler, LatentUpsamplerConfigurator
 from ...ltx_core.model.video_vae import (
     VAE_DECODER_COMFY_KEYS_FILTER,
     VAE_ENCODER_COMFY_KEYS_FILTER,

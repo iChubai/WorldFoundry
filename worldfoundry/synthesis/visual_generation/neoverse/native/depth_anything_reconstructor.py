@@ -16,9 +16,11 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
     affine_inverse,
     as_homogeneous,
 )
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.geometry import (
+    depth_to_world_coords_points,
+)
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.sh_utils import RGB2SH
 
-from .geometry import depth_to_world_coords_points
 from .rasterization import Gaussians, Rasterizer
 
 

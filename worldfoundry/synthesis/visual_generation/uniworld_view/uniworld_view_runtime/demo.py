@@ -28,6 +28,7 @@ from transformers import AutoProcessor, AutoTokenizer, Blip2ForConditionalGenera
 
 from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_video_predictor
 from worldfoundry.base_models.three_dimensions.depth.moge.variants.uniworld_view import UniWorldMoGeModel
+from worldfoundry.base_models.three_dimensions.general_3d.uni3c.utils import points_padding
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.geometry import (
     closed_form_inverse_se3,
 )
@@ -43,7 +44,7 @@ from .model.uniview_transformer import WanVACETransformer3DModel
 from .painter import mask_painter
 from .utils.imagesplatrender import BiSplatRenderer
 from .utils.tensor_stream import _preprocess_frames_for_stream3r
-from .utils.utils import build_cameras, np_points_padding, points_padding, set_initial_camera, traj_map
+from .utils.utils import build_cameras, np_points_padding, set_initial_camera, traj_map
 from .utils.warp_utils import read_video_frames, save_video
 
 

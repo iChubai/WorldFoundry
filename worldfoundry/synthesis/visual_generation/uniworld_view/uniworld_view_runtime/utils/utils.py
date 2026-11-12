@@ -3,12 +3,6 @@ import torch
 from scipy.interpolate import UnivariateSpline, interp1d
 
 
-def points_padding(points):
-    padding = torch.ones_like(points)[..., 0:1]
-    points = torch.cat([points, padding], dim=-1)
-    return points
-
-
 def np_points_padding(points):
     padding = np.ones_like(points)[..., 0:1]
     points = np.concatenate([points, padding], axis=-1)

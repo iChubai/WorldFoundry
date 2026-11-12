@@ -7185,3 +7185,13 @@ Team and The HuggingFace Team; Apache-2.0), used by LongCat-Video and FlashWorld
 FlashWorld retains its spatial kernel slicing, scaled-gamma normalization,
 in-place residuals, single-frame shortcuts and family-local cache defaults.
 Checkpoint names and the existing model/weight licenses are unchanged.
+
+Shared temporal depth components
+--------------------------------
+base_models/three_dimensions/depth/temporal shares Video Depth Anything's temporal
+transformer, position, feed-forward and manual/SDPA attention components with its
+LongVie variant. Attribution: AnimateDiff, ByteDance Ltd. and/or its affiliates,
+and The HuggingFace Team (Apache-2.0). LongVie retains its optional native xFormers
+policy; the independent prior retains its existing SDPA tensor layout. The shared
+owners do not initialize either model family or ViPE's configuration resolvers.
+Checkpoint parameter names, positional buffers and model licenses are unchanged.

@@ -15,7 +15,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import memory_efficient_attention
+from worldfoundry.core.attention import scaled_dot_product_attention
 
 
 class CrossAttention(nn.Module):
@@ -40,12 +40,12 @@ class CrossAttention(nn.Module):
         heads: int = 8,
         dim_head: int = 64,
         dropout: float = 0.0,
-        bias=False,
+        bias: bool = False,
         upcast_attention: bool = False,
         upcast_softmax: bool = False,
         added_kv_proj_dim: int | None = None,
         norm_num_groups: int | None = None,
-    ):
+    ) -> None:
         super().__init__()
         inner_dim = dim_head * heads
         cross_attention_dim = cross_attention_dim if cross_attention_dim is not None else query_dim
@@ -86,39 +86,44 @@ class CrossAttention(nn.Module):
         self.to_out.append(nn.Linear(inner_dim, query_dim))
         self.to_out.append(nn.Dropout(dropout))
 
-    def reshape_heads_to_batch_dim(self, tensor):
+    def reshape_heads_to_batch_dim(self, tensor: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size, seq_len, head_size, dim // head_size).contiguous()
         tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size * head_size, seq_len, dim // head_size).contiguous()
         return tensor
 
-    def reshape_heads_to_4d(self, tensor):
+    def reshape_heads_to_4d(self, tensor: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size, seq_len, head_size, dim // head_size).contiguous()
         return tensor
 
-    def reshape_batch_dim_to_heads(self, tensor):
+    def reshape_batch_dim_to_heads(self, tensor: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size // head_size, head_size, seq_len, dim).contiguous()
         tensor = tensor.permute(0, 2, 1, 3).reshape(batch_size // head_size, seq_len, dim * head_size).contiguous()
         return tensor
 
-    def reshape_4d_to_heads(self, tensor):
+    def reshape_4d_to_heads(self, tensor: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len, head_size, dim = tensor.shape
         head_size = self.heads
         tensor = tensor.reshape(batch_size, seq_len, dim * head_size).contiguous()
         return tensor
 
-    def set_attention_slice(self, slice_size):
+    def set_attention_slice(self, slice_size: int | None) -> None:
         if slice_size is not None and slice_size > self.sliceable_head_dim:
             raise ValueError(f"slice_size {slice_size} has to be smaller or equal to {self.sliceable_head_dim}.")
 
         self._slice_size = slice_size
 
-    def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None):
+    def forward(
+        self,
+        hidden_states: torch.Tensor,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         batch_size, sequence_length, _ = hidden_states.shape
 
         encoder_hidden_states = encoder_hidden_states
@@ -168,7 +173,9 @@ class CrossAttention(nn.Module):
         hidden_states = self.to_out[1](hidden_states)
         return hidden_states
 
-    def _attention(self, query, key, value, attention_mask=None):
+    def _attention(
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, attention_mask: torch.Tensor | None = None
+    ) -> torch.Tensor:
         if self.upcast_attention:
             query = query.float()
             key = key.float()
@@ -205,7 +212,15 @@ class CrossAttention(nn.Module):
         hidden_states = self.reshape_batch_dim_to_heads(hidden_states)
         return hidden_states
 
-    def _sliced_attention(self, query, key, value, sequence_length, dim, attention_mask):
+    def _sliced_attention(
+        self,
+        query: torch.Tensor,
+        key: torch.Tensor,
+        value: torch.Tensor,
+        sequence_length: int,
+        dim: int,
+        attention_mask: torch.Tensor | None,
+    ) -> torch.Tensor:
         batch_size_attention = query.shape[0]
         hidden_states = torch.zeros(
             (batch_size_attention, sequence_length, dim // self.heads),
@@ -256,7 +271,9 @@ class CrossAttention(nn.Module):
         hidden_states = self.reshape_batch_dim_to_heads(hidden_states)
         return hidden_states
 
-    def _memory_efficient_attention_xformers(self, query, key, value, attention_mask):
+    def _memory_efficient_attention_xformers(
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, attention_mask: torch.Tensor | None
+    ) -> torch.Tensor:
         if self.upcast_efficient_attention:
             org_dtype = query.dtype
             query = query.float()
@@ -272,10 +289,9 @@ class CrossAttention(nn.Module):
         hidden_states = self.reshape_4d_to_heads(hidden_states)
         return hidden_states
 
-        # print("Errror: no xformers")
-        # raise NotImplementedError
-
-    def _memory_efficient_attention_split(self, query, key, value, attention_mask):
+    def _memory_efficient_attention_split(
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, attention_mask: torch.Tensor | None
+    ) -> torch.Tensor:
         batch_size = query.shape[0]
         max_batch_size = 65535
         num_batches = (batch_size + max_batch_size - 1) // max_batch_size
@@ -287,7 +303,12 @@ class CrossAttention(nn.Module):
             key_batch = key[start_idx:end_idx]
             value_batch = value[start_idx:end_idx]
             attention_mask_batch = attention_mask[start_idx:end_idx] if attention_mask is not None else None
-            result = memory_efficient_attention(query_batch, key_batch, value_batch, attn_bias=attention_mask_batch)
+            result = scaled_dot_product_attention(
+                query_batch.transpose(1, 2),
+                key_batch.transpose(1, 2),
+                value_batch.transpose(1, 2),
+                attn_mask=attention_mask_batch,
+            ).transpose(1, 2)
             results.append(result)
         full_result = torch.cat(results, dim=0)
         return full_result
@@ -306,13 +327,8 @@ class FeedForward(nn.Module):
     """
 
     def __init__(
-        self,
-        dim: int,
-        dim_out: int | None = None,
-        mult: int = 4,
-        dropout: float = 0.0,
-        activation_fn: str = "geglu",
-    ):
+        self, dim: int, dim_out: int | None = None, mult: int = 4, dropout: float = 0.0, activation_fn: str = "geglu"
+    ) -> None:
         super().__init__()
         inner_dim = int(dim * mult)
         dim_out = dim_out if dim_out is not None else dim
@@ -332,7 +348,7 @@ class FeedForward(nn.Module):
         # project out
         self.net.append(nn.Linear(inner_dim, dim_out))
 
-    def forward(self, hidden_states):
+    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         for module in self.net:
             hidden_states = module(hidden_states)
         return hidden_states
@@ -343,17 +359,17 @@ class GELU(nn.Module):
     GELU activation function
     """
 
-    def __init__(self, dim_in: int, dim_out: int):
+    def __init__(self, dim_in: int, dim_out: int) -> None:
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out)
 
-    def gelu(self, gate):
+    def gelu(self, gate: torch.Tensor) -> torch.Tensor:
         if gate.device.type != "mps":
             return F.gelu(gate)
         # mps: gelu is not implemented for float16
         return F.gelu(gate.to(dtype=torch.float32)).to(dtype=gate.dtype)
 
-    def forward(self, hidden_states):
+    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states = self.proj(hidden_states)
         hidden_states = self.gelu(hidden_states)
         return hidden_states
@@ -369,17 +385,17 @@ class GEGLU(nn.Module):
         dim_out (`int`): The number of channels in the output.
     """
 
-    def __init__(self, dim_in: int, dim_out: int):
+    def __init__(self, dim_in: int, dim_out: int) -> None:
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out * 2)
 
-    def gelu(self, gate):
+    def gelu(self, gate: torch.Tensor) -> torch.Tensor:
         if gate.device.type != "mps":
             return F.gelu(gate)
         # mps: gelu is not implemented for float16
         return F.gelu(gate.to(dtype=torch.float32)).to(dtype=gate.dtype)
 
-    def forward(self, hidden_states):
+    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states, gate = self.proj(hidden_states).chunk(2, dim=-1)
         return hidden_states * self.gelu(gate)
 
@@ -391,16 +407,16 @@ class ApproximateGELU(nn.Module):
     For more details, see section 2: https://arxiv.org/abs/1606.08415
     """
 
-    def __init__(self, dim_in: int, dim_out: int):
+    def __init__(self, dim_in: int, dim_out: int) -> None:
         super().__init__()
         self.proj = nn.Linear(dim_in, dim_out)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.proj(x)
         return x * torch.sigmoid(1.702 * x)
 
 
-def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0):
+def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0) -> torch.Tensor:
     freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
     t = torch.arange(end, device=freqs.device, dtype=torch.float32)
     freqs = torch.outer(t, freqs)
@@ -408,7 +424,7 @@ def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0):
     return freqs_cis
 
 
-def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
+def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
     ndim = x.ndim
     assert 0 <= 1 < ndim
     assert freqs_cis.shape == (x.shape[1], x.shape[-1])
@@ -416,11 +432,7 @@ def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
     return freqs_cis.view(*shape)
 
 
-def apply_rotary_emb(
-    xq: torch.Tensor,
-    xk: torch.Tensor,
-    freqs_cis: torch.Tensor,
-) -> tuple[torch.Tensor, torch.Tensor]:
+def apply_rotary_emb(xq: torch.Tensor, xk: torch.Tensor, freqs_cis: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     xq_ = torch.view_as_complex(xq.float().reshape(*xq.shape[:-1], -1, 2).contiguous())
     xk_ = torch.view_as_complex(xk.float().reshape(*xk.shape[:-1], -1, 2).contiguous())
     freqs_cis = reshape_for_broadcast(freqs_cis, xq_)

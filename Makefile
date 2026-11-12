@@ -283,6 +283,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/geometry/test_projection.py \
 	tests/base_models/three_dimensions/depth/midas/test_fusion.py \
 	tests/base_models/three_dimensions/depth/depth_anything/test_geometry_bindings.py \
+	tests/base_models/three_dimensions/depth/test_temporal.py \
 	tests/base_models/perception_core/general_perception/dinov2/test_shared_vision_leaves.py \
 	tests/base_models/perception_core/general_perception/dinov3/test_omega_components.py \
 	tests/base_models/three_dimensions/point_clouds/vggt/test_shared_blocks.py \

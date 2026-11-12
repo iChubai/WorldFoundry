@@ -16,8 +16,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.dpt import DPTHead
-
-from .motion_module.motion_module import TemporalModule
+from worldfoundry.base_models.three_dimensions.depth.temporal.motion import TemporalModule
 
 
 class DPTHeadTemporal(DPTHead):

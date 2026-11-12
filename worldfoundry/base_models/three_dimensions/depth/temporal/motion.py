@@ -1,9 +1,10 @@
-# This file is originally from AnimateDiff/animatediff/models/motion_module.py at main · guoyww/AnimateDiff
-# SPDX-License-Identifier: Apache-2.0 license
-#
-# This file may have been modified by ByteDance Ltd. and/or its affiliates on [date of modification]
-# Original file was released under [ Apache-2.0 license], with the full license text available at [https://github.com/guoyww/AnimateDiff?tab=Apache-2.0-1-ov-file#readme].
+# Derived from AnimateDiff/animatediff/models/motion_module.py and Video Depth Anything.
+# Modifications by ByteDance Ltd. and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
+# https://github.com/guoyww/AnimateDiff
 import math
+from collections.abc import Callable
+from typing import Any
 
 import torch
 import torch.nn.functional as F
@@ -23,18 +24,20 @@ from .attention import (
 class TemporalModule(nn.Module):
     def __init__(
         self,
-        in_channels,
-        num_attention_heads=8,
-        num_transformer_block=2,
-        num_attention_blocks=2,
-        norm_num_groups=32,
-        temporal_max_len=32,
-        zero_initialize=True,
-        pos_embedding_type="ape",
-    ):
+        in_channels: int,
+        num_attention_heads: int = 8,
+        num_transformer_block: int = 2,
+        num_attention_blocks: int = 2,
+        norm_num_groups: int = 32,
+        temporal_max_len: int = 32,
+        zero_initialize: bool = True,
+        pos_embedding_type: str = "ape",
+        *,
+        transformer_layer: Callable[..., nn.Module] | None = None,
+    ) -> None:
         super().__init__()
 
-        self.temporal_transformer = TemporalTransformer3DModel(
+        self.temporal_transformer = (TemporalTransformer3DModel if transformer_layer is None else transformer_layer)(
             in_channels=in_channels,
             num_attention_heads=num_attention_heads,
             attention_head_dim=in_channels // num_attention_heads,
@@ -48,7 +51,12 @@ class TemporalModule(nn.Module):
         if zero_initialize:
             self.temporal_transformer.proj_out = zero_module(self.temporal_transformer.proj_out)
 
-    def forward(self, input_tensor, encoder_hidden_states, attention_mask=None):
+    def forward(
+        self,
+        input_tensor: torch.Tensor,
+        encoder_hidden_states: torch.Tensor | None,
+        attention_mask: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         hidden_states = input_tensor
         hidden_states = self.temporal_transformer(hidden_states, encoder_hidden_states, attention_mask)
 
@@ -61,15 +69,17 @@ class TemporalTransformer3DModel(nn.Module):
 
     def __init__(
         self,
-        in_channels,
-        num_attention_heads,
-        attention_head_dim,
-        num_layers,
-        num_attention_blocks=2,
-        norm_num_groups=32,
-        temporal_max_len=32,
-        pos_embedding_type="ape",
-    ):
+        in_channels: int,
+        num_attention_heads: int,
+        attention_head_dim: int,
+        num_layers: int,
+        num_attention_blocks: int = 2,
+        norm_num_groups: int = 32,
+        temporal_max_len: int = 32,
+        pos_embedding_type: str = "ape",
+        *,
+        block_layer: Callable[..., nn.Module] | None = None,
+    ) -> None:
         super().__init__()
 
         inner_dim = num_attention_heads * attention_head_dim
@@ -79,7 +89,7 @@ class TemporalTransformer3DModel(nn.Module):
 
         self.transformer_blocks = nn.ModuleList(
             [
-                TemporalTransformerBlock(
+                (TemporalTransformerBlock if block_layer is None else block_layer)(
                     dim=inner_dim,
                     num_attention_heads=num_attention_heads,
                     attention_head_dim=attention_head_dim,
@@ -92,7 +102,12 @@ class TemporalTransformer3DModel(nn.Module):
         )
         self.proj_out = nn.Linear(inner_dim, in_channels)
 
-    def forward(self, hidden_states, encoder_hidden_states=None, attention_mask=None):
+    def forward(
+        self,
+        hidden_states: torch.Tensor,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         assert hidden_states.dim() == 5, f"Expected hidden_states to have ndim=5, but got ndim={hidden_states.dim()}."
         video_length = hidden_states.shape[2]
         hidden_states = rearrange(hidden_states, "b c f h w -> (b f) c h w")
@@ -127,18 +142,20 @@ class TemporalTransformer3DModel(nn.Module):
 class TemporalTransformerBlock(nn.Module):
     def __init__(
         self,
-        dim,
-        num_attention_heads,
-        attention_head_dim,
-        num_attention_blocks=2,
-        temporal_max_len=32,
-        pos_embedding_type="ape",
-    ):
+        dim: int,
+        num_attention_heads: int,
+        attention_head_dim: int,
+        num_attention_blocks: int = 2,
+        temporal_max_len: int = 32,
+        pos_embedding_type: str = "ape",
+        *,
+        attention_layer: Callable[..., nn.Module] | None = None,
+    ) -> None:
         super().__init__()
 
         self.attention_blocks = nn.ModuleList(
             [
-                TemporalAttention(
+                (TemporalAttention if attention_layer is None else attention_layer)(
                     query_dim=dim,
                     heads=num_attention_heads,
                     dim_head=attention_head_dim,
@@ -155,11 +172,11 @@ class TemporalTransformerBlock(nn.Module):
 
     def forward(
         self,
-        hidden_states,
-        encoder_hidden_states=None,
-        attention_mask=None,
-        video_length=None,
-    ):
+        hidden_states: torch.Tensor,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        video_length: int | None = None,
+    ) -> torch.Tensor:
         for attention_block, norm in zip(self.attention_blocks, self.norms, strict=False):
             norm_hidden_states = norm(hidden_states)
             hidden_states = (
@@ -179,7 +196,7 @@ class TemporalTransformerBlock(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, dropout=0.0, max_len=32):
+    def __init__(self, d_model: int, dropout: float = 0.0, max_len: int = 32) -> None:
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
         position = torch.arange(max_len).unsqueeze(1)
@@ -189,13 +206,13 @@ class PositionalEncoding(nn.Module):
         pe[0, :, 1::2] = torch.cos(position * div_term)
         self.register_buffer("pe", pe)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = x + self.pe[:, : x.size(1)].to(x.dtype)
         return self.dropout(x)
 
 
 class TemporalAttention(CrossAttention):
-    def __init__(self, temporal_max_len=32, pos_embedding_type="ape", *args, **kwargs):
+    def __init__(self, temporal_max_len: int = 32, pos_embedding_type: str = "ape", *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.pos_embedding_type = pos_embedding_type
@@ -214,11 +231,11 @@ class TemporalAttention(CrossAttention):
 
     def forward(
         self,
-        hidden_states,
-        encoder_hidden_states=None,
-        attention_mask=None,
-        video_length=None,
-    ):
+        hidden_states: torch.Tensor,
+        encoder_hidden_states: torch.Tensor | None = None,
+        attention_mask: torch.Tensor | None = None,
+        video_length: int | None = None,
+    ) -> torch.Tensor:
         d = hidden_states.shape[1]
         hidden_states = rearrange(hidden_states, "(b f) d c -> (b d) f c", f=video_length)
 
@@ -256,7 +273,6 @@ class TemporalAttention(CrossAttention):
 
         use_memory_efficient = self._use_memory_efficient_attention_xformers
         if use_memory_efficient and (dim // self.heads) % 8 != 0:
-            # print('Warning: the dim {} cannot be divided by 8. Fall into normal attention'.format(dim // self.heads))
             use_memory_efficient = False
 
         # attention, what we cannot get enough of
@@ -277,7 +293,6 @@ class TemporalAttention(CrossAttention):
                 hidden_states = self._attention(query, key, value, attention_mask)
             else:
                 raise NotImplementedError
-                # hidden_states = self._sliced_attention(query, key, value, sequence_length, dim, attention_mask)
 
         # linear proj
         hidden_states = self.to_out[0](hidden_states)

@@ -7303,3 +7303,10 @@ GR00T conditioning and LVDM GEGLU/resampler components retain their existing
 owners and licenses. The core NN pre-norm/ReLU/input-FP32 variants and CroCo
 constructor binding preserve native parameter names, signatures and precision;
 existing canonical core implementations remain unchanged.
+
+Wan varlen cross-attention forwards
+----------------------------------
+networks/wan/varlen_cross_attention.py shares the matching Forcing/MinWM text-cache
+and image/text forwards from the existing Apache-2.0 Wan implementations. Native
+constructors, RMSNorm identities and self-attention ancestry remain family-owned
+for MinWM's PRoPE installer. No checkpoint remap is introduced.

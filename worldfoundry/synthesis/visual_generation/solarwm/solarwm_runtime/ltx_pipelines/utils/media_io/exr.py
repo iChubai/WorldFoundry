@@ -12,10 +12,15 @@ import numpy as np
 import OpenImageIO
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.image import resize_and_center_crop
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_pipelines.utils.media_io.resize import (
+    ResizeMode,
+    resize_and_reflect_pad,
+)
+
 from ....ltx_core.color.primaries import Primaries
 from .color_config import HDRColorSpace
 from .range_map import to_vae_range
-from .resize import ResizeMode, resize_and_center_crop, resize_and_reflect_pad
 
 logger = logging.getLogger(__name__)
 

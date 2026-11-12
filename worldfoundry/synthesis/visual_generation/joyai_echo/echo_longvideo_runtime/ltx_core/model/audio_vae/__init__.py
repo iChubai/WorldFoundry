@@ -7,6 +7,10 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audi
     encode_audio,
 )
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.ops import AudioProcessor
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.variants.joyai_echo import (
+    EchoVocoderWithBWE as VocoderWithBWE,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.vocoder import Vocoder
 
 from .model_configurator import (
     AUDIO_VAE_DECODER_COMFY_KEYS_FILTER,
@@ -16,7 +20,6 @@ from .model_configurator import (
     AudioEncoderConfigurator,
     VocoderConfigurator,
 )
-from .vocoder import Vocoder, VocoderWithBWE
 
 __all__ = [
     "AUDIO_VAE_DECODER_COMFY_KEYS_FILTER",

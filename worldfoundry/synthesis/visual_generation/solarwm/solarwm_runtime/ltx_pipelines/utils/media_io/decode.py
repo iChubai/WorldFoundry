@@ -14,13 +14,18 @@ import torch
 from PIL import ExifTags, Image, ImageCms
 from torch._prims_common import DeviceLikeType
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.image import resize_and_center_crop
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import Audio, VideoPixelShape
+from worldfoundry.core.media.codecs.audio_window import decode_audio_from_file as decode_audio_window
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_pipelines.utils.media_io.resize import (
+    ResizeMode,
+    resize_and_reflect_pad,
+)
 
 from ....ltx_core.hdr import HDRTransfer
 from .color_config import HDRColorSpace
 from .exr import is_exr_dir, load_exr_image_conditioning_hdr
 from .range_map import normalize_images, to_vae_range
-from .resize import ResizeMode, resize_and_center_crop, resize_and_reflect_pad
 
 logger = logging.getLogger(__name__)
 
@@ -29,15 +34,6 @@ _ORIENTATION_EXIF_KEY = next(key for key, value in ExifTags.TAGS.items() if valu
 _ORIENTATION_TO_ROTATION = {3: 180, 6: 270, 8: 90}
 
 _SRGB_PROFILE = ImageCms.createProfile("sRGB")
-
-_INT_FORMAT_MAX: dict[str, float] = {
-    "u8": 128.0,
-    "u8p": 128.0,
-    "s16": 32768.0,
-    "s16p": 32768.0,
-    "s32": 2147483648.0,
-    "s32p": 2147483648.0,
-}
 
 
 def load_image_and_preprocess(
@@ -167,19 +163,6 @@ def decode_image(image_path: str) -> np.ndarray:
         return np.array(image, dtype=np.uint8)
 
 
-def _audio_frame_to_float(frame: av.AudioFrame) -> np.ndarray:
-    """Convert an audio frame to a float32 ndarray with values in [-1, 1] and shape (channels, samples)."""
-    fmt = frame.format.name
-    arr = frame.to_ndarray().astype(np.float32)
-    if fmt in _INT_FORMAT_MAX:
-        arr = arr / _INT_FORMAT_MAX[fmt]
-    if not frame.format.is_planar:
-        # Interleaved formats have shape (1, samples * channels) — reshape to (channels, samples).
-        channels = len(frame.layout.channels)
-        arr = arr.reshape(-1, channels).T
-    return arr
-
-
 def get_videostream_fps(path: str) -> float:
     """Read video stream FPS.
     EXR-frame folders have no embedded frame rate — callers must supply fps via
@@ -237,64 +220,9 @@ def get_videostream_metadata(path: str, fps: float | None = None) -> VideoPixelS
 def decode_audio_from_file(
     path: str, device: torch.device, start_time: float = 0.0, max_duration: float | None = None
 ) -> Audio | None:
-    """Decodes audio from a file, optionally seeking to a start time and limiting duration.
-    Args:
-        path: Path to the audio/video file containing an audio stream.
-        device: Device to place the resulting tensor on.
-        start_time: Start time in seconds to begin reading audio from.
-        max_duration: Maximum audio duration in seconds. If None, reads to end of stream.
-    Returns:
-        An Audio object with waveform of shape (1, channels, samples), or None if no audio stream.
-    """
-    container = av.open(path)
-    try:
-        audio_stream = next(s for s in container.streams if s.type == "audio")
-    except StopIteration:
-        container.close()
-        return None
-
-    sample_rate = audio_stream.rate
-    start_pts = int(start_time / audio_stream.time_base)
-    end_time = start_time + max_duration if max_duration else audio_stream.duration * audio_stream.time_base
-    container.seek(start_pts, stream=audio_stream)
-
-    samples = []
-    first_frame_time = None
-    for frame in container.decode(audio=0):
-        if frame.pts is None:
-            continue
-        frame_time = float(frame.pts * audio_stream.time_base)
-        frame_end = frame_time + frame.samples / frame.sample_rate
-        if frame_end < start_time:
-            continue
-        if frame_time > end_time:
-            break
-        if first_frame_time is None:
-            first_frame_time = frame_time
-        samples.append(_audio_frame_to_float(frame))
-
-    container.close()
-
-    if not samples:
-        return None
-
-    audio = np.concatenate(samples, axis=-1)
-
-    # Trim samples that fall outside the requested [start_time, start_time + max_duration] window.
-    # Audio codecs decode in fixed-size frames whose boundaries may not align with the requested
-    # time range, so the first frame can start before start_time and the last frame can end after
-    # start_time + max_duration.
-    skip_samples = round((start_time - first_frame_time) * sample_rate)
-    if skip_samples > 0:
-        audio = audio[..., skip_samples:]
-
-    if max_duration is not None:
-        max_samples = round(max_duration * sample_rate)
-        audio = audio[..., :max_samples]
-
-    waveform = torch.from_numpy(audio).to(device).unsqueeze(0)
-
-    return Audio(waveform=waveform, sampling_rate=sample_rate)
+    """Decode the requested sample window into the family audio container."""
+    decoded = decode_audio_window(path, device, start_time, max_duration)
+    return Audio(waveform=decoded[0], sampling_rate=decoded[1]) if decoded is not None else None
 
 
 def decode_video_by_frame(

@@ -1,5 +1,13 @@
 """Media I/O: decode, encode, EXR, resize, and colour-config helpers."""
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.image import resize_and_center_crop
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_pipelines.utils.media_io.resize import (
+    ResizeMode,
+    align_resolution,
+    resize_and_reflect_pad,
+    resize_aspect_ratio_preserving,
+)
+
 from .color_config import HDRColorSpace, decode_hdr_video, resolve_hdr_color_space, vae_dtype_for_hdr
 from .decode import (
     decode_audio_from_file,
@@ -26,13 +34,6 @@ from .exr import (
     save_exr_tensor,
 )
 from .range_map import from_vae_range, normalize_images, to_vae_range
-from .resize import (
-    ResizeMode,
-    align_resolution,
-    resize_and_center_crop,
-    resize_and_reflect_pad,
-    resize_aspect_ratio_preserving,
-)
 
 __all__ = [
     "HDRColorSpace",

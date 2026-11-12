@@ -47,14 +47,6 @@ except ImportError:
 # may end up on different backends (e.g. FA3 unmasked + SDPA masked on H100).
 
 
-_SDPA_FULL_PRIORITY: tuple[SDPBackend, ...] = (
-    SDPBackend.CUDNN_ATTENTION,
-    SDPBackend.FLASH_ATTENTION,
-    SDPBackend.EFFICIENT_ATTENTION,
-    SDPBackend.MATH,
-)
-
-
 def _on_macos() -> bool:
     """True on macOS, where torch's native SDPA materializes the score matrix and
     AUTOMATIC routes to Apple's fused ``mps-sdpa`` kernel instead."""
@@ -119,14 +111,6 @@ def automatic_attention() -> AttentionCallable:
 def automatic_masked_attention() -> MaskedAttentionCallable:
     """Cached AUTOMATIC pick for the masked path. See :func:`automatic_attention`."""
     return _select_masked_attention()
-
-
-def attention_label(fn: AttentionCallable | MaskedAttentionCallable) -> str:
-    """Best-effort human-readable backend name.
-    Built-in callables expose ``.label`` (encoding the SDPA priority list for the
-    Pytorch backends); fall back to the class name for custom or wrapped callables
-    (e.g. the multi-GPU All2All wrappers) that don't define one."""
-    return getattr(fn, "label", type(fn).__name__)
 
 
 class AttentionFunction(Enum):

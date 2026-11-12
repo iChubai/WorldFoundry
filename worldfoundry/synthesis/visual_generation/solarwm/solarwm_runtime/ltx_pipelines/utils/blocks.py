@@ -42,6 +42,7 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.types i
     VideoLatentShape,
     VideoPixelShape,
 )
+from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model import upsample_video
 from worldfoundry.base_models.diffusion_model.optimizations.ltx.compile import CompilationConfig
 from worldfoundry.core.attention.backends.model_backends import AttentionCallable
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.duration_head import (
@@ -61,6 +62,9 @@ from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.m
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.transformer.compiling import (
     build_compile_transformer_op,
     modify_sd_ops_for_compilation,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.upsampler import (
+    LatentUpsamplerConfigurator,
 )
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import (
     VIDEO_SCALE_FACTORS,
@@ -90,7 +94,6 @@ from ...ltx_core.model.audio_vae import (
     VocoderConfigurator,
 )
 from ...ltx_core.model.model_protocol import LTXModelProtocol, ModelConfigurator
-from ...ltx_core.model.upsampler import LatentUpsamplerConfigurator, upsample_video
 from ...ltx_core.model.video_vae import (
     CHANNELS_LAST_3D_WEIGHTS,
     MEMORY_EFFICIENT_DECODE,

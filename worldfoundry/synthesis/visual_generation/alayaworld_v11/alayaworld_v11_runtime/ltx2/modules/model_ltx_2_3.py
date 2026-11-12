@@ -67,10 +67,6 @@ __all__ = [
 ]
 
 
-ADALN_NUM_BASE_PARAMS = 6
-ADALN_NUM_CROSS_ATTN_PARAMS = 3
-
-
 # =============================================================================
 # da3 inference: fused flex_attention for key-bias masked self-attention (exact).
 # Meant to run under torch.compile (inductor lowers flex to a fused Triton

@@ -8,9 +8,10 @@ from tqdm import tqdm
 
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import DiffusionStepProtocol
 from worldfoundry.base_models.diffusion_model.schedulers.res2s import get_res2s_coefficients
+from worldfoundry.core.nn import velocity_to_denoised as to_denoised
 
 from ...ltx_core.components.diffusion_steps import Res2sDiffusionStep
-from ...ltx_core.utils import to_denoised, to_velocity
+from ...ltx_core.utils import to_velocity
 from .helpers import post_process_latent, timesteps_from_mask
 from .types import DenoisingFunc, LatentState
 

@@ -36,22 +36,6 @@ def to_velocity(
     return ((sample.to(calc_dtype) - denoised_sample.to(calc_dtype)) / sigma).to(sample.dtype)
 
 
-def to_denoised(
-    sample: torch.Tensor,
-    velocity: torch.Tensor,
-    sigma: float | torch.Tensor,
-    calc_dtype: torch.dtype = torch.float32,
-) -> torch.Tensor:
-    """
-    Convert the sample and its denoising velocity to denoised sample.
-    Returns:
-        Denoised sample
-    """
-    if isinstance(sigma, torch.Tensor):
-        sigma = sigma.to(calc_dtype)
-    return (sample.to(calc_dtype) - velocity.to(calc_dtype) * sigma).to(sample.dtype)
-
-
 def find_matching_file(root_path: str, pattern: str) -> Path:
     """
     Recursively search for files matching a glob pattern and return the first match.

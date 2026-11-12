@@ -20,9 +20,9 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.ops 
     unpatchify,
 )
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.resnet import ResnetBlock3D, UNetMidBlock3D
-from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.sampling import (
-    DepthToSpaceUpsample,
-    SpaceToDepthDownsample,
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.video_vae import (
+    _make_decoder_block,
+    _make_encoder_block,
 )
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import (
     compute_rectangular_mask_1d,
@@ -43,112 +43,6 @@ from worldfoundry.synthesis.visual_generation.joyai_echo.echo_wm_runtime.ltx_cor
 from ...types import VIDEO_SCALE_FACTORS, SpatioTemporalScaleFactors, VideoLatentShape
 
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-def _make_encoder_block(
-    block_name: str,
-    block_config: dict[str, Any],
-    in_channels: int,
-    convolution_dimensions: int,
-    norm_layer: NormLayerType,
-    norm_num_groups: int,
-    spatial_padding_mode: PaddingModeType,
-) -> tuple[nn.Module, int]:
-    out_channels = in_channels
-
-    if block_name == "res_x":
-        block = UNetMidBlock3D(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            num_layers=block_config["num_layers"],
-            resnet_eps=1e-6,
-            resnet_groups=norm_num_groups,
-            norm_layer=norm_layer,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "res_x_y":
-        out_channels = in_channels * block_config.get("multiplier", 2)
-        block = ResnetBlock3D(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            eps=1e-6,
-            groups=norm_num_groups,
-            norm_layer=norm_layer,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_time":
-        block = make_conv_nd(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=3,
-            stride=(2, 1, 1),
-            causal=True,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_space":
-        block = make_conv_nd(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=3,
-            stride=(1, 2, 2),
-            causal=True,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_all":
-        block = make_conv_nd(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=3,
-            stride=(2, 2, 2),
-            causal=True,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_all_x_y":
-        out_channels = in_channels * block_config.get("multiplier", 2)
-        block = make_conv_nd(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=3,
-            stride=(2, 2, 2),
-            causal=True,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_all_res":
-        out_channels = in_channels * block_config.get("multiplier", 2)
-        block = SpaceToDepthDownsample(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            stride=(2, 2, 2),
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_space_res":
-        out_channels = in_channels * block_config.get("multiplier", 2)
-        block = SpaceToDepthDownsample(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            stride=(1, 2, 2),
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_time_res":
-        out_channels = in_channels * block_config.get("multiplier", 2)
-        block = SpaceToDepthDownsample(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            stride=(2, 1, 1),
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    else:
-        raise ValueError(f"unknown block: {block_name}")
-
-    return block, out_channels
 
 
 class VideoEncoder(nn.Module):
@@ -479,88 +373,6 @@ def prepare_tiles_for_encoding(
         mappers[2] = make_mapping_operation(map_temporal_interval_to_latent, scale=VIDEO_SCALE_FACTORS.time)
 
     return create_tiles(video.shape, splitters, mappers)
-
-
-def _make_decoder_block(
-    block_name: str,
-    block_config: dict[str, Any],
-    in_channels: int,
-    convolution_dimensions: int,
-    norm_layer: NormLayerType,
-    timestep_conditioning: bool,
-    norm_num_groups: int,
-    spatial_padding_mode: PaddingModeType,
-) -> tuple[nn.Module, int]:
-    out_channels = in_channels
-    if block_name == "res_x":
-        block = UNetMidBlock3D(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            num_layers=block_config["num_layers"],
-            resnet_eps=1e-6,
-            resnet_groups=norm_num_groups,
-            norm_layer=norm_layer,
-            inject_noise=block_config.get("inject_noise", False),
-            timestep_conditioning=timestep_conditioning,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "attn_res_x":
-        block = UNetMidBlock3D(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            num_layers=block_config["num_layers"],
-            resnet_groups=norm_num_groups,
-            norm_layer=norm_layer,
-            inject_noise=block_config.get("inject_noise", False),
-            timestep_conditioning=timestep_conditioning,
-            attention_head_dim=block_config["attention_head_dim"],
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "res_x_y":
-        out_channels = in_channels // block_config.get("multiplier", 2)
-        block = ResnetBlock3D(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            out_channels=out_channels,
-            eps=1e-6,
-            groups=norm_num_groups,
-            norm_layer=norm_layer,
-            inject_noise=block_config.get("inject_noise", False),
-            timestep_conditioning=False,
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_time":
-        out_channels = in_channels // block_config.get("multiplier", 1)
-        block = DepthToSpaceUpsample(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            stride=(2, 1, 1),
-            out_channels_reduction_factor=block_config.get("multiplier", 1),
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_space":
-        out_channels = in_channels // block_config.get("multiplier", 1)
-        block = DepthToSpaceUpsample(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            stride=(1, 2, 2),
-            out_channels_reduction_factor=block_config.get("multiplier", 1),
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    elif block_name == "compress_all":
-        out_channels = in_channels // block_config.get("multiplier", 1)
-        block = DepthToSpaceUpsample(
-            dims=convolution_dimensions,
-            in_channels=in_channels,
-            stride=(2, 2, 2),
-            residual=block_config.get("residual", False),
-            out_channels_reduction_factor=block_config.get("multiplier", 1),
-            spatial_padding_mode=spatial_padding_mode,
-        )
-    else:
-        raise ValueError(f"unknown layer: {block_name}")
-
-    return block, out_channels
 
 
 class VideoDecoder(nn.Module):

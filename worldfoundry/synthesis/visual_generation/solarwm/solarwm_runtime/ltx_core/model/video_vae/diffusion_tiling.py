@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from typing import Literal
 
 import torch
 
@@ -27,8 +26,6 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling 
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.tiling import TileSizeConfig
 
 from ...types import VIDEO_SCALE_FACTORS, SpatioTemporalScaleFactors
-
-ResizeAxisMode = Literal["repeat_last", "symmetric"]
 
 # Peak-activation heuristic (bytes):
 #   hard (resident for whole tiled decode):

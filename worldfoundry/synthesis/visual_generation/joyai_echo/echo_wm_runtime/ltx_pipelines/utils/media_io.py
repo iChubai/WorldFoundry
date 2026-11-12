@@ -1,5 +1,4 @@
 import logging
-import math
 from collections.abc import Generator, Iterator
 from fractions import Fraction
 from io import BytesIO
@@ -11,6 +10,9 @@ from einops import rearrange
 from PIL import Image
 from torch._prims_common import DeviceLikeType
 from tqdm import tqdm
+
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.image import resize_and_center_crop
+from worldfoundry.core.media.codecs.audio_window import decode_audio_from_file as decode_audio_window
 
 from ...ltx_core.types import Audio
 from .constants import DEFAULT_IMAGE_CRF
@@ -38,41 +40,6 @@ def resize_aspect_ratio_preserving(image: torch.Tensor, long_side: int) -> torch
     result = rearrange(resized, "b c f h w -> b f h w c")[0]
     # preserve input dimensions
     return result[0] if result.shape[0] == 1 else result
-
-
-def resize_and_center_crop(tensor: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """
-    Resize tensor preserving aspect ratio (filling target), then center crop to exact dimensions.
-    Args:
-        latent: Input tensor with shape (H, W, C) or (F, H, W, C)
-        height: Target height
-        width: Target width
-    Returns:
-        Tensor with shape (1, C, 1, height, width) for 3D input or (1, C, F, height, width) for 4D input
-    """
-    if tensor.ndim == 3:
-        tensor = rearrange(tensor, "h w c -> 1 c h w")
-    elif tensor.ndim == 4:
-        tensor = rearrange(tensor, "f h w c -> f c h w")
-    else:
-        raise ValueError(f"Expected input with 3 or 4 dimensions; got shape {tensor.shape}.")
-
-    _, _, src_h, src_w = tensor.shape
-
-    scale = max(height / src_h, width / src_w)
-    # Use ceil to avoid floating-point rounding causing new_h/new_w to be
-    # slightly smaller than target, which would result in negative crop offsets.
-    new_h = math.ceil(src_h * scale)
-    new_w = math.ceil(src_w * scale)
-
-    tensor = torch.nn.functional.interpolate(tensor, size=(new_h, new_w), mode="bilinear", align_corners=False)
-
-    crop_top = (new_h - height) // 2
-    crop_left = (new_w - width) // 2
-    tensor = tensor[:, :, crop_top : crop_top + height, crop_left : crop_left + width]
-
-    tensor = rearrange(tensor, "f c h w -> 1 c f h w")
-    return tensor
 
 
 def normalize_latent(latent: torch.Tensor, device: torch.device, dtype: torch.dtype) -> torch.Tensor:
@@ -234,29 +201,6 @@ def encode_video(
     logger.info(f"Video saved to {output_path}")
 
 
-_INT_FORMAT_MAX: dict[str, float] = {
-    "u8": 128.0,
-    "u8p": 128.0,
-    "s16": 32768.0,
-    "s16p": 32768.0,
-    "s32": 2147483648.0,
-    "s32p": 2147483648.0,
-}
-
-
-def _audio_frame_to_float(frame: av.AudioFrame) -> np.ndarray:
-    """Convert an audio frame to a float32 ndarray with values in [-1, 1] and shape (channels, samples)."""
-    fmt = frame.format.name
-    arr = frame.to_ndarray().astype(np.float32)
-    if fmt in _INT_FORMAT_MAX:
-        arr = arr / _INT_FORMAT_MAX[fmt]
-    if not frame.format.is_planar:
-        # Interleaved formats have shape (1, samples * channels) — reshape to (channels, samples).
-        channels = len(frame.layout.channels)
-        arr = arr.reshape(-1, channels).T
-    return arr
-
-
 def get_videostream_metadata(path: str) -> tuple[float, int, int, int]:
     """Read video stream metadata: (fps, num_frames, width, height).
     If frame count is missing in the container, decodes the stream to count frames.
@@ -278,64 +222,9 @@ def get_videostream_metadata(path: str) -> tuple[float, int, int, int]:
 def decode_audio_from_file(
     path: str, device: torch.device, start_time: float = 0.0, max_duration: float | None = None
 ) -> Audio | None:
-    """Decodes audio from a file, optionally seeking to a start time and limiting duration.
-    Args:
-        path: Path to the audio/video file containing an audio stream.
-        device: Device to place the resulting tensor on.
-        start_time: Start time in seconds to begin reading audio from.
-        max_duration: Maximum audio duration in seconds. If None, reads to end of stream.
-    Returns:
-        An Audio object with waveform of shape (1, channels, samples), or None if no audio stream.
-    """
-    container = av.open(path)
-    try:
-        audio_stream = next(s for s in container.streams if s.type == "audio")
-    except StopIteration:
-        container.close()
-        return None
-
-    sample_rate = audio_stream.rate
-    start_pts = int(start_time / audio_stream.time_base)
-    end_time = start_time + max_duration if max_duration else audio_stream.duration * audio_stream.time_base
-    container.seek(start_pts, stream=audio_stream)
-
-    samples = []
-    first_frame_time = None
-    for frame in container.decode(audio=0):
-        if frame.pts is None:
-            continue
-        frame_time = float(frame.pts * audio_stream.time_base)
-        frame_end = frame_time + frame.samples / frame.sample_rate
-        if frame_end < start_time:
-            continue
-        if frame_time > end_time:
-            break
-        if first_frame_time is None:
-            first_frame_time = frame_time
-        samples.append(_audio_frame_to_float(frame))
-
-    container.close()
-
-    if not samples:
-        return None
-
-    audio = np.concatenate(samples, axis=-1)
-
-    # Trim samples that fall outside the requested [start_time, start_time + max_duration] window.
-    # Audio codecs decode in fixed-size frames whose boundaries may not align with the requested
-    # time range, so the first frame can start before start_time and the last frame can end after
-    # start_time + max_duration.
-    skip_samples = round((start_time - first_frame_time) * sample_rate)
-    if skip_samples > 0:
-        audio = audio[..., skip_samples:]
-
-    if max_duration is not None:
-        max_samples = round(max_duration * sample_rate)
-        audio = audio[..., :max_samples]
-
-    waveform = torch.from_numpy(audio).to(device).unsqueeze(0)
-
-    return Audio(waveform=waveform, sampling_rate=sample_rate)
+    """Decode the requested sample window into the family audio container."""
+    decoded = decode_audio_window(path, device, start_time, max_duration)
+    return Audio(waveform=decoded[0], sampling_rate=decoded[1]) if decoded is not None else None
 
 
 def decode_video_from_file(path: str, frame_cap: int, device: DeviceLikeType) -> Generator[torch.Tensor]:

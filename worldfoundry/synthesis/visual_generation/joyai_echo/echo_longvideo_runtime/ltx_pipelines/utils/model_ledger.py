@@ -3,6 +3,7 @@ from dataclasses import replace
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import AudioDecoder, AudioEncoder
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.vocoder import Vocoder
 from worldfoundry.base_models.diffusion_model.models.encoders.ltx.variants.joyai_echo import (
     EchoEmbeddingsProcessor as EmbeddingsProcessor,
 )
@@ -17,7 +18,6 @@ from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.
     VOCODER_COMFY_KEYS_FILTER,
     AudioDecoderConfigurator,
     AudioEncoderConfigurator,
-    Vocoder,
     VocoderConfigurator,
 )
 from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.ltx_core.model.transformer import (

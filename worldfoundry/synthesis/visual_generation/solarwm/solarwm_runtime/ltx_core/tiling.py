@@ -74,46 +74,6 @@ def compute_summed_weights(
 
 
 @dataclass(frozen=True)
-class DimensionTilingConfig:
-    """Tiling parameters for a single dimension of the patchified grid.
-    Attributes:
-        num_tiles: Number of tiles along this dimension. ``1`` with ``overlap=0``
-            means the axis is not tiled.
-        overlap: Overlap between adjacent tiles, in latent grid units.
-            Adjacent tiles share ``overlap`` grid cells at their
-            boundary, producing an overlap zone blended with
-            trapezoidal masks.
-    """
-
-    num_tiles: int = 1
-    overlap: int = 0
-
-    def __post_init__(self) -> None:
-        if self.num_tiles < 1:
-            raise ValueError(f"num_tiles must be >= 1, got {self.num_tiles}")
-        if self.overlap < 0:
-            raise ValueError(f"overlap must be >= 0, got {self.overlap}")
-
-    def is_tiled(self) -> bool:
-        """True when this axis is split into more than one tile (or has overlap)."""
-        return self.num_tiles > 1 or self.overlap > 0
-
-    @classmethod
-    def from_tile_size(cls, dim_size: int, tile_size: int, overlap: int = 0) -> DimensionTilingConfig:
-        """Create config by computing ``num_tiles`` from dimension size and tile size.
-        Args:
-            dim_size: Total length of the dimension.
-            tile_size: Desired tile size.
-            overlap: Overlap between consecutive tiles.
-        Returns:
-            A ``DimensionTilingConfig`` with the computed ``num_tiles``.
-        """
-        split_op = split_by_size(tile_size, overlap)
-        intervals = split_op(dim_size)
-        return cls(num_tiles=len(intervals.intervals), overlap=overlap)
-
-
-@dataclass(frozen=True)
 class TileSizeConfig:
     """Size-based tiling layout for a ``(F, H, W)`` video — mirror of ``TileCountConfig``.
     Each axis is a non-optional :class:`DimensionSizeConfig`; ``tile_size=0`` means

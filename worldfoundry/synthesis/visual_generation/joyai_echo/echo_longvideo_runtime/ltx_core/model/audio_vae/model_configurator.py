@@ -3,12 +3,15 @@ import torch
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.attention import AttentionType
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import AudioDecoder, AudioEncoder
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.causality_axis import CausalityAxis
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.variants.joyai_echo import (
+    EchoVocoderWithBWE as VocoderWithBWE,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.vocoder import MelSTFT, Vocoder
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.normalization import NormType
 
 from ...loader.sd_ops import KeyValueOperationResult, SDOps
 from ...utils import check_config_value
 from ..model_protocol import ModelConfigurator
-from .vocoder import MelSTFT, Vocoder, VocoderWithBWE
 
 
 def _vocoder_from_config(
@@ -40,14 +43,14 @@ def _vocoder_from_config(
     )
 
 
-class VocoderConfigurator(ModelConfigurator[Vocoder]):
+class VocoderConfigurator(ModelConfigurator[Vocoder | VocoderWithBWE]):
     """Configurator that auto-detects the checkpoint format.
     Returns a plain Vocoder for pre-ltx-2.3 checkpoints (flat config) or a
     VocoderWithBWE for ltx-2.3+ checkpoints (nested "vocoder" + "bwe" config).
     """
 
     @classmethod
-    def from_config(cls: type[Vocoder], config: dict) -> Vocoder | VocoderWithBWE:
+    def from_config(cls, config: dict) -> Vocoder | VocoderWithBWE:
         cfg = config.get("vocoder", {})
 
         if "bwe" not in cfg:

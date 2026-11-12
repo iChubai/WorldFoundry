@@ -162,7 +162,10 @@ class FastWAMRuntime:
 
     @staticmethod
     def _reset_rope(video_expert: Any, action_expert: Any) -> None:
-        from .wan_video_dit import precompute_freqs_cis, precompute_freqs_cis_3d
+        from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import (
+            precompute_freqs_cis,
+            precompute_freqs_cis_3d,
+        )
 
         video_expert.freqs = precompute_freqs_cis_3d(int(video_expert.attn_head_dim))
         action_expert.freqs = precompute_freqs_cis(int(action_expert.attn_head_dim), end=1024)

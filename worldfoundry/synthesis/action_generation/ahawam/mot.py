@@ -8,7 +8,9 @@ from typing import Any, cast
 import torch
 import torch.nn as nn
 
-from .wan_video_dit import flash_attention, modulate, rope_apply
+from worldfoundry.core.nn import scale_shift as modulate
+
+from .wan_video_dit import flash_attention, rope_apply
 
 logger = logging.getLogger(__name__)
 

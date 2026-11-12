@@ -8,15 +8,17 @@ from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import sinusoidal_embedding_1d
 from worldfoundry.base_models.diffusion_model.runners import (
     InferenceStage,
     InferenceStageRunner,
     StagedDiffusionPipeline,
 )
 from worldfoundry.core.model_loading import ModelConfig
+from worldfoundry.core.nn import RMSNorm
 
 from ..models.model_manager import ModelManager, load_state_dict
-from ..models.wan_video_dit import RMSNorm, WanModel, sinusoidal_embedding_1d
+from ..models.wan_video_dit import WanModel
 
 # isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.s2v import rope_precompute

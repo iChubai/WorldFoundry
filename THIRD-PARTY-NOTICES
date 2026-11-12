@@ -522,6 +522,12 @@ InternViT vision transformer
   Being-H source revision: 66b959e05db225fd816f8a517d94a9c0585cfc3e
   Files: worldfoundry/base_models/llm_mllm_core/mllm/intern_vit/
 
+FastWAM shared Wan/action blocks
+  License: MIT
+  Source: https://github.com/yuantianyuan01/FastWAM
+  Source revision: 45d8e1458921d83f8ad6cf9ce993d371208dabd0
+  Files: worldfoundry/base_models/diffusion_model/models/networks/wan/variants/wam.py
+
 Latent Consistency Models
   License: MIT
   Source: https://github.com/luosiallen/latent-consistency-model

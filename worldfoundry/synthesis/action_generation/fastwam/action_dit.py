@@ -7,28 +7,16 @@ from typing import Any
 import torch
 import torch.nn as nn
 
-from .gradient import gradient_checkpoint_forward
-from .wan_video_dit import (
-    DiTBlock,
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import (
     precompute_freqs_cis,
     sinusoidal_embedding_1d,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.wam import WamDiTBlock
+
+from .gradient import gradient_checkpoint_forward
+from .wan_video_dit import flash_attention, rope_apply
 
 logger = logging.getLogger(__name__)
-
-
-class ActionHead(nn.Module):
-    def __init__(self, hidden_dim: int, out_dim: int, eps: float):
-        super().__init__()
-        self.norm = nn.LayerNorm(hidden_dim, eps=eps, elementwise_affine=False)
-        self.proj = nn.Linear(hidden_dim, out_dim)
-        self.modulation = nn.Parameter(torch.randn(1, 2, hidden_dim) / hidden_dim**0.5)
-
-    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
-        shift, scale = (self.modulation.to(dtype=t.dtype, device=t.device) + t.unsqueeze(1)).chunk(2, dim=1)
-        shift = shift.squeeze(1)
-        scale = scale.squeeze(1)
-        return self.proj(self.norm(x) * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1))
 
 
 class ActionDiT(nn.Module):
@@ -87,12 +75,14 @@ class ActionDiT(nn.Module):
         self.time_projection = nn.Sequential(nn.SiLU(), nn.Linear(hidden_dim, hidden_dim * 6))
         self.blocks = nn.ModuleList(
             [
-                DiTBlock(
+                WamDiTBlock(
                     hidden_dim=hidden_dim,
                     attn_head_dim=attn_head_dim,
                     num_heads=num_heads,
                     ffn_dim=ffn_dim,
                     eps=eps,
+                    attention_fn=flash_attention,
+                    rope_fn=rope_apply,
                 )
                 for _ in range(num_layers)
             ]

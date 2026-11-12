@@ -7306,7 +7306,9 @@ existing canonical core implementations remain unchanged.
 
 Wan varlen cross-attention forwards
 ----------------------------------
-networks/wan/varlen_cross_attention.py shares the matching Forcing/MinWM text-cache
-and image/text forwards from the existing Apache-2.0 Wan implementations. Native
-constructors, RMSNorm identities and self-attention ancestry remain family-owned
-for MinWM's PRoPE installer. No checkpoint remap is introduced.
+networks/wan/varlen_cross_attention.py shares the matching Forcing/MinWM/
+Echo-Infinity text-cache and image/text forwards and the Linear/Geometry text
+forward from the existing Apache-2.0 Wan implementations. Native constructors,
+RMSNorm identities, attention providers and self-attention ancestry remain
+family-owned, including MinWM's PRoPE selection and Linear's image-projection
+initialization. No checkpoint remap is introduced.

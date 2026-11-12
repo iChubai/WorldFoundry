@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Varlen cross-attention forwards with family-owned construction and type identity.
+"""Cross-attention forwards with family-owned construction, providers and type identity.
 
 Forcing and MinWM retain their native self-attention ancestry so MinWM's PRoPE
 installer can distinguish self-attention from text/image cross-attention.
@@ -10,6 +10,20 @@ from typing import Any
 from torch import Tensor
 
 from worldfoundry.core.attention.sequence.varlen import flash_attention
+
+
+class UncachedTextCrossAttentionMixin:
+    """Text forward with the native provider bound as a static ``_cross_attention``."""
+
+    def forward(self: Any, x: Tensor, context: Tensor, context_lens: Tensor | None) -> Tensor:
+        b, n, d = x.size(0), self.num_heads, self.head_dim
+        q = self.norm_q(self.q(x)).view(b, -1, n, d)
+        k = self.norm_k(self.k(context)).view(b, -1, n, d)
+        v = self.v(context).view(b, -1, n, d)
+        x = self._cross_attention(q, k, v, k_lens=context_lens)
+        x = x.flatten(2)
+        x = self.o(x)
+        return x
 
 
 class CachedTextCrossAttentionMixin:

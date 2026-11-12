@@ -11,6 +11,10 @@ import torch
 import torch.nn as nn
 from einops import repeat
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.varlen_cross_attention import (
+    CachedTextCrossAttentionMixin,
+    ImageTextCrossAttentionMixin,
+)
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
 from .attention import flash_attention
@@ -129,29 +133,8 @@ class WanSelfAttention(nn.Module):
         return x
 
 
-class WanT2VCrossAttention(WanSelfAttention):
-    """Wan text or image-text cross-attention."""
-
-    def forward(self, x, context, context_lens, crossattn_cache=None):
-        b, n, d = (x.size(0), self.num_heads, self.head_dim)
-        q = self.norm_q(self.q(x)).view(b, -1, n, d)
-        if crossattn_cache is not None:
-            if not crossattn_cache["is_init"]:
-                crossattn_cache["is_init"] = True
-                k = self.norm_k(self.k(context)).view(b, -1, n, d)
-                v = self.v(context).view(b, -1, n, d)
-                crossattn_cache["k"] = k
-                crossattn_cache["v"] = v
-            else:
-                k = crossattn_cache["k"]
-                v = crossattn_cache["v"]
-        else:
-            k = self.norm_k(self.k(context)).view(b, -1, n, d)
-            v = self.v(context).view(b, -1, n, d)
-        x = flash_attention(q, k, v, k_lens=context_lens)
-        x = x.flatten(2)
-        x = self.o(x)
-        return x
+class WanT2VCrossAttention(CachedTextCrossAttentionMixin, WanSelfAttention):
+    """Native Echo-Infinity self-attention ancestry with the shared text-cache forward."""
 
 
 class WanGanCrossAttention(WanSelfAttention):
@@ -168,7 +151,7 @@ class WanGanCrossAttention(WanSelfAttention):
         return x
 
 
-class WanI2VCrossAttention(WanSelfAttention):
+class WanI2VCrossAttention(ImageTextCrossAttentionMixin, WanSelfAttention):
     """Wan text or image-text cross-attention."""
 
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-06):
@@ -176,23 +159,6 @@ class WanI2VCrossAttention(WanSelfAttention):
         self.k_img = nn.Linear(dim, dim)
         self.v_img = nn.Linear(dim, dim)
         self.norm_k_img = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
-
-    def forward(self, x, context, context_lens):
-        context_img = context[:, :257]
-        context = context[:, 257:]
-        b, n, d = (x.size(0), self.num_heads, self.head_dim)
-        q = self.norm_q(self.q(x)).view(b, -1, n, d)
-        k = self.norm_k(self.k(context)).view(b, -1, n, d)
-        v = self.v(context).view(b, -1, n, d)
-        k_img = self.norm_k_img(self.k_img(context_img)).view(b, -1, n, d)
-        v_img = self.v_img(context_img).view(b, -1, n, d)
-        img_x = flash_attention(q, k_img, v_img, k_lens=None)
-        x = flash_attention(q, k, v, k_lens=context_lens)
-        x = x.flatten(2)
-        img_x = img_x.flatten(2)
-        x = x + img_x
-        x = self.o(x)
-        return x
 
 
 WAN_CROSSATTENTION_CLASSES = {"t2v_cross_attn": WanT2VCrossAttention, "i2v_cross_attn": WanI2VCrossAttention}

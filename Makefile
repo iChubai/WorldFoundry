@@ -154,6 +154,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/test_hyperflow_components.py \
 	tests/synthesis/test_hyperflow_runtime.py \
 	tests/base_models/test_minimax_h3_dit.py \
+	tests/synthesis/test_lyra1_attention_reuse.py \
 	tests/synthesis/test_adaworld_component_reuse.py \
 	tests/base_models/diffusion_model/models/networks/animatediff/test_resnet.py \
 	tests/synthesis/test_wan_text_encoder_reuse.py \

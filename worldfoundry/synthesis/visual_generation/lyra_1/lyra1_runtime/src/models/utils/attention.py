@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections.abc
 import warnings
-from itertools import repeat
 
 import torch
 from einops import rearrange
@@ -50,51 +48,16 @@ except BaseException:
 import math  # noqa: E402 - Follows the warnings configuration.
 from functools import partial  # noqa: E402 - Follows the warnings configuration.
 
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_  # noqa: E402 - Follows the warnings configuration.
+from timm.layers import (  # noqa: E402 - Follows the warnings configuration.
+    DropPath,
+    to_2tuple,
+    to_3tuple,
+    trunc_normal_,
+)
 
 from worldfoundry.core.attention import (  # noqa: E402 - Follows the warnings configuration.
     scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
 )
-
-
-def _ntuple(n):
-    def parse(x):
-        if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
-            return x
-        return tuple(repeat(x, n))
-
-    return parse
-
-
-to_2tuple = _ntuple(2)  # noqa: F811 - Later definition replaces the earlier one, as upstream.
-to_3tuple = _ntuple(3)
-
-
-def drop_path(x, drop_prob: float = 0.0, training: bool = False, scale_by_keep: bool = True):
-    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks)."""
-    if drop_prob == 0.0 or not training:
-        return x
-    keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
-    random_tensor = x.new_empty(shape).bernoulli_(keep_prob)
-    if keep_prob > 0.0 and scale_by_keep:
-        random_tensor.div_(keep_prob)
-    return x * random_tensor
-
-
-class DropPath(nn.Module):  # noqa: F811 - Later definition replaces the earlier one, as upstream.
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
-
-    def __init__(self, drop_prob: float = 0.0, scale_by_keep: bool = True):
-        super().__init__()
-        self.drop_prob = drop_prob
-        self.scale_by_keep = scale_by_keep
-
-    def forward(self, x):
-        return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
-
-    def extra_repr(self):
-        return f"drop_prob={round(self.drop_prob, 3):0.3f}"
 
 
 class Mlp(nn.Module):

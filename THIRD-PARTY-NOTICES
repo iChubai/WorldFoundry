@@ -7176,3 +7176,12 @@ kernel policies. LiveWorld's binding is in encoders/wan/variants/liveworld_clip.
 its image preprocessing and checkpoint orchestration stay in the runtime.
 These components retain the Wan, OpenAI CLIP and OpenCLIP attributions and the
 Apache-2.0/MIT source terms reproduced above.
+
+Shared Diffusers-layout Wan VAE blocks
+-------------------------------------
+autoencoders/wan/diffusers_blocks.py shares the Wan residual, attention, resample,
+mid and up blocks with Diffusers-style parameter names (Copyright 2025 The Wan
+Team and The HuggingFace Team; Apache-2.0), used by LongCat-Video and FlashWorld.
+FlashWorld retains its spatial kernel slicing, scaled-gamma normalization,
+in-place residuals, single-frame shortcuts and family-local cache defaults.
+Checkpoint names and the existing model/weight licenses are unchanged.

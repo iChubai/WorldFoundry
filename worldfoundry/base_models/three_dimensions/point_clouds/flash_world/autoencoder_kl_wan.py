@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import itertools
+from typing import Any as Any
 
 import torch
 import torch.nn as nn
@@ -27,127 +28,52 @@ from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import logging
 from diffusers.utils.accelerate_utils import apply_forward_hook
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.diffusers_blocks import (
+    WanMidBlock as CanonicalWanMidBlock,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.diffusers_blocks import (
+    WanResample as CanonicalWanResample,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.diffusers_blocks import (
+    WanResidualUpBlock as CanonicalWanResidualUpBlock,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.diffusers_blocks import (
+    WanUpBlock as CanonicalWanUpBlock,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CACHE_T as CACHE_T
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d as CausalConv3d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import RMS_norm as RMS_norm
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-
-# Import base components from the canonical Wan autoencoder role.
-try:
-    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d, RMS_norm, Upsample
-    from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (
-        CACHE_T as WAN_CACHE_T,
-    )
-
-    # Use CACHE_T from wan_2p1 if available
-    CACHE_T = WAN_CACHE_T
-except ImportError:
-    # Fallback to local definitions if import fails
-    CACHE_T = 2
-    CausalConv3d = None
-    RMS_norm = None
-    Upsample = None
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
-# Adapter classes to make wan_2p1 components compatible with autoencoder_kl_wan interface
-if CausalConv3d is not None:
 
-    class WanCausalConv3d(CausalConv3d):
-        """Adapter for CausalConv3d from wan_2p1 with compatibility improvements."""
+class WanCausalConv3d(CausalConv3d):
+    """Adapter for CausalConv3d from wan_2p1 with compatibility improvements."""
 
-        def forward(self, x, cache_x=None):
-            padding = list(self._padding)
-            if cache_x is not None and self._padding[4] > 0:
-                cache_x = cache_x.to(x.device)
-                x = torch.cat([cache_x, x], dim=2)
-                padding[4] -= cache_x.shape[2]
-            if any(padding):
-                x = F.pad(x, padding)
-            return super().forward(x)
-else:
-    # Fallback: define WanCausalConv3d locally if import failed
-    class WanCausalConv3d(nn.Conv3d):
-        r"""
-        A custom 3D causal convolution layer with feature caching support.
-        """
-
-        def __init__(
-            self,
-            in_channels: int,
-            out_channels: int,
-            kernel_size: int | tuple[int, int, int],
-            stride: int | tuple[int, int, int] = 1,
-            padding: int | tuple[int, int, int] = 0,
-        ) -> None:
-            super().__init__(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=kernel_size,
-                stride=stride,
-                padding=padding,
-            )
-            self._padding = (self.padding[2], self.padding[2], self.padding[1], self.padding[1], 2 * self.padding[0], 0)
-            self.padding = (0, 0, 0)
-
-        def forward(self, x, cache_x=None):
-            padding = list(self._padding)
-            if cache_x is not None and self._padding[4] > 0:
-                cache_x = cache_x.to(x.device)
-                x = torch.cat([cache_x, x], dim=2)
-                padding[4] -= cache_x.shape[2]
-            if any(padding):
-                x = F.pad(x, padding)
-            return super().forward(x)
+    def forward(self, x, cache_x=None):
+        padding = list(self._padding)
+        if cache_x is not None and self._padding[4] > 0:
+            cache_x = cache_x.to(x.device)
+            x = torch.cat([cache_x, x], dim=2)
+            padding[4] -= cache_x.shape[2]
+        if any(padding):
+            x = F.pad(x, padding)
+        return super().forward(x)
 
 
-if RMS_norm is not None:
+class WanRMS_norm(RMS_norm):
+    """Adapter for RMS_norm from wan_2p1 with weight parameter support."""
 
-    class WanRMS_norm(RMS_norm):
-        """Adapter for RMS_norm from wan_2p1 with weight parameter support."""
+    def __init__(
+        self, dim: int, channel_first: bool = True, images: bool = True, weight: bool = True, bias: bool = False
+    ) -> None:
+        super().__init__(dim, channel_first=channel_first, images=images, bias=bias)
+        if not weight:
+            self.gamma = 1.0
 
-        def __init__(
-            self, dim: int, channel_first: bool = True, images: bool = True, weight: bool = True, bias: bool = False
-        ) -> None:
-            super().__init__(dim, channel_first=channel_first, images=images, bias=bias)
-            if not weight:
-                self.gamma = 1.0
-
-        def forward(self, x):
-            return F.normalize(x, dim=(1 if self.channel_first else -1)).mul_(self.scale * self.gamma).add_(self.bias)
-else:
-    # Fallback: define WanRMS_norm locally if import failed
-    class WanRMS_norm(nn.Module):
-        r"""
-        A custom RMS normalization layer.
-        """
-
-        def __init__(
-            self, dim: int, channel_first: bool = True, images: bool = True, weight: bool = True, bias: bool = False
-        ) -> None:
-            super().__init__()
-            broadcastable_dims = (1, 1, 1) if not images else (1, 1)
-            shape = (dim, *broadcastable_dims) if channel_first else (dim,)
-            self.channel_first = channel_first
-            self.scale = dim**0.5
-            self.gamma = nn.Parameter(torch.ones(shape)) if weight else 1.0
-            self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
-
-        def forward(self, x):
-            return F.normalize(x, dim=(1 if self.channel_first else -1)).mul_(self.scale * self.gamma).add_(self.bias)
-
-
-if Upsample is not None:
-
-    class WanUpsample(Upsample):
-        """Adapter for Upsample from wan_2p1."""
-
-else:
-    # Fallback: define WanUpsample locally if import failed
-    class WanUpsample(nn.Upsample):
-        r"""
-        Perform upsampling while ensuring the output tensor has the same data type as the input.
-        """
-
-        def forward(self, x):
-            return super().forward(x.float()).type_as(x)
+    def forward(self, x):
+        return F.normalize(x, dim=(1 if self.channel_first else -1)).mul_(self.scale * self.gamma).add_(self.bias)
 
 
 class AvgDown3D(nn.Module):
@@ -309,90 +235,12 @@ class DupUp3D(nn.Module):
             return x
 
 
-class WanResample(nn.Module):
-    r"""
-    A custom resampling module for 2D and 3D data.
+class WanResample(CanonicalWanResample):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, conv_layer=WanCausalConv3d, **kwargs)
 
-    Args:
-        dim (int): The number of input/output channels.
-        mode (str): The resampling mode. Must be one of:
-            - 'none': No resampling (identity operation).
-            - 'upsample2d': 2D upsampling with nearest-exact interpolation and convolution.
-            - 'upsample3d': 3D upsampling with nearest-exact interpolation, convolution, and causal 3D convolution.
-            - 'downsample2d': 2D downsampling with zero-padding and convolution.
-            - 'downsample3d': 3D downsampling with zero-padding, convolution, and causal 3D convolution.
-    """
-
-    def __init__(self, dim: int, mode: str, upsample_out_dim: int | None = None) -> None:
-        super().__init__()
-        self.dim = dim
-        self.mode = mode
-
-        # default to dim //2
-        if upsample_out_dim is None:
-            upsample_out_dim = dim // 2
-
-        # layers
-        if mode == "upsample2d":
-            self.resample = nn.Sequential(
-                WanUpsample(scale_factor=(2.0, 2.0), mode="nearest-exact"),
-                nn.Conv2d(dim, upsample_out_dim, 3, padding=1),
-            )
-        elif mode == "upsample3d":
-            self.resample = nn.Sequential(
-                WanUpsample(scale_factor=(2.0, 2.0), mode="nearest-exact"),
-                nn.Conv2d(dim, upsample_out_dim, 3, padding=1),
-            )
-            self.time_conv = WanCausalConv3d(dim, dim * 2, (3, 1, 1), padding=(1, 0, 0))
-
-        elif mode == "downsample2d":
-            self.resample = nn.Sequential(nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2)))
-        elif mode == "downsample3d":
-            self.resample = nn.Sequential(nn.ZeroPad2d((0, 1, 0, 1)), nn.Conv2d(dim, dim, 3, stride=(2, 2)))
-            self.time_conv = WanCausalConv3d(dim, dim, (3, 1, 1), stride=(2, 1, 1), padding=(0, 0, 0))
-
-        else:
-            self.resample = nn.Identity()
-
-    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
-        b, c, t, h, w = x.size()
-        if self.mode == "upsample3d" and feat_cache is not None:
-            idx = feat_idx[0]
-            if feat_cache[idx] is None:
-                feat_cache[idx] = "Rep"
-                feat_idx[0] += 1
-            else:
-                cache_x = x[:, :, -CACHE_T:, :, :].clone()
-                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] != "Rep":
-                    # cache last frame of last two chunk
-                    cache_x = torch.cat(
-                        [feat_cache[idx][:, :, -1, :, :].unsqueeze(2).to(cache_x.device), cache_x], dim=2
-                    )
-                if cache_x.shape[2] < 2 and feat_cache[idx] is not None and feat_cache[idx] == "Rep":
-                    cache_x = torch.cat([torch.zeros_like(cache_x).to(cache_x.device), cache_x], dim=2)
-                x = self.time_conv(x) if feat_cache[idx] == "Rep" else self.time_conv(x, feat_cache[idx])
-                feat_cache[idx] = cache_x
-                feat_idx[0] += 1
-
-                x = x.reshape(b, 2, c, t, h, w)
-                x = torch.stack((x[:, 0, :, :, :, :], x[:, 1, :, :, :, :]), 3)
-                x = x.reshape(b, c, t * 2, h, w)
-        t = x.shape[2]
-        x = x.permute(0, 2, 1, 3, 4).reshape(b * t, c, h, w)
-        x = self.resample(x)
-        x = x.view(b, t, x.size(1), x.size(2), x.size(3)).permute(0, 2, 1, 3, 4)
-
-        if self.mode == "downsample3d" and feat_cache is not None:
-            idx = feat_idx[0]
-            if feat_cache[idx] is None:
-                feat_cache[idx] = x.clone()
-                feat_idx[0] += 1
-            else:
-                cache_x = x[:, :, -1:, :, :].clone()
-                x = self.time_conv(torch.cat([feat_cache[idx][:, :, -1:, :, :], x], 2))
-                feat_cache[idx] = cache_x
-                feat_idx[0] += 1
-        return x
+    def forward(self, x: torch.Tensor, feat_cache: list[Any] | None = None, feat_idx: list[int] = [0]) -> torch.Tensor:  # noqa: B006 - Keeps the family's cache-index default separate from the shared block.
+        return super().forward(x, feat_cache, feat_idx)
 
 
 class WanResidualBlock(nn.Module):
@@ -514,43 +362,12 @@ class WanAttentionBlock(nn.Module):
         return identity.add_(x)
 
 
-class WanMidBlock(nn.Module):
-    """
-    Middle block for WanVAE encoder and decoder.
+class WanMidBlock(CanonicalWanMidBlock):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, residual_layer=WanResidualBlock, attention_layer=WanAttentionBlock, **kwargs)
 
-    Args:
-        dim (int): Number of input/output channels.
-        dropout (float): Dropout rate.
-        non_linearity (str): Type of non-linearity to use.
-    """
-
-    def __init__(self, dim: int, dropout: float = 0.0, non_linearity: str = "silu", num_layers: int = 1):
-        super().__init__()
-        self.dim = dim
-
-        # Create the components
-        resnets = [WanResidualBlock(dim, dim, dropout, non_linearity)]
-        attentions = []
-        for _ in range(num_layers):
-            attentions.append(WanAttentionBlock(dim))
-            resnets.append(WanResidualBlock(dim, dim, dropout, non_linearity))
-        self.attentions = nn.ModuleList(attentions)
-        self.resnets = nn.ModuleList(resnets)
-
-        self.gradient_checkpointing = False
-
-    def forward(self, x, feat_cache=None, feat_idx=[0]):  # noqa: B006 - Keeps the upstream default object and signature.
-        # First residual block
-        x = self.resnets[0](x, feat_cache, feat_idx)
-
-        # Process through attention and residual blocks
-        for attn, resnet in zip(self.attentions, self.resnets[1:], strict=False):
-            if attn is not None:
-                x = attn(x)
-
-            x = resnet(x, feat_cache, feat_idx)
-
-        return x
+    def forward(self, x: torch.Tensor, feat_cache: list[Any] | None = None, feat_idx: list[int] = [0]) -> torch.Tensor:  # noqa: B006 - Keeps the family's cache-index default separate from the shared block.
+        return super().forward(x, feat_cache, feat_idx)
 
 
 class WanResidualDownBlock(nn.Module):
@@ -708,150 +525,34 @@ class WanEncoder3d(nn.Module):
         return x
 
 
-class WanResidualUpBlock(nn.Module):
-    """
-    A block that handles upsampling for the WanVAE decoder.
+class WanResidualUpBlock(CanonicalWanResidualUpBlock):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(
+            *args, residual_layer=WanResidualBlock, resample_layer=WanResample, shortcut_layer=DupUp3D, **kwargs
+        )
 
-    Args:
-        in_dim (int): Input dimension
-        out_dim (int): Output dimension
-        num_res_blocks (int): Number of residual blocks
-        dropout (float): Dropout rate
-        temperal_upsample (bool): Whether to upsample on temporal dimension
-        up_flag (bool): Whether to upsample or not
-        non_linearity (str): Type of non-linearity to use
-    """
-
-    def __init__(
+    def forward(
         self,
-        in_dim: int,
-        out_dim: int,
-        num_res_blocks: int,
-        dropout: float = 0.0,
-        temperal_upsample: bool = False,
-        up_flag: bool = False,
-        non_linearity: str = "silu",
-    ):
-        super().__init__()
-        self.in_dim = in_dim
-        self.out_dim = out_dim
-
-        if up_flag:
-            self.avg_shortcut = DupUp3D(
-                in_dim,
-                out_dim,
-                factor_t=2 if temperal_upsample else 1,
-                factor_s=2,
-            )
-        else:
-            self.avg_shortcut = None
-
-        # create residual blocks
-        resnets = []
-        current_dim = in_dim
-        for _ in range(num_res_blocks + 1):
-            resnets.append(WanResidualBlock(current_dim, out_dim, dropout, non_linearity))
-            current_dim = out_dim
-
-        self.resnets = nn.ModuleList(resnets)
-
-        # Add upsampling layer if needed
-        if up_flag:
-            upsample_mode = "upsample3d" if temperal_upsample else "upsample2d"
-            self.upsampler = WanResample(out_dim, mode=upsample_mode, upsample_out_dim=out_dim)
-        else:
-            self.upsampler = None
-
-        self.gradient_checkpointing = False
-
-    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=False):  # noqa: B006 - Keeps the upstream default object and signature.
-        """
-        Forward pass through the upsampling block.
-
-        Args:
-            x (torch.Tensor): Input tensor
-            feat_cache (list, optional): Feature cache for causal convolutions
-            feat_idx (list, optional): Feature index for cache management
-
-        Returns:
-            torch.Tensor: Output tensor
-        """
-        x_copy = x.clone()
-
-        for resnet in self.resnets:
-            x = resnet(x, feat_cache, feat_idx) if feat_cache is not None else resnet(x)
-
-        if self.upsampler is not None:
-            x = self.upsampler(x, feat_cache, feat_idx) if feat_cache is not None else self.upsampler(x)
-
-        if self.avg_shortcut is not None:
-            # print(x.shape, x_copy.shape, self.avg_shortcut(x_copy, first_chunk=first_chunk).shape)
-            x = x + self.avg_shortcut(x_copy, first_chunk=first_chunk)
-
-        return x
+        x: torch.Tensor,
+        feat_cache: list[Any] | None = None,
+        feat_idx: list[int] = [0],  # noqa: B006 - Keeps the family's cache-index default separate from the shared block.
+        first_chunk: bool = False,
+    ) -> torch.Tensor:
+        return super().forward(x, feat_cache, feat_idx, first_chunk)
 
 
-class WanUpBlock(nn.Module):
-    """
-    A block that handles upsampling for the WanVAE decoder.
+class WanUpBlock(CanonicalWanUpBlock):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, residual_layer=WanResidualBlock, resample_layer=WanResample, **kwargs)
 
-    Args:
-        in_dim (int): Input dimension
-        out_dim (int): Output dimension
-        num_res_blocks (int): Number of residual blocks
-        dropout (float): Dropout rate
-        upsample_mode (str, optional): Mode for upsampling ('upsample2d' or 'upsample3d')
-        non_linearity (str): Type of non-linearity to use
-    """
-
-    def __init__(
+    def forward(
         self,
-        in_dim: int,
-        out_dim: int,
-        num_res_blocks: int,
-        dropout: float = 0.0,
-        upsample_mode: str | None = None,
-        non_linearity: str = "silu",
-    ):
-        super().__init__()
-        self.in_dim = in_dim
-        self.out_dim = out_dim
-
-        # Create layers list
-        resnets = []
-        # Add residual blocks and attention if needed
-        current_dim = in_dim
-        for _ in range(num_res_blocks + 1):
-            resnets.append(WanResidualBlock(current_dim, out_dim, dropout, non_linearity))
-            current_dim = out_dim
-
-        self.resnets = nn.ModuleList(resnets)
-
-        # Add upsampling layer if needed
-        self.upsamplers = None
-        if upsample_mode is not None:
-            self.upsamplers = nn.ModuleList([WanResample(out_dim, mode=upsample_mode)])
-
-        self.gradient_checkpointing = False
-
-    def forward(self, x, feat_cache=None, feat_idx=[0], first_chunk=None):  # noqa: B006 - Keeps the upstream default object and signature.
-        """
-        Forward pass through the upsampling block.
-
-        Args:
-            x (torch.Tensor): Input tensor
-            feat_cache (list, optional): Feature cache for causal convolutions
-            feat_idx (list, optional): Feature index for cache management
-
-        Returns:
-            torch.Tensor: Output tensor
-        """
-        for resnet in self.resnets:
-            x = resnet(x, feat_cache, feat_idx) if feat_cache is not None else resnet(x)
-
-        if self.upsamplers is not None:
-            x = self.upsamplers[0](x, feat_cache, feat_idx) if feat_cache is not None else self.upsamplers[0](x)
-        return x
+        x: torch.Tensor,
+        feat_cache: list[Any] | None = None,
+        feat_idx: list[int] = [0],  # noqa: B006 - Keeps the family's cache-index default separate from the shared block.
+        first_chunk: bool | None = None,
+    ) -> torch.Tensor:
+        return super().forward(x, feat_cache, feat_idx, first_chunk)
 
 
 class WanDecoder3d(nn.Module):

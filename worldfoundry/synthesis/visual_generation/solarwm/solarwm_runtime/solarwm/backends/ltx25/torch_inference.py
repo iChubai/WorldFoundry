@@ -26,7 +26,8 @@ from .official_codec import OfficialDiffVAEDecoder
 from .torch_data import TorchBatch
 
 if TYPE_CHECKING:
-    from ....ltx_core.guidance.perturbations import BatchedPerturbationConfig
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import BatchedPerturbationConfig
+
     from .torch_model import LoRARuntime, StrictLoadedModel
 
 
@@ -207,7 +208,7 @@ def _guided_x0(
 
 
 def _perturbation(*, perturbed: bool, blocks: tuple[int, ...], device: torch.device) -> BatchedPerturbationConfig:
-    from ....ltx_core.guidance.perturbations import (
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import (
         BatchedPerturbationConfig,
         Perturbation,
         PerturbationConfig,

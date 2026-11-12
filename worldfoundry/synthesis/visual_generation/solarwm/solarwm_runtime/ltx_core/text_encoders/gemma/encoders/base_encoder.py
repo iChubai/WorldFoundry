@@ -7,6 +7,8 @@ from typing import Any
 import torch
 from transformers import PreTrainedModel, ProcessorMixin
 
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.gemma import _cat_with_padding
+
 from ....loader.module_ops import ModuleOps
 from ....model.disposable import Disposable
 from ..gemma_assets import TOKENIZER_MAX_LENGTH, GemmaAssets, build_gemma_hf_tokenizer, build_gemma_processor
@@ -181,27 +183,6 @@ def default_gemma4_i2v_system_prompt() -> str:
 
 def default_gemma4_t2v_system_prompt() -> str:
     return _load_system_prompt("gemma4_t2v_system_prompt.txt")
-
-
-def _cat_with_padding(
-    tensor: torch.Tensor,
-    padding_length: int,
-    value: int | float,
-) -> torch.Tensor:
-    """Left-pad a tensor (prepend the padding) with the given value.
-    Decoder-only LLMs must be LEFT-padded for generation: with right-padding the trailing
-    pad positions become the sequence end, so generate() continues from a pad position
-    instead of the real last token. Left-padding keeps the real last token at the end
-    while still aligning the sequence length to a multiple of 8.
-    See https://huggingface.co/docs/transformers/en/llm_tutorial#padding-side
-    """
-    pad = torch.full(
-        (1, padding_length),
-        value,
-        dtype=tensor.dtype,
-        device=tensor.device,
-    )
-    return torch.cat([pad, tensor], dim=1)
 
 
 def _pad_inputs_for_attention_alignment(

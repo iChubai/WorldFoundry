@@ -5,7 +5,10 @@ import torch.nn.functional as F
 from einops import rearrange
 from torch import nn
 
-from ..transformer.attention import AttentionCallable, AttentionFunction
+from worldfoundry.core.attention.backends.model_backends import AttentionCallable
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.attention_policy import (
+    AttentionFunction,
+)
 
 
 class _RMSNorm2D(nn.Module):

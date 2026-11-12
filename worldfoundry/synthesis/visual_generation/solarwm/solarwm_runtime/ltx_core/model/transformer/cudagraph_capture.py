@@ -12,15 +12,18 @@ from collections.abc import Callable, Hashable
 from typing import TYPE_CHECKING
 
 import torch
-import torch.utils._pytree as pytree
 
-from ...guidance.perturbations import BatchedPerturbationConfig
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import BatchedPerturbationConfig
+from worldfoundry.base_models.diffusion_model.optimizations.ltx.cudagraph import _shape_key
 
 if TYPE_CHECKING:
     # torch imports this under TYPE_CHECKING too (a runtime top-level import cycles).
     from torch.cuda import _POOL_HANDLE
 
-    from .transformer_args import BlockPerturbationsProcessor, TransformerArgs
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.transformer_args import (
+        BlockPerturbationsProcessor,
+        TransformerArgs,
+    )
 
 _BlockLoopFn = Callable[
     ["TransformerArgs | None", "TransformerArgs | None", "BatchedPerturbationConfig"],
@@ -41,11 +44,6 @@ class _Capture:
     static_perturbations: BatchedPerturbationConfig  # wraps the static block_masks buffer read in-graph
     static_video_out: TransformerArgs | None
     static_audio_out: TransformerArgs | None
-
-
-def _shape_key(video: TransformerArgs | None, audio: TransformerArgs | None, block_masks: torch.Tensor) -> _ShapeKey:
-    tensors = [*pytree.tree_leaves(video), *pytree.tree_leaves(audio), block_masks]
-    return tuple(tuple(t.shape) for t in tensors if isinstance(t, torch.Tensor))
 
 
 def _clone_value(value: object) -> object:

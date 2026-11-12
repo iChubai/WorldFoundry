@@ -28,13 +28,13 @@ Device = str | torch.device
 
 # Type checking imports (not loaded at runtime)
 if TYPE_CHECKING:
+    from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import EmbeddingsProcessor
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.solarwm import SolarWMModel as LTXModel
     from worldfoundry.base_models.diffusion_model.schedulers.ltx_sigma import LTX2Scheduler
 
     from ..ltx_core.model.audio_vae import AudioDecoder, AudioEncoder, Vocoder
-    from ..ltx_core.model.transformer import LTXModel
     from ..ltx_core.model.video_vae import VideoDecoder, VideoEncoder
     from ..ltx_core.text_encoders.gemma import LTXGemmaTextEncoder
-    from ..ltx_core.text_encoders.gemma.embeddings_processor import EmbeddingsProcessor
     from ..ltx_core.types import SpatioTemporalScaleFactors
 
 

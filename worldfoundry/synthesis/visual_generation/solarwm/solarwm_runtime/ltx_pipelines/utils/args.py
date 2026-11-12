@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import DiffVAEMode
+from worldfoundry.base_models.diffusion_model.optimizations.ltx.compile import CompilationConfig
 
 from ...ltx_core.loader import LTXV_LORA_COMFY_RENAMING_MAP, LoraPathStrengthAndSDOps
-from ...ltx_core.model.transformer.compiling import CompilationConfig
 from ...ltx_core.quantization import QuantizationPolicy
 from .constants import (
     DEFAULT_LORA_STRENGTH,

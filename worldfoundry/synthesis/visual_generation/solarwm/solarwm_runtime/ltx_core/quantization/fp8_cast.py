@@ -3,12 +3,13 @@ from pathlib import Path
 import safetensors
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.solarwm import SolarWMModel as LTXModel
+
 from ..loader.fuse_loras import FuseRule, bf16_fuse_rule
 from ..loader.kernels import TRITON_AVAILABLE
 from ..loader.module_ops import ModuleOps
 from ..loader.primitives import StateDict
 from ..loader.sd_ops import KeyValueOperationResult, SDOps
-from ..model.transformer.model import LTXModel
 from .policy import QuantizationPolicy
 
 BLOCK_SIZE = 1024

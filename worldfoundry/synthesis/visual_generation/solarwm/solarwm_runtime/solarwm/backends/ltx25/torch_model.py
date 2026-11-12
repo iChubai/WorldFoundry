@@ -11,18 +11,24 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from dataclasses import dataclass, fields, replace
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 
-from ....ltx_core.guidance.perturbations import BatchedPerturbationConfig
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.attention import Attention
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import LTXModelType
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import BatchedPerturbationConfig
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.transformer import BasicAVTransformerBlock
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.transformer_args import TransformerArgs
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.solarwm import SolarWMModel as LTXModel
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.attention_policy import (
+    AttentionFunction,
+    MaskedAttentionFunction,
+)
+
 from ....ltx_core.loader import SDOps, SingleGPUModelBuilder
-from ....ltx_core.model.transformer.attention import Attention, AttentionFunction, MaskedAttentionFunction
-from ....ltx_core.model.transformer.modality import Modality
-from ....ltx_core.model.transformer.model import LTXModel, LTXModelType
 from ....ltx_core.model.transformer.model_configurator import LTXVideoOnlyModelConfigurator
-from ....ltx_core.model.transformer.transformer import BasicAVTransformerBlock
-from ....ltx_core.model.transformer.transformer_args import TransformerArgs
 from ....ltx_core.text_encoders.gemma.embeddings_connector import Embeddings1DConnectorConfigurator
 from ...errors import BackendContractError
 from .adapter import lora_target_modules
@@ -45,6 +51,9 @@ from .torch_distributed import (
     state as distributed_state,
 )
 from .torch_prope import normalize_translation_transform, prope_qkv
+
+if TYPE_CHECKING:
+    from worldfoundry.core.attention.cache.context import ContextAttentionCache
 
 VIDEO_CONNECTOR_PREFIX = "video_connector."
 
@@ -118,6 +127,8 @@ def _with_camera(
 class SolarLTX25VideoSelfAttention(Attention):
     """Official video self-attention with one parameter-free PRoPE transform."""
 
+    camera_translation_transform: str
+
     def forward(
         self,
         x: torch.Tensor,
@@ -130,6 +141,8 @@ class SolarLTX25VideoSelfAttention(Attention):
         *,
         camera_viewmats: torch.Tensor | None = None,
         camera_k: torch.Tensor | None = None,
+        camera_control: object | None = None,
+        cache: ContextAttentionCache | None = None,
     ) -> torch.Tensor:
         cameras_active = _camera_pair(camera_viewmats, camera_k)
         runtime = distributed_state()
@@ -142,6 +155,8 @@ class SolarLTX25VideoSelfAttention(Attention):
                 k_pe=k_pe,
                 perturbation_mask=perturbation_mask,
                 all_perturbed=all_perturbed,
+                camera_control=camera_control,
+                cache=cache,
             )
         if context is not None and context is not x:
             raise BackendContractError("PRoPE/SP may modify only video self-attention")
@@ -727,7 +742,10 @@ class LTX25VideoBackbone(torch.nn.Module):
             raise BackendContractError("LTX caption cache must be [B,1024,4096]")
         if tuple(mask.shape) != (caption.shape[0], 1024):
             raise BackendContractError("LTX caption mask must be [B,1024]")
-        from ....ltx_core.text_encoders.gemma.embeddings_processor import EmbeddingsProcessor, convert_to_additive_mask
+        from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import (
+            EmbeddingsProcessor,
+            convert_to_additive_mask,
+        )
 
         additive = convert_to_additive_mask(mask, caption.dtype)
         with torch.no_grad():

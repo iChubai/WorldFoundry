@@ -4,11 +4,20 @@ from os import fspath
 
 import torch
 from transformers import AutoModelForImageTextToText, PretrainedConfig
-from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
 
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import EmbeddingsProcessor
 from worldfoundry.base_models.diffusion_model.models.encoders.ltx.feature_extractor import (
     FeatureExtractorV1,
     FeatureExtractorV2,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.gemma import (
+    populate_gemma3_buffers as _create_and_populate_gemma3,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.gemma import (
+    populate_gemma4_dense_buffers as _create_and_populate_gemma4_dense,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.gemma import (
+    populate_gemma4_unified_buffers as _create_and_populate_gemma4_unified,
 )
 
 from ....loader import KeyValueOperationResult, parse_model_version
@@ -16,7 +25,6 @@ from ....loader.module_ops import ModuleOps
 from ....loader.sd_ops import SDOps
 from ....model.model_protocol import ModelConfigurator
 from ..embeddings_connector import AudioEmbeddings1DConnectorConfigurator, Embeddings1DConnectorConfigurator
-from ..embeddings_processor import EmbeddingsProcessor
 from ..gemma_assets import GemmaAssets, build_gemma_hf_config, resolve_gemma_weight_paths
 from .base_encoder import LTXGemmaTextEncoder, module_ops_from_gemma_root
 
@@ -355,89 +363,6 @@ VIDEO_ONLY_EMBEDDINGS_PROCESSOR_KEY_OPS = (
     .with_matching(prefix="model.diffusion_model.embeddings_connector.")
     .with_replacement("model.diffusion_model.embeddings_connector.", "embeddings_processor.video_connector.")
 )
-
-
-def _populate_rotary_v5(l_model: torch.nn.Module, config: object) -> None:
-    """transformers >=5 layout: single rotary_emb with per-layer-type buffers.
-    Gemma 4's global ("full_attention") layers use a wider head_dim than the local layers, so when
-    such a layer uses "proportional" RoPE the init must read ``global_head_dim`` instead of the
-    default ``head_dim``. Gemma 3 never uses "proportional" RoPE, so the branch is inert there.
-    """
-    rope_emb = l_model.rotary_emb
-    for layer_type in dict.fromkeys(config.layer_types):
-        rope_params = config.rope_parameters[layer_type]
-        if rope_params is None:
-            continue
-        rope_type = rope_params["rope_type"]
-        if rope_type == "default":
-            inv_freq, attn_scaling = rope_emb.compute_default_rope_parameters(config, layer_type=layer_type)
-        else:
-            init_kwargs = {"layer_type": layer_type}
-            if layer_type == "full_attention" and rope_type == "proportional":
-                init_kwargs["head_dim_key"] = "global_head_dim"
-            inv_freq, attn_scaling = ROPE_INIT_FUNCTIONS[rope_type](config, **init_kwargs)
-        rope_emb.register_buffer(f"{layer_type}_inv_freq", inv_freq, persistent=False)
-        rope_emb.register_buffer(f"{layer_type}_original_inv_freq", inv_freq.clone(), persistent=False)
-        setattr(rope_emb, f"{layer_type}_attention_scaling", attn_scaling)
-
-
-def _populate_language_model_buffers(module: LTXGemmaTextEncoder) -> LTXGemmaTextEncoder:
-    """Populate the non-persistent rotary and embed-scale buffers shared by all Gemma families."""
-    model = module.model
-    l_model = model.model.language_model
-    config = model.config.text_config
-
-    _populate_rotary_v5(l_model, config)
-
-    embed_scale = torch.tensor(config.hidden_size**0.5, device="cpu")
-    l_model.embed_tokens.register_buffer("embed_scale", embed_scale, persistent=False)
-
-    # Dense gemma4 also has per-layer input embeddings; unified/gemma3 do not.
-    if hasattr(l_model, "embed_tokens_per_layer"):
-        per_layer_scale = torch.tensor(config.hidden_size_per_layer_input**0.5, device="cpu")
-        l_model.embed_tokens_per_layer.register_buffer("embed_scale", per_layer_scale, persistent=False)
-
-    return module
-
-
-def _create_and_populate_gemma3(module: LTXGemmaTextEncoder) -> LTXGemmaTextEncoder:
-    module = _populate_language_model_buffers(module)
-
-    v_tower = module.model.model.vision_tower
-    positions_length = len(v_tower.embeddings.position_ids[0])
-    position_ids = torch.arange(positions_length, dtype=torch.long, device="cpu").unsqueeze(0)
-    v_tower.embeddings.register_buffer("position_ids", position_ids, persistent=False)
-
-    return module
-
-
-def _create_and_populate_gemma4_unified(module: LTXGemmaTextEncoder) -> LTXGemmaTextEncoder:
-    """Populate buffers for the Gemma 4 unified text encoder.
-    The unified model is encoder-free: vision/audio inputs go through lightweight embedders
-    (model.model.embed_vision / .embed_audio) that carry no RoPE, so unlike Gemma 3 there is no
-    vision_tower to seed.
-    """
-    return _populate_language_model_buffers(module)
-
-
-def _create_and_populate_gemma4_dense(module: LTXGemmaTextEncoder) -> LTXGemmaTextEncoder:
-    """Populate buffers for dense Gemma 4 instruct (enhance-capable).
-    Same language-model buffers as unified, plus vision-tower RoPE (needed for I2V enhance).
-    """
-    module = _populate_language_model_buffers(module)
-
-    vision_tower = module.model.model.vision_tower
-    rotary = vision_tower.encoder.rotary_emb
-    rope_fn = (
-        ROPE_INIT_FUNCTIONS[rotary.rope_type]
-        if rotary.rope_type != "default"
-        else rotary.compute_default_rope_parameters
-    )
-    inv_freq, _ = rope_fn(rotary.config)
-    rotary.register_buffer("inv_freq", inv_freq, persistent=False)
-    rotary.register_buffer("original_inv_freq", inv_freq.clone(), persistent=False)
-
-    return module
 
 
 def get_gemma_ops(gemma_model_path: str) -> tuple[SDOps, tuple[ModuleOps, ...]]:

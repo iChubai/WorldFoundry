@@ -10,14 +10,15 @@ all guidance passes into a single transformer call.
 
 import torch
 
-from ...ltx_core.components.guiders import MultiModalGuider, MultiModalGuiderFactory, MultiModalGuiderParams
-from ...ltx_core.guidance.perturbations import (
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import X0Model
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import (
     BatchedPerturbationConfig,
     Perturbation,
     PerturbationConfig,
     PerturbationType,
 )
-from ...ltx_core.model.transformer import X0Model
+
+from ...ltx_core.components.guiders import MultiModalGuider, MultiModalGuiderFactory, MultiModalGuiderParams
 from ...ltx_core.types import LatentState
 from .helpers import modality_from_latent_state
 from .types import DenoisedLatentResult

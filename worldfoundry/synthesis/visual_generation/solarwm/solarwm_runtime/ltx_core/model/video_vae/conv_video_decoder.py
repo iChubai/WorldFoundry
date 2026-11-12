@@ -24,7 +24,11 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling 
     scale_by_masks_1d,
 )
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+from worldfoundry.core.attention.backends.model_backends import AttentionCallable
 from worldfoundry.core.nn.diffusion.timestep import PixArtAlphaCombinedTimestepSizeEmbeddings
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.attention_policy import (
+    AttentionFunction,
+)
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.tiling import (
     DEFAULT_MAPPING_OPERATION,
     DEFAULT_SPLIT_OPERATION,
@@ -33,7 +37,6 @@ from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.t
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import SpatioTemporalScaleFactors
 
 from ..disposable import Disposable
-from ..transformer.attention import AttentionCallable, AttentionFunction
 from .attention import AttnBlock3D
 from .video_vae import VideoDecoder, map_spatial_slice, map_temporal_slice, to_mapping_operation
 

@@ -12,9 +12,10 @@ from typing import Any
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.solarwm import SolarWMModel as LTXModel
+
 from ...loader.module_ops import ModuleOps
 from ...loader.sd_ops import KeyValueOperationResult, SDOps
-from ...model.transformer import LTXModel
 from .types import ActScale
 
 SafetensorsHeader = dict[str, dict[str, Any]]

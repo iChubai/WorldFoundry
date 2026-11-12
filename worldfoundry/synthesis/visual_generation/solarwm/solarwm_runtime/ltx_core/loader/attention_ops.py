@@ -2,13 +2,13 @@
 
 import torch
 
-from ..model.transformer.attention import (
-    Attention,
-    AttentionCallable,
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.attention import Attention
+from worldfoundry.core.attention.backends.model_backends import AttentionCallable, MaskedAttentionCallable
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.attention_policy import (
     AttentionFunction,
-    MaskedAttentionCallable,
     MaskedAttentionFunction,
 )
+
 from .module_ops import ModuleOps
 
 

@@ -8,6 +8,7 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.diff
     diffvae_tiling_geometry_from_vae_config,
 )
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import DiffVAEMode
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import AutoTiling, DimensionSizeConfig
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import (
     AudioLatentShape,
@@ -39,7 +40,6 @@ from ...ltx_core.conditioning import (
 )
 from ...ltx_core.devices import cleanup_accelerator_memory, cuda_activation_budget_bytes, get_preferred_device
 from ...ltx_core.loader.sft_loader import SafetensorsModelStateDictLoader
-from ...ltx_core.model.transformer import Modality
 from ...ltx_core.model.video_vae.diffusion_tiling import recommended_decode_tiling_config
 from ...ltx_core.text_encoders.gemma import LTXGemmaTextEncoder
 from ...ltx_core.tools import LatentTools

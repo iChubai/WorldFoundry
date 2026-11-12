@@ -32,6 +32,10 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling 
     untiled_mask_1d,
 )
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+from worldfoundry.core.attention.backends.model_backends import AttentionCallable
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.attention_policy import (
+    AttentionFunction,
+)
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.tiling import (
     DEFAULT_MAPPING_OPERATION,
     DEFAULT_SPLIT_OPERATION,
@@ -45,7 +49,6 @@ from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.t
 )
 
 from ..disposable import Disposable
-from ..transformer.attention import AttentionCallable, AttentionFunction
 from .attention import AttnBlock3D
 
 logger: logging.Logger = logging.getLogger(__name__)

@@ -25,7 +25,12 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.tran
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.dsl_kernels.attn import (
     na_dsl_available,
 )
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import (
+    EmbeddingsProcessor,
+    EmbeddingsProcessorOutput,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.duration_head import DurationHead
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import X0Model
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
     AudioPatchifier,
     VideoLatentPatchifier,
@@ -37,12 +42,25 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.types i
     VideoLatentShape,
     VideoPixelShape,
 )
+from worldfoundry.base_models.diffusion_model.optimizations.ltx.compile import CompilationConfig
+from worldfoundry.core.attention.backends.model_backends import AttentionCallable
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.duration_head import (
     DURATION_HEAD_KEY_OPS,
     DurationHeadConfigurator,
 )
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.attention_policy import (
+    AttentionFunction,
+)
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.video_decoder import (
     build_diffvae_mode_op,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.transformer import (
+    LTXV_MODEL_COMFY_RENAMING_MAP,
+    LTXModelConfigurator,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.transformer.compiling import (
+    build_compile_transformer_op,
+    modify_sd_ops_for_compilation,
 )
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import (
     VIDEO_SCALE_FACTORS,
@@ -72,13 +90,6 @@ from ...ltx_core.model.audio_vae import (
     VocoderConfigurator,
 )
 from ...ltx_core.model.model_protocol import LTXModelProtocol, ModelConfigurator
-from ...ltx_core.model.transformer import LTXV_MODEL_COMFY_RENAMING_MAP, LTXModelConfigurator, X0Model
-from ...ltx_core.model.transformer.attention import AttentionCallable, AttentionFunction
-from ...ltx_core.model.transformer.compiling import (
-    CompilationConfig,
-    build_compile_transformer_op,
-    modify_sd_ops_for_compilation,
-)
 from ...ltx_core.model.upsampler import LatentUpsamplerConfigurator, upsample_video
 from ...ltx_core.model.video_vae import (
     CHANNELS_LAST_3D_WEIGHTS,
@@ -101,7 +112,6 @@ from ...ltx_core.text_encoders.gemma import (
     get_gemma_ops,
     resolve_gemma_weight_paths,
 )
-from ...ltx_core.text_encoders.gemma.embeddings_processor import EmbeddingsProcessor, EmbeddingsProcessorOutput
 from ...ltx_core.tools import AudioLatentTools, LatentTools, VideoLatentTools
 from .args import ImageConditioningInput
 from .constants import detect_params

@@ -1,6 +1,11 @@
 """Gemma text encoder components."""
 
-from .embeddings_processor import EmbeddingsProcessor, EmbeddingsProcessorOutput, convert_to_additive_mask
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import (
+    EmbeddingsProcessor,
+    EmbeddingsProcessorOutput,
+    convert_to_additive_mask,
+)
+
 from .encoders.base_encoder import LTXGemmaTextEncoder, build_gemma_tokenizer, module_ops_from_gemma_root
 from .encoders.encoder_configurator import (
     EMBEDDINGS_PROCESSOR_KEY_OPS,

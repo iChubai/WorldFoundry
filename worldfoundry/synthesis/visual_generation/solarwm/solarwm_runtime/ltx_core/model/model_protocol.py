@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Protocol, TypeVar
 import torch
 
 if TYPE_CHECKING:
-    from ..guidance.perturbations import BatchedPerturbationConfig
-    from .transformer.modality import Modality
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import BatchedPerturbationConfig
 
 ModelType = TypeVar("ModelType", covariant=True, bound=torch.nn.Module)
 

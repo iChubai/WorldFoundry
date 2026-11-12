@@ -7011,7 +7011,7 @@ The original UniPC/Wan attribution and Apache license are retained in this bundl
 Shared Qwen/VLA transformer leaves
 ---------------------------------
 The checkpoint-stable text components in
-worldfoundry/base_models/llm_mllm_core/mllm/qwen/{layers,vision}.py and the query/key
+worldfoundry/base_models/llm_mllm_core/mllm/qwen/{layers,rotary,vision}.py and the query/key
 rotation in worldfoundry/core/attention/rotary/embedding.py reuse the in-tree
 Qwen and Hugging Face Transformers implementations (Apache-2.0; Copyright
 2024 The Qwen Team and The HuggingFace Inc. team). Qwen2, Qwen2.5-VL,

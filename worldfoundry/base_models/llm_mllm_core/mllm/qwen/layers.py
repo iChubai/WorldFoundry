@@ -9,7 +9,6 @@ import torch
 from torch import nn
 from transformers.activations import ACT2FN
 from transformers.configuration_utils import PretrainedConfig
-from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 
 from worldfoundry.core.nn.transformer.dit import _rms_norm_reference
 
@@ -34,13 +33,13 @@ class QwenRMSNorm(nn.Module):
 
 
 class QwenMLP(nn.Module):
-    """Qwen-style gated MLP with optional LDA/Llama projection biases."""
+    """Qwen gated MLP with checkpoint-selected projection widths and biases."""
 
-    def __init__(self, config: PretrainedConfig, bias: bool = False) -> None:
+    def __init__(self, config: PretrainedConfig, bias: bool = False, intermediate_size: int | None = None) -> None:
         super().__init__()
         self.config = config
         self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
+        self.intermediate_size = config.intermediate_size if intermediate_size is None else intermediate_size
         self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=bias)
         self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=bias)
         self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=bias)
@@ -87,42 +86,6 @@ def eager_attention_forward(
     attn_output = attn_output.transpose(1, 2).contiguous()
 
     return attn_output, attn_weights
-
-
-class QwenRotaryEmbedding(nn.Module):
-    """Qwen rotary embedding implementation."""
-
-    def __init__(self, config: PretrainedConfig, device: torch.device | str | None = None) -> None:
-        super().__init__()
-        # BC: "rope_type" was originally "type"
-        if hasattr(config, "rope_scaling") and config.rope_scaling is not None:
-            self.rope_type = config.rope_scaling.get("rope_type", config.rope_scaling.get("type"))
-        else:
-            self.rope_type = "default"
-        self.max_seq_len_cached = config.max_position_embeddings
-        self.original_max_seq_len = config.max_position_embeddings
-
-        self.config = config
-        self.rope_init_fn = ROPE_INIT_FUNCTIONS[self.rope_type]
-
-        inv_freq, self.attention_scaling = self.rope_init_fn(self.config, device)
-        self.register_buffer("inv_freq", inv_freq, persistent=False)
-        self.original_inv_freq = self.inv_freq
-
-    @torch.no_grad()
-    @dynamic_rope_update  # power user: used with advanced RoPE types (e.g. dynamic rope)
-    def forward(self, x: torch.Tensor, position_ids: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)
-        position_ids_expanded = position_ids[:, None, :].float()
-
-        device_type = x.device.type if isinstance(x.device.type, str) and x.device.type != "mps" else "cpu"
-        with torch.autocast(device_type=device_type, enabled=False):  # Force float32
-            freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)
-            emb = torch.cat((freqs, freqs), dim=-1)
-            cos = emb.cos() * self.attention_scaling
-            sin = emb.sin() * self.attention_scaling
-
-        return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
 
 
 def get_unpad_data(attention_mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, int]:

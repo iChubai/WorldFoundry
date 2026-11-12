@@ -59,3 +59,41 @@ def test_lingbot_joint_padding_preserves_state_action_order() -> None:
     assert state.tolist() == [0, 1, 2, 3, 4, 0, 0, 0]
     torch.testing.assert_close(action[:, :5], observation["action"], atol=0, rtol=0)
     assert torch.count_nonzero(action[:, 5:]) == 0
+
+
+@pytest.mark.parametrize("implementation", ["eager", "fused"])
+def test_lingbot_v2_moe_keeps_expert_widths_and_storage(implementation: str) -> None:
+    from transformers import PretrainedConfig
+
+    from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP
+    from worldfoundry.synthesis.action_generation.lingbot_vla_v2.modeling.qwen2_expert import (
+        Qwen2FusedExperts,
+        Qwen2TokenMoeBlock,
+    )
+
+    config = PretrainedConfig(
+        hidden_size=8,
+        intermediate_size=24,
+        hidden_act="silu",
+        num_experts=3,
+        num_experts_per_tok=2,
+        norm_topk_prob=True,
+        moe_intermediate_size=12,
+        shared_expert_intermediate_size=16,
+        _moe_implementation=implementation,
+    )
+    block = Qwen2TokenMoeBlock(config).eval()
+    assert type(block.shared_expert) is QwenMLP
+    assert block.shared_expert.gate_proj.weight.shape == (16, 8)
+    if implementation == "eager":
+        assert isinstance(block.experts, torch.nn.ModuleList)
+        assert all(type(expert) is QwenMLP for expert in block.experts)
+        assert block.experts[0].gate_proj.weight.shape == (12, 8)
+    else:
+        assert type(block.experts) is Qwen2FusedExperts
+        assert block.experts.gate_proj.shape == (3, 12, 8)
+    reloaded = Qwen2TokenMoeBlock(config).eval()
+    reloaded.load_state_dict(block.state_dict(), strict=True)
+    inputs = torch.randn(2, 5, 8)
+    for actual, expected in zip(reloaded(inputs), block(inputs), strict=True):
+        torch.testing.assert_close(actual, expected, atol=0, rtol=0)

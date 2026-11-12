@@ -33,8 +33,8 @@ from transformers.processing_utils import Unpack
 from transformers.utils import auto_docstring, can_return_tuple, logging
 
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as GemmaMLP
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRotaryEmbedding as GemmaRotaryEmbedding
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.rotary import QwenRotaryEmbedding as GemmaRotaryEmbedding
 from worldfoundry.core.attention import scaled_dot_product_attention
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 

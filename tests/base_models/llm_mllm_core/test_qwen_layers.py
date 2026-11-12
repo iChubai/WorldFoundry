@@ -33,16 +33,19 @@ def test_qwen_rms_norm_casts_before_affine(dtype: torch.dtype, affine_dtype: tor
 
 
 @pytest.mark.parametrize("bias", [False, True])
-def test_qwen_mlp_keeps_gated_projection_checkpoint_names(bias: bool) -> None:
+@pytest.mark.parametrize("intermediate_size", [None, 12])
+def test_qwen_mlp_keeps_gated_projection_checkpoint_names(bias: bool, intermediate_size: int | None) -> None:
     config = PretrainedConfig(hidden_size=8, intermediate_size=20, hidden_act="silu")
-    model = QwenMLP(config, bias=bias).eval()
+    model = QwenMLP(config, bias=bias, intermediate_size=intermediate_size).eval()
+    width = 20 if intermediate_size is None else intermediate_size
     expected_shapes = {
-        "gate_proj.weight": (20, 8),
-        "up_proj.weight": (20, 8),
-        "down_proj.weight": (8, 20),
+        "gate_proj.weight": (width, 8),
+        "up_proj.weight": (width, 8),
+        "down_proj.weight": (8, width),
     }
     if bias:
-        expected_shapes.update({"gate_proj.bias": (20,), "up_proj.bias": (20,), "down_proj.bias": (8,)})
+        expected_shapes.update({"gate_proj.bias": (width,), "up_proj.bias": (width,), "down_proj.bias": (8,)})
+    assert config.intermediate_size == 20
     assert {key: tuple(value.shape) for key, value in model.state_dict().items()} == expected_shapes
     x = torch.randn(2, 3, 8)
     expected = model.down_proj(torch.nn.functional.silu(model.gate_proj(x)) * model.up_proj(x))
@@ -63,3 +66,22 @@ def test_get_unpad_data_keeps_empty_rows_and_int32_offsets() -> None:
     torch.testing.assert_close(indices, torch.tensor([1, 2, 3, 8, 9]), atol=0, rtol=0)
     torch.testing.assert_close(offsets, torch.tensor([0, 3, 3, 5], dtype=torch.int32), atol=0, rtol=0)
     assert maximum == 3
+
+
+@pytest.mark.parametrize("bias", [False, True])
+def test_hunyuan_vl_mot_decoder_uses_qwen_mlp_for_both_modalities(bias: bool) -> None:
+    from worldfoundry.synthesis.action_generation.hy_embodied_vla.configuration_hunyuan_vl_mot import (
+        HunYuanVLMoTTextConfig,
+    )
+    from worldfoundry.synthesis.action_generation.hy_embodied_vla.modeling_hunyuan_vl_mot import (
+        HunYuanVLMoTDecoderLayer,
+    )
+
+    config = HunYuanVLMoTTextConfig(
+        hidden_size=16, intermediate_size=24, num_attention_heads=2, num_key_value_heads=1, mlp_bias=bias
+    )
+    layer = HunYuanVLMoTDecoderLayer(config, layer_idx=0)
+    for mlp in (layer.mlp, layer.mlp_v):
+        assert type(mlp) is QwenMLP
+        assert (mlp.gate_proj.bias is not None) == bias
+        assert mlp.gate_proj.weight.shape == (24, 16)

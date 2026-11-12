@@ -36,7 +36,6 @@ from typing import (
 import torch
 import torch.nn.functional as F
 from torch import nn
-from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.generation import GenerationMixin
 from transformers.modeling_outputs import (
@@ -50,6 +49,7 @@ from transformers.processing_utils import Unpack
 from transformers.utils import TransformersKwargs, auto_docstring
 from transformers.utils.deprecation import deprecate_kwarg
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     QwenRMSNorm as HunYuanVLMoTRMSNorm,
 )
@@ -74,7 +74,7 @@ except ImportError:
 
 import itertools
 
-from .configuration_hunyuan_vl_mot import HunYuanVLMoTConfig
+from .configuration_hunyuan_vl_mot import HunYuanVLMoTConfig, HunYuanVLMoTTextConfig
 
 logger = logging.getLogger(__name__)
 
@@ -171,25 +171,6 @@ def _repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
 # ============================================================================
 # RMSNorm
 # ============================================================================
-
-
-# ============================================================================
-# MLP
-# ============================================================================
-
-
-class HunYuanVLMoTMLP(nn.Module):
-    def __init__(self, config: HunYuanVLMoTConfig):
-        super().__init__()
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=config.mlp_bias)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
 
 
 # ============================================================================
@@ -954,18 +935,18 @@ class HunYuanVLMoTAttention(nn.Module):
 class HunYuanVLMoTDecoderLayer(nn.Module):
     """A single transformer decoder layer with per-modality norm and MLP paths."""
 
-    def __init__(self, config: HunYuanVLMoTConfig, layer_idx: int):
+    def __init__(self, config: HunYuanVLMoTTextConfig, layer_idx: int):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = HunYuanVLMoTAttention(config=config, layer_idx=layer_idx)
 
         # Text paths
-        self.mlp = HunYuanVLMoTMLP(config)
+        self.mlp = QwenMLP(config, bias=config.mlp_bias)
         self.input_layernorm = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
         # Vision paths (_v suffix matches checkpoint keys)
-        self.mlp_v = HunYuanVLMoTMLP(config)
+        self.mlp_v = QwenMLP(config, bias=config.mlp_bias)
         self.input_layernorm_v = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm_v = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

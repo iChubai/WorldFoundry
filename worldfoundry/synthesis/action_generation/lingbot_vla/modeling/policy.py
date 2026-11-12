@@ -59,10 +59,10 @@ from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     QwenRMSNorm as Qwen2RMSNorm,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
-    QwenRotaryEmbedding as Qwen2RotaryEmbedding,
-)
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     eager_attention_forward,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.rotary import (
+    QwenRotaryEmbedding as Qwen2RotaryEmbedding,
 )
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 

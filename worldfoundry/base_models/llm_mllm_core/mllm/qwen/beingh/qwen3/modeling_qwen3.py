@@ -26,8 +26,8 @@ from transformers.utils.deprecation import deprecate_kwarg
 
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as Qwen3MLP
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as Qwen3RMSNorm
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRotaryEmbedding as Qwen3RotaryEmbedding
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import eager_attention_forward
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.rotary import QwenRotaryEmbedding as Qwen3RotaryEmbedding
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
 from .configuration_qwen3 import Qwen3Config

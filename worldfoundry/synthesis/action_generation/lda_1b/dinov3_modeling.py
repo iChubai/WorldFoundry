@@ -29,6 +29,9 @@ from transformers.activations import ACT2FN
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenMLP as DINOv3ViTGatedMLP,
+)
 from worldfoundry.core.attention.rotary.rope import rotate_half
 
 from .dinov3_configuration import DINOv3ViTConfig
@@ -363,22 +366,6 @@ class DINOv3ViTMLP(nn.Module):
         return self.down_proj(self.act_fn(self.up_proj(x)))
 
 
-class DINOv3ViTGatedMLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=config.mlp_bias)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-        return down_proj
-
-
 class DINOv3ViTLayer(nn.Module):
     """This corresponds to the Block class in the original implementation."""
 
@@ -393,7 +380,7 @@ class DINOv3ViTLayer(nn.Module):
         self.norm2 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
 
         if config.use_gated_mlp:
-            self.mlp = DINOv3ViTGatedMLP(config)
+            self.mlp = DINOv3ViTGatedMLP(config, bias=config.mlp_bias)
         else:
             self.mlp = DINOv3ViTMLP(config)
         self.layer_scale2 = DINOv3ViTLayerScale(config)

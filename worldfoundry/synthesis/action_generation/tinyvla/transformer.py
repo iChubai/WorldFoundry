@@ -8,11 +8,16 @@ Copy-paste from torch.nn.Transformer with modifications:
     * decoder returns a stack of activations from all decoding layers
 """
 
-import copy
-
 import torch
-import torch.nn.functional as F
 from torch import Tensor, nn
+
+from worldfoundry.base_models.llm_mllm_core.action.transformer import (
+    TransformerDecoder,
+    TransformerEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
+    get_activation_fn as _get_activation_fn,
+)
 
 
 class Transformer(nn.Module):
@@ -87,80 +92,6 @@ class Transformer(nn.Module):
         hs = self.decoder(tgt, memory, memory_key_padding_mask=mask, pos=pos_embed, query_pos=query_embed)
         hs = hs.transpose(1, 2)
         return hs
-
-
-class TransformerEncoder(nn.Module):
-    def __init__(self, encoder_layer, num_layers, norm=None):
-        super().__init__()
-        self.layers = _get_clones(encoder_layer, num_layers)
-        self.num_layers = num_layers
-        self.norm = norm
-
-    def forward(
-        self,
-        src,
-        mask: Tensor | None = None,
-        src_key_padding_mask: Tensor | None = None,
-        pos: Tensor | None = None,
-    ):
-        output = src
-
-        for layer in self.layers:
-            output = layer(output, src_mask=mask, src_key_padding_mask=src_key_padding_mask, pos=pos)
-
-        if self.norm is not None:
-            output = self.norm(output)
-
-        return output
-
-
-class TransformerDecoder(nn.Module):
-    def __init__(self, decoder_layer, num_layers, norm=None, return_intermediate=False):
-        super().__init__()
-        self.layers = _get_clones(decoder_layer, num_layers)
-        self.num_layers = num_layers
-        self.norm = norm
-        self.return_intermediate = return_intermediate
-
-    def forward(
-        self,
-        tgt,
-        memory,
-        tgt_mask: Tensor | None = None,
-        memory_mask: Tensor | None = None,
-        tgt_key_padding_mask: Tensor | None = None,
-        memory_key_padding_mask: Tensor | None = None,
-        pos: Tensor | None = None,
-        query_pos: Tensor | None = None,
-    ):
-        output = tgt
-
-        intermediate = []
-
-        for layer in self.layers:
-            output = layer(
-                output,
-                memory,
-                tgt_mask=tgt_mask,
-                memory_mask=memory_mask,
-                tgt_key_padding_mask=tgt_key_padding_mask,
-                memory_key_padding_mask=memory_key_padding_mask,
-                pos=pos,
-                query_pos=query_pos,
-            )
-            if self.return_intermediate:
-                intermediate.append(self.norm(output))
-
-        if self.norm is not None:
-            output = self.norm(output)
-            if self.return_intermediate:
-                intermediate.pop()
-                intermediate.append(output)
-
-        if self.return_intermediate:
-            return torch.stack(intermediate)
-
-        return output.unsqueeze(0)
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -328,10 +259,6 @@ class TransformerDecoderLayer(nn.Module):
         )
 
 
-def _get_clones(module, N):
-    return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
-
-
 def build_transformer(args):
     return Transformer(
         d_model=args.hidden_dim,
@@ -343,14 +270,3 @@ def build_transformer(args):
         normalize_before=args.pre_norm,
         return_intermediate_dec=True,
     )
-
-
-def _get_activation_fn(activation):
-    """Return an activation function given a string"""
-    if activation == "relu":
-        return F.relu
-    if activation == "gelu":
-        return F.gelu
-    if activation == "glu":
-        return F.glu
-    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")

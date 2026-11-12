@@ -21,7 +21,6 @@ import warnings
 from typing import ClassVar
 
 import torch
-import torch.nn.functional as F
 import torch.utils.checkpoint
 from einops import rearrange
 from torch import nn
@@ -40,7 +39,12 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as InternLM2RMSNorm
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as InternLM2RMSNorm,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    get_unpad_data as _get_unpad_data,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
 from worldfoundry.core.attention import scaled_dot_product_attention
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
@@ -81,19 +85,6 @@ def _import_flash_attn():
     pad_input = symbols["pad_input"]
     index_first_axis = symbols["index_first_axis"]
     unpad_input = symbols["unpad_input"]
-
-
-# Copied from transformers.models.llama.modeling_llama._get_unpad_data
-def _get_unpad_data(attention_mask):
-    seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
-    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
-    max_seqlen_in_batch = seqlens_in_batch.max().item()
-    cu_seqlens = F.pad(torch.cumsum(seqlens_in_batch, dim=0, dtype=torch.torch.int32), (1, 0))
-    return (
-        indices,
-        cu_seqlens,
-        max_seqlen_in_batch,
-    )
 
 
 # Copied from transformers.models.bart.modeling_bart._make_causal_mask

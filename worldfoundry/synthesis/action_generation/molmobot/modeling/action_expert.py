@@ -6,12 +6,9 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+from worldfoundry.core.nn.transformer.dit import modulate_sequence as _modulate
+
 from ..config import BaseConfig, D
-
-
-def _modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
-    """Apply AdaLN-style shift/scale modulation."""
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
 class ActionExpertAttention(nn.Module):

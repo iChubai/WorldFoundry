@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Emu3p5VisionVQ model"""
-
 import math
 from typing import ClassVar
 
@@ -21,12 +20,11 @@ from torch import nn
 from torch.nn import functional as F
 from transformers.modeling_utils import PreTrainedModel
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import (
+    nonlinearity,
+)
+
 from .configuration_emu3p5visionvq import Emu3p5VisionVQConfig
-
-
-def nonlinearity(x):
-    # swish
-    return x * torch.sigmoid(x)
 
 
 def Emu3p5VisionVQNormalize(in_channels):

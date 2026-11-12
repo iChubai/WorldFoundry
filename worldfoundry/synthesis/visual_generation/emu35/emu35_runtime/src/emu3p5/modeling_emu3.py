@@ -46,7 +46,10 @@ from transformers.modeling_outputs import (
     CausalLMOutputWithPast,
 )
 from transformers.modeling_utils import PreTrainedModel
-from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS, is_torch_greater_or_equal_than_1_13
+from transformers.pytorch_utils import (
+    ALL_LAYERNORM_LAYERS,
+    is_torch_greater_or_equal_than_1_13,
+)
 from transformers.utils import (
     add_start_docstrings,
     add_start_docstrings_to_model_forward,
@@ -57,7 +60,12 @@ from transformers.utils import (
 )
 from transformers.utils.import_utils import is_torch_fx_available
 
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as Emu3RMSNorm
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as Emu3RMSNorm,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    get_unpad_data as _get_unpad_data,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
@@ -96,18 +104,6 @@ def _cache_usable_length(cache: Cache, new_seq_length: int, layer_idx: int = 0) 
 
 
 _CONFIG_FOR_DOC = "Emu3Config"
-
-
-def _get_unpad_data(attention_mask):
-    seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
-    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
-    max_seqlen_in_batch = seqlens_in_batch.max().item()
-    cu_seqlens = F.pad(torch.cumsum(seqlens_in_batch, dim=0, dtype=torch.torch.int32), (1, 0))
-    return (
-        indices,
-        cu_seqlens,
-        max_seqlen_in_batch,
-    )
 
 
 ALL_LAYERNORM_LAYERS.append(Emu3RMSNorm)

@@ -165,6 +165,12 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/llm_mllm_core/test_lingbot_components.py \
 	tests/base_models/llm_mllm_core/test_diffusion_policy_components.py \
 	tests/base_models/llm_mllm_core/test_cogact_components.py \
+	tests/base_models/llm_mllm_core/test_molmo_preprocessing.py \
+	tests/base_models/llm_mllm_core/test_mllm_sampling.py \
+	tests/base_models/llm_mllm_core/test_action_transformer.py \
+	tests/base_models/llm_mllm_core/test_rdt.py \
+	tests/base_models/diffusion_model/models/networks/dit/test_token.py \
+	tests/core/nn/blocks/test_module_properties.py \
 	tests/base_models/test_hyperflow_components.py \
 	tests/synthesis/test_hyperflow_runtime.py \
 	tests/base_models/test_minimax_h3_dit.py \

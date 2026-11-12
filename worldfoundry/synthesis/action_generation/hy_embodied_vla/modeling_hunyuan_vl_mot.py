@@ -38,15 +38,24 @@ from torch import nn
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.generation import GenerationMixin
-from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast, ModelOutput
+from transformers.modeling_outputs import (
+    BaseModelOutputWithPast,
+    CausalLMOutputWithPast,
+    ModelOutput,
+)
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 from transformers.modeling_utils import PreTrainedModel
 from transformers.processing_utils import Unpack
 from transformers.utils import TransformersKwargs, auto_docstring
 from transformers.utils.deprecation import deprecate_kwarg
 
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as HunYuanVLMoTRMSNorm
-from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb as _apply_rotary_pos_emb
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as HunYuanVLMoTRMSNorm,
+)
+from worldfoundry.core.attention.rotary.embedding import (
+    apply_rotary_pos_emb as _apply_rotary_pos_emb,
+)
+from worldfoundry.core.nn.blocks.layers import LayerScale as _ViTLayerScale
 
 try:
     from timm.layers import (
@@ -1213,16 +1222,6 @@ class _HunYuanVLMoTTextForCausalLM(_HunYuanVLMoTInnerPreTrainedModel, Generation
 
 
 # ViT Attention / Block
-
-
-class _ViTLayerScale(nn.Module):
-    def __init__(self, dim: int, init_values: float = 1e-5, inplace: bool = False) -> None:
-        super().__init__()
-        self.inplace = inplace
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class _ViTAttention(nn.Module):

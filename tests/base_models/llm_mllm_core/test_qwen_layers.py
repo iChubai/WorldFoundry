@@ -6,7 +6,12 @@ import pytest
 import torch
 from transformers import PretrainedConfig
 
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP, QwenRMSNorm, repeat_kv
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenMLP,
+    QwenRMSNorm,
+    get_unpad_data,
+    repeat_kv,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -27,14 +32,18 @@ def test_qwen_rms_norm_casts_before_affine(dtype: torch.dtype, affine_dtype: tor
     torch.testing.assert_close(actual, expected, atol=0, rtol=0)
 
 
-def test_qwen_mlp_keeps_gated_projection_checkpoint_names() -> None:
+@pytest.mark.parametrize("bias", [False, True])
+def test_qwen_mlp_keeps_gated_projection_checkpoint_names(bias: bool) -> None:
     config = PretrainedConfig(hidden_size=8, intermediate_size=20, hidden_act="silu")
-    model = QwenMLP(config).eval()
-    assert {key: tuple(value.shape) for key, value in model.state_dict().items()} == {
+    model = QwenMLP(config, bias=bias).eval()
+    expected_shapes = {
         "gate_proj.weight": (20, 8),
         "up_proj.weight": (20, 8),
         "down_proj.weight": (8, 20),
     }
+    if bias:
+        expected_shapes.update({"gate_proj.bias": (20,), "up_proj.bias": (20,), "down_proj.bias": (8,)})
+    assert {key: tuple(value.shape) for key, value in model.state_dict().items()} == expected_shapes
     x = torch.randn(2, 3, 8)
     expected = model.down_proj(torch.nn.functional.silu(model.gate_proj(x)) * model.up_proj(x))
     torch.testing.assert_close(model(x), expected, atol=0, rtol=0)
@@ -46,3 +55,11 @@ def test_qwen_repeat_kv_keeps_head_order(repetitions: int) -> None:
     torch.testing.assert_close(repeat_kv(x, repetitions), x.repeat_interleave(repetitions, dim=1), atol=0, rtol=0)
     if repetitions == 1:
         assert repeat_kv(x, repetitions) is x
+
+
+def test_get_unpad_data_keeps_empty_rows_and_int32_offsets() -> None:
+    mask = torch.tensor([[0, 1, 1, 1], [0, 0, 0, 0], [1, 1, 0, 0]], dtype=torch.bool)
+    indices, offsets, maximum = get_unpad_data(mask)
+    torch.testing.assert_close(indices, torch.tensor([1, 2, 3, 8, 9]), atol=0, rtol=0)
+    torch.testing.assert_close(offsets, torch.tensor([0, 3, 3, 5], dtype=torch.int32), atol=0, rtol=0)
+    assert maximum == 3

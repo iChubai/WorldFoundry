@@ -38,8 +38,12 @@ from transformers.utils import (
     logging,
 )
 
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import eager_attention_forward, repeat_kv
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    eager_attention_forward,
+    repeat_kv,
+)
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
+from worldfoundry.core.nn.transformer.dit import modulate_sequence as _modulate
 
 from .configuration_molmoact2 import (
     MolmoAct2ActionExpertConfig,
@@ -88,10 +92,6 @@ _QUESTION_PREFIX_PATTERNS = tuple(
 
 _DEPTH_REASONING_PATCH_SIZE = 32
 _DEPTH_REASONING_THRESHOLD = 0.996
-
-
-def _modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
 def _round_up_multiple(value: int, multiple_of: int) -> int:

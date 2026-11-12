@@ -34,16 +34,16 @@ class QwenRMSNorm(nn.Module):
 
 
 class QwenMLP(nn.Module):
-    """Qwen mlp implementation."""
+    """Qwen-style gated MLP with optional LDA/Llama projection biases."""
 
-    def __init__(self, config: PretrainedConfig) -> None:
+    def __init__(self, config: PretrainedConfig, bias: bool = False) -> None:
         super().__init__()
         self.config = config
         self.hidden_size = config.hidden_size
         self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
+        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=bias)
+        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=bias)
+        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=bias)
         self.act_fn = ACT2FN[config.hidden_act]
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -123,3 +123,12 @@ class QwenRotaryEmbedding(nn.Module):
             sin = emb.sin() * self.attention_scaling
 
         return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)
+
+
+def get_unpad_data(attention_mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, int]:
+    """Return flat valid-token indices, int32 cumulative lengths, and the longest row length."""
+    lengths = attention_mask.sum(dim=-1, dtype=torch.int32)
+    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
+    max_length = lengths.max().item()
+    cumulative_lengths = nn.functional.pad(torch.cumsum(lengths, dim=0, dtype=torch.int32), (1, 0))
+    return indices, cumulative_lengths, max_length

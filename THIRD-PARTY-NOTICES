@@ -7038,3 +7038,24 @@ action/cogact.py and action/cogact_diffusion.py retain the CogACT/DiT and
 OpenAI GLIDE/guided-diffusion/improved-diffusion attribution and MIT terms.
 CogACT and DB-CogACT reuse their checkpoint-compatible inference leaves and
 sampling process. Meta Platforms' DiT copyright is retained in the source.
+
+Shared Molmo, ACT and token-denoising leaves
+------------------------------------------
+worldfoundry/base_models/llm_mllm_core/mllm/molmo/preprocessing.py retains the
+Apache-2.0 pixel/patch and pooling-index conventions from Allen Institute for
+AI's MolmoAct2 and MolmoBot. action/transformer.py retains ACT's DETR-derived
+encoder/decoder containers (Copyright Facebook, Inc. and its affiliates;
+Apache-2.0). action/rdt.py reuses SANA's embedding graph for the RDT-1B/Go1
+fixed-dtype timestep variant; model-weight licenses are unchanged.
+
+worldfoundry/base_models/diffusion_model/models/networks/dit/token.py retains
+the MIT-licensed MAR/DiT token output layer (Copyright 2024 Tianhong Li;
+Copyright Meta Platforms, Inc. and affiliates). Its 2-D modulation and
+initialization remain checkpoint-compatible with Bernini and HMA.
+
+worldfoundry/base_models/llm_mllm_core/mllm/sampling.py retains the generic
+batched logits filter from Hugging Face Transformers' Thomas Wolf example
+(https://gist.github.com/thomwolf/1a5a29f6962089e871b94cbd09daf317; Apache-2.0).
+The first-tensor dtype helper in core/nn/blocks/module_properties.py retains
+the Diffusers (Apache-2.0) first-parameter/first-buffer selection convention.
+The complete Apache-2.0 and MIT license texts are retained above.

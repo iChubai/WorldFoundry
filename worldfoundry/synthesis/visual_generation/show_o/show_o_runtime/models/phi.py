@@ -17,7 +17,6 @@ import math
 from typing import ClassVar
 
 import torch
-import torch.nn.functional as F
 import torch.utils.checkpoint
 from packaging import version
 from torch import nn
@@ -43,8 +42,13 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    get_unpad_data as _get_unpad_data,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
 if is_flash_attn_2_available():
@@ -56,19 +60,6 @@ logger = logging.get_logger(__name__)
 
 _CHECKPOINT_FOR_DOC = "microsoft/phi-1"
 _CONFIG_FOR_DOC = "PhiConfig"
-
-
-# Copied from transformers.models.llama.modeling_llama._get_unpad_data
-def _get_unpad_data(attention_mask):
-    seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
-    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
-    max_seqlen_in_batch = seqlens_in_batch.max().item()
-    cu_seqlens = F.pad(torch.cumsum(seqlens_in_batch, dim=0, dtype=torch.int32), (1, 0))
-    return (
-        indices,
-        cu_seqlens,
-        max_seqlen_in_batch,
-    )
 
 
 # Copied from transformers.models.mixtral.modeling_mixtral.MixtralRotaryEmbedding with Mixtral->Phi

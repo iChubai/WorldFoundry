@@ -1,7 +1,6 @@
 # Inference-only DB-CogACT source retained in-tree.
 # SPDX-License-Identifier: Apache-2.0
 """This is basically a copy from perception_models/core/vision_encoder/pe.py"""
-
 from collections import OrderedDict
 from collections.abc import Callable
 from functools import partial
@@ -15,37 +14,8 @@ from einops import rearrange, repeat
 from torch import nn
 from torch.nn import functional as F
 
-
-def rotate_half(x):
-    x = rearrange(x, "... (d r) -> ... d r", r=2)
-    x1, x2 = x.unbind(dim=-1)
-    x = torch.stack((-x2, x1), dim=-1)
-    return rearrange(x, "... d r -> ... (d r)")
-
-
-def apply_rotary_emb(freqs, t, start_index=0, scale=1.0, seq_dim=-2):
-    dtype = t.dtype
-
-    if t.ndim == 3:
-        seq_len = t.shape[seq_dim]
-        freqs = freqs[-seq_len:]
-
-    rot_dim = freqs.shape[-1]
-    end_index = start_index + rot_dim
-
-    assert rot_dim <= t.shape[-1], (
-        f"feature dimension {t.shape[-1]} is not of sufficient size to rotate in all the positions {rot_dim}"
-    )
-
-    t_left, t, t_right = (
-        t[..., :start_index],
-        t[..., start_index:end_index],
-        t[..., end_index:],
-    )
-    t = (t * freqs.cos() * scale) + (rotate_half(t) * freqs.sin() * scale)
-    out = torch.cat((t_left, t, t_right), dim=-1)
-
-    return out.type(dtype)
+from worldfoundry.core.attention.rotary.rope import apply_rotary_embedding
+from worldfoundry.core.nn.blocks.layers import LayerScale
 
 
 class Rope2D(nn.Module):
@@ -129,20 +99,10 @@ class Rope2D(nn.Module):
         # Cache frequencies outside module state so FSDP2 wrap/prepare does not touch them,
         # while still avoiding per-forward recomputation on the common same-device/same-grid path.
         freqs = self._get_runtime_freqs(grid_hw[0], grid_hw[1], q.device)
-        q = apply_rotary_emb(freqs, q)
-        k = apply_rotary_emb(freqs, k)
+        cos, sin = freqs.cos(), freqs.sin()
+        q = apply_rotary_embedding(q, cos, sin, interleaved=True)
+        k = apply_rotary_embedding(k, cos, sin, interleaved=True)
         return q, k
-
-
-class LayerScale(nn.Module):
-    def __init__(self, dim, init_values=1e-5, inplace=False):
-        super().__init__()
-        self.inplace = inplace
-        self.dim = dim
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x):
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class AttentionPooling(nn.Module):

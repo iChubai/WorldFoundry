@@ -5,12 +5,14 @@ import torch
 import torch.utils.checkpoint
 from torch import nn
 from transformers import LlamaConfig
-from transformers.activations import ACT2FN
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as LlamaRMSNorm
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as LlamaMLP
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as LlamaRMSNorm,
+)
 from worldfoundry.core.attention import (
     scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
 )
@@ -102,22 +104,6 @@ class LlamaRotaryEmbedding(nn.Module):
         )
 
 
-class LlamaMLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=config.mlp_bias)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-        return down_proj
-
-
 class LlamaAttention(nn.Module):
     def __init__(self, config: LlamaConfig):
         super().__init__()
@@ -199,7 +185,7 @@ class LlamaDecoderLayer(nn.Module):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = LlamaAttention(config=config)
-        self.mlp = LlamaMLP(config)
+        self.mlp = LlamaMLP(config, bias=config.mlp_bias)
         self.input_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

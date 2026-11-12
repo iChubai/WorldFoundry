@@ -8,7 +8,9 @@ import numpy as np
 import torch
 from torch import nn
 
-from .transformer import Transformer, TransformerEncoder, TransformerEncoderLayer
+from worldfoundry.base_models.llm_mllm_core.action.transformer import TransformerEncoder
+
+from .transformer import Transformer, TransformerEncoderLayer
 
 
 def _sinusoid_encoding_table(n_position: int, hidden_dim: int) -> torch.Tensor:

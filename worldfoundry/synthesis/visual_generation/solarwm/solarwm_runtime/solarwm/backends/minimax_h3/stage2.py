@@ -5,12 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from .distributed import broadcast_sp_tensor, is_sequence_parallel_enabled
-from .layout import build_stage0p5_layout, patchify_video, unpatchify_video
+from .layout import patchify_video
 from .sgf import h3_sgf_score_timesteps
 from .sgf_rollout import H3SGFInputs, h3_sgf_rollout
 from .stage0p5 import H3Stage0p5Core
 from .torch_flow import sample_shifted_timestep, scale_noise
-from .torch_layout import build_row_timesteps
 
 
 class H3SGFCore(H3Stage0p5Core):
@@ -94,44 +93,6 @@ class H3SGFCore(H3Stage0p5Core):
         silence = self.audio_rows()
         audio = scale_noise(silence, self.random_like(silence), audio_time)
         return noisy, noise, video_time, audio, audio_time
-
-    def score_forward(
-        self,
-        model: Any,
-        inputs: H3SGFInputs,
-        noisy: Any,
-        video_time: Any,
-        audio: Any,
-        audio_time: Any,
-    ) -> Any:
-        import torch
-
-        layout = build_stage0p5_layout(inputs.text_tags.cpu(), 47, 48, 84, audio.shape[1] // 2).to(self.device)
-        times, indices = build_row_timesteps(
-            layout,
-            video_time,
-            audio_time,
-            condition_video_timestep=0.999,
-            device=self.device,
-        )
-        frame_ids = layout.camera_frame_ids.clone()
-        frame_ids[layout.num_condition_video_rows :] += 1
-        velocity, _ = model(
-            hidden_states=torch.cat((inputs.anchor_rows, patchify_video(noisy)), 1),
-            audio_hidden_states=audio,
-            encoder_hidden_states=inputs.prompt,
-            timestep=times,
-            timestep_indices=indices,
-            fused_prope=True,
-            prope_token_indices=layout.camera_video_indices,
-            prope_frame_ids=frame_ids,
-            cam_viewmats=inputs.camera_viewmats[:, :48],
-            cam_K=inputs.camera_K[:, :48],
-            packed_sequence_parallel=is_sequence_parallel_enabled(),
-            return_dict=False,
-            **layout.transformer_kwargs(),
-        )
-        return unpatchify_video(velocity[:, layout.noisy_video_output_slice], 47, 48, 84)
 
     def generate(self, batch: Any, *, noise_seed: int, num_inference_steps: int) -> Any:
         import torch

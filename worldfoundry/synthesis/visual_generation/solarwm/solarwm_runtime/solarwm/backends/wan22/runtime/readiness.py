@@ -469,30 +469,8 @@ def probe_runtime(
     )
 
 
-def require_training_runtime(
-    config: Mapping[str, Any],
-    *,
-    family: str,
-    require_transformer_weights: bool = True,
-) -> ReadinessReport:
-    """Require the normal Wan training runtime and all configured assets."""
-
-    checkpoint = config.get("checkpoint", {})
-    full_resume = isinstance(checkpoint, Mapping) and str(checkpoint.get("mode")) == "full_resume"
-    report = probe_runtime(
-        config,
-        family=family,
-        require_cuda=True,
-        require_transformer_weights=require_transformer_weights and not full_resume,
-        validate_index_contents=False,
-    )
-    report.require_ready()
-    return report
-
-
 __all__ = [
     "ReadinessIssue",
     "ReadinessReport",
     "probe_runtime",
-    "require_training_runtime",
 ]

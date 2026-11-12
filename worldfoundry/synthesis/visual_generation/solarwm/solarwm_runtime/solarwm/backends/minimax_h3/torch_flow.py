@@ -38,20 +38,6 @@ def add_noise(clean: Any, noise: Any, t: Any) -> Any:
     return scale_noise(clean, noise, t)
 
 
-def data_velocity_target(clean_sample: Any, noise: Any) -> Any:
-    """Return H3's data-ward velocity target ``x0-noise``."""
-
-    if clean_sample.shape != noise.shape:
-        raise ValueError(f"clean/noise shapes must match, got {clean_sample.shape} and {noise.shape}")
-    return clean_sample - noise
-
-
-def velocity_target(clean: Any, noise: Any) -> Any:
-    """Trainer-facing alias returning H3's ``clean-noise`` target."""
-
-    return data_velocity_target(clean, noise)
-
-
 def sample_shifted_timestep(
     batch: int | tuple[int, ...],
     shift: float,
@@ -130,12 +116,10 @@ def euler_step(sample: Any, velocity: Any, timestep: Any, sigma: Any, sigma_next
 __all__ = [
     "H3FlowSchedule",
     "add_noise",
-    "data_velocity_target",
     "euler_step",
     "make_shifted_schedule",
     "predict_clean_sample",
     "sample_shifted_timestep",
     "scale_noise",
     "shift_sigma",
-    "velocity_target",
 ]

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -42,65 +41,9 @@ def scale_noise(clean: object, noise: object, sigma: object) -> np.ndarray:
     return (1.0 - expanded) * clean_array.astype(np.float32) + expanded * noise_array.astype(np.float32)
 
 
-def velocity_target(clean: object, noise: object) -> np.ndarray:
-    """Return the native noise-ward velocity ``eps-x0``."""
-
-    clean_array, noise_array = _floating_pair(clean, noise)
-    return noise_array.astype(np.float32) - clean_array.astype(np.float32)
-
-
 def predict_clean(noisy: object, velocity: object, sigma: object) -> np.ndarray:
     noisy_array, velocity_array = _floating_pair(noisy, velocity)
     return noisy_array.astype(np.float32) - _sigma(sigma, noisy_array) * velocity_array.astype(np.float32)
-
-
-def shifted_logit_normal_mu(
-    sequence_length: int = STABLE_GEOMETRY.video_tokens,
-    *,
-    min_tokens: int = 1024,
-    max_tokens: int = 4096,
-    min_shift: float = 0.95,
-    max_shift: float = 2.05,
-) -> float:
-    """Return the provider's linearly extrapolated shift (10/3 for 7,680 tokens)."""
-
-    if isinstance(sequence_length, bool) or not isinstance(sequence_length, int) or sequence_length <= 0:
-        raise BackendContractError("sequence_length must be a positive integer")
-    if max_tokens <= min_tokens:
-        raise BackendContractError("max_tokens must exceed min_tokens")
-    slope = (max_shift - min_shift) / (max_tokens - min_tokens)
-    return slope * sequence_length + min_shift - slope * min_tokens
-
-
-def sample_shifted_logit_normal(
-    batch_size: int,
-    *,
-    generator: np.random.Generator,
-    sequence_length: int = STABLE_GEOMETRY.video_tokens,
-    std: float = 1.0,
-    eps: float = 1e-3,
-    uniform_probability: float = 0.1,
-) -> np.ndarray:
-    """Sample the configured shifted/stretched logit-normal mixture."""
-
-    if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size <= 0:
-        raise BackendContractError("batch_size must be a positive integer")
-    if not isinstance(generator, np.random.Generator):
-        raise BackendContractError("generator must be an explicit numpy Generator")
-    if not math.isfinite(std) or std <= 0 or not 0 < eps < 0.5:
-        raise BackendContractError("std/eps are invalid")
-    if not 0 <= uniform_probability <= 1:
-        raise BackendContractError("uniform_probability must be in [0,1]")
-    mu = shifted_logit_normal_mu(sequence_length)
-    normal = generator.standard_normal(batch_size, dtype=np.float32) * std + mu
-    logit = 1.0 / (1.0 + np.exp(-normal))
-    upper = 1.0 / (1.0 + math.exp(-(mu + 3.0902 * std)))
-    lower = 1.0 / (1.0 + math.exp(-(mu - 2.5758 * std)))
-    raw = (logit - lower) / (upper - lower)
-    stretched = np.clip(np.where(raw >= eps, raw, 2 * eps - raw), 0, 1)
-    uniform = (1 - eps) * generator.random(batch_size, dtype=np.float32) + eps
-    choose = generator.random(batch_size, dtype=np.float32)
-    return np.where(choose > uniform_probability, stretched, uniform).astype(np.float32)
 
 
 def restore_clean_first_latent(noisy: object, first_frame: object) -> np.ndarray:
@@ -125,16 +68,6 @@ def restore_clean_first_latent(noisy: object, first_frame: object) -> np.ndarray
     return result
 
 
-def first_frame_excluded_mse(prediction: object, target: object) -> float:
-    """Compute velocity MSE only over latent slices 1..19."""
-
-    predicted, expected = _floating_pair(prediction, target)
-    if predicted.ndim != 5 or predicted.shape[1:] != STABLE_GEOMETRY.latent_shape:
-        raise BackendContractError("velocity tensors must be [B,128,20,16,24]")
-    delta = predicted[:, :, 1:].astype(np.float32) - expected[:, :, 1:].astype(np.float32)
-    return float(np.mean(np.square(delta), dtype=np.float64))
-
-
 @dataclass(frozen=True)
 class NativeFlowContract:
     interpolation: str = "(1-sigma)*x0+sigma*eps"
@@ -149,11 +82,7 @@ NATIVE_FLOW_CONTRACT = NativeFlowContract()
 __all__ = [
     "NATIVE_FLOW_CONTRACT",
     "NativeFlowContract",
-    "first_frame_excluded_mse",
     "predict_clean",
     "restore_clean_first_latent",
-    "sample_shifted_logit_normal",
     "scale_noise",
-    "shifted_logit_normal_mu",
-    "velocity_target",
 ]

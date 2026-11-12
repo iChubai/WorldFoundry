@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Any
 
 from ...errors import BackendContractError
 from .contracts import PROFILES, WAN_FAMILIES, WAN_TI2V_5B_720P_153F_SCHEMA
@@ -99,17 +99,6 @@ def validate_tensor_data_config(data: Mapping[str, Any], *, family: str) -> None
         raise BackendContractError("data.camera_source must be preserve")
 
 
-@runtime_checkable
-class OnlineCodec(Protocol):
-    """Model-specific raw sample encoder used below the common data plan."""
-
-    family: str
-
-    def encode_video(self, frames: Any, *, first_frame_conditioned: bool) -> Mapping[str, Any]: ...
-
-    def encode_text(self, caption: str) -> Any: ...
-
-
 def profile_for(schema: Any, *, family: str) -> PreencodedProfile:
     key = str(schema or "")
     try:
@@ -197,7 +186,6 @@ def _is_component(value: Any) -> bool:
 __all__ = [
     "PREENCODED_PROFILES",
     "PREENCODE_WINDOW_ASSIGNMENTS",
-    "OnlineCodec",
     "PreencodedProfile",
     "expected_tensor_shapes",
     "profile_for",

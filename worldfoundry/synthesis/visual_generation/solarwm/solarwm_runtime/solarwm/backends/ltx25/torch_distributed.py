@@ -8,7 +8,6 @@ position across nodes.
 
 from __future__ import annotations
 
-import math
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -329,124 +328,6 @@ def assert_sp_object_identity(value: Any) -> None:
         raise BackendContractError(f"SP peers have different batch identities: {peers!r}")
 
 
-@torch.no_grad()
-def _sync_replicated_gradient_group(
-    parameters: tuple[torch.nn.Parameter, ...],
-    *,
-    group: dist.ProcessGroup | None,
-    average: bool,
-) -> None:
-    """Reduce FSDP-ignored LoRA tensors in bounded FP32 buckets."""
-
-    if not parameters or not dist.is_initialized():
-        return
-    world_size = dist.get_world_size(group=group)
-    if world_size == 1:
-        return
-    flag_device = next(
-        (parameter.grad.device for parameter in parameters if parameter.grad is not None),
-        parameters[0].device,
-    )
-    flags = torch.tensor(
-        [int(parameter.grad is not None) for parameter in parameters],
-        device=flag_device,
-        dtype=torch.int32,
-    )
-    dist.all_reduce(flags, group=group)
-    inconsistent = (flags != 0) & (flags != world_size)
-    if bool(inconsistent.any().item()):
-        indices = inconsistent.nonzero(as_tuple=False).flatten()[:16].cpu().tolist()
-        raise BackendContractError(
-            f"LoRA gradient presence differs across replicated peers; first parameter indices={indices}"
-        )
-
-    limit_mib = max(1, int(os.environ.get("SOLARWM_REPLICATED_GRAD_BUCKET_MB", "16")))
-    limit_bytes = limit_mib * 1024 * 1024
-    buckets: list[list[torch.Tensor]] = []
-    current: list[torch.Tensor] = []
-    current_bytes = 0
-    current_key: tuple[torch.device, torch.dtype] | None = None
-    for parameter in parameters:
-        gradient = parameter.grad
-        if gradient is None:
-            continue
-        key = (gradient.device, gradient.dtype)
-        size_bytes = gradient.numel() * gradient.element_size()
-        if current and (key != current_key or current_bytes + size_bytes > limit_bytes):
-            buckets.append(current)
-            current = []
-            current_bytes = 0
-        current.append(gradient)
-        current_bytes += size_bytes
-        current_key = key
-    if current:
-        buckets.append(current)
-
-    scale = 1.0 / world_size if average else 1.0
-    for bucket in buckets:
-        flattened = torch.cat([gradient.detach().reshape(-1).float() for gradient in bucket])
-        dist.all_reduce(flattened, group=group)
-        if average:
-            flattened.mul_(scale)
-        offset = 0
-        for gradient in bucket:
-            stop = offset + gradient.numel()
-            gradient.copy_(flattened[offset:stop].view(gradient.shape))
-            offset = stop
-
-
-@torch.no_grad()
-def synchronize_replicated_gradients(parameters: tuple[torch.nn.Parameter, ...]) -> None:
-    """Reconstruct SP gradients, then average LoRA gradients over logical DP in FP32."""
-
-    runtime = state()
-    _sync_replicated_gradient_group(
-        parameters,
-        group=runtime.sp_group,
-        average=False,
-    )
-    _sync_replicated_gradient_group(
-        parameters,
-        group=runtime.dp_group,
-        average=True,
-    )
-
-
-@torch.no_grad()
-def clip_replicated_gradient_norm(
-    parameters: tuple[torch.nn.Parameter, ...],
-    max_norm: float,
-) -> torch.Tensor:
-    """Clip one replicated LoRA norm without overflowing FP32 squares."""
-
-    limit = float(max_norm)
-    if not math.isfinite(limit) or limit <= 0:
-        raise BackendContractError("LTX gradient clip must be finite and positive")
-    gradients = [parameter.grad for parameter in parameters if parameter.grad is not None]
-    if not gradients:
-        return torch.zeros((), dtype=torch.float32)
-    device = gradients[0].device
-    squared = torch.zeros((), device=device, dtype=torch.float64)
-    for gradient in gradients:
-        if gradient.device != device or gradient.is_sparse:
-            raise BackendContractError("LTX replicated gradients must be dense on one device")
-        scale = gradient.detach().abs().amax().double()
-        safe_scale = torch.where(scale > 0, scale, torch.ones_like(scale))
-        norm = torch.linalg.vector_norm(
-            gradient.detach() / safe_scale.to(dtype=gradient.dtype),
-            ord=2,
-            dtype=(torch.float64 if gradient.dtype in {torch.float64, torch.complex128} else torch.float32),
-        )
-        squared.add_((scale * norm.double()).square())
-    total = squared.sqrt()
-    if bool(torch.isfinite(total).item()):
-        coefficient = min(1.0, limit / (float(total.item()) + 1e-6))
-        if coefficient < 1.0:
-            for gradient in gradients:
-                gradient.mul_(coefficient)
-    return total.float()
-
-
 def token_bounds(total_tokens: int) -> tuple[int, int]:
     runtime = state()
     return contiguous_token_bounds(
@@ -462,10 +343,8 @@ __all__ = [
     "all_to_all_4d",
     "assert_sp_object_identity",
     "broadcast_sp_tensor",
-    "clip_replicated_gradient_norm",
     "initialize",
     "register_sequence_length",
     "state",
-    "synchronize_replicated_gradients",
     "token_bounds",
 ]

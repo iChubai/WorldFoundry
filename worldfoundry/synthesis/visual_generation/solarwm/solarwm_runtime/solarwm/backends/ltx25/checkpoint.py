@@ -668,46 +668,6 @@ def fingerprint_digest(value: Mapping[str, Any]) -> str:
     return hashlib.blake2s(payload.encode()).hexdigest()
 
 
-@dataclass(frozen=True)
-class TrainingCheckpointManifest:
-    """Logical contents required for a same-stage full resume."""
-
-    global_step: int
-    runtime_fingerprint: Mapping[str, Any]
-    adapter_targets: Sequence[str]
-    ema_targets: Sequence[str]
-    optimizer_present: bool
-    scheduler_present: bool
-
-    def validate(self) -> None:
-        if isinstance(self.global_step, bool) or self.global_step < 0:
-            raise BackendContractError("global_step must be nonnegative")
-        expected = lora_target_modules()
-        if tuple(self.adapter_targets) != expected:
-            raise BackendContractError("checkpoint adapter target inventory is not exact")
-        if tuple(self.ema_targets) != expected:
-            raise BackendContractError("EMA must contain exactly trainable LoRA targets")
-        if not self.optimizer_present or not self.scheduler_present:
-            raise BackendContractError("full resume requires optimizer and scheduler state")
-        expected_schema = self.runtime_fingerprint.get("schema")
-        if expected_schema != "solarwm.ltx25.checkpoint.v1":
-            raise BackendContractError("checkpoint runtime fingerprint schema is missing")
-
-
-def validate_full_resume(
-    saved: TrainingCheckpointManifest,
-    current_fingerprint: Mapping[str, Any],
-) -> None:
-    saved.validate()
-    if dict(saved.runtime_fingerprint) != dict(current_fingerprint):
-        differing = sorted(
-            key
-            for key in set(saved.runtime_fingerprint) | set(current_fingerprint)
-            if saved.runtime_fingerprint.get(key) != current_fingerprint.get(key)
-        )
-        raise BackendContractError(f"LTX full resume requires identical runtime semantics; differing={differing}")
-
-
 __all__ = [
     "BASE_CHECKPOINT_CONTRACT",
     "BASE_RETAINED_PARAMETERS",
@@ -722,10 +682,8 @@ __all__ = [
     "SafetensorsHeader",
     "StrictCodecLoadReceipt",
     "StrictModelLoadReceipt",
-    "TrainingCheckpointManifest",
     "fingerprint_digest",
     "inspect_base_checkpoint",
     "read_safetensors_header",
     "runtime_fingerprint",
-    "validate_full_resume",
 ]

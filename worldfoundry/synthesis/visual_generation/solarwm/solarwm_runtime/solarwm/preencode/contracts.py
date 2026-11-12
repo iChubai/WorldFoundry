@@ -1,4 +1,4 @@
-"""The same codec contract is used by offline production and online training."""
+"""Tensor contracts for released latent inputs and online inference conditioning."""
 
 from __future__ import annotations
 

@@ -2840,24 +2840,10 @@ def run_wan_inference(
     return run_wan_generation(config, **kwargs)
 
 
-def run_wan_validation(
-    config: Mapping[str, Any],
-    **kwargs: Any,
-) -> WanGenerationSummary:
-    """Training validation is a named call to the unified implementation."""
-
-    provider = kwargs.get("provider")
-    if provider is not None and getattr(provider, "validation_plan_path", None) is None:
-        output_dir = Path(str(config["runtime"]["output_dir"])).expanduser().resolve()
-        provider.validation_plan_path = output_dir / "validation" / "frozen-plan.json"
-    return run_wan_generation(config, **kwargs)
-
-
 __all__ = [
     "CudaWanGenerationAdapter",
     "TrainingWanGenerationAdapter",
     "WanGenerationSummary",
     "run_wan_generation",
     "run_wan_inference",
-    "run_wan_validation",
 ]

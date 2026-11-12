@@ -383,72 +383,6 @@ def sequence_all_to_all(input_: Any, scatter_dim: int = 2, gather_dim: int = 1) 
     return _AllToAll.apply(input_)
 
 
-def _sync_gradient_bucket(parameters: tuple[Any, ...], *, group: Any, average: bool) -> None:
-    import os
-
-    import torch
-    import torch.distributed as dist
-
-    if not parameters:
-        return
-    gradients = [parameter.grad for parameter in parameters if parameter.grad is not None]
-    flag_device = gradients[0].device if gradients else parameters[0].device
-    flags = torch.tensor(
-        [int(parameter.grad is not None) for parameter in parameters],
-        device=flag_device,
-        dtype=torch.int32,
-    )
-    group_size = dist.get_world_size(group=group)
-    dist.all_reduce(flags, group=group)
-    if bool(((flags != 0) & (flags != group_size)).any().item()):
-        raise RuntimeError("H3 distributed ranks have different gradient patterns")
-    if not gradients:
-        return
-    bucket_limit = max(
-        1,
-        int(os.environ.get("SOLARWM_H3_GRAD_BUCKET_MB", "16")),
-    ) * (1 << 20)
-    buckets: list[list[Any]] = []
-    current_bucket: list[Any] = []
-    current_bytes = 0
-    current_key: tuple[Any, Any] | None = None
-    for gradient in gradients:
-        key = (gradient.device, gradient.dtype)
-        size = int(gradient.numel()) * int(gradient.element_size())
-        if current_bucket and (key != current_key or current_bytes + size > bucket_limit):
-            buckets.append(current_bucket)
-            current_bucket = []
-            current_bytes = 0
-        current_bucket.append(gradient)
-        current_bytes += size
-        current_key = key
-    if current_bucket:
-        buckets.append(current_bucket)
-    for bucket in buckets:
-        # Match FSDP's configured FP32 reduction. LoRA parameters are BF16
-        # and deliberately ignored by FSDP, so a native-dtype all-reduce here
-        # would silently lower both SP-sum and logical-DP-average precision.
-        flat = torch.cat([gradient.detach().reshape(-1).float() for gradient in bucket])
-        dist.all_reduce(flat, group=group)
-        if average:
-            flat.div_(group_size)
-        offset = 0
-        for gradient in bucket:
-            count = gradient.numel()
-            gradient.copy_(flat[offset : offset + count].view_as(gradient))
-            offset += count
-
-
-def sync_lora_gradients(parameters: tuple[Any, ...]) -> None:
-    """Sum complementary SP work, then average replicated LoRA over logical DP."""
-
-    current = state()
-    if current.sp_size > 1:
-        _sync_gradient_bucket(parameters, group=current.sp_group, average=False)
-    if current.dp_world_size > 1:
-        _sync_gradient_bucket(parameters, group=current.dp_group, average=True)
-
-
 @dataclass(frozen=True)
 class H3PackedSequenceShard:
     hidden_states: Any
@@ -557,7 +491,6 @@ __all__ = [
     "sequence_all_to_all",
     "shard_stage0p5_packed_sequence",
     "state",
-    "sync_lora_gradients",
 ]
 
 

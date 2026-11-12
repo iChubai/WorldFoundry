@@ -209,13 +209,3 @@ def h3_sgf_rollout(
         )
     finally:
         cache.clear()
-
-
-def h3_sgf_replay(*, student, inputs, rollout):
-    return h3_student_forward(
-        student,
-        inputs,
-        rollout.noisy_at_exit,
-        rollout.native_exit_timestep,
-        clean=rollout.cache_target,
-    )

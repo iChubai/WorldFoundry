@@ -532,69 +532,6 @@ def sequence_model_parallel_all_to_all_4D(
     return _AllToAll4D.apply(state.sp_group, input_, state.sp_size, scatter_dim, gather_dim)
 
 
-def sync_sequence_parallel_gradients(module: torch.nn.Module) -> None:
-    """Sum sharded-token gradients across SP ranks after FSDP DP reduction.
-
-    Loss is scaled by 1 / sp_size before backward. Summing the resulting partial
-    token/head gradients across SP reconstructs the exact logical-sample
-    gradient while keeping all SP replicas' optimizer states identical.
-    """
-    state = get_sequence_parallel_state()
-    if state.sp_size == 1:
-        return
-    group = state.sp_group
-    assert group is not None
-
-    params = list(module.parameters())
-    if not params:
-        return
-
-    # Check the entire grad/non-grad pattern with one collective instead of one
-    # scalar all-reduce per parameter.
-    flag_device = next((p.grad.device for p in params if p.grad is not None), params[0].device)
-    grad_flags = torch.tensor(
-        [1 if p.grad is not None else 0 for p in params],
-        device=flag_device,
-        dtype=torch.int32,
-    )
-    dist.all_reduce(grad_flags, op=dist.ReduceOp.SUM, group=group)
-    bad_flags = (grad_flags != 0) & (grad_flags != state.sp_size)
-    if bool(bad_flags.any().item()):
-        bad_indices = bad_flags.nonzero(as_tuple=False).flatten()[:16].cpu().tolist()
-        raise RuntimeError(
-            "SP gradient mismatch: every SP rank must have the same grad/non-grad pattern; "
-            f"first parameter indices={bad_indices}"
-        )
-
-    grads = [p.grad for p in params if p.grad is not None]
-    bucket_limit = max(1, int(os.environ.get("SOLARWM_SP_GRAD_BUCKET_MB", "256"))) * 1024 * 1024
-    buckets: list[list[torch.Tensor]] = []
-    current: list[torch.Tensor] = []
-    current_bytes = 0
-    current_key = None
-    for grad in grads:
-        key = (grad.device, grad.dtype)
-        grad_bytes = grad.numel() * grad.element_size()
-        if current and (key != current_key or current_bytes + grad_bytes > bucket_limit):
-            buckets.append(current)
-            current = []
-            current_bytes = 0
-        current.append(grad)
-        current_bytes += grad_bytes
-        current_key = key
-    if current:
-        buckets.append(current)
-
-    for bucket in buckets:
-        flat = torch.cat([grad.reshape(-1) for grad in bucket])
-        dist.all_reduce(flat, op=dist.ReduceOp.SUM, group=group)
-        offset = 0
-        for grad in bucket:
-            next_offset = offset + grad.numel()
-            grad.copy_(flat[offset:next_offset].view_as(grad))
-            offset = next_offset
-
-
 def contiguous_sp_bounds(length: int, sp_size: int, sp_rank: int) -> tuple[int, int]:
     """Return the equal contiguous token shard owned by one SP rank."""
 

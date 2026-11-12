@@ -2,24 +2,14 @@
 
 from __future__ import annotations
 
-import random
 from collections import OrderedDict
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import numpy as np
-
-from ....checkpoint import CheckpointContract, CheckpointTransaction, assert_resume_compatible, verify_checkpoint
+from ....checkpoint import CheckpointContract, assert_resume_compatible, verify_checkpoint
 from ....errors import BackendContractError
-from ....runtime.output_layout import checkpoint_model_dir
-from ....runtime.safe_state import (
-    decode_numpy_rng_state,
-    decode_python_rng_state,
-    encode_numpy_rng_state,
-    encode_python_rng_state,
-)
 
 _MODEL_PREFIX = "model."
 
@@ -148,103 +138,18 @@ def normalize_model_state(
     return normalized
 
 
-def normalize_optimizer_state(state: Mapping[str, Any]) -> dict[str, Any]:
-    """Normalize both FSDP full-state name surfaces, never just model weights."""
-
-    if not isinstance(state, Mapping):
-        raise BackendContractError("Wan checkpoint optimizer must be a mapping")
-    raw_slots = state.get("state")
-    raw_groups = state.get("param_groups")
-    if not isinstance(raw_slots, Mapping) or not isinstance(raw_groups, Sequence):
-        raise BackendContractError("Wan checkpoint optimizer state is incomplete")
-    named_keys = [key for key in raw_slots if isinstance(key, str)]
-    group_names: list[str] = []
-    for raw_group in raw_groups:
-        if isinstance(raw_group, Mapping):
-            params = raw_group.get("params", ())
-            if isinstance(params, Sequence) and not isinstance(params, (str, bytes)):
-                group_names.extend(value for value in params if isinstance(value, str))
-    all_names = [*named_keys, *group_names]
-    prefix_modes = {name.startswith(_MODEL_PREFIX) for name in all_names}
-    if len(prefix_modes) > 1:
-        raise BackendContractError("Wan optimizer mixes model-prefixed and unprefixed parameter names")
-
-    slots: dict[Any, Any] = {}
-    for key, value in raw_slots.items():
-        normalized = _strip_model_prefix_key(key) if isinstance(key, str) else key
-        if normalized in slots:
-            raise BackendContractError("Wan optimizer state key normalization produced duplicates")
-        slots[normalized] = value
-    groups: list[dict[str, Any]] = []
-    for index, raw_group in enumerate(raw_groups):
-        if not isinstance(raw_group, Mapping):
-            raise BackendContractError(f"Wan optimizer parameter group {index} is not a mapping")
-        params = raw_group.get("params")
-        if not isinstance(params, Sequence) or isinstance(params, (str, bytes)):
-            raise BackendContractError(f"Wan optimizer parameter group {index} has no parameter sequence")
-        normalized_params = [_strip_model_prefix_key(value) if isinstance(value, str) else value for value in params]
-        if len(set(normalized_params)) != len(normalized_params):
-            raise BackendContractError(f"Wan optimizer parameter group {index} normalization produced duplicates")
-        group = dict(raw_group)
-        group["params"] = normalized_params
-        groups.append(group)
-    slot_names = {key for key in slots if isinstance(key, str)}
-    parameter_names = {key for group in groups for key in group["params"] if isinstance(key, str)}
-    if slot_names and slot_names != parameter_names:
-        missing = sorted(parameter_names - slot_names)
-        unexpected = sorted(slot_names - parameter_names)
-        raise BackendContractError(
-            "Wan optimizer slot/parameter names differ after normalization: "
-            f"missing_slots={missing[:8]} unexpected_slots={unexpected[:8]}"
-        )
-    return {"state": slots, "param_groups": groups}
-
-
-def optimizer_parameter_names(state: Mapping[str, Any]) -> tuple[str, ...]:
-    """Return the readable ordered parameter inventory used for exact resume."""
-
-    normalized = normalize_optimizer_state(state)
-    return tuple(name for group in normalized["param_groups"] for name in group["params"])
-
-
-def _strip_parameter_wrapper_segments(name: str) -> str:
-    wrappers = {"_fsdp_wrapped_module", "_checkpoint_wrapped_module"}
-    return ".".join(part for part in name.split(".") if part not in wrappers)
-
-
-def _assert_optimizer_names_match_module(state: Mapping[str, Any], module: Any) -> None:
-    normalized = normalize_optimizer_state(state)
-    checkpoint_names = tuple(name for group in normalized["param_groups"] for name in group["params"])
-    if not all(isinstance(name, str) and name for name in checkpoint_names):
-        raise BackendContractError("Wan checkpoint optimizer parameters must use explicit names")
-    runtime_names = tuple(
-        _strip_parameter_wrapper_segments(_strip_model_prefix_key(name)) for name, _ in _named_parameters(module)
-    )
-    if checkpoint_names != runtime_names:
-        missing = sorted(set(runtime_names) - set(checkpoint_names))
-        unexpected = sorted(set(checkpoint_names) - set(runtime_names))
-        raise BackendContractError(
-            "Wan checkpoint optimizer names differ from the runtime model: "
-            f"missing={missing[:8]} unexpected={unexpected[:8]}"
-        )
-
-
-def _plain(value: Any) -> Any:
-    if isinstance(value, Mapping):
-        return {str(key): _plain(item) for key, item in value.items()}
-    if isinstance(value, tuple):
-        return [_plain(item) for item in value]
-    if isinstance(value, list):
-        return [_plain(item) for item in value]
-    return value
-
-
 def _distributed_context() -> tuple[Any, int, int]:
     import torch.distributed as dist
 
     if dist.is_initialized():
         return dist, dist.get_rank(), dist.get_world_size()
     return dist, 0, 1
+
+
+def _is_fsdp(module: Any) -> bool:
+    from torch.distributed.fsdp import FullyShardedDataParallel
+
+    return isinstance(module, FullyShardedDataParallel)
 
 
 def _collective_error(local_error: str | None, *, phase: str) -> None:
@@ -260,95 +165,12 @@ def _collective_error(local_error: str | None, *, phase: str) -> None:
         raise BackendContractError(f"Wan checkpoint {phase} failed collectively: {rendered}")
 
 
-def _local_rank_runtime_state(reader: Any, device: Any) -> dict[str, Any]:
-    import torch
-
-    state_dict = getattr(reader, "checkpoint_state_dict", None)
-    if not callable(state_dict):
-        state_dict = getattr(reader, "state_dict", None)
-    if not callable(state_dict):
-        raise BackendContractError("Wan checkpoint requires a stateful data reader")
-    _, rank, world_size = _distributed_context()
-    return {
-        "schema": "solarwm.wan22.rank-runtime.v1",
-        "rank": int(rank),
-        "world_size": int(world_size),
-        "reader": state_dict(),
-        "python_rng": encode_python_rng_state(random.getstate()),
-        "numpy_rng": encode_numpy_rng_state(np.random.get_state()),
-        "torch_cpu_rng": torch.get_rng_state().cpu(),
-        "torch_cuda_rng": (torch.cuda.get_rng_state(device).cpu() if torch.device(device).type == "cuda" else None),
-    }
-
-
-def _gather_rank_runtime_states(reader: Any, device: Any) -> list[dict[str, Any]]:
-    local = _local_rank_runtime_state(reader, device)
-    dist, _, world_size = _distributed_context()
-    if world_size == 1:
-        return [local]
-    gathered: list[Any] = [None] * world_size
-    dist.all_gather_object(gathered, local)
-    return list(gathered)
-
-
-def _restore_rank_runtime_state(states: Any, *, reader: Any, device: Any) -> None:
-    """Restore exact per-rank reader and RNG state."""
-
-    import torch
-
-    if states is None:
-        raise BackendContractError("Wan full resume requires rank-local reader and RNG state")
-    dist, rank, world_size = _distributed_context()
-    del dist
-    if not isinstance(states, list) or len(states) != world_size:
-        raise BackendContractError("Wan checkpoint raw-rank runtime state count differs")
-    selected = states[rank]
-    if (
-        not isinstance(selected, Mapping)
-        or selected.get("schema") != "solarwm.wan22.rank-runtime.v1"
-        or int(selected.get("rank", -1)) != rank
-        or int(selected.get("world_size", -1)) != world_size
-    ):
-        raise BackendContractError(f"Wan checkpoint runtime state for rank {rank} is invalid")
-    load_state_dict = getattr(reader, "load_state_dict", None)
-    if not callable(load_state_dict):
-        raise BackendContractError("Wan resume requires a stateful data reader")
-    load_state_dict(selected.get("reader", {}))
-    random.setstate(decode_python_rng_state(selected.get("python_rng")))
-    np.random.set_state(decode_numpy_rng_state(selected.get("numpy_rng")))
-    cpu_state = selected.get("torch_cpu_rng")
-    if (
-        not isinstance(cpu_state, torch.Tensor)
-        or cpu_state.dtype != torch.uint8
-        or cpu_state.ndim != 1
-        or cpu_state.numel() == 0
-    ):
-        raise BackendContractError("Wan checkpoint CPU RNG state is invalid")
-    torch.set_rng_state(cpu_state)
-    cuda_state = selected.get("torch_cuda_rng")
-    if torch.device(device).type == "cuda":
-        if (
-            not isinstance(cuda_state, torch.Tensor)
-            or cuda_state.dtype != torch.uint8
-            or cuda_state.ndim != 1
-            or cuda_state.numel() == 0
-        ):
-            raise BackendContractError("Wan checkpoint CUDA RNG state is invalid")
-        torch.cuda.set_rng_state(cuda_state, device)
-
-
 def _broadcast_text(value: str) -> str:
     dist, _, world_size = _distributed_context()
     payload = [value]
     if world_size > 1:
         dist.broadcast_object_list(payload, src=0)
     return str(payload[0])
-
-
-def _is_fsdp(module: Any) -> bool:
-    from torch.distributed.fsdp import FullyShardedDataParallel
-
-    return isinstance(module, FullyShardedDataParallel)
 
 
 def _load_full_model_state(module: Any, state: Mapping[str, Any]) -> None:
@@ -482,47 +304,6 @@ def _assert_payload_contract(
     }
     if drift:
         raise BackendContractError(f"{label} contract mismatch: {drift}")
-
-
-def _validate_standalone_full_resume(
-    payload: Mapping[str, Any],
-    config: Mapping[str, Any],
-) -> int:
-    step = _validate_current_full_resume(payload, config)
-    _assert_payload_contract(
-        payload,
-        expected={
-            "family": str(config["model"]["family"]),
-            "stage": str(config["train"]["stage"]),
-            "objective": str(config["train"]["objective"]),
-            "camera_translation_transform": str(config["model"]["camera_translation_transform"]),
-        },
-        label="Wan standalone full-resume source",
-    )
-    return step
-
-
-def _validate_current_full_resume(
-    payload: Mapping[str, Any],
-    config: Mapping[str, Any],
-) -> int:
-    try:
-        step = int(payload["global_step"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise BackendContractError("Wan checkpoint has no valid global_step") from exc
-    if step != int(config["checkpoint"]["resume_step"]):
-        raise BackendContractError("Wan checkpoint global_step differs from checkpoint.resume_step")
-    for field in ("generator", "generator_ema", "optimizer", "scheduler"):
-        value = payload.get(field)
-        if not isinstance(value, Mapping) or not value:
-            raise BackendContractError(f"Wan full resume requires non-empty {field}")
-    try:
-        ema_updates = int(payload["ema_num_updates"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise BackendContractError("Wan checkpoint has no EMA update count") from exc
-    if ema_updates != step:
-        raise BackendContractError("Wan checkpoint EMA update count differs from step")
-    return step
 
 
 def _resolve_input_checkpoint(
@@ -812,222 +593,12 @@ def load_live_and_ema_weights_checkpoint(
     return RestoredWanWeights(source_step, identity, resolved, standalone)
 
 
-def load_full_checkpoint(
-    *,
-    config: Mapping[str, Any],
-    path: str | Path,
-    diffusion: Any,
-    optimizer: Any,
-    scheduler: Any,
-    ema: Any,
-    reader: Any,
-    device: Any,
-) -> RestoredWanCheckpoint:
-    """Restore all algorithm-bearing state, including rank-local RNG and data position."""
-
-    import torch
-
-    resolved, identity, standalone = _resolve_input_checkpoint(path, config)
-    payload: Mapping[str, Any] | None = None
-    local_error: str | None = None
-    try:
-        loaded = torch.load(
-            resolved,
-            map_location="cpu",
-            weights_only=True,
-            mmap=True,
-        )
-        if not isinstance(loaded, Mapping):
-            raise BackendContractError("Wan model.pt payload must be a mapping")
-        payload = loaded
-        step = (
-            _validate_standalone_full_resume(payload, config)
-            if standalone
-            else _validate_current_full_resume(payload, config)
-        )
-        generator = normalize_model_state(payload["generator"], field="generator")
-        generator_ema = normalize_model_state(payload["generator_ema"], field="generator_ema")
-        optimizer_state = normalize_optimizer_state(payload["optimizer"])
-        optimizer_names = optimizer_parameter_names(optimizer_state)
-        _assert_optimizer_names_match_module(optimizer_state, diffusion.module)
-        scheduler_state = payload["scheduler"]
-        ema_updates = int(payload["ema_num_updates"])
-    except Exception as exc:
-        local_error = f"{type(exc).__name__}: {exc}"
-    _collective_error(local_error, phase="preload/contract")
-    assert payload is not None
-
-    _load_full_model_state(diffusion.module, generator)
-    _load_full_ema_state(
-        diffusion.module,
-        ema,
-        generator_ema,
-        num_updates=ema_updates,
-    )
-    try:
-        if _is_fsdp(diffusion.module):
-            from torch.distributed.fsdp import FullyShardedDataParallel
-
-            local_optimizer = FullyShardedDataParallel.optim_state_dict_to_load(
-                model=diffusion.module,
-                optim=optimizer,
-                optim_state_dict=optimizer_state,
-            )
-            optimizer.load_state_dict(local_optimizer)
-        else:
-            optimizer.load_state_dict(optimizer_state)
-        scheduler.load_state_dict(scheduler_state)
-        if int(getattr(scheduler, "last_epoch", -1)) != step:
-            raise BackendContractError(
-                "restored Wan scheduler epoch differs from checkpoint step: "
-                f"{getattr(scheduler, 'last_epoch', None)} != {step}"
-            )
-    except Exception as exc:
-        local_error = f"{type(exc).__name__}: {exc}"
-    else:
-        local_error = None
-    _collective_error(local_error, phase="optimizer/scheduler restore")
-    try:
-        _restore_rank_runtime_state(
-            payload.get("rank_runtime_state"),
-            reader=reader,
-            device=device,
-        )
-    except Exception as exc:
-        local_error = f"{type(exc).__name__}: {exc}"
-    else:
-        local_error = None
-    _collective_error(local_error, phase="rank runtime restore")
-    return RestoredWanCheckpoint(step, identity, resolved, standalone, optimizer_names)
-
-
-def _gather_full_state(module: Any, *, rank0_only: bool) -> Mapping[str, Any]:
-    if _is_fsdp(module):
-        from torch.distributed.fsdp import (
-            FullStateDictConfig,
-            FullyShardedDataParallel,
-            StateDictType,
-        )
-
-        options = FullStateDictConfig(
-            rank0_only=bool(rank0_only),
-            offload_to_cpu=True,
-        )
-        with FullyShardedDataParallel.state_dict_type(module, StateDictType.FULL_STATE_DICT, options):
-            return module.state_dict()
-    _, rank, _ = _distributed_context()
-    if rank0_only and rank != 0:
-        return {}
-    return {key: value.detach().cpu().clone() for key, value in module.state_dict().items()}
-
-
-def _gather_full_optimizer(module: Any, optimizer: Any) -> Mapping[str, Any]:
-    if _is_fsdp(module):
-        from torch.distributed.fsdp import (
-            FullOptimStateDictConfig,
-            FullStateDictConfig,
-            FullyShardedDataParallel,
-            StateDictType,
-        )
-
-        with FullyShardedDataParallel.state_dict_type(
-            module,
-            StateDictType.FULL_STATE_DICT,
-            state_dict_config=FullStateDictConfig(rank0_only=True, offload_to_cpu=True),
-            optim_state_dict_config=FullOptimStateDictConfig(rank0_only=True, offload_to_cpu=True),
-        ):
-            return FullyShardedDataParallel.optim_state_dict(module, optimizer)
-    _, rank, _ = _distributed_context()
-    return optimizer.state_dict() if rank == 0 else {}
-
-
-def save_full_checkpoint(
-    *,
-    config: Mapping[str, Any],
-    step: int,
-    diffusion: Any,
-    optimizer: Any,
-    scheduler: Any,
-    ema: Any,
-    reader: Any,
-    device: Any,
-) -> str:
-    """Collectively create one full-state payload inside an atomic store."""
-
-    import torch
-
-    dist, rank, _ = _distributed_context()
-    if int(step) < 1:
-        raise BackendContractError("Wan checkpoint step must be positive")
-    target = checkpoint_model_dir(
-        str(config["runtime"]["output_dir"]),
-        step=int(step),
-        width=6,
-    )
-    rank_runtime_state = _gather_rank_runtime_states(reader, device)
-    live = _gather_full_state(diffusion.module, rank0_only=True)
-    optimizer_state = _gather_full_optimizer(diffusion.module, optimizer)
-    with ema.swapped_into(diffusion.module):
-        ema_state = _gather_full_state(diffusion.module, rank0_only=True)
-    if dist.is_initialized():
-        dist.barrier()
-
-    identity = [""]
-    error = [""]
-    if rank == 0:
-        try:
-            with CheckpointTransaction(target) as transaction:
-                payload = {
-                    "generator": live,
-                    "generator_ema": ema_state,
-                    "optimizer": normalize_optimizer_state(optimizer_state),
-                    "scheduler": scheduler.state_dict(),
-                    "global_step": int(step),
-                    "config": _plain(config),
-                    "ema_num_updates": int(ema.num_updates),
-                    "rank_runtime_state": rank_runtime_state,
-                }
-                torch.save(payload, transaction.path / "model.pt")
-                committed = transaction.commit(
-                    step=int(step),
-                    contract=checkpoint_contract(config),
-                    required_components=("model.pt",),
-                    metadata={
-                        "schema": "solarwm.wan22-full-state.v1",
-                        "roles": {
-                            "generator": "live_full_state",
-                            "generator_ema": "fp32_ema_full_state",
-                            "optimizer": "fsdp_full_optimizer_state",
-                            "scheduler": "lr_scheduler",
-                            "global_step": "completed_optimizer_steps",
-                            "rank_runtime_state": "per_raw_rank_rng_and_reader",
-                        },
-                    },
-                )
-                identity[0] = committed.manifest_digest
-        except Exception as exc:
-            error[0] = f"{type(exc).__name__}: {exc}"
-    if dist.is_initialized():
-        dist.broadcast_object_list(error, src=0)
-        dist.broadcast_object_list(identity, src=0)
-        dist.barrier()
-    if error[0]:
-        raise BackendContractError(f"Wan checkpoint commit failed: {error[0]}")
-    if not identity[0]:
-        raise BackendContractError("Wan checkpoint commit returned no identity")
-    return str(identity[0])
-
-
 __all__ = [
     "RestoredWanCheckpoint",
     "RestoredWanWeights",
     "checkpoint_contract",
     "load_anyflow_weights_only_checkpoint",
-    "load_full_checkpoint",
     "load_live_and_ema_weights_checkpoint",
     "load_weights_only_checkpoint",
     "normalize_model_state",
-    "normalize_optimizer_state",
-    "optimizer_parameter_names",
-    "save_full_checkpoint",
 ]

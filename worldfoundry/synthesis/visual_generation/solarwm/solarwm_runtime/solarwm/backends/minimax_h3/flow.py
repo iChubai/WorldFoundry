@@ -46,13 +46,6 @@ def scale_noise(clean_sample: object, noise: object, timestep: object) -> np.nda
     return time * clean_array + (1.0 - time) * noise_array
 
 
-def data_velocity_target(clean_sample: object, noise: object) -> np.ndarray:
-    """Return H3's data-ward velocity target, ``x0 - noise``."""
-
-    clean_array, noise_array = _pair(clean_sample, noise)
-    return clean_array - noise_array
-
-
 def predict_clean_sample(
     noisy_sample: object,
     velocity: object,
@@ -77,24 +70,6 @@ def shift_sigma(sigma: object, shift: float) -> np.ndarray:
         raise ValueError(f"shift must be finite and positive, got {shift}")
     values = np.asarray(sigma)
     return shift * values / (1.0 + (shift - 1.0) * values)
-
-
-def sample_shifted_timestep(
-    shape: int | tuple[int, ...],
-    *,
-    shift: float,
-    generator: np.random.Generator,
-    dtype: np.dtype | type = np.float32,
-) -> np.ndarray:
-    """Sample ``t=1-shift_sigma(U(0,1))`` from an explicit RNG."""
-
-    normalized = (shape,) if isinstance(shape, int) else tuple(shape)
-    if not normalized or any(int(size) <= 0 for size in normalized):
-        raise ValueError(f"shape must be positive, got {shape!r}")
-    if not isinstance(generator, np.random.Generator):
-        raise TypeError("generator must be an explicit numpy.random.Generator")
-    base_sigma = generator.random(normalized, dtype=np.dtype(dtype))
-    return 1.0 - shift_sigma(base_sigma, shift)
 
 
 def make_shifted_schedule(
@@ -139,18 +114,14 @@ def euler_step(
 
 
 add_noise = scale_noise
-velocity_target = data_velocity_target
 
 
 __all__ = [
     "H3FlowSchedule",
     "add_noise",
-    "data_velocity_target",
     "euler_step",
     "make_shifted_schedule",
     "predict_clean_sample",
-    "sample_shifted_timestep",
     "scale_noise",
     "shift_sigma",
-    "velocity_target",
 ]

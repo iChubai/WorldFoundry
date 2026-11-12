@@ -3,63 +3,13 @@
 from __future__ import annotations
 
 import hashlib
-import time
 from collections.abc import Callable, Mapping, Sequence
-from datetime import timedelta
 from typing import Any, TypeVar
 
 from ..config.loader import canonical_json
 from ..errors import BackendContractError
 
 T = TypeVar("T")
-
-
-class DataReadiness:
-    """Finish remote batch reads on every rank before entering GPU collectives.
-
-    All raw ranks construct and call this at the same reader boundary. The
-    separate CPU group keeps storage latency out of the NCCL watchdog window;
-    it does not select samples, advance RNGs, or move batch tensors.
-    """
-
-    def __init__(self, *, enabled: bool) -> None:
-        self.group: Any = None
-        if not enabled:
-            return
-        import torch
-        import torch.distributed as dist
-
-        if not dist.is_initialized() or dist.get_world_size() == 1:
-            return
-        self.torch = torch
-        self.dist = dist
-        self.group = dist.new_group(backend="gloo", timeout=timedelta(hours=2))
-
-    def read(self, call: Callable[[], T]) -> T:
-        if self.group is None:
-            return call()
-        started = time.monotonic()
-        result: T | None = None
-        local_error: Exception | None = None
-        try:
-            result = call()
-        except Exception as exc:
-            local_error = exc
-        rank = self.dist.get_rank()
-        world = self.dist.get_world_size()
-        status = self.torch.tensor([rank if local_error is not None else world], dtype=self.torch.int64, device="cpu")
-        self.dist.all_reduce(status, op=self.dist.ReduceOp.MIN, group=self.group)
-        failed_rank = int(status.item())
-        if failed_rank != world:
-            messages = [f"{type(local_error).__name__}: {local_error}" if rank == failed_rank else ""]
-            self.dist.broadcast_object_list(messages, src=failed_rank, group=self.group)
-            raise BackendContractError(
-                f"training data read failed on rank {failed_rank}: {messages[0]}"
-            ) from local_error
-        elapsed = time.monotonic() - started
-        if elapsed >= 30:
-            print(f"[data-readiness][rank{rank}] all batches ready after {elapsed:.1f}s", flush=True)
-        return result  # type: ignore[return-value]
 
 
 def _collective_coordinates(
@@ -175,36 +125,6 @@ def collective_call(
             raise exc from local_exception
         raise
     return result  # type: ignore[return-value]
-
-
-def collective_rank_zero_call(
-    call: Callable[[], T],
-    *,
-    dist: Any | None,
-    label: str,
-    rank: int | None = None,
-    world_size: int | None = None,
-    error_type: type[Exception] = BackendContractError,
-) -> T:
-    """Run work on raw rank zero and broadcast only its successful value."""
-
-    resolved_rank, resolved_world, initialized = _collective_coordinates(
-        dist,
-        rank=rank,
-        world_size=world_size,
-    )
-    result = collective_call(
-        call if resolved_rank == 0 else lambda: None,  # type: ignore[arg-type]
-        dist=dist,
-        label=label,
-        rank=resolved_rank,
-        world_size=resolved_world,
-        error_type=error_type,
-    )
-    values: list[Any] = [result if resolved_rank == 0 else None]
-    if initialized and resolved_world > 1:
-        dist.broadcast_object_list(values, src=0)
-    return values[0]  # type: ignore[return-value]
 
 
 def identity_fingerprint(value: Mapping[str, Any]) -> str:

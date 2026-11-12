@@ -97,14 +97,6 @@ class H3Stage0p5Core:
         raise RuntimeError("H3 camera artifact is neither latent nor token aligned")
 
     @staticmethod
-    def shifted_timestep(generator: Any | None, *, shift: float, device: Any) -> Any:
-        import torch
-
-        sigma = torch.rand((), generator=generator, device=device, dtype=torch.float32)
-        shifted = float(shift) * sigma / (1.0 + (float(shift) - 1.0) * sigma)
-        return 1.0 - shifted
-
-    @staticmethod
     def _row_times(layout: H3TorchLayout, video_t: Any, audio_t: Any, device: Any) -> tuple[Any, Any]:
         import torch
 
@@ -154,49 +146,6 @@ class H3Stage0p5Core:
             return_dict=False,
         )
         return video[:, layout.target_video_output_slice]
-
-    def forward_loss(self, batch: H3ArtifactBatch, *, noise_seed: int | None) -> Any:
-        import torch
-        import torch.nn.functional as F
-
-        generator = None if noise_seed is None else torch.Generator(device=self.device).manual_seed(int(noise_seed))
-        clean = batch.target_latents.to(self.device, dtype=torch.float32, non_blocking=True).unsqueeze(0)
-        anchor = batch.anchor_latents.to(self.device, dtype=torch.float32, non_blocking=True).unsqueeze(0)
-        prompt = batch.prompt_embeds.to(self.device, dtype=torch.bfloat16, non_blocking=True).unsqueeze(0)
-        tags = batch.text_token_tags.to(self.device, dtype=torch.long)
-        self._broadcast_logical_sample(tags)
-        layout = self.layout(tags)
-        viewmats, K, frame_ids = self._camera(batch, layout)
-        self._broadcast_logical_sample(clean, anchor, prompt, viewmats, K)
-        anchor_noise = torch.randn(anchor.shape, generator=generator, device=self.device, dtype=torch.float32)
-        audio_clean = self.audio_rows()
-        audio_noise = torch.randn(audio_clean.shape, generator=generator, device=self.device, dtype=torch.float32)
-        audio_t = self.shifted_timestep(generator, shift=3.0, device=self.device)
-        video_noise = torch.randn(clean.shape, generator=generator, device=self.device, dtype=torch.float32)
-        video_t = self.shifted_timestep(generator, shift=12.0, device=self.device)
-        if is_sequence_parallel_enabled():
-            for value in (anchor_noise, audio_noise, video_noise, video_t, audio_t):
-                broadcast_sp_tensor(value)
-        anchor_t = torch.tensor(0.999, device=self.device, dtype=anchor.dtype)
-        anchor_noisy = anchor_t * anchor + (1.0 - anchor_t) * anchor_noise
-        audio_noisy = audio_t * audio_clean + (1.0 - audio_t) * audio_noise
-        video_noisy = video_t * clean + (1.0 - video_t) * video_noise
-        video_rows = torch.cat((patchify_video(anchor_noisy), patchify_video(video_noisy)), dim=1)
-        target_rows = patchify_video(clean - video_noise)
-        prediction = self._forward(
-            video_rows=video_rows,
-            audio_rows=audio_noisy,
-            prompt=prompt,
-            layout=layout,
-            video_t=video_t,
-            audio_t=audio_t,
-            viewmats=viewmats,
-            K=K,
-            frame_ids=frame_ids,
-        )
-        if tuple(prediction.shape) != tuple(target_rows.shape):
-            raise RuntimeError(f"H3 predicted rows {tuple(prediction.shape)} != {tuple(target_rows.shape)}")
-        return F.mse_loss(prediction.float(), target_rows.float())
 
     def generate(self, batch: H3ArtifactBatch, *, noise_seed: int, num_inference_steps: int) -> Any:
         import torch

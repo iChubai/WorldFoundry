@@ -17,9 +17,7 @@ from typing import Any
 from ...data.index import IndexRow, iter_index, shard_identity
 from ...errors import DataContractError
 
-PIXEL_FRAMES_81F = 81
 PIXEL_FRAMES_153F = 153
-WINDOW_HASH_NAMESPACE_81F = "solarwm-latent-81f-v1"
 WINDOW_HASH_NAMESPACE_153F = "solarwm-latent-153f-v1"
 SIX_WINDOW_153F_DATASETS = frozenset({"abot", "miradata", "sekai_game"})
 _WINDOW_SAMPLE_ID = re.compile(r"^(?P<source>.+)/latent-153f-w(?P<index>[0-9]{2})$")
@@ -50,35 +48,6 @@ class WindowMaterializationSummary:
             "decompressed_sha256": self.decompressed_sha256,
             "compressed_sha256": self.compressed_sha256,
         }
-
-
-def expected_81f_window_count(num_frames: int) -> int:
-    """Return the release-defined number of five-second windows at 16 fps."""
-
-    if num_frames < PIXEL_FRAMES_81F:
-        raise DataContractError("81f preencoding source is shorter than 81 frames")
-    # Round half up so a 160-frame source deterministically carries two windows.
-    return max(1, (int(num_frames) - 1 + 40) // 80)
-
-
-def expected_81f_window_start(preencoding: Mapping[str, Any], num_frames: int) -> int:
-    """Return an endpoint-inclusive, uniformly spaced 81f window start."""
-
-    try:
-        window_index = int(preencoding["window_index"])
-        window_count = int(preencoding["window_count"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise DataContractError("81f preencoding window metadata is incomplete") from exc
-    expected_count = expected_81f_window_count(num_frames)
-    if window_count != expected_count or not 0 <= window_index < window_count:
-        raise DataContractError(
-            f"81f source requires {expected_count} window ordinals, got index={window_index} count={window_count}"
-        )
-    max_start = int(num_frames) - PIXEL_FRAMES_81F
-    if window_count == 1:
-        return max_start // 2
-    denominator = window_count - 1
-    return (2 * window_index * max_start + denominator) // (2 * denominator)
 
 
 def expected_153f_window_start(preencoding: Mapping[str, Any], num_frames: int) -> int:

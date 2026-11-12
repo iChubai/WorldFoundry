@@ -120,19 +120,6 @@ def latent_aligned_pixel_indices(
     return result
 
 
-def audio_latents_for_video(
-    num_frames: int,
-    *,
-    fps: float = DEFAULT_GEOMETRY.semantic_fps,
-    latents_per_second: int = DEFAULT_GEOMETRY.audio_latents_per_second,
-) -> int:
-    """Return per-channel audio latents on H3's rounded semantic timeline."""
-
-    if num_frames < 1 or fps <= 0 or latents_per_second <= 0:
-        raise ValueError("num_frames, fps, and latents_per_second must be positive")
-    return round(num_frames / fps * latents_per_second)
-
-
 def validate_canvas(height: int, width: int, *, multiple: int = 32) -> tuple[int, int]:
     """Reject rather than round a canvas outside the checkpoint contract."""
 
@@ -257,7 +244,6 @@ __all__ = [
     "H3Geometry",
     "H3Stage0p5Geometry",
     "align_pixel_frames",
-    "audio_latents_for_video",
     "frame_position_grid",
     "latent_aligned_pixel_indices",
     "latent_frames_to_pixel_frames",

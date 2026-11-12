@@ -11,11 +11,9 @@ import importlib.util
 import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, NoReturn
 
-from ...checkpoint import VerifiedCheckpoint
 from ...errors import BackendContractError
-from ...runtime.distributed import collective_call, collective_rank_zero_call
 from .adapter import lora_target_modules
 from .checkpoint import (
     FP32_SCALE_TABLES,
@@ -32,9 +30,7 @@ from .inference import InferencePlan
 from .runtime import (
     RUNTIME_PROVIDER_API,
     InferenceRuntimeBundle,
-    PreencodeRuntimeBundle,
     ProviderCheck,
-    TrainingRuntimeBundle,
 )
 
 PROVIDER_IDENTITY = "solarwm.ltx25.official.v1"
@@ -47,54 +43,6 @@ def _inference_data_source(config: Mapping[str, Any]) -> Any:
     from .torch_data import IndexedPreencodedSource
 
     return IndexedPreencodedSource(config)
-
-
-def _collective_resume_checkpoint(
-    path: str | Path,
-    config: Mapping[str, Any],
-) -> VerifiedCheckpoint:
-    """Deep-verify once, then construct the same manifest view on every rank."""
-
-    import torch.distributed as dist
-
-    from ...checkpoint import verify_checkpoint
-    from .runtime import validate_ltx_checkpoint
-
-    rank = dist.get_rank() if dist.is_initialized() else 0
-    world_size = dist.get_world_size() if dist.is_initialized() else 1
-
-    def deep_verify() -> str:
-        verified = verify_checkpoint(path)
-        validate_ltx_checkpoint(verified, config)
-        return verified.manifest_digest
-
-    identity = str(
-        collective_rank_zero_call(
-            deep_verify,
-            dist=dist,
-            rank=rank,
-            world_size=world_size,
-            label="LTX resume deep verification",
-            error_type=BackendContractError,
-        )
-    )
-
-    def local_verify() -> VerifiedCheckpoint:
-        verified = verify_checkpoint(path)
-        validate_ltx_checkpoint(verified, config)
-        if verified.manifest_digest != identity:
-            raise BackendContractError("LTX resume manifest identity differs across ranks")
-        return verified
-
-    verified = collective_call(
-        local_verify,
-        dist=dist,
-        rank=rank,
-        world_size=world_size,
-        label="LTX resume rank-local verification",
-        error_type=BackendContractError,
-    )
-    return verified
 
 
 def _package_version(name: str) -> str:
@@ -227,7 +175,7 @@ class OfficialLTX25Provider:
         config: Mapping[str, Any],
         inspection: BaseCheckpointInspection,
         validation_plan: InferencePlan,
-    ) -> TrainingRuntimeBundle:
+    ) -> NoReturn:
         raise BackendContractError("SolarWM training is not part of the WorldFoundry inference runtime")
 
     def create_inference_runtime(
@@ -317,7 +265,7 @@ class OfficialLTX25Provider:
             close=close,
         )
 
-    def create_preencode_runtime(self, config: Mapping[str, Any]) -> PreencodeRuntimeBundle:
+    def create_preencode_runtime(self, config: Mapping[str, Any]) -> NoReturn:
         raise BackendContractError("SolarWM preencoding is not part of the WorldFoundry inference runtime")
 
 

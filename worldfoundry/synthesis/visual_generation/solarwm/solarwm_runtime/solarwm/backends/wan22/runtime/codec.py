@@ -1,4 +1,4 @@
-"""One Wan5B online codec shared by raw training and offline preencoding."""
+"""Wan image-conditioning masks and inference codec contracts."""
 
 from __future__ import annotations
 
@@ -6,175 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from ....errors import DataContractError
-from ....preencode.contracts import EncoderContract, TensorSpec, validate_encoded_tensors
-
-
-class Wan5BOnlineCodec:
-    """Encode pixels/text while preserving already-canonical camera tensors."""
-
-    def __init__(
-        self,
-        vae: Any,
-        text_encoder: Any,
-        *,
-        pixel_frames: int,
-        height: int = 480,
-        width: int = 864,
-        frame_sequence_length: int = 405,
-    ) -> None:
-        latent_frames = 1 + (int(pixel_frames) - 1) // 4
-        self.vae = vae
-        self.text_encoder = text_encoder
-        self.contract = EncoderContract(
-            schema="solarwm.encoder.v1",
-            family="wan22_ti2v_5b",
-            format_version="solarwm.wan22-ti2v-5b.online.v1",
-            pixel_frames=int(pixel_frames),
-            latent_frames=latent_frames,
-            height=int(height),
-            width=int(width),
-            camera_convention="first-frame-relative-w2c-fp32",
-            tensors=(
-                TensorSpec(
-                    "latents",
-                    (latent_frames, 48, int(height) // 16, int(width) // 16),
-                    "bfloat16",
-                ),
-                TensorSpec("prompt_embeds", (512, 4096), "bfloat16"),
-                TensorSpec(
-                    "camera_viewmats",
-                    (latent_frames * int(frame_sequence_length), 4, 4),
-                    "float32",
-                ),
-                TensorSpec(
-                    "camera_K",
-                    (latent_frames * int(frame_sequence_length), 3, 3),
-                    "float32",
-                ),
-            ),
-            extras={
-                "vae_temporal_alignment": "0,1,5,9,...",
-                "caption_source": "frozen",
-                "camera_source": "preserve",
-            },
-        )
-
-    def encode(
-        self,
-        *,
-        sample_id: str,
-        pixels: Any,
-        caption: str,
-        camera: Any,
-        seed: int,
-    ) -> Mapping[str, Any]:
-        del seed
-        if not sample_id:
-            raise DataContractError("Wan online codec requires a sample_id")
-        if not isinstance(camera, Mapping) or set(camera) != {"viewmats", "K"}:
-            raise DataContractError("Wan online codec camera must contain viewmats and K")
-        try:
-            import torch
-        except ImportError as exc:
-            raise DataContractError("Wan online codec requires torch") from exc
-        if tuple(pixels.shape) != (
-            self.contract.pixel_frames,
-            3,
-            self.contract.height,
-            self.contract.width,
-        ):
-            raise DataContractError(
-                f"Wan pixels have shape {tuple(pixels.shape)}, expected "
-                f"[{self.contract.pixel_frames},3,{self.contract.height},{self.contract.width}]"
-            )
-        with torch.no_grad():
-            latents = self.vae.encode(pixels.unsqueeze(0).permute(0, 2, 1, 3, 4).float())[0].to(torch.bfloat16)
-            prompt = self.text_encoder([caption])["prompt_embeds"][0].to(torch.bfloat16)
-        encoded = {
-            "latents": latents,
-            "prompt_embeds": prompt,
-            "camera_viewmats": camera["viewmats"].to(torch.float32),
-            "camera_K": camera["K"].to(torch.float32),
-        }
-        validate_encoded_tensors(encoded, self.contract)
-        return encoded
-
-    def encode_batch(
-        self,
-        *,
-        sample_ids: Sequence[str],
-        pixels: Any,
-        captions: Sequence[str],
-        camera: Mapping[str, Any],
-    ) -> Mapping[str, Any]:
-        """Batched execution with the same per-sample tensor contract."""
-
-        try:
-            import torch
-        except ImportError as exc:
-            raise DataContractError("Wan online codec requires torch") from exc
-        batch = len(sample_ids)
-        if len(captions) != batch or int(pixels.shape[0]) != batch:
-            raise DataContractError("Wan online batch identity and tensor sizes differ")
-        with torch.no_grad():
-            latents = self.vae.encode(pixels.permute(0, 2, 1, 3, 4).contiguous().float()).to(torch.bfloat16)
-            prompts = self.text_encoder(captions)["prompt_embeds"].to(torch.bfloat16)
-        return {
-            "latents": latents,
-            "prompt_embeds": prompts,
-            "camera": {
-                "viewmats": camera["viewmats"].to(torch.float32),
-                "K": camera["K"].to(torch.float32),
-            },
-        }
-
-    def encode_stage2_batch(
-        self,
-        *,
-        sample_ids: Sequence[str],
-        first_pixels: Any,
-        captions: Sequence[str],
-        camera: Mapping[str, Any],
-    ) -> Mapping[str, Any]:
-        """Encode the real first-frame anchor while preserving rollout geometry."""
-
-        try:
-            import torch
-        except ImportError as exc:
-            raise DataContractError("Wan online codec requires torch") from exc
-        batch = len(sample_ids)
-        if len(captions) != batch or int(first_pixels.shape[0]) != batch:
-            raise DataContractError("Wan online batch identity and tensor sizes differ")
-        expected = (batch, 1, 3, self.contract.height, self.contract.width)
-        if tuple(first_pixels.shape) != expected:
-            raise DataContractError(
-                f"Wan Stage2 first-frame pixels have shape {tuple(first_pixels.shape)}, expected {expected}"
-            )
-        with torch.no_grad():
-            first_latents = self.vae.encode(first_pixels.permute(0, 2, 1, 3, 4).contiguous().float()).to(torch.bfloat16)
-            if int(first_latents.shape[1]) != 1:
-                raise DataContractError("Wan Stage2 first-frame VAE encode must produce one latent frame")
-            # Wan5BVAE.encode returns [B,T,C,H,W] as a view of a contiguous
-            # [B,C,T,H,W] allocation. Preserve that layout so randn_like uses
-            # the same index-to-random-value mapping as full-clip encoding.
-            latents = first_latents.new_zeros(
-                (
-                    batch,
-                    first_latents.shape[2],
-                    self.contract.latent_frames,
-                    *first_latents.shape[3:],
-                )
-            ).permute(0, 2, 1, 3, 4)
-            latents[:, :1].copy_(first_latents)
-            prompts = self.text_encoder(captions)["prompt_embeds"].to(torch.bfloat16)
-        return {
-            "latents": latents,
-            "prompt_embeds": prompts,
-            "camera": {
-                "viewmats": camera["viewmats"].to(torch.float32),
-                "K": camera["K"].to(torch.float32),
-            },
-        }
+from ....preencode.contracts import EncoderContract, TensorSpec
 
 
 def pack_first_frame_mask(
@@ -344,7 +176,6 @@ class WanA14BOnlineCodec:
 
 
 __all__ = [
-    "Wan5BOnlineCodec",
     "WanA14BOnlineCodec",
     "build_official_i2v_y",
     "combine_i2v_condition",

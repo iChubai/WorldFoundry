@@ -11,7 +11,6 @@ import numpy as np
 from ..errors import DataContractError
 
 CameraStorage = Literal["absolute_c2w", "absolute_w2c", "relative_w2c"]
-TranslationTransform = Literal["linear", "logd4"]
 
 
 class CameraGuardError(DataContractError):
@@ -102,28 +101,6 @@ def relative_w2c(value: np.ndarray, storage: CameraStorage) -> np.ndarray:
 
 def relative_c2w(value: np.ndarray, storage: CameraStorage) -> np.ndarray:
     return invert_se3(relative_w2c(value, storage))
-
-
-def transform_translation(
-    relative: np.ndarray,
-    transform: TranslationTransform,
-) -> np.ndarray:
-    """Apply model-conditioning compression without mutating source camera data."""
-
-    matrices = _validate_matrices(relative, name="relative camera")
-    if transform == "linear":
-        return matrices
-    if transform != "logd4":
-        raise DataContractError(f"unknown camera translation transform {transform!r}")
-    result = matrices.copy()
-    working_dtype = np.float64 if matrices.dtype == np.float64 else np.float32
-    translation = matrices[:, :3, 3].astype(working_dtype, copy=False)
-    norms = np.linalg.norm(translation, axis=-1)
-    scale = np.zeros_like(norms)
-    nonzero = norms != 0
-    scale[nonzero] = np.log1p(norms[nonzero]) / (4.0 * norms[nonzero])
-    result[:, :3, 3] = (translation * scale[:, None]).astype(result.dtype, copy=False)
-    return result
 
 
 @dataclass(frozen=True)

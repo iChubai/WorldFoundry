@@ -4,93 +4,11 @@ from __future__ import annotations
 
 import io
 from collections.abc import Mapping, Sequence
-from itertools import pairwise
 from typing import Any
 
 import numpy as np
 
-from ...data.index import IndexRow
 from ...errors import DataContractError
-
-
-def normalize_raw_source_windows(rows: Sequence[IndexRow]) -> tuple[IndexRow, ...]:
-    """Use the first contiguous 158 frames when a generic raw row has no window."""
-
-    normalized = []
-    for row in rows:
-        values = dict(row.values)
-        has_start = "start_frame" in values
-        has_indices = "source_frame_indices" in values
-        if has_start and not has_indices:
-            try:
-                start = int(values["start_frame"])
-            except (TypeError, ValueError) as exc:
-                raise DataContractError(f"H3 raw row {row.sample_id!r} has an invalid start frame") from exc
-            values["source_frame_indices"] = list(range(start, start + 158))
-        elif has_indices and not has_start:
-            try:
-                indices = tuple(int(value) for value in values["source_frame_indices"])
-            except (TypeError, ValueError) as exc:
-                raise DataContractError(f"H3 raw row {row.sample_id!r} has invalid source indices") from exc
-            if len(indices) != 158 or indices != tuple(range(indices[0], indices[0] + 158)):
-                raise DataContractError(f"H3 raw row {row.sample_id!r} source indices are not contiguous")
-            values["start_frame"] = indices[0]
-        elif not has_start:
-            values["start_frame"] = 0
-            values["source_frame_indices"] = list(range(158))
-        normalized.append(IndexRow.from_mapping(row.ordinal, values))
-    return tuple(normalized)
-
-
-def decode_resize_video(
-    video_bytes: bytes,
-    source_indices: Sequence[int],
-    *,
-    decord_num_threads: int = 2,
-) -> tuple[np.ndarray, dict[str, int]]:
-    """Decode the exact 158-frame window and apply H3's Lanczos cover crop."""
-
-    try:
-        import decord
-        from PIL import Image
-    except ImportError as exc:  # pragma: no cover - optional runtime dependency
-        raise DataContractError("H3 raw decoding requires decord and Pillow") from exc
-    indices = tuple(int(value) for value in source_indices)
-    if len(indices) != 158 or any(right != left + 1 for left, right in pairwise(indices)):
-        raise DataContractError("H3 raw decoding requires 158 contiguous source indices")
-    decord.bridge.set_bridge("native")
-    try:
-        reader = decord.VideoReader(io.BytesIO(video_bytes), num_threads=max(1, int(decord_num_threads)))
-        frames = reader.get_batch(list(indices)).asnumpy()
-    except Exception as exc:
-        raise DataContractError(f"cannot decode the selected H3 video window: {exc}") from exc
-    if tuple(frames.shape[:1]) != (158,) or frames.ndim != 4 or frames.shape[-1] != 3:
-        raise DataContractError(f"H3 decoded frames have shape {frames.shape}")
-    source_h, source_w = int(frames.shape[1]), int(frames.shape[2])
-    target_h, target_w = 768, 1344
-    scale = max(target_w / source_w, target_h / source_h)
-    resized_w = max(target_w, round(source_w * scale))
-    resized_h = max(target_h, round(source_h * scale))
-    left = max(0, (resized_w - target_w) // 2)
-    top = max(0, (resized_h - target_h) // 2)
-    output = np.empty((158, target_h, target_w, 3), dtype=np.uint8)
-    for index, frame in enumerate(frames):
-        image = Image.fromarray(np.asarray(frame, dtype=np.uint8), mode="RGB")
-        if image.size != (resized_w, resized_h):
-            image = image.resize((resized_w, resized_h), Image.Resampling.LANCZOS)
-        if image.size != (target_w, target_h):
-            image = image.crop((left, top, left + target_w, top + target_h))
-        output[index] = np.asarray(image, dtype=np.uint8)
-    return output, {
-        "source_h": source_h,
-        "source_w": source_w,
-        "resized_h": resized_h,
-        "resized_w": resized_w,
-        "crop_top": top,
-        "crop_left": left,
-        "target_h": target_h,
-        "target_w": target_w,
-    }
 
 
 def _invert_se3(matrices: np.ndarray) -> np.ndarray:
@@ -231,6 +149,4 @@ def decode_camera(
 
 __all__ = [
     "decode_camera",
-    "decode_resize_video",
-    "normalize_raw_source_windows",
 ]

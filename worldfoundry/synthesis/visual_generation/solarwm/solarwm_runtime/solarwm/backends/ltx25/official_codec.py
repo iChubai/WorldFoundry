@@ -8,7 +8,6 @@ from typing import Any
 import torch
 
 from ...errors import BackendContractError
-from .artifact import TensorArtifact
 from .checkpoint import StrictCodecLoadReceipt
 from .geometry import STABLE_GEOMETRY
 
@@ -19,23 +18,6 @@ _RUNTIME_PREFIX = __name__.split(".solarwm.backends.")[0] + "."
 def _qualified_class(value: Any) -> str:
     cls = value.__class__
     return f"{cls.__module__.removeprefix(_RUNTIME_PREFIX)}.{cls.__qualname__}"
-
-
-def _bf16_artifact(value: torch.Tensor, shape: tuple[int, ...]) -> TensorArtifact:
-    tensor = value.detach().to(device="cpu", dtype=torch.bfloat16).contiguous()
-    if tuple(tensor.shape) != shape:
-        raise BackendContractError(f"official LTX tensor shape {tuple(tensor.shape)} != {shape}")
-    if not bool(torch.isfinite(tensor).all()):
-        raise BackendContractError("official LTX tensor contains NaN or Inf")
-    payload = tensor.view(torch.uint16).numpy().astype("<u2", copy=False).tobytes()
-    return TensorArtifact("BF16", shape, payload)
-
-
-def _i64_artifact(value: torch.Tensor, shape: tuple[int, ...]) -> TensorArtifact:
-    tensor = value.detach().to(device="cpu", dtype=torch.int64).contiguous()
-    if tuple(tensor.shape) != shape:
-        raise BackendContractError(f"official LTX tensor shape {tuple(tensor.shape)} != {shape}")
-    return TensorArtifact("I64", shape, tensor.numpy().astype("<i8", copy=False).tobytes())
 
 
 class OfficialDiffVAEDecoder:
@@ -116,118 +98,6 @@ class OfficialDiffVAEDecoder:
         torch.cuda.empty_cache()
 
 
-class OfficialOnlineCodec:
-    """Official direct VAE encoder and Gemma4 preconnector feature extractor."""
-
-    def __init__(
-        self,
-        *,
-        transformer_path: str | Path,
-        video_vae_path: str | Path,
-        gemma4_path: str | Path,
-        device: torch.device,
-        identity: str,
-    ) -> None:
-        from ....ltx_trainer import model_loader
-
-        self.device = device
-        self.identity = identity
-        self.video_vae = (
-            model_loader.load_video_vae_encoder(
-                video_vae_path,
-                device=device,
-                dtype=torch.bfloat16,
-            )
-            .eval()
-            .requires_grad_(False)
-        )
-        self.text_encoder = (
-            model_loader.load_text_encoder(
-                gemma4_path,
-                device=device,
-                dtype=torch.bfloat16,
-                load_in_8bit=False,
-            )
-            .eval()
-            .requires_grad_(False)
-        )
-        paths = model_loader.embedding_weight_paths(transformer_path, gemma4_path)
-        processor = (
-            model_loader.load_embeddings_processor(
-                paths,
-                gemma_model_path=gemma4_path,
-                device=device,
-                dtype=torch.bfloat16,
-            )
-            .eval()
-            .requires_grad_(False)
-        )
-        self.feature_extractor = processor.feature_extractor
-        del processor
-
-    @property
-    def video_vae_class(self) -> str:
-        return _qualified_class(self.video_vae)
-
-    @property
-    def feature_extractor_class(self) -> str:
-        return _qualified_class(self.feature_extractor)
-
-    def encode_video(
-        self,
-        frames: object,
-    ) -> tuple[TensorArtifact, TensorArtifact]:
-        value = torch.as_tensor(frames)
-        if tuple(value.shape) == (153, 512, 768, 3):
-            value = value.permute(0, 3, 1, 2)
-        if tuple(value.shape) != (153, 3, 512, 768):
-            raise BackendContractError("official LTX codec frames must be [153,3,512,768]")
-        value = value.to(dtype=torch.float32)
-        if value.max() > 1:
-            value = value / 255.0
-        if not bool(torch.isfinite(value).all()) or not bool(((value >= 0) & (value <= 1)).all()):
-            raise BackendContractError("official LTX codec frames must be finite [0,1]")
-        video = (
-            value.permute(1, 0, 2, 3)
-            .unsqueeze(0)
-            .contiguous()
-            .mul(2.0)
-            .sub_(1.0)
-            .to(device=self.device, dtype=torch.bfloat16)
-        )
-        with torch.inference_mode():
-            latent = self.video_vae(video)
-        if tuple(latent.shape) != (1, 128, 20, 16, 24):
-            raise BackendContractError("official LTX VAE returned the wrong latent geometry")
-        encoded = _bf16_artifact(latent[0], (128, 20, 16, 24))
-        first = _bf16_artifact(latent[0, :, :1], (128, 1, 16, 24))
-        return encoded, first
-
-    def encode_prompt(self, caption: str) -> tuple[TensorArtifact, TensorArtifact]:
-        if not isinstance(caption, str) or not caption.strip():
-            raise BackendContractError("official LTX codec requires a nonempty caption")
-        with torch.inference_mode():
-            encoded = self.text_encoder.encode([caption])
-            if not isinstance(encoded, (list, tuple)) or len(encoded) != 1:
-                raise BackendContractError("official Gemma must return one encoded prompt")
-            hidden, mask = encoded[0]
-            video_prompt, _audio_prompt = self.feature_extractor(hidden, mask, "left")
-        prompt = video_prompt[0]
-        prompt_mask = mask[0]
-        if bool((prompt_mask[1:] < prompt_mask[:-1]).any()):
-            raise BackendContractError("official Gemma caption mask is not left padded")
-        return (
-            _bf16_artifact(prompt, (1024, 4096)),
-            _i64_artifact(prompt_mask, (1024,)),
-        )
-
-    def close(self) -> None:
-        del self.video_vae
-        del self.text_encoder
-        del self.feature_extractor
-        torch.cuda.empty_cache()
-
-
 def codec_receipt(
     *,
     provider_identity: str,
@@ -249,6 +119,5 @@ def codec_receipt(
 
 __all__ = [
     "OfficialDiffVAEDecoder",
-    "OfficialOnlineCodec",
     "codec_receipt",
 ]

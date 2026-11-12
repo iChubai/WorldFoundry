@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import functools
-import math
 from collections.abc import Iterable
 from datetime import timedelta
 
@@ -101,45 +100,6 @@ def wrap_h3_fsdp(
         if blocks != 50:
             raise RuntimeError(f"H3 activation checkpointing expected 50 blocks, got {blocks}")
     return wrapped
-
-
-@torch.no_grad()
-def finite_clip_norm(parameters: Iterable[torch.nn.Parameter], max_norm: float) -> tuple[bool, float]:
-    """Clip replicated LoRA gradients with an overflow-safe global 2-norm."""
-
-    max_norm = float(max_norm)
-    if not math.isfinite(max_norm) or max_norm <= 0.0:
-        raise ValueError("max_norm must be finite and positive")
-    values = tuple(parameter for parameter in parameters if parameter.grad is not None)
-    if not values:
-        raise RuntimeError("H3 optimizer step has no LoRA gradients")
-    device = values[0].grad.device
-    squared = torch.zeros((), device=device, dtype=torch.float64)
-    for parameter in values:
-        gradient = parameter.grad
-        if gradient.is_sparse:
-            raise RuntimeError("H3 does not support sparse LoRA gradients")
-        detached = gradient.detach()
-        norm_dtype = torch.float64 if detached.dtype == torch.float64 else torch.float32
-        local_scale = detached.abs().amax().double()
-        safe_scale = torch.where(local_scale > 0, local_scale, torch.ones_like(local_scale))
-        scaled_norm = torch.linalg.vector_norm(
-            detached / safe_scale.to(dtype=detached.dtype),
-            ord=2,
-            dtype=norm_dtype,
-        )
-        squared.add_((local_scale * scaled_norm.double()).square())
-    norm = squared.sqrt()
-    finite = bool(torch.isfinite(norm).item())
-    if finite:
-        coefficient = min(1.0, max_norm / (float(norm.item()) + 1.0e-6))
-        if coefficient < 1.0:
-            for parameter in values:
-                parameter.grad.mul_(coefficient)
-    return finite, float(norm.float().item())
-
-
-__all__ = ["finite_clip_norm", "initialize_distributed", "wrap_h3_fsdp"]
 
 
 _FROZEN_BASE_GROUPS: dict[tuple[int, int], tuple[object, object]] = {}

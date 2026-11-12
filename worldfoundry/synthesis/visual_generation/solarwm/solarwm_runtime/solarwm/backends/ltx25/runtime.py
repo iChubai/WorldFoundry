@@ -11,10 +11,10 @@ from __future__ import annotations
 import importlib
 import importlib.metadata
 import os
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, NoReturn, Protocol
 
 from ...checkpoint import CheckpointContract, VerifiedCheckpoint, assert_resume_compatible
 from ...errors import BackendContractError
@@ -27,7 +27,6 @@ from .checkpoint import (
     StrictModelLoadReceipt,
     runtime_fingerprint,
 )
-from .codec import LTX25OnlineCodec, RawSample
 from .inference import InferencePlan
 
 RUNTIME_PROVIDER_API = "solarwm.ltx25.runtime-provider.v1"
@@ -60,14 +59,6 @@ class ProviderCheck:
 
 
 @dataclass(frozen=True)
-class TrainingRuntimeBundle:
-    runtime: Any
-    model_receipt: StrictModelLoadReceipt
-    codec_receipt: StrictCodecLoadReceipt | None = None
-    close: Callable[[], None] | None = None
-
-
-@dataclass(frozen=True)
 class InferenceRuntimeBundle:
     adapter: InferenceAdapter
     cases: Sequence[InferenceCase]
@@ -75,14 +66,6 @@ class InferenceRuntimeBundle:
     codec_receipt: StrictCodecLoadReceipt
     adapter_checkpoint_manifest_digest: str
     non_writer_run: Callable[[Sequence[InferenceCase], str], None] | None = None
-    close: Callable[[], None] | None = None
-
-
-@dataclass(frozen=True)
-class PreencodeRuntimeBundle:
-    codec: LTX25OnlineCodec
-    samples: Iterable[RawSample]
-    codec_receipt: StrictCodecLoadReceipt
     close: Callable[[], None] | None = None
 
 
@@ -97,7 +80,7 @@ class LTX25RuntimeProvider(Protocol):
         config: Mapping[str, Any],
         inspection: BaseCheckpointInspection,
         validation_plan: InferencePlan,
-    ) -> TrainingRuntimeBundle: ...
+    ) -> NoReturn: ...
 
     def create_inference_runtime(
         self,
@@ -107,7 +90,7 @@ class LTX25RuntimeProvider(Protocol):
         adapter_checkpoint: InferenceAdapterCheckpoint,
     ) -> InferenceRuntimeBundle: ...
 
-    def create_preencode_runtime(self, config: Mapping[str, Any]) -> PreencodeRuntimeBundle: ...
+    def create_preencode_runtime(self, config: Mapping[str, Any]) -> NoReturn: ...
 
 
 @dataclass(frozen=True)
@@ -325,10 +308,8 @@ __all__ = [
     "RUNTIME_PROVIDER_API",
     "InferenceRuntimeBundle",
     "LTX25RuntimeProvider",
-    "PreencodeRuntimeBundle",
     "ProviderCheck",
     "ProviderResolution",
-    "TrainingRuntimeBundle",
     "checkpoint_contract",
     "inference_checkpoint_contract",
     "resolve_runtime_provider",

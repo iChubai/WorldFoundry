@@ -6,8 +6,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-import numpy as np
-
 from ...errors import BackendContractError
 
 _WEIGHT_SOURCES = frozenset({"live", "ema"})
@@ -37,22 +35,6 @@ def normalize_weight_source(value: Any, *, role: str) -> str:
     if source not in _WEIGHT_SOURCES:
         raise BackendContractError(f"checkpoint.roles.{role}.weights must be live or ema")
     return source
-
-
-def should_update_student(global_step: int, critic_updates_per_student: int) -> bool:
-    """Warm the critic first, then update the student every N outer steps."""
-
-    ratio = int(critic_updates_per_student)
-    if ratio < 1:
-        raise ValueError("critic_updates_per_student must be at least one")
-    step = int(global_step)
-    return step > 0 and step % ratio == 0
-
-
-def student_update_steps(max_outer_steps: int, ratio: int) -> tuple[int, ...]:
-    if max_outer_steps < 0:
-        raise ValueError("max_outer_steps must be non-negative")
-    return tuple(step for step in range(max_outer_steps) if should_update_student(step, ratio))
 
 
 def validate_checkpoint_transaction(members: Sequence[str]) -> None:
@@ -236,10 +218,6 @@ def _torch() -> Any:
     return torch
 
 
-def reference_cfg(cond: Any, uncond: Any, guidance_scale: float) -> Any:
-    return cond + float(guidance_scale) * (cond - uncond)
-
-
 def warp_denoising_steps(
     raw_steps: Sequence[int | float],
     scheduler_timesteps: Any,
@@ -267,167 +245,10 @@ def warp_denoising_steps(
     return tuple(result)
 
 
-def sample_shifted_score_timesteps(
-    *,
-    batch_size: int,
-    num_frames: int,
-    device: Any,
-    shift: float,
-    num_train_timesteps: int = 1000,
-    min_timestep: float = 20.0,
-    max_timestep: float = 980.0,
-    generator: Any | None = None,
-) -> Any:
-    """Sample uniform raw score labels and apply the Wan rational shift."""
-
-    torch = _torch()
-    if batch_size < 1 or num_frames < 1:
-        raise ValueError("SGF score timestep dimensions must be positive")
-    if not 0 <= min_timestep < max_timestep <= num_train_timesteps:
-        raise ValueError("SGF score timestep bounds must satisfy 0 <= min < max <= N")
-    raw = torch.randint(
-        0,
-        int(num_train_timesteps),
-        (int(batch_size), 1),
-        device=device,
-        dtype=torch.long,
-        generator=generator,
-    ).to(torch.float32)
-    fraction = raw / float(num_train_timesteps)
-    shifted = float(shift) * fraction / (1.0 + (float(shift) - 1.0) * fraction)
-    shifted = (shifted * float(num_train_timesteps)).clamp(float(min_timestep), float(max_timestep))
-    return shifted.expand(-1, int(num_frames)).clone()
-
-
-def compute_kl_gradient_array(
-    *, fake_x0: Any, real_x0: Any, student_output: Any, mask: Any = None, normalize: bool = True
-) -> np.ndarray:
-    """NumPy reference for masked SGF gradient fixture tests."""
-
-    fake = np.asarray(fake_x0, dtype=np.float32)
-    real = np.asarray(real_x0, dtype=np.float32)
-    output = np.asarray(student_output, dtype=np.float32)
-    if fake.shape != real.shape or fake.shape != output.shape:
-        raise ValueError("fake_x0, real_x0 and student_output must have identical shapes")
-    grad = fake - real
-    expanded = None
-    if mask is not None:
-        try:
-            expanded = np.broadcast_to(np.asarray(mask, dtype=np.bool_), fake.shape)
-        except ValueError as exc:
-            raise ValueError("mask must broadcast to the input shape") from exc
-        grad = np.where(expanded, grad, np.float32(0))
-    if normalize:
-        distance = np.abs(output - real)
-        dims = tuple(range(1, distance.ndim))
-        if expanded is None:
-            normalizer = np.mean(distance, axis=dims, keepdims=True)
-        else:
-            distance = np.where(expanded, distance, np.float32(0))
-            denominator = np.maximum(np.sum(expanded, axis=dims, keepdims=True), 1)
-            normalizer = np.sum(distance, axis=dims, keepdims=True) / denominator
-        grad = grad / np.maximum(normalizer, np.float32(1e-8))
-    return np.nan_to_num(grad)
-
-
-def compute_kl_gradient(
-    *, fake_x0: Any, real_x0: Any, student_output: Any, mask: Any = None, normalize: bool = True
-) -> Any:
-    """Compute the masked reference DMD gradient in FP32."""
-
-    torch = _torch()
-    fake = torch.as_tensor(fake_x0).float()
-    real = torch.as_tensor(real_x0, device=fake.device).float()
-    output = torch.as_tensor(student_output, device=fake.device).float()
-    if fake.shape != real.shape or fake.shape != output.shape:
-        raise ValueError("fake_x0, real_x0 and student_output must have identical shapes")
-    grad = fake - real
-    expanded = None
-    if mask is not None:
-        expanded = torch.as_tensor(mask, device=fake.device, dtype=torch.bool)
-        try:
-            expanded = torch.broadcast_to(expanded, fake.shape)
-        except RuntimeError as exc:
-            raise ValueError("mask must broadcast to the input shape") from exc
-        grad = torch.where(expanded, grad, torch.zeros_like(grad))
-    if normalize:
-        distance = (output - real).abs()
-        dims = tuple(range(1, distance.ndim))
-        if expanded is None:
-            normalizer = distance.mean(dim=dims, keepdim=True)
-        else:
-            distance = torch.where(expanded, distance, torch.zeros_like(distance))
-            normalizer = distance.sum(dim=dims, keepdim=True) / expanded.float().sum(dim=dims, keepdim=True).clamp_min(
-                1.0
-            )
-        grad = grad / normalizer.clamp_min(1e-8)
-    return torch.nan_to_num(grad)
-
-
-def sgf_student_loss(student_output: Any, kl_gradient: Any, *, mask: Any = None) -> Any:
-    """Surrogate whose derivative with respect to output is the SGF gradient."""
-
-    torch = _torch()
-    output = torch.as_tensor(student_output).float()
-    gradient = torch.as_tensor(kl_gradient, device=output.device).float()
-    if output.shape != gradient.shape:
-        raise ValueError("student_output and kl_gradient must have identical shapes")
-    target = (output - gradient.detach()).detach()
-    diff = output - target
-    if mask is None:
-        return 0.5 * diff.square().mean()
-    try:
-        valid = torch.broadcast_to(
-            torch.as_tensor(mask, device=output.device, dtype=torch.bool),
-            output.shape,
-        )
-    except RuntimeError as exc:
-        raise ValueError("SGF student mask does not broadcast to output") from exc
-    diff = torch.where(valid, diff, torch.zeros_like(diff))
-    return 0.5 * diff.square().sum() / valid.float().sum().clamp_min(1.0)
-
-
-def sgf_critic_flow_loss(
-    flow_prediction: Any,
-    *,
-    noise: Any,
-    clean: Any,
-    mask: Any = None,
-) -> Any:
-    """Flow-matching critic loss with mask-before-subtraction semantics."""
-
-    torch = _torch()
-    prediction = torch.as_tensor(flow_prediction).float()
-    noise_value = torch.as_tensor(noise, device=prediction.device).float()
-    clean_value = torch.as_tensor(clean, device=prediction.device).float()
-    if prediction.shape != noise_value.shape or prediction.shape != clean_value.shape:
-        raise ValueError("SGF critic tensors must have identical shapes")
-    diff = prediction - (noise_value - clean_value)
-    if mask is None:
-        return diff.square().mean()
-    try:
-        valid = torch.broadcast_to(
-            torch.as_tensor(mask, device=prediction.device, dtype=torch.bool),
-            prediction.shape,
-        )
-    except RuntimeError as exc:
-        raise ValueError("SGF critic mask does not broadcast to prediction") from exc
-    diff = torch.where(valid, diff, torch.zeros_like(diff))
-    return diff.square().sum() / valid.float().sum().clamp_min(1.0)
-
-
 __all__ = [
     "STAGE2_CHECKPOINT_MEMBERS",
     "RoleInitialization",
-    "compute_kl_gradient",
-    "compute_kl_gradient_array",
     "normalize_weight_source",
-    "reference_cfg",
-    "sample_shifted_score_timesteps",
-    "sgf_critic_flow_loss",
-    "sgf_student_loss",
-    "should_update_student",
-    "student_update_steps",
     "validate_checkpoint_transaction",
     "validate_stage2_contract",
     "warp_denoising_steps",

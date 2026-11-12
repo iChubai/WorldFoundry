@@ -304,16 +304,6 @@ def _valid_receipt_values(
     return values if valid else None
 
 
-def _receipt_valid(
-    target: Path,
-    receipt: Path,
-    identity: ObjectIdentity,
-    *,
-    uri: str,
-) -> bool:
-    return _valid_receipt_values(target, receipt, identity, uri=uri) is not None
-
-
 def _verified_stat(path: Path) -> dict[str, int]:
     stat = path.stat()
     return {

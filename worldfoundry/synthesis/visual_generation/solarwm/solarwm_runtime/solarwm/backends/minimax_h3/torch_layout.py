@@ -29,8 +29,6 @@ def build_row_timesteps(
     ``t=1`` in Stage1.
     """
 
-    import torch
-
     def tensor(value: Any) -> Any:
         return torch.as_tensor(value, dtype=torch.float32, device=device).flatten()
 
@@ -81,52 +79,6 @@ def build_row_timesteps(
     return torch.unique(row_timesteps, sorted=True, return_inverse=True)
 
 
-def _unique_timestep_plan(row_timesteps: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-    if row_timesteps.ndim != 1:
-        raise ValueError("row_timesteps must be one-dimensional")
-    return torch.unique(row_timesteps.float(), sorted=True, return_inverse=True)
-
-
-def build_stage1_row_timesteps(
-    layout: Any,
-    video_chunk_timesteps: torch.Tensor,
-    audio_timestep: torch.Tensor,
-    *,
-    keyframe_timestep: float = 0.999,
-    device: torch.device,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Assign per-chunk Stage1 timesteps to the explicit clean/noisy layout."""
-
-    chunks = video_chunk_timesteps.reshape(-1).to(device=device, dtype=torch.float32)
-    expected_chunks = int(layout.target_video_chunk_ids.max().item()) + 1
-    if chunks.numel() != expected_chunks:
-        raise ValueError(f"expected {expected_chunks} Stage1 video chunk timesteps, got {chunks.numel()}")
-    rows = torch.ones(layout.sequence_length, dtype=torch.float32, device=device)
-    rows[layout.condition_video_indices] = float(keyframe_timestep)
-    rows[layout.audio_indices] = audio_timestep.reshape(())
-    noisy_chunks = layout.target_video_chunk_ids.index_select(0, layout.noisy_video_indices)
-    rows[layout.noisy_video_indices] = chunks.index_select(0, noisy_chunks)
-    # Text and clean teacher-forcing rows remain clean conditions at t=1.
-    return _unique_timestep_plan(rows)
-
-
-def build_stage1_row_time_pairs(layout, video_t, video_r, audio_t, *, keyframe_timestep, device):
-    """Group by the pair, so equal t with different destination r stays distinct."""
-    chunks = int(layout.target_video_chunk_ids.max().item()) + 1
-    t, t_index = build_stage1_row_timesteps(
-        layout,
-        video_t.expand(chunks),
-        audio_t,
-        keyframe_timestep=keyframe_timestep,
-        device=device,
-    )
-    t_rows = t[t_index]
-    r_rows = t_rows.clone()
-    r_rows[layout.noisy_video_indices] = video_r.reshape(())
-    pairs, indices = torch.unique(torch.stack((t_rows, r_rows), dim=1), sorted=True, dim=0, return_inverse=True)
-    return pairs[:, 0], pairs[:, 1], indices
-
-
 def _unique_row_timestep_plan(
     layout: Any,
     *,
@@ -136,8 +88,6 @@ def _unique_row_timestep_plan(
     keyframe_timestep: float,
     device: Any,
 ) -> tuple[Any, Any]:
-    import torch
-
     rows = torch.ones(layout.sequence_length, dtype=torch.float32, device=device)
     rows[layout.condition_video_indices] = float(keyframe_timestep)
     rows[layout.audio_indices] = torch.as_tensor(audio_timestep, device=device).reshape(())
@@ -164,8 +114,6 @@ def _unique_row_interval_plan(
     Only current noisy-video rows carry a finite-map interval. Conditions,
     audio and clean history retain their original diagonal conditioning.
     """
-
-    import torch
 
     times, inverse = _unique_row_timestep_plan(
         layout,

@@ -103,21 +103,6 @@ def _run_root(output_dir: str | Path) -> Path:
     return root.resolve()
 
 
-def checkpoint_model_dir(
-    output_dir: str | Path,
-    *,
-    step: int,
-    width: int,
-) -> Path:
-    """Return the stable top-level public checkpoint directory."""
-
-    if isinstance(step, bool) or not isinstance(step, int) or step < 1:
-        raise BackendContractError("checkpoint step must be a positive integer")
-    if width not in {6, 8}:
-        raise BackendContractError("checkpoint step width must be 6 or 8")
-    return _run_root(output_dir) / f"checkpoint_model_{step:0{width}d}"
-
-
 def validation_pass_component(value: object) -> str:
     """Validate and return one validation-pass path component."""
 
@@ -187,7 +172,6 @@ __all__ = [
     "CAMERA_TRANSACTION_LAYOUT",
     "CameraInferenceOutputLayout",
     "camera_inference_output_layout",
-    "checkpoint_model_dir",
     "cleanup_validation_staging",
     "invocation_output_dir",
     "portable_output_component",

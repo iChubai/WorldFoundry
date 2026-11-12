@@ -81,20 +81,5 @@ def h3_sgf_score_timesteps(
     return tuple(1.0 - shift_sigma(raw, shift).clamp(min_sigma, max_sigma) for shift in (video_shift, audio_shift))
 
 
-def h3_sgf_critic_loss(velocity, *, noise, clean):
-    """H3 predicts data-ward ``clean-noise``, the opposite sign from Wan."""
-    import torch.nn.functional as F
-
-    if velocity.shape != noise.shape or velocity.shape != clean.shape:
-        raise ValueError("H3 critic prediction, noise and clean shapes must agree")
-    return F.mse_loss(velocity.float(), clean.float() - noise.float())
-
-
 def h3_sgf_clean_prediction(noisy, velocity, timestep):
     return predict_clean_sample(noisy, velocity, timestep)
-
-
-def h3_sgf_supervised_video(rollout):
-    if rollout.ndim != 5 or rollout.shape[2] != 50:
-        raise ValueError("H3 SGF rollout must be [B,C,50,H,W]")
-    return rollout[:, :, :47]

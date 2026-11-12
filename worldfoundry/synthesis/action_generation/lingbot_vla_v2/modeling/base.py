@@ -28,18 +28,27 @@ try:  # noqa: SIM105 - The handler carries an explanatory comment.
     )
 except BaseException:
     pass
-from .attention import build_block_mask, flex_attention_forward, flex_attention_with_block_mask
-from .depth_head import TaskTokenDepthHead
+from worldfoundry.base_models.llm_mllm_core.action.lingbot.modeling import (
+    TaskTokenDepthHead,
+)
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import (
+    apply_rope,
+    create_sinusoidal_pos_embedding,
+    make_att_2d_masks,
+)
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import (
+    masked_eager_attention_forward as our_eager_attention_forward,
+)
+
+from .attention import (
+    build_block_mask,
+    flex_attention_forward,
+    flex_attention_with_block_mask,
+)
 from .qwen2_expert import (
     FixQwen2RMSNorm,
     Qwen2ForCausalLM,
     Qwen2TokenMoeBlock,
-)
-from .utils import (
-    apply_rope,
-    create_sinusoidal_pos_embedding,
-    make_att_2d_masks,
-    our_eager_attention_forward,
 )
 
 logger = logging.get_logger(__name__)

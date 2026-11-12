@@ -1,5 +1,4 @@
 """LingBot-VLA v2 observation preprocessing and action postprocessing."""
-
 import ast
 import json
 import os
@@ -8,18 +7,20 @@ from collections import OrderedDict
 import torch
 import torch.nn.functional as F
 import yaml
-from pydantic import BaseModel
+
+from worldfoundry.base_models.llm_mllm_core.action.lingbot.preprocessing import (
+    FeatureInfo,
+)
 
 from . import logging as logging_utils
 
 # isort: split
-from .transforms import (
-    Normalizer,
+from worldfoundry.base_models.llm_mllm_core.action.lingbot.preprocessing import (
     prepare_action,
-    prepare_images,
-    prepare_language,
     prepare_state,
 )
+
+from .transforms import Normalizer, prepare_images, prepare_language
 
 # isort: split
 from .ee_pose import *  # noqa: F403 - Upstream star import kept as written.
@@ -47,29 +48,6 @@ def compute_image_token_count(images, image_grid_thw=None, merge_size=2, use_vis
     else:
         return 0
     return int(num_images * (num_patch + boundary_tokens))
-
-
-class FeatureInfo(BaseModel):
-    joints: list[str] | None = None
-    images: list[str] | None = None
-    joints_max_dim: dict | None = None
-
-    def update_info(self, data_config):
-        joints_info = data_config.joints
-        self.images = ["observation.images." + image for image in data_config.cameras]
-
-        joints = []
-        joints_max_dim = {}
-        for s in joints_info:
-            joint_info = dict(s) if isinstance(s, dict) else ast.literal_eval(s)
-            joint = next(iter(joint_info.keys()))
-            if joint_info[joint] == 0:
-                continue
-
-            joints.append(joint)
-            joints_max_dim.update(joint_info)
-        self.joints = joints
-        self.joints_max_dim = joints_max_dim
 
 
 class FeatureTransform:

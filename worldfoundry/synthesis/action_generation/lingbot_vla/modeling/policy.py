@@ -12,7 +12,12 @@ from transformers import (
     PretrainedConfig,
     PreTrainedModel,
 )
-from transformers.cache_utils import Cache, DynamicCache, SlidingWindowCache, StaticCache
+from transformers.cache_utils import (
+    Cache,
+    DynamicCache,
+    SlidingWindowCache,
+    StaticCache,
+)
 from transformers.generation import GenerationMixin
 from transformers.modeling_attn_mask_utils import AttentionMaskConverter
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
@@ -33,21 +38,34 @@ from transformers.utils import (
 )
 from transformers.utils.deprecation import deprecate_kwarg
 
+from worldfoundry.base_models.llm_mllm_core.action.lingbot.modeling import (
+    TaskTokenDepthHead,
+)
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import (
+    apply_rope,
+    create_sinusoidal_pos_embedding,
+    make_att_2d_masks,
+)
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import (
+    masked_eager_attention_forward as our_eager_attention_forward,
+)
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as Qwen2MLP
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as FixQwen2RMSNorm
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as Qwen2RMSNorm
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRotaryEmbedding as Qwen2RotaryEmbedding
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import eager_attention_forward
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as FixQwen2RMSNorm,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as Qwen2RMSNorm,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRotaryEmbedding as Qwen2RotaryEmbedding,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    eager_attention_forward,
+)
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
 from .attention import flex_attention_forward
 from .qwen25_vl import Qwen2_5_VLForConditionalGeneration
-from .utils import (
-    apply_rope,
-    create_sinusoidal_pos_embedding,
-    make_att_2d_masks,
-    our_eager_attention_forward,
-)
 
 logger = logging.get_logger(__name__)
 
@@ -55,7 +73,6 @@ _CHECKPOINT_FOR_DOC = "meta-qwen2/Qwen2-2-7b-hf"
 _CONFIG_FOR_DOC = "Qwen2Config"
 
 
-from .depth_head import TaskTokenDepthHead  # noqa: E402 - Follows module-level setup, as upstream.
 
 
 class Qwen2Attention(nn.Module):

@@ -1,22 +1,25 @@
-"""Tensor utilities used by LingBot-VLA v1 inference."""
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# SPDX-License-Identifier: Apache-2.0
+# Adapted from Robbyant LingBot-VLA and Physical Intelligence OpenPI (Apache-2.0).
+"""Shared action-transformer masks, conditioning and packed tensor arithmetic."""
 
 import math
 
 import einops
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import nn
 
-# from xformers.ops import memory_efficient_attention
+from worldfoundry.core.attention.rotary.rope import apply_rotary_embedding
 
 
 def create_sinusoidal_pos_embedding(
-    time: torch.tensor,
+    time: torch.Tensor,
     dimension: int,
     min_period: float,
     max_period: float,
-    device="cpu",
-) -> Tensor:
+    device: torch.device | str = "cpu",
+    dtype: torch.dtype = torch.float32,
+) -> torch.Tensor:
     """Computes sine-cosine positional embedding vectors for scalar positions."""
     if dimension % 2 != 0:
         raise ValueError(f"dimension ({dimension}) must be divisible by 2")
@@ -24,7 +27,7 @@ def create_sinusoidal_pos_embedding(
     if time.ndim != 1:
         raise ValueError("The time tensor is expected to be of shape `(batch_size, )`.")
 
-    fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=torch.float32, device=device)
+    fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=dtype, device=device)
     period = min_period * (max_period / min_period) ** fraction
 
     # Compute the outer product
@@ -34,7 +37,7 @@ def create_sinusoidal_pos_embedding(
     return pos_emb
 
 
-def make_att_2d_masks(pad_masks, att_masks):
+def make_att_2d_masks(pad_masks: torch.Tensor, att_masks: torch.Tensor) -> torch.Tensor:
     """Copied from big_vision.
 
     Tokens can attend to valid inputs tokens which have a cumulative mask_ar
@@ -67,12 +70,12 @@ def make_att_2d_masks(pad_masks, att_masks):
     return att_2d_masks
 
 
-def our_eager_attention_forward(
+def masked_eager_attention_forward(
     query_states: torch.Tensor,
     key_states: torch.Tensor,
     value_states: torch.Tensor,
     attention_mask: torch.Tensor,
-):
+) -> torch.Tensor:
     """
     Performs eager attention, optimized with torch.einsum.
 
@@ -85,7 +88,6 @@ def our_eager_attention_forward(
     Returns:
         Output tensor of shape [batch_size, seq_len, num_attention_heads * head_dim].
     """
-    # ipdb.set_trace()
     bsize, seq_len, num_att_heads, head_dim = query_states.shape
     num_key_value_heads = key_states.shape[2]
     num_key_value_groups = num_att_heads // num_key_value_heads
@@ -113,7 +115,6 @@ def our_eager_attention_forward(
     return att_output
 
 
-# @torch.jit.script
 def apply_rope(
     x: torch.Tensor,
     positions: torch.Tensor,
@@ -121,7 +122,6 @@ def apply_rope(
     dtype: torch.dtype = torch.float32,
 ) -> torch.Tensor:
     """Applies RoPE positions [B, L] to x [B, L, H, D]."""
-    # ipdb.set_trace()
     original_dtype = x.dtype  # bf16
     d = x.shape[-1]
     d_half = d // 2
@@ -140,8 +140,18 @@ def apply_rope(
     sin = torch.sin(radians)  # bf16
     cos = torch.cos(radians)  # bf16
 
-    x1, x2 = x_casted.split(d_half, dim=-1)  # fp32
+    return apply_rotary_embedding(x_casted, cos, sin).to(original_dtype)
 
-    res = torch.cat([x1 * cos - x2 * sin, x2 * cos + x1 * sin], dim=-1)  # fp32
 
-    return res.to(original_dtype)  # bf16
+def pad_vector(vector: torch.Tensor, new_dim: int) -> torch.Tensor:
+    """Can be (batch_size x sequence_length x features_dimension)
+    or (batch_size x features_dimension)
+    """
+    if vector.shape[-1] == new_dim:
+        return vector
+    shape = list(vector.shape)
+    current_dim = shape[-1]
+    shape[-1] = new_dim
+    new_vector = torch.zeros(*shape, dtype=vector.dtype, device=vector.device)
+    new_vector[..., :current_dim] = vector
+    return new_vector

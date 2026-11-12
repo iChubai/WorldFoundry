@@ -17,5 +17,9 @@ class TimestepEmbedder(SanaTimestepEmbedder):
         super().__init__(hidden_size, frequency_embedding_size)
         self._worldfoundry_execution_dtype = dtype
 
+    @SanaTimestepEmbedder.dtype.setter
+    def dtype(self, value: torch.dtype) -> None:
+        self._worldfoundry_execution_dtype = value
+
     def timestep_embedding(self, t: torch.Tensor, dim: int, max_period: int = 10000) -> torch.Tensor:
         return super().timestep_embedding(t, dim, max_period).to(self.dtype)

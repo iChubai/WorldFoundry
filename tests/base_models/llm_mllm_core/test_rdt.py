@@ -25,3 +25,13 @@ def test_rdt_timestep_embedder_preserves_fixed_dtype_and_checkpoint_keys(
     expected_basis = SanaTimestepEmbedder.timestep_embedding(timesteps, frequency_dim).to(dtype)
     torch.testing.assert_close(model.timestep_embedding(timesteps, frequency_dim), expected_basis, atol=0, rtol=0)
     torch.testing.assert_close(model(timesteps), model.mlp(expected_basis), atol=0, rtol=0)
+
+
+def test_rdt_timestep_embedder_accepts_go1_runtime_dtype_assignment() -> None:
+    model = TimestepEmbedder(16, 8, dtype=torch.bfloat16).float().eval()
+    model.dtype = torch.float32
+    assert model.dtype == torch.float32
+    timesteps = torch.tensor([0.0, 2.0, 3.25])
+    expected_basis = SanaTimestepEmbedder.timestep_embedding(timesteps, 8)
+    torch.testing.assert_close(model.timestep_embedding(timesteps, 8), expected_basis, atol=0, rtol=0)
+    torch.testing.assert_close(model(timesteps), model.mlp(expected_basis), atol=0, rtol=0)

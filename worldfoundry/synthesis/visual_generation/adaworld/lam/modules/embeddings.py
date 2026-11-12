@@ -9,6 +9,8 @@ from torch import Tensor, broadcast_tensors, einsum, nn
 from torch.amp import autocast
 from torch.nn import Module
 
+from worldfoundry.core.attention.rotary.interleaved import apply_rotary_emb as apply_rotary_emb
+
 
 def exists(val) -> bool:
     return val is not None
@@ -16,54 +18,6 @@ def exists(val) -> bool:
 
 def default(val, d) -> Tensor:
     return val if exists(val) else d
-
-
-def broadcat(tensors, dim=-1) -> Tensor:
-    broadcasted_tensors = broadcast_tensors(*tensors)
-    return torch.cat(broadcasted_tensors, dim=dim)
-
-
-def rotate_half(x) -> Tensor:
-    x = rearrange(x, "... (d r) -> ... d r", r=2)
-    x1, x2 = x.unbind(dim=-1)
-    x = torch.stack((-x2, x1), dim=-1)
-    return rearrange(x, "... d r -> ... (d r)")
-
-
-@autocast("cuda", enabled=False)
-def apply_rotary_emb(freqs, t, start_index=0, scale=1.0, seq_dim=-2):
-    dtype = t.dtype
-
-    if t.ndim == 3:
-        seq_len = t.shape[seq_dim]
-        freqs = freqs[-seq_len:]
-
-    rot_dim = freqs.shape[-1]
-    end_index = start_index + rot_dim
-
-    assert rot_dim <= t.shape[-1], (
-        f"Feature dimension {t.shape[-1]} is not of sufficient size to rotate in all the positions {rot_dim}"
-    )
-
-    # Split t into three parts: left, middle (to be transformed), and right
-    t_left = t[..., :start_index]
-    t_middle = t[..., start_index:end_index]
-    t_right = t[..., end_index:]
-
-    # Apply rotary embeddings without modifying t in place
-    t_transformed = (t_middle * freqs.cos() * scale) + (rotate_half(t_middle) * freqs.sin() * scale)
-
-    out = torch.cat([t_left, t_transformed, t_right], dim=-1)
-    return out.type(dtype)
-
-
-def apply_learned_rotations(rotations, t, start_index=0, freq_ranges=None):
-    if exists(freq_ranges):
-        rotations = einsum("..., f -> ... f", rotations, freq_ranges)
-        rotations = rearrange(rotations, "... r f -> ... (r f)")
-
-    rotations = repeat(rotations, "... n -> ... (n r)", r=2)
-    return apply_rotary_emb(rotations, t, start_index=start_index)
 
 
 class RotaryEmbedding(Module):

@@ -19,6 +19,7 @@ from diffusers.utils import BaseOutput, logging
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.core.nn.diffusion.convolution import zero_module as zero_module
 from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.transformers.block import (
     AdaLayerNormSingle,
     BasicTransformerBlock,
@@ -30,12 +31,6 @@ from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.mo
 )
 
 logger = logging.get_logger(__name__)
-
-
-def zero_module(module):
-    for p in module.parameters():
-        nn.init.zeros_(p)
-    return module
 
 
 @dataclass

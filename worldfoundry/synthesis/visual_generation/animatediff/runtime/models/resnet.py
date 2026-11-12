@@ -8,6 +8,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet
     InflatedConv3d,
     InflatedGroupNorm,
 )
+from worldfoundry.core.nn.blocks.layers import Mish as Mish
 
 
 class ResnetBlock3D(nn.Module):
@@ -114,8 +115,3 @@ class ResnetBlock3D(nn.Module):
         output_tensor = (input_tensor + hidden_states) / self.output_scale_factor
 
         return output_tensor
-
-
-class Mish(torch.nn.Module):
-    def forward(self, hidden_states):
-        return hidden_states * torch.tanh(torch.nn.functional.softplus(hidden_states))

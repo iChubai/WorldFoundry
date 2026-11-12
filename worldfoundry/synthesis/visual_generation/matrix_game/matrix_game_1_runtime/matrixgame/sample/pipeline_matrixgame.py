@@ -41,10 +41,11 @@ from diffusers.video_processor import VideoProcessor
 from worldfoundry.base_models.diffusion_model.models.autoencoders.hunyuan_video import (
     AutoencoderKLCausal3D,
 )
+from worldfoundry.core.media.processing.image_utils import numpy_to_pil
 from worldfoundry.synthesis.visual_generation.matrix_game import MGVideoDiffusionTransformerI2V
 
 from ..encoder_variants.matrixgame_i2v import TextEncoder
-from ..utils.utils import black_image, numpy_to_pil
+from ..utils.utils import black_image
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

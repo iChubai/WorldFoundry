@@ -15,7 +15,8 @@ import torch
 import torch.nn as nn
 from timm.models.vision_transformer import Attention, Mlp, PatchEmbed
 
-from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import FinalLayer, modulate
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import FinalLayer
+from worldfoundry.core.nn.transformer.dit import modulate_sequence as modulate
 
 #################################################################################
 #               Embedding Layers for Timesteps and Class Labels                 #

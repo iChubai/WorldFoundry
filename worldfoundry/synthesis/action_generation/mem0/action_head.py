@@ -10,7 +10,11 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from .action_encoder import SinusoidalPositionalEncoding, swish
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as swish
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamzero.action_encoder import (
+    SinusoidalPositionalEncoding,
+)
+
 from .cross_attention_dit import DiT
 
 

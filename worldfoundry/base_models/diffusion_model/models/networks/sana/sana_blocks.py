@@ -55,16 +55,11 @@ from worldfoundry.core.attention import scaled_dot_product_attention as _worldfo
 from worldfoundry.core.nn import get_same_padding, to_2tuple, to_3tuple
 from worldfoundry.core.nn.blocks.layers import Mlp
 from worldfoundry.core.nn.blocks.layers import VisionAttention as Attention_
+from worldfoundry.core.nn.transformer.dit import modulate_sequence as modulate
 
 _xformers_available = False if os.environ.get("DISABLE_XFORMERS", "0") == "1" else is_xformers_available()
 if _xformers_available:
     import xformers.ops
-
-
-def modulate(x, shift, scale):
-    """AdaLN affine with an extra sequence axis: ``x * (1 + scale) + shift``."""
-
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
 def t2i_modulate(x, shift, scale):

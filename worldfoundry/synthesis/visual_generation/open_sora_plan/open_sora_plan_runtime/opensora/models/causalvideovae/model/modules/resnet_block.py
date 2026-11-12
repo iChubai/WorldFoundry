@@ -11,10 +11,12 @@ except BaseException:
 import torch
 from torch.utils.checkpoint import checkpoint
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity
+
 from .block import Block
 from .conv import CausalConv3d
 from .normalize import Normalize
-from .ops import nonlinearity, video_to_image
+from .ops import video_to_image
 
 
 class ResnetBlock2D(Block):

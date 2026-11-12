@@ -60,17 +60,6 @@ class DynamicSwapInstaller:
         return
 
 
-def fake_diffusers_current_device(model: torch.nn.Module, target_device: torch.device):
-    if hasattr(model, "scale_shift_table"):
-        model.scale_shift_table.data = model.scale_shift_table.data.to(target_device)
-        return
-
-    for _k, p in model.named_modules():
-        if hasattr(p, "weight"):
-            p.to(target_device)
-            return
-
-
 def get_cuda_free_memory_gb(device=None):
     if device is None:
         device = gpu

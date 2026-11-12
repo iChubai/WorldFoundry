@@ -30,17 +30,6 @@ except ImportError:
     xformers = None
 
 
-def inverse_sigmoid(x, eps=1e-3):
-    """
-    The inverse function for sigmoid activation function.
-    Note: It might face numberical issues with fp16 small eps.
-    """
-    x = x.clamp(min=0, max=1)
-    x1 = x.clamp(min=eps)
-    x2 = (1 - x).clamp(min=eps)
-    return torch.log(x1 / x2)
-
-
 def get_sdpa_settings():
     if torch.cuda.is_available():
         old_gpu = torch.cuda.get_device_properties(0).major < 7

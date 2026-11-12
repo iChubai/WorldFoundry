@@ -21,6 +21,8 @@ from einops import pack, rearrange, reduce, unpack
 from torch import einsum
 from torch.nn import Module
 
+from worldfoundry.core.utils.tensors.torch import mult_along_first_dims as mult_along_first_dims
+
 from ...config import VQConfig
 
 # constants
@@ -53,16 +55,6 @@ def unpack_one(t, ps, pattern):
 
 
 # class
-
-
-def mult_along_first_dims(x, y):
-    """
-    returns x * y elementwise along the leading dimensions of y
-    """
-    ndim_to_expand = x.ndim - y.ndim
-    for _ in range(ndim_to_expand):
-        y = y.unsqueeze(-1)
-    return x * y
 
 
 def masked_mean(x, m):

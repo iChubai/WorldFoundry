@@ -164,6 +164,21 @@ class DropPath(nn.Module):
         return drop_path(x, float(self.drop_prob), self.training, self.scale_by_keep)
 
 
+class Mish(nn.Module):
+    """Mish with explicit softplus/tanh rounding in the input dtype."""
+
+    def forward(self, hidden_states: Tensor) -> Tensor:
+        return hidden_states * torch.tanh(F.softplus(hidden_states))
+
+
+def inverse_sigmoid(x: Tensor, eps: float = 1e-3) -> Tensor:
+    """Clamp probabilities to [0, 1] before forming the epsilon-bounded odds."""
+    x = x.clamp(min=0, max=1)
+    x1 = x.clamp(min=eps)
+    x2 = (1 - x).clamp(min=eps)
+    return torch.log(x1 / x2)
+
+
 class LayerNorm2d(nn.Module):
     """2D layer normalization over the channel dimension (dim=1)."""
 

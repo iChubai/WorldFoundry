@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as silu
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext import corr_ext as _corr_ext
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.corr import SpatialCorrelationSampler
 
@@ -606,10 +607,6 @@ class MultiheadLocalAttentionV3(nn.Module):
 def linear_gate(x, dim=-1):
     # return F.relu_(x).pow(2.) / x.size()[dim]
     return torch.softmax(x, dim=dim)
-
-
-def silu(x):
-    return x * torch.sigmoid(x)
 
 
 class GatedPropagation(nn.Module):

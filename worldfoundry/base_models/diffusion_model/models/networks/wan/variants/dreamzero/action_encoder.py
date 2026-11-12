@@ -13,10 +13,7 @@ No camera, VACE, causal, or linear-attention logic.
 import torch
 import torch.nn as nn
 
-
-def swish(x):
-    """SiLU / Swish used between the action MLP layers."""
-    return x * torch.sigmoid(x)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as swish
 
 
 class SinusoidalPositionalEncoding(nn.Module):

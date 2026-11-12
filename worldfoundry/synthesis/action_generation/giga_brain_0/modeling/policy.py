@@ -6,6 +6,8 @@ from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 from torch import Tensor, nn
 
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import make_att_2d_masks as make_att_2d_masks
+
 from .paligemma import PaliGemmaWithExpertModel
 from .paligemma2 import PaliGemma2WithExpertModel
 
@@ -707,35 +709,3 @@ def create_sinusoidal_pos_embedding(
     sin_input = scaling_factor[None, :] * time[:, None]
     pos_emb = torch.cat([torch.sin(sin_input), torch.cos(sin_input)], dim=1)
     return pos_emb
-
-
-def make_att_2d_masks(pad_masks: Tensor, att_masks: Tensor) -> Tensor:
-    """Creates a 2D attention mask from 1D padding and attention-type masks.
-
-    This function is copied from big_vision.
-
-    The `att_masks` allow for different attention patterns:
-    - `[[1, 1, 1, 1, 1, 1]]`: Purely causal attention.
-    - `[[0, 0, 0, 1, 1, 1]]`: Prefix-LM attention. The first 3 tokens attend
-      to each other, and the last 3 tokens are causal.
-    - `[[1, 0, 1, 0, 1, 0]]`: Causal attention between blocks. Tokens can
-      attend to previous blocks and tokens within the same block.
-
-    Args:
-        pad_masks: bool[B, N] indicating valid (true) vs. padding (false) tokens.
-        att_masks: int[B, N] defining attention type. A `1` at a position
-                   indicates the start of a new causal block.
-
-    Returns:
-        A 2D boolean attention mask of shape (B, N, N).
-    """
-    if att_masks.ndim != 2:
-        raise ValueError(att_masks.ndim)
-    if pad_masks.ndim != 2:
-        raise ValueError(pad_masks.ndim)
-
-    cumsum = torch.cumsum(att_masks, dim=1)
-    att_2d_masks = cumsum[:, None, :] <= cumsum[:, :, None]
-    pad_2d_masks = pad_masks[:, None, :] * pad_masks[:, :, None]
-    att_2d_masks = att_2d_masks & pad_2d_masks
-    return att_2d_masks

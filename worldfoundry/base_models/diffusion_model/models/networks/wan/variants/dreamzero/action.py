@@ -13,12 +13,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as swish
 from worldfoundry.core.model_loading.model_configuration import NativeConfigMixin, register_to_config
 
-from .action_encoder import (
-    SinusoidalPositionalEncoding,
-    swish,
-)
+from .action_encoder import SinusoidalPositionalEncoding
 from .attention import (
     AttentionModule,
 )

@@ -24,7 +24,7 @@ import torch
 from einops import repeat
 from torch import nn
 
-from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import rotate_half
+from worldfoundry.core.attention.rotary.interleaved import rotate_pairs as rotate_half
 
 
 def pool(x: torch.Tensor, size: int, dim: int) -> torch.Tensor:

@@ -3,39 +3,18 @@ import random
 import re
 import sys
 from collections.abc import Iterable
-from itertools import repeat
 
 import torch
 import torch.distributed as dist
-import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
 from torch.utils.checkpoint import checkpoint, checkpoint_sequential
 from torchvision import transforms as T
 
-
-def _ntuple(n):
-    def parse(x):
-        if isinstance(x, Iterable) and not isinstance(x, str):
-            return x
-        return tuple(repeat(x, n))
-
-    return parse
-
+from worldfoundry.core.nn.blocks.tuples import ntuple as _ntuple
 
 to_1tuple = _ntuple(1)
 to_2tuple = _ntuple(2)
-
-
-def set_grad_checkpoint(model, use_fp32_attention=False, gc_step=1):
-    assert isinstance(model, nn.Module)
-
-    def set_attr(module):
-        module.grad_checkpointing = True
-        module.fp32_attention = use_fp32_attention
-        module.grad_checkpointing_step = gc_step
-
-    model.apply(set_attr)
 
 
 def auto_grad_checkpoint(module, *args, **kwargs):

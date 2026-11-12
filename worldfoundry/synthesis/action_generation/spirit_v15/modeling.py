@@ -33,6 +33,8 @@ from transformers import (
     PretrainedConfig,
 )
 
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import pad_vector
+
 from .normalization import (
     FeatureType,
     NormalizationMode,
@@ -41,7 +43,7 @@ from .normalization import (
     no_stats_error_str,
 )
 from .sampling import sample_noise
-from .tensor_ops import pad_and_cat, pad_vector
+from .tensor_ops import pad_and_cat
 from .vlm_utils import (
     get_rope_index_3,
     get_user_prompt,

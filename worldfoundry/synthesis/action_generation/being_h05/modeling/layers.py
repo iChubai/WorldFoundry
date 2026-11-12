@@ -6,7 +6,7 @@
 import torch
 from torch import nn
 
-from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.embodiment_mlp import swish
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as swish
 
 
 class ProprioProjector(nn.Module):

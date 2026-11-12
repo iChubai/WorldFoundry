@@ -7128,3 +7128,25 @@ Shared homogeneous-coordinate, image-grid and camera-ray composition helpers
 remain in Depth Anything 3's utils/geometry.py (Copyright 2025 ByteDance Ltd.
 and/or its affiliates; Apache-2.0). PixelSplat retains its native inverse and
 coordinate-dtype bindings. Model and checkpoint license terms are unchanged.
+
+Shared cross-family tensor and video helpers
+--------------------------------------------
+core/attention/rotary/interleaved.py and the broadcast-and-concatenate helper in
+core/attention/rotary/broadcast.py share rotary-embedding-torch's adjacent-pair
+operations (Phil Wang; MIT), as used by SAM3, AdaWorld and Open-Oasis.
+core/media/processing/video_transforms.py shares Latte/Open-Sora's tensor video
+operations (Copyright 2024 Vchitect/Latte; Apache-2.0). Image/PIL conversion retains
+the Diffusers-derived rounding and grayscale conventions.
+
+core/nn/diffusion/utils.py shares the OpenAI improved-diffusion/GLIDE NumPy schedule
+extraction used by HMA, NWM, WorldFM and CogACT (MIT). Its appended-zero operation
+retains the k-diffusion-derived schedule contract. The detector inverse-sigmoid
+in core/nn/blocks/layers.py is shared from GroundingDINO/DETR (Apache-2.0); its
+Mish implementation retains the explicit Diffusers/AnimateDiff decomposition.
+The checkpoint-attribute setter in core/nn/checkpointing/gradient.py is shared
+from Open-Sora (Apache-2.0). core/utils/tensors/torch.py shares DIAMOND's episode
+field concatenation (Copyright 2024 Eloi Alonso; MIT) and Open-MAGVIT2's leading-axis
+multiplication (Apache-2.0). Existing core sampling, token-head, RDT, DCR-upsample
+and module-dtype owners are reused without checkpoint-key changes.
+The complete MIT and Apache-2.0 texts are retained above; model and weight terms
+are unchanged.

@@ -31,9 +31,10 @@ from worldfoundry.core.attention import (
     scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
 )
 from worldfoundry.core.geometry.boxes import box_cxcywh_to_xyxy
+from worldfoundry.core.nn.blocks.layers import inverse_sigmoid
 
 from .act_ckpt_utils import activation_ckpt_wrapper
-from .model_misc import MLP, gen_sineembed_for_position, inverse_sigmoid
+from .model_misc import MLP, gen_sineembed_for_position
 
 
 class TransformerDecoderLayer(nn.Module):

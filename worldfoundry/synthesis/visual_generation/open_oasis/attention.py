@@ -7,7 +7,8 @@ from einops import rearrange
 from torch import nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-from worldfoundry.synthesis.visual_generation.open_oasis.rotary_embedding_torch import RotaryEmbedding, apply_rotary_emb
+from worldfoundry.core.attention.rotary.interleaved import apply_rotary_emb
+from worldfoundry.synthesis.visual_generation.open_oasis.rotary_embedding_torch import RotaryEmbedding
 
 
 class TemporalAxialAttention(nn.Module):

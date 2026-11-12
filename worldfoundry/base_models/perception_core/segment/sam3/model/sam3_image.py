@@ -34,11 +34,11 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc impor
 # isort: split
 
 from worldfoundry.core.geometry.boxes import box_cxcywh_to_xyxy
+from worldfoundry.core.nn.blocks.layers import inverse_sigmoid
 
 from .act_ckpt_utils import activation_ckpt_wrapper
 from .data_misc import FindStage
 from .geometry_encoders import Prompt
-from .model_misc import inverse_sigmoid
 
 
 def _update_out(out, out_name, out_value, auxiliary=True, update_aux=True):

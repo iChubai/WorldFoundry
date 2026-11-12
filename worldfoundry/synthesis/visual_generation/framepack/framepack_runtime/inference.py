@@ -14,6 +14,7 @@ from transformers import (
     SiglipVisionModel,
 )
 
+from worldfoundry.core.vram.memory import patched_diffusers_current_device as fake_diffusers_current_device
 from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.hunyuan import (
     encode_prompt_conds,
     vae_decode,
@@ -21,7 +22,6 @@ from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffus
 )
 from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime.diffusers_helper.memory import (
     DynamicSwapInstaller,
-    fake_diffusers_current_device,
     get_cuda_free_memory_gb,
     gpu,
     load_model_as_complete,
@@ -74,7 +74,9 @@ def initialize(
     print(f"High-VRAM Mode: {high_vram}")
 
     text_encoder = LlamaModel.from_pretrained(hunyuan_model, subfolder="text_encoder", torch_dtype=torch.float16).cpu()
-    text_encoder_2 = CLIPTextModel.from_pretrained(hunyuan_model, subfolder="text_encoder_2", torch_dtype=torch.float16).cpu()
+    text_encoder_2 = CLIPTextModel.from_pretrained(
+        hunyuan_model, subfolder="text_encoder_2", torch_dtype=torch.float16
+    ).cpu()
     tokenizer = (
         LlamaTokenizerFast.from_pretrained(str(Path(hunyuan_root) / "tokenizer"))
         if hunyuan_root
@@ -88,7 +90,9 @@ def initialize(
         redux_model, subfolder="image_encoder", torch_dtype=torch.float16
     ).cpu()
 
-    transformer = HunyuanVideoTransformer3DModelPacked.from_pretrained(str(checkpoint_path), torch_dtype=torch.bfloat16).cpu()
+    transformer = HunyuanVideoTransformer3DModelPacked.from_pretrained(
+        str(checkpoint_path), torch_dtype=torch.bfloat16
+    ).cpu()
 
     vae.eval()
     text_encoder.eval()

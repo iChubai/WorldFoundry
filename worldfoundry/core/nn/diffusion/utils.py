@@ -7,6 +7,7 @@ Shape/cast utilities for U-Net residuals. DiT modulation lives in
 import math
 from inspect import isfunction
 
+import numpy as np
 import torch
 import torch.distributed as dist
 import torch.utils.checkpoint
@@ -52,6 +53,21 @@ def extract_into_tensor(a, t, x_shape):
     b, *_ = t.shape
     out = a.gather(-1, t)
     return out.reshape(b, *((1,) * (len(x_shape) - 1)))
+
+
+def extract_numpy_into_tensor(
+    arr: np.ndarray, timesteps: torch.Tensor, broadcast_shape: tuple[int, ...]
+) -> torch.Tensor:
+    """Index a NumPy schedule on the timestep device and add a full default-dtype zero tensor."""
+    res = torch.from_numpy(arr).to(device=timesteps.device)[timesteps].float()
+    while len(res.shape) < len(broadcast_shape):
+        res = res[..., None]
+    return res + torch.zeros(broadcast_shape, device=timesteps.device)
+
+
+def append_zero(x: torch.Tensor) -> torch.Tensor:
+    """Append one zero without changing the schedule's dtype or device."""
+    return torch.cat([x, x.new_zeros([1])])
 
 
 def extract_into_tensor_2d(a, t, x_shape):

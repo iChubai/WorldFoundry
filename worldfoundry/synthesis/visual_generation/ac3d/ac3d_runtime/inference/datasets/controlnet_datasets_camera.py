@@ -8,7 +8,6 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.transforms.functional as F
 from decord import VideoReader
-from packaging import version as pver
 from torch.utils.data.dataset import Dataset
 
 
@@ -58,32 +57,26 @@ class Camera:
         self.c2w_mat = np.linalg.inv(w2c_mat_4x4)
 
 
-def custom_meshgrid(*args):
-    # ref: https://pytorch.org/docs/stable/generated/torch.meshgrid.html?highlight=meshgrid#torch.meshgrid
-    if pver.parse(torch.__version__) < pver.parse("1.10"):
-        return torch.meshgrid(*args)
-    else:
-        return torch.meshgrid(*args, indexing="ij")
-
-
 def ray_condition(K, c2w, H, W, device, flip_flag=None):
     # c2w: B, V, 4, 4
     # K: B, V, 4
 
     B, V = K.shape[:2]
 
-    j, i = custom_meshgrid(
+    j, i = torch.meshgrid(
         torch.linspace(0, H - 1, H, device=device, dtype=c2w.dtype),
         torch.linspace(0, W - 1, W, device=device, dtype=c2w.dtype),
+        indexing="ij",
     )
     i = i.reshape([1, 1, H * W]).expand([B, V, H * W]) + 0.5  # [B, V, HxW]
     j = j.reshape([1, 1, H * W]).expand([B, V, H * W]) + 0.5  # [B, V, HxW]
 
     n_flip = torch.sum(flip_flag).item() if flip_flag is not None else 0
     if n_flip > 0:
-        j_flip, i_flip = custom_meshgrid(
+        j_flip, i_flip = torch.meshgrid(
             torch.linspace(0, H - 1, H, device=device, dtype=c2w.dtype),
             torch.linspace(W - 1, 0, W, device=device, dtype=c2w.dtype),
+            indexing="ij",
         )
         i_flip = i_flip.reshape([1, 1, H * W]).expand(B, 1, H * W) + 0.5
         j_flip = j_flip.reshape([1, 1, H * W]).expand(B, 1, H * W) + 0.5

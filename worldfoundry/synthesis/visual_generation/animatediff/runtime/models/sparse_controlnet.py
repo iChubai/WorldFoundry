@@ -24,6 +24,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet import InflatedConv3d
+from worldfoundry.core.nn.diffusion.convolution import zero_module as zero_module
 
 from .unet_blocks import (
     UNetMidBlock3DCrossAttn,
@@ -582,9 +583,3 @@ class SparseControlNetModel(ModelMixin, ConfigMixin):
         return SparseControlNetOutput(
             down_block_res_samples=down_block_res_samples, mid_block_res_sample=mid_block_res_sample
         )
-
-
-def zero_module(module):
-    for p in module.parameters():
-        nn.init.zeros_(p)
-    return module

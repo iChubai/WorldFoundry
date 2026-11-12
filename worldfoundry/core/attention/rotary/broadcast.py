@@ -3,7 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 # Shared from the SAM and SAM2 source distributions.
 
+from collections.abc import Sequence
+
 import torch
+
+
+def broadcat(tensors: Sequence[torch.Tensor], dim: int = -1) -> torch.Tensor:
+    """Broadcast all input axes before concatenating rotary position tables."""
+    broadcasted_tensors = torch.broadcast_tensors(*tensors)
+    return torch.cat(broadcasted_tensors, dim=dim)
 
 
 def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor) -> torch.Tensor:

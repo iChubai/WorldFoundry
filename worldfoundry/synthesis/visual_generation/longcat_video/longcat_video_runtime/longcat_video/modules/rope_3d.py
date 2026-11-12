@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 from einops import rearrange, repeat
 
+from worldfoundry.core.attention.rotary.interleaved import rotate_pairs as rotate_half
 from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
 
 
@@ -25,13 +26,6 @@ def broadcat(tensors, dim=-1):
     expandable_shapes = list(zip(*(t[1] for t in expanded_dims), strict=False))
     tensors = [t[0].expand(*t[1]) for t in zip(tensors, expandable_shapes, strict=False)]
     return torch.cat(tensors, dim=dim)
-
-
-def rotate_half(x):
-    x = rearrange(x, "... (d r) -> ... d r", r=2)
-    x1, x2 = x.unbind(dim=-1)
-    x = torch.stack((-x2, x1), dim=-1)
-    return rearrange(x, "... d r -> ... (d r)")
 
 
 class RotaryPositionalEmbedding(nn.Module):

@@ -3,7 +3,7 @@ from abc import abstractmethod
 import numpy as np
 import torch
 
-from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import append_zero
+from worldfoundry.core.nn.diffusion.utils import append_zero
 
 
 def generate_roughly_equally_spaced_steps(num_substeps: int, max_step: int) -> np.ndarray:

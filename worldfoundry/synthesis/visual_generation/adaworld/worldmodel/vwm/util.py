@@ -61,10 +61,6 @@ def get_obj_from_str(string, reload=False, invalidate_cache=True):
     return _get_obj_from_str(string, reload=reload, invalidate_cache=invalidate_cache)
 
 
-def append_zero(x):
-    return torch.cat([x, x.new_zeros([1])])
-
-
 def append_dims(x, target_dims):
     """
     Appends dimensions to the end of a tensor until it has target_dims dimensions.

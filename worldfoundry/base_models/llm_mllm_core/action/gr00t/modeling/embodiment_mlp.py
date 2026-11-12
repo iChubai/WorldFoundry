@@ -19,13 +19,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-
-def swish(x):
-    """Swish activation function."""
-    return x * torch.sigmoid(x)
-
-
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamzero.action_encoder import (  # noqa: E402 - Follows module-level definitions, as upstream.
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as swish
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamzero.action_encoder import (
     SinusoidalPositionalEncoding,
 )
 

@@ -24,3 +24,11 @@ def test_top_k_top_p_filtering_preserves_inplace_boundary_selection(
     actual = top_k_top_p_filtering(logits, top_k, top_p, min_tokens_to_keep=minimum)
     assert actual is logits
     torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+
+
+def test_open_magvit2_uses_canonical_logits_filtering() -> None:
+    from worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime.src.Open_MAGVIT2.modules.transformer import (
+        gpt,
+    )
+
+    assert gpt.top_k_top_p_filtering is top_k_top_p_filtering

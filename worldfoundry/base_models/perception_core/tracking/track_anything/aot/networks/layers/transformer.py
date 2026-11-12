@@ -6,13 +6,14 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as silu
+
 from .attention import (
     GatedPropagation,
     LocalGatedPropagation,
     MultiheadAttention,
     MultiheadLocalAttentionV2,
     MultiheadLocalAttentionV3,
-    silu,
 )
 from .basic import DropPath, GNActDWConv2d, GroupNorm1D, seq_to_2d
 

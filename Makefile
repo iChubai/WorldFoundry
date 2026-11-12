@@ -177,6 +177,11 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/llm_mllm_core/test_rdt.py \
 	tests/base_models/diffusion_model/models/networks/dit/test_token.py \
 	tests/core/nn/blocks/test_module_properties.py \
+	tests/core/nn/blocks/test_layers.py \
+	tests/core/nn/diffusion/test_utils.py \
+	tests/core/attention/rotary/test_interleaved.py \
+	tests/core/media/processing/test_video_transforms.py \
+	tests/core/utils/tensors/test_torch.py \
 	tests/base_models/test_hyperflow_components.py \
 	tests/synthesis/test_hyperflow_runtime.py \
 	tests/base_models/test_minimax_h3_dit.py \

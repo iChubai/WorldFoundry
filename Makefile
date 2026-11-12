@@ -163,6 +163,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/llm_mllm_core/test_qwen_vision.py \
 	tests/base_models/llm_mllm_core/test_action_tensor_ops.py \
 	tests/base_models/llm_mllm_core/test_lingbot_components.py \
+	tests/base_models/llm_mllm_core/test_rms_norm_variants.py \
 	tests/base_models/llm_mllm_core/test_diffusion_policy_components.py \
 	tests/base_models/llm_mllm_core/test_cogact_components.py \
 	tests/base_models/llm_mllm_core/test_molmo_preprocessing.py \

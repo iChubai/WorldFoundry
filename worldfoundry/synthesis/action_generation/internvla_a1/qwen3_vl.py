@@ -61,6 +61,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.qwen.vision import (
     VisionRotaryEmbedding as Qwen3VLVisionRotaryEmbedding,
 )
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
+from worldfoundry.core.nn.transformer.dit import _rms_norm_reference
 
 try:
     from transformers.utils.generic import check_model_inputs
@@ -296,9 +297,7 @@ class Qwen3VLTextRMSNorm(nn.Module):
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
+        hidden_states = _rms_norm_reference(hidden_states.float(), None, self.variance_epsilon, "fp32")
         return (self.weight * hidden_states).to(input_dtype)
 
     def extra_repr(self):

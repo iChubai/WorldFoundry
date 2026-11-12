@@ -44,6 +44,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     repeat_kv,
 )
 from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
+from worldfoundry.core.nn.transformer.dit import _rms_norm_reference
 from worldfoundry.core.nn.transformer.dit import modulate_sequence as _modulate
 
 from .configuration_molmoact2 import (
@@ -150,8 +151,7 @@ class ActionExpertRMSNorm(nn.Module):
         with torch.autocast(enabled=False, device_type=x.device.type):
             dtype = x.dtype
             x_float = x.to(torch.float32)
-            variance = x_float.pow(2).mean(dim=-1, keepdim=True)
-            out = x_float * torch.rsqrt(variance + self.eps)
+            out = _rms_norm_reference(x_float, None, self.eps, "fp32")
             out = out.to(dtype)
         if self.weight is not None:
             out = out * self.weight
@@ -1941,8 +1941,7 @@ class MolmoAct2RMSNorm(nn.Module):
         with torch.autocast(enabled=False, device_type=x.device.type):
             og_dtype = x.dtype
             x = x.to(torch.float32)
-            variance = x.pow(2).mean(-1, keepdim=True)
-            x = x * torch.rsqrt(variance + self.eps)
+            x = _rms_norm_reference(x, None, self.eps, "fp32")
             x = x.to(og_dtype)
 
         return self.weight * x

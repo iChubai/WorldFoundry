@@ -1,11 +1,10 @@
-from typing import ClassVar
-
-# Inference-only Being-H0.5 runtime retained in-tree.
 # --------------------------------------------------------
 # InternVL
 # Copyright (c) 2024 OpenGVLab
 # Licensed under The MIT License [see LICENSE for details]
 # --------------------------------------------------------
+from typing import ClassVar
+
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
@@ -17,7 +16,7 @@ from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPo
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
-from .internvit_configuration import InternVisionConfig
+from .configuration import InternVisionConfig
 
 try:
     from flash_attn.bert_padding import pad_input, unpad_input

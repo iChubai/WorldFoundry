@@ -514,6 +514,14 @@ Hugging Face Finetrainers
 MIT-licensed source adaptations
 -------------------------------
 
+InternViT vision transformer
+  License: MIT
+  Copyright: 2024 OpenGVLab
+  Sources: https://github.com/OpenGVLab/InternVL,
+           https://github.com/BeingBeyond/Being-H
+  Being-H source revision: 66b959e05db225fd816f8a517d94a9c0585cfc3e
+  Files: worldfoundry/base_models/llm_mllm_core/mllm/intern_vit/
+
 Latent Consistency Models
   License: MIT
   Source: https://github.com/luosiallen/latent-consistency-model

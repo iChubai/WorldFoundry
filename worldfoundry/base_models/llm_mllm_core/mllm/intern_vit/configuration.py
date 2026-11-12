@@ -1,4 +1,3 @@
-# Inference-only Being-H0.5 runtime retained in-tree.
 # --------------------------------------------------------
 # InternVL
 # Copyright (c) 2024 OpenGVLab

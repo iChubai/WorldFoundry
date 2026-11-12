@@ -14,9 +14,10 @@ from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
+from worldfoundry.base_models.llm_mllm_core.mllm.intern_vit.model import has_flash_attn
+
 from ..preprocessing.constants import CONNECTOR_ARCH, LLM_MODEL_ARCH, VIT_MODEL_ARCH
 from ..preprocessing.conversation import get_conv_template
-from .internvit import has_flash_attn
 from .layers import *  # noqa: F403 - Upstream star import kept as written.
 
 logger = logging.get_logger(__name__)

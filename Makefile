@@ -165,6 +165,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_wan_family_components.py \
 	tests/synthesis/test_rcm_wan_components.py \
 	tests/synthesis/test_gr00t_preprocessing.py \
+	tests/synthesis/test_being_h05_components.py \
 	tests/base_models/test_omnivinci_components.py \
 	tests/synthesis/test_omnivinci_runtime.py \
 	tests/synthesis/test_spatia_runtime.py \

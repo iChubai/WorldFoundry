@@ -771,8 +771,14 @@ class LTX25VideoBackbone(torch.nn.Module):
         if tuple(condition.shape) != (batch, STABLE_GEOMETRY.latent_frames):
             raise BackendContractError("LTX first-frame mask must be [B,20]")
         condition = condition.repeat_interleave(STABLE_GEOMETRY.tokens_per_latent, dim=1)
-        from ....ltx_core.components.patchifiers import VideoLatentPatchifier, get_pixel_coords
-        from ....ltx_core.types import SpatioTemporalScaleFactors, VideoLatentShape
+        from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+            VideoLatentPatchifier,
+            get_pixel_coords,
+        )
+        from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+        from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import (
+            SpatioTemporalScaleFactors,
+        )
 
         patchifier = VideoLatentPatchifier(patch_size=1)
         tokens = patchifier.patchify(video_latent)

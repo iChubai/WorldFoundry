@@ -23,11 +23,9 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.tran
     DiffVAEMode,
     NAttentionKind,
 )
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import DimensionSizeConfig
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.tiling import TileSizeConfig
 
-from ...tiling import (
-    DimensionSizeConfig,
-    TileSizeConfig,
-)
 from ...types import VIDEO_SCALE_FACTORS, SpatioTemporalScaleFactors
 
 ResizeAxisMode = Literal["repeat_last", "symmetric"]

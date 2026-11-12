@@ -1,11 +1,16 @@
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# SPDX-License-Identifier: LicenseRef-LTX-2.x-Community
+"""LTX token-shifted, linear-quadratic and beta sigma schedules.
+
+Adapted from the Lightricks LTX-2 inference runtime; see THIRD-PARTY-NOTICES.
+"""
+
 import math
 from functools import lru_cache
 
-import numpy
-import scipy
 import torch
 
-from .protocols import SchedulerProtocol
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import SchedulerProtocol
 
 BASE_SHIFT_ANCHOR = 1024
 MAX_SHIFT_ANCHOR = 4096
@@ -110,6 +115,9 @@ class BetaScheduler(SchedulerProtocol):
         Returns:
             A tensor of sigmas.
         """
+        import numpy
+        import scipy
+
         model_sampling_sigmas = _precalculate_model_sampling_sigmas(self.shift, self.timesteps_length)
         total_timesteps = len(model_sampling_sigmas) - 1
         ts = 1 - numpy.linspace(0, 1, steps, endpoint=False)

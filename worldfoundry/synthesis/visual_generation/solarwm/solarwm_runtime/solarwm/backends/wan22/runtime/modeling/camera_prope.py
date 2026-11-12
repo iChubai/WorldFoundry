@@ -27,6 +27,11 @@ from functools import partial
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.minwm.prope import _invert_K, _invert_SE3
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import (
+    _apply_block_diagonal,
+)
+
 from ..camera import transform_relative_viewmats
 
 
@@ -266,59 +271,11 @@ def _apply_tiled_projmat(
     ).reshape(feats.shape)
 
 
-def _apply_block_diagonal(
-    feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
-) -> torch.Tensor:
-    """Apply a block-diagonal function to an input array.
-
-    Each function is specified as a tuple with form:
-
-        ((Tensor) -> Tensor, int)
-
-    Where the integer is the size of the input to the function.
-    """
-    funcs, block_sizes = zip(*func_size_pairs, strict=False)
-    assert feats.shape[-1] == sum(block_sizes)
-    x_blocks = torch.split(feats, block_sizes, dim=-1)
-    out = torch.cat(
-        [f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)],
-        dim=-1,
-    )
-    assert out.shape == feats.shape, "Input/output shapes should match."
-    return out
-
-
-def _invert_SE3(transforms: torch.Tensor) -> torch.Tensor:
-    """Invert a 4x4 SE(3) matrix."""
-    assert transforms.shape[-2:] == (4, 4)
-    Rinv = transforms[..., :3, :3].transpose(-1, -2)
-    out = torch.zeros_like(transforms)
-    out[..., :3, :3] = Rinv
-    out[..., :3, 3] = -torch.einsum("...ij,...j->...i", Rinv, transforms[..., :3, 3])
-    out[..., 3, 3] = 1.0
-    out = out.to(dtype=transforms.dtype)
-    return out
-
-
 def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
     """Lift 3x3 matrices to homogeneous 4x4 matrices."""
     assert Ks.shape[-2:] == (3, 3)
     out = torch.zeros((*Ks.shape[:-2], 4, 4), device=Ks.device)
     out[..., :3, :3] = Ks
     out[..., 3, 3] = 1.0
-    out = out.to(dtype=Ks.dtype)
-    return out
-
-
-def _invert_K(Ks: torch.Tensor) -> torch.Tensor:
-    """Invert 3x3 intrinsics matrices. Assumes no skew."""
-    assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros_like(Ks)
-    out[..., 0, 0] = 1.0 / Ks[..., 0, 0]
-    out[..., 1, 1] = 1.0 / Ks[..., 1, 1]
-    out[..., 0, 2] = -Ks[..., 0, 2] / Ks[..., 0, 0]
-    out[..., 1, 2] = -Ks[..., 1, 2] / Ks[..., 1, 1]
-    out[..., 2, 2] = 1.0
     out = out.to(dtype=Ks.dtype)
     return out

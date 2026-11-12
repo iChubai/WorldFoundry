@@ -2,9 +2,15 @@ from dataclasses import dataclass, replace
 
 import torch
 
-from .adaln import AdaLayerNormSingle
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.adaln import AdaLayerNormSingle
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
+    LTXRopeType,
+    generate_freq_grid_np,
+    generate_freq_grid_pytorch,
+    precompute_freqs_cis,
+)
+
 from .modality import Modality
-from .rope import LTXRopeType, generate_freq_grid_np, generate_freq_grid_pytorch, precompute_freqs_cis
 
 
 @dataclass(frozen=True)

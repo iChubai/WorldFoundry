@@ -7,7 +7,7 @@ from fractions import Fraction
 import av
 import torch
 
-from ..types import Audio
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import Audio
 
 
 def validate_audio_waveform(audio: Audio) -> None:

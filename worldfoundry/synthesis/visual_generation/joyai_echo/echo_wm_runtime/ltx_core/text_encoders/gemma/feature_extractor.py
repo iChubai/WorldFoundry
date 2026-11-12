@@ -1,5 +1,3 @@
-import math
-
 import torch
 from einops import rearrange
 from torch import nn
@@ -59,30 +57,6 @@ def _norm_and_concat_padded_batch(
     return normed
 
 
-def norm_and_concat_per_token_rms(
-    encoded_text: torch.Tensor,
-    attention_mask: torch.Tensor,
-) -> torch.Tensor:
-    """Per-token RMSNorm normalization for V2 models.
-    Args:
-        encoded_text: [B, T, D, L]
-        attention_mask: [B, T] binary mask
-    Returns:
-        [B, T, D*L] normalized tensor with padding zeroed out.
-    """
-    B, T, D, L = encoded_text.shape
-    variance = torch.mean(encoded_text**2, dim=2, keepdim=True)  # [B,T,1,L]
-    normed = encoded_text * torch.rsqrt(variance + 1e-6)
-    normed = normed.reshape(B, T, D * L)
-    mask_3d = attention_mask.bool().unsqueeze(-1)  # [B, T, 1]
-    return torch.where(mask_3d, normed, torch.zeros_like(normed))
-
-
-def _rescale_norm(x: torch.Tensor, target_dim: int, source_dim: int) -> torch.Tensor:
-    """Rescale normalization: x * sqrt(target_dim / source_dim)."""
-    return x * math.sqrt(target_dim / source_dim)
-
-
 # ---------------------------------------------------------------------------
 # Feature extractor variants
 # ---------------------------------------------------------------------------
@@ -107,35 +81,3 @@ class FeatureExtractorV1(nn.Module):
         if self.is_av:
             return features, features
         return features, None
-
-
-class FeatureExtractorV2(nn.Module):
-    """22B: per-token RMS norm → rescale → dual aggregate embeds"""
-
-    def __init__(
-        self,
-        video_aggregate_embed: nn.Linear,
-        embedding_dim: int,
-        audio_aggregate_embed: nn.Linear | None = None,
-    ):
-        super().__init__()
-        self.video_aggregate_embed = video_aggregate_embed
-        self.audio_aggregate_embed = audio_aggregate_embed
-        self.embedding_dim = embedding_dim
-
-    def forward(
-        self,
-        hidden_states: torch.Tensor,
-        attention_mask: torch.Tensor,
-        padding_side: str = "left",
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        encoded = torch.stack(hidden_states, dim=-1) if isinstance(hidden_states, (list, tuple)) else hidden_states
-        normed = norm_and_concat_per_token_rms(encoded, attention_mask)
-        normed = normed.to(encoded.dtype)
-        v_dim = self.video_aggregate_embed.out_features
-        video = self.video_aggregate_embed(_rescale_norm(normed, v_dim, self.embedding_dim))
-        audio = None
-        if self.audio_aggregate_embed is not None:
-            a_dim = self.audio_aggregate_embed.out_features
-            audio = self.audio_aggregate_embed(_rescale_norm(normed, a_dim, self.embedding_dim))
-        return video, audio

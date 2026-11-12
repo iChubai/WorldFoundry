@@ -1,10 +1,15 @@
 import torch
 
-from ...components.patchifiers import get_pixel_coords
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.attention_masks import (
+    extend_keyframes_mask,
+    update_attention_mask,
+)
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import get_pixel_coords
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import LatentState
+
 from ...tools import VideoLatentTools
-from ...types import LatentState, VideoLatentShape
 from ..item import ConditioningItem
-from ..mask_utils import extend_keyframes_mask, update_attention_mask
 
 
 class VideoConditionByKeyframeIndex(ConditioningItem):

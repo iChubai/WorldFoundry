@@ -4,14 +4,15 @@ from typing import Protocol
 import torch
 from torch._prims_common import DeviceLikeType
 
-from .components.patchifiers import (
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
     AudioLatentShape,
     AudioPatchifier,
     VideoLatentPatchifier,
     VideoLatentShape,
     get_pixel_coords,
 )
-from .components.protocols import Patchifier
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import Patchifier
+
 from .types import LatentState, SpatioTemporalScaleFactors
 
 DEFAULT_SCALE_FACTORS = SpatioTemporalScaleFactors.default()

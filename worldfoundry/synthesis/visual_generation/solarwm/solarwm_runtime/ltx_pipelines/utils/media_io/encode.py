@@ -16,13 +16,14 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import Audio
+
 from ....ltx_core.color.audio_mux import prepare_audio_stream as _prepare_audio_stream
 from ....ltx_core.color.audio_mux import validate_audio_waveform as _validate_audio_waveform
 from ....ltx_core.color.audio_mux import write_audio as _write_audio
 from ....ltx_core.color.hlg import encode_linear_hdr_frames_to_hlg_mp4
 from ....ltx_core.color.primaries import Primaries
 from ....ltx_core.color.yuv import FrameConverter, PixelFormat, yuv420p_bt709_converter_
-from ....ltx_core.types import Audio
 from .color_config import HDRColorSpace, decode_hdr_video
 from .exr import save_exr_tensor
 

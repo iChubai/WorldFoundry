@@ -1,13 +1,25 @@
-"""Utilities for building 2D self-attention masks for conditioning items."""
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# SPDX-License-Identifier: LicenseRef-LTX-2.x-Community
+"""LTX self-attention masks for appended conditioning tokens.
+
+Adapted from the Lightricks LTX-2 inference runtime; see THIRD-PARTY-NOTICES.
+"""
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Protocol
 
 import torch
 
-if TYPE_CHECKING:
-    from ..types import LatentState
+
+class AttentionMaskState(Protocol):
+    """Latent tokens and their optional pairwise conditioning mask."""
+
+    @property
+    def latent(self) -> torch.Tensor: ...
+
+    @property
+    def attention_mask(self) -> torch.Tensor | None: ...
 
 
 def resolve_cross_mask(
@@ -73,42 +85,8 @@ def resolve_cross_mask(
     return mask
 
 
-def extend_keyframes_mask(
-    latent_state: LatentState,
-    num_new_tokens: int,
-    *,
-    marked: bool,
-) -> torch.Tensor | None:
-    """Extend :attr:`LatentState.keyframes_mask` to cover newly appended tokens.
-    Every conditioning item that appends tokens must call this, otherwise the per-token marker
-    goes out of sync with the token sequence -- or is dropped entirely by items that build a fresh
-    :class:`LatentState` instead of using :func:`dataclasses.replace`.
-    Args:
-        latent_state: State being extended.
-        num_new_tokens: Number of tokens the item appends.
-        marked: Whether the new tokens encode a single standalone pixel frame in the *generated*
-            stream. True only for generated keyframe slots; given-content conditioning tokens
-            (image guidance, reference latents) are never marked, matching the reference
-            implementation, which marks only the keyframe conditioning methods.
-    Returns:
-        The extended mask, or ``None`` when there was no mask and the new tokens are unmarked.
-    """
-    existing = latent_state.keyframes_mask
-    if existing is None and not marked:
-        return None
-    if existing is None:
-        existing = torch.zeros_like(latent_state.denoise_mask)
-    new = torch.ones if marked else torch.zeros
-    pad = new(
-        (existing.shape[0], num_new_tokens, existing.shape[2]),
-        device=existing.device,
-        dtype=existing.dtype,
-    )
-    return torch.cat([existing, pad], dim=1)
-
-
 def update_attention_mask(
-    latent_state: LatentState,
+    latent_state: AttentionMaskState,
     attention_mask: float | torch.Tensor | None,
     num_noisy_tokens: int,
     num_new_tokens: int,
@@ -242,3 +220,47 @@ def build_attention_mask(
     # [N_noisy:N, N:N+M] and [N:N+M, N_noisy:N] remain 0 (no cross-ref attention)
 
     return mask
+
+
+class KeyframeMaskState(Protocol):
+    """Token denoising layout and optional standalone-keyframe markers."""
+
+    @property
+    def denoise_mask(self) -> torch.Tensor: ...
+
+    @property
+    def keyframes_mask(self) -> torch.Tensor | None: ...
+
+
+def extend_keyframes_mask(
+    latent_state: KeyframeMaskState,
+    num_new_tokens: int,
+    *,
+    marked: bool,
+) -> torch.Tensor | None:
+    """Extend :attr:`LatentState.keyframes_mask` to cover newly appended tokens.
+    Every conditioning item that appends tokens must call this, otherwise the per-token marker
+    goes out of sync with the token sequence -- or is dropped entirely by items that build a fresh
+    :class:`LatentState` instead of using :func:`dataclasses.replace`.
+    Args:
+        latent_state: State being extended.
+        num_new_tokens: Number of tokens the item appends.
+        marked: Whether the new tokens encode a single standalone pixel frame in the *generated*
+            stream. True only for generated keyframe slots; given-content conditioning tokens
+            (image guidance, reference latents) are never marked, matching the reference
+            implementation, which marks only the keyframe conditioning methods.
+    Returns:
+        The extended mask, or ``None`` when there was no mask and the new tokens are unmarked.
+    """
+    existing = latent_state.keyframes_mask
+    if existing is None and not marked:
+        return None
+    if existing is None:
+        existing = torch.zeros_like(latent_state.denoise_mask)
+    new = torch.ones if marked else torch.zeros
+    pad = new(
+        (existing.shape[0], num_new_tokens, existing.shape[2]),
+        device=existing.device,
+        dtype=existing.dtype,
+    )
+    return torch.cat([existing, pad], dim=1)

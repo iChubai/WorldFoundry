@@ -3,7 +3,7 @@ from typing import Protocol
 
 import torch
 
-from .rope import LTXRopeType, apply_rotary_emb
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType, apply_rotary_emb
 
 memory_efficient_attention = None
 flash_attn_interface = None

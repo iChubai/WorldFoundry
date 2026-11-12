@@ -25,8 +25,29 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.tran
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.dsl_kernels.attn import (
     na_dsl_available,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.duration_head import DurationHead
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+    AudioPatchifier,
+    VideoLatentPatchifier,
+)
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import DiffusionStepProtocol
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import (
+    Audio,
+    AudioLatentShape,
+    VideoLatentShape,
+    VideoPixelShape,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.duration_head import (
+    DURATION_HEAD_KEY_OPS,
+    DurationHeadConfigurator,
+)
 from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.loader.video_decoder import (
     build_diffvae_mode_op,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import (
+    VIDEO_SCALE_FACTORS,
+    LatentState,
+    SpatioTemporalScaleFactors,
 )
 
 from ...ltx_core.allocator_trim_strategy import AllocatorTrimStrategy
@@ -34,10 +55,7 @@ from ...ltx_core.batch_split import BatchSplitAdapter
 from ...ltx_core.block_streaming import DISK_CPU_SLOTS, StreamingModelBuilder
 from ...ltx_core.components.diffusion_steps import EulerDiffusionStep
 from ...ltx_core.components.noisers import Noiser
-from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier
-from ...ltx_core.components.protocols import DiffusionStepProtocol
 from ...ltx_core.conditioning import VideoGeneratedKeyframeSlots
-from ...ltx_core.duration_head import DURATION_HEAD_KEY_OPS, DurationHead, DurationHeadConfigurator
 from ...ltx_core.loader import SDOps
 from ...ltx_core.loader.attention_ops import set_attention_module_op
 from ...ltx_core.loader.fuse_loras import bf16_fuse_rule
@@ -85,15 +103,6 @@ from ...ltx_core.text_encoders.gemma import (
 )
 from ...ltx_core.text_encoders.gemma.embeddings_processor import EmbeddingsProcessor, EmbeddingsProcessorOutput
 from ...ltx_core.tools import AudioLatentTools, LatentTools, VideoLatentTools
-from ...ltx_core.types import (
-    VIDEO_SCALE_FACTORS,
-    Audio,
-    AudioLatentShape,
-    LatentState,
-    SpatioTemporalScaleFactors,
-    VideoLatentShape,
-    VideoPixelShape,
-)
 from .args import ImageConditioningInput
 from .constants import detect_params
 from .gpu_model import gpu_model

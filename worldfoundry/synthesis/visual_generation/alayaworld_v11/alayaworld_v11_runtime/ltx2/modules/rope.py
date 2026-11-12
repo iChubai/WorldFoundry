@@ -2,11 +2,15 @@ import functools
 import math
 import os
 from collections.abc import Callable
-from enum import Enum
 
-import numpy as np
 import torch
 from einops import rearrange
+
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
+    LTXRopeType,
+    apply_split_rotary_emb,
+    generate_freq_grid_pytorch,
+)
 
 
 def _use_wan_rope() -> bool:
@@ -19,13 +23,6 @@ def _use_wan_rope_t_only() -> bool:
     """LTX_USE_WAN_ROPE_T_ONLY=1: use Wan-style RoPE on the temporal dimension only (H/W stay LTX default).
     This buys length generalization while keeping the pretrained spatial representation."""
     return os.environ.get("LTX_USE_WAN_ROPE_T_ONLY", "0") == "1"
-
-
-class LTXRopeType(Enum):
-    """RoPE variants."""
-
-    INTERLEAVED = "interleaved"
-    SPLIT = "split"
 
 
 def apply_rotary_emb(
@@ -76,78 +73,6 @@ def apply_interleaved_rotary_emb(
     return output
 
 
-def apply_split_rotary_emb(
-    input_tensor: torch.Tensor, cos_freqs: torch.Tensor, sin_freqs: torch.Tensor
-) -> torch.Tensor:
-    """
-    Apply split RoPE to the input tensor.
-
-    Core 2D rotation:
-        [x', y'] = [x·cos(θ) - y·sin(θ), x·sin(θ) + y·cos(θ)]
-
-    Args:
-        input_tensor: Q or K tensor of shape [batch_size, num_heads, num_tokens, head_dim]
-                      e.g. [1, 32, 25515, 128]
-        cos_freqs: cos(position × frequency), shape [batch_size, num_heads, num_tokens, head_dim//2]
-                   e.g. [1, 32, 25515, 64]
-        sin_freqs: sin(position × frequency), shape [batch_size, num_heads, num_tokens, head_dim//2]
-                   e.g. [1, 32, 25515, 64]
-
-    Returns:
-        the rotated tensor, same shape as input_tensor
-    """
-    needs_reshape = False
-    # print(input_tensor.shape, cos_freqs.shape, sin_freqs.shape)
-
-    if input_tensor.ndim != 4 and cos_freqs.ndim == 4:
-        b, h, t, _ = cos_freqs.shape
-        input_tensor = input_tensor.reshape(b, t, h, -1).swapaxes(1, 2)
-        needs_reshape = True
-
-    # [batch_size, num_heads, num_tokens, head_dim] -> [batch_size, num_heads, num_tokens, 2, head_dim//2]
-    split_input = rearrange(input_tensor, "... (d r) -> ... d r", d=2)
-
-    first_half_input = split_input[..., :1, :]  # x: [batch, heads, tokens, 1, 64]
-    second_half_input = split_input[..., 1:, :]  # y: [batch, heads, tokens, 1, 64]
-
-    output = split_input * cos_freqs.unsqueeze(-2)  # [b, h, t, 2, 64]
-
-    first_half_output = output[..., :1, :]  # x·cos: [b, h, t, 1, 64]
-    second_half_output = output[..., 1:, :]  # y·cos: [b, h, t, 1, 64]
-
-    first_half_output.addcmul_(-sin_freqs.unsqueeze(-2), second_half_input)  # x·cos - y·sin
-    # y' = y·cos + x·sin
-    second_half_output.addcmul_(sin_freqs.unsqueeze(-2), first_half_input)  # y·cos + x·sin
-
-    output = rearrange(output, "... d r -> ... (d r)")
-
-    if needs_reshape:
-        output = output.swapaxes(1, 2).reshape(b, t, -1)
-
-    return output
-
-
-@functools.lru_cache(maxsize=5)
-def generate_freq_grid_np(
-    positional_embedding_theta: float, positional_embedding_max_pos_count: int, inner_dim: int
-) -> torch.Tensor:
-    theta = positional_embedding_theta
-    start = 1
-    end = theta
-
-    n_elem = 2 * positional_embedding_max_pos_count
-    pow_indices = np.power(
-        theta,
-        np.linspace(
-            np.log(start) / np.log(theta),
-            np.log(end) / np.log(theta),
-            inner_dim // n_elem,
-            dtype=np.float64,
-        ),
-    )
-    return torch.tensor(pow_indices * math.pi / 2, dtype=torch.float32)
-
-
 @functools.lru_cache(maxsize=5)
 def generate_freq_grid_wan(
     positional_embedding_theta: float, positional_embedding_max_pos_count: int, inner_dim: int
@@ -158,43 +83,6 @@ def generate_freq_grid_wan(
     freq_dim = inner_dim // n_elem  # frequencies per cos/sin pair per dimension
     indices = 1.0 / (positional_embedding_theta ** (torch.arange(0, freq_dim, dtype=torch.float64) / float(freq_dim)))
     return indices.to(torch.float32)
-
-
-@functools.lru_cache(maxsize=5)
-def generate_freq_grid_pytorch(
-    positional_embedding_theta: float, positional_embedding_max_pos_count: int, inner_dim: int
-) -> torch.Tensor:
-    theta = positional_embedding_theta  # 10000.0
-    start = 1  # 1
-    end = theta  # 10000.0
-    n_elem = 2 * positional_embedding_max_pos_count  # 3 * 2 = 6
-    # print("n_elem:",n_elem)
-    # print("start:",start)
-    # print("end:",end)
-    # print("theta:",theta)
-    # print("positional_embedding_max_pos_count:",positional_embedding_max_pos_count)
-    # print("positional_embedding_theta:",positional_embedding_theta)
-    # print("inner_dim:",inner_dim)
-    # print("positional_embedding_max_pos_count:",positional_embedding_max_pos_count)
-    # print("positional_embedding_theta:",positional_embedding_theta)
-    # print("inner_dim:",inner_dim)
-    indices = theta ** (
-        torch.linspace(
-            math.log(start, theta),
-            math.log(end, theta),
-            inner_dim // n_elem,
-            dtype=torch.float32,
-        )
-    )
-    # print("indices:",indices)
-    # print("indices.shape:",indices.shape)
-    # print("indices max:",indices.max())
-    # print("indices min:",indices.min())
-    indices = indices.to(dtype=torch.float32)
-
-    indices = indices * math.pi / 2
-
-    return indices
 
 
 def get_fractional_positions(

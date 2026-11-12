@@ -1,12 +1,11 @@
-import torch
+from worldfoundry.base_models.diffusion_model.models.denoisers.ltx_configurator import _build_caption_projections
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
 
 from ...loader.sd_ops import SDOps
 from ...utils import check_config_value
 from ..model_protocol import ModelConfigurator
 from .attention import AttentionFunction
 from .model import LTXModel, LTXModelType
-from .rope import LTXRopeType
-from .text_projection import create_caption_projection
 
 
 class LTXModelConfigurator(ModelConfigurator[LTXModel]):
@@ -120,29 +119,6 @@ class LTXVideoOnlyModelConfigurator(ModelConfigurator[LTXModel]):
             caption_projection=caption_projection,
             cross_attention_adaln=config.get("cross_attention_adaln", False),
         )
-
-
-def _build_caption_projections(
-    config: dict,
-    is_av: bool,
-) -> tuple[torch.nn.Module | None, torch.nn.Module | None]:
-    """Build caption projections for the transformer when projection is NOT in the text encoder.
-    19B models: projection is in the transformer (caption_proj_before_connector=False).
-    22B models: projection is in the text encoder, so no projections are created here.
-    Args:
-        config: Full model config dict (must contain "transformer" key).
-        is_av: Whether this is an audio-video model. When False, audio projection is skipped.
-    Returns:
-        Tuple of (video_caption_projection, audio_caption_projection), both None for 22B models.
-    """
-    transformer_config = config.get("transformer", {})
-    if transformer_config.get("caption_proj_before_connector", False):
-        return None, None
-
-    with torch.device("meta"):
-        caption_projection = create_caption_projection(transformer_config)
-        audio_caption_projection = create_caption_projection(transformer_config, audio=True) if is_av else None
-    return caption_projection, audio_caption_projection
 
 
 LTXV_MODEL_COMFY_RENAMING_MAP = (

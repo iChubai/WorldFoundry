@@ -4,9 +4,13 @@ from dataclasses import replace
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import (
+    DiffusionStepProtocol,
+    GuiderProtocol,
+)
+
 from ...ltx_core.components.guiders import MultiModalGuider, MultiModalGuiderFactory
 from ...ltx_core.components.noisers import Noiser
-from ...ltx_core.components.protocols import DiffusionStepProtocol, GuiderProtocol
 from ...ltx_core.conditioning import ConditioningItem, VideoConditionByKeyframeIndex, VideoConditionByLatentIndex
 from ...ltx_core.guidance.perturbations import (
     BatchedPerturbationConfig,

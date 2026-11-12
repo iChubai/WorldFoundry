@@ -14,8 +14,9 @@ import torch
 from PIL import ExifTags, Image, ImageCms
 from torch._prims_common import DeviceLikeType
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import Audio, VideoPixelShape
+
 from ....ltx_core.hdr import HDRTransfer
-from ....ltx_core.types import Audio, VideoPixelShape
 from .color_config import HDRColorSpace
 from .exr import is_exr_dir, load_exr_image_conditioning_hdr
 from .range_map import normalize_images, to_vae_range

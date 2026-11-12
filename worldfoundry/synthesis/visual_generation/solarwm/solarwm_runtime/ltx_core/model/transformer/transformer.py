@@ -2,7 +2,10 @@ from dataclasses import dataclass, field, replace
 
 import torch
 
-from .adaln import adaln_embedding_coefficient
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.adaln import adaln_embedding_coefficient
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.feed_forward import FeedForward
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
+
 from .attention import (
     Attention,
     AttentionCallable,
@@ -11,7 +14,6 @@ from .attention import (
     MaskedAttentionCallable,
     MaskedAttentionFunction,
 )
-from .feed_forward import FeedForward
 from .ops import (
     AdaZeroCallable,
     GatedAttentionCallable,
@@ -22,7 +24,6 @@ from .ops import (
     PytorchPostSAFunction,
     PytorchPreAttention,
 )
-from .rope import LTXRopeType
 from .transformer_args import TransformerArgs
 
 

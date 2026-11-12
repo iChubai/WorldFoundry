@@ -15,9 +15,9 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.common.nor
     NormType,
     build_normalization_layer,
 )
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import AudioPatchifier
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import AudioLatentShape
 
-from ...components.patchifiers import AudioPatchifier
-from ...types import AudioLatentShape
 from ..disposable import Disposable
 
 LATENT_DOWNSAMPLE_FACTOR = 4

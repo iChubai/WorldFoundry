@@ -3,8 +3,9 @@ import math
 import einops
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import Patchifier
+
 from ..types import AudioLatentShape, SpatioTemporalScaleFactors, VideoLatentShape
-from .protocols import Patchifier
 
 
 class VideoLatentPatchifier(Patchifier):

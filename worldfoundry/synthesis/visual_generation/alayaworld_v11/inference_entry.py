@@ -104,8 +104,9 @@ def _read_transformer_config(checkpoint_path) -> dict:
 
 
 def _runtime_transformer_overrides(cfg) -> dict:
+    from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
+
     from .alayaworld_v11_runtime.ltx2.modules.attention import AttentionFunction
-    from .alayaworld_v11_runtime.ltx2.modules.rope import LTXRopeType
 
     attention_map = {
         "flash_attention_3": AttentionFunction.FLASH_ATTENTION_3,

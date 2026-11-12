@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# SPDX-License-Identifier: LicenseRef-LTX-2.x-Community
+"""LTX res_2s exponential Runge-Kutta coefficients.
+
+Adapted from the Lightricks LTX-2 inference runtime; see THIRD-PARTY-NOTICES.
+"""
+
 import math
 
 

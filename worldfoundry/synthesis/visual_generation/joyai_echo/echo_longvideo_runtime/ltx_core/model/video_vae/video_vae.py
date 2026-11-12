@@ -24,10 +24,12 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.samp
     DepthToSpaceUpsample,
     SpaceToDepthDownsample,
 )
-
-from ...types import VIDEO_SCALE_FACTORS, SpatioTemporalScaleFactors, VideoLatentShape
-from ..transformer.timestep_embedding import PixArtAlphaCombinedTimestepSizeEmbeddings
-from .tiling import (
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import (
+    compute_rectangular_mask_1d,
+    compute_trapezoidal_mask_1d,
+)
+from worldfoundry.core.nn.diffusion.timestep import PixArtAlphaCombinedTimestepSizeEmbeddings
+from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.ltx_core.model.video_vae.tiling import (
     DEFAULT_MAPPING_OPERATION,
     DEFAULT_SPLIT_OPERATION,
     DimensionIntervals,
@@ -35,10 +37,10 @@ from .tiling import (
     SplitOperation,
     Tile,
     TilingConfig,
-    compute_rectangular_mask_1d,
-    compute_trapezoidal_mask_1d,
     create_tiles,
 )
+
+from ...types import VIDEO_SCALE_FACTORS, SpatioTemporalScaleFactors, VideoLatentShape
 
 logger: logging.Logger = logging.getLogger(__name__)
 

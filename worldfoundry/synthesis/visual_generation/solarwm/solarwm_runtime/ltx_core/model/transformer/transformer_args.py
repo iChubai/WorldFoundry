@@ -3,10 +3,18 @@ from dataclasses import dataclass, replace
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.adaln import AdaLayerNormSingle
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
+    LTXRopeType,
+    generate_freq_grid_pytorch,
+    precompute_freqs_cis,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.model.transformer.rope import (
+    generate_freq_grid_np,
+)
+
 from ...guidance.perturbations import BatchedPerturbationConfig, PerturbationType
-from .adaln import AdaLayerNormSingle
 from .modality import Modality
-from .rope import LTXRopeType, generate_freq_grid_np, generate_freq_grid_pytorch, precompute_freqs_cis
 
 #: Returns the model's keyframe absolute-position embedding, or ``None`` when the model has none.
 #: A provider rather than the tensor itself because a parameter the checkpoint did not supply is

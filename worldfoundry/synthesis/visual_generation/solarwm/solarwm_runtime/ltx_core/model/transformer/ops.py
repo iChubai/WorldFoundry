@@ -3,8 +3,9 @@ from typing import Protocol
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import apply_rotary_emb
+
 from ...utils import rms_norm
-from .rope import apply_rotary_emb
 
 
 class PreAttentionCallable(Protocol):

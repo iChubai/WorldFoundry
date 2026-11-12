@@ -68,9 +68,9 @@ class OfficialDiffVAEDecoder:
         from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.transformer.config import (
             DiffVAEMode,
         )
+        from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoPixelShape
 
         from ....ltx_core.model.video_vae import AUTO_TILING
-        from ....ltx_core.types import VideoPixelShape
         from ....ltx_pipelines.utils.helpers import ensure_tiling_config, tiling_scale_factors_for_vae
 
         if tuple(latent.shape) != (1, 128, 20, 16, 24):

@@ -75,3 +75,24 @@ def test_joyai_upsampler_uses_canonical_graph(runtime: str) -> None:
     assert type(module) is LatentUpsampler
     with torch.no_grad():
         assert module(torch.randn(1, 4, 2, 3, 3)).shape == (1, 4, 2, 6, 6)
+
+
+def test_joyai_prope_preserves_meta_construction_and_feature_dtype() -> None:
+    from worldfoundry.synthesis.visual_generation.joyai_echo.echo_wm_runtime.ltx_core.model.transformer.ucpe_prope import (
+        PropeDotProductAttention,
+        _apply_tiled_projmat,
+    )
+
+    with torch.device("meta"):
+        attention = PropeDotProductAttention(16, 2, 2, 8, 8)
+    assert attention.coeffs_x_0 is None
+    viewmats = torch.eye(4)[None, None].repeat(1, 2, 1, 1)
+    viewmats[:, 1, 0, 3] = 0.5
+    attention._precompute_and_cache_apply_fns(viewmats, None)
+    features = torch.ones(1, 2, 8, 16)
+    assert torch.isfinite(attention._apply_to_q(features)).all()
+    features = torch.ones(1, 1, 2, 8, dtype=torch.bfloat16)
+    projected = _apply_tiled_projmat(features, viewmats)
+    expected = features.clone()
+    expected[:, :, 1, 0::4] = 1.5
+    torch.testing.assert_close(projected, expected, rtol=0, atol=0)

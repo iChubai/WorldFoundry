@@ -19,16 +19,10 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enum
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.ops import PerChannelStatistics, patchify
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.resnet import ResnetBlock3D, UNetMidBlock3D
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.sampling import SpaceToDepthDownsample
-
-from ...tiling import (
-    DEFAULT_MAPPING_OPERATION,
-    DEFAULT_SPLIT_OPERATION,
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import (
     DimensionIntervals,
-    MappingOperation,
     Tile,
     TileCountConfig,
-    TileSizeConfig,
-    TilingConfig,
     _validate_overlap,
     compute_rectangular_mask_1d,
     compute_trapezoidal_mask_1d,
@@ -37,7 +31,19 @@ from ...tiling import (
     scale_by_masks_1d,
     untiled_mask_1d,
 )
-from ...types import VIDEO_SCALE_FACTORS, SpatioTemporalScaleFactors, VideoLatentShape
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.tiling import (
+    DEFAULT_MAPPING_OPERATION,
+    DEFAULT_SPLIT_OPERATION,
+    MappingOperation,
+    TileSizeConfig,
+    TilingConfig,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import (
+    VIDEO_SCALE_FACTORS,
+    SpatioTemporalScaleFactors,
+)
+
 from ..disposable import Disposable
 from ..transformer.attention import AttentionCallable, AttentionFunction
 from .attention import AttnBlock3D

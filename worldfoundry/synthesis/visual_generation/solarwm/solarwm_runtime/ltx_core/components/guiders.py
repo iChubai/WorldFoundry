@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 import torch
 
-from .protocols import GuiderProtocol
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import GuiderProtocol
 
 
 @dataclass(frozen=True)

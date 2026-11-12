@@ -1,14 +1,15 @@
 import torch
 
-from ...model.model_protocol import ModelConfigurator
-from ...model.transformer.attention import Attention
-from ...model.transformer.feed_forward import FeedForward
-from ...model.transformer.rope import (
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.feed_forward import FeedForward
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
     LTXRopeType,
     generate_freq_grid_np,
     generate_freq_grid_pytorch,
     precompute_freqs_cis,
 )
+
+from ...model.model_protocol import ModelConfigurator
+from ...model.transformer.attention import Attention
 from ...utils import rms_norm
 
 

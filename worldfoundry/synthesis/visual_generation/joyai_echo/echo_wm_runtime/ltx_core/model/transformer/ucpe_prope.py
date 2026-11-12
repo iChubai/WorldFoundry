@@ -57,6 +57,20 @@ from functools import partial
 import torch
 import torch.nn.functional as F
 
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.ucpe.prope import (
+    _apply_tiled_projmat as _project_camera_features,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.ucpe.prope import (
+    _lift_K,
+    _rope_precompute_coeffs,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import (
+    _apply_block_diagonal,
+    _invert_K,
+    _invert_SE3,
+    _rope_apply_coeffs,
+)
+
 
 class PropeDotProductAttention(torch.nn.Module):
     """PRoPE attention with precomputed RoPE coefficients."""
@@ -349,136 +363,6 @@ def _prepare_apply_fns(
     return apply_fn_q, apply_fn_kv, apply_fn_o
 
 
-def _apply_tiled_projmat(
-    feats: torch.Tensor,  # (batch, num_heads, seqlen, feat_dim)
-    matrix: torch.Tensor,  # (batch, cameras, D, D) or (batch, seqlen, D, D)
-) -> torch.Tensor:
-    """Apply projection matrix to features."""
-    # - seqlen => (cameras, patches_x * patches_y)
-    # - feat_dim => (feat_dim // 4, 4)
-    (batch, num_heads, seqlen, feat_dim) = feats.shape
-    matrix = matrix.to(device=feats.device, dtype=feats.dtype)
-    D = matrix.shape[-1]
-    assert feat_dim % D == 0, f"feat_dim={feat_dim} must be divisible by D={D}"
-
-    if matrix.shape[1] == seqlen:
-        # Per-ray projection: matrix shape [B, seqlen, D, D]
-        feats_ = feats.view(batch, num_heads, seqlen, feat_dim // D, D)
-        out = torch.einsum("btij,bntpj->bntpi", matrix, feats_)
-        return out.reshape(feats.shape)
-
-    # Per-camera projection (original implementation)
-    cameras = matrix.shape[1]
-    assert seqlen > cameras and seqlen % cameras == 0
-    assert matrix.shape == (batch, cameras, D, D)
-    assert feat_dim % D == 0
-    return torch.einsum(
-        "bcij,bncpkj->bncpki",
-        matrix,
-        feats.reshape((batch, num_heads, cameras, -1, feat_dim // D, D)),
-    ).reshape(feats.shape)
-
-
-def _rope_precompute_coeffs(
-    positions: torch.Tensor,  # (seqlen,)
-    freq_base: float,
-    freq_scale: float,
-    feat_dim: int,
-    dtype: torch.dtype = torch.float32,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Precompute RoPE coefficients."""
-    assert len(positions.shape) == 1
-    assert feat_dim % 2 == 0
-    num_freqs = feat_dim // 2
-    freqs = freq_scale * (
-        freq_base ** (-torch.arange(num_freqs, device=positions.device)[None, None, None, :] / num_freqs)
-    )
-    angles = positions[None, None, :, None] * freqs
-    # Shape should be: `(batch, num_heads, seqlen, num_freqs)`; we're
-    # broadcasting across `batch` and `num_heads`.
-    assert angles.shape == (1, 1, positions.shape[0], num_freqs)
-    return torch.cos(angles).to(dtype), torch.sin(angles).to(dtype)
-
-
-def _rope_apply_coeffs(
-    feats: torch.Tensor,  # (batch, num_heads, seqlen, feat_dim)
-    coeffs: tuple[torch.Tensor, torch.Tensor],
-    inverse: bool = False,
-) -> torch.Tensor:
-    """Apply RoPE coefficients to features. We adopt a 'split' ordering
-    convention. (in contrast to 'interleaved')"""
-    cos, sin = coeffs
-    # We allow (cos, sin) to be either with shape (1, 1, seqlen, feat_dim // 2),
-    # or (1, 1, seqlen_per_image, feat_dim // 2) and we repeat it to
-    # match the shape of feats.
-    if cos.shape[2] != feats.shape[2]:
-        n_repeats = feats.shape[2] // cos.shape[2]
-        cos = cos.repeat(1, 1, n_repeats, 1)
-        sin = sin.repeat(1, 1, n_repeats, 1)
-    assert len(feats.shape) == len(cos.shape) == len(sin.shape) == 4
-    assert cos.shape[-1] == sin.shape[-1] == feats.shape[-1] // 2
-    x_in = feats[..., : feats.shape[-1] // 2]
-    y_in = feats[..., feats.shape[-1] // 2 :]
-    return torch.cat(
-        (
-            [cos * x_in + sin * y_in, -sin * x_in + cos * y_in]
-            if not inverse
-            else [cos * x_in - sin * y_in, sin * x_in + cos * y_in]
-        ),
-        dim=-1,
-    )
-
-
-def _apply_block_diagonal(
-    feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
-) -> torch.Tensor:
-    """Apply a block-diagonal function to an input array.
-
-    Each function is specified as a tuple with form:
-
-        ((Tensor) -> Tensor, int)
-
-    Where the integer is the size of the input to the function.
-    """
-    funcs, block_sizes = zip(*func_size_pairs, strict=False)
-    assert feats.shape[-1] == sum(block_sizes)
-    x_blocks = torch.split(feats, block_sizes, dim=-1)
-    out = torch.cat(
-        [f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)],
-        dim=-1,
-    )
-    assert out.shape == feats.shape, "Input/output shapes should match."
-    return out
-
-
-def _invert_SE3(transforms: torch.Tensor) -> torch.Tensor:
-    """Invert a 4x4 SE(3) matrix."""
-    assert transforms.shape[-2:] == (4, 4)
-    Rinv = transforms[..., :3, :3].transpose(-1, -2)
-    out = torch.zeros_like(transforms)
-    out[..., :3, :3] = Rinv
-    out[..., :3, 3] = -torch.einsum("...ij,...j->...i", Rinv, transforms[..., :3, 3])
-    out[..., 3, 3] = 1.0
-    return out
-
-
-def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
-    """Lift 3x3 matrices to homogeneous 4x4 matrices."""
-    assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros((*Ks.shape[:-2], 4, 4), device=Ks.device, dtype=Ks.dtype)
-    out[..., :3, :3] = Ks
-    out[..., 3, 3] = 1.0
-    return out
-
-
-def _invert_K(Ks: torch.Tensor) -> torch.Tensor:
-    """Invert 3x3 intrinsics matrices. Assumes no skew."""
-    assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros_like(Ks)
-    out[..., 0, 0] = 1.0 / Ks[..., 0, 0]
-    out[..., 1, 1] = 1.0 / Ks[..., 1, 1]
-    out[..., 0, 2] = -Ks[..., 0, 2] / Ks[..., 0, 0]
-    out[..., 1, 2] = -Ks[..., 1, 2] / Ks[..., 1, 1]
-    out[..., 2, 2] = 1.0
-    return out
+def _apply_tiled_projmat(feats: torch.Tensor, matrix: torch.Tensor) -> torch.Tensor:
+    """Cast camera matrices to the attention feature precision before projection."""
+    return _project_camera_features(feats, matrix.to(device=feats.device, dtype=feats.dtype))

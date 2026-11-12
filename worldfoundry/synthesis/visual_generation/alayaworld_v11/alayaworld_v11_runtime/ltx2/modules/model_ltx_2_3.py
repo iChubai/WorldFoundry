@@ -21,6 +21,19 @@ from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 from torch.nn.attention.flex_attention import flex_attention as _flex_attention
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.adaln import AdaLayerNormSingle
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.feed_forward import FeedForward
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import (
+    LTXRopeType,
+    generate_freq_grid_np,
+    generate_freq_grid_pytorch,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.text_projection import PixArtAlphaTextProjection
+from worldfoundry.synthesis.visual_generation.alayaworld_v11.alayaworld_v11_runtime.ltx2.modules.rope import (
+    apply_rotary_emb,
+    precompute_freqs_cis,
+)
+
 from ...fastvideo.utils.context_parallel import (
     apply_ulysses_attention,
     gather_for_loss,
@@ -32,8 +45,6 @@ from ...fastvideo.utils.context_parallel import (
 )
 from .attention import AttentionCallable, AttentionFunction
 from .perturbations import BatchedPerturbationConfig, PerturbationType
-from .rope import LTXRopeType, apply_rotary_emb, generate_freq_grid_np, generate_freq_grid_pytorch, precompute_freqs_cis
-from .timestep_embedding import TimestepEmbedding, get_timestep_embedding
 
 _LTX_QUIET = os.environ.get("LTX_QUIET_INFERENCE", "0") == "1"
 
@@ -71,73 +82,6 @@ class TransformerConfig:
     context_dim: int
     apply_gated_attention: bool = False  # NEW in 2.3
     cross_attention_adaln: bool = False  # NEW in 2.3
-
-
-class PixArtAlphaTextProjection(torch.nn.Module):
-    def __init__(self, in_features: int, hidden_size: int, out_features: int | None = None, act_fn: str = "gelu_tanh"):
-        super().__init__()
-        if out_features is None:
-            out_features = hidden_size
-        self.linear_1 = torch.nn.Linear(in_features=in_features, out_features=hidden_size, bias=True)
-        if act_fn == "gelu_tanh":
-            self.act_1 = torch.nn.GELU(approximate="tanh")
-        elif act_fn == "silu":
-            self.act_1 = torch.nn.SiLU()
-        else:
-            raise ValueError(f"Unknown activation function: {act_fn}")
-        self.linear_2 = torch.nn.Linear(in_features=hidden_size, out_features=out_features, bias=True)
-
-    def forward(self, caption: torch.Tensor) -> torch.Tensor:
-        hidden_states = self.linear_1(caption)
-        hidden_states = self.act_1(hidden_states)
-        hidden_states = self.linear_2(hidden_states)
-        return hidden_states
-
-
-class Timesteps(torch.nn.Module):
-    def __init__(self, num_channels: int, flip_sin_to_cos: bool, downscale_freq_shift: float, scale: int = 1):
-        super().__init__()
-        self.num_channels = num_channels
-        self.flip_sin_to_cos = flip_sin_to_cos
-        self.downscale_freq_shift = downscale_freq_shift
-        self.scale = scale
-
-    def forward(self, timesteps: torch.Tensor) -> torch.Tensor:
-        t_emb = get_timestep_embedding(
-            timesteps,
-            self.num_channels,
-            flip_sin_to_cos=self.flip_sin_to_cos,
-            downscale_freq_shift=self.downscale_freq_shift,
-            scale=self.scale,
-        )
-        return t_emb
-
-
-class PixArtAlphaCombinedTimestepSizeEmbeddings(torch.nn.Module):
-    def __init__(self, embedding_dim: int, size_emb_dim: int):
-        super().__init__()
-        self.outdim = size_emb_dim
-        self.time_proj = Timesteps(num_channels=256, flip_sin_to_cos=True, downscale_freq_shift=0)
-        self.timestep_embedder = TimestepEmbedding(in_channels=256, time_embed_dim=embedding_dim)
-
-    def forward(self, timestep: torch.Tensor, hidden_dtype: torch.dtype) -> torch.Tensor:
-        timesteps_proj = self.time_proj(timestep)
-        timesteps_emb = self.timestep_embedder(timesteps_proj.to(dtype=hidden_dtype))
-        return timesteps_emb
-
-
-class AdaLayerNormSingle(torch.nn.Module):
-    def __init__(self, embedding_dim: int, embedding_coefficient: int = 6):
-        super().__init__()
-        self.emb = PixArtAlphaCombinedTimestepSizeEmbeddings(embedding_dim, size_emb_dim=embedding_dim // 3)
-        self.silu = torch.nn.SiLU()
-        self.linear = torch.nn.Linear(embedding_dim, embedding_coefficient * embedding_dim, bias=True)
-
-    def forward(
-        self, timestep: torch.Tensor, hidden_dtype: torch.dtype | None = None
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        embedded_timestep = self.emb(timestep, hidden_dtype=hidden_dtype)
-        return self.linear(self.silu(embedded_timestep)), embedded_timestep
 
 
 class ActionAdaLNEmbedder(nn.Module):
@@ -199,26 +143,6 @@ class LTX23ModelType(Enum):
 
     def is_audio_enabled(self) -> bool:
         return self in (LTX23ModelType.AudioVideo, LTX23ModelType.AudioOnly)
-
-
-class GELUApprox(torch.nn.Module):
-    def __init__(self, dim_in: int, dim_out: int) -> None:
-        super().__init__()
-        self.proj = torch.nn.Linear(dim_in, dim_out)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return torch.nn.functional.gelu(self.proj(x), approximate="tanh")
-
-
-class FeedForward(torch.nn.Module):
-    def __init__(self, dim: int, dim_out: int, mult: int = 4) -> None:
-        super().__init__()
-        inner_dim = int(dim * mult)
-        project_in = GELUApprox(dim, inner_dim)
-        self.net = torch.nn.Sequential(project_in, torch.nn.Identity(), torch.nn.Linear(inner_dim, dim_out))
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.net(x)
 
 
 # =============================================================================

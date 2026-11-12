@@ -7,8 +7,9 @@ from typing import Protocol
 import torch
 from torch.nn.attention import SDPBackend, sdpa_kernel
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
+
 from .ops import GatedAttentionCallable, PreAttentionCallable, PytorchGatedAttention, PytorchPreAttention
-from .rope import LTXRopeType
 
 
 def _torch_default_sdpa_priority() -> list[SDPBackend]:

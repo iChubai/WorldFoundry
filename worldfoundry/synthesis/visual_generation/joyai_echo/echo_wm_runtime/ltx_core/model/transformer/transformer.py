@@ -3,12 +3,13 @@ from dataclasses import dataclass, field, replace
 import torch
 import torch.nn.functional as F
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.adaln import adaln_embedding_coefficient
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.feed_forward import FeedForward
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
+
 from ...guidance.perturbations import BatchedPerturbationConfig, PerturbationType
 from ...utils import rms_norm
-from .adaln import adaln_embedding_coefficient
 from .attention import Attention, AttentionCallable, AttentionFunction, update_kv_cache
-from .feed_forward import FeedForward
-from .rope import LTXRopeType
 from .transformer_args import TransformerArgs
 from .ucpe_prope import _prepare_apply_fns
 

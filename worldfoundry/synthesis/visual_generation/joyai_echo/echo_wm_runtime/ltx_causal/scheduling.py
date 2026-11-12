@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from itertools import pairwise
 
-from ..ltx_core.components.schedulers import LTX2Scheduler
+from worldfoundry.base_models.diffusion_model.schedulers.ltx_sigma import LTX2Scheduler
 
 DEFAULT_CAUSAL_TIMESTEPS = (1000, 750, 500, 250)
 CAUSAL_VIDEO_CHUNK_SIZE = 3

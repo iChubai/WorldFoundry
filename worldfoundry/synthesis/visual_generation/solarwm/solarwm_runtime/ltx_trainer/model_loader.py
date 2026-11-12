@@ -28,7 +28,8 @@ Device = str | torch.device
 
 # Type checking imports (not loaded at runtime)
 if TYPE_CHECKING:
-    from ..ltx_core.components.schedulers import LTX2Scheduler
+    from worldfoundry.base_models.diffusion_model.schedulers.ltx_sigma import LTX2Scheduler
+
     from ..ltx_core.model.audio_vae import AudioDecoder, AudioEncoder, Vocoder
     from ..ltx_core.model.transformer import LTXModel
     from ..ltx_core.model.video_vae import VideoDecoder, VideoEncoder
@@ -439,7 +440,7 @@ def load_model(
     Returns:
         LtxModelComponents containing all loaded model components
     """
-    from ..ltx_core.components.schedulers import LTX2Scheduler
+    from worldfoundry.base_models.diffusion_model.schedulers.ltx_sigma import LTX2Scheduler
 
     checkpoint_path = Path(checkpoint_path)
 

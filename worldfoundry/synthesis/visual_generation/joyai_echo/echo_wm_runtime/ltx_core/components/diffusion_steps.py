@@ -1,7 +1,8 @@
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import DiffusionStepProtocol
+
 from ..utils import to_velocity
-from .protocols import DiffusionStepProtocol
 
 
 class EulerDiffusionStep(DiffusionStepProtocol):

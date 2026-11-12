@@ -6,13 +6,17 @@ import torch
 from transformers import AutoModelForImageTextToText, PretrainedConfig
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
 
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.feature_extractor import (
+    FeatureExtractorV1,
+    FeatureExtractorV2,
+)
+
 from ....loader import KeyValueOperationResult, parse_model_version
 from ....loader.module_ops import ModuleOps
 from ....loader.sd_ops import SDOps
 from ....model.model_protocol import ModelConfigurator
 from ..embeddings_connector import AudioEmbeddings1DConnectorConfigurator, Embeddings1DConnectorConfigurator
 from ..embeddings_processor import EmbeddingsProcessor
-from ..feature_extractor import FeatureExtractorV1, FeatureExtractorV2
 from ..gemma_assets import GemmaAssets, build_gemma_hf_config, resolve_gemma_weight_paths
 from .base_encoder import LTXGemmaTextEncoder, module_ops_from_gemma_root
 

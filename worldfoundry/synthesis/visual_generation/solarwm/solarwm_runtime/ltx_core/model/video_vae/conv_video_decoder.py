@@ -16,21 +16,24 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.enum
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.ops import PerChannelStatistics, unpatchify
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.resnet import ResnetBlock3D, UNetMidBlock3D
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.video.sampling import DepthToSpaceUpsample
-
-from ...tiling import (
-    DEFAULT_MAPPING_OPERATION,
-    DEFAULT_SPLIT_OPERATION,
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.tiling import (
     Tile,
-    TilingConfig,
     create_tiles,
     group_tiles_by_temporal_slice,
     masks_are_complementary,
     scale_by_masks_1d,
 )
-from ...types import SpatioTemporalScaleFactors, VideoLatentShape
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+from worldfoundry.core.nn.diffusion.timestep import PixArtAlphaCombinedTimestepSizeEmbeddings
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.tiling import (
+    DEFAULT_MAPPING_OPERATION,
+    DEFAULT_SPLIT_OPERATION,
+    TilingConfig,
+)
+from worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.ltx_core.types import SpatioTemporalScaleFactors
+
 from ..disposable import Disposable
 from ..transformer.attention import AttentionCallable, AttentionFunction
-from ..transformer.timestep_embedding import PixArtAlphaCombinedTimestepSizeEmbeddings
 from .attention import AttnBlock3D
 from .video_vae import VideoDecoder, map_spatial_slice, map_temporal_slice, to_mapping_operation
 

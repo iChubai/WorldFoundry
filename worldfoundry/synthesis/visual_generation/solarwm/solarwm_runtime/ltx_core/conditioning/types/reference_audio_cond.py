@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.attention_masks import (
+    extend_keyframes_mask,
+    update_attention_mask,
+)
+
 from ...tools import LatentTools
 from ...types import LatentState
-from ..mask_utils import extend_keyframes_mask, update_attention_mask
 
 
 class AudioConditionByReferenceLatent:

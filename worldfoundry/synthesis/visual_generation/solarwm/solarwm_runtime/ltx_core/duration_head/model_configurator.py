@@ -1,6 +1,7 @@
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.duration_head import DurationHead
+
 from ..loader.sd_ops import SDOps
 from ..model.model_protocol import ModelConfigurator
-from .duration_head import DurationHead
 
 # DurationHead's tensors live under a "duration_head." key prefix, already exported in
 # PyTorch's nn.MultiheadAttention layout. Layout-agnostic on purpose: this strips the

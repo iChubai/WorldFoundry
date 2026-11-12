@@ -2,8 +2,9 @@ from typing import Protocol
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import DiffusionStepProtocol
+
 from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier
-from ...ltx_core.components.protocols import DiffusionStepProtocol
 from ...ltx_core.types import LatentState
 from .constants import VIDEO_LATENT_CHANNELS, VIDEO_SCALE_FACTORS
 

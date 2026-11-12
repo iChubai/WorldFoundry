@@ -6,7 +6,11 @@ from typing import Protocol
 
 import torch
 
-from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import (
+    AudioPatchifier,
+    VideoLatentPatchifier,
+)
+
 from ...ltx_core.conditioning import ConditioningItem
 from ...ltx_core.model.transformer import X0Model
 from ...ltx_core.types import LatentState

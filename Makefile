@@ -244,6 +244,8 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/acceleration/test_checkpoint_quantization.py \
 	tests/core/test_bt709_audio_video.py \
 	tests/base_models/test_ltx25_canonical_components.py \
+	tests/base_models/test_ltx_attention_masks.py \
+	tests/base_models/test_ltx_sigma_schedules.py \
 	tests/base_models/test_ltx25_native_recipe.py \
 	tests/base_models/test_ltx_ic_lora.py \
 	tests/pipelines/test_ltx2_v2v.py \

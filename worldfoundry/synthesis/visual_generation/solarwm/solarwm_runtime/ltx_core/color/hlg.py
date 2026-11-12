@@ -25,7 +25,8 @@ import av
 import numpy as np
 import torch
 
-from ..types import Audio
+from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import Audio
+
 from .audio_mux import prepare_audio_stream, validate_audio_waveform, write_audio
 from .primaries import Primaries
 from .yuv import ColorRange, ColorSpace, rgb_to_yuv420p10

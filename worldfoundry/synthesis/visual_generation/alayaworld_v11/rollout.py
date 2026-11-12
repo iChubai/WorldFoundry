@@ -24,6 +24,10 @@ import torch.nn.functional as F
 
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.patchifiers import VideoLatentPatchifier
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.types import VideoLatentShape
+from worldfoundry.base_models.diffusion_model.schedulers.ltx_sigma import LinearQuadraticScheduler
+from worldfoundry.synthesis.visual_generation.alayaworld_v11.alayaworld_v11_runtime.ltx2.modules.scheduler import (
+    LTX2Scheduler,
+)
 
 from .alayaworld_v11_runtime.alaya.config.schema import ValidationModeConfig
 from .alayaworld_v11_runtime.alaya.control.action import build_action_vectors, build_action_vectors_from_pixel_indices
@@ -46,7 +50,6 @@ from .alayaworld_v11_runtime.ltx2.modules.perturbations import (
     PerturbationConfig,
     PerturbationType,
 )
-from .alayaworld_v11_runtime.ltx2.modules.scheduler import LinearQuadraticScheduler, LTX2Scheduler
 
 
 @dataclass

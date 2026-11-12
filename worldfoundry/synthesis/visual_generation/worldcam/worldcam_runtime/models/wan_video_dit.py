@@ -9,6 +9,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multia
 from worldfoundry.base_models.diffusion_model.models.networks.wan.model import MLP
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.wam import NativeDtypeHead, TorchGateModule
 from worldfoundry.core.attention import apply_complex_rotary_embedding as rope_apply
+from worldfoundry.core.attention.backends.dispatch import flash_attention_2, flash_attention_3, sage_attention
 from worldfoundry.core.model_loading import hash_state_dict_keys
 from worldfoundry.core.nn import RMSNorm
 from worldfoundry.core.nn import scale_shift as modulate
@@ -20,21 +21,21 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan import SimpleA
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:
-    import flash_attn_interface
+    import flash_attn_interface  # noqa: F401 - Preserve the family availability probe.
 
     FLASH_ATTN_3_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_3_AVAILABLE = False
 
 try:
-    import flash_attn
+    import flash_attn  # noqa: F401 - Preserve the family availability probe.
 
     FLASH_ATTN_2_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
 
 try:
-    from sageattention import sageattn
+    from sageattention import sageattn  # noqa: F401 - Preserve the family availability probe.
 
     SAGE_ATTN_AVAILABLE = True
 except ModuleNotFoundError:
@@ -66,50 +67,35 @@ class PluckerEmbeddingChannelStack(nn.Module):
         return final_output
 
 
-def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False):
-    if compatibility_mode:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = _worldfoundry_scaled_dot_product_attention(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
-    elif FLASH_ATTN_3_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
-        x = flash_attn_interface.flash_attn_func(q, k, v)
-        if isinstance(x, tuple):
-            x = x[0]
-        x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
-    elif FLASH_ATTN_2_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
-        x = flash_attn.flash_attn_func(q, k, v)
-        x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
-    elif SAGE_ATTN_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = sageattn(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
-    else:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = _worldfoundry_scaled_dot_product_attention(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
-    return x
-
-
-class AttentionModule(nn.Module):
-    def __init__(self, num_heads):
-        super().__init__()
-        self.num_heads = num_heads
-
-    def forward(self, q, k, v):
-        x = flash_attention(q=q, k=k, v=v, num_heads=self.num_heads)
-        return x
+def flash_attention(
+    q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode: bool = False
+) -> torch.Tensor:
+    """Keep WorldCam's FA3 → FA2 → Sage priority with its exact SDPA fallback."""
+    provider = None
+    if not compatibility_mode:
+        if FLASH_ATTN_3_AVAILABLE:
+            provider = flash_attention_3
+        elif FLASH_ATTN_2_AVAILABLE:
+            provider = flash_attention_2
+        elif SAGE_ATTN_AVAILABLE:
+            provider = sage_attention
+    if provider is not None:
+        layout = "b s (n d)"
+        return provider(
+            q,
+            k,
+            v,
+            q_pattern=layout,
+            k_pattern=layout,
+            v_pattern=layout,
+            out_pattern=layout,
+            dims={"n": num_heads},
+        )
+    q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
+    k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
+    v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
+    x = _worldfoundry_scaled_dot_product_attention(q, k, v)
+    return rearrange(x, "b n s d -> b s (n d)", n=num_heads)
 
 
 class SelfAttention(nn.Module):
@@ -126,15 +112,13 @@ class SelfAttention(nn.Module):
         self.norm_q = RMSNorm(dim, eps=eps)
         self.norm_k = RMSNorm(dim, eps=eps)
 
-        self.attn = AttentionModule(self.num_heads)
-
     def forward(self, x, freqs):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(x))
         v = self.v(x)
         q = rope_apply(q, freqs, self.num_heads)
         k = rope_apply(k, freqs, self.num_heads)
-        x = self.attn(q, k, v)
+        x = flash_attention(q, k, v, num_heads=self.num_heads)
         return self.o(x)
 
 
@@ -157,8 +141,6 @@ class CrossAttention(nn.Module):
             self.v_img = nn.Linear(dim, dim)
             self.norm_k_img = RMSNorm(dim, eps=eps)
 
-        self.attn = AttentionModule(self.num_heads)
-
     def forward(self, x: torch.Tensor, y: torch.Tensor):
         if self.has_image_input:
             img = y[:, :257]
@@ -168,7 +150,7 @@ class CrossAttention(nn.Module):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(ctx))
         v = self.v(ctx)
-        x = self.attn(q, k, v)
+        x = flash_attention(q, k, v, num_heads=self.num_heads)
         if self.has_image_input:
             k_img = self.norm_k_img(self.k_img(img))
             v_img = self.v_img(img)

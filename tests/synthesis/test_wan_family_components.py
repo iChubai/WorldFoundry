@@ -124,3 +124,56 @@ def test_wam_gate_preserves_unfused_residual(dtype: torch.dtype) -> None:
     residual = torch.randn_like(x)
     actual = TorchGateModule()(x, gate, residual)
     torch.testing.assert_close(actual, x + gate * residual, atol=0, rtol=0)
+
+
+@pytest.mark.parametrize(
+    "available,expected",
+    [
+        ((True, True, True), "flash_attention_3"),
+        ((False, True, True), "flash_attention_2"),
+        ((False, False, True), "sage_attention"),
+    ],
+)
+def test_worldcam_preserves_explicit_provider_priority(
+    monkeypatch: pytest.MonkeyPatch, available: tuple[bool, bool, bool], expected: str
+) -> None:
+    from functools import partial
+
+    from worldfoundry.synthesis.visual_generation.worldcam.worldcam_runtime.models import wan_video_dit
+
+    called = []
+
+    def record(name: str, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, **kwargs: object) -> torch.Tensor:
+        called.append(name)
+        assert kwargs == {
+            "q_pattern": "b s (n d)",
+            "k_pattern": "b s (n d)",
+            "v_pattern": "b s (n d)",
+            "out_pattern": "b s (n d)",
+            "dims": {"n": 2},
+        }
+        return q
+
+    for flag, enabled in zip(
+        ["FLASH_ATTN_3_AVAILABLE", "FLASH_ATTN_2_AVAILABLE", "SAGE_ATTN_AVAILABLE"], available, strict=True
+    ):
+        monkeypatch.setattr(wan_video_dit, flag, enabled)
+    for provider in ["flash_attention_3", "flash_attention_2", "sage_attention"]:
+        monkeypatch.setattr(wan_video_dit, provider, partial(record, provider))
+    q = torch.randn(1, 4, 16)
+    assert wan_video_dit.flash_attention(q, q, q, num_heads=2) is q
+    assert called == [expected]
+
+
+@pytest.mark.parametrize("compatibility_mode", [False, True])
+def test_worldcam_keeps_exact_sdpa_fallback(monkeypatch: pytest.MonkeyPatch, compatibility_mode: bool) -> None:
+    from worldfoundry.core.attention import scaled_dot_product_attention
+    from worldfoundry.synthesis.visual_generation.worldcam.worldcam_runtime.models import wan_video_dit
+
+    for flag in ["FLASH_ATTN_3_AVAILABLE", "FLASH_ATTN_2_AVAILABLE", "SAGE_ATTN_AVAILABLE"]:
+        monkeypatch.setattr(wan_video_dit, flag, compatibility_mode)
+    q, k, v = (torch.randn(1, 4, 16) for _ in range(3))
+    actual = wan_video_dit.flash_attention(q, k, v, num_heads=2, compatibility_mode=compatibility_mode)
+    split = [value.reshape(1, 4, 2, 8).transpose(1, 2) for value in [q, k, v]]
+    expected = scaled_dot_product_attention(*split).transpose(1, 2).reshape(1, 4, 16)
+    torch.testing.assert_close(actual, expected, atol=0, rtol=0)

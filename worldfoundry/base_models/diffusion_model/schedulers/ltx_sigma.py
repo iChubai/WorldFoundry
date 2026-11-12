@@ -7,6 +7,7 @@ Adapted from the Lightricks LTX-2 inference runtime; see THIRD-PARTY-NOTICES.
 
 import math
 from functools import lru_cache
+from typing import cast
 
 import torch
 
@@ -59,7 +60,7 @@ class LTX2Scheduler(SchedulerProtocol):
             stretched = 1.0 - (one_minus_z / scale_factor)
             sigmas[non_zero_mask] = stretched
 
-        return sigmas.to(torch.float32)
+        return cast(torch.FloatTensor, sigmas.to(torch.float32))
 
 
 class LinearQuadraticScheduler(SchedulerProtocol):
@@ -102,7 +103,10 @@ class BetaScheduler(SchedulerProtocol):
     shift = 2.37
     timesteps_length = 10000
 
-    def execute(self, steps: int, alpha: float = 0.6, beta: float = 0.6) -> torch.FloatTensor:
+    # Beta deliberately rejects keywords other than steps, alpha and beta.
+    def execute(  # ty: ignore[incompatible-method-override]
+        self, steps: int, alpha: float = 0.6, beta: float = 0.6
+    ) -> torch.FloatTensor:
         """
         Execute the beta scheduler.
         Args:

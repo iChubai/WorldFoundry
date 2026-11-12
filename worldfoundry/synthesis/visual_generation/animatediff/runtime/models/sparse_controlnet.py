@@ -23,7 +23,8 @@ from diffusers.utils import BaseOutput, logging
 from torch import nn
 from torch.nn import functional as F
 
-from .resnet import InflatedConv3d
+from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet import InflatedConv3d
+
 from .unet_blocks import (
     UNetMidBlock3DCrossAttn,
     get_down_block,

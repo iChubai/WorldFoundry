@@ -10,8 +10,9 @@ from diffusers.utils import BaseOutput
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet import InflatedGroupNorm
+
 from .attention_processor import PoseAdaptorAttnProcessor
-from .resnet import InflatedGroupNorm
 
 
 def zero_module(module):

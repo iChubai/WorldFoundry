@@ -17,10 +17,12 @@ from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import BaseOutput, logging  # noqa: F811 - Later import provides the binding, as upstream.
 from einops import rearrange, repeat
 
+from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet import InflatedConv3d
+
 from .attention_processor import AttnProcessor as CustomizedAttnProcessor
 from .attention_processor import LoRAAttnProcessor as CustomizedLoRAAttnProcessor
 from .attention_processor import LORAPoseAdaptorAttnProcessor, PoseAdaptorAttnProcessor
-from .resnet import FusionBlock2D, InflatedConv3d
+from .resnet import FusionBlock2D
 from .unet_blocks import (
     CrossAttnDownBlock3D,
     CrossAttnUpBlock3D,

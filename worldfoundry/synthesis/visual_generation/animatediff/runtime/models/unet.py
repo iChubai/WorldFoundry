@@ -13,8 +13,12 @@ from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from diffusers.models.modeling_utils import _get_model_file
 from diffusers.utils import BaseOutput, logging
 
+from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet import (
+    InflatedConv3d,
+    InflatedGroupNorm,
+)
+
 from .diffusers_compat import ModelMixin, load_state_dict
-from .resnet import InflatedConv3d, InflatedGroupNorm
 from .unet_blocks import (
     CrossAttnDownBlock3D,
     CrossAttnUpBlock3D,

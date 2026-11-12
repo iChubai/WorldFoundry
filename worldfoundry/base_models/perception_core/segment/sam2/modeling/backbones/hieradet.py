@@ -14,10 +14,14 @@ from iopath.common.file_io import g_pathmgr
 
 from worldfoundry.base_models.perception_core.segment.sam2.modeling.backbones.utils import (
     PatchEmbed,
-    window_partition,
-    window_unpartition,
 )
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
+from worldfoundry.core.attention.window import (
+    window_partition_padded as window_partition,
+)
+from worldfoundry.core.attention.window import window_unpartition
 from worldfoundry.core.nn.blocks.layers import DropPath, SamHeadMLP
 
 

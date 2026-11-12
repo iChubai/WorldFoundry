@@ -12,20 +12,26 @@ import torch
 from torchvision.ops.boxes import batched_nms, box_area  # type: ignore
 
 from worldfoundry.base_models.perception_core.segment.mask_data import MaskData
-from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam2_base import SAM2Base
-from worldfoundry.base_models.perception_core.segment.sam2.sam2_image_predictor import SAM2ImagePredictor
+from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam2_base import (
+    SAM2Base,
+)
+from worldfoundry.base_models.perception_core.segment.sam2.sam2_image_predictor import (
+    SAM2ImagePredictor,
+)
 from worldfoundry.base_models.perception_core.segment.sam2.utils.amg import (
     area_from_rle,
     batch_iterator,
-    batched_mask_to_box,
     box_xyxy_to_xywh,
     build_all_layer_point_grids,
     calculate_stability_score,
     coco_encode_rle,
     generate_crop_boxes,
+    remove_small_regions,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_ops import (
+    batched_mask_to_box,
     is_box_near_crop_edge,
     mask_to_rle_pytorch,
-    remove_small_regions,
     rle_to_mask,
     uncrop_boxes_xyxy,
     uncrop_masks,
@@ -163,7 +169,9 @@ class SAM2AutomaticMaskGenerator:
         Returns:
           (SAM2AutomaticMaskGenerator): The loaded model.
         """
-        from worldfoundry.base_models.perception_core.segment.sam2.build_sam import build_sam2_hf
+        from worldfoundry.base_models.perception_core.segment.sam2.build_sam import (
+            build_sam2_hf,
+        )
 
         sam_model = build_sam2_hf(model_id, **kwargs)
         return cls(sam_model, **kwargs)

@@ -1,6 +1,9 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+# Shared from the SAM and SAM2 source distributions.
 
-# pyre-unsafe
+from __future__ import annotations
 
 import torch
 from torch import nn
@@ -38,9 +41,9 @@ class MaskDecoder(nn.Module):
             when disambiguating masks
           activation (nn.Module): the type of activation to use when
             upscaling masks
-          iou_head_depth (int): the depth of the MLP used to predict
+          iou_head_depth (int): the depth of the SamHeadMLP used to predict
             mask quality
-          iou_head_hidden_dim (int): the hidden dimension of the MLP
+          iou_head_hidden_dim (int): the hidden dimension of the SamHeadMLP
             used to predict mask quality
         """
         super().__init__()
@@ -101,7 +104,7 @@ class MaskDecoder(nn.Module):
         multimask_output: bool,
         repeat_image: bool,
         high_res_features: list[torch.Tensor] | None = None,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Predict masks given image and prompt embeddings.
 
@@ -158,7 +161,7 @@ class MaskDecoder(nn.Module):
         dense_prompt_embeddings: torch.Tensor,
         repeat_image: bool,
         high_res_features: list[torch.Tensor] | None = None,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Predicts masks. See 'forward' for more details."""
         # Concatenate output tokens
         s = 0
@@ -221,7 +224,7 @@ class MaskDecoder(nn.Module):
 
         return masks, iou_pred, mask_tokens_out, object_score_logits
 
-    def _get_stability_scores(self, mask_logits):
+    def _get_stability_scores(self, mask_logits: torch.Tensor) -> torch.Tensor:
         """
         Compute stability scores of the mask logits based on the IoU between upper and
         lower thresholds.
@@ -233,7 +236,9 @@ class MaskDecoder(nn.Module):
         stability_scores = torch.where(area_u > 0, area_i / area_u, 1.0)
         return stability_scores
 
-    def _dynamic_multimask_via_stability(self, all_mask_logits, all_iou_scores):
+    def _dynamic_multimask_via_stability(
+        self, all_mask_logits: torch.Tensor, all_iou_scores: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         When outputting a single mask, if the stability score from the current single-mask
         output (based on output token 0) falls below a threshold, we instead select from
@@ -268,7 +273,3 @@ class MaskDecoder(nn.Module):
             best_multimask_iou_scores,
         )
         return mask_logits_out, iou_scores_out
-
-
-# Lightly adapted from
-# https://github.com/facebookresearch/MaskFormer/blob/main/mask_former/modeling/transformer/transformer_predictor.py

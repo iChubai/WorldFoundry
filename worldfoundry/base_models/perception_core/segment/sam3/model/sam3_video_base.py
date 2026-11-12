@@ -19,20 +19,31 @@ import torch.distributed as dist
 import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
-from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import fast_diag_box_iou
+from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import (
+    fast_diag_box_iou,
+)
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
+    BatchedDatapoint,
+)
 
 # isort: split
 from torch import Tensor, nn
 
-from worldfoundry.base_models.perception_core.segment.sam3.masks_ops import mask_iom, rle_encode
+from worldfoundry.base_models.perception_core.segment.sam3.masks_ops import (
+    mask_iom,
+    rle_encode,
+)
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
     fill_holes_in_mask_scores,
-    mask_to_box,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
+    mask_iou,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_ops import (
+    mask_to_box_zero_empty as mask_to_box,
+)
 
 logger = get_logger(__name__)
 

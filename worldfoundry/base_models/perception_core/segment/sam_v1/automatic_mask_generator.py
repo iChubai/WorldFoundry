@@ -11,25 +11,27 @@ import torch
 from torchvision.ops.boxes import batched_nms, box_area  # type: ignore
 
 from worldfoundry.base_models.perception_core.segment.mask_data import MaskData
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_ops import (
+    batched_mask_to_box,
+    is_box_near_crop_edge,
+    mask_to_rle_pytorch,
+    rle_to_mask,
+    uncrop_boxes_xyxy,
+    uncrop_masks,
+    uncrop_points,
+)
 
 from .modeling import Sam
 from .predictor import SamPredictor
 from .utils.amg import (
     area_from_rle,
     batch_iterator,
-    batched_mask_to_box,
     box_xyxy_to_xywh,
     build_all_layer_point_grids,
     calculate_stability_score,
     coco_encode_rle,
     generate_crop_boxes,
-    is_box_near_crop_edge,
-    mask_to_rle_pytorch,
     remove_small_regions,
-    rle_to_mask,
-    uncrop_boxes_xyxy,
-    uncrop_masks,
-    uncrop_points,
 )
 
 

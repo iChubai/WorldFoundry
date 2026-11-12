@@ -15,7 +15,7 @@ from worldfoundry.base_models.llm_mllm_core.action.transformer import (
     TransformerDecoder,
     TransformerEncoder,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
     get_activation_fn as _get_activation_fn,
 )
 

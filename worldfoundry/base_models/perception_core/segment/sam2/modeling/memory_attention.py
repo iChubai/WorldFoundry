@@ -7,8 +7,13 @@
 import torch
 from torch import Tensor, nn
 
-from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam.transformer import RoPEAttention
-from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam2_utils import get_activation_fn, get_clones
+from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam.transformer import (
+    RoPEAttention,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
+    get_activation_fn,
+    get_clones,
+)
 
 
 class MemoryAttentionLayer(nn.Module):

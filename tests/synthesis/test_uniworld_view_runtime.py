@@ -49,6 +49,17 @@ def test_sam2_config_resolves_to_canonical_modules() -> None:
         ).rpartition(".")
         source = REPO_ROOT.joinpath(*module.split(".")).with_suffix(".py")
         tree = ast.parse(source.read_text(encoding="utf-8"))
+        imports = {
+            alias.asname or alias.name: (node.module, alias.name)
+            for node in tree.body
+            if isinstance(node, ast.ImportFrom)
+            for alias in node.names
+        }
+        if name in imports:
+            owner, name = imports[name]
+            assert owner is not None and owner.startswith("worldfoundry.")
+            source = REPO_ROOT.joinpath(*owner.split(".")).with_suffix(".py")
+            tree = ast.parse(source.read_text(encoding="utf-8"))
         assert any(isinstance(node, ast.ClassDef) and node.name == name for node in tree.body), target
 
 

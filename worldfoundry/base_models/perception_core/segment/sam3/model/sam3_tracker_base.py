@@ -7,18 +7,30 @@ import logging
 import torch
 import torch.nn.functional as F
 
-from worldfoundry.base_models.perception_core.segment.sam3.model.memory import SimpleMaskEncoder
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
-    get_1d_sine_pe,
     select_closest_cond_frames,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.sam.mask_decoder import MaskDecoder
-from worldfoundry.base_models.perception_core.segment.sam3.sam.prompt_encoder import PromptEncoder
-from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import TwoWayTransformer
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_decoder import (
+    MaskDecoder as MaskDecoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.memory import (
+    MemoryEncoder as SimpleMaskEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.prompt_encoder import (
+    PromptEncoder as PromptEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.transformer import (
+    Sam3TwoWayTransformer as TwoWayTransformer,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
+    get_1d_sine_pe,
+)
 from worldfoundry.core.nn.blocks.layers import SamHeadMLP
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
+    BatchedDatapoint,
+)
 
 try:
     from timm.layers import trunc_normal_
@@ -1092,7 +1104,9 @@ class Sam3TrackerBase(torch.nn.Module):
         # see https://github.com/pytorch/pytorch/blob/v2.5.1/torch/_dynamo/config.py#L42-L49
         torch._dynamo.config.cache_size_limit = 64
         torch._dynamo.config.accumulated_cache_size_limit = 2048
-        from worldfoundry.base_models.perception_core.segment.sam3.perflib.compile import compile_wrapper
+        from worldfoundry.base_models.perception_core.segment.sam3.perflib.compile import (
+            compile_wrapper,
+        )
 
         logging.info("Compiling all components. First time may be very slow.")
 
@@ -1126,14 +1140,3 @@ class Sam3TrackerBase(torch.nn.Module):
     def _maybe_clone(self, x):
         """Clone a tensor if and only if `self.compile_all_components` is True."""
         return x.clone() if self.compile_all_components else x
-
-
-def concat_points(old_point_inputs, new_points, new_labels):
-    """Add new points and labels to previous point inputs (add at the end)."""
-    if old_point_inputs is None:
-        points, labels = new_points, new_labels
-    else:
-        points = torch.cat([old_point_inputs["point_coords"], new_points], dim=1)
-        labels = torch.cat([old_point_inputs["point_labels"], new_labels], dim=1)
-
-    return {"point_coords": points, "point_labels": labels}

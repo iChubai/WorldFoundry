@@ -6,8 +6,13 @@
 import torch
 from torch import Tensor, nn
 
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
+    get_activation_fn,
+    get_clones,
+)
+
 from .act_ckpt_utils import activation_ckpt_wrapper
-from .model_misc import get_activation_fn, get_clones, get_valid_ratio
+from .model_misc import get_valid_ratio
 
 
 class TransformerEncoderLayer(nn.Module):

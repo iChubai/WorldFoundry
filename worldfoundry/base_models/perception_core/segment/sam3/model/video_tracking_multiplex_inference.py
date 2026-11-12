@@ -7,17 +7,27 @@ import numpy as np
 import torch
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
+    NestedTensor,
+)
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import load_video_frames
-from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import MultiplexState
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import fill_holes_in_mask_scores
+from worldfoundry.base_models.perception_core.segment.sam3.model.io_utils import (
+    load_video_frames,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import (
+    MultiplexState,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
+    fill_holes_in_mask_scores,
+)
 
 # isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.video_tracking_multiplex import (
     NO_OBJ_SCORE,
     VideoTrackingDynamicMultiplex,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
     concat_points,
 )
 

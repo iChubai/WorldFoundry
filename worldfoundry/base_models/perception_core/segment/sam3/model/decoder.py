@@ -20,18 +20,20 @@ from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import (
     apply_rotary_enc_real,
     compute_axial_cis,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import RoPEAttention
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
-
-from .act_ckpt_utils import activation_ckpt_wrapper
-from .box_ops import box_cxcywh_to_xyxy
-from .model_misc import (
-    MLP,
-    gen_sineembed_for_position,
+from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import (
+    RoPEAttention,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
     get_activation_fn,
     get_clones,
-    inverse_sigmoid,
 )
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
+from worldfoundry.core.geometry.boxes import box_cxcywh_to_xyxy
+
+from .act_ckpt_utils import activation_ckpt_wrapper
+from .model_misc import MLP, gen_sineembed_for_position, inverse_sigmoid
 
 
 class TransformerDecoderLayer(nn.Module):
@@ -970,7 +972,9 @@ def functional_attention(
             )
 
     if use_fa3:
-        from worldfoundry.base_models.perception_core.segment.sam3.perflib.fa3 import flash_attn_func
+        from worldfoundry.base_models.perception_core.segment.sam3.perflib.fa3 import (
+            flash_attn_func,
+        )
 
         assert dropout == 0.0
         out = flash_attn_func(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2))

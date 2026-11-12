@@ -7,9 +7,12 @@ import torch.nn as nn
 import torchvision
 from typing_extensions import override
 
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
+    get_clones,
+)
+from worldfoundry.core.geometry.boxes import box_cxcywh_to_xyxy
+
 from .act_ckpt_utils import activation_ckpt_wrapper
-from .box_ops import box_cxcywh_to_xyxy
-from .model_misc import get_clones
 
 
 def is_right_padded(mask):

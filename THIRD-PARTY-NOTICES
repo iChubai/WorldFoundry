@@ -7085,3 +7085,18 @@ components reuse worldfoundry/base_models/perception_core/general_perception/din
 Its query/key-normalized attention bindings live in dinov3/variants/vggt_omega.py.
 Copyright Meta Platforms, Inc. and affiliates; the DINOv3 License Agreement
 continues to apply. No checkpoint license terms are changed.
+
+Shared SAM components and spatial helpers
+-----------------------------------------
+worldfoundry/base_models/perception_core/segment/sam_components/ shares the SAM
+and SAM2 prompt, mask, memory and two-way transformer components (Meta Platforms,
+Inc. and affiliates; Apache-2.0). Generation-specific bindings preserve the
+original SAM1 attention arithmetic, SAM2 MLP names and SAM3 FA3/empty-mask behavior.
+SAM3's model and accelerated implementations retain their original terms.
+
+worldfoundry/core/attention/window.py shares the padded SAM2 window helpers and
+the unpadded Swin Transformer helpers used by GroundingDINO (Copyright 2021
+Microsoft; MIT). core/attention/rotary/broadcast.py shares SAM2's rotary shape
+helper, and core/geometry/boxes.py shares the GroundingDINO/DETR box conversions
+(Copyright Facebook, Inc. and its affiliates; Apache-2.0). The complete Apache-2.0
+and MIT license texts are retained above. Model and checkpoint terms are unchanged.

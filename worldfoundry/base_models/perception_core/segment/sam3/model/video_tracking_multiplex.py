@@ -8,8 +8,14 @@ This file extends the base video tracking with prompt functionality to add:
     - Recording image features in memory to support the decoupled transformer for memory reading
 """
 
-import logging  # noqa: E402 - Follows a module-level setup call, as upstream.
-from copy import deepcopy  # noqa: E402 - Follows a module-level setup call, as upstream.
+import logging  # noqa: E402
+from copy import (  # noqa: E402
+    deepcopy,
+)
+
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (  # noqa: E402
+    concat_points as concat_points,
+)
 
 try:
     from collections.abc import Iterable
@@ -24,47 +30,53 @@ except ImportError:
         TypedDict,
     )
 
-import numpy as np  # noqa: E402 - Follows the optional import block.
-import torch  # noqa: E402 - Follows the optional import block.
-import torch.distributed  # noqa: E402 - Follows the optional import block.
-import torch.nn as nn  # noqa: E402 - Follows the optional import block.
-import torch.nn.functional as F  # noqa: E402 - Follows the optional import block.
+import numpy as np  # noqa: E402
+import torch  # noqa: E402
+import torch.distributed  # noqa: E402
+import torch.nn as nn  # noqa: E402
+import torch.nn.functional as F  # noqa: E402
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (  # noqa: E402 - Follows the optional import block.
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (  # noqa: E402
     BatchedDatapoint,
     NestedTensor,
 )
 
 # isort: split
-from timm.models.layers import trunc_normal_  # noqa: E402 - Follows the optional import block.
-
-from worldfoundry.base_models.perception_core.segment.sam3.model.memory import (  # noqa: E402 - Follows the optional import block.
-    SimpleMaskEncoder,
+from timm.models.layers import (  # noqa: E402
+    trunc_normal_,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_mask_decoder import (  # noqa: E402 - Follows the optional import block.
+
+from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_mask_decoder import (  # noqa: E402
     MultiplexMaskDecoder,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import (  # noqa: E402 - Follows the optional import block.
+from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import (  # noqa: E402
     MultiplexController,
     MultiplexState,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (  # noqa: E402 - Follows the optional import block.
-    get_1d_sine_pe,
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (  # noqa: E402
     get_next_point,
-    sample_box_points,
     select_closest_cond_frames,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.sam.mask_decoder import (  # noqa: E402 - Follows the optional import block.
-    MaskDecoder,
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_decoder import (  # noqa: E402
+    MaskDecoder as MaskDecoder,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.sam.prompt_encoder import (  # noqa: E402 - Follows the optional import block.
-    PromptEncoder,
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_ops import (  # noqa: E402
+    sample_box_points_zero_empty as sample_box_points,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import (  # noqa: E402 - Follows the optional import block.
-    TwoWayTransformer,
+from worldfoundry.base_models.perception_core.segment.sam_components.memory import (  # noqa: E402
+    MemoryEncoder as SimpleMaskEncoder,
 )
-from worldfoundry.core.nn.blocks.layers import (  # noqa: E402 - Follows the optional import block.
+from worldfoundry.base_models.perception_core.segment.sam_components.prompt_encoder import (  # noqa: E402
+    PromptEncoder as PromptEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.transformer import (  # noqa: E402
+    Sam3TwoWayTransformer as TwoWayTransformer,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (  # noqa: E402
+    get_1d_sine_pe,
+)
+from worldfoundry.core.nn.blocks.layers import (  # noqa: E402
     PositionEmbeddingRandom,
     SamHeadMLP,
 )
@@ -2469,17 +2481,6 @@ class VideoTrackingMultiplex(nn.Module):
             valid_indices.append(must_include)
 
         return valid_indices
-
-
-def concat_points(old_point_inputs, new_points, new_labels):
-    """Add new points and labels to previous point inputs (add at the end)."""
-    if old_point_inputs is None:
-        points, labels = new_points, new_labels
-    else:
-        points = torch.cat([old_point_inputs["point_coords"], new_points], dim=1)
-        labels = torch.cat([old_point_inputs["point_labels"], new_labels], dim=1)
-
-    return {"point_coords": points, "point_labels": labels}
 
 
 def _append(d1: StageOutput, d2: SAMOutput, k1: str, k2: str, dim: int = 0, strict: bool = True):

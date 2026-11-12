@@ -22,16 +22,15 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.encoder import 
     TransformerEncoderFusion,
     TransformerEncoderLayer,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.geometry_encoders import SequenceGeometryEncoder
+from worldfoundry.base_models.perception_core.segment.sam3.model.geometry_encoders import (
+    SequenceGeometryEncoder,
+)
 from worldfoundry.base_models.perception_core.segment.sam3.model.maskformer_segmentation import (
     PixelDecoder,
     UniversalSegmentationHead,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.model.memory import (
-    CXBlock,
-    SimpleFuser,
     SimpleMaskDownSampler,
-    SimpleMaskEncoder,
 )
 from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
     MLP,
@@ -41,20 +40,38 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc impo
 from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
     MultiheadAttentionWrapper as MultiheadAttention,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import MultiplexController
-from worldfoundry.base_models.perception_core.segment.sam3.model.necks import Sam3DualViTDetNeck, Sam3TriViTDetNeck
-from worldfoundry.base_models.perception_core.segment.sam3.model.position_encoding import PositionEmbeddingSine
+from worldfoundry.base_models.perception_core.segment.sam3.model.multiplex_utils import (
+    MultiplexController,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.necks import (
+    Sam3DualViTDetNeck,
+    Sam3TriViTDetNeck,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.position_encoding import (
+    PositionEmbeddingSine,
+)
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam1_task_predictor import (
     SAM3InteractiveImagePredictor,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_image import Sam3Image, Sam3ImageOnVideoMultiGPU
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracking_predictor import Sam3TrackerPredictor
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_image import (
+    Sam3Image,
+    Sam3ImageOnVideoMultiGPU,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracking_predictor import (
+    Sam3TrackerPredictor,
+)
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_inference import (
     Sam3VideoInferenceWithInstanceInteractivity,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_predictor import Sam3VideoPredictorMultiGPU
-from worldfoundry.base_models.perception_core.segment.sam3.model.text_encoder_ve import VETextEncoder
-from worldfoundry.base_models.perception_core.segment.sam3.model.tokenizer_ve import SimpleTokenizer
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_predictor import (
+    Sam3VideoPredictorMultiGPU,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.text_encoder_ve import (
+    VETextEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.tokenizer_ve import (
+    SimpleTokenizer,
+)
 from worldfoundry.base_models.perception_core.segment.sam3.model.video_tracking_multiplex import (
     VideoTrackingDynamicMultiplex,  # noqa: F401 - Keeps the module's import-time setup.
 )
@@ -64,7 +81,18 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.vl_combiner imp
     SAM3VLBackboneTri,
     TriHeadVisionOnly,
 )
-from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import RoPEAttention
+from worldfoundry.base_models.perception_core.segment.sam3.sam.transformer import (
+    RoPEAttention,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.memory import (
+    CXBlock,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.memory import (
+    Fuser as SimpleFuser,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.memory import (
+    MemoryEncoder as SimpleMaskEncoder,
+)
 
 
 # Setup TensorFloat-32 for Ampere GPUs if available

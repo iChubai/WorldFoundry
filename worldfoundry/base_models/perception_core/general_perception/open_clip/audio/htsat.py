@@ -18,6 +18,8 @@ from torch.nn.init import _calculate_fan_in_and_fan_out
 from torchlibrosa.augmentation import SpecAugmentation
 from torchlibrosa.stft import LogmelFilterBank, Spectrogram
 
+from worldfoundry.core.attention.window import window_partition as window_partition
+from worldfoundry.core.attention.window import window_reverse as window_reverse
 from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
 from worldfoundry.core.nn.blocks.stochastic_depth import UniformDropPath as DropPath
 
@@ -257,34 +259,6 @@ def variance_scaling_(tensor, scale=1.0, mode="fan_in", distribution="normal"):
 
 def lecun_normal_(tensor):
     variance_scaling_(tensor, mode="fan_in", distribution="truncated_normal")
-
-
-def window_partition(x, window_size):
-    """
-    Args:
-        x: (B, H, W, C)
-    Returns:
-        windows: (num_windows*B, window_size, window_size, C)
-    """
-    B, H, W, C = x.shape
-    x = x.view(B, H // window_size, window_size, W // window_size, window_size, C)
-    windows = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(-1, window_size, window_size, C)
-    return windows
-
-
-def window_reverse(windows, window_size, H, W):
-    """
-    Args:
-        windows: (num_windows*B, window_size, window_size, C)
-        H (int): Height of image
-        W (int): Width of image
-    Returns:
-        x: (B, H, W, C)
-    """
-    B = int(windows.shape[0] / (H * W / window_size / window_size))
-    x = windows.view(B, H // window_size, W // window_size, window_size, window_size, -1)
-    x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
-    return x
 
 
 class WindowAttention(nn.Module):

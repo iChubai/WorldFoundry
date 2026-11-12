@@ -1,6 +1,9 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+# Shared from the SAM and SAM2 source distributions.
 
-# pyre-unsafe
+from __future__ import annotations
 
 import torch
 from torch import nn

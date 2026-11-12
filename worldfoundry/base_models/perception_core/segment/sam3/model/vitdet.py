@@ -21,23 +21,39 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 
+from worldfoundry.core.attention.rotary.broadcast import (
+    reshape_for_broadcast as reshape_for_broadcast,
+)
+from worldfoundry.core.attention.window import (
+    window_partition_padded as window_partition,
+)
+from worldfoundry.core.attention.window import window_unpartition as window_unpartition
+
 try:
     from timm.layers import DropPath, trunc_normal_
 except ModuleNotFoundError:
     # compatibility for older timm versions
     from timm.models.layers import DropPath, trunc_normal_
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import NestedTensor
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
+    NestedTensor,
+)
 
 # isort: split
 from torch import Tensor
 
-from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import AttentionType
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.fused import addmm_act
+from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
+    AttentionType,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.fused import (
+    addmm_act,
+)
 from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import (
     VisionRotaryEmbeddingVE,
     apply_rotary_enc_real,
 )
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
 from worldfoundry.core.nn.blocks.layers import LayerScale
 
 
@@ -105,14 +121,6 @@ def compute_axial_cis(
     return torch.cat([freqs_cis_x, freqs_cis_y], dim=-1)
 
 
-def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-    ndim = x.ndim
-    assert 0 <= 1 < ndim
-    assert freqs_cis.shape == (x.shape[-2], x.shape[-1])
-    shape = [d if i >= ndim - 2 else 1 for i, d in enumerate(x.shape)]
-    return freqs_cis.view(*shape)
-
-
 def apply_rotary_enc(
     xq: torch.Tensor,
     xk: torch.Tensor,
@@ -132,49 +140,6 @@ def apply_rotary_enc(
         freqs_cis = freqs_cis.repeat(*([1] * (freqs_cis.ndim - 2)), r, 1)
     xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(3)
     return xq_out.type_as(xq).to(xq.device), xk_out.type_as(xk).to(xk.device)
-
-
-def window_partition(x: Tensor, window_size: int) -> tuple[Tensor, tuple[int, int]]:
-    """
-    Partition into non-overlapping windows with padding if needed.
-    Args:
-        x (tensor): input tokens with [B, H, W, C].
-    Returns:
-        windows: windows after partition with [B * num_windows, window_size, window_size, C].
-        (Hp, Wp): padded height and width before partition
-    """
-    B, H, W, C = x.shape
-
-    pad_h = (window_size - H % window_size) % window_size
-    pad_w = (window_size - W % window_size) % window_size
-    if pad_h > 0 or pad_w > 0:
-        x = F.pad(x, (0, 0, 0, pad_w, 0, pad_h))
-    Hp, Wp = H + pad_h, W + pad_w
-
-    x = x.view(B, Hp // window_size, window_size, Wp // window_size, window_size, C)
-    windows = x.permute(0, 1, 3, 2, 4, 5).reshape(-1, window_size, window_size, C)
-    return windows, (Hp, Wp)
-
-
-def window_unpartition(windows: Tensor, window_size: int, pad_hw: tuple[int, int], hw: tuple[int, int]) -> Tensor:
-    """
-    Window unpartition into original sequences and removing padding.
-    Args:
-        x (tensor): input tokens with [B * num_windows, window_size, window_size, C].
-        pad_hw (Tuple): padded height and width (Hp, Wp).
-        hw (Tuple): original height and width (H, W) before padding.
-    Returns:
-        x: unpartitioned sequences with [B, H, W, C].
-    """
-    Hp, Wp = pad_hw
-    H, W = hw
-    B = windows.shape[0] // (Hp * Wp // window_size // window_size)
-    x = windows.reshape(B, Hp // window_size, Wp // window_size, window_size, window_size, -1)
-    x = x.permute(0, 1, 3, 2, 4, 5).reshape(B, Hp, Wp, -1)
-
-    if Hp > H or Wp > W:
-        x = x[:, :H, :W, :]
-    return x
 
 
 def get_rel_pos(q_size: int, k_size: int, rel_pos: Tensor) -> Tensor:
@@ -588,7 +553,9 @@ class Attention(nn.Module):
 
         if self.attn_type == AttentionType.Vanilla:
             if self.use_fa3:
-                from worldfoundry.base_models.perception_core.segment.sam3.perflib.fa3 import flash_attn_func
+                from worldfoundry.base_models.perception_core.segment.sam3.perflib.fa3 import (
+                    flash_attn_func,
+                )
 
                 x = flash_attn_func(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)).transpose(1, 2)
             else:

@@ -6,9 +6,7 @@ from collections.abc import Sequence
 import torch
 import torchvision.transforms.functional as F
 
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.box_ops import (
-    box_xyxy_to_cxcywh,
-)
+from worldfoundry.core.geometry.boxes import box_xyxy_to_cxcywh
 
 
 def _resolve_size(

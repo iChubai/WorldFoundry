@@ -8,7 +8,9 @@ from copy import deepcopy
 import numpy as np
 import torch
 
-from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import SAM3Output
+from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import (
+    SAM3Output,
+)
 
 # isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam1_task_predictor import (
@@ -17,18 +19,23 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.sam1_task_predi
 
 # isort: split
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.vl_combiner import SAM3VLBackbone
+from worldfoundry.base_models.perception_core.segment.sam3.model.vl_combiner import (
+    SAM3VLBackbone,
+)
 
 # isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.nms import nms_masks
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
+    BatchedDatapoint,
+)
 
 # isort: split
 
+from worldfoundry.core.geometry.boxes import box_cxcywh_to_xyxy
+
 from .act_ckpt_utils import activation_ckpt_wrapper
-from .box_ops import box_cxcywh_to_xyxy
 from .data_misc import FindStage
 from .geometry_encoders import Prompt
 from .model_misc import inverse_sigmoid

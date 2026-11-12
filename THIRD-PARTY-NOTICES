@@ -6939,3 +6939,14 @@ AnimateDiff and CameraCtrl. They retain the Diffusers resnet attribution from
 the packaged AnimateDiff source. Checkpoint parameters remain two-dimensional
 convolution weights; model weights are distributed separately.
 The complete Apache-2.0 license text is retained above.
+
+
+EasyAnimate image-to-video conditioning
+--------------------------------------
+Source: https://github.com/aigc-apps/EasyAnimate/tree/c2a70d17daa1549a22129d0cd0e02053ecccd75c
+License: Apache-2.0
+Files: worldfoundry/base_models/diffusion_model/models/initializers/easyanimate_conditioning.py
+
+The image-to-video pixel and inpaint-mask preparation routine is shared with
+VideoX-Fun. Model weights are distributed separately.
+The complete Apache-2.0 license text is retained above.

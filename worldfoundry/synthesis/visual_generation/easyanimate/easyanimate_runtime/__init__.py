@@ -22,6 +22,9 @@ class EasyAnimateComponents:
 def load_easyanimate_components() -> EasyAnimateComponents:
     """Load the installed EasyAnimate components; checkpoints remain external assets."""
     try:
+        from worldfoundry.base_models.diffusion_model.models.initializers.easyanimate_conditioning import (
+            get_image_to_video_latent,
+        )
         from worldfoundry.synthesis.visual_generation.easyanimate.easyanimate_runtime.easyanimate.models import (
             name_to_autoencoder_magvit,
             name_to_transformer3d,
@@ -31,9 +34,6 @@ def load_easyanimate_components() -> EasyAnimateComponents:
         )
         from worldfoundry.synthesis.visual_generation.easyanimate.easyanimate_runtime.easyanimate.utils.fp8_optimization import (
             convert_weight_dtype_wrapper,
-        )
-        from worldfoundry.synthesis.visual_generation.easyanimate.easyanimate_runtime.easyanimate.utils.utils import (
-            get_image_to_video_latent,
         )
     except ImportError as exc:
         raise RuntimeError(EASYANIMATE_RUNTIME_UNAVAILABLE) from exc

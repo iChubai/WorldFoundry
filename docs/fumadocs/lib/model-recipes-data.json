@@ -57751,8 +57751,8 @@
         "pipelineTarget": "worldfoundry.pipelines.hyperflow.pipeline_hyperflow:HyperFlowPipeline",
         "loadingMethod": "from_pretrained",
         "invocationMode": "native_or_standard_invocation",
-        "backendStage": "official_external_runtime",
-        "runtimeStatus": "gpu_smoke_validated",
+        "backendStage": "in_tree_runtime",
+        "runtimeStatus": "cpu_contract_validated_checkpoint_gpu_pending",
         "environmentId": "hyperflow",
         "environmentName": "hyperflow",
         "environmentKind": "dedicated",
@@ -57769,13 +57769,16 @@
           "torch==2.11.0+cu128",
           "torchvision==0.26.0+cu128",
           "torchaudio==2.11.0+cu128",
-          "hyperflow-h3[examples] @ git+https://github.com/Video-Rebirth/hyperflow.git@1dd2f342aba5ab51da02b62885939655e8e268da",
           "diffusers==0.40.0",
           "transformers==5.12.1",
           "accelerate",
-          "peft==0.18.0",
           "safetensors>=0.8",
-          "pillow"
+          "pillow",
+          "av",
+          "numpy",
+          "scipy",
+          "einops",
+          "msgspec"
         ],
         "packageVersions": {
           "torch": "torch==2.11.0+cu128",
@@ -57789,20 +57792,20 @@
           "torch",
           "diffusers",
           "transformers",
-          "hyperflow_h3",
-          "peft",
-          "av"
+          "av",
+          "worldfoundry.synthesis.visual_generation.hyperflow.pipeline"
         ],
         "notes": [
-          "Uses the pinned upstream inference package and official diffusers H3 components; no training code is bundled.",
-          "The dedicated loader installs two-time conditioning and the fixed eight-step grid; ordinary LoRA loading is insufficient.",
+          "In-tree HyperFlow reuses canonical MiniMax-H3 DiT, refiner, Qwen3-VL feature encoder and video/audio VAEs.",
+          "The H3 variant owns two-time conditioning, unmerged LoRA, Sol-Attn policy and the fixed eight-step grid.",
           "Local base-model shards and adapter weights are required; inference runs offline.",
           "T2VA, first/last-frame FL2VA and ordered image/video/audio Ref2VA retain joint audio-video output.",
-          "Single GPU CPU offload is the default; 2 or 4 GPUs use the upstream Ulysses implementation.",
-          "T2VA, single-image FL2VA and image-reference Ref2VA passed single-H100 smoke inference at 640x384, 124 frames, 24 fps and eight steps; video and stereo audio decoded successfully.",
-          "High-resolution quality parity, multi-GPU inference, last-frame and video/audio reference conditioning have not been GPU validated.",
+          "Single GPU CPU offload is the default; 2 or 4 GPUs use core Ulysses collectives. Diffusers is retained for automatic CPU eviction and selected attention dispatch utilities only.",
+          "Released-key mappings are bijective and tiny FP32 components and all workflow denoising paths match the pinned reference exactly.",
+          "CUDA kernels, distributed execution, offload placement and released-weight output parity require GPU validation.",
           "Source code is Apache-2.0; adapter and base weights use the MiniMax H3 Community License.",
-          "The pinned upstream package supplies inference only. No runtime clone, package installation or weight download is performed during generation.",
+          "In-tree HyperFlow reuses canonical MiniMax-H3 components. Generation uses local weights and performs no clone, installation or weight download.",
+          "Diffusers supplies automatic CPU eviction and selected attention dispatch utilities only; model, VAE and scheduler forwards are canonical WorldFoundry code.",
           "Sol-Attn and FlashAttention-3 are optional installations; the default backend is PyTorch SDPA."
         ]
       },
@@ -58146,15 +58149,15 @@
         }
       ],
       "notes": [
-        "T2VA, single-image FL2VA and image-reference Ref2VA passed single-H100 smoke inference at 640x384, 124 frames and eight steps, including full video and stereo audio decoding.",
-        "High-resolution quality parity, multi-GPU inference, last-frame and video/audio reference conditioning remain unvalidated.",
-        "Uses the pinned upstream inference package and official diffusers H3 components; no training code is bundled.",
-        "The dedicated loader installs two-time conditioning and the fixed eight-step grid; ordinary LoRA loading is insufficient.",
+        "Canonical H3 foundation and HyperFlow adapter key mappings are bijective. Tiny FP32 component and workflow denoising parity against the pinned upstream is exact.",
+        "Released-weight output parity, CUDA kernels, multi-GPU execution and automatic CPU-offload placement remain pending GPU validation.",
+        "In-tree HyperFlow reuses canonical MiniMax-H3 DiT, refiner, Qwen3-VL feature encoder and video/audio VAEs.",
+        "The H3 variant owns two-time conditioning, unmerged LoRA, Sol-Attn policy and the fixed eight-step grid.",
         "Local base-model shards and adapter weights are required; inference runs offline.",
         "T2VA, first/last-frame FL2VA and ordered image/video/audio Ref2VA retain joint audio-video output.",
-        "Single GPU CPU offload is the default; 2 or 4 GPUs use the upstream Ulysses implementation.",
-        "T2VA, single-image FL2VA and image-reference Ref2VA passed single-H100 smoke inference at 640x384, 124 frames, 24 fps and eight steps; video and stereo audio decoded successfully.",
-        "High-resolution quality parity, multi-GPU inference, last-frame and video/audio reference conditioning have not been GPU validated.",
+        "Single GPU CPU offload is the default; 2 or 4 GPUs use core Ulysses collectives. Diffusers is retained for automatic CPU eviction and selected attention dispatch utilities only.",
+        "Released-key mappings are bijective and tiny FP32 components and all workflow denoising paths match the pinned reference exactly.",
+        "CUDA kernels, distributed execution, offload placement and released-weight output parity require GPU validation.",
         "Source code is Apache-2.0; adapter and base weights use the MiniMax H3 Community License."
       ],
       "docs": {
@@ -58173,10 +58176,10 @@
         "architecture": [],
         "architectureZh": [],
         "usageNotes": [
-          "Supply a complete local diffusers MiniMax-H3 snapshot, weights_path and the dedicated Python executable. The upstream loader supplies the fixed grid; num_inference_steps must be 8 and output fps must be 24."
+          "Supply a complete local Diffusers-format MiniMax-H3 checkpoint snapshot, weights_path and the dedicated Python executable. In-tree HyperFlow reuses canonical H3 components and its variant supplies the fixed grid; num_inference_steps must be 8 and output fps must be 24. Diffusers is used only for CPU eviction and selected attention dispatch utilities. Source is Apache-2.0; weights use the MiniMax H3 Community License."
         ],
         "usageNotesZh": [
-          "提供完整的本地 Diffusers 格式 MiniMax-H3 权重快照、weights_path 和专用 Python 可执行文件。上游加载器使用固定网格；num_inference_steps 必须为 8，输出帧率必须为 24 fps。"
+          "提供完整的本地 Diffusers 格式 MiniMax-H3 权重快照、weights_path 和专用 Python 可执行文件。树内 HyperFlow 复用规范 H3 组件，其变体提供固定网格；num_inference_steps 必须为 8，输出帧率必须为 24 fps。 Diffusers 仅用于 CPU 卸载和部分注意力分发工具。源码采用 Apache-2.0，权重采用 MiniMax H3 Community License。"
         ],
         "highlights": [
           "Text To Video",
@@ -58210,17 +58213,16 @@
         },
         "benchmarks": [],
         "limitations": [
-          "GPU inference requires substantial VRAM and host RAM; the upstream single-GPU measurements use an H200.",
+          "GPU inference requires substantial VRAM and host RAM; CUDA and released-weight replay of the in-tree implementation remain pending.",
           "The official frame count is aligned upward to 17n+5, with supported aligned counts from 124 to 345 at 24 fps.",
-          "Ref2VA requires transformer_ref weights; audio-only references are unsupported."
+          "Ref2VA requires transformer_ref weights; audio-only references are unsupported.",
+          "Runner output parity, multi-GPU execution, automatic CPU offload and optional attention kernels require GPU validation."
         ],
         "limitationsZh": [
-          "Runner parity 仍待验证；已完成的单卡烟测不代表端到端 Runner 与官方结果一致。原生 Demo 证据未记录。",
-          "T2VA、单图 FL2VA 和图像参考 Ref2VA 已在单张 H100 上完成 640×384、124 帧、8 步烟测，包含完整视频与立体声音频解码。",
-          "GPU 推理需要大量显存和主机内存；上游公布的单卡测量使用 H200。",
+          "GPU 推理需要大量显存和主机内存；树内实现的 CUDA 验证及发布权重回放尚待完成。",
           "官方帧数会向上对齐到 17n+5；在 24 fps 下支持对齐后的 124 至 345 帧。",
           "Ref2VA 需要 transformer_ref 权重；不支持仅音频参考。",
-          "高分辨率质量一致性、多卡推理、末帧条件以及视频/音频参考条件尚未验证。"
+          "Runner 输出一致性、多卡执行、CPU 自动卸载及可选注意力内核仍需 GPU 验证。"
         ],
         "paper": null,
         "figures": []

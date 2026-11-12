@@ -152,6 +152,7 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
 	tests/base_models/test_hyperflow_components.py \
+	tests/synthesis/test_hyperflow_runtime.py \
 	tests/base_models/test_minimax_h3_dit.py \
 	tests/base_models/test_omnivinci_components.py \
 	tests/synthesis/test_omnivinci_runtime.py \

@@ -8,8 +8,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as T
 
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import (
+    QuickGELU,
+    SelfAttention,
+    SwiGLU,
+    XLMRobertaWithHead,
+    pos_interpolate,
+)
+
 from .attention import flash_attention
-from .xlm_roberta import XLMRoberta
 
 __all__ = [
     "CLIPModel",
@@ -18,90 +25,10 @@ __all__ = [
 ]
 
 
-def pos_interpolate(pos, seq_len):
-    if pos.size(1) == seq_len:
-        return pos
-    else:
-        src_grid = int(math.sqrt(pos.size(1)))
-        tar_grid = int(math.sqrt(seq_len))
-        n = pos.size(1) - src_grid * src_grid
-        return torch.cat(
-            [
-                pos[:, :n],
-                F.interpolate(
-                    pos[:, n:].float().reshape(1, src_grid, src_grid, -1).permute(0, 3, 1, 2),
-                    size=(tar_grid, tar_grid),
-                    mode="bicubic",
-                    align_corners=False,
-                )
-                .flatten(2)
-                .transpose(1, 2),
-            ],
-            dim=1,
-        )
-
-
-class QuickGELU(nn.Module):
-    def forward(self, x):
-        return x * torch.sigmoid(1.702 * x)
-
-
 class LayerNorm(nn.LayerNorm):
     def forward(self, x):
         # return super().forward(x.float()).type_as(x)
         return super().forward(x.to(self.weight.dtype))
-
-
-class SelfAttention(nn.Module):
-    def __init__(self, dim, num_heads, causal=False, attn_dropout=0.0, proj_dropout=0.0):
-        assert dim % num_heads == 0
-        super().__init__()
-        self.dim = dim
-        self.num_heads = num_heads
-        self.head_dim = dim // num_heads
-        self.causal = causal
-        self.attn_dropout = attn_dropout
-        self.proj_dropout = proj_dropout
-
-        # layers
-        self.to_qkv = nn.Linear(dim, dim * 3)
-        self.proj = nn.Linear(dim, dim)
-
-    def forward(self, x):
-        """
-        x:   [B, L, C].
-        """
-        b, s, c, n, d = *x.size(), self.num_heads, self.head_dim
-
-        # compute query, key, value
-        q, k, v = self.to_qkv(x).view(b, s, 3, n, d).unbind(2)
-
-        # compute attention
-        p = self.attn_dropout if self.training else 0.0
-        x = flash_attention(q, k, v, dropout_p=p, causal=self.causal, version=2)
-        x = x.reshape(b, s, c)
-
-        # output
-        x = self.proj(x)
-        x = F.dropout(x, self.proj_dropout, self.training)
-        return x
-
-
-class SwiGLU(nn.Module):
-    def __init__(self, dim, mid_dim):
-        super().__init__()
-        self.dim = dim
-        self.mid_dim = mid_dim
-
-        # layers
-        self.fc1 = nn.Linear(dim, mid_dim)
-        self.fc2 = nn.Linear(dim, mid_dim)
-        self.fc3 = nn.Linear(mid_dim, dim)
-
-    def forward(self, x):
-        x = F.silu(self.fc1(x)) * self.fc2(x)
-        x = self.fc3(x)
-        return x
 
 
 class AttentionBlock(nn.Module):
@@ -283,30 +210,6 @@ class VisionTransformer(nn.Module):
         else:
             x = self.transformer(x)
             return x
-
-
-class XLMRobertaWithHead(XLMRoberta):
-    def __init__(self, **kwargs):
-        self.out_dim = kwargs.pop("out_dim")
-        super().__init__(**kwargs)
-
-        # head
-        mid_dim = (self.dim + self.out_dim) // 2
-        self.head = nn.Sequential(
-            nn.Linear(self.dim, mid_dim, bias=False), nn.GELU(), nn.Linear(mid_dim, self.out_dim, bias=False)
-        )
-
-    def forward(self, ids):
-        # xlm-roberta
-        x = super().forward(ids)
-
-        # average pooling
-        mask = ids.ne(self.pad_id).unsqueeze(-1).to(x)
-        x = (x * mask).sum(dim=1) / mask.sum(dim=1)
-
-        # head
-        x = self.head(x)
-        return x
 
 
 class XLMRobertaCLIP(nn.Module):

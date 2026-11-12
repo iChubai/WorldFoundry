@@ -7,6 +7,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
+    MLPProj,
+    WanRMSNorm,
+    sinusoidal_embedding_1d,
+)
 from worldfoundry.core import autocast_context
 from worldfoundry.core.distributed.model_parallel import context_state as context_parallel_util
 
@@ -372,18 +377,6 @@ def flash_attention(
     return x.type(out_dtype)
 
 
-def sinusoidal_embedding_1d(dim, position):
-    # preprocess
-    assert dim % 2 == 0
-    half = dim // 2
-    position = position.type(torch.float64)
-
-    # calculation
-    sinusoid = torch.outer(position, torch.pow(10000, -torch.arange(half).to(position).div(half)))
-    x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
-    return x
-
-
 def rope_params(max_seq_len, dim, theta=10000):
     with autocast_context("cuda", enabled=False):
         assert dim % 2 == 0
@@ -429,24 +422,6 @@ def rope_apply(x, grid_sizes, freqs, enable_context_parallel=False):
             # append to collection
             output.append(x_i)
         return torch.stack(output).float()
-
-
-class WanRMSNorm(nn.Module):
-    def __init__(self, dim, eps=1e-5):
-        super().__init__()
-        self.dim = dim
-        self.eps = eps
-        self.weight = nn.Parameter(torch.ones(dim))
-
-    def forward(self, x):
-        r"""
-        Args:
-            x(Tensor): Shape [B, L, C]
-        """
-        return self._norm(x.float()).type_as(x) * self.weight
-
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class ActionEncoder(nn.Module):
@@ -845,23 +820,6 @@ class Head(nn.Module):
             e = (self.modulation + e.unsqueeze(1)).chunk(2, dim=1)
             x = self.head(self.norm(x) * (1 + e[1]) + e[0])
         return x
-
-
-class MLPProj(torch.nn.Module):
-    def __init__(self, in_dim, out_dim):
-        super().__init__()
-
-        self.proj = torch.nn.Sequential(
-            torch.nn.LayerNorm(in_dim),
-            torch.nn.Linear(in_dim, in_dim),
-            torch.nn.GELU(),
-            torch.nn.Linear(in_dim, out_dim),
-            torch.nn.LayerNorm(out_dim),
-        )
-
-    def forward(self, image_embeds):
-        clip_extra_context_tokens = self.proj(image_embeds)
-        return clip_extra_context_tokens
 
 
 class WanModel(nn.Module):

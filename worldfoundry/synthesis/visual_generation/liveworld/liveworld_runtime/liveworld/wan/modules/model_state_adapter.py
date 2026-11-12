@@ -7,6 +7,17 @@ import torch.nn as nn
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
+    WanRMSNorm,
+    sinusoidal_embedding_1d,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import (
+    MLPProj,
+    WanLayerNorm,
+    rope_apply,
+    rope_params,
+)
+
 from .attention import flash_attention
 
 __all__ = ["StateAdapterWanModel"]
@@ -25,32 +36,7 @@ def modulate(x, shift, scale):
     return x * (1 + scale) + shift
 
 
-def sinusoidal_embedding_1d(dim, position):
-    # preprocess
-    assert dim % 2 == 0
-    half = dim // 2
-    position = position.type(torch.float64)
-
-    # calculation
-    sinusoid = torch.outer(position, torch.pow(10000, -torch.arange(half).to(position).div(half)))
-    x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
-    return x
-
-
 # @amp.autocast(enabled=False)
-def rope_params(max_seq_len, dim, theta=10000):
-    assert dim % 2 == 0
-    freqs = torch.outer(
-        torch.arange(max_seq_len), 1.0 / torch.pow(theta, torch.arange(0, dim, 2).to(torch.float64).div(dim))
-    )
-    freqs = torch.polar(torch.ones_like(freqs), freqs)
-    return freqs
-
-
-# @amp.autocast(enabled=False)
-from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.camera_21 import (  # noqa: E402 - Follows module-level definitions, as upstream.
-    rope_apply,
-)
 
 
 def rope_params_with_offset(positions, dim, theta=10000):
@@ -167,36 +153,6 @@ def rope_apply_state_adapter(x, h, w, num_t, num_p, num_r, freqs, max_seq_len=10
     return torch.stack(output).type_as(x)
 
 
-class WanRMSNorm(nn.Module):
-    def __init__(self, dim, eps=1e-5):
-        super().__init__()
-        self.dim = dim
-        self.eps = eps
-        self.weight = nn.Parameter(torch.ones(dim))
-
-    def forward(self, x):
-        r"""
-        Args:
-            x(Tensor): Shape [B, L, C]
-        """
-        return self._norm(x.float()).type_as(x) * self.weight
-
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
-
-
-class WanLayerNorm(nn.LayerNorm):
-    def __init__(self, dim, eps=1e-6, elementwise_affine=False):
-        super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
-
-    def forward(self, x):
-        r"""
-        Args:
-            x(Tensor): Shape [B, L, C]
-        """
-        return super().forward(x).type_as(x)
-
-
 class WanSelfAttention(nn.Module):
     def __init__(self, dim, num_heads, window_size=(-1, -1), qk_norm=True, eps=1e-6):
         assert dim % num_heads == 0
@@ -299,32 +255,6 @@ class WanT2VCrossAttention(WanSelfAttention):
             v = self.v(context).view(b, -1, n, d)
         # compute attention
         x = flash_attention(q, k, v, k_lens=context_lens)
-
-        # output
-        x = x.flatten(2)
-        x = self.o(x)
-        return x
-
-
-class WanGanCrossAttention(WanSelfAttention):
-    def forward(self, x, context, crossattn_cache=None):
-        r"""
-        Args:
-            x(Tensor): Shape [B, L1, C]
-            context(Tensor): Shape [B, L2, C]
-            context_lens(Tensor): Shape [B]
-            crossattn_cache (List[dict], *optional*): Contains the cached key and value tensors for context embedding.
-        """
-        b, n, d = x.size(0), self.num_heads, self.head_dim
-
-        # compute query, key, value
-        qq = self.norm_q(self.q(context)).view(b, 1, -1, d)
-
-        kk = self.norm_k(self.k(x)).view(b, -1, n, d)
-        vv = self.v(x).view(b, -1, n, d)
-
-        # compute attention
-        x = flash_attention(qq, kk, vv)
 
         # output
         x = x.flatten(2)
@@ -598,23 +528,6 @@ class Head(nn.Module):
             e = (self.modulation + e.unsqueeze(1)).chunk(2, dim=1)
             x = self.head(self.norm(x) * (1 + e[1]) + e[0])
         return x
-
-
-class MLPProj(torch.nn.Module):
-    def __init__(self, in_dim, out_dim):
-        super().__init__()
-
-        self.proj = torch.nn.Sequential(
-            torch.nn.LayerNorm(in_dim),
-            torch.nn.Linear(in_dim, in_dim),
-            torch.nn.GELU(),
-            torch.nn.Linear(in_dim, out_dim),
-            torch.nn.LayerNorm(out_dim),
-        )
-
-    def forward(self, image_embeds):
-        clip_extra_context_tokens = self.proj(image_embeds)
-        return clip_extra_context_tokens
 
 
 class StateAdapterWanModel(ModelMixin, ConfigMixin):

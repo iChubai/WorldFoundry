@@ -74,3 +74,20 @@ def test_go1_loads_shared_internvit_leaves_without_changing_its_encoder(tmp_path
     pixels = torch.randn(1, 3, 12, 12)
     with torch.no_grad():
         torch.testing.assert_close(model(pixels).last_hidden_state, reloaded(pixels).last_hidden_state, atol=0, rtol=0)
+
+
+def test_qwen2_5_vision_block_uses_the_gated_qwen_owner() -> None:
+    from transformers.models.qwen2_5_vl.configuration_qwen2_5_vl import Qwen2_5_VLVisionConfig
+
+    from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP
+    from worldfoundry.synthesis.action_generation.lingbot_vla.modeling.qwen25_vl import Qwen2_5_VLVisionBlock
+
+    config = Qwen2_5_VLVisionConfig(hidden_size=16, intermediate_size=32, num_heads=2)
+    config._attn_implementation = "eager"
+    block = Qwen2_5_VLVisionBlock(config)
+    assert type(block.mlp) is QwenMLP
+    assert {key for key in block.mlp.state_dict() if key.endswith("bias")} == {
+        "gate_proj.bias",
+        "up_proj.bias",
+        "down_proj.bias",
+    }

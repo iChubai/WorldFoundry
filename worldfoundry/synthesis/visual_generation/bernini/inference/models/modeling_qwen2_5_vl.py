@@ -88,13 +88,13 @@ from transformers.utils import (
 )
 
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as Qwen2MLP
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as Qwen2_5_VLMLP
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     QwenRMSNorm as Qwen2RMSNorm,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.vision import (
     Qwen2_5_VisionPatchEmbed,
-    Qwen2_5_VLMLP,
     Qwen2_5_VLPatchMerger,
     apply_multimodal_rotary_pos_emb,
 )

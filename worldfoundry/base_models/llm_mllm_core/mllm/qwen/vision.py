@@ -27,20 +27,6 @@ def apply_rotary_pos_emb_vision(
     return q_embed.to(q.dtype), k_embed.to(k.dtype)
 
 
-class Qwen2_5_VLMLP(nn.Module):
-    def __init__(self, config: PretrainedConfig, bias: bool = False) -> None:
-        super().__init__()
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=bias)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, hidden_state: torch.Tensor) -> torch.Tensor:
-        return self.down_proj(self.act_fn(self.gate_proj(hidden_state)) * self.up_proj(hidden_state))
-
-
 class Qwen2_5_VisionPatchEmbed(nn.Module):
     def __init__(
         self,

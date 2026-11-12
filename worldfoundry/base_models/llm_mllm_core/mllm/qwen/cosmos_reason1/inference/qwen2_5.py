@@ -24,15 +24,12 @@ from torch.distributed.device_mesh import DeviceMesh
 from transformers.cache_utils import Cache, DynamicCache, StaticCache
 
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as Qwen2MLP
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as Qwen2_5_VLMLP
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     QwenRMSNorm as Qwen2RMSNorm,
 )
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
-from worldfoundry.base_models.llm_mllm_core.mllm.qwen.vision import (
-    Qwen2_5_VisionPatchEmbed,
-    Qwen2_5_VLMLP,
-    Qwen2_5_VLPatchMerger,
-)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.vision import Qwen2_5_VisionPatchEmbed, Qwen2_5_VLPatchMerger
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.vision import (
     VisionRotaryEmbedding as Qwen2_5_VisionRotaryEmbedding,
 )

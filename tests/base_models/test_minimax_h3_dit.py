@@ -88,22 +88,27 @@ def _build_packed_inputs(cfg: MiniMaxH3DiTArchConfig, device: torch.device):
     packed = {"cu_seqlens_q": torch.tensor([0, seq_len], dtype=torch.int32, device=device), "max_seqlen_q": seq_len}
     refiner = {"cu_seqlens_q": torch.tensor([0, text_len], dtype=torch.int32, device=device), "max_seqlen_q": text_len}
 
-    return dict(
-        x=x,
-        audio_x=audio_x,
-        img_position_ids=img_position_ids,
-        unique_timesteps=unique_timesteps,
-        inverse_indices=inverse_indices,
-        update_mask=update_mask,
-        token_tags=token_tags,
-        prompt_embeds=prompt_embeds,
-        img_pos_info={"position_ids": img_pos},
-        audio_pos_info={"position_ids": audio_pos},
-        text_pos_info={"position_ids": text_pos},
-        img_pos_for_infer_output_info={"position_ids": img_pos},
-        packed_seq_params=packed,
-        refiner_packed_seq_params=refiner,
-    ), video_len, audio_len, video_row
+    return (
+        dict(
+            x=x,
+            audio_x=audio_x,
+            img_position_ids=img_position_ids,
+            unique_timesteps=unique_timesteps,
+            inverse_indices=inverse_indices,
+            update_mask=update_mask,
+            token_tags=token_tags,
+            prompt_embeds=prompt_embeds,
+            img_pos_info={"position_ids": img_pos},
+            audio_pos_info={"position_ids": audio_pos},
+            text_pos_info={"position_ids": text_pos},
+            img_pos_for_infer_output_info={"position_ids": img_pos},
+            packed_seq_params=packed,
+            refiner_packed_seq_params=refiner,
+        ),
+        video_len,
+        audio_len,
+        video_row,
+    )
 
 
 def test_forward_rejects_unexpected_kwargs() -> None:

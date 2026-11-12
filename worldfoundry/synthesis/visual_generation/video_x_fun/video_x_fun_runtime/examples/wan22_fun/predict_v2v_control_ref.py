@@ -17,6 +17,9 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.v
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (
     WanT5EncoderModel,
 )
+from worldfoundry.base_models.diffusion_model.models.initializers.easyanimate_conditioning import (
+    get_image_to_video_latent,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.video_x_fun.transformer import (
     Wan2_2Transformer3DModel,
 )
@@ -63,7 +66,6 @@ from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.vi
 from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (
     filter_kwargs,
     get_image_latent,
-    get_image_to_video_latent,
     get_video_to_video_latent,
 )
 

@@ -20,6 +20,9 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.v
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants.dreamx_world.text_encoder import (  # noqa: E402 - Follows the warnings configuration.
     WanT5EncoderModel,
 )
+from worldfoundry.base_models.diffusion_model.models.initializers.easyanimate_conditioning import (  # noqa: E402 - Follows the warnings setup.
+    get_image_to_video_latent,
+)
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.versecrafter import (  # noqa: E402 - Follows the warnings configuration.
     VerseCrafterWanTransformer3DModel,
 )
@@ -45,10 +48,9 @@ from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.vi
     merge_lora,
     unmerge_lora,
 )
-from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (  # noqa: E402 - Follows the warnings configuration.
+from worldfoundry.synthesis.visual_generation.video_x_fun.video_x_fun_runtime.videox_fun.utils.utils import (  # noqa: E402 - Follows the warnings setup.
     filter_kwargs,
     get_image_latent,
-    get_image_to_video_latent,
     get_video_to_video_latent,
     save_videos_grid,
 )

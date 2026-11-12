@@ -6964,7 +6964,7 @@ License: Apache-2.0
 Files: worldfoundry/base_models/diffusion_model/models/initializers/easyanimate_conditioning.py
 
 The image-to-video pixel and inpaint-mask preparation routine is shared with
-VideoX-Fun. Model weights are distributed separately.
+VideoX-Fun and VerseCrafter. Model weights are distributed separately.
 The complete Apache-2.0 license text is retained above.
 
 Open-Sora / Open-Oasis CPU-frequency conditioning

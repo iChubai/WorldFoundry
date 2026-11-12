@@ -50,6 +50,22 @@ def test_conditioning_frame_placement_and_mask_dtype(tmp_path: Path, start_kind:
     assert np.all(np.array(clip_image) == 100)
 
 
+def test_multiple_end_frames_keep_the_reference_assignment_error() -> None:
+    image = Image.fromarray(np.full((5, 7, 3), 100, dtype=np.uint8))
+    with pytest.raises(RuntimeError, match="expanded size of the tensor"):
+        get_image_to_video_latent([image], [image, image], 5, (4, 6))
+
+
+def test_unconditional_video_respects_default_float_dtype() -> None:
+    previous = torch.get_default_dtype()
+    try:
+        torch.set_default_dtype(torch.float64)
+        video, mask, _ = get_image_to_video_latent(None, None, 5, (4, 6))
+        assert video.dtype == mask.dtype == torch.float64
+    finally:
+        torch.set_default_dtype(previous)
+
+
 def test_unconditional_video_has_float_mask_and_no_clip_image() -> None:
     video, mask, clip_image = get_image_to_video_latent(None, None, 5, (4, 6))
     assert video.shape == (1, 3, 5, 4, 6)

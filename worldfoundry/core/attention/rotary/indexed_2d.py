@@ -1,24 +1,22 @@
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# SPDX-License-Identifier: Apache-2.0
 # Copyright (c) Meta Platforms, Inc. and affiliates.
-#
-# This source code is licensed under the Apache License, Version 2.0
-# found in the LICENSE file in the root directory of this source tree.
+"""STream3R/Vigeo positive-index RoPE and shape-only position caching.
 
+The original scaling_factor is metadata, not a frequency multiplier. Negative
+positions are not reflected into the table as in the signed core variant.
+"""
 
-# Implementation of 2D Rotary Position Embeddings (RoPE).
-
-# This module provides a clean implementation of 2D Rotary Position Embeddings,
-# which extends the original RoPE concept to handle 2D spatial positions.
-
-# Inspired by:
-#         https://github.com/meta-llama/codellama/blob/main/llama/model.py
-#         https://github.com/naver-ai/rope-vit
+from __future__ import annotations
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn
+from torch.nn import functional as F
+
+from .rope_2d import PositionGetter, RotaryPositionEmbedding2D
 
 
-class PositionGetter:
+class ShapeCachedPositionGetter(PositionGetter):
     """Generates and caches 2D spatial positions for patches in a grid.
 
     This class efficiently manages the generation of spatial coordinates for patches
@@ -28,10 +26,6 @@ class PositionGetter:
         position_cache: Dictionary storing precomputed position tensors for different
             grid dimensions.
     """
-
-    def __init__(self):
-        """Initializes the position generator with an empty cache."""
-        self.position_cache: dict[tuple[int, int], torch.Tensor] = {}
 
     def __call__(self, batch_size: int, height: int, width: int, device: torch.device) -> torch.Tensor:
         """Generates spatial positions for a batch of patches.
@@ -56,7 +50,7 @@ class PositionGetter:
         return cached_positions.view(1, height * width, 2).expand(batch_size, -1, -1).clone()
 
 
-class RotaryPositionEmbedding2D(nn.Module):
+class IndexedRotaryPositionEmbedding2D(RotaryPositionEmbedding2D):
     """2D Rotary Position Embedding implementation.
 
     This module applies rotary position embeddings to input tokens based on their
@@ -65,17 +59,17 @@ class RotaryPositionEmbedding2D(nn.Module):
 
     Args:
         frequency: Base frequency for the position embeddings. Default: 100.0
-        scaling_factor: Scaling factor for frequency computation. Default: 1.0
+        scaling_factor: Retained constructor metadata. Default: 1.0
 
     Attributes:
         base_frequency: Base frequency for computing position embeddings.
-        scaling_factor: Factor to scale the computed frequencies.
+        scaling_factor: Retained constructor metadata; frequencies are unscaled.
         frequency_cache: Cache for storing precomputed frequency components.
     """
 
-    def __init__(self, frequency: float = 100.0, scaling_factor: float = 1.0):
+    def __init__(self, frequency: float = 100.0, scaling_factor: float = 1.0) -> None:
         """Initializes the 2D RoPE module."""
-        super().__init__()
+        nn.Module.__init__(self)
         self.base_frequency = frequency
         self.scaling_factor = scaling_factor
         self.frequency_cache: dict[tuple, tuple[torch.Tensor, torch.Tensor]] = {}
@@ -92,7 +86,7 @@ class RotaryPositionEmbedding2D(nn.Module):
             dtype: Data type for the computed tensors.
 
         Returns:
-            tuple of (cosine, sine) tensors for frequency components.
+            Tuple of (cosine, sine) tensors for frequency components.
         """
         cache_key = (dim, seq_len, device, dtype)
         if cache_key not in self.frequency_cache:
@@ -113,26 +107,8 @@ class RotaryPositionEmbedding2D(nn.Module):
 
         return self.frequency_cache[cache_key]
 
-    @staticmethod
-    def _rotate_features(x: torch.Tensor) -> torch.Tensor:
-        """Performs feature rotation by splitting and recombining feature dimensions.
-
-        Args:
-            x: Input tensor to rotate.
-
-        Returns:
-            Rotated feature tensor.
-        """
-        feature_dim = x.shape[-1]
-        x1, x2 = x[..., : feature_dim // 2], x[..., feature_dim // 2 :]
-        return torch.cat((-x2, x1), dim=-1)
-
     def _apply_1d_rope(
-        self,
-        tokens: torch.Tensor,
-        positions: torch.Tensor,
-        cos_comp: torch.Tensor,
-        sin_comp: torch.Tensor,
+        self, tokens: torch.Tensor, positions: torch.Tensor, cos_comp: torch.Tensor, sin_comp: torch.Tensor
     ) -> torch.Tensor:
         """Applies 1D rotary position embeddings along one dimension.
 
@@ -148,6 +124,7 @@ class RotaryPositionEmbedding2D(nn.Module):
         # Embed positions with frequency components
         cos = F.embedding(positions, cos_comp)[:, None, :, :]
         sin = F.embedding(positions, sin_comp)[:, None, :, :]
+
         # Apply rotation
         return (tokens * cos) + (self._rotate_features(tokens) * sin)
 

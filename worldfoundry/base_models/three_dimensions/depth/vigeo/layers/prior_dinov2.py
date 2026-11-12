@@ -20,13 +20,13 @@ from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.c
     init_weights_vit_timm as init_weights_vit_timm,
 )
 from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
+from worldfoundry.core.nn.blocks.layers import PatchEmbed as PatchEmbed
 from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused as SwiGLUFFNFused
 from worldfoundry.core.nn.blocks.module_utils import named_apply as named_apply
 
 from .attention import MemEffAttention
 from .block import NestedTensorBlock as Block
 from .mask_utils import _compute_depth_invalid_mask, depth_masking
-from .patch_embed import PatchEmbed
 
 
 class PriorDinoVisionTransformer(nn.Module):

@@ -275,6 +275,8 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/three_dimensions/depth/midas/test_fusion.py \
 	tests/base_models/perception_core/general_perception/dinov2/test_shared_vision_leaves.py \
 	tests/base_models/perception_core/general_perception/dinov3/test_omega_components.py \
+	tests/base_models/three_dimensions/point_clouds/vggt/test_shared_blocks.py \
+	tests/core/attention/test_indexed_2d.py \
 	tests/base_models/perception_core/segment/sam_components/test_heads.py \
 	tests/base_models/perception_core/segment/sam_components/test_mask_ops.py \
 	tests/base_models/perception_core/segment/sam_components/test_memory.py \

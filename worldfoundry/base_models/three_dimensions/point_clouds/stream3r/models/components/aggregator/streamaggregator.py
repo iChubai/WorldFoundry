@@ -10,9 +10,15 @@ import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
+from worldfoundry.core.attention.rotary.indexed_2d import (
+    IndexedRotaryPositionEmbedding2D as RotaryPositionEmbedding2D,
+)
+from worldfoundry.core.attention.rotary.indexed_2d import (
+    ShapeCachedPositionGetter as PositionGetter,
+)
+
 from ..layers import PatchEmbed
 from ..layers.block import Block
-from ..layers.rope import PositionGetter, RotaryPositionEmbedding2D
 from ..layers.vision_transformer import vit_base, vit_giant2, vit_large, vit_small
 
 logger = logging.getLogger(__name__)

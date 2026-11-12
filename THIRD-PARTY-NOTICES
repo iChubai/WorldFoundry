@@ -7100,3 +7100,13 @@ Microsoft; MIT). core/attention/rotary/broadcast.py shares SAM2's rotary shape
 helper, and core/geometry/boxes.py shares the GroundingDINO/DETR box conversions
 (Copyright Facebook, Inc. and its affiliates; Apache-2.0). The complete Apache-2.0
 and MIT license texts are retained above. Model and checkpoint terms are unchanged.
+
+Shared VGGT reconstruction blocks
+----------------------------------
+Mirror, HY-World-2.0, STream3R, InfiniteVGGT and FantasyWorld reuse the VGGT
+projection/block shells in worldfoundry/base_models/three_dimensions/point_clouds/
+vggt/vggt/layers (Meta Platforms, Inc. and affiliates; Apache-2.0 source).
+Their attention-backend, KV-cache and conditioning variants remain in their
+respective model modules, under their existing source and checkpoint terms.
+worldfoundry/core/attention/rotary/indexed_2d.py retains STream3R/Vigeo's
+Meta-attributed positive-index rotation and shape-only grid cache conventions.

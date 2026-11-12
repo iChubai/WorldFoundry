@@ -24,12 +24,12 @@ from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.c
     init_weights_vit_timm as init_weights_vit_timm,
 )
 from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
+from worldfoundry.core.nn.blocks.layers import PatchEmbed as PatchEmbed
 from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused as SwiGLUFFNFused
 from worldfoundry.core.nn.blocks.module_utils import named_apply as named_apply
 
 from .attention import Attention
 from .block import Block
-from .patch_embed import PatchEmbed
 
 logger = logging.getLogger("dinov2")
 

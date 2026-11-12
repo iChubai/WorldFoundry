@@ -26,15 +26,22 @@ from torch.nn.init import trunc_normal_
 from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.construction import (
     init_weights_vit_timm as init_weights_vit_timm,
 )
+from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_dav2.layers.block import (
+    drop_add_residual_stochastic_depth_list as drop_add_residual_stochastic_depth_list,
+)
+from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_dav2.layers.block import (
+    get_attn_bias_and_cat as get_attn_bias_and_cat,
+)
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import (
-    index_select_cat,
     memory_efficient_attention,
 )
 from worldfoundry.core.nn.blocks.layers import LayerScale as LayerScale
 from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused as SwiGLUFFNFused
 from worldfoundry.core.nn.blocks.module_utils import named_apply
 from worldfoundry.core.nn.blocks.stochastic_depth import add_residual as add_residual
-from worldfoundry.core.nn.blocks.stochastic_depth import get_branges_scales as get_branges_scales
+from worldfoundry.core.nn.blocks.stochastic_depth import (
+    get_branges_scales as get_branges_scales,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -566,58 +573,6 @@ def drop_add_residual_stochastic_depth(
 
 
 attn_bias_cache: dict[tuple, Any] = {}
-
-
-def get_attn_bias_and_cat(x_list, branges=None):
-    """
-    this will perform the index select, cat the tensors, and provide the attn_bias from cache
-    """
-    if fmha is None:
-        raise NotImplementedError("Nested tensor attention requires xFormers, which is disabled in ViPE")
-
-    batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
-    if all_shapes not in attn_bias_cache:
-        seqlens = []
-        for b, x in zip(batch_sizes, x_list, strict=False):
-            for _ in range(b):
-                seqlens.append(x.shape[1])
-        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
-        attn_bias._batch_sizes = batch_sizes
-        attn_bias_cache[all_shapes] = attn_bias
-
-    if branges is not None:
-        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])
-    else:
-        tensors_bs1 = tuple(x.reshape([1, -1, *x.shape[2:]]) for x in x_list)
-        cat_tensors = torch.cat(tensors_bs1, dim=1)
-
-    return attn_bias_cache[all_shapes], cat_tensors
-
-
-def drop_add_residual_stochastic_depth_list(
-    x_list: list[Tensor],
-    residual_func: Callable[[Tensor, Any], Tensor],
-    sample_drop_ratio: float = 0.0,
-    scaling_vector=None,
-) -> Tensor:
-    # 1) generate random set of indices for dropping samples in the batch
-    branges_scales = [get_branges_scales(x, sample_drop_ratio=sample_drop_ratio) for x in x_list]
-    branges = [s[0] for s in branges_scales]
-    residual_scale_factors = [s[1] for s in branges_scales]
-
-    # 2) get attention bias and index+concat the tensors
-    attn_bias, x_cat = get_attn_bias_and_cat(x_list, branges)
-
-    # 3) apply residual_func to get residual, and split the result
-    residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
-
-    outputs = []
-    for x, brange, residual, residual_scale_factor in zip(
-        x_list, branges, residual_list, residual_scale_factors, strict=False
-    ):
-        outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
-    return outputs
 
 
 class NestedTensorBlock(Block):

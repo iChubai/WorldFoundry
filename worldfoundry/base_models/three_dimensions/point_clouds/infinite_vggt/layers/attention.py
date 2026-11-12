@@ -1,13 +1,21 @@
 import torch
 import torch.nn.functional as F
-from torch import Tensor, nn
+from torch import nn
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.attention import (
+    Attention as VGGTAttention,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.attention import (
+    MemEffAttention as VGGTMemEffAttention,
+)
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
 
 XFORMERS_AVAILABLE = False
 
 
-class Attention(nn.Module):
+class Attention(VGGTAttention):
     def __init__(
         self,
         dim: int,
@@ -21,20 +29,18 @@ class Attention(nn.Module):
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
         rope=None,
     ) -> None:
-        super().__init__()
-        assert dim % num_heads == 0, "dim should be divisible by num_heads"
-        self.num_heads = num_heads
-        self.head_dim = dim // num_heads
-        self.scale = self.head_dim**-0.5
-        self.fused_attn = fused_attn
-
-        self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
-        self.q_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
-        self.k_norm = norm_layer(self.head_dim) if qk_norm else nn.Identity()
-        self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(dim, dim, bias=proj_bias)
-        self.proj_drop = nn.Dropout(proj_drop)
-        self.rope = rope
+        super().__init__(
+            dim=dim,
+            num_heads=num_heads,
+            qkv_bias=qkv_bias,
+            proj_bias=proj_bias,
+            attn_drop=attn_drop,
+            proj_drop=proj_drop,
+            norm_layer=norm_layer,
+            qk_norm=qk_norm,
+            fused_attn=fused_attn,
+            rope=rope,
+        )
         self.num_anchor_tokens = 0
 
     def _reset_cache_state(self):
@@ -139,23 +145,5 @@ class Attention(nn.Module):
         return x
 
 
-class MemEffAttention(Attention):
-    def forward(self, x: Tensor, attn_bias=None, pos=None) -> Tensor:
-        assert pos is None
-        if not XFORMERS_AVAILABLE:
-            if attn_bias is not None:
-                raise AssertionError("xFormers is required for using nested tensors")
-            return super().forward(x)
-
-        B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads)
-
-        q, k, v = unbind(qkv, 2)  # noqa: F821 - Name is undefined in the upstream source.
-
-        x = memory_efficient_attention(q, k, v, attn_bias=attn_bias)  # noqa: F821 - Name is undefined in the upstream source.
-        x = x.reshape([B, N, C])
-
-        x = self.proj(x)
-        x = self.proj_drop(x)
-
-        return x
+class MemEffAttention(VGGTMemEffAttention, Attention):
+    """VGGT tensor-only interface with the family attention policy."""

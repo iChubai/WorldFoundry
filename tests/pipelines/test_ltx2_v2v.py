@@ -252,3 +252,46 @@ def test_ltx_v2v_cli_spec_retains_control_fields_without_an_interpreter(model_id
     }
     schema = load_model_run_schema(model_id)
     assert not any("python-executable" in field.option for field in schema.fields)
+
+
+@pytest.mark.parametrize("model_id", ["ltx-2-v2v", "ltx-2.3-v2v"])
+def test_ltx_v2v_runtime_profile_selects_the_existing_ltx25_environment(model_id: str) -> None:
+    from worldfoundry.runtime.conda import load_runtime_conda_env_spec
+    from worldfoundry.zoo.bindings import resolve_pipeline_route, runtime_profile_execution_metadata
+
+    environment = load_runtime_conda_env_spec(model_id)
+    ltx25 = load_runtime_conda_env_spec("ltx-2.5")
+    assert environment is not None and ltx25 is not None
+    assert environment.env_name == ltx25.env_name == "ltx-2.5"
+    assert environment.cuda_profile == ltx25.cuda_profile == "cu128"
+    assert environment.python == ltx25.python == "3.11"
+    assert environment.pip_packages == ltx25.pip_packages
+    assert environment.conda_packages == ltx25.conda_packages
+    assert environment.pip_extra_index_url == ltx25.pip_extra_index_url
+    metadata = runtime_profile_execution_metadata(model_id)
+    assert metadata["environment"] == "ltx-2.5"
+    assert metadata["pipeline_binding"] == model_id
+    route = resolve_pipeline_route(model_id=model_id, runtime_profile=model_id)
+    assert route is not None
+    target, binding, _source = route
+    assert target.startswith("worldfoundry.pipelines.ltx2.pipeline_ltx2_v2v:")
+    assert binding == model_id
+
+
+def test_ltx_t2v_i2v_keep_the_original_gemma_loader_and_unified_environment() -> None:
+    from worldfoundry.base_models.diffusion_model.components import ComponentKind
+    from worldfoundry.base_models.diffusion_model.models.encoders.ltx.component import build_ltx_prompt_conditioner
+    from worldfoundry.base_models.diffusion_model.recipes import default_native_diffusion_registry
+    from worldfoundry.runtime.conda import load_runtime_conda_env_spec
+    from worldfoundry.zoo.bindings import runtime_profile_execution_metadata
+
+    for model_id in ("ltx-2-t2v", "ltx-2.3-t2v", "ltx-2-i2v", "ltx-2.3-i2v"):
+        recipe = default_native_diffusion_registry().resolve(model_id)
+        conditioner = next(c for c in recipe.components if c.key.kind is ComponentKind.CONDITIONER)
+        assert conditioner.factory is build_ltx_prompt_conditioner
+        if model_id.endswith("-t2v"):
+            assert runtime_profile_execution_metadata(model_id)["environment"] == "_unified"
+        else:
+            environment = load_runtime_conda_env_spec(model_id)
+            assert environment is not None
+            assert environment.env_name == "worldfoundry-unified-cu128"

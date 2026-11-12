@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import replace
 from typing import Any
 
@@ -175,7 +175,7 @@ def test_multistage_selects_weights_by_stage_and_keeps_default_denoiser(stage_sp
     calls = []
     runner = _runner([])
 
-    def denoiser(name: str):
+    def denoiser(name: str) -> Callable[[MultiModalDenoiserInput], MultiModalDenoiserOutput]:
         def predict(inputs: MultiModalDenoiserInput) -> MultiModalDenoiserOutput:
             calls.append((name, inputs.step_index, inputs.total_steps))
             return MultiModalDenoiserOutput(samples={key: value.latent for key, value in inputs.modalities.items()})

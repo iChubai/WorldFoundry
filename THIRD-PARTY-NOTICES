@@ -1442,6 +1442,25 @@ fallbacks in models/autoencoders/ltx/video/transformer/fallback_na/eager.py and 
 vendored by LTX-2 from comfy-kitchen (Copyright (c) 2025 Comfy Org, Apache-2.0) and retain their
 SPDX headers.
 
+
+Canonical LTX IC-LoRA control-video inference
+--------------------------------------------
+Source: https://github.com/Lightricks/LTX-2/tree/a95ab856bf29407b6b066ede0abe1846050db56c
+Upstream: packages/ltx-pipelines/src/ltx_pipelines/ic_lora.py,
+          packages/ltx-core/src/ltx_core/loader/fuse_loras.py,
+          packages/ltx-core/src/ltx_core/conditioning/types/reference_video_cond.py,
+          and the IC-LoRA video conditioning helpers in ltx_pipelines/utils.
+Files: worldfoundry/base_models/diffusion_model/models/denoisers/ltx_lora.py;
+       the reference-video additions to models/initializers/ltx.py and
+       models/representations/ltx/conditioning.py, and the IC-LoRA recipe additions
+       to recipes/ltx.py under worldfoundry/base_models/diffusion_model/.
+License: LTX-2.x Community License Agreement (August 11, 2026), reproduced below
+in the SolarWM block with Section 4 and Attachment A. SPDX identifier:
+LicenseRef-LTX-2.x-Community. These inference portions are adapted by WorldFoundry
+to canonical checkpoint transforms, reference-token conditioning and the shared
+multi-stage runner. The public pipeline adapter and standard framework primitives
+retain their existing first-party license.
+
 SolarWM inference runtime
 -------------------------
 Source: https://github.com/Junchao-cs/SolarWM/tree/2fe1ea9aca072f787bbba07ee9380b0e1ea7563b

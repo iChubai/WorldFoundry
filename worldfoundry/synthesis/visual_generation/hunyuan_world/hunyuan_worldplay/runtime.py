@@ -1580,7 +1580,9 @@ class _HunyuanWorldPlayInternalPipeline(HunyuanVideo15Resources, DiffusionPipeli
 
         if prompt_rewrite:
             if not dist.is_initialized() or get_parallel_state().sp_rank == 0:
-                loguru.logger.warning("HY-WorldPlay prompt rewriting is unavailable in this build; using the raw prompt")
+                loguru.logger.warning(
+                    "HY-WorldPlay prompt rewriting is unavailable in this build; using the raw prompt"
+                )
                 prompt = user_prompt
 
             if dist.is_initialized() and get_parallel_state().sp_enabled:

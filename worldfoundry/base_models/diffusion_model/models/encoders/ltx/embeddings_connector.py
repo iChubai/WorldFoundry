@@ -223,7 +223,9 @@ class Embeddings1DConnectorConfigurator:
         """Keep audio dimension overrides independent of the shared connector options."""
         transformer_config = config.get("transformer", {})
         dimensions = {
-            key: transformer_config.get(cls._DIMENSION_PREFIX + key, transformer_config.get("connector_" + key, default))
+            key: transformer_config.get(
+                cls._DIMENSION_PREFIX + key, transformer_config.get("connector_" + key, default)
+            )
             for key, default in (("num_attention_heads", 30), ("attention_head_dim", 128), ("num_layers", 2))
         }
         return Embeddings1DConnector(

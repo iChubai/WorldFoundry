@@ -118,7 +118,9 @@ class Lyra1Representation:
 
         maybe_set_cuda_device(self.device)
         try:
-            sample_module = importlib.import_module("worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.sample")
+            sample_module = importlib.import_module(
+                "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.sample"
+            )
             dataset_registry_module = importlib.import_module(
                 "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.registry"
             )

@@ -358,9 +358,7 @@ class HYWorld2Synthesis(HunyuanWorldPlanSynthesis):
             "Official worldgen requires five separate runners: traj_generate.py, traj_render.py, video_gen.py, gen_gs_data.py, and world_gs_trainer.py.",
             "Official worldgen also requires custom gsplat_maskgaussian/navmesh native extensions, a vLLM VLM service, and distributed GPU orchestration.",
         ),
-        recommendation=(
-            "Use task='worldrecon'. HY-Pano 2.0 and world generation are not part of WorldFoundry."
-        ),
+        recommendation=("Use task='worldrecon'. HY-Pano 2.0 and world generation are not part of WorldFoundry."),
     )
 
 

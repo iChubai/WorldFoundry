@@ -85,7 +85,11 @@ class SLConfig:
             tree = ast.parse(f.read(), filename=filename)
         cfg_dict = {}
         for node in tree.body:
-            if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            if (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
                 continue
             if not (isinstance(node, ast.Assign) and all(isinstance(target, ast.Name) for target in node.targets)):
                 raise ValueError(f"{filename}:{node.lineno}: config files may only assign literal values to names")

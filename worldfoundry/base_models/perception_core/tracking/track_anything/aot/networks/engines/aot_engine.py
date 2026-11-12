@@ -24,7 +24,6 @@ class AOTEngine(nn.Module):
 
         self.restart_engine()
 
-
     def encode_one_img_mask(self, img=None, mask=None, frame_step=-1):
         if frame_step == -1:
             frame_step = self.frame_step
@@ -275,7 +274,6 @@ class AOTEngine(nn.Module):
         else:
             pred_prob = torch.softmax(pred_id_logits, dim=1)
             return pred_mask, pred_prob
-
 
     def restart_engine(self, batch_size=1, enable_id_shuffle=False):
         self.batch_size = batch_size

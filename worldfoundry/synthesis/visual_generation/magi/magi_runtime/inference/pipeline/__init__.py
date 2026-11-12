@@ -22,4 +22,5 @@ def __getattr__(name: str) -> Any:
         return MagiPipeline
     raise AttributeError(name)
 
+
 __all__ = ["MagiPipeline"]

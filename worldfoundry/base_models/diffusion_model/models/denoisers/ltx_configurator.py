@@ -28,9 +28,7 @@ class LTXModelConfigurator:
     MODEL_CLS = LTXModel
 
     @classmethod
-    def from_metadata(
-        cls, metadata: dict[str, Any], ops: TransformerOpsConfig | None = None
-    ) -> LTXModel:
+    def from_metadata(cls, metadata: dict[str, Any], ops: TransformerOpsConfig | None = None) -> LTXModel:
         """Build a joint transformer with the split-checkpoint execution policy."""
         from worldfoundry.base_models.diffusion_model.optimizations.ltx.attention import (
             split_checkpoint_transformer_ops,

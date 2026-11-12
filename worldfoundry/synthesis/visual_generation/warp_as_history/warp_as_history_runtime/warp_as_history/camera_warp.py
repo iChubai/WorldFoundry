@@ -158,6 +158,7 @@ def _import_pi3() -> tuple[type[torch.nn.Module], Callable[..., torch.Tensor]]:
 
     return Pi3X, recover_intrinsic_from_rays_d
 
+
 def _load_pi3x_model(Pi3X: Any, device: torch.device):
     ckpt = default_pi3x_ckpt().expanduser().resolve()
     if not ckpt.is_file():

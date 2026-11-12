@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from diffusers import AutoencoderKL, DPMSolverMultistepScheduler, StableDiffusionInpaintPipeline
-from .models.models import KeyframeGen, KeyframeInterp
 from omegaconf import OmegaConf
 from PIL import Image
 from torchvision.transforms import ToPILImage
@@ -20,17 +19,19 @@ from transformers import (
     OneFormerImageProcessor,
     OneFormerProcessor,
 )
-from .util.chatGPT4 import TextpromptGen
-from .util.checkpoints import diffusers_fp16_load_kwargs, local_model_ref, oneformer_local_load_kwargs
-from .util.general_utils import save_video
-from .util.segment_utils import create_mask_generator
-from .util.utils import load_inference_prompt_config, merge_frames, merge_keyframes, prepare_scheduler, save_depth_map
 
 # Modified by WorldFoundry: import midas via the package-absolute path instead of a
 # sys.path insert that hard-coded the on-disk layout between the synthesis and
 # base_models trees.
 from worldfoundry.base_models.three_dimensions.depth.midas.model_loader import load_model
 from worldfoundry.core.io.paths import package_data_path
+
+from .models.models import KeyframeGen, KeyframeInterp
+from .util.chatGPT4 import TextpromptGen
+from .util.checkpoints import diffusers_fp16_load_kwargs, local_model_ref, oneformer_local_load_kwargs
+from .util.general_utils import save_video
+from .util.segment_utils import create_mask_generator
+from .util.utils import load_inference_prompt_config, merge_frames, merge_keyframes, prepare_scheduler, save_depth_map
 
 
 def evaluate(model):

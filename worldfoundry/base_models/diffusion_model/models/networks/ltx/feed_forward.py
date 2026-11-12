@@ -17,9 +17,7 @@ class FeedForward(torch.nn.Module):
         inner_dim = int(dim * mult)
         project_in = GELUApprox(dim, inner_dim, bias=bias)
 
-        self.net = torch.nn.Sequential(
-            project_in, torch.nn.Identity(), torch.nn.Linear(inner_dim, dim_out, bias=bias)
-        )
+        self.net = torch.nn.Sequential(project_in, torch.nn.Identity(), torch.nn.Linear(inner_dim, dim_out, bias=bias))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Map ``[..., dim]`` tokens to ``[..., dim_out]``."""

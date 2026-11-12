@@ -364,9 +364,7 @@ def build_official_server_command(
     args.extend(["--model-path", str(checkpoint_dir)])
     if max_chunk_size is not None:
         args.extend(["--max-chunk-size", str(max_chunk_size)])
-    return package_module_command(
-        OFFICIAL_SERVER_MODULE, args, python_executable=python, nproc_per_node=nproc_per_node
-    )
+    return package_module_command(OFFICIAL_SERVER_MODULE, args, python_executable=python, nproc_per_node=nproc_per_node)
 
 
 def build_server_command(

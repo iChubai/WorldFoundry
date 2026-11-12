@@ -27,6 +27,7 @@ _BASE_MODEL_TARGETS: Mapping[str, str] = {
     "video-depth-anything-prior": "worldfoundry.base_models.three_dimensions.depth.videodepthanything",
 }
 
+
 def _checkpoint_root() -> Path:
     return Path(
         os.environ.get(
@@ -297,9 +298,7 @@ class GeometryPriorSynthesis(BaseSynthesis):
         from worldfoundry.base_models.three_dimensions.depth.base import DepthEstimationInput
         from worldfoundry.base_models.three_dimensions.general_3d.vipe.utils.cameras import CameraType
 
-        ckpt = self._existing_checkpoint(
-            directory_ok=self.model_id in {"prior-depth-anything", "unidepth-v2-prior"}
-        )
+        ckpt = self._existing_checkpoint(directory_ok=self.model_id in {"prior-depth-anything", "unidepth-v2-prior"})
         if self.model_id == "dap":
             from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v1.dap_adapter import (
                 DAPModel,
@@ -433,7 +432,6 @@ class GeometryPriorSynthesis(BaseSynthesis):
             "preview_image": str(preview_path),
             "metadata_path": str(metadata_path),
         }
-
 
     def _run_track_anything(self, *, video: Any, images: Any, output_dir: Path, **kwargs: Any) -> dict[str, Any]:
         from worldfoundry.base_models.perception_core.tracking.track_anything import TrackAnythingPipeline

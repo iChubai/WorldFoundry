@@ -339,10 +339,7 @@ class AttentionModule(torch.nn.Module):
         q_lens: torch.Tensor | None = None,
         k_lens: torch.Tensor | None = None,
     ):
-        if (
-            self.backend == "torch"
-            or self.backend == "torch_onnx"
-        ):
+        if self.backend == "torch" or self.backend == "torch_onnx":
             if q_lens is not None or k_lens is not None:
                 warnings.warn(
                     "Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance.",

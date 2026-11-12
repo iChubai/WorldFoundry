@@ -158,11 +158,11 @@ recursive-include worldfoundry/synthesis/action_generation/gr00t/legacy_n1_runti
 recursive-include worldfoundry/data/models/runtime/configs/gr00t-n1 *.txt
 recursive-include worldfoundry/base_models/diffusion_model/models/networks/hunyuan_video/h15 ACTION_CAMERA_PROVENANCE.md
 
-# InSpatio uses these inference-only entry points as subprocess resources.
+# InSpatio package workers retain their inference resources.
 recursive-include worldfoundry/synthesis/visual_generation/inspatio_world/inspatio_world_runtime *.py *.sh
 recursive-include worldfoundry/synthesis/visual_generation/inspatio_world/inspatio_world_runtime/inference_inputs PROVENANCE.md
 
-# Explicit Warp-as-History inference resources; Pi3 remains external.
+# Explicit Warp-as-History inference resources; reconstruction uses native Pi3X.
 include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/__init__.py
 include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/diffusers_version/__init__.py
 include worldfoundry/synthesis/visual_generation/warp_as_history/warp_as_history_runtime/helios/diffusers_version/pipeline_helios_diffusers.py

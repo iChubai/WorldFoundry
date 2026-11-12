@@ -584,7 +584,6 @@ def build_ltx_gemma_prompt_conditioner(context: ComponentBuildContext) -> LTXGem
         raise ValueError("LTX encoding requires Gemma-3 or Gemma-4 unified")
     transformer = NativeCheckpointResolver().materialize(context.require_checkpoint("weights"))
     config = safetensors_json_metadata(transformer)
-    text = NativeCheckpointResolver().materialize(text_checkpoint)
     processor = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=LTXEmbeddingProcessorModule,
@@ -595,7 +594,7 @@ def build_ltx_gemma_prompt_conditioner(context: ComponentBuildContext) -> LTXGem
             lazy_state_dict=True,
             buffer_aware_offload=True,
         ),
-        CheckpointSpec(source=tuple(str(path) for path in (*transformer.paths, *text.paths))),
+        CheckpointSpec(source=tuple(str(path) for path in (*transformer.paths, *assets.weight_paths))),
         policy,
     )
     duration = (

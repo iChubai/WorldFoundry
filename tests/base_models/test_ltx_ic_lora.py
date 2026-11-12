@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -304,3 +305,48 @@ def test_reference_initializer_encodes_only_stage_one_and_reads_adapter_metadata
     assert states[1]["video"].latent.shape == (1, 32, 128)
     assert torch.all(states[0]["video"].denoise_mask[:, -2:] == 0)
     assert torch.all(states[1]["video"].denoise_mask == 1)
+
+
+@pytest.mark.parametrize("layout", ["directory", "single-file"])
+def test_gemma_projector_loading_uses_resolved_weight_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, layout: str
+) -> None:
+    from worldfoundry.base_models.diffusion_model.models.encoders.ltx import component as encoder_module
+
+    transformer = tmp_path / "transformer.safetensors"
+    save_file({}, str(transformer), metadata={"config": json.dumps({"transformer": {}})})
+    gemma_root = tmp_path / "gemma"
+    gemma_root.mkdir()
+    shards = tuple(gemma_root / f"model-{index}.safetensors" for index in (1, 2))
+    for path in shards:
+        save_file({}, str(path))
+    weight_paths = tuple(str(path) for path in shards) if layout == "directory" else (str(shards[0]),)
+    assets = SimpleNamespace(
+        config_dict={"model_type": "gemma3" if layout == "directory" else "gemma4_unified"},
+        weight_paths=weight_paths,
+    )
+    gemma = object()
+    monkeypatch.setattr(encoder_module, "_load_split_gemma", lambda checkpoint, policy: (gemma, assets))
+    loaded: list[CheckpointSpec] = []
+
+    def load(self: Any, spec: Any, checkpoint: CheckpointSpec, policy: RuntimePolicy) -> object:
+        loaded.append(checkpoint)
+        return object()
+
+    monkeypatch.setattr(encoder_module.NativeModuleLoader, "load", load)
+    context = ComponentBuildContext(
+        model_id="ltx-2-v2v",
+        key=ComponentKey(ComponentKind.CONDITIONER),
+        policy=RuntimePolicy(device="cpu", dtype=torch.float32),
+        checkpoints={
+            "weights": CheckpointSpec(source=transformer),
+            "text_encoder": CheckpointSpec(source=gemma_root if layout == "directory" else shards[0]),
+        },
+    )
+    conditioner = encoder_module.build_ltx_gemma_prompt_conditioner(context)
+    assert conditioner.gemma is gemma
+    assert len(loaded) == 1
+    source = loaded[0].source
+    assert isinstance(source, tuple)
+    assert source == (str(transformer), *weight_paths)
+    assert all(Path(path).is_file() for path in source)

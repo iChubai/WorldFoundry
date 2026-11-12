@@ -38,7 +38,7 @@ _TARGET_REWRITES = {
         "worldfoundry.synthesis.action_generation.diffusion_policy.modeling.unet"
     ),
     "diffusion_policy.model.diffusion.conv1d_components": (
-        "worldfoundry.synthesis.action_generation.diffusion_policy.modeling.convolution"
+        "worldfoundry.base_models.llm_mllm_core.action.diffusion_policy"
     ),
     "diffusion_policy.model.diffusion.positional_embedding": (
         "worldfoundry.synthesis.action_generation.diffusion_policy.modeling.embeddings"
@@ -49,6 +49,7 @@ _TARGET_REWRITES = {
 }
 
 _ALLOWED_HYDRA_TARGET_PREFIXES = (
+    "worldfoundry.base_models.llm_mllm_core.action.diffusion_policy.",
     "worldfoundry.synthesis.action_generation.diffusion_policy.modeling.",
     "diffusers.schedulers.",
 )
@@ -253,7 +254,9 @@ class DiffusionPolicyRuntime:
         import torch
         from omegaconf import OmegaConf
 
-        from worldfoundry.core.model_loading.checkpoints.file import load_torch_checkpoint
+        from worldfoundry.core.model_loading.checkpoints.file import (
+            load_torch_checkpoint,
+        )
 
         # Official workspace checkpoints use dill and can execute arbitrary code while
         # deserializing.  Runtime inference accepts only an offline-converted payload:

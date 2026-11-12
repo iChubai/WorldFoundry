@@ -6,8 +6,11 @@ action_model.py
 
 from torch import nn
 
-from . import diffusion as gd
-from .diffusion_factory import create_diffusion
+from worldfoundry.base_models.llm_mllm_core.action import cogact_diffusion as gd
+from worldfoundry.base_models.llm_mllm_core.action.cogact_diffusion import (
+    create_diffusion,
+)
+
 from .dit import DiT
 
 

@@ -1,15 +1,34 @@
-# Inference-only DB-CogACT source retained in-tree.
-# Modified from OpenAI's diffusion repos
-#     GLIDE: https://github.com/openai/glide-text2im/blob/main/glide_text2im/gaussian_diffusion.py
-#     ADM:   https://github.com/openai/guided-diffusion/blob/main/guided_diffusion
-#     IDDPM: https://github.com/openai/improved-diffusion/blob/main/improved_diffusion/gaussian_diffusion.py
+# SPDX-FileCopyrightText: 2026 OpenEnvision
+# SPDX-License-Identifier: Apache-2.0
+# Adapted from OpenAI guided-diffusion, improved-diffusion and GLIDE (MIT).
+# https://github.com/openai/guided-diffusion
+"""Canonical CogACT/DB-CogACT DDPM and DDIM inference sampling."""
 
+from __future__ import annotations
 
 import enum
 import math
+from collections.abc import Callable, Generator, Sequence
+from typing import Any
 
 import numpy as np
 import torch as th
+
+
+def _extract_into_tensor(arr: np.ndarray, timesteps: th.Tensor, broadcast_shape: tuple[int, ...]) -> th.Tensor:
+    """
+    Extract values from a 1-D numpy array for a batch of indices.
+    :param arr: the 1-D numpy array.
+    :param timesteps: a tensor of indices into the array to extract.
+    :param broadcast_shape: a larger shape of K dimensions with the batch
+                            dimension equal to the length of timesteps.
+    :return: a tensor of shape [batch_size, 1, ...] where the shape has K dims.
+    """
+    res = th.from_numpy(arr).to(device=timesteps.device)[timesteps].float()
+    while len(res.shape) < len(broadcast_shape):
+        res = res[..., None]
+    return res + th.zeros(broadcast_shape, device=timesteps.device)
+
 
 # diffusion utils
 
@@ -40,14 +59,16 @@ class ModelVarType(enum.Enum):
     LEARNED_RANGE = enum.auto()
 
 
-def _warmup_beta(beta_start, beta_end, num_diffusion_timesteps, warmup_frac):
+def _warmup_beta(beta_start: float, beta_end: float, num_diffusion_timesteps: int, warmup_frac: float) -> np.ndarray:
     betas = beta_end * np.ones(num_diffusion_timesteps, dtype=np.float64)
     warmup_time = int(num_diffusion_timesteps * warmup_frac)
     betas[:warmup_time] = np.linspace(beta_start, beta_end, warmup_time, dtype=np.float64)
     return betas
 
 
-def get_beta_schedule(beta_schedule, *, beta_start, beta_end, num_diffusion_timesteps):
+def get_beta_schedule(
+    beta_schedule: str, *, beta_start: float, beta_end: float, num_diffusion_timesteps: int
+) -> np.ndarray:
     """
     This is the deprecated API for creating beta schedules.
     See get_named_beta_schedule() for the new library of schedules.
@@ -78,7 +99,7 @@ def get_beta_schedule(beta_schedule, *, beta_start, beta_end, num_diffusion_time
     return betas
 
 
-def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
+def get_named_beta_schedule(schedule_name: str, num_diffusion_timesteps: int) -> np.ndarray:
     """
     Get a pre-defined beta schedule for the given name.
     The beta schedule library consists of beta schedules which remain similar
@@ -105,7 +126,9 @@ def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
         raise NotImplementedError(f"unknown beta schedule: {schedule_name}")
 
 
-def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
+def betas_for_alpha_bar(
+    num_diffusion_timesteps: int, alpha_bar: Callable[[float], float], max_beta: float = 0.999
+) -> np.ndarray:
     """
     Create a beta schedule that discretizes the given alpha_t_bar function,
     which defines the cumulative product of (1-beta) over time from t = [0,1].
@@ -133,13 +156,7 @@ class GaussianDiffusion:
                   starting at T and going to 1.
     """
 
-    def __init__(
-        self,
-        *,
-        betas,
-        model_mean_type,
-        model_var_type,
-    ):
+    def __init__(self, *, betas: np.ndarray, model_mean_type: ModelMeanType, model_var_type: ModelVarType) -> None:
         self.model_mean_type = model_mean_type
         self.model_var_type = model_var_type
 
@@ -177,7 +194,9 @@ class GaussianDiffusion:
         self.posterior_mean_coef1 = betas * np.sqrt(self.alphas_cumprod_prev) / (1.0 - self.alphas_cumprod)
         self.posterior_mean_coef2 = (1.0 - self.alphas_cumprod_prev) * np.sqrt(alphas) / (1.0 - self.alphas_cumprod)
 
-    def q_posterior_mean_variance(self, x_start, x_t, t):
+    def q_posterior_mean_variance(
+        self, x_start: th.Tensor, x_t: th.Tensor, t: th.Tensor
+    ) -> tuple[th.Tensor, th.Tensor, th.Tensor]:
         """
         Compute the mean and variance of the diffusion posterior:
             q(x_{t-1} | x_t, x_0)
@@ -201,7 +220,15 @@ class GaussianDiffusion:
         )
         return posterior_mean, posterior_variance, posterior_log_variance_clipped
 
-    def p_mean_variance(self, model, x, t, clip_denoised=True, denoised_fn=None, model_kwargs=None):
+    def p_mean_variance(
+        self,
+        model: Callable[..., th.Tensor],
+        x: th.Tensor,
+        t: th.Tensor,
+        clip_denoised: bool = True,
+        denoised_fn: Callable[[th.Tensor], th.Tensor] | None = None,
+        model_kwargs: dict[str, Any] | None = None,
+    ) -> dict[str, th.Tensor]:
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
         the initial x, x_0.
@@ -266,7 +293,7 @@ class GaussianDiffusion:
                 model_variance = _extract_into_tensor(model_variance, t, x.shape)
                 model_log_variance = _extract_into_tensor(model_log_variance, t, x.shape)
 
-        def process_xstart(x):
+        def process_xstart(x: th.Tensor) -> th.Tensor:
             if denoised_fn is not None:
                 x = denoised_fn(x)
             if clip_denoised:
@@ -288,19 +315,26 @@ class GaussianDiffusion:
             "extra": extra,
         }
 
-    def _predict_xstart_from_eps(self, x_t, t, eps):
+    def _predict_xstart_from_eps(self, x_t: th.Tensor, t: th.Tensor, eps: th.Tensor) -> th.Tensor:
         assert x_t.shape == eps.shape
         return (
             _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t
             - _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape) * eps
         )
 
-    def _predict_eps_from_xstart(self, x_t, t, pred_xstart):
+    def _predict_eps_from_xstart(self, x_t: th.Tensor, t: th.Tensor, pred_xstart: Any) -> th.Tensor:
         return (
             _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x_t.shape) * x_t - pred_xstart
         ) / _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x_t.shape)
 
-    def condition_mean(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
+    def condition_mean(
+        self,
+        cond_fn: Callable[..., th.Tensor] | None,
+        p_mean_var: dict[str, th.Tensor],
+        x: th.Tensor,
+        t: th.Tensor,
+        model_kwargs: dict[str, Any] | None = None,
+    ) -> th.Tensor:
         """
         Compute the mean for the previous step, given a function cond_fn that
         computes the gradient of a conditional log probability with respect to
@@ -312,7 +346,14 @@ class GaussianDiffusion:
         new_mean = p_mean_var["mean"].float() + p_mean_var["variance"] * gradient.float()
         return new_mean
 
-    def condition_score(self, cond_fn, p_mean_var, x, t, model_kwargs=None):
+    def condition_score(
+        self,
+        cond_fn: Callable[..., th.Tensor] | None,
+        p_mean_var: dict[str, th.Tensor],
+        x: th.Tensor,
+        t: th.Tensor,
+        model_kwargs: dict[str, Any] | None = None,
+    ) -> dict[str, th.Tensor]:
         """
         Compute what the p_mean_variance output would have been, should the
         model's score function be conditioned by cond_fn.
@@ -332,14 +373,14 @@ class GaussianDiffusion:
 
     def p_sample(
         self,
-        model,
-        x,
-        t,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-    ):
+        model: Callable[..., th.Tensor],
+        x: th.Tensor,
+        t: th.Tensor,
+        clip_denoised: bool = True,
+        denoised_fn: Callable[[th.Tensor], th.Tensor] | None = None,
+        cond_fn: Callable[..., th.Tensor] | None = None,
+        model_kwargs: dict[str, Any] | None = None,
+    ) -> dict[str, th.Tensor]:
         """
         Sample x_{t-1} from the model at the given timestep.
         :param model: the model to sample from.
@@ -373,16 +414,16 @@ class GaussianDiffusion:
 
     def p_sample_loop(
         self,
-        model,
-        shape,
-        noise=None,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        device=None,
-        progress=False,
-    ):
+        model: Callable[..., th.Tensor],
+        shape: tuple[int, ...],
+        noise: th.Tensor | None = None,
+        clip_denoised: bool = True,
+        denoised_fn: Callable[[th.Tensor], th.Tensor] | None = None,
+        cond_fn: Callable[..., th.Tensor] | None = None,
+        model_kwargs: dict[str, Any] | None = None,
+        device: th.device | str | None = None,
+        progress: bool = False,
+    ) -> th.Tensor:
         """
         Generate samples from the model.
         :param model: the model module.
@@ -418,16 +459,16 @@ class GaussianDiffusion:
 
     def p_sample_loop_progressive(
         self,
-        model,
-        shape,
-        noise=None,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        device=None,
-        progress=False,
-    ):
+        model: Callable[..., th.Tensor],
+        shape: tuple[int, ...],
+        noise: th.Tensor | None = None,
+        clip_denoised: bool = True,
+        denoised_fn: Callable[[th.Tensor], th.Tensor] | None = None,
+        cond_fn: Callable[..., th.Tensor] | None = None,
+        model_kwargs: dict[str, Any] | None = None,
+        device: th.device | str | None = None,
+        progress: bool = False,
+    ) -> Generator[dict[str, th.Tensor], None, None]:
         """
         Generate samples from the model and yield intermediate samples from
         each timestep of diffusion.
@@ -464,15 +505,15 @@ class GaussianDiffusion:
 
     def ddim_sample(
         self,
-        model,
-        x,
-        t,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        eta=0.0,
-    ):
+        model: Callable[..., th.Tensor],
+        x: th.Tensor,
+        t: th.Tensor,
+        clip_denoised: bool = True,
+        denoised_fn: Callable[[th.Tensor], th.Tensor] | None = None,
+        cond_fn: Callable[..., th.Tensor] | None = None,
+        model_kwargs: dict[str, Any] | None = None,
+        eta: float = 0.0,
+    ) -> dict[str, th.Tensor]:
         """
         Sample x_{t-1} from the model using DDIM.
         Same usage as p_sample().
@@ -502,56 +543,19 @@ class GaussianDiffusion:
         sample = mean_pred + nonzero_mask * sigma * noise
         return {"sample": sample, "pred_xstart": out["pred_xstart"]}
 
-    def ddim_reverse_sample(
-        self,
-        model,
-        x,
-        t,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        eta=0.0,
-    ):
-        """
-        Sample x_{t+1} from the model using DDIM reverse ODE.
-        """
-        assert eta == 0.0, "Reverse ODE only for deterministic path"
-        out = self.p_mean_variance(
-            model,
-            x,
-            t,
-            clip_denoised=clip_denoised,
-            denoised_fn=denoised_fn,
-            model_kwargs=model_kwargs,
-        )
-        if cond_fn is not None:
-            out = self.condition_score(cond_fn, out, x, t, model_kwargs=model_kwargs)
-        # Usually our model outputs epsilon, but we re-derive it
-        # in case we used x_start or x_prev prediction.
-        eps = (
-            _extract_into_tensor(self.sqrt_recip_alphas_cumprod, t, x.shape) * x - out["pred_xstart"]
-        ) / _extract_into_tensor(self.sqrt_recipm1_alphas_cumprod, t, x.shape)
-        alpha_bar_next = _extract_into_tensor(self.alphas_cumprod_next, t, x.shape)
-
-        # Equation 12. reversed
-        mean_pred = out["pred_xstart"] * th.sqrt(alpha_bar_next) + th.sqrt(1 - alpha_bar_next) * eps
-
-        return {"sample": mean_pred, "pred_xstart": out["pred_xstart"]}
-
     def ddim_sample_loop(
         self,
-        model,
-        shape,
-        noise=None,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        device=None,
-        progress=False,
-        eta=0.0,
-    ):
+        model: Callable[..., th.Tensor],
+        shape: tuple[int, ...],
+        noise: th.Tensor | None = None,
+        clip_denoised: bool = True,
+        denoised_fn: Callable[[th.Tensor], th.Tensor] | None = None,
+        cond_fn: Callable[..., th.Tensor] | None = None,
+        model_kwargs: dict[str, Any] | None = None,
+        device: th.device | str | None = None,
+        progress: bool = False,
+        eta: float = 0.0,
+    ) -> th.Tensor:
         """
         Generate samples from the model using DDIM.
         Same usage as p_sample_loop().
@@ -574,17 +578,17 @@ class GaussianDiffusion:
 
     def ddim_sample_loop_progressive(
         self,
-        model,
-        shape,
-        noise=None,
-        clip_denoised=True,
-        denoised_fn=None,
-        cond_fn=None,
-        model_kwargs=None,
-        device=None,
-        progress=False,
-        eta=0.0,
-    ):
+        model: Callable[..., th.Tensor],
+        shape: tuple[int, ...],
+        noise: th.Tensor | None = None,
+        clip_denoised: bool = True,
+        denoised_fn: Callable[[th.Tensor], th.Tensor] | None = None,
+        cond_fn: Callable[..., th.Tensor] | None = None,
+        model_kwargs: dict[str, Any] | None = None,
+        device: th.device | str | None = None,
+        progress: bool = False,
+        eta: float = 0.0,
+    ) -> Generator[dict[str, th.Tensor], None, None]:
         """
         Use DDIM to sample from the model and yield intermediate samples from
         each timestep of DDIM.
@@ -619,25 +623,10 @@ class GaussianDiffusion:
                 img = out["sample"]
 
 
-def _extract_into_tensor(arr, timesteps, broadcast_shape):
-    """
-    Extract values from a 1-D numpy array for a batch of indices.
-    :param arr: the 1-D numpy array.
-    :param timesteps: a tensor of indices into the array to extract.
-    :param broadcast_shape: a larger shape of K dimensions with the batch
-                            dimension equal to the length of timesteps.
-    :return: a tensor of shape [batch_size, 1, ...] where the shape has K dims.
-    """
-    res = th.from_numpy(arr).to(device=timesteps.device)[timesteps].float()
-    while len(res.shape) < len(broadcast_shape):
-        res = res[..., None]
-    return res + th.zeros(broadcast_shape, device=timesteps.device)
-
-
 # respace
 
 
-def space_timesteps(num_timesteps, section_counts):
+def space_timesteps(num_timesteps: int, section_counts: str | list[int]) -> set[int]:
     """
     Create a list of timesteps to use from an original diffusion process,
     given the number of timesteps we want to take from equally-sized portions
@@ -693,7 +682,7 @@ class SpacedDiffusion(GaussianDiffusion):
     :param kwargs: the kwargs to create the base diffusion process.
     """
 
-    def __init__(self, use_timesteps, **kwargs):
+    def __init__(self, use_timesteps: Sequence[int] | set[int], **kwargs: Any) -> None:
         self.use_timesteps = set(use_timesteps)
         self.timestep_map = []
         self.original_num_steps = len(kwargs["betas"])
@@ -709,33 +698,31 @@ class SpacedDiffusion(GaussianDiffusion):
         kwargs["betas"] = np.array(new_betas)
         super().__init__(**kwargs)
 
-    def p_mean_variance(self, model, *args, **kwargs):  # pylint: disable=signature-differs
+    def p_mean_variance(self, model: Callable[..., th.Tensor], *args: Any, **kwargs: Any) -> dict[str, th.Tensor]:
         return super().p_mean_variance(self._wrap_model(model), *args, **kwargs)
 
-    def condition_mean(self, cond_fn, *args, **kwargs):
+    def condition_mean(self, cond_fn: Callable[..., th.Tensor] | None, *args: Any, **kwargs: Any) -> th.Tensor:
         return super().condition_mean(self._wrap_model(cond_fn), *args, **kwargs)
 
-    def condition_score(self, cond_fn, *args, **kwargs):
+    def condition_score(
+        self, cond_fn: Callable[..., th.Tensor] | None, *args: Any, **kwargs: Any
+    ) -> dict[str, th.Tensor]:
         return super().condition_score(self._wrap_model(cond_fn), *args, **kwargs)
 
-    def _wrap_model(self, model):
+    def _wrap_model(self, model: Callable[..., th.Tensor]) -> _WrappedModel:
         if isinstance(model, _WrappedModel):
             return model
         return _WrappedModel(model, self.timestep_map, self.original_num_steps)
 
-    def _scale_timesteps(self, t):
-        # Scaling is done by the wrapped model.
-        return t
-
 
 class _WrappedModel:
-    def __init__(self, model, timestep_map, original_num_steps):
+    def __init__(self, model: Callable[..., th.Tensor], timestep_map: list[int], original_num_steps: int) -> None:
         self.model = model
         self.timestep_map = timestep_map
         # self.rescale_timesteps = rescale_timesteps
         self.original_num_steps = original_num_steps
 
-    def __call__(self, x, ts, **kwargs):
+    def __call__(self, x: th.Tensor, ts: th.Tensor, **kwargs: Any) -> th.Tensor:
         map_tensor = th.tensor(self.timestep_map, device=ts.device, dtype=ts.dtype)
         new_ts = map_tensor[ts]
         # if self.rescale_timesteps:
@@ -744,13 +731,13 @@ class _WrappedModel:
 
 
 def create_diffusion(
-    timestep_respacing,
-    noise_schedule="linear",
-    sigma_small=False,
-    predict_xstart=False,
-    learn_sigma=True,
-    diffusion_steps=1000,
-):
+    timestep_respacing: str | list[int] | None,
+    noise_schedule: str = "linear",
+    sigma_small: bool = False,
+    predict_xstart: bool = False,
+    learn_sigma: bool = True,
+    diffusion_steps: int = 1000,
+) -> SpacedDiffusion:
     betas = get_named_beta_schedule(noise_schedule, diffusion_steps)
     if timestep_respacing is None or timestep_respacing == "":
         timestep_respacing = [diffusion_steps]

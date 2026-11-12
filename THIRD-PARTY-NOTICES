@@ -7027,3 +7027,14 @@ reuse inference components from Robbyant/lingbot-vla at
 Tencent-Hunyuan/HY-Embodied. These sources are Apache-2.0. The task-token
 resampler uses the existing canonical LVDM/IP-Adapter Perceiver attention
 and OpenFlamingo-derived FFN, retaining their upstream attribution.
+
+Shared Diffusion Policy and CogACT inference components
+-----------------------------------------------------
+worldfoundry/base_models/llm_mllm_core/action/diffusion_policy.py retains the
+MIT-licensed action convolution and normalizer components from Cheng Chi's
+Diffusion Policy (real-stanford/diffusion_policy,
+5ba07ac6661db573af695b419a7947ecb704690f), also used by RoboFlamingo and TinyVLA.
+action/cogact.py and action/cogact_diffusion.py retain the CogACT/DiT and
+OpenAI GLIDE/guided-diffusion/improved-diffusion attribution and MIT terms.
+CogACT and DB-CogACT reuse their checkpoint-compatible inference leaves and
+sampling process. Meta Platforms' DiT copyright is retained in the source.

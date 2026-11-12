@@ -45,6 +45,8 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/runtime/test_junit_contract_validator.py \
 	tests/core/test_repository_policies.py \
 	tests/scripts/test_pr_checks.py \
+	tests/scripts/test_model_env_install_shell_compatibility.py \
+	tests/runtime/test_conda_setup_commands.py \
 	tests/core/test_docs_toolchain.py \
 	tests/core/test_agent_skills.py \
 	tests/core/test_inference_validation_guidance.py \

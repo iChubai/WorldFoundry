@@ -118,6 +118,7 @@ class RuntimeCondaEnvSpec:
         driver_status: Driver compatibility classification string.
         conda_packages: Conda package specification strings.
         pip_packages: Pip package specification strings.
+        setup_commands: Shell commands run in the environment after installing dependencies.
         pip_extra_index_url: Optional alternate pip index URL for CUDA wheels.
         pip_find_links: Optional pip find-links pages for wheels published outside the simple index API.
         channels: Conda channel names for package resolution.
@@ -136,6 +137,7 @@ class RuntimeCondaEnvSpec:
     driver_status: str = "compatible"
     conda_packages: tuple[str, ...] = ()
     pip_packages: tuple[str, ...] = ()
+    setup_commands: tuple[str, ...] = ()
     pip_extra_index_url: str | None = None
     pip_find_links: tuple[str, ...] = ()
     channels: tuple[str, ...] = ()
@@ -194,6 +196,7 @@ class RuntimeCondaEnvSpec:
             "exists": self.exists if check_exists else False,
             "conda_packages": list(self.conda_packages),
             "pip_packages": list(self.pip_packages),
+            **({"setup_commands": list(self.setup_commands)} if self.setup_commands else {}),
             "pip_extra_index_url": self.pip_extra_index_url,
             "pip_find_links": list(self.pip_find_links),
             "channels": list(self.channels),
@@ -384,6 +387,7 @@ def _load_runtime_conda_env_specs_uncached(
             driver_status=str(item.get("driver_status") or "compatible"),
             conda_packages=_tuple_of_str(item.get("conda_packages")),
             pip_packages=_tuple_of_str(item.get("pip_packages")),
+            setup_commands=_tuple_of_str(item.get("setup_commands")),
             pip_extra_index_url=None if pip_extra_index is None else str(pip_extra_index),
             pip_find_links=_tuple_of_str(item.get("pip_find_links") or item.get("pip_find_links_url")),
             channels=_tuple_of_str(item.get("channels")) or default_channels,
@@ -484,6 +488,7 @@ def apply_unified_env_override(
         driver_status=spec.driver_status,
         conda_packages=spec.conda_packages,
         pip_packages=spec.pip_packages,
+        setup_commands=spec.setup_commands,
         pip_extra_index_url=spec.pip_extra_index_url,
         pip_find_links=spec.pip_find_links,
         channels=spec.channels,

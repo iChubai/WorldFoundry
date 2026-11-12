@@ -11,8 +11,9 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.actio
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.causal_action_21 import (
     CausalWanModel,
 )
+from worldfoundry.core.nn.diffusion.schedulers import SchedulerInterface
 
-from .scheduler import FlowMatchScheduler, SchedulerInterface
+from .scheduler import FlowMatchScheduler
 
 
 class WanVAEWrapper(torch.nn.Module):  # todo

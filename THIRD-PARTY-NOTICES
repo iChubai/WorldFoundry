@@ -6998,3 +6998,13 @@ Source: https://github.com/Robbyant/lingbot-world (CC-BY-NC-SA-4.0)
 File: worldfoundry/synthesis/visual_generation/lingbot_world/lingbot_world_runtime/utils/cam_utils.py
 The optional direction-only branch retains LingBot's license locally and reuses
 the Apache camera geometry helpers for the common ray computation.
+
+Device-coefficient flow UniPC
+----------------------------
+Source: https://github.com/huggingface/diffusers/blob/v0.31.0/src/diffusers/schedulers/scheduling_unipc_multistep.py
+        https://github.com/Wan-Video/Wan2.1 (Apache License 2.0)
+Files: worldfoundry/base_models/diffusion_model/schedulers/flow_unipc_device.py
+       worldfoundry/base_models/diffusion_model/schedulers/flow_unipc_compat.py
+The device-coefficient variant reuses the native flow_unipc solver math. Its
+Diffusers adapter preserves scheduler-config serialization and SchedulerOutput.
+The original UniPC/Wan attribution and Apache license are retained in this bundle.

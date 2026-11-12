@@ -149,6 +149,18 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         self.sigma_min = self.sigmas[-1].item()
         self.sigma_max = self.sigmas[0].item()
 
+    def _coefficient_ratios(self, rks: list[torch.Tensor], h: torch.Tensor, device: torch.device) -> torch.Tensor:
+        rks.append(torch.ones_like(h))
+        return torch.stack(rks).to(device="cpu")
+
+    def _coefficient_rhs(self, values: list[torch.Tensor], device: torch.device) -> torch.Tensor:
+        return torch.stack(values).to(device="cpu")
+
+    def _solve_coefficients(
+        self, matrix: torch.Tensor, rhs: torch.Tensor, *, device: torch.device, dtype: torch.dtype
+    ) -> torch.Tensor:
+        return _solve_small_system_on_cpu(matrix, rhs, device=device, dtype=dtype)
+
     @property
     def step_index(self):
         """
@@ -444,8 +456,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             rks.append(rk)
             D1s.append((mi - m0) / rk)  # pyright: ignore
 
-        rks.append(torch.ones_like(h))
-        rks = torch.stack(rks).to(device="cpu")
+        rks = self._coefficient_ratios(rks, h, device)
 
         R = []
         b = []
@@ -470,7 +481,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             h_phi_k = h_phi_k / hh - 1 / factorial_i
 
         R = torch.stack(R)
-        b = torch.stack(b).to(device="cpu")
+        b = self._coefficient_rhs(b, device)
 
         if len(D1s) > 0:
             D1s = torch.stack(D1s, dim=1)  # (B, K)
@@ -478,7 +489,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             if order == 2:
                 rhos_p = torch.tensor([0.5], dtype=x.dtype, device=device)
             else:
-                rhos_p = _solve_small_system_on_cpu(
+                rhos_p = self._solve_coefficients(
                     R[:-1, :-1],
                     b[:-1],
                     device=device,
@@ -589,8 +600,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             rks.append(rk)
             D1s.append((mi - m0) / rk)  # pyright: ignore
 
-        rks.append(torch.ones_like(h))
-        rks = torch.stack(rks).to(device="cpu")
+        rks = self._coefficient_ratios(rks, h, device)
 
         R = []
         b = []
@@ -615,7 +625,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
             h_phi_k = h_phi_k / hh - 1 / factorial_i
 
         R = torch.stack(R)
-        b = torch.stack(b).to(device="cpu")
+        b = self._coefficient_rhs(b, device)
 
         D1s = torch.stack(D1s, dim=1) if len(D1s) > 0 else None
 
@@ -623,7 +633,7 @@ class FlowUniPCMultistepScheduler(NativeSchedulerMixin):
         if order == 1:
             rhos_c = torch.tensor([0.5], dtype=x.dtype, device=device)
         else:
-            rhos_c = _solve_small_system_on_cpu(
+            rhos_c = self._solve_coefficients(
                 R,
                 b,
                 device=device,

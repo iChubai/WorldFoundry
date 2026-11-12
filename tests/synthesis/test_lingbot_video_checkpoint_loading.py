@@ -13,12 +13,12 @@ from diffusers.configuration_utils import ConfigMixin
 from diffusers.models.modeling_utils import ModelMixin
 from diffusers.pipelines import pipeline_utils
 
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc_compat import FlowUniPCMultistepScheduler
 from worldfoundry.synthesis.visual_generation.lingbot_video import runner
 from worldfoundry.synthesis.visual_generation.lingbot_video.pipeline_lingbot_video import LingBotVideoPipeline
 from worldfoundry.synthesis.visual_generation.lingbot_video.pipeline_lingbot_video_i2v import (
     LingBotVideoImageToVideoPipeline,
 )
-from worldfoundry.synthesis.visual_generation.lingbot_video.scheduling_flow_unipc import FlowUniPCMultistepScheduler
 from worldfoundry.synthesis.visual_generation.lingbot_video.transformer_lingbot_video import (
     LingBotVideoTransformer3DModel,
 )
@@ -30,27 +30,32 @@ pytestmark = pytest.mark.unit
 # at f2e538f64afe00cc4ae674db2aeb52e2945edfd5.
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "lingbot_video"
 PACKAGE = "worldfoundry.synthesis.visual_generation.lingbot_video"
+SCHEDULER_MODULE = "worldfoundry.base_models.diffusion_model.schedulers.flow_unipc_compat"
 
 
+@pytest.mark.parametrize("legacy_prefix", ["lingbot_video", PACKAGE])
 @pytest.mark.parametrize("pipeline_class", [LingBotVideoPipeline, LingBotVideoImageToVideoPipeline])
 def test_lingbot_video_maps_released_component_names_without_changing_the_index(
     pipeline_class: type[LingBotVideoPipeline],
+    legacy_prefix: str,
 ) -> None:
     original = (FIXTURES / "model_index.json").read_text()
     config = json.loads(original)
+    config["scheduler"][0] = f"{legacy_prefix}.scheduling_flow_unipc"
+    original_config = json.dumps(config, sort_keys=True)
 
     components, unused, hidden = pipeline_class.extract_init_dict(config)
 
     assert components == {
         "transformer": [f"{PACKAGE}.transformer_lingbot_video", "LingBotVideoTransformer3DModel"],
-        "scheduler": [f"{PACKAGE}.scheduling_flow_unipc", "FlowUniPCMultistepScheduler"],
+        "scheduler": [SCHEDULER_MODULE, "FlowUniPCMultistepScheduler"],
         "vae": ["diffusers", "AutoencoderKLWan"],
         "text_encoder": ["transformers", "Qwen3VLForConditionalGeneration"],
         "processor": ["transformers", "Qwen3VLProcessor"],
     }
     assert unused == {}
     assert hidden["_class_name"] == "LingBotVideoPipeline"
-    assert config == json.loads(original)
+    assert json.dumps(config, sort_keys=True) == original_config
 
 
 class _AuxiliaryModel(ModelMixin, ConfigMixin):
@@ -63,12 +68,15 @@ class _Processor:
     """Weight-free processor stand-in for the component-loading contract."""
 
 
+@pytest.mark.parametrize("legacy_prefix", ["lingbot_video", PACKAGE])
 @pytest.mark.parametrize("mode", ["t2v", "ti2v"])
 @pytest.mark.parametrize("defer_transformer", [False, True])
 def test_lingbot_video_loads_packaged_components_without_namespace_aliases(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mode: str, defer_transformer: bool
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mode: str, defer_transformer: bool, legacy_prefix: str
 ) -> None:
-    index = (FIXTURES / "model_index.json").read_bytes()
+    config = json.loads((FIXTURES / "model_index.json").read_text())
+    config["scheduler"][0] = f"{legacy_prefix}.scheduling_flow_unipc"
+    index = json.dumps(config).encode()
     (tmp_path / "model_index.json").write_bytes(index)
     scheduler_dir = tmp_path / "scheduler"
     scheduler_dir.mkdir()
@@ -129,7 +137,7 @@ def test_lingbot_video_loads_packaged_components_without_namespace_aliases(
     assert pipe.text_encoder is auxiliary["text_encoder"]
     assert pipe.processor is auxiliary["processor"]
     assert loaded == {
-        "scheduler": (f"{PACKAGE}.scheduling_flow_unipc", "FlowUniPCMultistepScheduler", torch.float32),
+        "scheduler": (SCHEDULER_MODULE, "FlowUniPCMultistepScheduler", torch.float32),
         "vae": ("diffusers", "AutoencoderKLWan", torch.float32),
         "text_encoder": ("transformers", "Qwen3VLForConditionalGeneration", torch.bfloat16),
         "processor": ("transformers", "Qwen3VLProcessor", torch.float32),

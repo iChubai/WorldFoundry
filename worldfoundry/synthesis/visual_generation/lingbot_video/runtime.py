@@ -33,7 +33,6 @@ REQUIRED_RUNTIME_FILES = (
     "pipeline_lingbot_video.py",
     "pipeline_lingbot_video_i2v.py",
     "transformer_lingbot_video.py",
-    "scheduling_flow_unipc.py",
     "utils.py",
 )
 

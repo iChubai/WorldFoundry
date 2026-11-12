@@ -2,25 +2,36 @@
 # Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
 # Copyright 2026 SolarWM Contributors.
 #
-# Modified from the Wan 2.2 architecture (see model.py in this directory, from
-# which WanRMSNorm, WanLayerNorm, WanCrossAttention, rope_params and
-# sinusoidal_embedding_1d are imported). Changes by SolarWM: causal attention
+# Modified from the Wan 2.2 architecture. Changes by SolarWM: causal attention
 # over chunked history, camera conditioning through PRoPE, and the
 # sequence-parallel paths the causal routes need.
 import copy
 import math
 import os
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import torch
 import torch.nn as nn
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.mixins import WanTransformerMethodsMixin
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_22 import (
+    rope_params,
+    sinusoidal_embedding_1d,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.moverse.causal import CausalHead
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.moverse.normalization import WanLayerNorm
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.solarwm import (
+    SolarWanAttentionProjections,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.solarwm import (
+    SolarWanRMSNorm as WanRMSNorm,
+)
+
 from ..camera import normalize_camera_translation_transform
-from .attention import attention
+from .attention import attention, flash_attention
 from .camera_prope import prope_qkv, prope_qkv_separate
-from .model import WanCrossAttention, WanLayerNorm, WanRMSNorm, rope_params, sinusoidal_embedding_1d
 
 # Lazily-imported FlexAttention symbols. Some torch builds don't ship
 # torch.nn.attention.flex_attention; we only require it when stage1 TF mode
@@ -511,7 +522,51 @@ def build_inference_window_block_mask(
     return block_mask, padded_length
 
 
-class CausalWanSelfAttention(nn.Module):
+class WanCrossAttention(SolarWanAttentionProjections):
+    """Solar FlashAttention dispatch with request-owned text keys and values."""
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        context: torch.Tensor,
+        context_lens: torch.Tensor | None,
+        crossattn_cache: dict[str, Any] | None = None,
+    ) -> torch.Tensor:
+        r"""
+        Args:
+            x(Tensor): Shape [B, L1, C]
+            context(Tensor): Shape [B, L2, C]
+            context_lens(Tensor): Shape [B]
+        """
+        b, n, d = x.size(0), self.num_heads, self.head_dim
+
+        # compute query, key, value
+        q = self.norm_q(self.q(x)).view(b, -1, n, d)
+
+        if crossattn_cache is not None:
+            if not crossattn_cache["is_init"]:
+                crossattn_cache["is_init"] = True
+                k = self.norm_k(self.k(context)).view(b, -1, n, d)
+                v = self.v(context).view(b, -1, n, d)
+                crossattn_cache["k"] = k
+                crossattn_cache["v"] = v
+            else:
+                k = crossattn_cache["k"]
+                v = crossattn_cache["v"]
+        else:
+            k = self.norm_k(self.k(context)).view(b, -1, n, d)
+            v = self.v(context).view(b, -1, n, d)
+
+        # compute attention
+        x = flash_attention(q, k, v, k_lens=context_lens)
+
+        # output
+        x = x.flatten(2)
+        x = self.o(x)
+        return x
+
+
+class CausalWanSelfAttention(SolarWanAttentionProjections):
     """Self-attention with selectable Wan RoPE and optional fused camera PRoPE."""
 
     def __init__(
@@ -528,15 +583,9 @@ class CausalWanSelfAttention(nn.Module):
         camera_attention_mode="parallel",
         camera_translation_transform="linear",
     ):
-        assert dim % num_heads == 0
-        super().__init__()
-        self.dim = dim
-        self.num_heads = num_heads
-        self.head_dim = dim // num_heads
+        super().__init__(dim, num_heads, qk_norm=qk_norm, eps=eps)
         self.local_attn_size = local_attn_size
         self.sink_size = sink_size
-        self.qk_norm = qk_norm
-        self.eps = eps
         self.frame_seq_length = frame_seq_length
         self.rope_train_frames = None if rope_train_frames is None else int(rope_train_frames)
         if self.rope_train_frames is not None and self.rope_train_frames <= 0:
@@ -546,12 +595,6 @@ class CausalWanSelfAttention(nn.Module):
         self.camera_translation_transform = normalize_camera_translation_transform(camera_translation_transform)
         self.max_attention_size = 39600 if local_attn_size == -1 else local_attn_size * frame_seq_length
 
-        self.q = nn.Linear(dim, dim)
-        self.k = nn.Linear(dim, dim)
-        self.v = nn.Linear(dim, dim)
-        self.o = nn.Linear(dim, dim)
-        self.norm_q = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
-        self.norm_k = WanRMSNorm(dim, eps=eps) if qk_norm else nn.Identity()
         self.num_frame_per_block_attr = 3
         self.layer_idx = -1
 
@@ -1591,27 +1634,7 @@ class CausalWanAttentionBlock(nn.Module):
         return x, cache_update_info
 
 
-class CausalHead(nn.Module):
-    def __init__(self, dim, out_dim, patch_size, eps=1e-6):
-        super().__init__()
-        self.dim = dim
-        self.out_dim = out_dim
-        self.patch_size = patch_size
-        self.eps = eps
-
-        out_dim = math.prod(patch_size) * out_dim
-        self.norm = WanLayerNorm(dim, eps)
-        self.head = nn.Linear(dim, out_dim)
-        self.modulation = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
-
-    def forward(self, x, e):
-        num_frames, frame_seqlen = e.shape[1], x.shape[1] // e.shape[1]
-        e = (self.modulation.unsqueeze(1) + e).chunk(2, dim=2)
-        x = self.head(self.norm(x).unflatten(dim=1, sizes=(num_frames, frame_seqlen)) * (1 + e[1]) + e[0])
-        return x
-
-
-class CausalWanModel(ModelMixin, ConfigMixin):
+class CausalWanModel(WanTransformerMethodsMixin, ModelMixin, ConfigMixin):
     """Wan diffusion backbone for causal camera-controlled training and inference."""
 
     ignore_for_config: ClassVar[list[str]] = ["patch_size", "cross_attn_norm", "qk_norm", "text_dim"]
@@ -2705,32 +2728,3 @@ class CausalWanModel(ModelMixin, ConfigMixin):
                 if not is_recompute:
                     kv_cache[block_index]["global_end_index"].fill_(current_end)
                     kv_cache[block_index]["local_end_index"].fill_(local_end_index)
-
-    def unpatchify(self, x, grid_sizes):
-        """Reconstruct video tensors from patch embeddings."""
-        c = self.out_dim
-        out = []
-        for u, v in zip(x, grid_sizes.tolist(), strict=False):
-            u = u[: math.prod(v)].view(*v, *self.patch_size, c)
-            u = torch.einsum("fhwpqrc->cfphqwr", u)
-            u = u.reshape(c, *[i * j for i, j in zip(v, self.patch_size, strict=False)])
-            out.append(u)
-        return out
-
-    def init_weights(self):
-        """Initialize model parameters using Xavier initialization."""
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
-                if m.bias is not None:
-                    nn.init.zeros_(m.bias)
-
-        nn.init.xavier_uniform_(self.patch_embedding.weight.flatten(1))
-        for m in self.text_embedding.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, std=0.02)
-        for m in self.time_embedding.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, std=0.02)
-
-        nn.init.zeros_(self.head.head.weight)

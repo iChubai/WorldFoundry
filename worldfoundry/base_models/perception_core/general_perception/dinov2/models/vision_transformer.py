@@ -17,6 +17,12 @@ import torch.nn as nn
 import torch.utils.checkpoint
 from torch.nn.init import trunc_normal_
 
+from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.construction import (
+    BlockChunk as BlockChunk,
+)
+from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.construction import (
+    init_weights_vit_timm as init_weights_vit_timm,
+)
 from worldfoundry.core.nn.blocks.layers import Mlp, PatchEmbed, SwiGLUFFNFused
 from worldfoundry.core.nn.blocks.module_utils import named_apply
 
@@ -24,13 +30,6 @@ from ..layers import MemEffAttention
 from ..layers import NestedTensorBlock as Block
 
 logger = logging.getLogger("dinov2")
-
-
-class BlockChunk(nn.ModuleList):
-    def forward(self, x):
-        for b in self:
-            x = b(x)
-        return x
 
 
 class DinoVisionTransformer(nn.Module):
@@ -330,14 +329,6 @@ class DinoVisionTransformer(nn.Module):
             return ret
         else:
             return self.head(ret["x_norm_clstoken"])
-
-
-def init_weights_vit_timm(module: nn.Module, name: str = ""):
-    """ViT weight initialization, original timm impl (for reproducibility)"""
-    if isinstance(module, nn.Linear):
-        trunc_normal_(module.weight, std=0.02)
-        if module.bias is not None:
-            nn.init.zeros_(module.bias)
 
 
 def vit_small(patch_size=16, num_register_tokens=0, **kwargs):

@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
-from .model_misc import LayerScale
+from worldfoundry.core.nn.blocks.layers import LayerScale
 
 
 class ResidualAttentionBlock(nn.Module):

@@ -12,6 +12,7 @@ from torch import nn
 from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import Normalize
 from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention import GEGLU
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
 
 SDP_IS_AVAILABLE = callable(getattr(F, "scaled_dot_product_attention", None))
 if not SDP_IS_AVAILABLE:
@@ -56,16 +57,6 @@ class FeedForward(nn.Module):
 
     def forward(self, x):
         return self.net(x)
-
-
-def zero_module(module):
-    """
-    Zero out the parameters of a module and return it.
-    """
-
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
 
 
 class CrossAttention(nn.Module):  # Not used, never mind

@@ -8,6 +8,7 @@ from torch.nn import functional as F
 from torch.utils.checkpoint import checkpoint
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn.blocks.layers import LayerScale as LayerScale
 
 from .pos_embed import get_2d_sincos_pos_embed
 from .utils import feature_take_indices, to_2tuple
@@ -35,16 +36,6 @@ class QuickGELU(nn.Module):
     # NOTE This is slower than nn.GELU or nn.SiLU and uses more GPU memory
     def forward(self, x: torch.Tensor):
         return x * torch.sigmoid(1.702 * x)
-
-
-class LayerScale(nn.Module):
-    def __init__(self, dim, init_values=1e-5, inplace=False):
-        super().__init__()
-        self.inplace = inplace
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x):
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class PatchDropout(nn.Module):

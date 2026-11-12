@@ -77,7 +77,6 @@ from worldfoundry.base_models.perception_core.general_perception.uniception.unic
 )
 from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.utils.transformer_blocks import (
     Mlp,
-    SwiGLUFFNFused,
 )
 from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.device import (
     empty_cache,
@@ -96,6 +95,7 @@ from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanythin
     preprocess_input_views_for_inference,
     validate_input_views_for_inference,
 )
+from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused
 
 # Enable TF32 precision if supported (for GPU >= Ampere and PyTorch >= 1.12)
 if hasattr(torch.backends.cuda, "matmul") and hasattr(torch.backends.cuda.matmul, "allow_tf32"):

@@ -3,12 +3,7 @@ import torch.nn.functional as F
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from torch import nn
 
-
-def zero_module(module):
-    # Zero out the parameters of a module and return it.
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
 
 
 class FP32LayerNorm(nn.LayerNorm):

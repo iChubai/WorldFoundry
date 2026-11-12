@@ -14,9 +14,7 @@
 
 # Modified from: https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py#L103-L110
 
-from collections.abc import Callable
 
-import torch
 from torch import Tensor, nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
@@ -66,46 +64,4 @@ class Attention(nn.Module):
         x = x.transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
-        return x
-
-
-class LayerScale(nn.Module):
-    def __init__(
-        self,
-        dim: int,
-        init_values: float | Tensor = 1e-5,
-        inplace: bool = False,
-    ) -> None:
-        super().__init__()
-        self.inplace = inplace
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x: Tensor) -> Tensor:
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
-
-
-class Mlp(nn.Module):
-    def __init__(
-        self,
-        in_features: int,
-        hidden_features: int | None = None,
-        out_features: int | None = None,
-        act_layer: Callable[..., nn.Module] = nn.GELU,
-        drop: float = 0.0,
-        bias: bool = True,
-    ) -> None:
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features, bias=bias)
-        self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features, bias=bias)
-        self.drop = nn.Dropout(drop)
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
         return x

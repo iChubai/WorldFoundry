@@ -39,16 +39,6 @@ def timestep_embedding(timesteps, dim, max_period=10000, repeat_only=False):
     return embedding
 
 
-def zero_module(module):
-    """
-    Zero out the parameters of a module and return it.
-    """
-
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
-
-
 def scale_module(module, scale):
     """
     Scale the parameters of a module and return it.

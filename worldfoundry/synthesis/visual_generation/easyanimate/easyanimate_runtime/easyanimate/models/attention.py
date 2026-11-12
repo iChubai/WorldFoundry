@@ -32,6 +32,8 @@ from diffusers.utils.torch_utils import maybe_allow_in_graph
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
+
 from .motion_module import PositionalEncoding, get_motion_module
 from .norm import AdaLayerNormShift, EasyAnimateLayerNormZero, FP32LayerNorm
 from .processor import EasyAnimateAttnProcessor2_0, EasyAnimateSWAttnProcessor2_0, LazyKVCompressionProcessor2_0
@@ -41,13 +43,6 @@ if is_xformers_available():
     import xformers.ops
 else:
     xformers = None
-
-
-def zero_module(module):
-    # Zero out the parameters of a module and return it.
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
 
 
 @maybe_allow_in_graph

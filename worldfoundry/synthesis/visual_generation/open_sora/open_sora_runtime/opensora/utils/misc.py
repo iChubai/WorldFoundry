@@ -1,15 +1,15 @@
-import collections
 import importlib
 import logging
 import os
 import time
 from collections import OrderedDict
 from collections.abc import Sequence
-from itertools import repeat
 
 import numpy as np
 import torch
 import torch.distributed as dist
+
+from worldfoundry.core.nn.blocks.tuples import ntuple as _ntuple
 
 # ======================================================
 # Logging
@@ -239,15 +239,6 @@ def to_torch_dtype(dtype):
         return dtype
     else:
         raise ValueError
-
-
-def _ntuple(n):
-    def parse(x):
-        if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
-            return x
-        return tuple(repeat(x, n))
-
-    return parse
 
 
 to_1tuple = _ntuple(1)

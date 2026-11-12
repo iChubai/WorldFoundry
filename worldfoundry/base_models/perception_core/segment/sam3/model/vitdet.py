@@ -31,13 +31,14 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc impor
 # isort: split
 from torch import Tensor
 
-from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import AttentionType, LayerScale
+from worldfoundry.base_models.perception_core.segment.sam3.model.model_misc import AttentionType
 from worldfoundry.base_models.perception_core.segment.sam3.perflib.fused import addmm_act
 from worldfoundry.base_models.perception_core.segment.sam3.sam.rope import (
     VisionRotaryEmbeddingVE,
     apply_rotary_enc_real,
 )
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn.blocks.layers import LayerScale
 
 
 class Mlp(nn.Module):

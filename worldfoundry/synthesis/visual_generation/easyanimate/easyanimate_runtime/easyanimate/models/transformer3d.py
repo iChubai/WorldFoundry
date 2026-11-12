@@ -40,13 +40,13 @@ from torch import nn
 
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.beingh.qwen2.modeling_qwen2 import Qwen2RMSNorm
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
+from worldfoundry.core.nn.blocks.layers import zero_module
 
 from .attention import (
     EasyAnimateDiTBlock,
     HunyuanDiTBlock,
     SelfAttentionTemporalTransformerBlock,
     TemporalTransformerBlock,
-    zero_module,
 )
 from .embeddings import HunyuanCombinedTimestepTextSizeStyleEmbedding, TimePositionalEncoding
 from .hf_loading import resolve_pretrained_subfolder

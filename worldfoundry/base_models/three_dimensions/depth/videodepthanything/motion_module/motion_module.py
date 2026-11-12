@@ -10,19 +10,14 @@ import torch.nn.functional as F
 from einops import rearrange, repeat
 from torch import nn
 
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
+
 from .attention import (
     CrossAttention,
     FeedForward,
     apply_rotary_emb,
     precompute_freqs_cis,
 )
-
-
-def zero_module(module):
-    # Zero out the parameters of a module and return it.
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
 
 
 class TemporalModule(nn.Module):

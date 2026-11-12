@@ -12,12 +12,13 @@ from collections.abc import Callable
 from typing import Any
 
 import torch
+from timm.layers import DropPath as DropPath
 from torch import Tensor, nn
 
+from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
+
 from .attention import Attention, MemEffAttention
-from .drop_path import DropPath
 from .layer_scale import LayerScale
-from .mlp import Mlp
 
 XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
 try:

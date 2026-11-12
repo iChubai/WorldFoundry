@@ -6,6 +6,8 @@ import diffusers
 import pkg_resources
 import torch
 
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
+
 installed_version = diffusers.__version__
 
 if pkg_resources.parse_version(installed_version) >= pkg_resources.parse_version("0.28.2"):
@@ -25,13 +27,6 @@ if is_xformers_available():
     import xformers.ops
 else:
     xformers = None
-
-
-def zero_module(module):
-    # Zero out the parameters of a module and return it.
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
 
 
 def get_motion_module(

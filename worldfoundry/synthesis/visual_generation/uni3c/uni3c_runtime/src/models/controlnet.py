@@ -4,15 +4,10 @@ import torch.nn.functional as F
 from diffusers.models import ModelMixin
 from diffusers.models.attention_processor import Attention
 
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
+
 from ..xfuser_compat import long_context_attention
 from .rotary_compat import apply_rotary_embedding_bhld
-
-
-def zero_module(module):
-    # Zero out the parameters of a module and return it.
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
 
 
 class WanAttnProcessorSP:

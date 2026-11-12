@@ -12,6 +12,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
+from worldfoundry.core.nn.blocks.layers import LayerScale as LayerScale
+
 from .utils.misc import default
 
 
@@ -189,21 +191,6 @@ class CvnxtBlock(nn.Module):
         x = self.gamma * x
         x = input + x.permute(0, 3, 1, 2)  # (N, H, W, C) -> (N, C, H, W)
         return x
-
-
-class LayerScale(nn.Module):
-    def __init__(
-        self,
-        dim: int,
-        init_values: float | torch.Tensor = 1e-5,
-        inplace: bool = False,
-    ) -> None:
-        super().__init__()
-        self.inplace = inplace
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class MLP(nn.Module):

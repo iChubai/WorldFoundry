@@ -13,13 +13,7 @@ from einops import rearrange, repeat
 from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet import (
     InflatedConv3d,
 )
-
-
-def zero_module(module):
-    # Zero out the parameters of a module and return it.
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
 
 
 class FusionBlock2D(nn.Module):

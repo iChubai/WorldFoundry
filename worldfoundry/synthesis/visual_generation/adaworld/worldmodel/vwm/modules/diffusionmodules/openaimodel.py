@@ -7,11 +7,12 @@ import torch.nn.functional as F
 from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.networks.lvdm.unet3d import TimestepBlock
+from worldfoundry.core.nn.blocks.layers import zero_module
 from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.video_attention import (
     SpatialVideoTransformer,
 )
 
-from .util import avg_pool_nd, conv_nd, linear, normalization, timestep_embedding, zero_module
+from .util import avg_pool_nd, conv_nd, linear, normalization, timestep_embedding
 
 
 class TimestepEmbedSequential(nn.Sequential, TimestepBlock):

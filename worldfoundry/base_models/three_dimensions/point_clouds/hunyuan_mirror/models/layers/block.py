@@ -9,6 +9,11 @@ import torch
 from torch import Tensor, nn
 
 from worldfoundry.core.nn import DropPath, LayerScale, Mlp
+from worldfoundry.core.nn.blocks.stochastic_depth import add_residual as add_residual
+from worldfoundry.core.nn.blocks.stochastic_depth import (
+    drop_add_residual_stochastic_depth as drop_add_residual_stochastic_depth,
+)
+from worldfoundry.core.nn.blocks.stochastic_depth import get_branges_scales as get_branges_scales
 
 from .attention import Attention
 
@@ -91,53 +96,6 @@ class Block(nn.Module):
             x = x + attn_residual_func(x, pos=pos)
             x = x + ffn_residual_func(x)
         return x
-
-
-def drop_add_residual_stochastic_depth(
-    x: Tensor, residual_func: Callable[[Tensor], Tensor], sample_drop_ratio: float = 0.0, pos=None
-) -> Tensor:
-    # 1) extract subset using permutation
-    b, n, d = x.shape
-    sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
-    brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
-    x_subset = x[brange]
-
-    # 2) apply residual_func to get residual
-    if pos is not None:
-        # if necessary, apply rope to the subset
-        pos = pos[brange]
-        residual = residual_func(x_subset, pos=pos)
-    else:
-        residual = residual_func(x_subset)
-
-    x_flat = x.flatten(1)
-    residual = residual.flatten(1)
-
-    residual_scale_factor = b / sample_subset_size
-
-    # 3) add the residual
-    x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
-    return x_plus_residual.view_as(x)
-
-
-def get_branges_scales(x, sample_drop_ratio=0.0):
-    b, n, d = x.shape
-    sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
-    brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
-    residual_scale_factor = b / sample_subset_size
-    return brange, residual_scale_factor
-
-
-def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None):
-    if scaling_vector is None:
-        x_flat = x.flatten(1)
-        residual = residual.flatten(1)
-        x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
-    else:
-        x_plus_residual = scaled_index_add(  # noqa: F821 - Name is undefined in the upstream source.
-            x, brange, residual.to(dtype=x.dtype), scaling=scaling_vector, alpha=residual_scale_factor
-        )
-    return x_plus_residual
 
 
 attn_bias_cache: dict[tuple, Any] = {}

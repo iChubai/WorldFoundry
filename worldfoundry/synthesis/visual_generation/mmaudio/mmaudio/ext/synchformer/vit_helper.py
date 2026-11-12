@@ -12,7 +12,7 @@ from einops import rearrange, repeat
 from timm.layers import to_2tuple
 from torch import einsum
 
-from worldfoundry.base_models.perception_core.general_perception.dino.models.vision_transformer import Mlp
+from worldfoundry.core.nn.blocks.layers import Mlp
 
 default_cfgs = {
     "vit_1k": "https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p16_224-80ecf9dd.pth",

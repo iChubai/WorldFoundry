@@ -795,7 +795,7 @@ class TwoLayerReLU(nn.Module):
 class InputFP32LayerNorm(nn.LayerNorm):
     """Normalize FP32 inputs without casting the affine parameters."""
 
-    def forward(self, x: Tensor) -> Tensor:  # ty: ignore[lost-keyword-for-regular-parameter] - Native x keyword.
+    def forward(self, x: Tensor) -> Tensor:  # ty: ignore[invalid-method-override] - Native x keyword.
         return super().forward(x.float()).type_as(x)
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ast
 import importlib
+import importlib.util
 import json
 import subprocess
 import sys
@@ -40,6 +41,7 @@ def test_model_manifest_resolves_the_direct_package(model_id, package, tmp_path,
     assert spec.runtime_module == f"{MODULE_ROOT}.{package}.worldfoundry_runtime"
     module = importlib.import_module(spec.runtime_module)
     model_root = VISUAL_ROOT / package
+    assert module.__file__ is not None
     assert Path(module.__file__).resolve().parent == model_root
     assert Path(module.RUNTIME_DIR).resolve() == model_root
 
@@ -108,12 +110,14 @@ def test_model_config_targets_resolve_to_packaged_modules():
                 assert source.is_file(), f"{path}: {target}"
                 tree = ast.parse(source.read_text(encoding="utf-8"))
                 definitions = {
-                    node.name for node in tree.body
+                    node.name
+                    for node in tree.body
                     if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
                 }
                 definitions.update(
                     alias.asname or alias.name
-                    for node in tree.body if isinstance(node, ast.ImportFrom)
+                    for node in tree.body
+                    if isinstance(node, ast.ImportFrom)
                     for alias in node.names
                 )
                 assert name in definitions, f"{path}: {target}"
@@ -124,7 +128,9 @@ def test_model_config_targets_resolve_to_packaged_modules():
 def test_solarwm_keeps_both_registered_runtime_routes():
     from worldfoundry.synthesis.visual_generation.solarwm import SolarWMRuntime, worldfoundry_runtime
 
-    assert Path(sys.modules[SolarWMRuntime.__module__].__file__).parent == VISUAL_ROOT / "solarwm"
+    module_file = sys.modules[SolarWMRuntime.__module__].__file__
+    assert module_file is not None
+    assert Path(module_file).parent == VISUAL_ROOT / "solarwm"
     assert worldfoundry_runtime.OFFICIAL_ENTRYPOINT == VISUAL_ROOT / "solarwm/infer.py"
 
 

@@ -12,7 +12,7 @@ def _require_local_source(relative: str) -> Path:
     """Skip when a license-gated source tree is absent from this checkout."""
     path = REPO_ROOT / relative
     if not path.exists():
-        pytest.skip(f"license-gated source tree is not present: {relative}")
+        raise pytest.skip.Exception(f"license-gated source tree is not present: {relative}")
     return path
 
 
@@ -149,7 +149,6 @@ def test_empty_synthesis_compat_packages_are_not_reintroduced():
     ]
 
     assert [path for path in removed_paths if (REPO_ROOT / path).exists()] == []
-
 
 
 def test_base_model_pure_demo_and_ui_app_dirs_are_pruned():
@@ -800,8 +799,6 @@ def test_kling_recammaster_runtime_lives_under_synthesis():
     assert ".recammaster." not in text
 
 
-
-
 def test_matrix_game_1_runtime_logic_lives_under_base_models():
     runtime_path = REPO_ROOT / "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_1_runtime/runtime.py"
     synthesis_path = REPO_ROOT / "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_1_synthesis.py"
@@ -1155,7 +1152,10 @@ def test_three_d_four_d_runtimes_run_vendored_package_modules(monkeypatch, tmp_p
     )
     plan = synthesis.predict(prompt="a quiet harbor", run_dir=tmp_path / "run", plan_only=True)
 
-    assert plan["command"][1:3] == ["-m", "worldfoundry.synthesis.visual_generation.worldgen.worldgen_runtime.inference"]
+    assert plan["command"][1:3] == [
+        "-m",
+        "worldfoundry.synthesis.visual_generation.worldgen.worldgen_runtime.inference",
+    ]
     monkeypatch.delenv("PYTHONPATH", raising=False)
     assert "PYTHONPATH" not in synthesis._subprocess_env()
 

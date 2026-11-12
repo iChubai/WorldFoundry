@@ -23,6 +23,7 @@ from worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video import NativeHu
 from worldfoundry.runtime.inference_catalog import get_model_inference_spec
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.studio.inference.catalog import find_entry
+from worldfoundry.studio.inference.catalog import resolve as catalog_resolve
 from worldfoundry.synthesis.visual_generation.framepack.worldfoundry_runner import _parse_bool
 from worldfoundry.synthesis.visual_generation.official_video_runtime import OfficialVideoRuntime
 
@@ -132,7 +133,7 @@ def test_pusa_lightx2v_load_defaults_accept_hugging_face_mirror_name(monkeypatch
         requested_names.append(names)
         return fallback
 
-    monkeypatch.setattr(studio_catalog.resolve, "_checkpoint_model_ref", capture_checkpoint_names)
+    monkeypatch.setattr(catalog_resolve, "_checkpoint_model_ref", capture_checkpoint_names)
     studio_catalog.models.video_generation._pusa_vidgen_default_load_kwargs()
 
     assert (

@@ -9,6 +9,7 @@ from worldfoundry.studio.inference.catalog import (
     find_entry,
     template_id_hint,
 )
+from worldfoundry.studio.inference.catalog import resolve as catalog_resolve
 
 _TEMPLATE_TO_WORKLOAD = {
     "depth-geometry": "geometry",
@@ -147,7 +148,7 @@ def test_gen3c_defaults_keep_public_hub_fallbacks_without_local_checkpoints(
     monkeypatch.setenv("WORLDFOUNDRY_CKPT_DIR", str(tmp_path / "checkpoints"))
     monkeypatch.setenv("WORLDFOUNDRY_HFD_ROOT", str(tmp_path / "hfd"))
     monkeypatch.setenv("HF_HOME", str(tmp_path / "hf-home"))
-    monkeypatch.setattr(catalog.resolve, "_cache_candidates", lambda *names: [])
+    monkeypatch.setattr(catalog_resolve, "_cache_candidates", lambda *names: [])
 
     assert catalog.models.world_models._gen3c_default_ref() == "nvidia/GEN3C-Cosmos-7B"
     assert catalog.models.world_models._gen3c_default_load_kwargs() == {

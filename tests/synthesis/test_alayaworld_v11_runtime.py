@@ -46,7 +46,7 @@ def test_plan_launches_the_package_entry_module(tmp_path, monkeypatch):
     assert plan.env.get("PYTHONPATH", "") == ""
     request = json.loads((tmp_path / "run" / "request.json").read_text())
     assert not {"source_root", "vigeo_source_root"} & request.keys()
-    assert request["config"].endswith("models/runtime/configs/alayaworld-v1.1/dmd.yaml")
+    assert request["config"].endswith("models/runtime/configs/alayaworld_v11/dmd.yaml")
 
 
 def test_released_config_builds_without_external_source_fields(tmp_path):
@@ -54,7 +54,7 @@ def test_released_config_builds_without_external_source_fields(tmp_path):
     from worldfoundry.synthesis.visual_generation.alayaworld_v11.inference_entry import build_config
 
     request = {
-        "config": str(resolve_data_path("models/runtime/configs/alayaworld-v1.1/dmd.yaml")),
+        "config": str(resolve_data_path("models/runtime/configs/alayaworld_v11/dmd.yaml")),
         "output_dir": str(tmp_path),
         "seed": 7,
         "base_checkpoint": "ltx.safetensors",

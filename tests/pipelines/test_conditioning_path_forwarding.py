@@ -10,9 +10,10 @@ from worldfoundry.pipelines.magic_world.pipeline_magic_world import MagicWorldPi
 from worldfoundry.pipelines.minwm.pipeline_minwm import MinWMHYAction2VPipeline
 from worldfoundry.pipelines.spatia.pipeline_spatia import SpatiaPipeline
 from worldfoundry.pipelines.versecrafter.pipeline_versecrafter import VerseCrafterPipeline
+from worldfoundry.synthesis.visual_generation.hydra import HydraSynthesis
 
 
-class _RecordingSynthesis:
+class _RecordingSynthesis(HydraSynthesis):
     def __init__(self) -> None:
         self.calls: list[dict[str, object]] = []
 

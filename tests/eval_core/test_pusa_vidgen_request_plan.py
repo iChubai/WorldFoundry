@@ -40,13 +40,11 @@ def test_pusa_catalog_and_runtime_profile_document_generated_video_runner() -> N
         for checkpoint in profile.checkpoints
     )
     assert any(
-        checkpoint.get("repo_id") == "Wan-AI/Wan2.2-T2V-A14B"
-        and checkpoint.get("status") == "required"
+        checkpoint.get("repo_id") == "Wan-AI/Wan2.2-T2V-A14B" and checkpoint.get("status") == "required"
         for checkpoint in profile.checkpoints
     )
     assert any(
-        checkpoint.get("repo_id") == "lightx2v/Wan2.2-Lightning"
-        and checkpoint.get("status") == "optional"
+        checkpoint.get("repo_id") == "lightx2v/Wan2.2-Lightning" and checkpoint.get("status") == "optional"
         for checkpoint in profile.checkpoints
     )
 
@@ -104,7 +102,7 @@ def test_pusa_pipeline_execute_path_records_generated_video(tmp_path: Path) -> N
         output_path=str(generated),
     )
     pipeline.runtime.build_plan = lambda **kwargs: plan
-    pipeline.runtime.run_plan = lambda runtime_plan, **kwargs: {
+    pipeline.runtime.run_plan = lambda plan, **kwargs: {
         "ok": True,
         "status": "success",
         "returncode": 0,
@@ -114,7 +112,7 @@ def test_pusa_pipeline_execute_path_records_generated_video(tmp_path: Path) -> N
         "metadata_path": str(generated.with_suffix(".json")),
         "stdout_path": str(tmp_path / "stdout.log"),
         "stderr_path": str(tmp_path / "stderr.log"),
-        "runtime_plan": runtime_plan.to_dict(),
+        "runtime_plan": plan.to_dict(),
     }
 
     report_path = tmp_path / "pusa_report.json"
@@ -130,6 +128,7 @@ def test_pusa_pipeline_execute_path_records_generated_video(tmp_path: Path) -> N
         num_inference_steps=1,
     )
 
+    assert isinstance(result, dict)
     assert result["status"] == "success"
     assert result["runtime"] == "worldfoundry.synthesis.visual_generation.pusa_vidgen.pusa_v1_runner"
     assert result["artifact_kind"] == "generated_video"
@@ -162,4 +161,7 @@ def test_pusa_runner_smoke_fails_without_execute() -> None:
 
     assert results[0].status == "failed"
     assert not results[0].artifacts
-    assert results[0].error == "RuntimeError: Pusa VidGen requires execute=True; request-plan artifacts are no longer emitted."
+    assert (
+        results[0].error
+        == "RuntimeError: Pusa VidGen requires execute=True; request-plan artifacts are no longer emitted."
+    )

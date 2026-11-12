@@ -25,11 +25,14 @@ def test_cached_weights_use_request_scoped_normalization(monkeypatch, tmp_path, 
     policy_module = ModuleType("worldfoundry.synthesis.action_generation.db_cogact.modeling.policy")
     transformers = ModuleType("transformers")
     tokenizer_calls = []
-    transformers.AutoTokenizer = SimpleNamespace(
-        from_pretrained=lambda path, **kwargs: tokenizer_calls.append((path, kwargs)) or tokenizer
+    monkeypatch.setattr(
+        transformers,
+        "AutoTokenizer",
+        SimpleNamespace(from_pretrained=lambda path, **kwargs: tokenizer_calls.append((path, kwargs)) or tokenizer),
+        raising=False,
     )
     modeling_utils = ModuleType("transformers.modeling_utils")
-    modeling_utils.no_init_weights = nullcontext
+    monkeypatch.setattr(modeling_utils, "no_init_weights", nullcontext, raising=False)
 
     class Model:
         def __init__(self, config):
@@ -46,13 +49,16 @@ def test_cached_weights_use_request_scoped_normalization(monkeypatch, tmp_path, 
     class Policy:
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
+            self.norm_stats = kwargs["norm_stats"]
 
         def select_action(self):
             return np.array([self.norm_stats["min"], self.norm_stats["max"]])
 
-    architecture.CogActConfig = SimpleNamespace(from_pretrained=lambda *_, **__: SimpleNamespace())
-    architecture.CogACTForCausalLM = Model
-    policy_module.CogACTPolicy = Policy
+    monkeypatch.setattr(
+        architecture, "CogActConfig", SimpleNamespace(from_pretrained=lambda *_, **__: SimpleNamespace()), raising=False
+    )
+    monkeypatch.setattr(architecture, "CogACTForCausalLM", Model, raising=False)
+    monkeypatch.setattr(policy_module, "CogACTPolicy", Policy, raising=False)
     for module in (architecture, policy_module, transformers, modeling_utils):
         monkeypatch.setitem(sys.modules, module.__name__, module)
     monkeypatch.setattr(runtime, "_RUNTIME_CACHE", {})

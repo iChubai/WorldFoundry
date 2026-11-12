@@ -15,8 +15,12 @@ pytestmark = pytest.mark.unit
 
 
 @pytest.fixture
-def pipeline_module() -> ModuleType:
-    return importlib.import_module("worldfoundry.synthesis.visual_generation.ac3d.ac3d_runtime.controlnet_pipeline")
+def pipeline_module(caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+    module = importlib.import_module("worldfoundry.synthesis.visual_generation.ac3d.ac3d_runtime.controlnet_pipeline")
+    logger = logging.getLogger(module.__name__)
+    monkeypatch.setattr(logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(logger, "propagate", False)
+    return module
 
 
 class T5TokenizerStub:

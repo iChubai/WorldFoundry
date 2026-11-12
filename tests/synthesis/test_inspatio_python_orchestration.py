@@ -19,9 +19,15 @@ RUNTIME_MODULE = "worldfoundry.synthesis.visual_generation.inspatio_world.inspat
 def make_args(tmp_path, *flags):
     trajectory = tmp_path / "camera '# path.txt"
     trajectory.touch()
-    return pipeline.parser().parse_args([
-        "--input_dir", str(tmp_path), "--traj_txt_path", str(trajectory), *flags,
-    ])
+    return pipeline.parser().parse_args(
+        [
+            "--input_dir",
+            str(tmp_path),
+            "--traj_txt_path",
+            str(trajectory),
+            *flags,
+        ]
+    )
 
 
 def test_cached_depth_still_renders_new_trajectory(monkeypatch, tmp_path):
@@ -42,14 +48,48 @@ def test_full_pipeline_preserves_gpu_flags_and_yaml_paths(monkeypatch, tmp_path)
     monkeypatch.setenv("PYTHONPATH", "/operator/packages")
     (tmp_path / "models_t5_umt5-xxl-enc-bf16.safetensors").touch()
     config = tmp_path / "config.yaml"
-    config.write_text(yaml.safe_dump({"camera": {"traj_txt_path": "old", "relative_to_source": False,
-                                              "rotation_only": False, "adaptive_frame": True,
-                                              "freeze_repeat": 0, "freeze_frame": 5}}))
-    args = make_args(tmp_path, "--config_path", str(config), "--wan_model_path", str(tmp_path),
-                     "--step1_gpus", "2,3", "--step2_gpus", "4", "--step3_gpus", "5,6",
-                     "--step3_nproc", "2", "--master_port", "29587", "--relative_to_source", "--disable_adaptive_frame",
-                     "--freeze_repeat", "3", "--freeze_frame", "0", "--use_tae", "--compile_dit",
-                     "--seed", "1730", "--deterministic")
+    config.write_text(
+        yaml.safe_dump(
+            {
+                "camera": {
+                    "traj_txt_path": "old",
+                    "relative_to_source": False,
+                    "rotation_only": False,
+                    "adaptive_frame": True,
+                    "freeze_repeat": 0,
+                    "freeze_frame": 5,
+                }
+            }
+        )
+    )
+    args = make_args(
+        tmp_path,
+        "--config_path",
+        str(config),
+        "--wan_model_path",
+        str(tmp_path),
+        "--step1_gpus",
+        "2,3",
+        "--step2_gpus",
+        "4",
+        "--step3_gpus",
+        "5,6",
+        "--step3_nproc",
+        "2",
+        "--master_port",
+        "29587",
+        "--relative_to_source",
+        "--disable_adaptive_frame",
+        "--freeze_repeat",
+        "3",
+        "--freeze_frame",
+        "0",
+        "--use_tae",
+        "--compile_dit",
+        "--seed",
+        "1730",
+        "--deterministic",
+    )
     calls = []
     saved_config = {}
 
@@ -78,8 +118,17 @@ def test_full_pipeline_preserves_gpu_flags_and_yaml_paths(monkeypatch, tmp_path)
     assert json.loads(depth[depth.index("--da3_config") + 1])["fix_resize_width"] == 832
     infer, options = calls[-1]
     assert options["env"]["CUDA_VISIBLE_DEVICES"] == "5,6"
-    assert infer[:9] == [sys.executable, "-m", "torch.distributed.run", "--master_port", "29587",
-                         "--nproc_per_node", "2", "-m", f"{RUNTIME_MODULE}.inference_causal"]
+    assert infer[:9] == [
+        sys.executable,
+        "-m",
+        "torch.distributed.run",
+        "--master_port",
+        "29587",
+        "--nproc_per_node",
+        "2",
+        "-m",
+        f"{RUNTIME_MODULE}.inference_causal",
+    ]
     assert "--use_tae" in infer and "--compile_dit" in infer
     assert infer[infer.index("--seed") + 1] == "1730"
     assert "--deterministic" in infer
@@ -105,12 +154,15 @@ def test_failed_caption_does_not_start_geometry(monkeypatch, tmp_path):
     assert calls[0][:3] == [sys.executable, "-m", f"{RUNTIME_MODULE}.scripts.gen_json"]
 
 
-@pytest.mark.parametrize("flags, inherited, expected", [
-    ((), None, None),
-    (("--seed", "42"), None, "42"),
-    (("--deterministic",), None, "0"),
-    ((), "7", "7"),
-])
+@pytest.mark.parametrize(
+    "flags, inherited, expected",
+    [
+        ((), None, None),
+        (("--seed", "42"), None, "42"),
+        (("--deterministic",), None, "0"),
+        ((), "7", "7"),
+    ],
+)
 def test_video_stage_receives_effective_seed(monkeypatch, tmp_path, flags, inherited, expected):
     monkeypatch.delenv("WORLDFOUNDRY_DETERMINISTIC", raising=False)
     monkeypatch.delenv("WORLDFOUNDRY_INSPATIO_WORLD_SEED", raising=False)
@@ -119,8 +171,16 @@ def test_video_stage_receives_effective_seed(monkeypatch, tmp_path, flags, inher
     (tmp_path / "models_t5_umt5-xxl-enc-bf16.safetensors").touch()
     config = tmp_path / "config.yaml"
     config.write_text("{}")
-    args = make_args(tmp_path, "--config_path", str(config), "--wan_model_path", str(tmp_path),
-                     "--skip_step1", "--skip_step2", *flags)
+    args = make_args(
+        tmp_path,
+        "--config_path",
+        str(config),
+        "--wan_model_path",
+        str(tmp_path),
+        "--skip_step1",
+        "--skip_step2",
+        *flags,
+    )
     calls = []
     monkeypatch.setattr(pipeline.subprocess, "run", lambda argv, **kw: calls.append((argv, kw)))
     pipeline.run_pipeline(args)
@@ -138,12 +198,18 @@ def test_t5_conversion_uses_package_module(monkeypatch: pytest.MonkeyPatch, tmp_
     weights.touch()
     config = tmp_path / "config.yaml"
     config.write_text("{}")
-    args = make_args(tmp_path, "--config_path", str(config), "--wan_model_path", str(tmp_path),
-                     "--skip_step1", "--skip_step2")
+    args = make_args(
+        tmp_path, "--config_path", str(config), "--wan_model_path", str(tmp_path), "--skip_step1", "--skip_step2"
+    )
     calls: list[list[str]] = []
     monkeypatch.setattr(pipeline.subprocess, "run", lambda argv, **kw: calls.append(argv))
     pipeline.run_pipeline(args)
     assert calls[1] == [
-        sys.executable, "-m", f"{RUNTIME_MODULE}.utils.convert_pth_to_safetensors",
-        "--input", str(weights), "--output", str(weights.with_suffix(".safetensors")),
+        sys.executable,
+        "-m",
+        f"{RUNTIME_MODULE}.utils.convert_pth_to_safetensors",
+        "--input",
+        str(weights),
+        "--output",
+        str(weights.with_suffix(".safetensors")),
     ]

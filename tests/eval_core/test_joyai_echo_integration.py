@@ -6,6 +6,7 @@ import sys
 from dataclasses import replace
 from importlib import import_module
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -31,7 +32,7 @@ def _write(path: Path, text: str = "fixture") -> Path:
     return path
 
 
-def _import_target(target: str) -> object:
+def _import_target(target: str) -> type:
     module_name, attribute = target.split(":", 1)
     return getattr(import_module(module_name), attribute)
 
@@ -131,7 +132,7 @@ def test_joyai_echo_entrypoints_are_vendored_package_modules(module: str) -> Non
         ({"precision": "fp4", "consumer": True}, "inference.consumer.fp4.yaml"),
     ],
 )
-def test_longvideo_default_configs_are_bundled(options: dict[str, object], config_name: str) -> None:
+def test_longvideo_default_configs_are_bundled(options: dict[str, Any], config_name: str) -> None:
     runtime = JoyAIEchoLongVideoRuntime(device="cuda", **options)
 
     assert runtime.config_path == MODEL_DATA / "runtime" / "configs" / "joyai-echo-longvideo" / config_name
@@ -149,7 +150,8 @@ def test_longvideo_voice_filter_rejects_memory_audio_without_the_msst_separator(
 
     assert filter_voice_only(audio, 16000, VoiceFilterConfig(enabled=False)) is audio
     assert filter_voice_only(None, 16000, VoiceFilterConfig()) is None
-    assert filter_voice_only(torch.ones(2, 1), 16000, VoiceFilterConfig()).shape == (2, 1)
+    filtered = filter_voice_only(torch.ones(2, 1), 16000, VoiceFilterConfig())
+    assert filtered is not None and filtered.shape == (2, 1)
     with pytest.raises(RuntimeError, match="MSST-WebUI"):
         filter_voice_only(audio, 16000, VoiceFilterConfig())
 

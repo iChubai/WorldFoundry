@@ -44,7 +44,7 @@ def test_from_pretrained_uses_data_config_without_mutating_imports(
     config_path = data_root / "configs" / "inference" / "inference.yaml"
     config_path.parent.mkdir(parents=True)
     config_path.write_text("model: {height: 8, width: 12}\nsurfel: {}\n", encoding="utf-8")
-    options = {}
+    options: dict[str, Any] = {}
     if config_source == "runtime_root":
         options["runtime_root"] = str(data_root)
     elif config_source == "env_root":

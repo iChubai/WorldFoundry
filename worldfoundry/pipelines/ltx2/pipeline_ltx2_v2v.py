@@ -57,7 +57,7 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
         self.ic_lora_path = _required_file(ic_lora_path, "control IC-LoRA")
 
     @classmethod
-    def from_pretrained(  # ty: ignore[incompatible-method-override]  # model-specific loader arguments, passed by keyword
+    def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
         cls,
         model_path: str | Path | Mapping[str, Any] | None = None,
         required_components: Mapping[str, Any] | None = None,

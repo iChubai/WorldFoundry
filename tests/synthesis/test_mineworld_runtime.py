@@ -78,6 +78,7 @@ def test_checkpoint_config_targets_resolve_without_mutating_the_input(
     loaded = utils.load_model_from_config(config, state, gpu=False, eval_mode=True)["model"]
 
     expected = OmegaConf.to_container(config)
+    assert isinstance(expected, dict)
     expected["target"] = "worldfoundry.synthesis.visual_generation.mineworld.lvm.LlamaLVM"
     expected["params"]["model_class"] = "worldfoundry.synthesis.visual_generation.mineworld.lvm.LlamaForCausalLM"
     expected["params"]["tokenizer_config"]["target"] = "worldfoundry.synthesis.visual_generation.mineworld.vae.VAE"

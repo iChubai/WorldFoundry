@@ -259,13 +259,14 @@ def _canonical_catalog_defaults() -> Generator[None, None, None]:
     from unittest.mock import patch
 
     from worldfoundry.studio.inference import catalog
+    from worldfoundry.studio.inference.catalog import resolve as catalog_resolve
 
     catalog.discover_catalog.cache_clear()
     try:
         with (
-            patch.object(catalog.resolve, "_checkpoint_model_ref", _canonical_checkpoint_ref),
-            patch.object(catalog.resolve, "_prefer_existing_model_ref", _first_model_ref),
-            patch.object(catalog.resolve, "_local_root_with_files", return_value=""),
+            patch.object(catalog_resolve, "_checkpoint_model_ref", _canonical_checkpoint_ref),
+            patch.object(catalog_resolve, "_prefer_existing_model_ref", _first_model_ref),
+            patch.object(catalog_resolve, "_local_root_with_files", return_value=""),
         ):
             yield
     finally:

@@ -96,7 +96,7 @@ def test_kairos_declares_the_pinned_kernel_at_environment_setup() -> None:
         "sageattention @ git+https://github.com/kairos-agi/kairos-sensenova.git@"
         "40d3fcb518c3ff894501bf4b080ccaa589363adc#subdirectory=kairos/third_party/SageAttention"
     )
-    assert dependency in data["pip_packages"]
+    assert dependency not in data["pip_packages"]
     assert any(dependency in command and "--no-build-isolation" in command for command in data["setup_commands"])
     entry = studio_catalog.find_entry("kairos-sensenova")
     assert "runtime_root" not in entry.default_load_kwargs

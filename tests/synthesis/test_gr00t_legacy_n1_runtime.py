@@ -80,6 +80,8 @@ def test_predict_starts_the_worker_as_a_package_module(tmp_path: Path, monkeypat
 
     (call,) = calls
     command = call["command"]
+    assert isinstance(command, list)
+    assert isinstance(call["env"], dict)
     assert command[:3] == [sys.executable, "-m", legacy_n1.WORKER_MODULE]
     assert Path(command[3]).name == "request.json"
     assert call["env"].get("PYTHONPATH") == os.environ.get("PYTHONPATH")

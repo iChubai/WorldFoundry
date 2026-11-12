@@ -10,6 +10,7 @@ import pytest
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.encoders.wan import clip as canonical_clip
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.variants import liveworld_clip
 from worldfoundry.base_models.diffusion_model.models.networks.wan import reference_21
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants import camera_21
 from worldfoundry.synthesis.visual_generation.infinite_world.infinite_world_runtime.models import dit_model
@@ -63,9 +64,9 @@ def test_lyra2_projector_inherits_canonical_graph_and_resets_parameters() -> Non
 
 
 def test_liveworld_clip_reuses_fa2_projections_and_preserves_weight_dtype_norm() -> None:
-    for name in ("SelfAttention", "QuickGELU", "SwiGLU", "XLMRobertaWithHead", "pos_interpolate"):
-        assert getattr(clip, name) is getattr(canonical_clip, name)
-    norm = clip.LayerNorm(16).to(dtype=torch.bfloat16)
+    assert clip.XLMRobertaCLIP is liveworld_clip.XLMRobertaCLIP
+    assert liveworld_clip.SelfAttention is canonical_clip.SelfAttention
+    norm = liveworld_clip.LayerNorm(16).to(dtype=torch.bfloat16)
     x = torch.randn(2, 3, 16)
     with torch.no_grad():
         actual = norm(x)

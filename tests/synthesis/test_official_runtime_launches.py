@@ -172,12 +172,12 @@ def test_magi_installs_triton_shim_before_constructing_pipeline(monkeypatch, exi
     pipeline = Mock()
 
     def build(config_file: str) -> Mock:
-        assert torch.library.wrap_triton is expected
+        assert getattr(torch.library, "wrap_triton") is expected
         assert config_file == "config.json"
         return pipeline
 
     module = ModuleType(f"{entry.__package__}.pipeline")
-    module.MagiPipeline = build
+    monkeypatch.setattr(module, "MagiPipeline", build, raising=False)
     monkeypatch.setitem(sys.modules, module.__name__, module)
     entry.main()
     pipeline.run_text_to_video.assert_called_once_with(prompt="motion", output_path="out.mp4")
@@ -189,7 +189,7 @@ def test_mmaudio_calls_the_packaged_demo_with_original_arguments(monkeypatch) ->
     calls = []
     monkeypatch.setattr(runner, "_patch_torchaudio_save", lambda: calls.append("audio-save"))
     module = ModuleType(f"{runner.__package__}.official_demo")
-    module.main = lambda argv: calls.append(argv)
+    monkeypatch.setattr(module, "main", lambda argv: calls.append(argv), raising=False)
     monkeypatch.setitem(sys.modules, module.__name__, module)
     arguments = ["--prompt", "footsteps", "--duration", "4", "--full_precision"]
     assert runner.main(arguments) == 0

@@ -450,7 +450,7 @@ def test_local_official_repositories_lock_model_architecture_contracts() -> None
         if not Path(spec["local_dir"]).is_dir()
     ]
     if missing:
-        pytest.skip(f"local official model repositories are not staged: {missing}")
+        raise pytest.skip.Exception(f"local official model repositories are not staged: {missing}")
 
     profiles = load_runtime_profiles()
     registry = load_model_zoo_registry(REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog")
@@ -503,7 +503,7 @@ def test_local_official_repositories_lock_model_architecture_contracts() -> None
 def test_dreamdojo_action_contract_matches_official_posttraining_doc() -> None:
     repo_dir = ACQUISITION_REPO_ROOT / "NVIDIA--DreamDojo"
     if not repo_dir.is_dir():
-        pytest.skip("local DreamDojo official repository is not staged")
+        raise pytest.skip.Exception("local DreamDojo official repository is not staged")
 
     posttrain_doc = (repo_dir / "docs" / "POSTTRAIN.md").read_text(encoding="utf-8")
     expected_slices = {

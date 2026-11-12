@@ -73,7 +73,7 @@ def test_worldgen_direct_panorama_skips_flux_initialization(monkeypatch):
     monkeypatch.setattr(worldgen_module, "build_pano_gen_model", _reject_flux_initialization)
     runtime = worldgen_module.WorldGen(
         mode="t2s",
-        device="cpu",
+        device=torch.device("cpu"),
         low_vram=False,
         initialize_pano_generator=False,
     )

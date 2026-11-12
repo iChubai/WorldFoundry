@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from types import ModuleType
 
 import pytest
 from hydra import compose, initialize_config_dir
+from hydra.core.global_hydra import GlobalHydra
 from hydra.utils import instantiate
 from omegaconf import OmegaConf
 
@@ -20,6 +22,18 @@ from worldfoundry.synthesis.visual_generation.diamond.models.rew_end_model impor
 from worldfoundry.synthesis.visual_generation.diamond.worldfoundry_runtime import CONFIG_DIR
 
 pytestmark = pytest.mark.unit
+
+
+@pytest.fixture(autouse=True)
+def isolated_hydra() -> Iterator[None]:
+    state = GlobalHydra.instance()
+    previous = state.hydra
+    state.clear()
+    try:
+        yield
+    finally:
+        state.hydra = previous
+        GlobalHydra.set_instance(state)
 
 
 def test_packaged_agent_config_constructs_owned_dataclasses() -> None:

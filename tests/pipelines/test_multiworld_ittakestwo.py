@@ -33,7 +33,7 @@ def _example_action() -> dict[str, np.ndarray]:
     }
 
 
-class _DummySynthesis:
+class _DummySynthesis(synthesis_module.MultiWorldItTakesTwoSynthesis):
     def __init__(self) -> None:
         self.calls = []
 

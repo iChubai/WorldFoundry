@@ -46,7 +46,7 @@ def test_vigeo_preflight_checks_only_weights(tmp_path):
     (tmp_path / "vigeo.pt").touch()
     vigeo_cloud.check_assets(weights=tmp_path)
     with pytest.raises(TypeError, match="src"):
-        vigeo_cloud.check_assets(src=tmp_path, weights=tmp_path)
+        getattr(vigeo_cloud, "check_assets")(src=tmp_path, weights=tmp_path)
 
 
 def test_vigeo_local_checkpoint_loader(tmp_path):

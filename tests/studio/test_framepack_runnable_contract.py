@@ -24,14 +24,30 @@ def test_framepack_local_hunyuan_tokenizer_bypasses_invalid_root_config(tmp_path
     from worldfoundry.synthesis.visual_generation.framepack.framepack_runtime import inference
 
     for name in (
-        "f1_mode", "high_vram", "text_encoder", "text_encoder_2", "tokenizer", "tokenizer_2", "vae",
-        "feature_extractor", "image_encoder", "transformer", "stream", "outputs_folder",
+        "f1_mode",
+        "high_vram",
+        "text_encoder",
+        "text_encoder_2",
+        "tokenizer",
+        "tokenizer_2",
+        "vae",
+        "feature_extractor",
+        "image_encoder",
+        "transformer",
+        "stream",
+        "outputs_folder",
     ):
         monkeypatch.setattr(inference, name, None, raising=False)
     loaders = {}
     for name in (
-        "LlamaModel", "CLIPTextModel", "LlamaTokenizerFast", "CLIPTokenizer", "AutoencoderKLHunyuanVideo",
-        "SiglipImageProcessor", "SiglipVisionModel", "HunyuanVideoTransformer3DModelPacked",
+        "LlamaModel",
+        "CLIPTextModel",
+        "LlamaTokenizerFast",
+        "CLIPTokenizer",
+        "AutoencoderKLHunyuanVideo",
+        "SiglipImageProcessor",
+        "SiglipVisionModel",
+        "HunyuanVideoTransformer3DModelPacked",
     ):
         loader = Mock()
         loader.from_pretrained.return_value.cpu.return_value = Mock()

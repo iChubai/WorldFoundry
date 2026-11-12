@@ -564,6 +564,7 @@ def _vendored_imports(rel: str, tree: ast.Module) -> Iterator[tuple[int, str, st
             for directory in directories:
                 local = _local_module(directory, module)
                 if local is not None and used <= _module_names(local):
+                    assert isinstance(node, (ast.Import, ast.ImportFrom, ast.Call))
                     yield (
                         node.lineno,
                         "vendored-import",

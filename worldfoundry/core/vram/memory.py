@@ -425,7 +425,7 @@ def activation_budget_bytes(device: torch.device) -> int:
         index = device.index if device.index is not None else torch.cuda.current_device()
         free, _ = torch.cuda.mem_get_info(index)
         total = torch.cuda.get_device_properties(index).total_memory
-        fraction = torch.cuda.get_per_process_memory_fraction(index)
+        fraction = torch.cuda.get_per_process_memory_fraction(index)  # ty: ignore[unresolved-attribute] - LTX runtime Torch supports this API; host 2.5 stubs do not.
         available = max(0, int(fraction * total) - int(torch.cuda.memory_reserved(index)))
         return min(int(free), available)
     if device.type == "mps" and torch.backends.mps.is_available():

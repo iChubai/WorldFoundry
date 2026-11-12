@@ -7,9 +7,10 @@ import numpy as np
 import torch
 from safetensors.torch import load_file
 
+from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import umt5_xxl
+
 from .utils import FlowMatchScheduler, SchedulerInterface
 from .wan.modules.clip import CLIPModel
-from .wan.modules.t5 import umt5_xxl
 from .wan.modules.tokenizers import HuggingfaceTokenizer
 from .wan.modules.vae import _video_vae
 

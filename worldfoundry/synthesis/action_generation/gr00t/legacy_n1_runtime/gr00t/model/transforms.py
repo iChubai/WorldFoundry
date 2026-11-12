@@ -19,8 +19,10 @@ import numpy as np
 import torch
 from pydantic import Field, PrivateAttr
 
-from ..data.schema import DatasetMetadata, EmbodimentTag
-from ..data.transform.base import InvertibleModalityTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import InvertibleModalityTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.embodiment_tags import EmbodimentTag
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.metadata import DatasetMetadata
+
 from .backbone.eagle2_hg_model.inference_eagle_repo import EagleProcessor
 
 DEFAULT_SYSTEM_MESSAGE = "You are a helpful assistant."

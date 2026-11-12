@@ -13,13 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base import (
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import (
     ComposedModalityTransform,
     InvertibleModalityTransform,
     ModalityTransform,
 )
-from .concat import ConcatTransform
-from .state_action import StateActionSinCosTransform, StateActionToTensor, StateActionTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.concat import ConcatTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.state_action import (
+    StateActionSinCosTransform,
+    StateActionToTensor,
+    StateActionTransform,
+)
+
 from .video import VideoColorJitter, VideoCrop, VideoResize, VideoToNumpy, VideoToTensor, VideoTransform
 
 __all__ = [

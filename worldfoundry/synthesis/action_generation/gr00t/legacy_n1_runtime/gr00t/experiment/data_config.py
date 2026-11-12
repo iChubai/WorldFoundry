@@ -15,10 +15,18 @@
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
-from ..data.dataset import ModalityConfig
-from ..data.transform.base import ComposedModalityTransform, ModalityTransform
-from ..data.transform.concat import ConcatTransform
-from ..data.transform.state_action import StateActionSinCosTransform, StateActionToTensor, StateActionTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import (
+    ComposedModalityTransform,
+    ModalityTransform,
+)
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.concat import ConcatTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.modality import ModalityConfig
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.state_action import (
+    StateActionSinCosTransform,
+    StateActionToTensor,
+    StateActionTransform,
+)
+
 from ..data.transform.video import VideoColorJitter, VideoCrop, VideoResize, VideoToNumpy, VideoToTensor
 from ..model.transforms import GR00TTransform
 

@@ -1,15 +1,25 @@
-# Inference-only Being-H0.5 runtime retained in-tree.
-# Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES.
-# Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 import numpy as np
 import torch
 from pydantic import Field
 
-from .schema import DatasetMetadata, StateActionMetadata
-from .transform_base import InvertibleModalityTransform
+from .base import InvertibleModalityTransform
+from .schema import NormalizationMetadata, StateActionMetadata
 
 
 class ConcatTransform(InvertibleModalityTransform):
@@ -63,7 +73,7 @@ class ConcatTransform(InvertibleModalityTransform):
         for key in data:
             try:
                 modality, _ = key.split(".")
-            except:  # noqa: E722 - Also catches BaseException, as upstream.
+            except:  # noqa: E722
                 ### Handle language annotation special case
                 modality = "language" if "annotation" in key else "others"
             if modality not in grouped_keys:
@@ -179,7 +189,7 @@ class ConcatTransform(InvertibleModalityTransform):
         modality_config = self.get_modality_metadata(key)
         return modality_config.rotation_type is not None
 
-    def set_metadata(self, dataset_metadata: DatasetMetadata):
+    def set_metadata(self, dataset_metadata: NormalizationMetadata):
         """Set the metadata and compute the dimensions of the state and action keys."""
         super().set_metadata(dataset_metadata)
         # Pre-compute the dimensions of the state and action keys

@@ -7,24 +7,22 @@ from typing import ClassVar
 
 from pydantic import BaseModel, Field
 
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import (
+    ComposedModalityTransform,
+    ModalityTransform,
+)
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.schema import RotationType
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.state_action import (
+    StateActionToTensor,
+    StateActionTransform,
+)
+
 from .constants import (
     TARGET_ACTION_ROTATION_DIM,
     TARGET_ACTION_ROTATION_TYPE,
     TARGET_STATE_ROTATION_DIM,
     TARGET_STATE_ROTATION_TYPE,
 )
-from .schema import RotationType
-from .transform_base import ComposedModalityTransform, ModalityTransform
-from .transform_state_action import StateActionToTensor, StateActionTransform
-
-
-class ModalityConfig(BaseModel):
-    """Configuration for a modality."""
-
-    delta_indices: list[int]
-    """Delta indices to sample relative to the current index. The returned data will correspond to the original data at a sampled base index + delta indices."""
-    modality_keys: list[str]
-    """The keys to load for the modality in the dataset."""
 
 
 class ModalityDef(BaseModel):

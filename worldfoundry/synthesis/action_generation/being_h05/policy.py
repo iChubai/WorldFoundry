@@ -16,6 +16,7 @@ from PIL import Image
 from safetensors import safe_open
 from transformers import AutoConfig, AutoModel, AutoTokenizer
 
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.modality import ModalityConfig
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.beingh.qwen2 import Qwen2Tokenizer
 from worldfoundry.base_models.llm_mllm_core.mllm.qwen.beingh.qwen2_navit import (
     Qwen2Config,
@@ -26,11 +27,11 @@ from worldfoundry.base_models.llm_mllm_core.mllm.qwen.beingh.qwen3_navit import 
     Qwen3ForCausalLM,
 )
 from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
+from worldfoundry.synthesis.action_generation.being_h05.preprocessing.data_config import DATA_CONFIG_MAP
 
 from .modeling.beingvla import BeingH, BeingHConfig
 from .modeling.internvit import InternVisionConfig, InternVisionModel
 from .modeling.layers import InternVLConnector
-from .preprocessing.data_config import DATA_CONFIG_MAP, ModalityConfig
 from .preprocessing.image_transforms import build_vit_transform_base
 from .preprocessing.schema import DatasetMetadata, EmbodimentTag
 

@@ -91,7 +91,8 @@ def run(request_path: Path) -> None:
     torch.set_num_threads(8)
     _install_eager_attention()
 
-    from .legacy_n1_runtime.gr00t.data.embodiment_tags import EmbodimentTag
+    from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.embodiment_tags import EmbodimentTag
+
     from .legacy_n1_runtime.gr00t.experiment.data_config import DATA_CONFIG_MAP
     from .legacy_n1_runtime.gr00t.model.policy import Gr00tPolicy
 

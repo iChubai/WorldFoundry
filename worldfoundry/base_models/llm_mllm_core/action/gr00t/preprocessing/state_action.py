@@ -1,34 +1,39 @@
-# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Shared GR00T-derived state/action normalization.
+# Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 import functools
 from typing import Any, ClassVar
 
 import numpy as np
-import pytorch3d.transforms as pt
 import torch
 from pydantic import Field, PrivateAttr, field_validator, model_validator
 
-from ..schema import DatasetMetadata, RotationType, StateActionMetadata
 from .base import InvertibleModalityTransform, ModalityTransform
+from .schema import NormalizationMetadata, RotationType, StateActionMetadata
+
+_PYTORCH3D_TRANSFORMS = None
+
+
+def _pytorch3d_transforms():
+    global _PYTORCH3D_TRANSFORMS
+    if _PYTORCH3D_TRANSFORMS is None:
+        try:
+            import pytorch3d.transforms as transforms
+        except ImportError as exc:
+            raise ImportError(
+                "pytorch3d is required for state/action rotation representation transforms. "
+                "Install pytorch3d or avoid target_rotations that require conversion."
+            ) from exc
+        _PYTORCH3D_TRANSFORMS = transforms
+    return _PYTORCH3D_TRANSFORMS
 
 
 class RotationTransform:
     """Adapted from https://github.com/real-stanford/diffusion_policy/blob/548a52bbb105518058e27bf34dcf90bf6f73681a/diffusion_policy/model/common/rotation_transformer.py"""
 
-    valid_reps: ClassVar[list[str]] = ["axis_angle", "euler_angles", "quaternion", "rotation_6d", "matrix"]
+    valid_reps: ClassVar[list] = ["axis_angle", "euler_angles", "quaternion", "rotation_6d", "matrix"]
 
     def __init__(self, from_rep="axis_angle", to_rep="rotation_6d"):
         """
@@ -54,6 +59,8 @@ class RotationTransform:
 
         forward_funcs = []
         inverse_funcs = []
+
+        pt = _pytorch3d_transforms()
 
         if from_rep != "matrix":
             funcs = [getattr(pt, f"{from_rep}_to_matrix"), getattr(pt, f"matrix_to_{from_rep}")]
@@ -91,7 +98,7 @@ class RotationTransform:
 
 
 class Normalizer:
-    valid_modes: ClassVar[list[str]] = ["q99", "mean_std", "min_max", "binary"]
+    valid_modes: ClassVar[list] = ["q99", "mean_std", "min_max", "binary"]
 
     def __init__(self, mode: str, statistics: dict):
         self.mode = mode
@@ -361,16 +368,18 @@ class StateActionTransform(InvertibleModalityTransform):
                     raise ValueError(f"Invalid normalization mode: {normalization_mode}")
         return self
 
-    def set_metadata(self, dataset_metadata: DatasetMetadata):
+    def set_metadata(self, dataset_metadata: NormalizationMetadata):
         dataset_statistics = dataset_metadata.statistics
         modality_metadata = dataset_metadata.modalities
 
         # Check that all state keys specified in apply_to have their modality_metadata
         for key in self.apply_to:
             split_key = key.split(".")
+            # print(key)
             assert len(split_key) == 2, "State keys should have two parts: 'modality.key'"
             if key not in self.modality_metadata:
                 modality, state_key = split_key
+
                 assert hasattr(modality_metadata, modality), f"{modality} config not found"
                 assert state_key in getattr(modality_metadata, modality), f"{state_key} config not found"
                 self.modality_metadata[key] = getattr(modality_metadata, modality)[state_key]

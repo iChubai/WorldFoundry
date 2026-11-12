@@ -23,10 +23,11 @@ import torch
 from huggingface_hub import snapshot_download
 from huggingface_hub.errors import HFValidationError, RepositoryNotFoundError
 
-from ..data.dataset import ModalityConfig
-from ..data.embodiment_tags import EmbodimentTag
-from ..data.schema import DatasetMetadata
-from ..data.transform.base import ComposedModalityTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import ComposedModalityTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.embodiment_tags import EmbodimentTag
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.metadata import DatasetMetadata
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.modality import ModalityConfig
+
 from .gr00t_n1 import GR00T_N1
 
 COMPUTE_DTYPE = torch.bfloat16

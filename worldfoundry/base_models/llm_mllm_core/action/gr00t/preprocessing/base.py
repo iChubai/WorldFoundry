@@ -1,24 +1,14 @@
-# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Shared GR00T-derived inference transforms.
+# Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 from abc import ABC, abstractmethod
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
-from ..schema import DatasetMetadata
+from .schema import NormalizationMetadata
 
 
 class ModalityTransform(BaseModel, ABC):
@@ -27,23 +17,23 @@ class ModalityTransform(BaseModel, ABC):
     """
 
     apply_to: list[str] = Field(..., description="The keys to apply the transform to.")
-    training: bool = Field(default=True, description="Whether to apply the transform in training mode.")
-    _dataset_metadata: DatasetMetadata | None = PrivateAttr(default=None)
+    training: bool = Field(default=False, description="Inference mode flag.")
+    _dataset_metadata: NormalizationMetadata | None = PrivateAttr(default=None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @property
-    def dataset_metadata(self) -> DatasetMetadata:
+    def dataset_metadata(self) -> NormalizationMetadata:
         assert self._dataset_metadata is not None, (
             "Dataset metadata is not set. Please call set_metadata() before calling apply()."
         )
         return self._dataset_metadata
 
     @dataset_metadata.setter
-    def dataset_metadata(self, value: DatasetMetadata):
+    def dataset_metadata(self, value: NormalizationMetadata):
         self._dataset_metadata = value
 
-    def set_metadata(self, dataset_metadata: DatasetMetadata):
+    def set_metadata(self, dataset_metadata: NormalizationMetadata):
         """
         Set the dataset metadata. This is useful for transforms that need to know the dataset metadata, e.g. to normalize actions.
         Subclasses can override this method if they need to do something more complex.
@@ -75,11 +65,9 @@ class ModalityTransform(BaseModel, ABC):
     def apply(self, data: dict[str, Any]) -> dict[str, Any]:
         """Apply the transformation to the data corresponding to keys matching the `apply_to` regular expression and return the processed data."""
 
-    def train(self):
-        self.training = True
-
-    def eval(self):
+    def eval(self) -> "ModalityTransform":
         self.training = False
+        return self
 
 
 class InvertibleModalityTransform(ModalityTransform):
@@ -93,11 +81,11 @@ class ComposedModalityTransform(ModalityTransform):
 
     transforms: list[ModalityTransform] = Field(..., description="The transforms to compose.")
     apply_to: list[str] = Field(default_factory=list, description="Will be ignored for composed transforms.")
-    training: bool = Field(default=True, description="Whether to apply the transform in training mode.")
+    training: bool = Field(default=False, description="Inference mode flag.")
 
     model_config = ConfigDict(arbitrary_types_allowed=True, from_attributes=True)
 
-    def set_metadata(self, dataset_metadata: DatasetMetadata):
+    def set_metadata(self, dataset_metadata: NormalizationMetadata):
         for transform in self.transforms:
             transform.set_metadata(dataset_metadata)
 
@@ -119,10 +107,7 @@ class ComposedModalityTransform(ModalityTransform):
                     raise ValueError(f"Error unapplying transform {step} to data: {e}") from e
         return data
 
-    def train(self):
-        for transform in self.transforms:
-            transform.train()
-
-    def eval(self):
+    def eval(self) -> "ComposedModalityTransform":
         for transform in self.transforms:
             transform.eval()
+        return self

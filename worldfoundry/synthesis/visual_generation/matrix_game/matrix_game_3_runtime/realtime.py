@@ -73,13 +73,15 @@ class MatrixGame3RealtimeSession:
 
     @staticmethod
     def _load_helpers() -> dict[str, Any]:
+        from worldfoundry.base_models.diffusion_model.models.networks.wan.camera_geometry import compute_relative_poses
+
         cam_utils = importlib.import_module(".utils.cam_utils", __package__)
         runtime_utils = importlib.import_module(".utils.utils", __package__)
         return {
             "build_plucker_from_c2ws": runtime_utils.build_plucker_from_c2ws,
             "build_plucker_from_pose": runtime_utils.build_plucker_from_pose,
             "compute_all_poses_from_actions": runtime_utils.compute_all_poses_from_actions,
-            "compute_relative_poses": cam_utils.compute_relative_poses,
+            "compute_relative_poses": compute_relative_poses,
             "get_extrinsics": runtime_utils.get_extrinsics,
             "get_intrinsics": cam_utils.get_intrinsics,
             "interpolate_poses": cam_utils._interpolate_camera_poses_handedness,

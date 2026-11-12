@@ -30,6 +30,11 @@ from einops import rearrange
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21_streaming import Wan2_1_VAE
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.reference import T5EncoderModel
+from worldfoundry.base_models.diffusion_model.models.networks.wan.camera_geometry import (
+    compute_relative_poses,
+    get_Ks_transformed,
+    interpolate_camera_poses,
+)
 from worldfoundry.base_models.diffusion_model.schedulers.flow_dpm import (
     FlowDPMSolverMultistepScheduler,
     get_sampling_sigmas,
@@ -39,12 +44,7 @@ from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc import FlowU
 from worldfoundry.core.media.artifacts import visualize_wasd_and_rotation_ui
 
 from .distributed import distributed_barrier
-from .utils.cam_utils import (
-    compute_relative_poses,
-    get_Ks_transformed,
-    get_plucker_embeddings,
-    interpolate_camera_poses,
-)
+from .utils.cam_utils import get_plucker_embeddings
 from .utils.wasd_ijkl_to_c2ws import action_string_to_wasd_ijkl, generate_and_save_trajectory, wasd_array_to_frame_keys
 
 

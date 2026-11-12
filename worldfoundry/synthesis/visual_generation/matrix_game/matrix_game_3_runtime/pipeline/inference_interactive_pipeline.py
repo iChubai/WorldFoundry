@@ -34,9 +34,10 @@ from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.l
 )
 
 # isort: split
+from worldfoundry.base_models.diffusion_model.models.networks.wan.camera_geometry import compute_relative_poses
+
 from ..utils.cam_utils import (
     _interpolate_camera_poses_handedness,
-    compute_relative_poses,
     get_intrinsics,
     select_memory_idx_fov,
 )

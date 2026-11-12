@@ -6983,3 +6983,18 @@ Source: https://github.com/TencentARC/Open-MAGVIT2 (Apache License 2.0)
 File: worldfoundry/base_models/diffusion_model/models/autoencoders/magvit2/upsampling.py
 The shared inference block retains Open-MAGVIT2's convolution keys and DCR channel ordering.
 The upstream license text is retained in this bundle.
+
+Wan camera geometry
+-------------------
+Source: https://github.com/SkyworkAI/Matrix-Game (Apache License 2.0)
+File: worldfoundry/base_models/diffusion_model/models/networks/wan/camera_geometry.py
+The common origin/direction camera embeddings and world_ray_directions helper use
+Matrix-Game's Apache-licensed implementation, also shared by the LingBot operator.
+The upstream Apache license text is retained in this bundle.
+
+LingBot direction-only camera adapter
+-------------------------------------
+Source: https://github.com/Robbyant/lingbot-world (CC-BY-NC-SA-4.0)
+File: worldfoundry/synthesis/visual_generation/lingbot_world/lingbot_world_runtime/utils/cam_utils.py
+The optional direction-only branch retains LingBot's license locally and reuses
+the Apache camera geometry helpers for the common ray computation.

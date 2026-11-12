@@ -151,6 +151,7 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_image_request_batching.py \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
+	tests/synthesis/test_wan_camera_component_reuse.py \
 	tests/synthesis/test_open_magvit2_component_reuse.py \
 	tests/synthesis/test_conditioning_component_reuse.py \
 	tests/synthesis/test_perception_component_reuse.py \

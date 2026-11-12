@@ -12,7 +12,6 @@ import logging
 import math
 from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Any
 
 import torch
 import torch.nn as nn
@@ -570,9 +569,6 @@ def drop_add_residual_stochastic_depth(
     # 3) add the residual
     x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
     return x_plus_residual.view_as(x)
-
-
-attn_bias_cache: dict[tuple, Any] = {}
 
 
 class NestedTensorBlock(Block):

@@ -9,7 +9,6 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
 
 from timm.layers import DropPath as DropPath
 from torch import Tensor, nn
@@ -152,6 +151,3 @@ class NestedTensorBlock(Block):
             return self.forward_nested(x_or_x_list)
         else:
             raise AssertionError
-
-
-attn_bias_cache: dict[tuple, Any] = {}

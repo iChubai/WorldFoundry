@@ -20,7 +20,7 @@ def _ltx_ic_lora_v2v_inference_spec(
     adapter_repo: str,
     control_types: tuple[str, ...],
 ) -> ModelInferenceSpec:
-    """Describe the typed control video required by the official IC-LoRA route."""
+    """Describe the typed control video required by the native IC-LoRA route."""
 
     control_label = "Pose" if control_types == ("pose",) else "Canny, Depth, or Pose"
     return ModelInferenceSpec(
@@ -31,7 +31,7 @@ def _ltx_ic_lora_v2v_inference_spec(
         variants=(
             InferenceVariantSpec(
                 variant_id=model_id,
-                label="Official IC-LoRA control",
+                label="Native IC-LoRA control",
                 status="configured",
                 checkpoints=(
                     InferenceCheckpointRef(role="distilled_base", uri=base_repo, status="official"),
@@ -43,7 +43,7 @@ def _ltx_ic_lora_v2v_inference_spec(
             InferenceTaskProfile(
                 task_id="control-video-to-video",
                 label="Control Video to Video",
-                description=f"Generate video from a {control_label.lower()} control video using official IC-LoRA.",
+                description=f"Generate video from a {control_label.lower()} control video using native IC-LoRA.",
                 inputs=(
                     _field("prompt", "Prompt", target="prompt", required=True),
                     _field(
@@ -74,7 +74,6 @@ def _ltx_ic_lora_v2v_inference_spec(
                     _field("spatial_upsampler_path", "Spatial Upsampler", kind="path", target="load_kwargs"),
                     _field("gemma_root", "Gemma Root", kind="path", target="load_kwargs"),
                     _field("ic_lora_path", "Control IC-LoRA", kind="path", target="load_kwargs"),
-                    _field("python_executable", "Official Runtime Python", kind="path", target="load_kwargs"),
                 ),
                 outputs=(
                     _artifact("video", "video", required=True, preview=True),

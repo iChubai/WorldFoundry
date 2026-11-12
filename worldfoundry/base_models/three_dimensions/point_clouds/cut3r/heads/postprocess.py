@@ -5,7 +5,8 @@
 # modified from DUSt3R
 
 import torch
-import torch.nn.functional as F
+
+from worldfoundry.core.geometry.transforms import normalize_quaternion_wxyz as standardize_quaternion
 
 
 def postprocess(out, depth_mode, conf_mode, pos_z=False):
@@ -135,19 +136,3 @@ def reg_dense_conf(x, mode):
     if mode == "sigmoid":
         return (vmax - vmin) * torch.sigmoid(x) + vmin
     raise ValueError(f"bad {mode=}")
-
-
-def standardize_quaternion(quaternions: torch.Tensor) -> torch.Tensor:
-    """
-    Convert a unit quaternion to a standard form: one in which the real
-    part is non negative.
-
-    Args:
-        quaternions: Quaternions with real part first,
-            as tensor of shape (..., 4).
-
-    Returns:
-        Standardized quaternions as tensor of shape (..., 4).
-    """
-    quaternions = F.normalize(quaternions, p=2, dim=-1)
-    return torch.where(quaternions[..., 0:1] < 0, -quaternions, quaternions)

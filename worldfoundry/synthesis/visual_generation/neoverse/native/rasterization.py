@@ -53,9 +53,9 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.model
     calculate_unprojected_mask,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.geometry import (
-    closed_form_inverse_se3,
     depth_to_world_coords_points,
 )
+from worldfoundry.core.geometry.transforms import closed_form_inverse_se3
 
 from .geometry import project_world_points_to_image
 

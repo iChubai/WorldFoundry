@@ -1,6 +1,7 @@
 import torch
 
-from .rotation import quat_to_rotmat, rotmat_to_quat
+from worldfoundry.core.geometry.transforms import quaternion_xyzw_to_rotation_matrix as quat_to_rotmat
+from worldfoundry.core.geometry.transforms import rotation_matrix_to_quaternion_xyzw as rotmat_to_quat
 
 
 def camera_params_to_vector(ext, intr, image_hw=None):

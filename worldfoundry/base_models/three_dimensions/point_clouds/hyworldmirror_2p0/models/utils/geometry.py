@@ -87,25 +87,3 @@ def depth_to_world_coords_points(
     )
 
     return world_coords_points, camera_points, point_mask
-
-
-def closed_form_inverse_se3(se3: torch.Tensor) -> torch.Tensor:
-    """
-    Efficiently invert batched SE(3) matrices of shape (B, 4, 4).
-
-    Args:
-        se3 (torch.Tensor): (B, 4, 4) Transformation matrices
-
-    Returns:
-        out (torch.Tensor): (B, 4, 4) Inverse transformation matrices
-    """
-    assert se3.ndim == 3 and se3.shape[1:] == (4, 4), f"se3 must be (B, 4, 4), got {se3.shape}"
-    R = se3[:, :3, :3]  # (B, 3, 3)
-    t = se3[:, :3, 3]  # (B, 3)
-    Rt = R.transpose(1, 2)  # (B, 3, 3)
-    t_inv = -torch.bmm(Rt, t.unsqueeze(-1)).squeeze(-1)  # (B, 3)
-    out = se3.new_zeros(se3.shape)
-    out[:, :3, :3] = Rt
-    out[:, :3, 3] = t_inv
-    out[:, 3, 3] = 1.0
-    return out

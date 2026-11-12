@@ -11,6 +11,7 @@ import numpy as np
 import torch
 
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import pose_encoding_to_extri_intri
+from worldfoundry.core.geometry.transforms import closed_form_inverse_se3 as closed_form_inverse_se3
 
 
 @dataclass
@@ -181,55 +182,3 @@ def depth_to_cam_coords_points(depth_map: np.ndarray, intrinsic: np.ndarray) -> 
     cam_coords = np.stack((x_cam, y_cam, z_cam), axis=-1).astype(np.float32)
 
     return cam_coords
-
-
-def closed_form_inverse_se3(se3, R=None, T=None):
-    """
-    Compute the inverse of each 4x4 (or 3x4) SE3 matrix in a batch.
-
-    If `R` and `T` are provided, they must correspond to the rotation and translation
-    components of `se3`. Otherwise, they will be extracted from `se3`.
-
-    Args:
-        se3: Nx4x4 or Nx3x4 array or tensor of SE3 matrices.
-        R (optional): Nx3x3 array or tensor of rotation matrices.
-        T (optional): Nx3x1 array or tensor of translation vectors.
-
-    Returns:
-        Inverted SE3 matrices with the same type and device as `se3`.
-
-    Shapes:
-        se3: (N, 4, 4)
-        R: (N, 3, 3)
-        T: (N, 3, 1)
-    """
-    # Check if se3 is a numpy array or a torch tensor
-    is_numpy = isinstance(se3, np.ndarray)
-
-    # Validate shapes
-    if se3.shape[-2:] != (4, 4) and se3.shape[-2:] != (3, 4):
-        raise ValueError(f"se3 must be of shape (N,4,4), got {se3.shape}.")
-
-    # Extract R and T if not provided
-    if R is None:
-        R = se3[:, :3, :3]  # (N,3,3)
-    if T is None:
-        T = se3[:, :3, 3:]  # (N,3,1)
-
-    # Transpose R
-    if is_numpy:
-        # Compute the transpose of the rotation for NumPy
-        R_transposed = np.transpose(R, (0, 2, 1))
-        # -R^T t for NumPy
-        top_right = -np.matmul(R_transposed, T)
-        inverted_matrix = np.tile(np.eye(4), (len(R), 1, 1))
-    else:
-        R_transposed = R.transpose(1, 2)  # (N,3,3)
-        top_right = -torch.bmm(R_transposed, T)  # (N,3,1)
-        inverted_matrix = torch.eye(4, 4)[None].repeat(len(R), 1, 1)
-        inverted_matrix = inverted_matrix.to(R.dtype).to(R.device)
-
-    inverted_matrix[:, :3, :3] = R_transposed
-    inverted_matrix[:, :3, 3:] = top_right
-
-    return inverted_matrix

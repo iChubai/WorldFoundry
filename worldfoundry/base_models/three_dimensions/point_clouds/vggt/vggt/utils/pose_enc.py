@@ -6,7 +6,8 @@
 
 import torch
 
-from .rotation import mat_to_quat, quat_to_mat
+from worldfoundry.core.geometry.transforms import quaternion_xyzw_to_rotation_matrix as quat_to_mat
+from worldfoundry.core.geometry.transforms import rotation_matrix_to_quaternion_xyzw as mat_to_quat
 
 
 def extri_intri_to_pose_encoding(

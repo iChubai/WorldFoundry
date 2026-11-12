@@ -8,11 +8,12 @@ import numpy as np
 import torch
 from scipy.spatial.transform import Rotation
 
+from worldfoundry.core.geometry.transforms import closed_form_inverse_se3 as closed_form_inverse_se3
+
 try:
     from lietorch import SE3, Sim3
 except ImportError:
     SE3 = Sim3 = None
-import torch.nn.functional as F
 
 try:
     from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.dependency.distortion import (
@@ -127,58 +128,6 @@ def depth_to_cam_coords_points(depth_map: np.ndarray, intrinsic: np.ndarray) -> 
     cam_coords = np.stack((x_cam, y_cam, z_cam), axis=-1).astype(np.float32)
 
     return cam_coords
-
-
-def closed_form_inverse_se3(se3, R=None, T=None):
-    """
-    Compute the inverse of each 4x4 (or 3x4) SE3 matrix in a batch.
-
-    If `R` and `T` are provided, they must correspond to the rotation and translation
-    components of `se3`. Otherwise, they will be extracted from `se3`.
-
-    Args:
-        se3: Nx4x4 or Nx3x4 array or tensor of SE3 matrices.
-        R (optional): Nx3x3 array or tensor of rotation matrices.
-        T (optional): Nx3x1 array or tensor of translation vectors.
-
-    Returns:
-        Inverted SE3 matrices with the same type and device as `se3`.
-
-    Shapes:
-        se3: (N, 4, 4)
-        R: (N, 3, 3)
-        T: (N, 3, 1)
-    """
-    # Check if se3 is a numpy array or a torch tensor
-    is_numpy = isinstance(se3, np.ndarray)
-
-    # Validate shapes
-    if se3.shape[-2:] != (4, 4) and se3.shape[-2:] != (3, 4):
-        raise ValueError(f"se3 must be of shape (N,4,4), got {se3.shape}.")
-
-    # Extract R and T if not provided
-    if R is None:
-        R = se3[:, :3, :3]  # (N,3,3)
-    if T is None:
-        T = se3[:, :3, 3:]  # (N,3,1)
-
-    # Transpose R
-    if is_numpy:
-        # Compute the transpose of the rotation for NumPy
-        R_transposed = np.transpose(R, (0, 2, 1))
-        # -R^T t for NumPy
-        top_right = -np.matmul(R_transposed, T)
-        inverted_matrix = np.tile(np.eye(4), (len(R), 1, 1))
-    else:
-        R_transposed = R.transpose(1, 2)  # (N,3,3)
-        top_right = -torch.bmm(R_transposed, T)  # (N,3,1)
-        inverted_matrix = torch.eye(4, 4)[None].repeat(len(R), 1, 1)
-        inverted_matrix = inverted_matrix.to(R.dtype).to(R.device)
-
-    inverted_matrix[:, :3, :3] = R_transposed
-    inverted_matrix[:, :3, 3:] = top_right
-
-    return inverted_matrix
 
 
 def closed_form_inverse_se3_general(se3, R=None, T=None):
@@ -650,78 +599,6 @@ def actp(Gij, X0, jacobian=False):
         return X1, Ja
 
     return X1, None
-
-
-def _sqrt_positive_part(x: torch.Tensor) -> torch.Tensor:
-    """
-    Returns torch.sqrt(torch.max(0, x))
-    but with a zero subgradient where x is 0.
-    """
-    ret = torch.zeros_like(x)
-    positive_mask = x > 0
-    ret[positive_mask] = torch.sqrt(x[positive_mask])
-    return ret
-
-
-def matrix_to_quaternion(matrix: torch.Tensor) -> torch.Tensor:
-    """
-    Convert rotations given as rotation matrices to quaternions.
-
-    Args:
-        matrix: Rotation matrices as tensor of shape (..., 3, 3).
-
-    Returns:
-        quaternions with real part first, as tensor of shape (..., 4).
-    """
-    if matrix.shape[-1] != 3 or matrix.shape[-2] != 3:
-        raise ValueError(f"Invalid rotation matrix shape {matrix.shape}.")
-
-    batch_dim = matrix.shape[:-2]
-    m00, m01, m02, m10, m11, m12, m20, m21, m22 = torch.unbind(matrix.reshape(batch_dim + (9,)), dim=-1)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
-
-    q_abs = _sqrt_positive_part(
-        torch.stack(
-            [
-                1.0 + m00 + m11 + m22,
-                1.0 + m00 - m11 - m22,
-                1.0 - m00 + m11 - m22,
-                1.0 - m00 - m11 + m22,
-            ],
-            dim=-1,
-        )
-    )
-
-    quat_by_rijk = torch.stack(
-        [
-            torch.stack([q_abs[..., 0] ** 2, m21 - m12, m02 - m20, m10 - m01], dim=-1),
-            torch.stack([m21 - m12, q_abs[..., 1] ** 2, m10 + m01, m02 + m20], dim=-1),
-            torch.stack([m02 - m20, m10 + m01, q_abs[..., 2] ** 2, m12 + m21], dim=-1),
-            torch.stack([m10 - m01, m20 + m02, m21 + m12, q_abs[..., 3] ** 2], dim=-1),
-        ],
-        dim=-2,
-    )
-
-    flr = torch.tensor(0.1).to(dtype=q_abs.dtype, device=q_abs.device)
-    quat_candidates = quat_by_rijk / (2.0 * q_abs[..., None].max(flr))
-
-    out = quat_candidates[F.one_hot(q_abs.argmax(dim=-1), num_classes=4) > 0.5, :].reshape(batch_dim + (4,))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
-    return standardize_quaternion(out)
-
-
-def standardize_quaternion(quaternions: torch.Tensor) -> torch.Tensor:
-    """
-    Convert a unit quaternion to a standard form: one in which the real
-    part is non negative.
-
-    Args:
-        quaternions: Quaternions with real part first,
-            as tensor of shape (..., 4).
-
-    Returns:
-        Standardized quaternions as tensor of shape (..., 4).
-    """
-    quaternions = F.normalize(quaternions, p=2, dim=-1)
-    return torch.where(quaternions[..., 0:1] < 0, -quaternions, quaternions)
 
 
 def umeyama(X, Y):

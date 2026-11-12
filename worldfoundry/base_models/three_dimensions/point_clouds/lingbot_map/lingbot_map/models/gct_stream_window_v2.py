@@ -21,14 +21,16 @@ from tqdm.auto import tqdm
 # every N frames.
 _KV_DEBUG = os.environ.get("LINGBOT_DEBUG_KV", "")
 
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.rotation import (  # noqa: E402 - Follows the environment setup.
-    mat_to_quat,
-    quat_to_mat,
+from worldfoundry.core.geometry.transforms import closed_form_inverse_se3  # noqa: E402 - Follows the environment setup.
+from worldfoundry.core.geometry.transforms import (  # noqa: E402 - Follows the environment setup.
+    quaternion_xyzw_to_rotation_matrix as quat_to_mat,
+)
+from worldfoundry.core.geometry.transforms import (  # noqa: E402 - Follows the environment setup.
+    rotation_matrix_to_quaternion_xyzw as mat_to_quat,
 )
 
 from ..aggregator.stream import AggregatorStream  # noqa: E402 - Follows the environment setup.
 from ..heads.camera_head import CameraCausalHead  # noqa: E402 - Follows the environment setup.
-from ..utils.geometry import closed_form_inverse_se3  # noqa: E402 - Follows the environment setup.
 from ..utils.pose_enc import pose_encoding_to_extri_intri  # noqa: E402 - Follows the environment setup.
 from .gct_base import GCTBase  # noqa: E402 - Follows the environment setup.
 

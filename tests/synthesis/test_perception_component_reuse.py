@@ -40,7 +40,7 @@ def test_vmem_feedforward_loads_canonical_geglu_keys() -> None:
         (
             "neoverse/native/rasterization.py",
             "worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.geometry",
-            {"depth_to_world_coords_points", "closed_form_inverse_se3"},
+            {"depth_to_world_coords_points"},
         ),
         (
             "neoverse/native/depth_anything_reconstructor.py",

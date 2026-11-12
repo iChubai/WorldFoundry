@@ -9,12 +9,10 @@ import PIL
 import torch
 from PIL import Image
 
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.geometry import (
-    closed_form_inverse_se3,
-)
 from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.variants.fantasy_world.utils.pose_enc import (
     pose_encoding_to_extri_intri,
 )
+from worldfoundry.core.geometry.transforms import closed_form_inverse_se3
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 

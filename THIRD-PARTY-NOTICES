@@ -7059,3 +7059,13 @@ batched logits filter from Hugging Face Transformers' Thomas Wolf example
 The first-tensor dtype helper in core/nn/blocks/module_properties.py retains
 the Diffusers (Apache-2.0) first-parameter/first-buffer selection convention.
 The complete Apache-2.0 and MIT license texts are retained above.
+
+Shared perception camera transforms
+-----------------------------------
+The WXYZ quaternion conversion in worldfoundry/core/geometry/transforms.py is
+adapted from the PyTorch3D-derived CUT3R helpers (Meta Platforms, Inc., BSD-3-Clause).
+The batched SE3 inversion is adapted from VGGT's utils/geometry.py (Meta Platforms,
+Inc., Apache-2.0 source license). Trace-branch quaternion conversion, normalize-first
+rotation products and spherical interpolation are shared from Tencent
+HunyuanWorld-Mirror's utils/scene_render.py; the HunyuanWorld-Mirror terms reproduced
+above continue to apply to these routines. Checkpoint and model licenses are unchanged.

@@ -186,6 +186,12 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/three_dimensions/point_clouds/pi3_inference/test_conv_head.py \
 	tests/core/nn/blocks/test_module_properties.py \
 	tests/core/nn/blocks/test_layers.py \
+	tests/core/attention/rotary/test_rope_2d.py \
+	tests/base_models/llm_mllm_core/test_prismatic.py \
+	tests/base_models/diffusion_model/models/autoencoders/test_alias_free.py \
+	tests/base_models/llm_mllm_core/action/gr00t/test_dit_components.py \
+	tests/base_models/diffusion_model/models/networks/lvdm/test_shared_feedforward.py \
+	tests/core/nn/diffusion/test_schedulers.py \
 	tests/core/nn/blocks/test_normalization.py \
 	tests/core/nn/diffusion/test_utils.py \
 	tests/core/attention/rotary/test_interleaved.py \

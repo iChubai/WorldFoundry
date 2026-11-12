@@ -9,15 +9,13 @@ from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.back
     dinov2_vitl14_reg,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.conv_head import ConvHead
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.pos_embed import (
-    PositionGetter,
-    RoPE2D,
-)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.pos_embed import PositionGetter
 from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.transformer_head import (
     ContextOnlyTransformerDecoder,
     LinearPts3d,
     TransformerDecoder,
 )
+from worldfoundry.core.attention.rotary.rope_2d import CrocoRotaryPositionEmbedding2D as RoPE2D
 from worldfoundry.core.nn.blocks.layers import Mlp
 
 from .layers.attention import FlashAttentionRope

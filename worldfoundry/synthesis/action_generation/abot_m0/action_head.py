@@ -22,6 +22,8 @@ from diffusers.models.attention import Attention, FeedForward
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from torch import nn
 
+from worldfoundry.core.nn.blocks.layers import TwoLayerReLU as MLP
+
 
 class SinusoidalPositionalEncoding(nn.Module):
     def __init__(self, embedding_dim: int) -> None:
@@ -41,16 +43,6 @@ class SinusoidalPositionalEncoding(nn.Module):
         if encoded.shape[-1] < self.embedding_dim:
             encoded = F.pad(encoded, (0, self.embedding_dim - encoded.shape[-1]))
         return encoded
-
-
-class MLP(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int, output_dim: int) -> None:
-        super().__init__()
-        self.layer1 = nn.Linear(input_dim, hidden_dim)
-        self.layer2 = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, value: torch.Tensor) -> torch.Tensor:
-        return self.layer2(F.relu(self.layer1(value)))
 
 
 class ActionEncoder(nn.Module):

@@ -762,10 +762,48 @@ def _ntuple(n: int):
     return parse
 
 
+class PreNormFeedForward(nn.Module):
+    """Layer-normalized FFN with native sequential checkpoint slots."""
+
+    def __init__(self, dim: int, hidden_dim: int, dropout: float = 0.0) -> None:
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.LayerNorm(dim),
+            nn.Linear(dim, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, dim),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, x: Tensor) -> Tensor:
+        return self.net(x)
+
+
+class TwoLayerReLU(nn.Module):
+    """Two linear layers with ReLU and native layer1/layer2 keys."""
+
+    def __init__(self, input_dim: int, hidden_dim: int, output_dim: int) -> None:
+        super().__init__()
+        self.layer1 = nn.Linear(input_dim, hidden_dim)
+        self.layer2 = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, value: torch.Tensor) -> torch.Tensor:
+        return self.layer2(F.relu(self.layer1(value)))
+
+
+class InputFP32LayerNorm(nn.LayerNorm):
+    """Normalize FP32 inputs without casting the affine parameters."""
+
+    def forward(self, x: Tensor) -> Tensor:  # ty: ignore[lost-keyword-for-regular-parameter] - Native x keyword.
+        return super().forward(x.float()).type_as(x)
+
+
 __all__ = [
     "XFORMERS_AVAILABLE",
     "XFORMERS_ENABLED",
     "DropPath",
+    "InputFP32LayerNorm",
     "LayerNorm2d",
     "LayerScale",
     "Mlp",
@@ -774,11 +812,13 @@ __all__ = [
     "Permute",
     "PixelUnshuffle",
     "PositionEmbeddingRandom",
+    "PreNormFeedForward",
     "SamHeadMLP",
     "SamMLPBlock",
     "SwiGLU",
     "SwiGLUFFN",
     "SwiGLUFFNFused",
+    "TwoLayerReLU",
     "VisionAttention",
     "drop_path",
     "get_same_padding",

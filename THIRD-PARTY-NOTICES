@@ -7285,3 +7285,21 @@ the PRoPE authors' MIT notice remains in that owner. ReCamMaster reuses Gamma-Wo
 unchanged complex RoPE helpers (NVIDIA, Apache-2.0). HY-World reuses HunyuanWorld-Mirror
 special-token expansion and image padding under their existing model terms. These
 imports do not change family model/checkpoint licenses.
+
+Shared Prismatic and audio filter components
+-------------------------------------------
+base_models/llm_mllm_core/mllm/prismatic.py retains the OpenVLA/Prismatic MIT
+projector and LayerScale parameter binding. Sources: openvla/openvla at
+c8f03f48af692657d3060c19588038c7220e9af9 and moojink/openvla-oft at
+e4287e94541f459edc4feabc4e181f537cd569a8. Checkpoint/model licenses remain unchanged.
+
+base_models/diffusion_model/models/autoencoders/alias_free.py owns the shared
+Kaiser-sinc, low-pass and downsample leaves from junjun3518/alias-free-torch
+(Apache-2.0), including attributed Julius sinc/low-pass code (MIT). The complete
+BigVGAN alias-free-torch LICENSE_3 and Julius LICENSE_5 notices above apply.
+Kandinsky/MMAudio and MiniMax H3 retain their native upsample/activation policies.
+
+GR00T conditioning and LVDM GEGLU/resampler components retain their existing
+owners and licenses. The core NN pre-norm/ReLU/input-FP32 variants and CroCo
+constructor binding preserve native parameter names, signatures and precision;
+existing canonical core implementations remain unchanged.

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+"""Shared Kaiser-sinc filters and depthwise downsampling for audio codecs."""
+
 # Adapted from https://github.com/junjun3518/alias-free-torch under the Apache License 2.0
 # License text: THIRD-PARTY-NOTICES, BigVGAN alias-free-torch LICENSE_3.
 
@@ -13,7 +16,7 @@ else:
     # This code is adopted from adefossez's julius.core.sinc under the MIT License
     # https://adefossez.github.io/julius/julius/core.html
     # License text: THIRD-PARTY-NOTICES, BigVGAN Julius LICENSE_5.
-    def sinc(x: torch.Tensor):
+    def sinc(x: torch.Tensor) -> torch.Tensor:
         """
         Implementation of sinc, i.e. sin(pi * x) / (pi * x)
         __Warning__: Different to julius.sinc, the input is multiplied by `pi`!
@@ -28,7 +31,9 @@ else:
 # This code is adopted from adefossez's julius.lowpass.LowPassFilters under the MIT License
 # https://adefossez.github.io/julius/julius/lowpass.html
 # License text: THIRD-PARTY-NOTICES, BigVGAN Julius LICENSE_5.
-def kaiser_sinc_filter1d(cutoff, half_width, kernel_size):  # return filter [1,1,kernel_size]
+def kaiser_sinc_filter1d(
+    cutoff: float, half_width: float, kernel_size: int
+) -> torch.Tensor:  # return filter [1,1,kernel_size]
     even = kernel_size % 2 == 0
     half_size = kernel_size // 2
 
@@ -61,13 +66,13 @@ def kaiser_sinc_filter1d(cutoff, half_width, kernel_size):  # return filter [1,1
 class LowPassFilter1d(nn.Module):
     def __init__(
         self,
-        cutoff=0.5,
-        half_width=0.6,
+        cutoff: float = 0.5,
+        half_width: float = 0.6,
         stride: int = 1,
         padding: bool = True,
         padding_mode: str = "replicate",
         kernel_size: int = 12,
-    ):
+    ) -> None:
         """
         kernel_size should be even number for stylegan3 setup, in this implementation, odd number is also possible.
         """
@@ -86,7 +91,7 @@ class LowPassFilter1d(nn.Module):
         filter = kaiser_sinc_filter1d(cutoff, half_width, kernel_size)
         self.register_buffer("filter", filter)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         _, C, _ = x.shape
 
         if self.padding:
@@ -94,3 +99,21 @@ class LowPassFilter1d(nn.Module):
         out = F.conv1d(x, self.filter.expand(C, -1, -1), stride=self.stride, groups=C)
 
         return out
+
+
+class DownSample1d(nn.Module):
+    def __init__(self, ratio: int = 2, kernel_size: int | None = None) -> None:
+        super().__init__()
+        self.ratio = ratio
+        self.kernel_size = int(6 * ratio // 2) * 2 if kernel_size is None else kernel_size
+        self.lowpass = LowPassFilter1d(
+            cutoff=0.5 / ratio,
+            half_width=0.6 / ratio,
+            stride=ratio,
+            kernel_size=self.kernel_size,
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        xx = self.lowpass(x)
+
+        return xx

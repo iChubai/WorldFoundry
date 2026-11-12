@@ -7,19 +7,11 @@ from einops import rearrange, repeat
 from einops_exts import rearrange_many
 from torch import einsum, nn
 
+from worldfoundry.base_models.diffusion_model.models.encoders.lvdm.resampler import FeedForward as FeedForward
+
 
 def exists(val):
     return val is not None
-
-
-def FeedForward(dim, mult=4):
-    inner_dim = int(dim * mult)
-    return nn.Sequential(
-        nn.LayerNorm(dim),
-        nn.Linear(dim, inner_dim, bias=False),
-        nn.GELU(),
-        nn.Linear(inner_dim, dim, bias=False),
-    )
 
 
 class PerceiverAttention(nn.Module):

@@ -133,4 +133,11 @@ class RotaryPositionEmbedding2D(nn.Module):
         return (tokens * cos) + (self._rotate_features(tokens) * sin)
 
 
-__all__ = ["PositionGetter", "RotaryPositionEmbedding2D"]
+class CrocoRotaryPositionEmbedding2D(RotaryPositionEmbedding2D):
+    """Axial RoPE with the native CroCo freq/F0 constructor names."""
+
+    def __init__(self, freq: float = 100.0, F0: float = 1.0) -> None:
+        super().__init__(frequency=freq, scaling_factor=F0)
+
+
+__all__ = ["CrocoRotaryPositionEmbedding2D", "PositionGetter", "RotaryPositionEmbedding2D"]

@@ -77,6 +77,7 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linea
 from worldfoundry.core.distributed.collectives.generic import get_rank
 from worldfoundry.core.model_loading.checkpoints import load_weights_only, require_tensor
 from worldfoundry.core.nn.blocks.layers import DropPath
+from worldfoundry.core.nn.blocks.layers import InputFP32LayerNorm as FP32LayerNorm
 
 from .sana_camctrl_blocks import (
     _maybe_drop_cam_branch,
@@ -111,13 +112,6 @@ class DeltaActionEmbedder(nn.Module):
 
     def forward(self, x):
         return self.mlp(x)
-
-
-class FP32LayerNorm(nn.LayerNorm):
-    """Layer norm implementation."""
-
-    def forward(self, x):
-        return super().forward(x.float()).type_as(x)
 
 
 class FP32NormProxy(nn.Module):

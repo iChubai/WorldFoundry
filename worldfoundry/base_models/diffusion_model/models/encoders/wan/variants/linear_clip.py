@@ -17,7 +17,6 @@ import logging
 from typing import Any as Any
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as T
 
@@ -31,17 +30,13 @@ from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import XL
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import HuggingfaceTokenizer
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.linear_attention import flash_attention
 from worldfoundry.core.model_loading import load_state_dict as load_core_state_dict
+from worldfoundry.core.nn.blocks.layers import InputFP32LayerNorm as LayerNorm
 
 __all__ = [
     "CLIPModel",
     "XLMRobertaCLIP",
     "clip_xlm_roberta_vit_h_14",
 ]
-
-
-class LayerNorm(nn.LayerNorm):
-    def forward(self, x):
-        return super().forward(x.float()).type_as(x)
 
 
 class SelfAttention(CanonicalSelfAttention):

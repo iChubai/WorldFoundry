@@ -8,38 +8,10 @@ import torch.nn.functional as F
 from torchvision.transforms import Compose
 
 from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_priorda_dav2 import DINOv2
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v2.util.blocks import (
-    FeatureFusionBlock,
-    _make_scratch,
-)
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import make_fusion_block as _make_fusion_block
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import make_scratch as _make_scratch
 
 from .transform import NormalizeImage, Resize
-
-
-def _make_fusion_block(features, use_bn, size=None):
-    return FeatureFusionBlock(
-        features,
-        nn.ReLU(False),
-        deconv=False,
-        bn=use_bn,
-        expand=False,
-        align_corners=True,
-        size=size,
-    )
-
-
-class ConvBlock(nn.Module):
-    def __init__(self, in_feature, out_feature):
-        super().__init__()
-
-        self.conv_block = nn.Sequential(
-            nn.Conv2d(in_feature, out_feature, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(out_feature),
-            nn.ReLU(True),
-        )
-
-    def forward(self, x):
-        return self.conv_block(x)
 
 
 class DPTHead(nn.Module):

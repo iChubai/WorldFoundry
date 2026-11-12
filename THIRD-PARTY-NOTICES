@@ -7069,3 +7069,11 @@ Inc., Apache-2.0 source license). Trace-branch quaternion conversion, normalize-
 rotation products and spherical interpolation are shared from Tencent
 HunyuanWorld-Mirror's utils/scene_render.py; the HunyuanWorld-Mirror terms reproduced
 above continue to apply to these routines. Checkpoint and model licenses are unchanged.
+
+Shared DPT fusion components
+----------------------------
+worldfoundry/base_models/three_dimensions/depth/midas/fusion.py shares the MiDaS
+residual/interpolation blocks (Intel ISL, MIT), Depth Anything fusion blocks
+(Depth Anything authors, Apache-2.0 source), and VGGT grouped residual/fusion blocks
+(Meta Platforms, Inc. and affiliates, Apache-2.0 source). The existing source and
+checkpoint terms for MiDaS, Depth Anything, VGGT and their variants remain unchanged.

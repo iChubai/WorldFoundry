@@ -6,8 +6,10 @@ https://github.com/thomasjpfan/pytorch_refinenet/blob/master/pytorch_refinenet/r
 import torch
 import torch.nn as nn
 
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import Interpolate
+
 from .base_model import BaseModel
-from .blocks import FeatureFusionBlock_custom, Interpolate, _make_encoder
+from .blocks import FeatureFusionBlock_custom, _make_encoder
 
 
 class MidasNet_small(BaseModel):

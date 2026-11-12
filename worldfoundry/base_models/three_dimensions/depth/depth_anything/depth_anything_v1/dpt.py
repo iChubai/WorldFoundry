@@ -3,8 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from huggingface_hub import PyTorchModelHubMixin
 
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import make_fusion_block as _make_fusion_block
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import make_scratch as _make_scratch
+
 from .....perception_core.general_perception.dinov2.hub import backbones as dinov2_backbones
-from .blocks import FeatureFusionBlock, _make_scratch
 
 
 def _load_in_tree_dinov2(encoder: str) -> nn.Module:
@@ -18,18 +20,6 @@ def _load_in_tree_dinov2(encoder: str) -> nn.Module:
     except KeyError as exc:
         raise ValueError(f"Unsupported DINOv2 encoder: {encoder}") from exc
     return loader(pretrained=False)
-
-
-def _make_fusion_block(features, use_bn, size=None):
-    return FeatureFusionBlock(
-        features,
-        nn.ReLU(False),
-        deconv=False,
-        bn=use_bn,
-        expand=False,
-        align_corners=True,
-        size=size,
-    )
 
 
 class DPTHead(nn.Module):

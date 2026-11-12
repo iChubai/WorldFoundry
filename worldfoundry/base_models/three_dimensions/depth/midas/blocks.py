@@ -2,6 +2,9 @@ import torch
 import torch.nn as nn
 from timm import create_model
 
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import ResidualConvUnit as ResidualConvUnit_custom
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import make_scratch as _make_scratch
+
 from .backbones.beit import (
     _make_pretrained_beitb16_384,
     _make_pretrained_beitl16_384,
@@ -117,39 +120,6 @@ def _make_encoder(
     return pretrained, scratch
 
 
-def _make_scratch(in_shape, out_shape, groups=1, expand=False):
-    scratch = nn.Module()
-
-    out_shape1 = out_shape
-    out_shape2 = out_shape
-    out_shape3 = out_shape
-    if len(in_shape) >= 4:
-        out_shape4 = out_shape
-
-    if expand:
-        out_shape1 = out_shape
-        out_shape2 = out_shape * 2
-        out_shape3 = out_shape * 4
-        if len(in_shape) >= 4:
-            out_shape4 = out_shape * 8
-
-    scratch.layer1_rn = nn.Conv2d(
-        in_shape[0], out_shape1, kernel_size=3, stride=1, padding=1, bias=False, groups=groups
-    )
-    scratch.layer2_rn = nn.Conv2d(
-        in_shape[1], out_shape2, kernel_size=3, stride=1, padding=1, bias=False, groups=groups
-    )
-    scratch.layer3_rn = nn.Conv2d(
-        in_shape[2], out_shape3, kernel_size=3, stride=1, padding=1, bias=False, groups=groups
-    )
-    if len(in_shape) >= 4:
-        scratch.layer4_rn = nn.Conv2d(
-            in_shape[3], out_shape4, kernel_size=3, stride=1, padding=1, bias=False, groups=groups
-        )
-
-    return scratch
-
-
 def _make_pretrained_efficientnet_lite3(use_pretrained, exportable=False):
     efficientnet = create_model(
         "tf_efficientnet_lite3",
@@ -195,36 +165,6 @@ def _make_pretrained_resnext101_wsl(use_pretrained):
     )
     resnet.load_state_dict(state_dict)
     return _make_resnet_backbone(resnet)
-
-
-class Interpolate(nn.Module):
-    """Interpolation module."""
-
-    def __init__(self, scale_factor, mode, align_corners=False):
-        """
-        Args:
-            scale_factor (float): scaling
-            mode (str): interpolation mode
-        """
-        super().__init__()
-
-        self.interp = nn.functional.interpolate
-        self.scale_factor = scale_factor
-        self.mode = mode
-        self.align_corners = align_corners
-
-    def forward(self, x):
-        """
-        Args:
-            x (tensor): input
-
-        Returns:
-            tensor: interpolated data
-        """
-
-        x = self.interp(x, scale_factor=self.scale_factor, mode=self.mode, align_corners=self.align_corners)
-
-        return x
 
 
 class ResidualConvUnit(nn.Module):
@@ -285,57 +225,6 @@ class FeatureFusionBlock(nn.Module):
         output = nn.functional.interpolate(output, scale_factor=2, mode="bilinear", align_corners=True)
 
         return output
-
-
-class ResidualConvUnit_custom(nn.Module):
-    """Residual convolution module."""
-
-    def __init__(self, features, activation, bn):
-        """
-        Args:
-            features (int): number of features
-        """
-        super().__init__()
-
-        self.bn = bn
-
-        self.groups = 1
-
-        self.conv1 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups)
-
-        self.conv2 = nn.Conv2d(features, features, kernel_size=3, stride=1, padding=1, bias=True, groups=self.groups)
-
-        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
-            self.bn1 = nn.BatchNorm2d(features)
-            self.bn2 = nn.BatchNorm2d(features)
-
-        self.activation = activation
-
-        self.skip_add = nn.quantized.FloatFunctional()
-
-    def forward(self, x):
-        """
-        Args:
-            x (tensor): input
-
-        Returns:
-            tensor: output
-        """
-
-        out = self.activation(x)
-        out = self.conv1(out)
-        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
-            out = self.bn1(out)
-
-        out = self.activation(out)
-        out = self.conv2(out)
-        if self.bn == True:  # noqa: E712 - Keeps `==` for operands that may compare elementwise.
-            out = self.bn2(out)
-
-        if self.groups > 1:
-            out = self.conv_merge(out)
-
-        return self.skip_add.add(out, x)
 
         # return out + x
 

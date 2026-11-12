@@ -2,17 +2,11 @@ import torch
 import torch.nn as nn
 from timm.models.layers import get_act_layer
 
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import Interpolate
+
 from .backbones.levit import stem_b4_transpose
 from .base_model import BaseModel
-from .blocks import (
-    FeatureFusionBlock_custom,
-    Interpolate,
-    _make_encoder,
-    forward_beit,
-    forward_levit,
-    forward_swin,
-    forward_vit,
-)
+from .blocks import FeatureFusionBlock_custom, _make_encoder, forward_beit, forward_levit, forward_swin, forward_vit
 
 
 def _make_fusion_block(features, use_bn, size=None):

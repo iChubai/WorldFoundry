@@ -160,6 +160,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_mmaudio_component_reuse.py \
 	tests/core/attention/test_qk_rotary_embedding.py \
 	tests/base_models/llm_mllm_core/test_qwen_layers.py \
+	tests/base_models/llm_mllm_core/test_qwen_vision.py \
 	tests/base_models/test_hyperflow_components.py \
 	tests/synthesis/test_hyperflow_runtime.py \
 	tests/base_models/test_minimax_h3_dit.py \

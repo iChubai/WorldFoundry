@@ -33,6 +33,7 @@ from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
     QwenMLP as DINOv3ViTGatedMLP,
 )
 from worldfoundry.core.attention.rotary.rope import rotate_half
+from worldfoundry.core.nn.blocks.layers import LayerScale
 
 from .dinov3_configuration import DINOv3ViTConfig
 
@@ -309,15 +310,6 @@ class DINOv3ViTAttention(nn.Module):
         return attn_output, attn_weights
 
 
-class DINOv3ViTLayerScale(nn.Module):
-    def __init__(self, config) -> None:
-        super().__init__()
-        self.lambda1 = nn.Parameter(config.layerscale_value * torch.ones(config.hidden_size))
-
-    def forward(self, hidden_state: torch.Tensor) -> torch.Tensor:
-        return hidden_state * self.lambda1
-
-
 def drop_path(input: torch.Tensor, drop_prob: float = 0.0, training: bool = False) -> torch.Tensor:
     """
     Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
@@ -374,7 +366,7 @@ class DINOv3ViTLayer(nn.Module):
 
         self.norm1 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.attention = DINOv3ViTAttention(config)
-        self.layer_scale1 = DINOv3ViTLayerScale(config)
+        self.layer_scale1 = LayerScale(config.hidden_size, init_values=config.layerscale_value)
         self.drop_path = DINOv3ViTDropPath(config.drop_path_rate) if config.drop_path_rate > 0.0 else nn.Identity()
 
         self.norm2 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
@@ -383,7 +375,7 @@ class DINOv3ViTLayer(nn.Module):
             self.mlp = DINOv3ViTGatedMLP(config, bias=config.mlp_bias)
         else:
             self.mlp = DINOv3ViTMLP(config)
-        self.layer_scale2 = DINOv3ViTLayerScale(config)
+        self.layer_scale2 = LayerScale(config.hidden_size, init_values=config.layerscale_value)
 
     def forward(
         self,
@@ -455,8 +447,8 @@ class DINOv3ViTPreTrainedModel(PreTrainedModel):
                     std=self.config.initializer_range,
                 ).to(module.register_tokens.dtype)
             module.mask_token.data.zero_()
-        elif isinstance(module, DINOv3ViTLayerScale):
-            module.lambda1.data.fill_(self.config.layerscale_value)
+        elif isinstance(module, LayerScale):
+            module.gamma.data.fill_(self.config.layerscale_value)
 
 
 class DINOv3ViTModel(DINOv3ViTPreTrainedModel):

@@ -17,6 +17,10 @@ from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     runtime_options_cache_key,
 )
 
+_LAYER_SCALE_CHECKPOINT_KEY_MAPPING = {
+    r"^(action_model\.vision_encoder\.layer\.\d+\.layer_scale[12])\.lambda1$": r"\1.gamma",
+}
+
 
 @dataclass(frozen=True)
 class LDA1BRuntimeConfig:
@@ -152,6 +156,8 @@ class LDA1BRuntime:
     def _load_state_dict(path: Path) -> Mapping[str, Any]:
         import torch
 
+        from worldfoundry.core.model_loading.checkpoints.remap import remap_checkpoint_keys
+
         payload = torch.load(
             path,
             map_location="cpu",
@@ -167,7 +173,7 @@ class LDA1BRuntime:
             state = {str(key)[7:]: value for key, value in state.items()}
         if not all(isinstance(key, str) and isinstance(value, torch.Tensor) for key, value in state.items()):
             raise ValueError("LDA-1B checkpoint state dict must contain tensor values only")
-        return state
+        return remap_checkpoint_keys(state, _LAYER_SCALE_CHECKPOINT_KEY_MAPPING)
 
     def _load_model(self) -> Any:
         if self._model is not None:

@@ -160,6 +160,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_mmaudio_component_reuse.py \
 	tests/core/test_sharded_safetensors.py \
 	tests/synthesis/test_go1_checkpoint_loading.py \
+	tests/synthesis/test_lda_1b_checkpoint_loading.py \
 	tests/core/attention/test_qk_rotary_embedding.py \
 	tests/base_models/llm_mllm_core/test_qwen_layers.py \
 	tests/base_models/llm_mllm_core/test_qwen_rotary.py \

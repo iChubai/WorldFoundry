@@ -7208,3 +7208,46 @@ The generic matching-linear constructor in core/acceleration/quantization/checkp
 and tensor-only PyTorch RMS entry point in core/nn/blocks/normalization.py are
 first-party OpenEnvision code under Apache-2.0. Family FP8 storage, calibration and
 kernel implementations retain their existing terms and checkpoint layouts.
+
+Shared RAFT feature extraction
+------------------------------
+Source: https://github.com/princeton-vl/RAFT
+Revision: 2888e15a51fa41140771d3f498ed8023cff098d1
+License: BSD-3-Clause
+File: worldfoundry/base_models/perception_core/optical_flow/raft_features.py
+
+AMT, FlowFormer++ and ViPE reuse the RAFT residual/bottleneck blocks and matching
+small feature encoder. Their full-encoder widths and frame layouts remain local.
+The shared owner is outside the evaluation-only RAFT runtime; that runtime retains
+its BasicEncoder and imports the same shared leaves. Original parameter names,
+normalization buffers and source/model terms are unchanged.
+
+BSD 3-Clause License
+
+Copyright (c) 2020, princeton-vl
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

@@ -180,6 +180,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/llm_mllm_core/test_rdt.py \
 	tests/base_models/diffusion_model/models/networks/dit/test_token.py \
 	tests/base_models/diffusion_model/models/representations/ltx/test_conditioning_helpers.py \
+	tests/base_models/perception_core/optical_flow/test_raft_features.py \
 	tests/core/nn/blocks/test_module_properties.py \
 	tests/core/nn/blocks/test_layers.py \
 	tests/core/nn/blocks/test_normalization.py \

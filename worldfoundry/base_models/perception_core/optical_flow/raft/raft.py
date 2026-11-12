@@ -3,12 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.optical_flow.raft.corr import AlternateCorrBlock, CorrBlock
-from worldfoundry.base_models.perception_core.optical_flow.raft.extractor import BasicEncoder, SmallEncoder
+from worldfoundry.base_models.perception_core.optical_flow.raft.extractor import BasicEncoder
 from worldfoundry.base_models.perception_core.optical_flow.raft.update import BasicUpdateBlock, SmallUpdateBlock
 from worldfoundry.base_models.perception_core.optical_flow.raft.utils.utils import (
     coords_grid,
     upflow8,
 )
+from worldfoundry.base_models.perception_core.optical_flow.raft_features import SmallEncoder
 
 try:
     _torch_amp_autocast = torch.amp.autocast

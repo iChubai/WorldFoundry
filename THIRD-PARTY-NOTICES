@@ -6976,3 +6976,10 @@ File: worldfoundry/base_models/diffusion_model/models/networks/sana/variants/cpu
 The CPU-frequency variant shares the canonical Sana projection graph and retains
 the source runtimes' FP32 CPU frequency construction and explicit dtype behavior.
 The upstream license texts are retained in this bundle.
+
+Open-MAGVIT2 depth-to-space upsampler
+-----------------------------------
+Source: https://github.com/TencentARC/Open-MAGVIT2 (Apache License 2.0)
+File: worldfoundry/base_models/diffusion_model/models/autoencoders/magvit2/upsampling.py
+The shared inference block retains Open-MAGVIT2's convolution keys and DCR channel ordering.
+The upstream license text is retained in this bundle.

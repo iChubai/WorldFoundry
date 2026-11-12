@@ -33,15 +33,7 @@ from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.openso
 transformers.logging.set_verbosity_error()
 
 
-class AbstractEncoder(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def encode(self, *args, **kwargs):
-        raise NotImplementedError
-
-
-class FrozenCLIPEmbedder(AbstractEncoder):
+class FrozenCLIPEmbedder(nn.Module):
     """Uses the CLIP transformer encoder for text (from Hugging Face)"""
 
     def __init__(self, path="openai/clip-vit-huge-patch14", device="cuda", max_length=77):

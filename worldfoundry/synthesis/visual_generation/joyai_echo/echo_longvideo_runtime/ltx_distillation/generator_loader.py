@@ -9,8 +9,12 @@ from pathlib import Path
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import X0Model
+from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.ltx_core.model.transformer import (
+    LTXModelConfigurator,
+)
+
 from ..ltx_core.loader.sft_loader import SafetensorsModelStateDictLoader
-from ..ltx_core.model.transformer import LTXModelConfigurator, X0Model
 from .models.ltx_wrapper import LTX2DiffusionWrapper, create_ltx2_wrapper
 from .quantization import build_prequant_fp8_policy, inspect_prequant_fp8_checkpoint
 from .release_checkpoint import ReleaseCheckpoint, resolve_release_checkpoint

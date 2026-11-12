@@ -3,9 +3,12 @@ from collections.abc import Callable
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.model import (
+    JoyAIEchoModel as LTXModel,
+)
+
 from ..loader.module_ops import ModuleOps
 from ..loader.sd_ops import KeyValueOperationResult, SDOps
-from ..model.transformer import LTXModel
 
 
 class FP8Linear(nn.Module):

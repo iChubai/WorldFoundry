@@ -4,6 +4,15 @@ from dataclasses import replace
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.embeddings_processor import EmbeddingsProcessorOutput
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import X0Model
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import (
+    BatchedPerturbationConfig,
+    Perturbation,
+    PerturbationConfig,
+    PerturbationType,
+)
 from worldfoundry.base_models.diffusion_model.models.representations.ltx.protocols import (
     DiffusionStepProtocol,
     GuiderProtocol,
@@ -12,16 +21,8 @@ from worldfoundry.base_models.diffusion_model.models.representations.ltx.protoco
 from ...ltx_core.components.guiders import MultiModalGuider, MultiModalGuiderFactory
 from ...ltx_core.components.noisers import Noiser
 from ...ltx_core.conditioning import ConditioningItem, VideoConditionByKeyframeIndex, VideoConditionByLatentIndex
-from ...ltx_core.guidance.perturbations import (
-    BatchedPerturbationConfig,
-    Perturbation,
-    PerturbationConfig,
-    PerturbationType,
-)
-from ...ltx_core.model.transformer import Modality, X0Model
 from ...ltx_core.model.video_vae import VideoEncoder
 from ...ltx_core.text_encoders.gemma import GemmaTextEncoder
-from ...ltx_core.text_encoders.gemma.embeddings_processor import EmbeddingsProcessorOutput
 from ...ltx_core.tools import AudioLatentTools, LatentTools, VideoLatentTools
 from ...ltx_core.types import AudioLatentShape, LatentState, VideoLatentShape, VideoPixelShape
 from .args import ImageConditioningInput
@@ -423,7 +424,9 @@ def multi_modal_guider_denoising_func(
             ptb_denoised_video, ptb_denoised_audio = transformer(
                 video=pos_video_modality,
                 audio=pos_audio_modality,
-                perturbations=BatchedPerturbationConfig(perturbations=[perturbation_config]),
+                perturbations=BatchedPerturbationConfig(
+                    perturbations=[perturbation_config], num_blocks=transformer.num_blocks
+                ),
             )
 
         mod_denoised_video, mod_denoised_audio = 0.0, 0.0
@@ -436,7 +439,9 @@ def multi_modal_guider_denoising_func(
             mod_denoised_video, mod_denoised_audio = transformer(
                 video=pos_video_modality,
                 audio=pos_audio_modality,
-                perturbations=BatchedPerturbationConfig(perturbations=[perturbation_config]),
+                perturbations=BatchedPerturbationConfig(
+                    perturbations=[perturbation_config], num_blocks=transformer.num_blocks
+                ),
             )
 
         if video_guider.should_skip_step(step_index):

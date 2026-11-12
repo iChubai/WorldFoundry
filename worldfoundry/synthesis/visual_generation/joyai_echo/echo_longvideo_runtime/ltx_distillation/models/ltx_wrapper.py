@@ -16,17 +16,20 @@ from typing import Any
 import torch
 import torch.nn as nn
 
-from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier, get_pixel_coords
-from ...ltx_core.guidance.perturbations import (
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.modality import Modality
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.perturbations import (
     BatchedPerturbationConfig,
     Perturbation,
     PerturbationConfig,
     PerturbationType,
 )
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.model import (
+    JoyAIEchoModel as LTXModel,
+)
+
+from ...ltx_core.components.patchifiers import AudioPatchifier, VideoLatentPatchifier, get_pixel_coords
 from ...ltx_core.loader import LoraPathStrengthAndSDOps
 from ...ltx_core.loader.registry import Registry
-from ...ltx_core.model.transformer import LTXModel
-from ...ltx_core.model.transformer.modality import Modality
 from ...ltx_core.quantization import QuantizationPolicy
 from ...ltx_core.types import SpatioTemporalScaleFactors, VideoLatentShape
 
@@ -679,9 +682,11 @@ class LTX2DiffusionWrapper(nn.Module):
 
         if perturbation_items:
             perturbation_config = PerturbationConfig(perturbations=perturbation_items)
-            perturbations = BatchedPerturbationConfig([perturbation_config for _ in range(B)])
+            perturbations = BatchedPerturbationConfig(
+                [perturbation_config for _ in range(B)], num_blocks=self.model.num_blocks
+            )
         else:
-            perturbations = BatchedPerturbationConfig.empty(batch_size=B)
+            perturbations = BatchedPerturbationConfig.empty(batch_size=B, num_blocks=self.model.num_blocks)
 
         # The model returns x0 predictions (X0Model wraps velocity model)
         video_x0, audio_x0 = self.model(

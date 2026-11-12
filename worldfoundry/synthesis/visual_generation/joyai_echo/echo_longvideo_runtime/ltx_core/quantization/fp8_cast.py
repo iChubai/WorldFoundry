@@ -1,8 +1,11 @@
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.model import (
+    JoyAIEchoModel as LTXModel,
+)
+
 from ..loader.module_ops import ModuleOps
 from ..loader.sd_ops import KeyValueOperationResult, SDOps
-from ..model.transformer.model import LTXModel
 
 BLOCK_SIZE = 1024
 

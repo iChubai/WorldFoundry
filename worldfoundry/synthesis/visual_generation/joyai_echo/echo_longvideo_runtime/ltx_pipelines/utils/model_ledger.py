@@ -3,6 +3,10 @@ from dataclasses import replace
 import torch
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.ltx.audio.audio_vae import AudioDecoder, AudioEncoder
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.variants.joyai_echo import (
+    EchoEmbeddingsProcessor as EmbeddingsProcessor,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import X0Model
 from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model import LatentUpsampler
 from worldfoundry.base_models.diffusion_model.models.upsamplers.ltx.model_configurator import (
     LatentUpsamplerConfigurator,
@@ -16,12 +20,27 @@ from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.
     Vocoder,
     VocoderConfigurator,
 )
+from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.ltx_core.model.transformer import (
+    LTXV_MODEL_COMFY_RENAMING_MAP,
+    LTXModelConfigurator,
+)
+from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.ltx_core.text_encoders.gemma import (
+    EMBEDDINGS_PROCESSOR_KEY_OPS,
+    GEMMA_LANGUAGE_ONLY_KEY_OPS,
+    GEMMA_LANGUAGE_ONLY_MODEL_OPS,
+    GEMMA_LLM_KEY_OPS,
+    GEMMA_MODEL_OPS,
+    EmbeddingsProcessorConfigurator,
+    GemmaTextEncoder,
+    GemmaTextEncoderConfigurator,
+    module_ops_from_gemma_root,
+    tokenizer_module_ops_from_gemma_root,
+)
 
 from ...ltx_core.loader import SDOps
 from ...ltx_core.loader.primitives import LoraPathStrengthAndSDOps
 from ...ltx_core.loader.registry import DummyRegistry, Registry
 from ...ltx_core.loader.single_gpu_model_builder import SingleGPUModelBuilder as Builder
-from ...ltx_core.model.transformer import LTXV_MODEL_COMFY_RENAMING_MAP, LTXModelConfigurator, X0Model
 from ...ltx_core.model.video_vae import (
     VAE_DECODER_COMFY_KEYS_FILTER,
     VAE_ENCODER_COMFY_KEYS_FILTER,
@@ -31,19 +50,6 @@ from ...ltx_core.model.video_vae import (
     VideoEncoderConfigurator,
 )
 from ...ltx_core.quantization import QuantizationPolicy
-from ...ltx_core.text_encoders.gemma import (
-    EMBEDDINGS_PROCESSOR_KEY_OPS,
-    GEMMA_LANGUAGE_ONLY_KEY_OPS,
-    GEMMA_LANGUAGE_ONLY_MODEL_OPS,
-    GEMMA_LLM_KEY_OPS,
-    GEMMA_MODEL_OPS,
-    EmbeddingsProcessor,
-    EmbeddingsProcessorConfigurator,
-    GemmaTextEncoder,
-    GemmaTextEncoderConfigurator,
-    module_ops_from_gemma_root,
-    tokenizer_module_ops_from_gemma_root,
-)
 from ...ltx_core.utils import find_matching_file
 
 

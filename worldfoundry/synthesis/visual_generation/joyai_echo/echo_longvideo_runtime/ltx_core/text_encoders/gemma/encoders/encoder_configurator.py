@@ -4,8 +4,11 @@ from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
 from transformers.models.gemma3 import Gemma3ForConditionalGeneration
 
 from worldfoundry.base_models.diffusion_model.models.encoders.ltx.feature_extractor import FeatureExtractorV2
-from worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime.ltx_core.text_encoders.gemma.feature_extractor import (
-    FeatureExtractorV1,
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.variants.joyai_echo import (
+    EchoEmbeddingsProcessor as EmbeddingsProcessor,
+)
+from worldfoundry.base_models.diffusion_model.models.encoders.ltx.variants.joyai_echo import (
+    EchoFeatureExtractorV1 as FeatureExtractorV1,
 )
 
 from ....loader import KeyValueOperationResult
@@ -14,7 +17,6 @@ from ....loader.sd_ops import SDOps
 from ....model.model_protocol import ModelConfigurator
 from ..config import GEMMA3_CONFIG_FOR_LTX
 from ..embeddings_connector import AudioEmbeddings1DConnectorConfigurator, Embeddings1DConnectorConfigurator
-from ..embeddings_processor import EmbeddingsProcessor
 from .base_encoder import GemmaTextEncoder
 
 

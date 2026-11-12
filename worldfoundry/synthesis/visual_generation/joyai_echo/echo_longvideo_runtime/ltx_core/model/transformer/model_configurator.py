@@ -1,11 +1,17 @@
 from worldfoundry.base_models.diffusion_model.models.denoisers.ltx_configurator import _build_caption_projections
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.model import LTXModelType
 from worldfoundry.base_models.diffusion_model.models.networks.ltx.rope import LTXRopeType
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.model import (
+    JoyAIEchoModel as LTXModel,
+)
+from worldfoundry.synthesis.visual_generation.joyai_echo.ltx_attention_policy import (
+    AttentionFunction,
+    build_transformer_ops,
+)
 
 from ...loader.sd_ops import SDOps
 from ...utils import check_config_value
 from ..model_protocol import ModelConfigurator
-from .attention import AttentionFunction
-from .model import LTXModel, LTXModelType
 
 
 class LTXModelConfigurator(ModelConfigurator[LTXModel]):
@@ -15,7 +21,7 @@ class LTXModelConfigurator(ModelConfigurator[LTXModel]):
     """
 
     @classmethod
-    def from_config(cls: type[LTXModel], config: dict) -> LTXModel:
+    def from_config(cls, config: dict) -> LTXModel:
         # Build caption projections for 19B models (projection handled in transformer).
         caption_projection, audio_caption_projection = _build_caption_projections(config, is_av=True)
 
@@ -49,7 +55,7 @@ class LTXModelConfigurator(ModelConfigurator[LTXModel]):
             num_layers=config.get("num_layers", 48),
             cross_attention_dim=config.get("cross_attention_dim", 4096),
             norm_eps=config.get("norm_eps", 1e-06),
-            attention_type=AttentionFunction(config.get("attention_type", "default")),
+            ops=build_transformer_ops(AttentionFunction(config.get("attention_type", "default"))),
             positional_embedding_theta=config.get("positional_embedding_theta", 10000.0),
             positional_embedding_max_pos=config.get("positional_embedding_max_pos", [20, 2048, 2048]),
             timestep_scale_multiplier=config.get("timestep_scale_multiplier", 1000),
@@ -77,7 +83,7 @@ class LTXVideoOnlyModelConfigurator(ModelConfigurator[LTXModel]):
     """
 
     @classmethod
-    def from_config(cls: type[LTXModel], config: dict) -> LTXModel:
+    def from_config(cls, config: dict) -> LTXModel:
         # Build caption projection for 19B model (projection handled in transformer).
         caption_projection, _ = _build_caption_projections(config, is_av=False)
 
@@ -108,7 +114,7 @@ class LTXVideoOnlyModelConfigurator(ModelConfigurator[LTXModel]):
             num_layers=config.get("num_layers", 48),
             cross_attention_dim=config.get("cross_attention_dim", 4096),
             norm_eps=config.get("norm_eps", 1e-06),
-            attention_type=AttentionFunction(config.get("attention_type", "default")),
+            ops=build_transformer_ops(AttentionFunction(config.get("attention_type", "default"))),
             positional_embedding_theta=config.get("positional_embedding_theta", 10000.0),
             positional_embedding_max_pos=config.get("positional_embedding_max_pos", [20, 2048, 2048]),
             timestep_scale_multiplier=config.get("timestep_scale_multiplier", 1000),

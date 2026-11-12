@@ -9,8 +9,11 @@ import safetensors
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.ltx.variants.joyai_echo.model import (
+    JoyAIEchoModel as LTXModel,
+)
+
 from ..ltx_core.loader.module_ops import ModuleOps
-from ..ltx_core.model.transformer import LTXModel
 from ..ltx_core.quantization.policy import QuantizationPolicy
 
 _CHECKPOINT_PREFIX = "model.diffusion_model."

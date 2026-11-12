@@ -81,12 +81,22 @@ def test_dreamzero_composition_propagates_pipeline_and_per_horizon_statistics() 
     from worldfoundry.synthesis.action_generation.dreamzero.preprocessing import (
         ConcatTransform as DreamZeroConcat,
     )
-    from worldfoundry.synthesis.action_generation.dreamzero.preprocessing import PerHorizonActionTransform
+    from worldfoundry.synthesis.action_generation.dreamzero.preprocessing import (
+        DatasetMetadata,
+        EmbodimentTag,
+        PerHorizonActionTransform,
+    )
 
     concat = DreamZeroConcat(video_concat_order=[])
     per_horizon = PerHorizonActionTransform(apply_to=["action.x"], normalization_modes={"action.x": "mean_std"})
     chain = DreamZeroComposed(transforms=[per_horizon, concat])
-    metadata = SimpleNamespace(modalities=SimpleNamespace())
+    metadata = DatasetMetadata.model_validate(
+        {
+            "statistics": {"state": {}, "action": {}},
+            "modalities": {"state": {}, "action": {}, "video": {}},
+            "embodiment_tag": next(iter(EmbodimentTag)),
+        }
+    )
     chain.set_metadata(metadata)
     assert concat._transform_pipeline == chain.transforms
     stats = {"x": {"mean": [[0.0], [1.0]], "std": [[1.0], [2.0]], "q01": [[-1.0], [-1.0]]}}

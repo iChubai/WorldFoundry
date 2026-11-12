@@ -181,6 +181,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/diffusion_model/models/networks/dit/test_token.py \
 	tests/base_models/diffusion_model/models/representations/ltx/test_conditioning_helpers.py \
 	tests/base_models/perception_core/optical_flow/test_raft_features.py \
+	tests/base_models/three_dimensions/point_clouds/pi3_inference/test_conv_head.py \
 	tests/core/nn/blocks/test_module_properties.py \
 	tests/core/nn/blocks/test_layers.py \
 	tests/core/nn/blocks/test_normalization.py \

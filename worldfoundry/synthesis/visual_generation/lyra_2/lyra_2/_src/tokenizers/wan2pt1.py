@@ -20,7 +20,6 @@ from contextlib import nullcontext
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from worldfoundry.core.configuration.lazy_config import LazyCall as L
 from worldfoundry.core.configuration.lazy_config import LazyDict
@@ -36,35 +35,8 @@ __all__ = [
 CACHE_T = 2
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level setup, as upstream.
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level setup, as upstream.  # noqa: E402 - Follows module-level definitions, as upstream.
     CausalConv3d,
-)
-
-
-class RMS_norm(nn.Module):
-    def __init__(self, dim, channel_first=True, images=True, bias=False):
-        super().__init__()
-        broadcastable_dims = (1, 1, 1) if not images else (1, 1)
-        shape = (dim, *broadcastable_dims) if channel_first else (dim,)
-
-        self.channel_first = channel_first
-        self.scale = dim**0.5
-        self.gamma = nn.Parameter(torch.ones(shape))
-        self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
-
-    def forward(self, x):
-        return F.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
-
-
-class Upsample(nn.Upsample):
-    def forward(self, x):
-        """
-        Fix bfloat16 support for nearest neighbor interpolation.
-        """
-        return super().forward(x.float()).type_as(x)
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level definitions, as upstream.
     Decoder3d,
     Encoder3d,
 )

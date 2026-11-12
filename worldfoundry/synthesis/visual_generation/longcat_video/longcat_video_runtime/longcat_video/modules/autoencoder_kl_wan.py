@@ -26,6 +26,11 @@ from diffusers.models.modeling_utils import ModelMixin
 from diffusers.utils import logging
 from diffusers.utils.accelerate_utils import apply_forward_hook
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.magi2.turbo_decoder import (
+    _turbo_unpatchify as unpatchify,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import RMS_norm as WanRMS_norm
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import Upsample as WanUpsample
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
@@ -84,47 +89,6 @@ class WanCausalConv3d(nn.Conv3d):
             padding[4] -= cache_x.shape[2]
         x = F.pad(x, padding)
         return super().forward(x)
-
-
-class WanRMS_norm(nn.Module):
-    r"""
-    A custom RMS normalization layer.
-
-    Args:
-        dim (int): The number of dimensions to normalize over.
-        channel_first (bool, optional): Whether the input tensor has channels as the first dimension.
-            Default is True.
-        images (bool, optional): Whether the input represents image data. Default is True.
-        bias (bool, optional): Whether to include a learnable bias term. Default is False.
-    """
-
-    def __init__(self, dim: int, channel_first: bool = True, images: bool = True, bias: bool = False) -> None:
-        super().__init__()
-        broadcastable_dims = (1, 1, 1) if not images else (1, 1)
-        shape = (dim, *broadcastable_dims) if channel_first else (dim,)
-
-        self.channel_first = channel_first
-        self.scale = dim**0.5
-        self.gamma = nn.Parameter(torch.ones(shape))
-        self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
-
-    def forward(self, x):
-        return F.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
-
-
-class WanUpsample(nn.Upsample):
-    r"""
-    Perform upsampling while ensuring the output tensor has the same data type as the input.
-
-    Args:
-        x (torch.Tensor): Input tensor to be upsampled.
-
-    Returns:
-        torch.Tensor: Upsampled tensor with the same data type as the input.
-    """
-
-    def forward(self, x):
-        return super().forward(x.float()).type_as(x)
 
 
 class WanResample(nn.Module):
@@ -818,26 +782,6 @@ def patchify(x, patch_size):
     # Rearrange to [batch_size, channels * patch_size * patch_size, frames, height//patch_size, width//patch_size]
     x = x.permute(0, 1, 6, 4, 2, 3, 5).contiguous()
     x = x.view(batch_size, channels * patch_size * patch_size, frames, height // patch_size, width // patch_size)
-
-    return x
-
-
-def unpatchify(x, patch_size):
-    if patch_size == 1:
-        return x
-
-    if x.dim() != 5:
-        raise ValueError(f"Invalid input shape: {x.shape}")
-    # x shape: [batch_size, (channels * patch_size * patch_size), frame, height, width]
-    batch_size, c_patches, frames, height, width = x.shape
-    channels = c_patches // (patch_size * patch_size)
-
-    # Reshape to [b, c, patch_size, patch_size, f, h, w]
-    x = x.view(batch_size, channels, patch_size, patch_size, frames, height, width)
-
-    # Rearrange to [b, c, f, h * patch_size, w * patch_size]
-    x = x.permute(0, 1, 4, 5, 3, 6, 2).contiguous()
-    x = x.view(batch_size, channels, frames, height * patch_size, width * patch_size)
 
     return x
 

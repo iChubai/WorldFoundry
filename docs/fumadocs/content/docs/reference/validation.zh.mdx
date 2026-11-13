@@ -269,6 +269,18 @@ pin 或操作者提供的 pin 变量。工具在计算权重哈希和加载模�
 `result_outputs: []` 只比较显式导出结果；必需输出检查仍会拒绝计划或空结果。
 省略这两项配置时，保留原有用例行为。
 
+模型用例保留各自的原生权重与输入契约。DIAMOND 的公开 `model_path` 选择
+`pretrained_dir`；Atari 回放使用 `pretrained=True`、指定游戏和已固定的预采集非空
+初始化数据集，而不是重新采集模拟器观测。LeWorldModel 的 `model_path` 选择已学习的
+`policy` 权重；DINO-WM 比较实际计算的 `planned_actions.npy`，LaST-R1 只选择生成的
+动作字段，不比较 value 或运行时元数据。模型的 seed 与命令测试不加载权重，不能当作
+checkpoint 生成证据。
+
+StarWM 的公开 `model_path` 选择 `served_model_id`，而不是本地 checkpoint。
+其待完成的 endpoint 声明要求匹配且已设定 seed 的 vLLM 服务、已固定的服务来源记录
+以及真实生成的状态文本。该声明仍不满足本地 checkpoint 覆盖策略，公开 runtime 的
+endpoint 就绪门禁也仍处于阻塞状态。服务可重复性与已接受参考回放需要分别验证。
+
 Kandinsky6 Lite/Pro 及各自的蒸馏、预训练变体均有独立的
 `kandinsky6-<variant>-video-short` 用例。将匹配的 Diffusers 发布权重放在
 `WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT` 下的用例 `assets.checkpoint` 路径。

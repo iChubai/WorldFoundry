@@ -421,6 +421,22 @@ memory metadata. Selected media paths use the existing numerical decoders.
 checks still reject a plan or an empty result. Omitting either option preserves
 the existing case behavior.
 
+Family recipes preserve their native checkpoint and input contracts. DIAMOND's
+public `model_path` selects `pretrained_dir`; its Atari replay uses
+`pretrained=True`, a selected game and a pinned, precollected nonempty initialization
+dataset rather than collecting new simulator observations. LeWorldModel's
+`model_path` selects its learned `policy` checkpoint; DINO-WM compares the computed
+`planned_actions.npy`, and LaST-R1 selects generated action fields rather than value
+or runtime metadata. The model-specific seed and command tests are weight-free
+contracts, not checkpoint-generation evidence.
+
+StarWM's public `model_path` selects `served_model_id`, not a local checkpoint.
+Its pending endpoint declaration requires a matching seeded vLLM server, pinned
+server provenance and genuine generated state text. It remains a local-checkpoint
+coverage-policy blocker, and the public runtime's endpoint readiness gate remains
+blocked. Endpoint repeatability and accepted-reference execution are separate
+requirements.
+
 Kandinsky6 Lite/Pro, including each distilled and pretraining variant, has its
 own `kandinsky6-<variant>-video-short` case. Stage the matching Diffusers release
 under `WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT` at the case's `assets.checkpoint`

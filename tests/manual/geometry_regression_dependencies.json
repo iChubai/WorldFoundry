@@ -573,6 +573,249 @@
     ],
     "visual-genie_envisioner": [
       "worldfoundry/synthesis/visual_generation/genie_envisioner/**"
+    ],
+    "native-hma": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/visual_generation/hma/**"
+    ],
+    "native-uniworld-view": [
+      "worldfoundry/pipelines/uniworld_view/pipeline_uniworld_view.py",
+      "worldfoundry/synthesis/visual_generation/uniworld_view/**"
+    ],
+    "action-last-r1": [
+      "worldfoundry/pipelines/component_pipelines.py",
+      "worldfoundry/synthesis/action_generation/last_r1/**"
+    ],
+    "native-sana": [
+      "worldfoundry/base_models/diffusion_model/models/networks/sana/**",
+      "worldfoundry/pipelines/sana/pipeline_sana.py"
+    ],
+    "native-ltx-2.x": [
+      "worldfoundry/base_models/diffusion_model/models/networks/ltx/**",
+      "worldfoundry/pipelines/ltx2/pipeline_ltx2_3_i2v.py",
+      "worldfoundry/pipelines/ltx2/pipeline_ltx2_3_t2v.py",
+      "worldfoundry/pipelines/ltx2/pipeline_ltx2_i2v.py",
+      "worldfoundry/pipelines/ltx2/pipeline_ltx2_t2v.py",
+      "worldfoundry/synthesis/visual_generation/ltx2/**"
+    ],
+    "native-hunyuanvideo": [
+      "worldfoundry/base_models/diffusion_model/models/autoencoders/hunyuan_video/**",
+      "worldfoundry/pipelines/hunyuan_video/pipeline_hunyuan_video.py"
+    ],
+    "native-hunyuanvideo-1.5": [
+      "worldfoundry/base_models/diffusion_model/models/autoencoders/hunyuan_video/**",
+      "worldfoundry/pipelines/hunyuan_video/pipeline_hunyuan_video.py"
+    ],
+    "native-allegro": [
+      "worldfoundry/pipelines/allegro/pipeline_allegro_ti2v.py",
+      "worldfoundry/synthesis/visual_generation/allegro/**"
+    ],
+    "native-bernini": [
+      "worldfoundry/pipelines/bernini/pipeline_bernini.py",
+      "worldfoundry/synthesis/visual_generation/bernini/**"
+    ],
+    "native-bernini-r-1.3b": [
+      "worldfoundry/pipelines/bernini/pipeline_bernini.py",
+      "worldfoundry/synthesis/visual_generation/bernini/**"
+    ],
+    "native-bernini-r-14b": [
+      "worldfoundry/pipelines/bernini/pipeline_bernini.py",
+      "worldfoundry/synthesis/visual_generation/bernini/**"
+    ],
+    "native-framepack": [
+      "worldfoundry/pipelines/video_official/pipeline_official_video.py",
+      "worldfoundry/synthesis/visual_generation/framepack/**"
+    ],
+    "native-helios": [
+      "worldfoundry/base_models/diffusion_model/models/networks/helios/**",
+      "worldfoundry/pipelines/helios/pipeline_helios.py",
+      "worldfoundry/synthesis/visual_generation/helios/**"
+    ],
+    "native-lingbot-video": [
+      "worldfoundry/pipelines/lingbot_video/pipeline_lingbot_video.py",
+      "worldfoundry/synthesis/visual_generation/lingbot_video/**"
+    ],
+    "native-longvie-2": [
+      "worldfoundry/pipelines/longvie/pipeline_longvie.py",
+      "worldfoundry/synthesis/visual_generation/longvie/**"
+    ],
+    "native-magi-1": [
+      "worldfoundry/pipelines/video_official/pipeline_official_video.py",
+      "worldfoundry/synthesis/visual_generation/magi/**"
+    ],
+    "native-magi2-preview": [
+      "worldfoundry/base_models/diffusion_model/models/autoencoders/magi2/**",
+      "worldfoundry/pipelines/magi2/**",
+      "worldfoundry/pipelines/magi2/pipeline_magi2.py"
+    ],
+    "native-minimax-h3": [
+      "worldfoundry/base_models/diffusion_model/models/networks/minimax_h3/dit.py",
+      "worldfoundry/base_models/diffusion_model/models/networks/minimax_h3/ops.py",
+      "worldfoundry/pipelines/minimax/pipeline_minimax_h3.py"
+    ],
+    "native-open-sora": [
+      "worldfoundry/pipelines/video_official/pipeline_official_video.py",
+      "worldfoundry/synthesis/visual_generation/open_sora/**"
+    ],
+    "native-open-sora-plan": [
+      "worldfoundry/pipelines/video_official/pipeline_official_video.py",
+      "worldfoundry/synthesis/visual_generation/open_sora_plan/**"
+    ],
+    "native-pusa-vidgen": [
+      "worldfoundry/pipelines/pusa_vidgen/pipeline_pusa_vidgen.py",
+      "worldfoundry/synthesis/visual_generation/pusa_vidgen/**"
+    ],
+    "native-step-video-t2v": [
+      "worldfoundry/base_models/diffusion_model/models/networks/step_video/normalization.py",
+      "worldfoundry/pipelines/step_video/pipeline_step_video_t2v.py"
+    ],
+    "native-unianimate-dit": [
+      "worldfoundry/pipelines/video_official/pipeline_official_video.py",
+      "worldfoundry/synthesis/visual_generation/unianimate_dit/**"
+    ],
+    "native-ac3d": [
+      "worldfoundry/pipelines/ac3d/pipeline_ac3d.py",
+      "worldfoundry/synthesis/visual_generation/ac3d/**"
+    ],
+    "native-echo-infinity": [
+      "worldfoundry/pipelines/echo_infinity/pipeline_echo_infinity.py",
+      "worldfoundry/synthesis/visual_generation/echo_infinity/**"
+    ],
+    "native-hy-worldplay": [
+      "worldfoundry/pipelines/hunyuan_world/pipeline_hunyuan_worldplay.py",
+      "worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_worldplay/**"
+    ],
+    "native-sana-wm": [
+      "worldfoundry/base_models/diffusion_model/models/networks/sana/**",
+      "worldfoundry/pipelines/sana_wm/pipeline_sana_wm.py"
+    ],
+    "native-scope": [
+      "worldfoundry/pipelines/scope/pipeline_scope.py",
+      "worldfoundry/synthesis/visual_generation/scope/**"
+    ],
+    "native-evoke": [
+      "worldfoundry/pipelines/evoke/pipeline_evoke.py",
+      "worldfoundry/synthesis/visual_generation/evoke/**"
+    ],
+    "native-hydra": [
+      "worldfoundry/pipelines/hydra/pipeline_hydra.py",
+      "worldfoundry/synthesis/visual_generation/hydra/**"
+    ],
+    "native-magicworld": [
+      "worldfoundry/pipelines/magic_world/pipeline_magic_world.py",
+      "worldfoundry/synthesis/visual_generation/magic_world/**"
+    ],
+    "native-minwm-hy-action2v": [
+      "worldfoundry/pipelines/minwm/pipeline_minwm.py",
+      "worldfoundry/synthesis/visual_generation/minwm/**"
+    ],
+    "native-minwm-wan-action2v": [
+      "worldfoundry/pipelines/minwm/pipeline_minwm.py",
+      "worldfoundry/synthesis/visual_generation/minwm/**"
+    ],
+    "native-moverse": [
+      "worldfoundry/pipelines/moverse/pipeline_moverse.py",
+      "worldfoundry/synthesis/visual_generation/moverse/**"
+    ],
+    "native-spatia": [
+      "worldfoundry/pipelines/spatia/pipeline_spatia.py",
+      "worldfoundry/synthesis/visual_generation/spatia/**"
+    ],
+    "native-versecrafter": [
+      "worldfoundry/pipelines/versecrafter/pipeline_versecrafter.py",
+      "worldfoundry/synthesis/visual_generation/versecrafter/**"
+    ],
+    "native-wan21-fun-14b-cam": [
+      "worldfoundry/pipelines/video_x_fun/pipeline_video_x_fun.py",
+      "worldfoundry/synthesis/visual_generation/video_x_fun/**"
+    ],
+    "native-wan21-fun-1p3b-cam": [
+      "worldfoundry/pipelines/video_x_fun/pipeline_video_x_fun.py",
+      "worldfoundry/synthesis/visual_generation/video_x_fun/**"
+    ],
+    "native-wan22-fun-5b-cam": [
+      "worldfoundry/pipelines/video_x_fun/pipeline_video_x_fun.py",
+      "worldfoundry/synthesis/visual_generation/video_x_fun/**"
+    ],
+    "native-wan22-fun-a14b-cam": [
+      "worldfoundry/pipelines/video_x_fun/pipeline_video_x_fun.py",
+      "worldfoundry/synthesis/visual_generation/video_x_fun/**"
+    ],
+    "native-warp-as-history": [
+      "worldfoundry/pipelines/warp_as_history/pipeline_warp_as_history.py",
+      "worldfoundry/synthesis/visual_generation/warp_as_history/**"
+    ],
+    "native-worldcrafter": [
+      "worldfoundry/base_models/diffusion_model/models/networks/worldcrafter/**",
+      "worldfoundry/pipelines/worldcrafter/pipeline_worldcrafter.py",
+      "worldfoundry/synthesis/visual_generation/worldcrafter/**"
+    ],
+    "native-worldcrafter-base": [
+      "worldfoundry/base_models/diffusion_model/models/networks/worldcrafter/**",
+      "worldfoundry/pipelines/worldcrafter/pipeline_worldcrafter.py",
+      "worldfoundry/synthesis/visual_generation/worldcrafter/**"
+    ],
+    "native-worldcrafter-fast": [
+      "worldfoundry/base_models/diffusion_model/models/networks/worldcrafter/**",
+      "worldfoundry/pipelines/worldcrafter/pipeline_worldcrafter.py",
+      "worldfoundry/synthesis/visual_generation/worldcrafter/**"
+    ],
+    "native-ctrl-world": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/visual_generation/ctrl_world/**"
+    ],
+    "native-dino-wm": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/visual_generation/dino_wm/**"
+    ],
+    "native-giga-world-0": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/visual_generation/giga_world_0/**"
+    ],
+    "native-leworldmodel": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/visual_generation/le_wm/**"
+    ],
+    "native-matrix-game-1": [
+      "worldfoundry/pipelines/matrix_game/pipeline_matrix_game_1.py",
+      "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_1_runtime/**"
+    ],
+    "native-matrix-game-3": [
+      "worldfoundry/pipelines/matrix_game/pipeline_matrix_game_3.py",
+      "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_3_runtime/**"
+    ],
+    "native-matrix-game-3.5-first-person": [
+      "worldfoundry/pipelines/matrix_game/pipeline_matrix_game_3p5.py",
+      "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_3p5_runtime/**"
+    ],
+    "native-matrix-game-3.5-third-person": [
+      "worldfoundry/pipelines/matrix_game/pipeline_matrix_game_3p5.py",
+      "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_3p5_runtime/**"
+    ],
+    "native-mira": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/visual_generation/mira_wm/**"
+    ],
+    "native-multiworld": [
+      "worldfoundry/pipelines/multiworld/pipeline_multiworld_ittakestwo.py",
+      "worldfoundry/synthesis/visual_generation/multiworld/**"
+    ],
+    "native-rolling-forcing": [
+      "worldfoundry/pipelines/forcing/pipeline_forcing.py",
+      "worldfoundry/synthesis/visual_generation/forcing/**",
+      "worldfoundry/synthesis/visual_generation/rolling_forcing/**"
+    ],
+    "native-solaris": [
+      "worldfoundry/pipelines/solaris/pipeline_solaris.py",
+      "worldfoundry/synthesis/visual_generation/solaris/**"
+    ],
+    "native-starwm": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/visual_generation/starwm/**"
+    ],
+    "native-tesseract": [
+      "worldfoundry/pipelines/world_model/pipeline_runtime_manifest.py",
+      "worldfoundry/synthesis/action_generation/tesseract/**"
     ]
   },
   "cases": {
@@ -972,6 +1215,348 @@
     ],
     "genie-envisioner-three-view-history-short": [
       "visual-genie_envisioner"
+    ],
+    "hma-paired-trajectory-short": [
+      "native-hma"
+    ],
+    "uniworld-view-single-view-short": [
+      "native-uniworld-view"
+    ],
+    "last-r1-libero10-actions-short": [
+      "action-last-r1"
+    ],
+    "easyanimate-i2v-checkpoint-replay": [
+      "visual-easyanimate"
+    ],
+    "solarwm-wan2.2-5b-checkpoint-replay": [
+      "visual-solarwm"
+    ],
+    "solarwm-ltx-22b-checkpoint-replay": [
+      "visual-solarwm"
+    ],
+    "hunyuanworld-mirror-checkpoint-replay": [
+      "hunyuan-mirror"
+    ],
+    "hy-world-2.0-checkpoint-replay": [
+      "hyworldmirror-2"
+    ],
+    "matrix-game-2-universal-ref-image-seed42-15f-checkpoint-replay": [
+      "matrix-game2"
+    ],
+    "sana-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-600m-512px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-600m-1024px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-1600m-512px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-1600m-512px-multiling-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-1600m-1024px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-1600m-1024px-multiling-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-1600m-1024px-bf16-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-1600m-2k-bf16-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-1600m-4k-bf16-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana1p5-1600m-1024px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana1p5-4800m-1024px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-sprint-600m-1024px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-sprint-1600m-1024px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-controlnet-600m-1024px-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-controlnet-1600m-1024px-bf16-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-video-2b-480p-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-video-2b-720p-checkpoint-replay": [
+      "native-sana"
+    ],
+    "longsana-video-2b-480p-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-streaming-2b-720p-checkpoint-replay": [
+      "native-sana"
+    ],
+    "sana-streaming-bidirectional-2b-720p-checkpoint-replay": [
+      "native-sana"
+    ],
+    "wan2.1-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.1-t2v-1.3b-832x480-81f-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.1-t2v-14b-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.1-i2v-14b-480p-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.1-i2v-14b-720p-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.1-vace-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.2-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.2-ti2v-5b-1280x704-121f-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.2-t2v-a14b-checkpoint-replay": [
+      "wan-video"
+    ],
+    "wan2.2-i2v-a14b-checkpoint-replay": [
+      "wan-video"
+    ],
+    "ltx-2-t2v-checkpoint-replay": [
+      "native-ltx-2.x"
+    ],
+    "ltx-2-i2v-checkpoint-replay": [
+      "native-ltx-2.x"
+    ],
+    "ltx-2.3-t2v-checkpoint-replay": [
+      "native-ltx-2.x"
+    ],
+    "ltx-2.3-i2v-checkpoint-replay": [
+      "native-ltx-2.x"
+    ],
+    "ltx-2.x-checkpoint-replay": [
+      "native-ltx-2.x"
+    ],
+    "hunyuanvideo-checkpoint-replay": [
+      "native-hunyuanvideo"
+    ],
+    "hunyuanvideo-t2v-checkpoint-replay": [
+      "native-hunyuanvideo"
+    ],
+    "hunyuanvideo-i2v-checkpoint-replay": [
+      "native-hunyuanvideo"
+    ],
+    "hunyuanvideo-1.5-checkpoint-replay": [
+      "native-hunyuanvideo-1.5"
+    ],
+    "hunyuanvideo-1.5-t2v-checkpoint-replay": [
+      "native-hunyuanvideo-1.5"
+    ],
+    "hunyuanvideo-1.5-i2v-checkpoint-replay": [
+      "native-hunyuanvideo-1.5"
+    ],
+    "allegro-checkpoint-replay": [
+      "native-allegro"
+    ],
+    "allegro-ti2v-checkpoint-replay": [
+      "native-allegro"
+    ],
+    "bernini-checkpoint-replay": [
+      "native-bernini"
+    ],
+    "bernini-r-1.3b-checkpoint-replay": [
+      "native-bernini-r-1.3b"
+    ],
+    "bernini-r-14b-checkpoint-replay": [
+      "native-bernini-r-14b"
+    ],
+    "framepack-original-checkpoint-replay": [
+      "native-framepack"
+    ],
+    "framepack-f1-checkpoint-replay": [
+      "native-framepack"
+    ],
+    "helios-checkpoint-replay": [
+      "native-helios"
+    ],
+    "helios-base-checkpoint-replay": [
+      "native-helios"
+    ],
+    "helios-mid-checkpoint-replay": [
+      "native-helios"
+    ],
+    "helios-distilled-checkpoint-replay": [
+      "native-helios"
+    ],
+    "lingbot-video-dense-checkpoint-replay": [
+      "native-lingbot-video"
+    ],
+    "lingbot-video-moe-checkpoint-replay": [
+      "native-lingbot-video"
+    ],
+    "longvie-2-checkpoint-replay": [
+      "native-longvie-2"
+    ],
+    "magi-1-checkpoint-replay": [
+      "native-magi-1"
+    ],
+    "magi2-preview-checkpoint-replay": [
+      "native-magi2-preview"
+    ],
+    "minimax-h3-checkpoint-replay": [
+      "native-minimax-h3"
+    ],
+    "open-sora-checkpoint-replay": [
+      "native-open-sora"
+    ],
+    "open-sora-plan-checkpoint-replay": [
+      "native-open-sora-plan"
+    ],
+    "pusa-vidgen-checkpoint-replay": [
+      "native-pusa-vidgen"
+    ],
+    "step-video-t2v-checkpoint-replay": [
+      "native-step-video-t2v"
+    ],
+    "unianimate-dit-checkpoint-replay": [
+      "native-unianimate-dit"
+    ],
+    "ac3d-2b-checkpoint-replay": [
+      "native-ac3d"
+    ],
+    "ac3d-5b-checkpoint-replay": [
+      "native-ac3d"
+    ],
+    "echo-infinity-checkpoint-replay": [
+      "native-echo-infinity"
+    ],
+    "hy-worldplay-checkpoint-replay": [
+      "native-hy-worldplay"
+    ],
+    "sana-wm-checkpoint-replay": [
+      "native-sana-wm"
+    ],
+    "sana-wm-streaming-checkpoint-replay": [
+      "native-sana-wm"
+    ],
+    "scope-checkpoint-replay": [
+      "native-scope"
+    ],
+    "evoke-checkpoint-replay": [
+      "native-evoke"
+    ],
+    "hydra-checkpoint-replay": [
+      "native-hydra"
+    ],
+    "magicworld-checkpoint-replay": [
+      "native-magicworld"
+    ],
+    "minwm-hy-action2v-checkpoint-replay": [
+      "native-minwm-hy-action2v"
+    ],
+    "minwm-wan-action2v-checkpoint-replay": [
+      "native-minwm-wan-action2v"
+    ],
+    "moverse-checkpoint-replay": [
+      "native-moverse"
+    ],
+    "spatia-checkpoint-replay": [
+      "native-spatia"
+    ],
+    "versecrafter-checkpoint-replay": [
+      "native-versecrafter"
+    ],
+    "wan21-fun-14b-cam-checkpoint-replay": [
+      "native-wan21-fun-14b-cam"
+    ],
+    "wan21-fun-1p3b-cam-checkpoint-replay": [
+      "native-wan21-fun-1p3b-cam"
+    ],
+    "wan22-fun-5b-cam-checkpoint-replay": [
+      "native-wan22-fun-5b-cam"
+    ],
+    "wan22-fun-a14b-cam-checkpoint-replay": [
+      "native-wan22-fun-a14b-cam"
+    ],
+    "warp-as-history-checkpoint-replay": [
+      "native-warp-as-history"
+    ],
+    "worldcrafter-checkpoint-replay": [
+      "native-worldcrafter"
+    ],
+    "worldcrafter-base-checkpoint-replay": [
+      "native-worldcrafter-base"
+    ],
+    "worldcrafter-fast-checkpoint-replay": [
+      "native-worldcrafter-fast"
+    ],
+    "ctrl-world-checkpoint-replay": [
+      "native-ctrl-world"
+    ],
+    "diamond-checkpoint-replay": [
+      "diamond"
+    ],
+    "diamond-atari-checkpoint-replay": [
+      "diamond"
+    ],
+    "dino-wm-wall-planned-actions": [
+      "native-dino-wm"
+    ],
+    "giga-world-0-checkpoint-replay": [
+      "native-giga-world-0"
+    ],
+    "leworldmodel-pusht-learned-policy": [
+      "native-leworldmodel"
+    ],
+    "matrix-game-1-checkpoint-replay": [
+      "native-matrix-game-1"
+    ],
+    "matrix-game-3-checkpoint-replay": [
+      "native-matrix-game-3"
+    ],
+    "matrix-game-3.5-first-person-checkpoint-replay": [
+      "native-matrix-game-3.5-first-person"
+    ],
+    "matrix-game-3.5-third-person-checkpoint-replay": [
+      "native-matrix-game-3.5-third-person"
+    ],
+    "mira-checkpoint-replay": [
+      "native-mira"
+    ],
+    "multiworld-checkpoint-replay": [
+      "native-multiworld"
+    ],
+    "rolling-forcing-checkpoint-replay": [
+      "native-rolling-forcing"
+    ],
+    "solaris-translation-two-player": [
+      "native-solaris"
+    ],
+    "solarwm-wan2.2-14b-checkpoint-replay": [
+      "visual-solarwm"
+    ],
+    "solarwm-h3-33b-checkpoint-replay": [
+      "visual-solarwm"
+    ],
+    "starwm-generated-state-text": [
+      "native-starwm"
+    ],
+    "tesseract-checkpoint-replay": [
+      "native-tesseract"
     ]
   },
   "coverage_scope": "Declared short 3D, video generation and world-model cases; variants and unlisted integrations are not implied covered.",

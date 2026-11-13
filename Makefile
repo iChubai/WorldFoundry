@@ -42,6 +42,7 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/eval_core/test_run_manifest.py \
 	tests/runtime/test_geometry_regression_lazy_dispatch.py \
 	tests/runtime/test_native_coverage_policy.py \
+	tests/runtime/test_geometry_regression_declarations.py \
 	tests/runtime/test_junit_contract_validator.py \
 	tests/core/test_repository_policies.py \
 	tests/scripts/test_pr_checks.py \
@@ -316,6 +317,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/core/attention/test_window.py \
 	tests/core/geometry/test_boxes.py \
 	tests/runtime/test_geometry_regression.py \
+	tests/runtime/test_geometry_regression_declarations.py \
 	tests/synthesis/test_dreamx_world_backend_policy.py \
 	tests/synthesis/test_solarwm_component_reuse.py \
 	tests/synthesis/test_solarwm_inference_only.py \

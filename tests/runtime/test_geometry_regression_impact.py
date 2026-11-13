@@ -33,7 +33,10 @@ def test_mg2_numerical_contract_changes_require_real_model_replay(path):
         [path],
     )
     assert plan["status"] == "planned"
-    assert plan["selected_cases"] == ["matrix-game2-controls-short"]
+    assert plan["selected_cases"] == [
+        "matrix-game2-controls-short",
+        "matrix-game-2-universal-ref-image-seed42-15f-checkpoint-replay",
+    ]
     assert not plan["uncovered_paths"]
 
 

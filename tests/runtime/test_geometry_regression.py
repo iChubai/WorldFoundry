@@ -701,6 +701,22 @@ def test_adaworld_replay_supplies_native_loader_input_and_seed(tmp_path: Path, m
     assert flags["--video-len"] == "20"
 
 
+def test_ltx25_replay_reaches_checkpoint_preflight(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from worldfoundry.pipelines.ltx25.pipeline_ltx25 import LTX25Pipeline
+
+    monkeypatch.setenv("WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT", str(tmp_path / "weights"))
+    matrix = Path(__file__).resolve().parents[1] / "manual/geometry_regression_cases.json"
+    case = replay.expand(json.loads(matrix.read_text())["ltx25-distilled-video-short"], tmp_path)
+    load: dict[str, Any] = {**case["load"], "device": "cpu"}
+    pipeline = LTX25Pipeline.from_pretrained(**load)
+    monkeypatch.setattr(
+        pipeline, "preflight", lambda: {"status": "blocked", "blocked_reasons": ["replay checkpoint preflight"]}
+    )
+    with pytest.raises(RuntimeError, match="LTX-2.5 preflight failed; missing: replay checkpoint preflight"):
+        pipeline(**case["call"])
+    assert not Path(case["call"]["output_path"]).exists()
+
+
 def test_neoverse_replay_uses_native_camera_contract() -> None:
     root = Path(__file__).resolve().parents[2]
     matrix = root / "tests/manual/geometry_regression_cases.json"

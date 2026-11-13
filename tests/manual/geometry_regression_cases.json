@@ -6309,6 +6309,7 @@
       "num_frames": 25,
       "fps": 24,
       "seed": 42,
+      "execute": true,
       "output_path": "${OUTPUT_DIR}/video.mp4",
       "return_dict": true
     },

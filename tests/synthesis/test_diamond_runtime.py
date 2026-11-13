@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import ast
+import subprocess
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -115,7 +117,8 @@ def test_unused_training_config_values_remain_without_dangling_targets() -> None
 
 
 @pytest.mark.parametrize("pretrained", [False, True])
-def test_atari_module_launch_keeps_runtime_options(pretrained: bool) -> None:
+@pytest.mark.parametrize("seed", [None, 0, 42])
+def test_atari_module_launch_keeps_runtime_options(pretrained: bool, seed: int | None) -> None:
     context = {
         "python": "/env/python",
         "entrypoint": "/unused/play.py",
@@ -134,6 +137,7 @@ def test_atari_module_launch_keeps_runtime_options(pretrained: bool) -> None:
             "record": True,
             "store_denoising_trajectory": True,
             "store_original_obs": True,
+            "seed": seed,
         },
     }
     checkpoint_args = (
@@ -168,7 +172,57 @@ def test_atari_module_launch_keeps_runtime_options(pretrained: bool) -> None:
         "/output/video.mp4",
         "--dataset-dir",
         "/output/initialization_dataset",
+        *([] if seed is None else ["--seed", str(seed)]),
     ]
+
+
+@pytest.mark.parametrize("seed", [None, 0, 42])
+def test_atari_optional_seed_reaches_worker_rngs_before_loading(seed: int | None) -> None:
+    tree = ast.parse((runtime.RUNTIME_DIR / "play.py").read_text())
+    argument = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Attribute)
+        and node.value.func.attr == "add_argument"
+        and node.value.args
+        and isinstance(node.value.args[0], ast.Constant)
+        and node.value.args[0].value == "--seed"
+    )
+    main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "main")
+    guard = next(
+        node for node in main.body if isinstance(node, ast.If) and ast.unparse(node.test) == "args.seed is not None"
+    )
+    loading = next(node for node in main.body if "prepare_play_mode" in ast.unparse(node))
+    assert guard.lineno < loading.lineno
+    code = f"""\
+import random
+from argparse import ArgumentParser
+import numpy as np
+import torch
+parser = ArgumentParser()
+{ast.unparse(argument)}
+args = parser.parse_args()
+def draw():
+    return [random.random(), float(np.random.random()), torch.randn(()).item()]
+expected_seed = 91 if args.seed is None else args.seed
+random.seed(expected_seed)
+np.random.seed(expected_seed)
+torch.manual_seed(expected_seed)
+expected = draw()
+random.seed(91)
+np.random.seed(91)
+torch.manual_seed(91)
+flags = (torch.are_deterministic_algorithms_enabled(), torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark)
+{ast.unparse(guard)}
+assert draw() == expected
+if args.seed is None:
+    assert flags == (torch.are_deterministic_algorithms_enabled(), torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark)
+"""
+    flags = [] if seed is None else ["--seed", str(seed)]
+    result = subprocess.run([sys.executable, "-c", code, *flags], capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.parametrize("sampler", ["fast", "higher_quality"])

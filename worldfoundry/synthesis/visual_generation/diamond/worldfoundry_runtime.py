@@ -208,6 +208,8 @@ def build_command(context):
                 str(dataset_dir),
             ]
         )
+    if options.get("seed") is not None:
+        args.extend(["--seed", str(int(options["seed"]))])
     return package_module_command(
         "worldfoundry.synthesis.visual_generation.diamond.play",
         args,

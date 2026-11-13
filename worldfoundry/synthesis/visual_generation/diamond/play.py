@@ -72,6 +72,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fps", type=int, default=15, help="Frame rate.")
     parser.add_argument("--size", type=int, default=640, help="Window size.")
     parser.add_argument("--no-header", action="store_true")
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument(
         "--headless-steps",
         type=int,
@@ -230,6 +231,11 @@ def main():
     ok = check_args(args)
     if not ok:
         return
+
+    if args.seed is not None:
+        from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+
+        set_seed_everywhere(args.seed)
 
     config_dir = str(Path(args.config_dir).expanduser().resolve())
     with initialize_config_dir(version_base="1.3", config_dir=config_dir):

@@ -70,6 +70,8 @@ def build_command(context):
         "--max_workers",
         str(options.get("max_workers", 8)),
     ]
+    if options.get("seed") is not None:
+        command.extend(["--seed", str(int(options["seed"]))])
     return package_module_command(
         "worldfoundry.synthesis.visual_generation.starwm.offline_infer.run_inference_client",
         command,

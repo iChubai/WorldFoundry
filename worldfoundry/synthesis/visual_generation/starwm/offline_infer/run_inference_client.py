@@ -24,7 +24,7 @@ def process_prompt(original_content, mode):
     return new_prompt
 
 
-def call_vllm(prompt, api_base, api_key, model_id, mode):
+def call_vllm(prompt, api_base, api_key, model_id, mode, seed: int | None = None):
     url = f"{api_base}/v1/chat/completions"
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
 
@@ -36,6 +36,9 @@ def call_vllm(prompt, api_base, api_key, model_id, mode):
         "top_p": 0.95,
         "top_k": 20,
     }
+
+    if seed is not None:
+        payload["seed"] = int(seed)
 
     try:
         response = requests.post(url, headers=headers, json=payload)
@@ -79,7 +82,7 @@ def process_single_item(item, args):
     final_prompt = process_prompt(original_content=original_prompt, mode=args.mode)
 
     # Call API
-    full_response = call_vllm(final_prompt, args.api_base, args.api_key, args.model_id, mode=args.mode)
+    full_response = call_vllm(final_prompt, args.api_base, args.api_key, args.model_id, mode=args.mode, seed=args.seed)
 
     # Parse
     think_content, output_content = parse_output(full_response)
@@ -96,6 +99,7 @@ def main():
     parser.add_argument("--api_key", type=str, default="sk-11223344")
     parser.add_argument("--model_id", type=str, required=True)
     parser.add_argument("--max_workers", type=int, default=8, help="Number of concurrent workers")
+    parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
 
     if args.input_file.endswith(".json"):

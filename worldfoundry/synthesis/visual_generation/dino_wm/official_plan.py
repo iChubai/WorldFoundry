@@ -356,6 +356,7 @@ class PlanWorkspace:
         }
         with open(self.log_filename, "a") as file:
             file.write(json.dumps(logs_entry) + "\n")
+        np.save("planned_actions.npy", actions.detach().cpu().numpy(), allow_pickle=False)
         return logs
 
 

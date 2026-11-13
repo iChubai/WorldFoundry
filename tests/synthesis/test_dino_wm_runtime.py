@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import ast
+import json
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from omegaconf import OmegaConf
@@ -14,6 +17,49 @@ from worldfoundry.synthesis.visual_generation.dino_wm import worldfoundry_runtim
 
 pytestmark = pytest.mark.unit
 PACKAGE = "worldfoundry.synthesis.visual_generation.dino_wm"
+
+
+def test_planning_exports_computed_actions_without_changing_them(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import numpy as np
+    import torch
+
+    tree = ast.parse((runtime.RUNTIME_DIR / "official_plan.py").read_text())
+    method = next(
+        node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "perform_planning"
+    )
+    namespace: dict[str, Any] = {"np": np, "json": json}
+    exec(compile(ast.Module(body=[method], type_ignores=[]), "official_plan.py", "exec"), namespace)
+    actions = torch.tensor([[[0.2, -0.3], [0.4, 0.1]]], requires_grad=True)
+    original = actions.detach().clone()
+    observation = object()
+    goal = object()
+
+    def plan(**kwargs: Any) -> tuple[torch.Tensor, None]:
+        assert kwargs == {"obs_0": observation, "obs_g": goal, "actions": None}
+        return actions, None
+
+    def evaluate(value: torch.Tensor, length: None, **kwargs: Any) -> tuple[dict[str, Any], None, None, None]:
+        torch.testing.assert_close(value, original, rtol=0, atol=0)
+        assert length is None
+        assert kwargs == {"save_video": True, "filename": "output_final"}
+        return {"score": np.float32(0.5)}, None, None, None
+
+    workspace = SimpleNamespace(
+        debug_dset_init=False,
+        planner=SimpleNamespace(plan=plan),
+        obs_0=observation,
+        obs_g=goal,
+        evaluator=SimpleNamespace(eval_actions=evaluate),
+        wandb_run=SimpleNamespace(log=lambda _: None),
+        log_filename=str(tmp_path / "planning.log"),
+    )
+    monkeypatch.chdir(tmp_path)
+    result = namespace["perform_planning"](workspace)
+    assert result == {"final_eval/score": 0.5}
+    np.testing.assert_array_equal(np.load(tmp_path / "planned_actions.npy", allow_pickle=False), original.numpy())
+    torch.testing.assert_close(actions, original, rtol=0, atol=0)
 
 
 @pytest.mark.parametrize(

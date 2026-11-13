@@ -38,6 +38,25 @@ def isolated_hydra() -> Iterator[None]:
         GlobalHydra.set_instance(state)
 
 
+@pytest.mark.parametrize("model_id", ["diamond", "diamond-atari"])
+def test_public_model_path_selects_the_pretrained_bundle(tmp_path: Path, model_id: str) -> None:
+    from worldfoundry.pipelines.world_model.pipeline_runtime_manifest import DIAMONDPipeline
+
+    checkpoint = tmp_path / "diamond"
+    pipeline = DIAMONDPipeline.from_pretrained(
+        model_path=str(checkpoint), model_id=model_id, pretrained=True, pretrained_game="Pong", device="cpu"
+    )
+    synthesis = pipeline.synthesis_model
+    assert synthesis.options["pretrained_dir"] == str(checkpoint)
+    assert "repo_root" not in synthesis.options
+    assert synthesis.device == "cpu"
+    assert checkpoint in synthesis._checkpoint_paths()
+    command = synthesis._command(output_path=tmp_path / "video.mp4", prompt="", plan_path=tmp_path / "plan.json")
+    assert "--pretrained" in command
+    assert command[command.index("--pretrained-game") + 1] == "Pong"
+    assert command[command.index("--pretrained-dir") + 1] == str(checkpoint)
+
+
 def test_packaged_agent_config_constructs_owned_dataclasses() -> None:
     with initialize_config_dir(version_base="1.3", config_dir=str(CONFIG_DIR)):
         config = compose(config_name="trainer")

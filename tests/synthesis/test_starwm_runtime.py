@@ -15,6 +15,20 @@ from worldfoundry.synthesis.visual_generation.starwm import worldfoundry_runtime
 pytestmark = pytest.mark.unit
 
 
+def test_public_model_path_selects_the_served_model_not_a_local_checkpoint(tmp_path: Path) -> None:
+    from worldfoundry.pipelines.world_model.pipeline_runtime_manifest import StarWMPipeline
+
+    pipeline = StarWMPipeline.from_pretrained(model_path="served-starwm", device="cpu")
+    synthesis = pipeline.synthesis_model
+    assert synthesis.options["served_model_id"] == "served-starwm"
+    assert "repo_root" not in synthesis.options
+    assert synthesis.device == "cpu"
+    assert synthesis._checkpoint_paths() == []
+    command = synthesis._command(output_path=tmp_path / "result.json", prompt="", plan_path=tmp_path / "plan.json")
+    assert command[command.index("--model_id") + 1] == "served-starwm"
+    assert synthesis.blocked_reason == runtime.BLOCKED_REASON
+
+
 @pytest.mark.parametrize("model_option", ["served_model_id", "api_model_id", "vllm_model_id", "upstream_model_id"])
 @pytest.mark.parametrize("mode", ["think", "nothink"])
 @pytest.mark.parametrize("seed", [None, 0, 42])

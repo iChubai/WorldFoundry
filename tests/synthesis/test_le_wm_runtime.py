@@ -12,6 +12,29 @@ from worldfoundry.synthesis.visual_generation.le_wm import worldfoundry_runtime 
 pytestmark = pytest.mark.unit
 
 
+@pytest.mark.parametrize("local_path", [True, False])
+def test_public_model_path_selects_the_learned_policy(tmp_path: Path, local_path: bool) -> None:
+    from worldfoundry.pipelines.world_model.pipeline_runtime_manifest import LeWorldModelPipeline
+
+    cache = tmp_path / "cache"
+    checkpoint = cache / "learned-policy_object.ckpt"
+    selector = str(checkpoint) if local_path else "learned-policy"
+    pipeline = LeWorldModelPipeline.from_pretrained(model_path=selector, cache_dir=str(cache), device="cpu")
+    synthesis = pipeline.synthesis_model
+    assert synthesis.options["policy"] == selector
+    assert "repo_root" not in synthesis.options
+    assert synthesis.device == "cpu"
+    assert synthesis._checkpoint_paths() == [checkpoint]
+    assert runtime.policy_checkpoint_path(synthesis.options) == checkpoint
+    command = synthesis._command(output_path=tmp_path / "result.json", prompt="", plan_path=tmp_path / "plan.json")
+    assert command[command.index("--policy") + 1] == selector
+    assert command[command.index("--cache-dir") + 1] == str(cache)
+
+
+def test_random_policy_has_no_object_checkpoint() -> None:
+    assert runtime.policy_checkpoint_path({"policy": "random"}) is None
+
+
 @pytest.mark.parametrize("suffix,artifact", [(".mp4", ".result.json"), (".json", ".json")])
 @pytest.mark.parametrize("policy", ["random", "learned-policy"])
 def test_package_command_preserves_policy_data_options_and_artifact_names(

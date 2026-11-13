@@ -487,6 +487,14 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
 
     def _checkpoint_paths(self) -> list[Path]:
         paths: list[Path] = []
+        if self.model_id == "leworldmodel":
+            from .le_wm.worldfoundry_runtime import policy_checkpoint_path
+
+            policy_path = policy_checkpoint_path(self.options)
+            if policy_path is not None:
+                paths.append(policy_path)
+        if self.model_id == "diamond" and self.options.get("pretrained_dir"):
+            paths.append(expand_worldfoundry_path(str(self.options["pretrained_dir"])))
         for key in (
             "checkpoint_path",
             "checkpoint_dir",

@@ -201,6 +201,7 @@ class DIAMONDPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for DIAMOND visual generation."""
 
     MODEL_ID = "diamond"
+    MODEL_PATH_OPTION = "pretrained_dir"
     RUNTIME_GATED_OPTION_KEYS = (
         "variant",
         "spawn_dir",
@@ -340,6 +341,7 @@ class LeWorldModelPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for LeWorldModel visual generation."""
 
     MODEL_ID = "leworldmodel"
+    MODEL_PATH_OPTION = "policy"
 
 
 class MIRAPipeline(WorldModelRuntimePipeline):
@@ -395,6 +397,7 @@ class StarWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for StarWM visual generation."""
 
     MODEL_ID = "starwm"
+    MODEL_PATH_OPTION = "served_model_id"
 
 
 class TesserActPipeline(WorldModelRuntimePipeline):

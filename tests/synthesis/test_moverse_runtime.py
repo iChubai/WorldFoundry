@@ -21,6 +21,16 @@ pytestmark = pytest.mark.unit
 RUNTIME_MODULE = "worldfoundry.synthesis.visual_generation.moverse.moverse_runtime"
 
 
+def test_moverse_public_model_path_selects_the_checkpoint(tmp_path: Path) -> None:
+    from worldfoundry.pipelines.moverse.pipeline_moverse import MoVersePipeline
+
+    checkpoint = tmp_path / "MoVerse"
+    pipeline = MoVersePipeline.from_pretrained(model_path=str(checkpoint), device="cpu")
+    assert pipeline.synthesis_model.options["moverse_path"] == str(checkpoint)
+    assert "repo_root" not in pipeline.synthesis_model.options
+    assert pipeline.synthesis_model.device == "cpu"
+
+
 def test_moverse_plan_uses_the_current_shared_wan_runtime(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     is_file = Path.is_file
 

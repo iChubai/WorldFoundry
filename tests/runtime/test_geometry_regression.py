@@ -704,9 +704,14 @@ def test_adaworld_replay_supplies_native_loader_input_and_seed(tmp_path: Path, m
 def test_neoverse_replay_uses_native_camera_contract() -> None:
     root = Path(__file__).resolve().parents[2]
     matrix = root / "tests/manual/geometry_regression_cases.json"
-    call = json.loads(matrix.read_text())["neoverse-navigation-short"]["call"]
+    case = json.loads(matrix.read_text())["neoverse-navigation-short"]
+    call = case["call"]
     source = root / "worldfoundry/synthesis/visual_generation/neoverse"
     tree = ast.parse((source / "worldfoundry_runtime.py").read_text())
+    imports = {alias.name for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) for alias in node.names}
+    assert {"WanModel", "NeoVerseControlBranch", "NeoVerseWorldMirror", "DepthAnything3Reconstructor"} <= imports
+    assert "canonical Wan 2.1 denoising" in case["scope"]
+    assert "checkpoint-selected WorldMirror/DepthAnything3" in case["scope"]
     predict = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "predict")
     parameters = {argument.arg for argument in predict.args.kwonlyargs}
     assert {"predefined_trajectory", "distance", "num_frames"} <= parameters & call.keys()

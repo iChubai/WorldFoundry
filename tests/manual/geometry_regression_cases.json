@@ -8570,7 +8570,7 @@
     "required_outputs": [
       "result.video"
     ],
-    "scope": "Public static-scene navigation with real geometry conditioning and native SVD denoising; compare returned generated RGB tensors."
+    "scope": "Public static-scene navigation with checkpoint-selected WorldMirror/DepthAnything3 geometry conditioning, the NeoVerse control branch and canonical Wan 2.1 denoising; compare returned generated RGB tensors. The alternate reconstructor is a separate replay."
   },
   "vmem-forward-navigation-short": {
     "id": "vmem-forward-navigation-short",

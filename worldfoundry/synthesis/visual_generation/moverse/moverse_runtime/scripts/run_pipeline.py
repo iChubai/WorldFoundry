@@ -49,6 +49,7 @@ def parse_args():
     # Output
     p.add_argument("--output", type=str, default="output/video.mp4", help="Output video path")
     p.add_argument("--fps", type=int, default=16, help="Output video FPS")
+    p.add_argument("--seed", type=int, default=None)
     p.add_argument(
         "--save_frames_dir", type=str, default=None, help="Directory to save individual frames (default: temp)"
     )
@@ -338,6 +339,10 @@ def frames_to_video(frames_dir, output_path, fps=16):
 
 def main():
     args = parse_args()
+    if args.seed is not None:
+        from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+
+        set_seed_everywhere(args.seed)
 
     # ── Load config ───────────────────────────────────────────────────────
     print(f"[init] Loading config: {args.config_path}")

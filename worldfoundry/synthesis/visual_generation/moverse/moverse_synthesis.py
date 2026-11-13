@@ -142,6 +142,9 @@ class MoVerseSynthesis(BaseSynthesis):
             arguments.extend(["--back_prompt", back_prompt])
         if trajectory:
             arguments.extend(["--traj", trajectory])
+        seed = options.get("seed")
+        if seed is not None:
+            arguments.extend(["--seed", str(int(seed))])
 
         command = package_module_command(
             "worldfoundry.synthesis.visual_generation.moverse.moverse_runtime.scripts.infer",

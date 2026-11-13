@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import subprocess
 import sys
@@ -37,8 +38,9 @@ def test_moverse_plan_uses_the_current_shared_wan_runtime(monkeypatch: pytest.Mo
     assert result["command"][-2:] == ["--python_executable", sys.executable]
 
 
+@pytest.mark.parametrize("seed", [None, 0, 42])
 def test_moverse_executes_package_command_without_import_path_injection(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, seed: int | None
 ) -> None:
     assets = {}
     for role, required in synthesis.REQUIRED_ASSET_FILES.items():
@@ -76,12 +78,18 @@ def test_moverse_executes_package_command_without_import_path_injection(
         num_frames=17,
         back_prompt="a pond",
         output_path=tmp_path / "world.mp4",
+        seed=seed,
     )
     assert result["status"] == "succeeded"
     command, options = calls[0]
     assert command[:3] == ["/opt/python", "-m", f"{RUNTIME_MODULE}.scripts.infer"]
     assert command[command.index("--num_frames") + 1] == "17"
     assert command[command.index("--fps") + 1] == "24"
+    if seed is None:
+        assert "--seed" not in command
+    else:
+        assert command[-2:] == ["--seed", str(seed)]
+        command = command[:-2]
     assert command[-4:] == ["--back_prompt", "a pond", "--traj", str(trajectory)]
     assert options["cwd"] == synthesis.runtime_root()
     assert options["env"]["PYTHONPATH"] == "/operator/packages"
@@ -94,9 +102,10 @@ def test_moverse_executes_package_command_without_import_path_injection(
     assert json.loads(Path(result["plan_path"]).read_text())["resolved_assets"] == assets
 
 
+@pytest.mark.parametrize("seed", [None, 0, 42])
 @pytest.mark.parametrize("custom_trajectory", [False, True])
 def test_moverse_orchestrator_launches_all_four_package_stages(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, custom_trajectory: bool
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, custom_trajectory: bool, seed: int | None
 ) -> None:
     image = tmp_path / "reference.png"
     image.touch()
@@ -136,6 +145,8 @@ def test_moverse_orchestrator_launches_all_four_package_stages(
     ]
     if custom_trajectory:
         args.extend(["--traj", str(tmp_path / "custom.txt")])
+    if seed is not None:
+        args.extend(["--seed", str(seed)])
     monkeypatch.setattr(sys, "argv", args)
     calls: list[tuple[list[str], dict[str, Any]]] = []
 
@@ -155,8 +166,15 @@ def test_moverse_orchestrator_launches_all_four_package_stages(
         )
     ]
     assert all(options == {"cwd": infer.RUNTIME_ROOT, "check": True} for _, options in calls)
-    assert calls[0][0][-2:] == ["--back_prompt", "a pond"]
+    panorama_command = calls[0][0]
     command = calls[-1][0]
+    if seed is None:
+        assert all("--seed" not in stage_command for stage_command, _ in calls)
+    else:
+        assert panorama_command[-2:] == command[-2:] == ["--seed", str(seed)]
+        panorama_command = panorama_command[:-2]
+        command = command[:-2]
+    assert panorama_command[-2:] == ["--back_prompt", "a pond"]
     assert command[command.index("--scene") + 1] == str(output / "reference_pano.ply")
     assert command[command.index("--prompt") + 1] == "A video of a garden"
     assert command[command.index("--taehv_checkpoint") + 1] == "/weights/taehv.pth"
@@ -165,3 +183,52 @@ def test_moverse_orchestrator_launches_all_four_package_stages(
     assert command[command.index("--traj") + 1] == str(trajectory)
     if not custom_trajectory:
         assert trajectory.read_text() == "0 0\n0 0\n0 0\n"
+
+
+@pytest.mark.parametrize("seed", [None, 0, 42])
+def test_moverse_optional_seed_reaches_headless_worker_rngs(seed: int | None) -> None:
+    source = synthesis.runtime_root() / "scripts/run_pipeline.py"
+    tree = ast.parse(source.read_text())
+    seed_argument = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr)
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Attribute)
+        and node.value.func.attr == "add_argument"
+        and node.value.args
+        and isinstance(node.value.args[0], ast.Constant)
+        and node.value.args[0].value == "--seed"
+    )
+    seed_guard = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.If) and ast.unparse(node.test) == "args.seed is not None"
+    )
+    code = f"""\
+import random
+from argparse import ArgumentParser
+import numpy as np
+import torch
+p = ArgumentParser()
+{ast.unparse(seed_argument)}
+args = p.parse_args()
+def draw() -> list[float]:
+    return [random.random(), float(np.random.random()), torch.randn(()).item()]
+expected_seed = 91 if args.seed is None else args.seed
+random.seed(expected_seed)
+np.random.seed(expected_seed)
+torch.manual_seed(expected_seed)
+expected = draw()
+random.seed(91)
+np.random.seed(91)
+torch.manual_seed(91)
+flags = (torch.are_deterministic_algorithms_enabled(), torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark)
+{ast.unparse(seed_guard)}
+assert draw() == expected
+if args.seed is None:
+    assert flags == (torch.are_deterministic_algorithms_enabled(), torch.backends.cudnn.deterministic, torch.backends.cudnn.benchmark)
+"""
+    flags = [] if seed is None else ["--seed", str(seed)]
+    result = subprocess.run([sys.executable, "-c", code, *flags], capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stderr

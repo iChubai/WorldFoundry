@@ -37,6 +37,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--default_config_path", required=True)
     parser.add_argument("--num_frames", type=int, default=161)
     parser.add_argument("--fps", type=int, default=16)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--python_executable", default=sys.executable)
     return parser.parse_args()
 
@@ -66,10 +67,12 @@ def main() -> None:
     ]
     if args.back_prompt:
         panorama_args.extend(["--back_prompt", args.back_prompt])
+    seed_args: list[object] = [] if args.seed is None else ["--seed", args.seed]
     _run(
         args.python_executable,
         "worldfoundry.synthesis.visual_generation.moverse.moverse_runtime.pano_gen.inference",
         *panorama_args,
+        *seed_args,
     )
 
     panorama = output_dir / f"{stem}_pano.png"
@@ -123,6 +126,7 @@ def main() -> None:
         args.num_frames,
         "--fps",
         args.fps,
+        *seed_args,
     )
 
 

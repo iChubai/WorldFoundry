@@ -166,6 +166,19 @@ def _load_impact_module() -> ModuleType:
     return module
 
 
+def declared_environment_variants(root: Path, rows: list[dict]) -> dict[str, list[str]]:
+    """Resolve exact manifest owners, including bindings outside the video inventory."""
+    manifest = root / "tests/manual/geometry_regression_dependencies.json"
+    if not manifest.is_file():
+        return {}
+    mappings = _load_impact_module().environment_variants(json.loads(manifest.read_text()))
+    known = {variant_key(row) for row in [*rows, *outside_bindings(root, rows)]}
+    for variants in mappings.values():
+        if unknown := set(variants) - known:
+            raise ValueError(f"Environment ownership names unknown variants: {sorted(unknown)}")
+    return mappings
+
+
 def runtime_dependencies(rows: list[dict], root: Path) -> dict[str, set[str]]:
     """Include runtime declarations and subprocess source roots in ownership.
 
@@ -219,6 +232,8 @@ def affected_variants(
             raise ValueError(f"Affected native model is absent from the inventory: {identity}")
         affected.update(variant_key(row) for row in matched)
     declared_dependencies = runtime_dependencies(rows, root) if changed_paths else {}
+    environments = declared_environment_variants(root, rows) if changed_paths else {}
+    native = {variant_key(row) for row in rows}
     source_changes = []
     for path in changed_paths:
         pure = Path(path)
@@ -227,6 +242,8 @@ def affected_variants(
         direct = [row for row in rows if path in {row.get("catalog_path"), row.get("binding_path")}]
         if direct:
             affected.update(variant_key(row) for row in direct)
+        elif path in environments:
+            affected.update(set(environments[path]) & native)
         elif path.startswith(("worldfoundry/core/", "worldfoundry/runtime/")) or path in {
             "worldfoundry/pipelines/pipeline_utils.py",
             "worldfoundry/operators/base_operator.py",

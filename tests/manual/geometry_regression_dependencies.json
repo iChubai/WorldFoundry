@@ -371,6 +371,208 @@
       "worldfoundry/base_models/diffusion_model/runners/compressed_memory.py",
       "worldfoundry/base_models/diffusion_model/runners/strategies.py",
       "worldfoundry/base_models/diffusion_model/schedulers/**"
+    ],
+    "ltx-2.5": [
+      "worldfoundry/pipelines/ltx25/**",
+      "worldfoundry/synthesis/visual_generation/ltx25/**",
+      "worldfoundry/base_models/diffusion_model/recipes/ltx25.py"
+    ],
+    "hyperflow": [
+      "worldfoundry/pipelines/hyperflow/**",
+      "worldfoundry/synthesis/visual_generation/hyperflow/**"
+    ],
+    "ltx-2-v2v": [
+      "worldfoundry/pipelines/ltx2/pipeline_ltx2_v2v.py",
+      "worldfoundry/base_models/diffusion_model/recipes/ltx.py"
+    ],
+    "ltx-2.3-v2v": [
+      "worldfoundry/pipelines/ltx2/pipeline_ltx2_v2v.py",
+      "worldfoundry/base_models/diffusion_model/recipes/ltx.py"
+    ],
+    "omnivinci": [
+      "worldfoundry/synthesis/visual_generation/omnivinci/**",
+      "worldfoundry/base_models/llm_mllm_core/mllm/omnivinci/**"
+    ],
+    "action-go1": [
+      "worldfoundry/synthesis/action_generation/go1/**"
+    ],
+    "action-ahawam": [
+      "worldfoundry/synthesis/action_generation/ahawam/**"
+    ],
+    "action-fastwam": [
+      "worldfoundry/synthesis/action_generation/fastwam/**"
+    ],
+    "action-x-wam": [
+      "worldfoundry/synthesis/action_generation/x_wam/**",
+      "worldfoundry/pipelines/x_wam/pipeline_x_wam.py"
+    ],
+    "action-being-h05": [
+      "worldfoundry/synthesis/action_generation/being_h05/**"
+    ],
+    "action-gr00t": [
+      "worldfoundry/synthesis/action_generation/gr00t/**"
+    ],
+    "action-galaxea-vla": [
+      "worldfoundry/synthesis/action_generation/galaxea_vla/**"
+    ],
+    "action-hy-embodied-vla": [
+      "worldfoundry/synthesis/action_generation/hy_embodied_vla/**",
+      "worldfoundry/pipelines/hy_embodied_vla/pipeline_hy_embodied_vla.py"
+    ],
+    "action-internvla-a1": [
+      "worldfoundry/synthesis/action_generation/internvla_a1/**"
+    ],
+    "action-lingbot-vla": [
+      "worldfoundry/synthesis/action_generation/lingbot_vla/**"
+    ],
+    "action-lingbot-vla-v2": [
+      "worldfoundry/synthesis/action_generation/lingbot_vla_v2/**"
+    ],
+    "action-cogact": [
+      "worldfoundry/synthesis/action_generation/cogact/**"
+    ],
+    "action-db-cogact": [
+      "worldfoundry/synthesis/action_generation/db_cogact/**"
+    ],
+    "action-diffusion-policy": [
+      "worldfoundry/synthesis/action_generation/diffusion_policy/**"
+    ],
+    "action-roboflamingo": [
+      "worldfoundry/synthesis/action_generation/roboflamingo/**"
+    ],
+    "action-tinyvla": [
+      "worldfoundry/synthesis/action_generation/tinyvla/**"
+    ],
+    "action-molmoact2": [
+      "worldfoundry/synthesis/action_generation/molmoact2/**"
+    ],
+    "action-molmobot": [
+      "worldfoundry/synthesis/action_generation/molmobot/**"
+    ],
+    "action-openpi": [
+      "worldfoundry/synthesis/action_generation/openpi/**"
+    ],
+    "action-lda-1b": [
+      "worldfoundry/synthesis/action_generation/lda_1b/**"
+    ],
+    "action-xiaomi-robotics-0": [
+      "worldfoundry/synthesis/action_generation/xiaomi_robotics_0/**",
+      "worldfoundry/pipelines/xiaomi_robotics_0/pipeline_xiaomi_robotics_0.py"
+    ],
+    "action-giga-world-policy-0.5": [
+      "worldfoundry/synthesis/action_generation/giga_world_policy/**"
+    ],
+    "action-openvla": [
+      "worldfoundry/synthesis/action_generation/openvla/**"
+    ],
+    "action-openvla-oft": [
+      "worldfoundry/synthesis/action_generation/openvla_oft/**"
+    ],
+    "action-spirit-v1.5": [
+      "worldfoundry/synthesis/action_generation/spirit_v15/**"
+    ],
+    "action-abot-m0": [
+      "worldfoundry/synthesis/action_generation/abot_m0/**"
+    ],
+    "action-mem-0": [
+      "worldfoundry/synthesis/action_generation/mem0/**"
+    ],
+    "action-dreamzero": [
+      "worldfoundry/synthesis/action_generation/dreamzero/**"
+    ],
+    "visual-joyai_echo": [
+      "worldfoundry/synthesis/visual_generation/joyai_echo/**",
+      "worldfoundry/pipelines/joyai_echo/pipeline_joyai_echo.py"
+    ],
+    "visual-solarwm": [
+      "worldfoundry/synthesis/visual_generation/solarwm/**",
+      "worldfoundry/pipelines/solarwm/pipeline_solarwm.py"
+    ],
+    "visual-alayaworld_v11": [
+      "worldfoundry/synthesis/visual_generation/alayaworld_v11/**",
+      "worldfoundry/pipelines/alayaworld_v11/pipeline_alayaworld_v11.py"
+    ],
+    "visual-astronex_world": [
+      "worldfoundry/synthesis/visual_generation/astronex_world/**",
+      "worldfoundry/pipelines/astronex_world/pipeline_astronex_world.py"
+    ],
+    "visual-emu35": [
+      "worldfoundry/synthesis/visual_generation/emu35/**",
+      "worldfoundry/pipelines/emu35/pipeline_emu35.py"
+    ],
+    "visual-open_magvit2": [
+      "worldfoundry/synthesis/visual_generation/open_magvit2/**"
+    ],
+    "visual-show_o": [
+      "worldfoundry/synthesis/visual_generation/show_o/**"
+    ],
+    "visual-infinite_world": [
+      "worldfoundry/synthesis/visual_generation/infinite_world/**",
+      "worldfoundry/pipelines/infinite_world/pipeline_infinite_world.py"
+    ],
+    "visual-krea_realtime_video": [
+      "worldfoundry/synthesis/visual_generation/krea_realtime_video/**"
+    ],
+    "visual-lyra_1": [
+      "worldfoundry/synthesis/visual_generation/lyra_1/**",
+      "worldfoundry/pipelines/lyra/pipeline_lyra1.py",
+      "worldfoundry/base_models/three_dimensions/point_clouds/lyra/**"
+    ],
+    "visual-longcat_video": [
+      "worldfoundry/synthesis/visual_generation/longcat_video/**",
+      "worldfoundry/pipelines/longcat_video/pipeline_longcat_video.py"
+    ],
+    "visual-liveworld": [
+      "worldfoundry/synthesis/visual_generation/liveworld/**",
+      "worldfoundry/pipelines/liveworld/pipeline_liveworld.py"
+    ],
+    "visual-uni3c": [
+      "worldfoundry/synthesis/visual_generation/uni3c/**",
+      "worldfoundry/pipelines/uni3c/pipeline_uni3c.py"
+    ],
+    "visual-adaworld": [
+      "worldfoundry/synthesis/visual_generation/adaworld/**"
+    ],
+    "visual-easyanimate": [
+      "worldfoundry/synthesis/visual_generation/easyanimate/**",
+      "worldfoundry/pipelines/easyanimate/pipeline_easyanimate_i2v.py"
+    ],
+    "visual-animatediff": [
+      "worldfoundry/synthesis/visual_generation/animatediff/**"
+    ],
+    "visual-cameractrl": [
+      "worldfoundry/synthesis/visual_generation/cameractrl/**"
+    ],
+    "visual-worldcam": [
+      "worldfoundry/synthesis/visual_generation/worldcam/**",
+      "worldfoundry/pipelines/worldcam/pipeline_worldcam.py"
+    ],
+    "visual-rcm": [
+      "worldfoundry/synthesis/visual_generation/rcm/**"
+    ],
+    "visual-kairos": [
+      "worldfoundry/synthesis/visual_generation/kairos/**",
+      "worldfoundry/pipelines/kairos/pipeline_kairos.py"
+    ],
+    "visual-neoverse": [
+      "worldfoundry/synthesis/visual_generation/neoverse/**",
+      "worldfoundry/pipelines/neoverse/pipeline_neoverse.py"
+    ],
+    "visual-vmem": [
+      "worldfoundry/synthesis/visual_generation/vmem/**",
+      "worldfoundry/pipelines/vmem/pipeline_vmem.py"
+    ],
+    "visual-mmaudio": [
+      "worldfoundry/synthesis/visual_generation/mmaudio/**"
+    ],
+    "visual-nwm": [
+      "worldfoundry/synthesis/visual_generation/nwm/**"
+    ],
+    "visual-mineworld": [
+      "worldfoundry/synthesis/visual_generation/mineworld/**"
+    ],
+    "visual-genie_envisioner": [
+      "worldfoundry/synthesis/visual_generation/genie_envisioner/**"
     ]
   },
   "cases": {
@@ -578,6 +780,198 @@
     ],
     "causal-forcing-framewise-short": [
       "causal-forcing"
+    ],
+    "ltx25-distilled-video-short": [
+      "ltx-2.5"
+    ],
+    "hyperflow-t2va-short": [
+      "hyperflow"
+    ],
+    "ltx-2-v2v-control-short": [
+      "ltx-2-v2v"
+    ],
+    "ltx-2.3-v2v-control-short": [
+      "ltx-2.3-v2v"
+    ],
+    "omnivinci-audiovisual-text-short": [
+      "omnivinci"
+    ],
+    "go1-action-short": [
+      "action-go1"
+    ],
+    "ahawam-action-short": [
+      "action-ahawam"
+    ],
+    "fastwam-action-short": [
+      "action-fastwam"
+    ],
+    "x-wam-action-short": [
+      "action-x-wam"
+    ],
+    "being-h05-action-short": [
+      "action-being-h05"
+    ],
+    "gr00t-action-short": [
+      "action-gr00t"
+    ],
+    "galaxea-vla-action-short": [
+      "action-galaxea-vla"
+    ],
+    "hy-embodied-vla-action-short": [
+      "action-hy-embodied-vla"
+    ],
+    "internvla-a1-action-short": [
+      "action-internvla-a1"
+    ],
+    "lingbot-vla-action-short": [
+      "action-lingbot-vla"
+    ],
+    "lingbot-vla-v2-action-short": [
+      "action-lingbot-vla-v2"
+    ],
+    "cogact-action-short": [
+      "action-cogact"
+    ],
+    "db-cogact-action-short": [
+      "action-db-cogact"
+    ],
+    "diffusion-policy-action-short": [
+      "action-diffusion-policy"
+    ],
+    "roboflamingo-action-short": [
+      "action-roboflamingo"
+    ],
+    "tinyvla-action-short": [
+      "action-tinyvla"
+    ],
+    "molmoact2-action-short": [
+      "action-molmoact2"
+    ],
+    "molmobot-action-short": [
+      "action-molmobot"
+    ],
+    "openpi-action-short": [
+      "action-openpi"
+    ],
+    "lda-1b-action-short": [
+      "action-lda-1b"
+    ],
+    "xiaomi-robotics-0-action-short": [
+      "action-xiaomi-robotics-0"
+    ],
+    "giga-world-policy-0.5-action-short": [
+      "action-giga-world-policy-0.5"
+    ],
+    "openvla-action-short": [
+      "action-openvla"
+    ],
+    "openvla-oft-action-short": [
+      "action-openvla-oft"
+    ],
+    "spirit-v1.5-action-short": [
+      "action-spirit-v1.5"
+    ],
+    "abot-m0-action-short": [
+      "action-abot-m0"
+    ],
+    "mem-0-action-short": [
+      "action-mem-0"
+    ],
+    "gr00t-n1-action-short": [
+      "action-gr00t"
+    ],
+    "dreamzero-droid-actions-short": [
+      "action-dreamzero"
+    ],
+    "joyai-echo-wm-base-controls-short": [
+      "visual-joyai_echo"
+    ],
+    "joyai-echo-wm-flash-controls-short": [
+      "visual-joyai_echo"
+    ],
+    "joyai-echo-longvideo-r2v-short": [
+      "visual-joyai_echo"
+    ],
+    "solarwm-wan5b-dmd-indexed-short": [
+      "visual-solarwm"
+    ],
+    "solarwm-ltx-indexed-short": [
+      "visual-solarwm"
+    ],
+    "alayaworld-v11-dmd-camera-short": [
+      "visual-alayaworld_v11"
+    ],
+    "astronex-causal-i2v-camera-short": [
+      "visual-astronex_world"
+    ],
+    "emu35-story-text-image-short": [
+      "visual-emu35"
+    ],
+    "open-magvit2-l-class-image-short": [
+      "visual-open_magvit2"
+    ],
+    "show-o-t2i-short": [
+      "visual-show_o"
+    ],
+    "infinite-world-camera-short": [
+      "visual-infinite_world"
+    ],
+    "krea-realtime-two-blocks-short": [
+      "visual-krea_realtime_video"
+    ],
+    "lyra1-static-reconstruction": [
+      "visual-lyra_1"
+    ],
+    "longcat-t2v-native-short": [
+      "visual-longcat_video"
+    ],
+    "liveworld-geometry-short": [
+      "visual-liveworld"
+    ],
+    "uni3c-camera-render-short": [
+      "visual-uni3c"
+    ],
+    "adaworld-context-short": [
+      "visual-adaworld"
+    ],
+    "easyanimate-i2v-short": [
+      "visual-easyanimate"
+    ],
+    "animatediff-v3-t2v-short": [
+      "visual-animatediff"
+    ],
+    "cameractrl-realestate-short": [
+      "visual-cameractrl"
+    ],
+    "worldcam-video-camera-short": [
+      "visual-worldcam"
+    ],
+    "causal-rcm-c1-1-short": [
+      "visual-rcm"
+    ],
+    "kairos-480p-distilled-short": [
+      "visual-kairos"
+    ],
+    "neoverse-navigation-short": [
+      "visual-neoverse"
+    ],
+    "vmem-forward-navigation-short": [
+      "visual-vmem"
+    ],
+    "mmaudio-small-16k-video-audio-short": [
+      "visual-mmaudio"
+    ],
+    "mmaudio-small-44k-video-audio-short": [
+      "visual-mmaudio"
+    ],
+    "nwm-recon-one-second": [
+      "visual-nwm"
+    ],
+    "mineworld-1200m-actions-short": [
+      "visual-mineworld"
+    ],
+    "genie-envisioner-three-view-history-short": [
+      "visual-genie_envisioner"
     ]
   },
   "coverage_scope": "Declared short 3D, video generation and world-model cases; variants and unlisted integrations are not implied covered.",
@@ -740,5 +1134,106 @@
       ],
       "reason": "Direct-package relocation is accepted only after commit-blob comparison proves identical bytes or the declared import-namespace rewrite; CPU contracts verify runtime discovery, configuration targets and bundled resources. This does not certify these models numerically."
     }
-  ]
+  ],
+  "environment_variants": {
+    "worldfoundry/data/models/runtime/environments/three_d/geometry-priors.yaml": [
+      "dap@dap",
+      "depth-anything-v2-prior@depth-anything-v2-prior",
+      "depth-anything-v3-prior@depth-anything-v3-prior",
+      "geocalib-prior@geocalib-prior",
+      "metric3d-prior@metric3d-prior",
+      "prior-depth-anything@prior-depth-anything",
+      "track-anything-prior@track-anything-prior",
+      "unidepth-v2-prior@unidepth-v2-prior",
+      "video-depth-anything-prior@video-depth-anything-prior"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/hyperflow.yaml": [
+      "hyperflow@hyperflow"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/joyai-echo-longvideo.yaml": [
+      "joyai-echo-longvideo@joyai-echo-longvideo"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/kairos-sensenova.yaml": [
+      "kairos-sensenova@kairos-sensenova"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/ltx-2-v2v.yaml": [
+      "ltx-2-v2v@ltx-2-v2v"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/ltx-2.3-v2v.yaml": [
+      "ltx-2.3-v2v@ltx-2.3-v2v"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/ltx-2.5.yaml": [
+      "ltx-2-v2v@ltx-2-v2v",
+      "ltx-2.3-v2v@ltx-2.3-v2v",
+      "ltx-2.5@ltx-2.5"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/magi2-preview.yaml": [
+      "magi2-preview@magi2-preview"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/moverse.yaml": [
+      "moverse@moverse"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/omnivinci.yaml": [
+      "omnivinci@omnivinci"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/studio_verified_unified.yaml": [
+      "allegro-ti2v@allegro-ti2v",
+      "allegro@allegro",
+      "cogvideox-2b-t2v@cogvideox-2b-t2v",
+      "cogvideox-5b-i2v@cogvideox-5b-i2v",
+      "cogvideox-5b-t2v@cogvideox-5b-t2v",
+      "cogvideox@cogvideox",
+      "dynamicrafter-1024-i2v@dynamicrafter-1024-i2v",
+      "dynamicrafter-512-i2v@dynamicrafter-512-i2v",
+      "dynamicrafter@dynamicrafter",
+      "easyanimate-i2v@easyanimate-i2v",
+      "easyanimate@easyanimate",
+      "hy-worldplay@hy-worldplay",
+      "i2vgen-xl@i2vgen-xl",
+      "krea-realtime-video@krea-realtime-video",
+      "longcat-video@longcat-video",
+      "mochi-1-preview-t2v@mochi-1-preview-t2v",
+      "mochi-1@mochi-1",
+      "modelscope-t2v@modelscope-t2v",
+      "neoverse@neoverse",
+      "sana@sana",
+      "skyreels-v2@skyreels-v2",
+      "unianimate-dit@unianimate-dit",
+      "vchitect-2-t2v@vchitect-2-t2v",
+      "videocrafter1-i2v@videocrafter1-i2v",
+      "videocrafter1-t2v@videocrafter1-t2v",
+      "videocrafter2-t2v@videocrafter2-t2v",
+      "videocrafter@videocrafter",
+      "wan2.1-vace@wan2.1-vace",
+      "wan2.1@wan2.1",
+      "wan2.2@wan2.2",
+      "worldgen@worldgen",
+      "yume-1p5@yume-1p5",
+      "yume@yume"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/uni3c.yaml": [
+      "uni3c@uni3c"
+    ],
+    "worldfoundry/data/models/runtime/environments/video/warp-as-history.yaml": [
+      "warp-as-history@warp-as-history"
+    ],
+    "worldfoundry/data/models/runtime/environments/world/astronex-world.yaml": [
+      "astronex-world@astronex-world"
+    ],
+    "worldfoundry/data/models/runtime/environments/world/mira.yaml": [
+      "mira@mira"
+    ],
+    "worldfoundry/data/models/runtime/environments/world/scope.yaml": [
+      "scope@scope"
+    ],
+    "worldfoundry/data/models/runtime/environments/world/solarwm-wan22.yaml": [
+      "solarwm@solarwm"
+    ],
+    "worldfoundry/data/models/runtime/environments/world/solarwm.yaml": [
+      "solarwm@solarwm"
+    ],
+    "worldfoundry/data/models/runtime/environments/world/uniworld-view.yaml": [
+      "uniworld-view@uniworld-view"
+    ]
+  }
 }

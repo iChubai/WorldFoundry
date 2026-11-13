@@ -396,3 +396,44 @@ def test_runtime_source_ownership_rejects_symlink_escapes(project, tmp_path):
     vendor.symlink_to(external, target_is_directory=True)
     with pytest.raises(ValueError, match="escapes"):
         policy.evaluate_policy(report, cases, baseline, root, ["worldfoundry/synthesis/subprocess_model/inference.py"])
+
+
+def _environment_ownership(root: Path, variants: list[str]) -> str:
+    path = "worldfoundry/data/models/runtime/environments/video/example.yaml"
+    manifest = root / "tests/manual/geometry_regression_dependencies.json"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(json.dumps({"environment_variants": {path: variants}}))
+    return path
+
+
+def test_exact_environment_ownership_selects_only_declared_variant(
+    project: tuple[Path, Path, dict, dict, dict],
+) -> None:
+    root, _, cases, report, baseline = project
+    path = _environment_ownership(root, ["small@small"])
+    result = policy.evaluate_policy(report, cases, baseline, root, [path])
+    assert result["status"] == "passed"
+    assert result["affected_variants"] == ["small@small"]
+    assert result["unknown_inference_paths"] == []
+
+
+def test_environment_ownership_does_not_hide_unknown_manifests_or_shared_core(
+    project: tuple[Path, Path, dict, dict, dict],
+) -> None:
+    root, _, cases, report, baseline = project
+    path = _environment_ownership(root, ["small@small"])
+    unknown = path.replace("example.yaml", "other.yaml")
+    result = policy.evaluate_policy(report, cases, baseline, root, [unknown])
+    assert result["status"] == "failed"
+    assert result["affected_variants"] == ["large@large", "small@small"]
+    assert result["unknown_inference_paths"] == [unknown]
+    result = policy.evaluate_policy(report, cases, baseline, root, [path, "worldfoundry/core/nn/blocks/layers.py"])
+    assert result["status"] == "failed"
+    assert result["affected_variants"] == ["large@large", "small@small"]
+
+
+def test_environment_ownership_rejects_unknown_variant(project: tuple[Path, Path, dict, dict, dict]) -> None:
+    root, _, cases, report, baseline = project
+    path = _environment_ownership(root, ["absent@absent"])
+    with pytest.raises(ValueError, match="unknown variants"):
+        policy.evaluate_policy(report, cases, baseline, root, [path])

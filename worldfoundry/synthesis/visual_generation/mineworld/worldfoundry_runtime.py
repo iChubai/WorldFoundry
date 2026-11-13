@@ -76,6 +76,8 @@ def build_command(context):
         args.extend(["--top_p", str(options["top_p"])])
     else:
         args.extend(["--top_k", str(options.get("top_k", 100))])
+    if options.get("seed") is not None:
+        args.extend(["--seed", str(options["seed"])])
     return package_module_command(
         "worldfoundry.synthesis.visual_generation.mineworld.inference",
         args,

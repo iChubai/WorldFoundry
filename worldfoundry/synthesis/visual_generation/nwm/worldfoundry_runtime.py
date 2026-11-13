@@ -59,6 +59,8 @@ def build_command(context):
         "--gt",
         str(options.get("gt", 0)),
     ]
+    if options.get("seed") is not None:
+        args.extend(["--seed", str(options["seed"])])
     return package_module_command(
         "worldfoundry.synthesis.visual_generation.nwm.isolated_nwm_infer", args, python_executable=context["python"]
     )

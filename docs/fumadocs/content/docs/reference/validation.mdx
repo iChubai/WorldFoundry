@@ -347,6 +347,70 @@ pixels and frame rate against the reference. Oasis uses this route because
 its subprocess returns an MP4 without in-memory tensors; its generator fixes
 the random seed to 0.
 
+GPU-required cases set `requires_gpu: true`; the runner fails before loading
+weights when CUDA is unavailable. This declaration does not certify a GPU run.
+The native LTX-2.5, LTX-2/2.3 IC-LoRA V2V and HyperFlow cases compare decoded
+video and FPS using their declared checkpoint and control assets.
+
+For generated-text models, `text_outputs` maps relative JSON artifact names to
+explicit output field paths, for example `{"prediction.json": ["text"]}`.
+The runner stores the selected string as UTF-8 `uint8` bytes under
+`text.prediction.json.text` and requires that key in `required_outputs`.
+Auditing re-reads the selected fields and requires exact byte equality even
+when a floating-point tolerance is supplied. Input paths and other JSON strings
+are not captured. OmniVinci's audiovisual case compares its generated description
+through this contract; legacy numerical cases are unchanged.
+
+Emu3.5 exports its in-tree Story protobuf as `.pb`. The replay exporter uses
+that schema to read generated clip text and PNG images into
+`export.<file>.text.*` and `export.<file>.images.*` arrays. Both generated
+modalities are required; a question-only response cannot pass. Text bytes and
+image pixels compare exactly, including when numerical tolerances are supplied.
+Questions and reference images are not generated outputs.
+
+MMAudio FLAC artifacts are decoded lazily with SoundFile to lossless `int32`
+PCM arrays, sample rate and channel count under `export.<file>.samples`,
+`.sample_rate` and `.channels`. Samples and metadata compare exactly even
+with floating-point tolerances; container tags do not affect the comparison.
+Empty audio fails validation. The 16k and 44k routes have separate GPU cases.
+
+For generated video soundtracks, declare `audio_outputs: ["video.mp4"]`.
+PyAV decodes the selected stream to float32 PCM under `audio.<file>.samples`,
+with exact sample-rate, channel-count and channel-layout metadata. PCM compares
+exactly even with floating-point tolerances; missing or empty audio fails.
+HyperFlow requires both decoded video and its generated soundtrack. Cases
+without `audio_outputs` retain their existing captures.
+
+NWM and MineWorld forward the loader's optional seed to their in-tree subprocesses,
+seeding Python, NumPy and Torch through the canonical runtime helper. An unset
+seed leaves their RNG behavior unchanged. NWM records generated PNG frames,
+not the request plan; replay compares the decoded prediction pixels exactly.
+
+Action cases can materialize their released camera/state observations from
+UTF-8 JSON input data. `input_json` maps a concrete call argument to an explicitly
+listed `assets` file and a required SHA256 pin:
+
+```json
+{
+  "input_json": {
+    "official_policy_observation": {
+      "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/go1/observation.json",
+      "sha256": "${WORLDFOUNDRY_REGRESSION_GO1_OBSERVATION_SHA256}"
+    }
+  }
+}
+```
+
+The private accepted-reference profile supplies the 64-character lowercase
+hexadecimal pin. Unset, malformed or mismatched pins, undeclared input files,
+and collisions with explicit `call` arguments fail before model loading.
+Environment tokens inside the decoded observation use the existing case
+expansion. The checkpoint, seed, inference call and required action outputs
+remain in the case; only observation data is external. Include the observation
+bundle in `assets` to pin its referenced camera media as well. JSON inputs apply
+to single-call recipes; legacy cases need no changes. Observation materialization
+and accepted-reference receipts remain GPU-host prerequisites.
+
 Kandinsky6 Lite/Pro, including each distilled and pretraining variant, has its
 own `kandinsky6-<variant>-video-short` case. Stage the matching Diffusers release
 under `WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT` at the case's `assets.checkpoint`
@@ -600,6 +664,15 @@ CI uploads `geometry-impact` even when planning fails. This artifact lists
 required replays; it is not a successful GPU result. The runner rejects stale
 tree/policy hashes, contradictory empty plans, or plans omitting cases required
 by the current declarations and import graph.
+
+Environment ownership is declared in `environment_variants` in
+`geometry_regression_dependencies.json`: exact environment YAML paths map to
+explicit `model_id@binding_id` lists. The native coverage policy and replay
+planner use these owners before broad metadata rules. A profile's declared
+`execution.environment` also identifies consumers, including both LTX V2V
+profiles using LTX-2.5. No wildcard environment mappings are accepted. Missing
+case definitions remain uncovered; unknown manifests and shared-core changes
+retain conservative selection. Frozen native-coverage records are unchanged.
 
 ### Scheduled GPU regression on a prepared host
 

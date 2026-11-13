@@ -64,6 +64,7 @@ def get_args():
         "--accelerate-algo", type=str, default="naive", help=f"Accelerate Algorithm Option: {ACCELERATE_ALGO}"
     )
     parser.add_argument("--fps", type=int, default=6)
+    parser.add_argument("--seed", type=int, default=None)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--top_k", type=int, help="Use top-k sampling")
     group.add_argument("--top_p", type=float, help="Use top-p (nucleus) sampling")
@@ -168,6 +169,10 @@ def lvm_generate(args, model, output_dir, demo_video):
 
 if __name__ == "__main__":
     args = get_args()
+    if args.seed is not None:
+        from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+
+        set_seed_everywhere(args.seed)
     config = OmegaConf.load(args.config)
     output_path = Path(args.output_dir)
     precision_scope = autocast

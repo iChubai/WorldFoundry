@@ -6288,5 +6288,2533 @@
       }
     ],
     "scope": "Native Causal-Forcing frame-wise variant of the causal-forcing binding: two one-latent-frame blocks at 128x224 for T2V, and an image-seeded first frame plus two blocks for I2V; fixed-seed A/B/A pixels and decoded export. Numerical parity with the official inference script is recorded separately by tests/manual/self_forcing_parity.py --model-id causal-forcing-framewise; not a quality benchmark."
+  },
+  "ltx25-distilled-video-short": {
+    "id": "ltx25-distilled-video-short",
+    "model_id": "ltx-2.5",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.ltx25.pipeline_ltx25:LTX25Pipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.5",
+      "offload_mode": "cpu",
+      "diffvae_optimization": "chunked_eager"
+    },
+    "call": {
+      "prompt": "A red fox trots across a snowy meadow at sunrise, the camera tracking alongside.",
+      "height": 256,
+      "width": 384,
+      "num_frames": 25,
+      "fps": 24,
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.5"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "output_arrays": [
+      "video.mp4"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released split LTX-2.5 distilled transformer, Gemma4 and DiffVAE through the public pipeline; decoded video and FPS. Audio and hardware-specific quantized/compiled paths have separate handover requirements."
+  },
+  "hyperflow-t2va-short": {
+    "id": "hyperflow-t2va-short",
+    "model_id": "hyperflow",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.hyperflow.pipeline_hyperflow:HyperFlowPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/MiniMaxAI--MiniMax-H3",
+      "weights_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/videorebirth--hyperflow/minimax_h3_hyperflow_8step_v1.0.safetensors",
+      "gpus": 1
+    },
+    "call": {
+      "prompt": "A fox runs through snow.",
+      "num_frames": 124,
+      "height": 384,
+      "width": 640,
+      "seed": 42,
+      "attention_backend": "sdpa",
+      "offload": true,
+      "memory_reserve_margin": "24GB",
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/MiniMaxAI--MiniMax-H3",
+      "adapter": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/videorebirth--hyperflow/minimax_h3_hyperflow_8step_v1.0.safetensors"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps",
+      "audio.video.mp4.samples",
+      "audio.video.mp4.sample_rate",
+      "audio.video.mp4.channels",
+      "audio.video.mp4.layout"
+    ],
+    "output_arrays": [
+      "video.mp4"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "audio_outputs": [
+      "video.mp4"
+    ],
+    "scope": "Released H3 components and HyperFlow eight-step adapter, public package-worker launch and SDPA sampling; decoded RGB, FPS and exact decoded soundtrack PCM/rate/channel layout. Reference-conditioned workflows and distributed/optional attention paths remain separate replays."
+  },
+  "ltx-2-v2v-control-short": {
+    "id": "ltx-2-v2v-control-short",
+    "model_id": "ltx-2-v2v",
+    "seed": 171198,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.ltx2.pipeline_ltx2_v2v:LTX2V2VPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2/ltx-2-19b-distilled.safetensors",
+      "spatial_upsampler_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2/ltx-2-spatial-upscaler-x2-1.0.safetensors",
+      "ic_lora_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2-19b-IC-LoRA-Pose-Control/ltx-2-19b-ic-lora-pose-control.safetensors",
+      "gemma_root": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/gemma-3-12b-it-qat-q4_0-unquantized"
+    },
+    "call": {
+      "prompt": "A dancer moves across the stage.",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/ltx-v2v/pose-control.mp4",
+      "control_type": "pose",
+      "height": 256,
+      "width": 256,
+      "num_frames": 17,
+      "fps": 24,
+      "seed": 171198,
+      "control_strength": 1.0,
+      "lora_strength": 1.0,
+      "offload": "cpu",
+      "skip_stage_2": false,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2/ltx-2-19b-distilled.safetensors",
+      "spatial_upsampler_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2/ltx-2-spatial-upscaler-x2-1.0.safetensors",
+      "ic_lora_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2-19b-IC-LoRA-Pose-Control/ltx-2-19b-ic-lora-pose-control.safetensors",
+      "gemma_root": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/gemma-3-12b-it-qat-q4_0-unquantized",
+      "control": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/ltx-v2v/pose-control.mp4"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "output_arrays": [
+      "video.mp4"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released IC-LoRA control, two-stage 8+3 distilled schedule, Gemma3 and spatial refinement through the public native V2V pipeline; decoded video and FPS."
+  },
+  "ltx-2.3-v2v-control-short": {
+    "id": "ltx-2.3-v2v-control-short",
+    "model_id": "ltx-2.3-v2v",
+    "seed": 171198,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.ltx2.pipeline_ltx2_v2v:LTX23V2VPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3/ltx-2.3-22b-distilled-1.1.safetensors",
+      "spatial_upsampler_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "ic_lora_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3-22b-IC-LoRA-Union-Control/ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+      "gemma_root": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/gemma-3-12b-it-qat-q4_0-unquantized"
+    },
+    "call": {
+      "prompt": "A dancer moves across the stage.",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/ltx-v2v/canny-control.mp4",
+      "control_type": "canny",
+      "height": 256,
+      "width": 256,
+      "num_frames": 17,
+      "fps": 24,
+      "seed": 171198,
+      "control_strength": 1.0,
+      "lora_strength": 1.0,
+      "offload": "cpu",
+      "skip_stage_2": false,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3/ltx-2.3-22b-distilled-1.1.safetensors",
+      "spatial_upsampler_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "ic_lora_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3-22b-IC-LoRA-Union-Control/ltx-2.3-22b-ic-lora-union-control-ref0.5.safetensors",
+      "gemma_root": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/gemma-3-12b-it-qat-q4_0-unquantized",
+      "control": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/ltx-v2v/canny-control.mp4"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "output_arrays": [
+      "video.mp4"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released IC-LoRA control, two-stage 8+3 distilled schedule, Gemma3 and spatial refinement through the public native V2V pipeline; decoded video and FPS."
+  },
+  "omnivinci-audiovisual-text-short": {
+    "id": "omnivinci-audiovisual-text-short",
+    "model_id": "omnivinci",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:OmniVinciPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--omnivinci",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Describe the colors, motion, and any sounds in the supplied media.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/omnivinci/image.png",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/omnivinci/video-audio.mp4",
+      "max_video_frames": 9,
+      "load_audio_in_video": true,
+      "max_new_tokens": 32,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--omnivinci",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/omnivinci/image.png",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/omnivinci/video-audio.mp4"
+    },
+    "text_outputs": {
+      "prediction.json": [
+        "text"
+      ]
+    },
+    "required_outputs": [
+      "text.prediction.json.text"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Released OmniVinci multimodal loader, image/video/audio processing and generated description; exact UTF-8 prediction comparison excludes materialization paths."
+  },
+  "go1-action-short": {
+    "id": "go1-action-short",
+    "model_id": "go1",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.go1.pipeline:GO1Pipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/agibot-world--GO-1",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/agibot-world--GO-1",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/go1/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/go1"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/go1/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_GO1_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "ahawam-action-short": {
+    "id": "ahawam-action-short",
+    "model_id": "ahawam",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.ahawam.pipeline:AHAWAMPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/SereneC--AHA-WAM-RoboTwin2.0/robotwin_ahawam.pt",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/SereneC--AHA-WAM-RoboTwin2.0",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/DiffSynth-Studio--Wan-Series-Converted-Safetensors",
+      "support_2": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B/google/umt5-xxl",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/ahawam/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/ahawam"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/ahawam/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_AHAWAM_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "fastwam-action-short": {
+    "id": "fastwam-action-short",
+    "model_id": "fastwam",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.fastwam.pipeline:FastWAMPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/yuanty--fastwam",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/yuanty--fastwam",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/DiffSynth-Studio--Wan-Series-Converted-Safetensors",
+      "support_2": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/fastwam/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/fastwam"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/fastwam/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_FASTWAM_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "x-wam-action-short": {
+    "id": "x-wam-action-short",
+    "model_id": "x-wam",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.x_wam.pipeline_x_wam:XWAMPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/sharinka0715--X-WAM-checkpoints",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/sharinka0715--X-WAM-checkpoints",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan2.2-TI2V-5B",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/x-wam/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/x-wam"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/x-wam/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_X_WAM_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "being-h05-action-short": {
+    "id": "being-h05-action-short",
+    "model_id": "being-h05",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:BeingH05Pipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/BeingBeyond--Being-H05-2B_libero",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/BeingBeyond--Being-H05-2B_libero",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/being-h05/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/being-h05"
+    },
+    "required_outputs": [
+      "export.prediction.json.prediction"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "being_h05_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/being-h05/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_BEING_H05_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "gr00t-action-short": {
+    "id": "gr00t-action-short",
+    "model_id": "gr00t",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:GR00TPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--GR00T-N1.7-LIBERO",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--GR00T-N1.7-LIBERO",
+      "support_2": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--Cosmos-Reason2-2B",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/gr00t/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/gr00t"
+    },
+    "required_outputs": [
+      "export.prediction.json.action"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "gr00t_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/gr00t/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_GR00T_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "galaxea-vla-action-short": {
+    "id": "galaxea-vla-action-short",
+    "model_id": "galaxea-vla",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.galaxea_vla.galaxea_vla_synthesis:GalaxeaVLASynthesis",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/OpenGalaxea--G0-VLA",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/OpenGalaxea--G0-VLA",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--paligemma-3b-pt-224",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/galaxea-vla/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/galaxea-vla"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/galaxea-vla/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_GALAXEA_VLA_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "hy-embodied-vla-action-short": {
+    "id": "hy-embodied-vla-action-short",
+    "model_id": "hy-embodied-vla",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.hy_embodied_vla.pipeline_hy_embodied_vla:HyEmbodiedVLAPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/tencent--Hy-Embodied-0.5-VLA-RoboTwin",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/tencent--Hy-Embodied-0.5-VLA-RoboTwin",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/hy-embodied-vla/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/hy-embodied-vla"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "hy_embodied_vla_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/hy-embodied-vla/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_HY_EMBODIED_VLA_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "internvla-a1-action-short": {
+    "id": "internvla-a1-action-short",
+    "model_id": "internvla-a1",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.internvla_a1.internvla_a1_synthesis:InternVLAA1Synthesis",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/InternRobotics--InternVLA-A1-3B",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/InternRobotics--InternVLA-A1-3B",
+      "support_2": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen--Qwen3-VL-2B-Instruct",
+      "support_3": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--Cosmos-Tokenizer-CI8x8",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/internvla-a1/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/internvla-a1"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/internvla-a1/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_INTERNVLA_A1_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "lingbot-vla-action-short": {
+    "id": "lingbot-vla-action-short",
+    "model_id": "lingbot-vla",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:LingBotVLAPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/robbyant--lingbot-vla-4b-posttrain-robotwin",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/robbyant--lingbot-vla-4b-posttrain-robotwin",
+      "support_3": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen--Qwen2.5-VL-3B-Instruct",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lingbot-vla/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lingbot-vla"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lingbot-vla/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_LINGBOT_VLA_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "lingbot-vla-v2-action-short": {
+    "id": "lingbot-vla-v2-action-short",
+    "model_id": "lingbot-vla-v2",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:LingBotVLAV2Pipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/robbyant--lingbot-vla-v2-6b",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/robbyant--lingbot-vla-v2-6b",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen--Qwen3-VL-4B-Instruct",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lingbot-vla-v2/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lingbot-vla-v2"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lingbot-vla-v2/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_LINGBOT_VLA_V2_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "cogact-action-short": {
+    "id": "cogact-action-short",
+    "model_id": "cogact",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:CogACTPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/CogACT--CogACT-Base/checkpoints/CogACT-Base.pt",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true,
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/cogact/image.png"
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/CogACT--CogACT-Base",
+      "support_0": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/meta-llama--Llama-2-7b-hf",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/cogact/image.png"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover."
+  },
+  "db-cogact-action-short": {
+    "id": "db-cogact-action-short",
+    "model_id": "db-cogact",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:DBCogACTPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Dexmal--libero-db-cogact",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Dexmal--libero-db-cogact",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/db-cogact/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/db-cogact"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/db-cogact/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_DB_COGACT_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "diffusion-policy-action-short": {
+    "id": "diffusion-policy-action-short",
+    "model_id": "diffusion-policy",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:DiffusionPolicyPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/embodied_action/diffusion-policy/low_dim_pusht_diffusion_policy_cnn/epoch=0550-test_mean_score=0.969.weights-only.ckpt",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/embodied_action/diffusion-policy/low_dim_pusht_diffusion_policy_cnn/epoch=0550-test_mean_score=0.969.weights-only.ckpt",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/diffusion-policy/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/diffusion-policy"
+    },
+    "required_outputs": [
+      "export.prediction.json.prediction.action"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/diffusion-policy/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_DIFFUSION_POLICY_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "roboflamingo-action-short": {
+    "id": "roboflamingo-action-short",
+    "model_id": "roboflamingo",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:RoboFlamingoPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/robovlms--RoboFlamingo",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/robovlms--RoboFlamingo",
+      "support_2": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/anas-awadalla--mpt-1b-redpajama-200b-dolly",
+      "open_clip": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/open_clip/ViT-L-14.pt",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/roboflamingo/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/roboflamingo"
+    },
+    "required_outputs": [
+      "export.prediction.json.action"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "roboflamingo_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/roboflamingo/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_ROBOFLAMINGO_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "tinyvla-action-short": {
+    "id": "tinyvla-action-short",
+    "model_id": "tinyvla",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.tinyvla.pipeline:TinyVLAPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/tinyvla/policy",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/tinyvla/policy",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/lesjie--Llava-Pythia-400M",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/tinyvla/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/tinyvla"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/tinyvla/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_TINYVLA_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "molmoact2-action-short": {
+    "id": "molmoact2-action-short",
+    "model_id": "molmoact2",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:MolmoAct2Pipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/allenai--MolmoAct2-DROID",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/allenai--MolmoAct2-DROID",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/molmoact2/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/molmoact2"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "molmoact2_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/molmoact2/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_MOLMOACT2_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "molmobot-action-short": {
+    "id": "molmobot-action-short",
+    "model_id": "molmobot",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:MolmoBotPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/allenai--MolmoBot-DROID",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/allenai--MolmoBot-DROID",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/molmobot/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/molmobot"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/molmobot/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_MOLMOBOT_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "openpi-action-short": {
+    "id": "openpi-action-short",
+    "model_id": "openpi",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:OpenPIPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/openpi-assets/checkpoints/pi05_libero",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/openpi-assets/checkpoints/pi05_libero",
+      "paligemma_tokenizer_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--paligemma-3b-pt-224/tokenizer.model",
+      "fast_tokenizer_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/physical-intelligence--fast",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openpi/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openpi"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "openpi_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openpi/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_OPENPI_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "lda-1b-action-short": {
+    "id": "lda-1b-action-short",
+    "model_id": "lda-1b",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.lda_1b.lda_1b_synthesis:LDA1BSynthesis",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wayer2--LDA-robocasa",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wayer2--LDA-robocasa",
+      "qwen_checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen--Qwen3-VL-4B-Instruct",
+      "vision_checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/facebook--dinov3-vits16-pretrain-lvd1689m",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lda-1b/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lda-1b"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lda-1b/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_LDA_1B_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "xiaomi-robotics-0-action-short": {
+    "id": "xiaomi-robotics-0-action-short",
+    "model_id": "xiaomi-robotics-0",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.xiaomi_robotics_0.pipeline_xiaomi_robotics_0:XiaomiRobotics0Pipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/XiaomiRobotics--Xiaomi-Robotics-0-LIBERO",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/XiaomiRobotics--Xiaomi-Robotics-0-LIBERO",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/xiaomi-robotics-0/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/xiaomi-robotics-0"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/xiaomi-robotics-0/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_XIAOMI_ROBOTICS_0_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "giga-world-policy-0.5-action-short": {
+    "id": "giga-world-policy-0.5-action-short",
+    "model_id": "giga-world-policy-0.5",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.giga_world_policy.pipeline:GigaWorldPolicyPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/open-gigaai--Giga-World-Policy-0.5",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/open-gigaai--Giga-World-Policy-0.5",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.2-TI2V-5B-Diffusers",
+      "norm_stats_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/giga-world-policy-0.5/norm_stats_delta.json",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/giga-world-policy-0.5/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/giga-world-policy-0.5"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/giga-world-policy-0.5/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_GIGA_WORLD_POLICY_0_5_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "openvla-action-short": {
+    "id": "openvla-action-short",
+    "model_id": "openvla",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:OpenVLAPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/openvla--openvla-7b",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true,
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openvla/image.png"
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/openvla--openvla-7b",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openvla/image.png"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover."
+  },
+  "openvla-oft-action-short": {
+    "id": "openvla-oft-action-short",
+    "model_id": "openvla-oft",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:OpenVLAOFTPipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/moojink--openvla-7b-oft-finetuned-libero-spatial",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/moojink--openvla-7b-oft-finetuned-libero-spatial",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openvla-oft/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openvla-oft"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/openvla-oft/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_OPENVLA_OFT_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "spirit-v1.5-action-short": {
+    "id": "spirit-v1.5-action-short",
+    "model_id": "spirit-v1.5",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.spirit_v15.pipeline:SpiritV15Pipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Spirit-AI-robotics--Spirit-v1.5",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Spirit-AI-robotics--Spirit-v1.5",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen--Qwen3-VL-4B-Instruct",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/spirit-v1.5/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/spirit-v1.5"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/spirit-v1.5/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_SPIRIT_V1_5_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "abot-m0-action-short": {
+    "id": "abot-m0-action-short",
+    "model_id": "abot-m0",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.abot_m0.pipeline:ABotM0Pipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/acvlab--ABot-M0-LIBERO",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/acvlab--ABot-M0-LIBERO",
+      "qwen_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen--Qwen3-VL-4B-Instruct",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/abot-m0/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/abot-m0"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/abot-m0/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_ABOT_M0_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "mem-0-action-short": {
+    "id": "mem-0-action-short",
+    "model_id": "mem-0",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.synthesis.action_generation.mem0.pipeline:Mem0Pipeline",
+    "load": {
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/qiuly--Mem-0-m1mix-RMBench",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/qiuly--Mem-0-m1mix-RMBench",
+      "support_1": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Qwen--Qwen3-VL-2B-Instruct",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mem-0/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mem-0"
+    },
+    "required_outputs": [
+      "export.prediction.json.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Checkpoint-backed public action prediction with the released default variant and its accepted camera/state observation; generated actions are required, not a plan or input metadata. Additional variants, A/B/A reuse and distributed/kernel contracts remain in the GPU handover.",
+    "input_json": {
+      "official_policy_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mem-0/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_MEM_0_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "gr00t-n1-action-short": {
+    "id": "gr00t-n1-action-short",
+    "model_id": "gr00t",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:GR00TPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--GR00T-N1-2B",
+      "device": "cuda",
+      "variant": "gr1"
+    },
+    "call": {
+      "prompt": "Pick up the object and place it on the tray.",
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true,
+      "n1_data_config_name": "gr1_arms_only"
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/nvidia--GR00T-N1-2B",
+      "observation": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/gr00t-n1/observation.json",
+      "observation_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/gr00t-n1"
+    },
+    "required_outputs": [
+      "export.prediction.json.action"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Original GR00T-N1 released GR1 checkpoint and named state/video observation through the public pipeline and isolated in-tree N1 worker; the private profile must provide its pinned N1 Python environment.",
+    "input_json": {
+      "gr00t_observation": {
+        "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/gr00t-n1/observation.json",
+        "sha256": "${WORLDFOUNDRY_REGRESSION_GR00T_N1_OBSERVATION_SHA256}"
+      }
+    }
+  },
+  "dreamzero-droid-actions-short": {
+    "id": "dreamzero-droid-actions-short",
+    "model_id": "dreamzero",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:DreamZeroPipeline",
+    "load": {
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/GEAR-Dreams--DreamZero-DROID",
+      "device": "cuda"
+    },
+    "call": {
+      "prompt": "Move the pan forward and use the brush in the middle of the plates to brush the inside of the pan",
+      "plan_only": false,
+      "server_host": "127.0.0.1",
+      "server_port": 8000,
+      "debug_video_dir": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/dreamzero/debug_image",
+      "num_chunks": 1,
+      "session_id": "regression-droid-seed42",
+      "use_zero_images": false,
+      "output_path": "${OUTPUT_DIR}/prediction.json",
+      "run_dir": "${OUTPUT_DIR}/runtime",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/GEAR-Dreams--DreamZero-DROID",
+      "wan": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-I2V-14B-480P",
+      "tokenizer": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--umt5-xxl",
+      "camera_videos": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/dreamzero/debug_image"
+    },
+    "required_outputs": [
+      "export.prediction.json.steps.0.actions",
+      "export.prediction.json.steps.1.actions"
+    ],
+    "export_artifacts": [
+      "prediction.json"
+    ],
+    "scope": "Public DROID WebSocket inference with actual three-camera videos, history-free and one scheduled chunk. Start the matching in-tree reference/candidate DreamZero server on port 8000 with the same seed 42 and declared rank topology before each run; server lifecycle and AgiBot are separate handover cases."
+  },
+  "joyai-echo-wm-base-controls-short": {
+    "id": "joyai-echo-wm-base-controls-short",
+    "model_id": "joyai-echo-wm",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoWMPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Echo-Team--Echo-WM",
+      "gemma_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it-qat-q4_0-unquantized",
+      "variant": "base"
+    },
+    "call": {
+      "prompt": "A camera moves slowly through a sunlit room with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/joyai-echo-wm/image.png",
+      "action_str": "w-24",
+      "num_frames": 25,
+      "height": 256,
+      "width": 384,
+      "seed": 42,
+      "execute": true,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Echo-Team--Echo-WM",
+      "gemma": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it-qat-q4_0-unquantized",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/joyai-echo-wm/image.png"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released Echo-WM base inference with first-frame conditioning and nonzero camera motion; decoded RGB/FPS. Audio, alternate precision and repeated cache lifecycle remain separate GPU contracts.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "joyai-echo-wm-flash-controls-short": {
+    "id": "joyai-echo-wm-flash-controls-short",
+    "model_id": "joyai-echo-wm",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoWMPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Echo-Team--Echo-WM",
+      "gemma_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it-qat-q4_0-unquantized",
+      "variant": "flash"
+    },
+    "call": {
+      "prompt": "A camera moves slowly through a sunlit room with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/joyai-echo-wm/image.png",
+      "action_str": "w-24",
+      "num_frames": 25,
+      "height": 256,
+      "width": 384,
+      "seed": 42,
+      "execute": true,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Echo-Team--Echo-WM",
+      "gemma": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it-qat-q4_0-unquantized",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/joyai-echo-wm/image.png"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released Echo-WM flash inference with first-frame conditioning and nonzero camera motion; decoded RGB/FPS. Audio, alternate precision and repeated cache lifecycle remain separate GPU contracts.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "joyai-echo-longvideo-r2v-short": {
+    "id": "joyai-echo-longvideo-r2v-short",
+    "model_id": "joyai-echo-longvideo",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.joyai_echo.pipeline_joyai_echo:JoyAIEchoLongVideoPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/jdopensource--JoyAI-Echo",
+      "gemma_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it"
+    },
+    "call": {
+      "prompt": "A camera moves slowly through a sunlit room with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/joyai-echo-longvideo/image.png",
+      "num_frames": 25,
+      "height": 256,
+      "width": 384,
+      "seed": 42,
+      "execute": true,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/jdopensource--JoyAI-Echo",
+      "gemma": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/joyai-echo-longvideo/image.png"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released BF16 Echo LongVideo reference-image generation; decoded RGB/FPS. Packed FP4/FP8, memory slots and audio are separate handover replays.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "solarwm-wan5b-dmd-indexed-short": {
+    "id": "solarwm-wan5b-dmd-indexed-short",
+    "model_id": "solarwm",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/junchaoh-cs--SolarWM/SolarWM-5B-sgf-stage2-81f",
+      "base_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan2.2-TI2V-5B",
+      "data_root": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/solarwm/releases-v1",
+      "variant": "wan-5b-dmd"
+    },
+    "call": {
+      "execute": true,
+      "overrides": {
+        "validation.sample_count": 1,
+        "validation.selection_seed": 42,
+        "validation.noise_seed": 42,
+        "data.test_index": "recipes/clean-81f/raw-wds/test-index.jsonl.gz"
+      },
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/junchaoh-cs--SolarWM/SolarWM-5B-sgf-stage2-81f",
+      "base": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan2.2-TI2V-5B",
+      "dataset": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/solarwm/releases-v1"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released one-device Wan5B SGF route, fixed indexed caption/image/camera sample and source 81-frame geometry; real video required. The dataset release and authorized Solar checkpoint are GPU-host prerequisites.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "solarwm-ltx-indexed-short": {
+    "id": "solarwm-ltx-indexed-short",
+    "model_id": "solarwm",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.solarwm.pipeline_solarwm:SolarWMPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/junchaoh-cs--SolarWM/SolarWM-ltx-22B-bid-stage0p5-153f",
+      "base_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.5/diffusion_models/ltx-2.5-22b-dev-transformer-bf16.safetensors",
+      "data_root": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/solarwm/releases-v1",
+      "variant": "ltx",
+      "assets": {
+        "model.codec.video_vae_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.5/vae/ltx-2.5-video-vae-bf16.safetensors",
+        "inference.negative_caption_cache": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/solarwm/ltx25-negative-caption.safetensors"
+      }
+    },
+    "call": {
+      "execute": true,
+      "overrides": {
+        "inference.sample_count": 1,
+        "inference.selection_seed": 42,
+        "inference.seed": 42,
+        "data.index": "recipes/clean-153f/latent-wds/ltx-153f-h512-w768/test-index.jsonl.gz"
+      },
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/junchaoh-cs--SolarWM/SolarWM-ltx-22B-bid-stage0p5-153f",
+      "base": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.5",
+      "dataset": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/solarwm/releases-v1",
+      "negative_caption": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/solarwm/ltx25-negative-caption.safetensors"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released two-device Solar LTX route, one preencoded indexed 153-frame sample, camera LoRA and chunked DiffVAE decode. Preserve the native 512x768 geometry, 30-step schedule and 24 FPS; capture/compiled and larger-rank behavior remain GPU handovers.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "alayaworld-v11-dmd-camera-short": {
+    "id": "alayaworld-v11-dmd-camera-short",
+    "model_id": "alayaworld-v1.1",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.alayaworld_v11.pipeline_alayaworld_v11:AlayaWorldV11Pipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/AlayaLab--AlayaWorld-v1.1-stage2b",
+      "student_dir": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/AlayaLab--AlayaWorld-v1.1-stage3",
+      "base_checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3/ltx-2.3-22b-dev.safetensors",
+      "gemma_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it-qat-q4_0-unquantized",
+      "vigeo_checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/pkqbajng--ViGeo1.1",
+      "variant": "dmd"
+    },
+    "call": {
+      "prompt": "A camera moves slowly through a sunlit room with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/alayaworld-v1.1/image.png",
+      "camera_path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/alayaworld-v1.1/camera.npy",
+      "rounds": 1,
+      "seed": 42,
+      "execute": true,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "stage2": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/AlayaLab--AlayaWorld-v1.1-stage2b",
+      "stage3": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/AlayaLab--AlayaWorld-v1.1-stage3",
+      "base": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-2.3/ltx-2.3-22b-dev.safetensors",
+      "gemma": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/google--gemma-3-12b-it-qat-q4_0-unquantized",
+      "vigeo": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/pkqbajng--ViGeo1.1",
+      "inputs": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/alayaworld-v1.1"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released v1.1 stage2b/history plus stage3 DMD LoRA and native LTX-2.3 components, one camera-conditioned round. AR, history eviction, sparse/parallel attention and optional action weights remain separate GPU replays.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "astronex-causal-i2v-camera-short": {
+    "id": "astronex-causal-i2v-camera-short",
+    "model_id": "astronex-world",
+    "seed": 0,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.astronex_world.pipeline_astronex_world:AstronexWorldPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Astronex-Lab--Astronex-World",
+      "mode": "causal"
+    },
+    "call": {
+      "prompt": "A camera walks down a library hall",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/astronex-world/image.png",
+      "trajectory": "w*12,j*11",
+      "latent_frames": 23,
+      "height": 480,
+      "width": 832,
+      "seed": 0,
+      "fps": 24,
+      "execute": true,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Astronex-Lab--Astronex-World",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/astronex-world/image.png"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released causal image-conditioned camera rollout across retrieval-window eviction, matching the Astronex handover. Bidirectional, events, actions, consumer offload and alternate attention backends require their own GPU evidence.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "emu35-story-text-image-short": {
+    "id": "emu35-story-text-image-short",
+    "model_id": "emu3.5",
+    "seed": 6666,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.emu35.pipeline_emu35:Emu35Pipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/BAAI--Emu3.5",
+      "vision_tokenizer_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/BAAI--Emu3.5-VisionTokenizer"
+    },
+    "call": {
+      "prompt": "Write a short story with one picture of a red fox in the snow.",
+      "task_type": "story",
+      "max_new_tokens": 4096,
+      "target_height": 32,
+      "target_width": 32,
+      "seed": 6666,
+      "output_path": "${OUTPUT_DIR}/story.pb",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/BAAI--Emu3.5",
+      "vision_tokenizer": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/BAAI--Emu3.5-VisionTokenizer"
+    },
+    "required_outputs": [
+      "export.story.pb.text",
+      "export.story.pb.images"
+    ],
+    "export_artifacts": [
+      "story.pb"
+    ],
+    "scope": "Released interleaved Story generation through the public in-tree worker. Both generated clip text and image payloads are required and compared exactly; a question-only protobuf is rejected."
+  },
+  "open-magvit2-l-class-image-short": {
+    "id": "open-magvit2-l-class-image-short",
+    "model_id": "open-magvit2",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:OpenMAGVIT2Pipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/TencentARC--Open-MAGVIT2/AR_256_L.ckpt",
+      "config_path": "imagenet_conditional_llama_L.yaml"
+    },
+    "call": {
+      "class_id": 207,
+      "batch_size": 1,
+      "output_path": "${OUTPUT_DIR}/image.png",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/TencentARC--Open-MAGVIT2/AR_256_L.ckpt"
+    },
+    "required_outputs": [
+      "export.image.png"
+    ],
+    "export_artifacts": [
+      "image.png"
+    ],
+    "scope": "Released L class-conditional checkpoint, class 207, source sampling defaults and DCR decoder; exact generated PNG pixels. B and XL releases remain separate variants."
+  },
+  "show-o-t2i-short": {
+    "id": "show-o-t2i-short",
+    "model_id": "show-o",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:ShowOPipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/showlab--show-o",
+      "vq_model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/showlab--magvitv2",
+      "llm_model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/microsoft--phi-1_5"
+    },
+    "call": {
+      "prompt": "A red fox standing in fresh snow.",
+      "mode": "t2i",
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/image.png",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/showlab--show-o",
+      "vq_model": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/showlab--magvitv2",
+      "llm": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/microsoft--phi-1_5"
+    },
+    "required_outputs": [
+      "export.image.png"
+    ],
+    "export_artifacts": [
+      "image.png"
+    ],
+    "scope": "Released Show-o text-to-image and shared MAGVIT visual tokenizer with source 256px/18-step defaults; exact decoded generated image."
+  },
+  "infinite-world-camera-short": {
+    "id": "infinite-world-camera-short",
+    "model_id": "infinite-world",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.infinite_world.pipeline_infinite_world:InfiniteWorldPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/MeiGen-AI--Infinite-World"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/studio_demo/00/image.jpg",
+      "interactions": [
+        "forward"
+      ],
+      "num_frames": 81,
+      "num_chunks": 2,
+      "fps": 30,
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/MeiGen-AI--Infinite-World",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/studio_demo/00/image.jpg"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Public first-frame camera navigation, two native chunks, canonical Wan components and decoded video/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "krea-realtime-two-blocks-short": {
+    "id": "krea-realtime-two-blocks-short",
+    "model_id": "krea-realtime-video",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:KreaRealtimeVideoPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/krea--krea-realtime-video"
+    },
+    "call": {
+      "prompt": "A red fox walks across fresh snow.",
+      "num_blocks": 2,
+      "height": 480,
+      "width": 832,
+      "fps": 16,
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/krea--krea-realtime-video"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released Krea two-block generation through the public worker, native cache/attention and decoded video/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "lyra1-static-reconstruction": {
+    "id": "lyra1-static-reconstruction",
+    "model_id": "lyra-1",
+    "seed": 1,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.lyra.pipeline_lyra1:Lyra1Pipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lyra/Lyra-1/00172.png",
+      "mode": "static",
+      "trajectory": "zoom_in",
+      "num_video_frames": 121,
+      "seed": 1,
+      "reconstruct_3d": true,
+      "output_dir": "${OUTPUT_DIR}/lyra1",
+      "return_dict": true
+    },
+    "assets": {
+      "lyra": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/lyra-1",
+      "gen3c": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/cosmos-gen3c",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/lyra/Lyra-1/00172.png"
+    },
+    "required_outputs": [
+      "result.video",
+      "export"
+    ],
+    "export_artifacts": [
+      "lyra1/reconstruction/**/*.ply"
+    ],
+    "scope": "Public static video generation and actual Gaussian reconstruction, including the deduplicated reconstruction attention. Requires generated RGB and exported PLY arrays; source multi-trajectory reconstruction stays enabled."
+  },
+  "longcat-t2v-native-short": {
+    "id": "longcat-t2v-native-short",
+    "model_id": "longcat-video",
+    "seed": 0,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.longcat_video.pipeline_longcat_video:LongCatVideoPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/meituan-longcat--LongCat-Video"
+    },
+    "call": {
+      "prompt": "A red fox walks across fresh snow.",
+      "task_type": "t2v",
+      "num_frames": 93,
+      "height": 480,
+      "width": 832,
+      "num_inference_steps": 50,
+      "guidance_scale": 4.0,
+      "seed": 0,
+      "execute": true,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/meituan-longcat--LongCat-Video"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released non-distilled LongCat T2V, native cached VAE and source fifty-step schedule; decoded RGB/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "liveworld-geometry-short": {
+    "id": "liveworld-geometry-short",
+    "model_id": "liveworld",
+    "seed": 71,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.liveworld.pipeline_liveworld:LiveWorldPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/ZichengD--LiveWorld"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/liveworld/reference.png",
+      "geometry_npz": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/liveworld/geometry.npz",
+      "width": 832,
+      "height": 480,
+      "num_frames": 65,
+      "fps": 16,
+      "seed": 71,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/ZichengD--LiveWorld",
+      "wan": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan2.1-T2V-14B",
+      "qwen": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/modelscope/Qwen--Qwen3-VL-8B-Instruct",
+      "sam3": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/sam3",
+      "inputs": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/liveworld"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "DC fixed-output LiveWorld request, real aligned image/geometry and 65-frame generation. An independently approved cache-capacity-corrected reference is required; the failed uncorrected baseline is not an accepted output.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "uni3c-camera-render-short": {
+    "id": "uni3c-camera-render-short",
+    "model_id": "uni3c",
+    "seed": 0,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.uni3c.pipeline_uni3c:Uni3CPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/ewrfcas--Uni3C",
+      "controller_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/ewrfcas--Uni3C",
+      "base_model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-I2V-14B-720P-Diffusers"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/uni3c/synthetic-forward-9f-768x480/reference.jpg",
+      "render_path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/uni3c/synthetic-forward-9f-768x480",
+      "mode": "camera",
+      "num_frames": 9,
+      "fps": 16,
+      "seed": 0,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "controller": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/ewrfcas--Uni3C",
+      "base": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-I2V-14B-720P-Diffusers",
+      "camera_render": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/uni3c/synthetic-forward-9f-768x480"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Public camera-control stage-two inference with the declared nine-frame render bundle; unified human-motion control remains a separate accepted-input replay.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "adaworld-context-short": {
+    "id": "adaworld-context-short",
+    "model_id": "adaworld",
+    "seed": 32,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:AdaWorldPipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Little-Podi--AdaWorld/adaworld.safetensors",
+      "source_video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/adaworld/source.mp4",
+      "video_len": 20,
+      "context_frame": 6,
+      "resolution": 256,
+      "num_steps": 5,
+      "seed": 32
+    },
+    "call": {
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/adaworld/source.mp4",
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Little-Podi--AdaWorld/adaworld.safetensors",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/adaworld/source.mp4"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Public AdaWorld context-video inference, source twenty-frame/six-context/five-step request and decoded output.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "easyanimate-i2v-short": {
+    "id": "easyanimate-i2v-short",
+    "model_id": "easyanimate",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.easyanimate.pipeline_easyanimate_i2v:EasyAnimateI2VPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/alibaba-pai--EasyAnimateV5.1-7b-zh-InP"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/studio_demo/00/image.jpg",
+      "num_frames": 49,
+      "height": 512,
+      "width": 512,
+      "num_inference_steps": 25,
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/alibaba-pai--EasyAnimateV5.1-7b-zh-InP",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/studio_demo/00/image.jpg"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released 5.1 image-to-video with the DC fixed geometry and sampling length; decoded RGB/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "animatediff-v3-t2v-short": {
+    "id": "animatediff-v3-t2v-short",
+    "model_id": "animatediff",
+    "seed": 303,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:AnimateDiffPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff/v3_sd15_mm.ckpt",
+      "motion_module_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff/v3_sd15_mm.ckpt",
+      "base_model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/stable-diffusion-v1-5",
+      "dreambooth_model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff_t2i_backups/realisticVisionV60B1_v51VAE.safetensors"
+    },
+    "call": {
+      "prompt": "A red fox walks across fresh snow.",
+      "num_frames": 16,
+      "height": 256,
+      "width": 256,
+      "num_inference_steps": 25,
+      "seed": 303,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "motion_module": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff/v3_sd15_mm.ckpt",
+      "base": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/stable-diffusion-v1-5",
+      "dreambooth": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff_t2i_backups/realisticVisionV60B1_v51VAE.safetensors"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Public v3 AnimateDiff motion module with the pinned SD1.5 and RealisticVision base, source 16-frame request; decoded RGB/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "cameractrl-realestate-short": {
+    "id": "cameractrl-realestate-short",
+    "model_id": "cameractrl",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.component_pipelines:CameraCtrlPipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hehao13--CameraCtrl/CameraCtrl.ckpt",
+      "sd15_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/stable-diffusion-v1-5",
+      "pose_adaptor_ckpt": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hehao13--CameraCtrl/CameraCtrl.ckpt",
+      "image_lora_ckpt": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hehao13--CameraCtrl/RealEstate10K_LoRA.ckpt",
+      "motion_module_ckpt": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff/v3_sd15_mm.ckpt",
+      "motion_adapter_ckpt": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff/v3_sd15_adapter.ckpt"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "trajectory_file": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/cameractrl/pose_files/0f47577ab3441480.txt",
+      "num_frames": 16,
+      "height": 256,
+      "width": 384,
+      "num_inference_steps": 25,
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "camera": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hehao13--CameraCtrl",
+      "base": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/stable-diffusion-v1-5",
+      "motion_module": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff/v3_sd15_mm.ckpt",
+      "motion_adapter": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/guoyww--animatediff/v3_sd15_adapter.ckpt",
+      "trajectory": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/cameractrl/pose_files/0f47577ab3441480.txt"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released CameraCtrl/RealEstate camera path and native AnimateDiff components with the DC 16-frame 256x384 request; decoded video/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "worldcam-video-camera-short": {
+    "id": "worldcam-video-camera-short",
+    "model_id": "worldcam",
+    "seed": 0,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.worldcam.pipeline_worldcam:WorldCamPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/worldcam/authorized-checkpoint",
+      "wan_model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/worldcam/context.mp4",
+      "intrinsics_path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/worldcam/intrinsics.npy",
+      "extrinsics_path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/worldcam/extrinsics.npy",
+      "conditioning_frames": 65,
+      "num_ar_steps": 1,
+      "num_inference_steps": 50,
+      "seed": 0,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/worldcam/authorized-checkpoint",
+      "wan": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Wan-AI--Wan2.1-T2V-1.3B",
+      "inputs": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/worldcam"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Actual public video/camera-conditioned WorldCam path. No confirmed official WorldCam checkpoint release is asserted: authorized checkpoint and matching accepted camera/video receipt are operator prerequisites.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "causal-rcm-c1-1-short": {
+    "id": "causal-rcm-c1-1-short",
+    "model_id": "causal-rcm",
+    "seed": 0,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:CausalRCMPipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/rcm/Causal_rCM_Wan2.1_T2V_1.3B_480p_TF-dCM-init_SF-DMD_c1-1_step4.pt",
+      "checkpoint_dir": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/rcm"
+    },
+    "call": {
+      "prompt": "A red fox walks across fresh snow.",
+      "num_frames": 17,
+      "first_chunk_t": 1,
+      "chunk_t": 1,
+      "num_steps": 4,
+      "distilled": true,
+      "resolution": "480p",
+      "aspect_ratio": "16:9",
+      "seed": 0,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/rcm/Causal_rCM_Wan2.1_T2V_1.3B_480p_TF-dCM-init_SF-DMD_c1-1_step4.pt",
+      "vae": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/rcm/Wan2.1_VAE.pth",
+      "text_encoder": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/rcm/models_t5_umt5-xxl-enc-bf16.pth"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released c1-1 four-step causal checkpoint with source VAE/text assets, real DiT attention and decoded output; NCCL/asynchronous and larger-window paths remain separate GPU obligations.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "kairos-480p-distilled-short": {
+    "id": "kairos-480p-distilled-short",
+    "model_id": "kairos-sensenova",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.kairos.pipeline_kairos:KairosPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/kairos-models"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/kairos/image.png",
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "models": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/kairos-models",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/kairos/image.png"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Public released 480P/16FPS distilled Kairos route with its Qwen/Wan assets and source sampling defaults; model-specific kernels must be installed after Torch dependencies.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "neoverse-navigation-short": {
+    "id": "neoverse-navigation-short",
+    "model_id": "neoverse",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.neoverse.pipeline_neoverse:NeoVersePipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Yuppie1204--NeoVerse"
+    },
+    "call": {
+      "prompt": "A slow exploratory camera move through a believable scene with stable geometry and lighting.",
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/neoverse/image.png",
+      "predefined_trajectory": "push_in",
+      "distance": 0.1,
+      "static_scene": true,
+      "num_frames": 49,
+      "seed": 42,
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Yuppie1204--NeoVerse",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/neoverse/image.png"
+    },
+    "required_outputs": [
+      "result.video"
+    ],
+    "scope": "Public static-scene navigation with real geometry conditioning and native SVD denoising; compare returned generated RGB tensors."
+  },
+  "vmem-forward-navigation-short": {
+    "id": "vmem-forward-navigation-short",
+    "model_id": "vmem",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.vmem.pipeline_vmem:VMemPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/vmem",
+      "surfel_model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/cut3r"
+    },
+    "call": {
+      "images": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/vmem/image.png",
+      "interactions": [
+        "forward"
+      ],
+      "reset_state": true,
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/vmem",
+      "surfel": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/cut3r",
+      "sd21": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/stable-diffusion-2-1-base",
+      "clip": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/CLIP-ViT-H-14-laion2B-s32B-b79K",
+      "image": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/vmem/image.png"
+    },
+    "required_outputs": [
+      "result.video",
+      "result.pose_history"
+    ],
+    "scope": "Public initialized navigation and memory rendering with native diffusion components; compare generated RGB and camera pose history. CUT3R remains license-gated in distributions."
+  },
+  "mmaudio-small-16k-video-audio-short": {
+    "id": "mmaudio-small-16k-video-audio-short",
+    "model_id": "mmaudio",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:MMAudioPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hkchengrex--MMAudio"
+    },
+    "call": {
+      "prompt": "Footsteps crunching in fresh snow.",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mmaudio/video.mp4",
+      "variant": "small_16k",
+      "duration": 4.0,
+      "num_steps": 25,
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/audio.flac",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hkchengrex--MMAudio",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mmaudio/video.mp4"
+    },
+    "required_outputs": [
+      "export.audio.flac.samples",
+      "export.audio.flac.sample_rate",
+      "export.audio.flac.channels"
+    ],
+    "export_artifacts": [
+      "audio.flac"
+    ],
+    "scope": "Released small 16k video-conditioned audio, native fixed demo seed 42 and twenty-five steps. Compare all decoded int32 FLAC PCM samples, sample rate and channel count exactly; includes the native Synchformer and VAE/vocoder forwards."
+  },
+  "mmaudio-small-44k-video-audio-short": {
+    "id": "mmaudio-small-44k-video-audio-short",
+    "model_id": "mmaudio",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.video_official.pipeline_official_video:MMAudioPipeline",
+    "load": {
+      "device": "cuda",
+      "model_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hkchengrex--MMAudio"
+    },
+    "call": {
+      "prompt": "Footsteps crunching in fresh snow.",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mmaudio/video.mp4",
+      "variant": "small_44k",
+      "duration": 4.0,
+      "num_steps": 25,
+      "seed": 42,
+      "output_path": "${OUTPUT_DIR}/audio.flac",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/hkchengrex--MMAudio",
+      "video": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mmaudio/video.mp4"
+    },
+    "required_outputs": [
+      "export.audio.flac.samples",
+      "export.audio.flac.sample_rate",
+      "export.audio.flac.channels"
+    ],
+    "export_artifacts": [
+      "audio.flac"
+    ],
+    "scope": "Released small 44k video-conditioned audio, native fixed demo seed 42 and twenty-five steps. Compare all decoded int32 FLAC PCM samples, sample rate and channel count exactly; includes the native Synchformer and VAE/vocoder forwards."
+  },
+  "nwm-recon-one-second": {
+    "id": "nwm-recon-one-second",
+    "model_id": "nwm",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:NWMPipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/facebook--nwm",
+      "config": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/nwm/replay.yaml",
+      "dataset": "recon",
+      "eval_type": "time",
+      "checkpoint_step": "0100000",
+      "num_sec_eval": 1,
+      "input_fps": 4,
+      "num_workers": 0,
+      "batch_size": 1,
+      "gt": 0,
+      "seed": 42
+    },
+    "call": {
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/prediction.png",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/facebook--nwm",
+      "sd_vae": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/stabilityai--sd-vae-ft-ema",
+      "input_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/nwm"
+    },
+    "required_outputs": [
+      "export.prediction.png",
+      "export.replay/recon/time/id_0/1.png"
+    ],
+    "export_artifacts": [
+      "prediction.png",
+      "replay/recon/time/id_*/*.png"
+    ],
+    "scope": "Native CDiT-XL/2, 224px, four-context-frame, 250-step one-second prediction from one accepted Recon index row. Loader-time seed reaches all subprocess RNGs. The accepted index, native YAML paths and package data_splits data link must be prepared on the GPU host; compare every generated PNG pixel."
+  },
+  "mineworld-1200m-actions-short": {
+    "id": "mineworld-1200m-actions-short",
+    "model_id": "mineworld",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:MineWorldPipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/mineworld/authorized-checkpoint/model.bin",
+      "config": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mineworld/replay.yaml",
+      "input_dir": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mineworld/episode",
+      "frames": 16,
+      "demo_num": 1,
+      "top_k": 100,
+      "val_data_num": 1,
+      "fps": 6,
+      "seed": 42
+    },
+    "call": {
+      "seed": 42,
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/mineworld/authorized-checkpoint",
+      "input_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/mineworld"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Native 1200M sixteen-frame action-conditioned generation with one real context frame, matching episode_0.mp4/episode_0.jsonl actions and top-k 100. Operator-provided checkpoint, VQ/VAE assets and native config are required. Loader-time seed reaches all subprocess RNGs; compare decoded generated RGB/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
+  },
+  "genie-envisioner-three-view-history-short": {
+    "id": "genie-envisioner-three-view-history-short",
+    "model_id": "genie-envisioner",
+    "seed": 42,
+    "deterministic": true,
+    "requires_gpu": true,
+    "target": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:GenieEnvisionerPipeline",
+    "load": {
+      "device": "cuda",
+      "checkpoint_path": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/agibot-world--Genie-Envisioner/GE_base_fast_v0.1.safetensors",
+      "ltx_base_model_dir": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-Video",
+      "input_mode": "explicit-three-view",
+      "input_views": [
+        "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/genie-envisioner/cam_high",
+        "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/genie-envisioner/cam_left_wrist",
+        "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/genie-envisioner/cam_right_wrist"
+      ],
+      "n_previous": 4
+    },
+    "call": {
+      "prompt": "Move the robot gripper toward the objects on the workbench.",
+      "input_mode": "explicit-three-view",
+      "input_views": [
+        "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/genie-envisioner/cam_high",
+        "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/genie-envisioner/cam_left_wrist",
+        "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/genie-envisioner/cam_right_wrist"
+      ],
+      "n_previous": 4,
+      "height": 192,
+      "width": 256,
+      "latent_chunk": 2,
+      "num_inference_steps": 5,
+      "guidance_scale": 1.0,
+      "decode_timestep": 0.03,
+      "decode_noise_scale": 0.025,
+      "fps": 8,
+      "seed": 42,
+      "mixed_precision": "bf16",
+      "plan_only": false,
+      "output_path": "${OUTPUT_DIR}/video.mp4",
+      "return_dict": true
+    },
+    "assets": {
+      "checkpoint": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/agibot-world--Genie-Envisioner",
+      "ltx_base": "${WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT}/Lightricks--LTX-Video",
+      "input_bundle": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/genie-envisioner"
+    },
+    "required_outputs": [
+      "artifact.video.mp4.frames",
+      "artifact.video.mp4.fps"
+    ],
+    "export_artifacts": [
+      "video.mp4"
+    ],
+    "scope": "Released fast GE-base BF16 sampler with synchronized three-view four-frame history, native 192x256 per-view geometry and five-step schedule. Camera folders contain exactly 0.png through 3.png; compare decoded generated RGB/FPS.",
+    "output_arrays": [
+      "video.mp4"
+    ]
   }
 }

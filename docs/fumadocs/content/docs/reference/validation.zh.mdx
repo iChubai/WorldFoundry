@@ -218,6 +218,50 @@ LTX 的 timestep-conditioned VAE 在解码时也会注入噪声。视频、音�
 
 只返回视频路径的生成器可以用 `output_arrays` 选择运行目录内的 MP4、WebM、MOV 或 MKV。回归工具完整解码后，将 `artifact.<相对路径>.frames` 和 `.fps` 保存到 `arrays.npz`，因此路径或计划本身不能满足必需数值输出。还应在 `export_artifacts` 中声明视频，比较导出文件解码后的像素及帧率。Oasis 的子进程只返回 MP4，没有内存张量，因此使用此入口；生成器的随机种子固定为 0。
 
+需要 GPU 的用例设置 `requires_gpu: true`；CUDA 不可用时，执行器在加载权重前失败。声明不代表 GPU 已运行。原生 LTX-2.5、LTX-2/2.3 IC-LoRA V2V 和 HyperFlow 用例使用显式权重及控制输入，比较解码后的视频和 FPS。
+
+文本生成模型通过 `text_outputs` 将 JSON 产物的相对文件名映射到明确的输出字段路径，例如 `{"prediction.json": ["text"]}`。执行器将所选字符串编码为 UTF-8 `uint8` 数组，键名为 `text.prediction.json.text`，并在 `required_outputs` 中要求该键。审计会重新读取所选字段，即使提供浮点容差，也要求字节完全一致。输入路径及其他 JSON 字符串不参与捕获。OmniVinci 音视频用例通过此契约比较生成的描述；原有数值用例行为不变。
+
+Emu3.5 输出使用仓库内的 Story protobuf（`.pb`）。回放导出器按照该 schema
+将生成 clip 的文本与 PNG 图像读取为 `export.<file>.text.*` 和
+`export.<file>.images.*` 数组。两种生成模态都必须存在，只有问题的响应不能通过。
+即使设置数值容差，文本字节与图像像素也要求完全一致。问题和参考图像不是生成输出。
+
+MMAudio FLAC 产物通过延迟导入的 SoundFile 无损解码为 `int32` PCM 数组，
+在 `export.<file>.samples`、`.sample_rate` 和 `.channels` 下记录采样值、采样率与
+通道数。即使设置浮点容差，也要求采样值和元数据完全一致；容器标签不影响比较。
+空音频验证失败。16k 与 44k 路线分别声明 GPU 用例。
+
+生成视频音轨通过 `audio_outputs: ["video.mp4"]` 显式选择。PyAV 将所选音轨
+解码为 `audio.<file>.samples` 下的 float32 PCM，同时记录采样率、通道数与通道布局。
+即使设置浮点容差，也要求 PCM 完全一致；缺失或空音轨验证失败。HyperFlow 同时
+要求解码视频与生成音轨。未声明 `audio_outputs` 的用例保持原有采集内容。
+
+NWM 和 MineWorld 将加载参数中的可选种子传递给树内子进程，通过规范运行时辅助函数为
+Python、NumPy 和 Torch 设置种子。不设置种子时，原有随机数行为保持不变。
+NWM 记录生成的 PNG 帧而不是请求计划；回放严格比较解码后的预测像素。
+
+动作用例可以从 UTF-8 JSON 数据读取与发布权重匹配的相机及状态观测。
+`input_json` 将具体调用参数映射到 `assets` 中明确列出的文件及必需的 SHA256 pin：
+
+```json
+{
+  "input_json": {
+    "official_policy_observation": {
+      "path": "${WORLDFOUNDRY_REGRESSION_INPUT_ROOT}/go1/observation.json",
+      "sha256": "${WORLDFOUNDRY_REGRESSION_GO1_OBSERVATION_SHA256}"
+    }
+  }
+}
+```
+
+私有已接受参考 profile 提供 64 位小写十六进制 pin。未设置、格式错误或内容不匹配的
+pin、未声明的输入文件，以及与显式 `call` 参数冲突的条目，均在加载模型前失败。
+观测内容中的环境变量使用现有用例展开规则。权重、种子、推理调用与必需动作输出仍在
+用例中声明，只有观测数据来自外部。将观测 bundle 同时列入 `assets`，以固定其引用的
+相机媒体。JSON 输入用于单次调用用例，原有用例无需修改。实际观测数据和已接受参考
+凭证仍须在 GPU 主机上准备。
+
 Kandinsky6 Lite/Pro 及各自的蒸馏、预训练变体均有独立的
 `kandinsky6-<variant>-video-short` 用例。将匹配的 Diffusers 发布权重放在
 `WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT` 下的用例 `assets.checkpoint` 路径。
@@ -329,6 +373,8 @@ python3 tests/manual/geometry_regression_impact.py --base <comparison-commit> \
 只有 planner 和源码快照编排工具具有较窄的验证规则：不可变 Git entries 必须证明全部运行时代码、环境、assets、案例及依赖定义完全不变，完整 diff 及检查的工具文件也必须与提交 blob 一致。此类改动仍要求完整 CPU 契约和 MG2 两项 GPU 门禁，验证完整工具链。缺少历史、案例定义变化或混入任何生产改动，仍保留原来的全量保守模型选择。
 
 CI 即使选例失败也会上传 `geometry-impact`，其中是必须执行的回归计划，不能当作 GPU 推理通过的证据。执行器拒绝源码树或规则哈希过期、状态与空选例矛盾，以及漏掉当前规则和导入图要求的案例的计划。
+
+环境归属在 `geometry_regression_dependencies.json` 的 `environment_variants` 中声明：精确的环境 YAML 路径映射到明确的 `model_id@binding_id` 列表。原生覆盖策略与回放 planner 优先使用该归属，再应用宽泛的元数据规则。profile 的 `execution.environment` 同样标识消费者，包括使用 LTX-2.5 的两个 V2V profile。环境映射不接受通配符。缺少用例定义仍报告 uncovered；未知 manifest 和共享 core 改动保留保守选例。冻结的原生覆盖记录保持不变。
 
 ### 在模型主机上定时执行 GPU 回归
 

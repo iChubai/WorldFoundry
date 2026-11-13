@@ -764,7 +764,13 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
                 "error": f"official entrypoint exited with code {completed.returncode}; see {log_path}",
                 "metadata": {"command": command, "log_path": str(log_path)},
             }
-        produced = self._resolve_produced_artifact(output)
+        produced = None
+        if self.model_id == "nwm":
+            produced = next((path for path in sorted(output.parent.rglob("*.png")) if path.is_file()), None)
+            if produced is not None:
+                output = output.with_suffix(".png")
+        if produced is None:
+            produced = self._resolve_produced_artifact(output)
         if produced is None:
             return {
                 "status": "failed",

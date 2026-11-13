@@ -67,6 +67,17 @@ def hash_assets(assets: dict) -> dict:
     return hashes
 
 
+def verify_asset_pins(case: dict) -> None:
+    """Check operator-pinned input files before checkpoint hashing or model loading."""
+    for name, expected in case.get("asset_sha256", {}).items():
+        if name not in case["assets"]:
+            raise ValueError(f"SHA256 pin needs a declared asset: {name}")
+        if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValueError(f"Asset needs a SHA256 pin: {name}")
+        if sha256(Path(case["assets"][name]).expanduser()) != expected:
+            raise ValueError(f"Asset SHA256 differs: {name}")
+
+
 def materialize_input_json(case: dict, output_dir: Path) -> dict:
     """Load declared observation data only after verifying its required content pin."""
     call = dict(case["call"])
@@ -167,6 +178,40 @@ def validate_contracts(arrays: dict, contracts: dict, comparisons: list[dict]) -
             raise ValueError(f"Output relation {relation} failed: {left}, {right}")
 
 
+def collect_output_fields(result: Any, arrays: dict, prefix: str, fields: list[str] | None) -> None:
+    """Select generated result fields without comparing unrelated runtime metadata."""
+    if fields is None:
+        collect_arrays(result, arrays, prefix)
+        return
+    if not isinstance(fields, list) or len(set(fields)) != len(fields):
+        raise ValueError(f"Invalid output selection: {prefix}")
+    for path in fields:
+        selected = result
+        for attribute in path.split("."):
+            selected = selected[attribute] if isinstance(selected, dict) else getattr(selected, attribute)
+        key = prefix + "." + path
+        if isinstance(selected, (str, Path)) and Path(selected).suffix.lower() in {
+            ".npy",
+            ".npz",
+            ".splat",
+            ".ply",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".json",
+            ".mp4",
+            ".webm",
+            ".mov",
+            ".mkv",
+        }:
+            artifact = Path(selected)
+            exported_prefix = "export." + artifact.name
+            for exported_key, value in exported_arrays(artifact.parent, [str(artifact)]).items():
+                arrays[key + exported_key.removeprefix(exported_prefix)] = value
+        else:
+            collect_arrays(selected, arrays, key)
+
+
 def run_sequence(pipeline, sequence: list[dict], arrays: dict) -> list[dict]:
     """Exercise one resident model, including failures, reset and A/B/A requests."""
     if not isinstance(sequence, list) or not sequence:
@@ -201,37 +246,7 @@ def run_sequence(pipeline, sequence: list[dict], arrays: dict) -> list[dict]:
         if expected is not None:
             raise ValueError(f"Expected inference failure did not occur: {name}")
         step_arrays = {}
-        outputs = step.get("outputs")
-        if outputs is None:
-            collect_arrays(result, step_arrays, name)
-        else:
-            if not isinstance(outputs, list) or len(set(outputs)) != len(outputs):
-                raise ValueError(f"Invalid output selection: {name}")
-            for path in outputs:
-                selected = result
-                for attribute in path.split("."):
-                    selected = selected[attribute] if isinstance(selected, dict) else getattr(selected, attribute)
-                key = name + "." + path
-                if isinstance(selected, (str, Path)) and Path(selected).suffix.lower() in {
-                    ".npy",
-                    ".npz",
-                    ".splat",
-                    ".ply",
-                    ".png",
-                    ".jpg",
-                    ".jpeg",
-                    ".json",
-                    ".mp4",
-                    ".webm",
-                    ".mov",
-                    ".mkv",
-                }:
-                    artifact = Path(selected)
-                    prefix = "export." + artifact.name
-                    for exported_key, value in exported_arrays(artifact.parent, [str(artifact)]).items():
-                        step_arrays[key + exported_key.removeprefix(prefix)] = value
-                else:
-                    collect_arrays(selected, step_arrays, key)
+        collect_output_fields(result, step_arrays, name, step.get("outputs"))
         # Some resident runtimes return views of reusable CPU buffers. Preserve
         # each response now so later requests cannot rewrite the earlier evidence.
         arrays.update({key: value.copy() for key, value in step_arrays.items()})
@@ -424,6 +439,7 @@ def run_case(case_file: Path, source_root: Path, output_dir: Path, case_id: str 
         if requires_gpu and not torch.cuda.is_available():
             raise RuntimeError("This replay case requires CUDA")
         resolved = expand(case, output_dir)
+        verify_asset_pins(resolved)
         if resolved.get("input_json"):
             if "sequence" in resolved:
                 raise ValueError("JSON inputs require a single explicit call")
@@ -451,7 +467,7 @@ def run_case(case_file: Path, source_root: Path, output_dir: Path, case_id: str 
         else:
             method = getattr(pipeline, resolved.get("method", "__call__"))
             result = method(**resolved["call"])
-            collect_arrays(result, arrays)
+            collect_output_fields(result, arrays, "result", resolved.get("result_outputs"))
             for name, extra in resolved.get("extra_calls", {}).items():
                 collect_arrays(getattr(pipeline, extra["method"])(**extra["call"]), arrays, name)
         if resolved.get("save", False):

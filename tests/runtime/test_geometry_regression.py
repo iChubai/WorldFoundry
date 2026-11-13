@@ -422,6 +422,66 @@ def test_gpu_required_case_fails_before_loading_on_cpu(
     assert "requires CUDA" in result["error"]
 
 
+def test_single_call_selects_generated_actions_without_runtime_metadata(
+    tmp_path: Path, artifact_pipeline: tuple[Path, Path, Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    case_file, source, pipeline = artifact_pipeline
+    monkeypatch.setattr(
+        pipeline,
+        "__call__",
+        lambda self, **kwargs: {"actions": np.array([[0.1, 0.2]]), "max_cuda_memory_mib": np.array([300.0])},
+    )
+    case = json.loads(case_file.read_text())
+    case.update(call={}, result_outputs=["actions"], required_outputs=["result.actions"], array_contracts={})
+    case.pop("export_artifacts", None)
+    case_file.write_text(json.dumps(case))
+    output = tmp_path / "selected-actions"
+    assert replay.run_case(case_file, source, output)["status"] == "passed"
+    with np.load(output / "arrays.npz") as arrays:
+        assert arrays.files == ["result.actions"]
+        np.testing.assert_array_equal(arrays["result.actions"], [[0.1, 0.2]])
+    with pytest.raises(KeyError):
+        replay.collect_output_fields({"max_cuda_memory_mib": 300.0}, {}, "result", ["actions"])
+
+
+def test_pinned_input_file_keeps_native_payload_and_path(tmp_path: Path) -> None:
+    path = tmp_path / "trajectory.json"
+    payload = b'{"action_format": "raw_language_table_delta_yx"}\n'
+    path.write_bytes(payload)
+    case = {"assets": {"trajectory": str(path)}, "asset_sha256": {"trajectory": replay.sha256(path)}}
+    replay.verify_asset_pins(case)
+    assert path.read_bytes() == payload
+    assert case["assets"]["trajectory"] == str(path)
+
+
+@pytest.mark.parametrize("fault", ["undeclared", "nonhex", "mismatch", "unset"])
+def test_asset_pin_failures_precede_model_loading(
+    tmp_path: Path, artifact_pipeline: tuple[Path, Path, Any], monkeypatch: pytest.MonkeyPatch, fault: str
+) -> None:
+    case_file, source, pipeline = artifact_pipeline
+    path = source / "trajectory.json"
+    path.write_text('{"actions": [[0.25, 0.5]]}')
+    case = json.loads(case_file.read_text())
+    case["assets"]["trajectory"] = str(path)
+    case["asset_sha256"] = {"trajectory": replay.sha256(path)}
+    if fault == "undeclared":
+        del case["assets"]["trajectory"]
+    elif fault == "nonhex":
+        case["asset_sha256"]["trajectory"] = "not-a-pin"
+    elif fault == "mismatch":
+        case["asset_sha256"]["trajectory"] = "0" * 64
+    else:
+        case["asset_sha256"]["trajectory"] = "${WORLDFOUNDRY_TEST_OBSERVATION_SHA256}"
+        monkeypatch.delenv("WORLDFOUNDRY_TEST_OBSERVATION_SHA256", raising=False)
+    case_file.write_text(json.dumps(case))
+    calls = []
+    monkeypatch.setattr(pipeline, "from_pretrained", lambda: calls.append("loaded"))
+    result = replay.run_case(case_file, source, tmp_path / "invalid-asset")
+    assert result["status"] == "failed"
+    assert "SHA256" in result["error"] or "Unset case variable" in result["error"]
+    assert calls == []
+
+
 def test_pinned_json_observation_is_materialized_as_data(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     path = tmp_path / "observation.json"
     path.write_text(json.dumps({"state": [0.25, 0.5], "image": "${OBSERVATION_IMAGES}/front.png"}))

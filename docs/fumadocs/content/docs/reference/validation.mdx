@@ -411,6 +411,16 @@ bundle in `assets` to pin its referenced camera media as well. JSON inputs apply
 to single-call recipes; legacy cases need no changes. Observation materialization
 and accepted-reference receipts remain GPU-host prerequisites.
 
+File-backed native inputs use `asset_sha256`, a mapping from declared `assets`
+names to required lowercase SHA256 pins or operator-supplied pin variables.
+The runner checks these pins before hashing checkpoints or loading the model;
+it does not rewrite the input payload. Single-call cases may select generated
+fields with `result_outputs`, for example `["actions"]`, excluding timing and
+memory metadata. Selected media paths use the existing numerical decoders.
+`result_outputs: []` compares only explicitly exported outputs; required-output
+checks still reject a plan or an empty result. Omitting either option preserves
+the existing case behavior.
+
 Kandinsky6 Lite/Pro, including each distilled and pretraining variant, has its
 own `kandinsky6-<variant>-video-short` case. Stage the matching Diffusers release
 under `WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT` at the case's `assets.checkpoint`

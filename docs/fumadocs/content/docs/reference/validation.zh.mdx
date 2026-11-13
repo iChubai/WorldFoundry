@@ -262,6 +262,13 @@ pin、未声明的输入文件，以及与显式 `call` 参数冲突的条目，
 相机媒体。JSON 输入用于单次调用用例，原有用例无需修改。实际观测数据和已接受参考
 凭证仍须在 GPU 主机上准备。
 
+原生文件输入使用 `asset_sha256`，将已声明的 `assets` 名称映射到必需的小写 SHA256
+pin 或操作者提供的 pin 变量。工具在计算权重哈希和加载模型前验证这些 pin，
+不改写输入内容。单次调用可用 `result_outputs`（例如 `["actions"]`）只选择生成字段，
+排除计时和显存元数据。选中的媒体路径通过现有数值解码器读取。
+`result_outputs: []` 只比较显式导出结果；必需输出检查仍会拒绝计划或空结果。
+省略这两项配置时，保留原有用例行为。
+
 Kandinsky6 Lite/Pro 及各自的蒸馏、预训练变体均有独立的
 `kandinsky6-<variant>-video-short` 用例。将匹配的 Diffusers 发布权重放在
 `WORLDFOUNDRY_REGRESSION_CHECKPOINT_ROOT` 下的用例 `assets.checkpoint` 路径。

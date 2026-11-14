@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import ast
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -78,3 +80,16 @@ def test_solarwm_stage2_keeps_only_shared_inference_cache_methods() -> None:
         "allocate_kv_cache",
         "allocate_crossattn_cache",
     }
+
+
+def test_solarwm_main_module_import_does_not_dispatch_cli_arguments() -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.solarwm.__main__",
+            "not-a-solarwm-command",
+        ],
+        check=True,
+        timeout=60,
+    )

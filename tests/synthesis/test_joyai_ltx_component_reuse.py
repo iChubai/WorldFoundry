@@ -4,6 +4,8 @@
 
 import importlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -96,3 +98,28 @@ def test_joyai_prope_preserves_meta_construction_and_feature_dtype() -> None:
     expected = features.clone()
     expected[:, :, 1, 0::4] = 1.5
     torch.testing.assert_close(projected, expected, rtol=0, atol=0)
+
+
+@pytest.mark.parametrize("runtime", ["echo_wm_runtime", "echo_longvideo_runtime"])
+def test_joyai_quantization_imports_before_the_loader(runtime: str) -> None:
+    package = f"worldfoundry.synthesis.visual_generation.joyai_echo.{runtime}.ltx_core"
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import importlib
+import sys
+
+package = sys.argv[1]
+for name in ("quantization", "quantization.fp8_cast", "quantization.fp8_scaled_mm", "quantization.policy"):
+    importlib.import_module(f"{package}.{name}")
+loader = importlib.import_module(f"{package}.loader")
+assert callable(loader.apply_loras)
+assert loader.SingleGPUModelBuilder is not None
+""",
+            package,
+        ],
+        check=True,
+        timeout=60,
+    )

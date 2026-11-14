@@ -206,7 +206,6 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/diffusion_model/models/networks/gamma_world/test_multiagent_rope.py \
 	tests/base_models/diffusion_model/models/networks/wan/test_varlen_cross_attention.py \
 	tests/core/media/processing/test_video_transforms.py \
-	tests/core/utils/tensors/test_torch.py \
 	tests/base_models/test_hyperflow_components.py \
 	tests/synthesis/test_hyperflow_runtime.py \
 	tests/base_models/test_minimax_h3_dit.py \

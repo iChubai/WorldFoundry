@@ -11,6 +11,7 @@
 </p>
 
 <p align="center">
+  <a href="https://arxiv.org/abs/2611.10771"><img src="https://img.shields.io/badge/arXiv-2611.10771-B31B1B?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"/></a>
   <a href="https://github.com/OpenEnvision/WorldFoundry"><img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/></a>
   <a href="https://openenvision.github.io/WorldFoundry/docs"><img src="https://img.shields.io/badge/Docs-4B8BBE?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Docs"/></a>
   <a href="https://openenvision.github.io/WorldFoundry/zh/docs"><img src="https://img.shields.io/badge/中文文档-07C160?style=for-the-badge" alt="中文文档"/></a>
@@ -30,6 +31,7 @@
 
 ## 📰 News
 
+- **[2026-11-07]** 📄 **Our paper is out on arXiv!** Read [WorldFoundry: Towards Unified Infrastructure for World Intelligence](https://arxiv.org/abs/2611.10771).
 - **[2026-07-12]** 🔥 **WorldFoundry reached 100+ stars on its very first day!** Thanks to the community for the incredible support and encouragement. More exciting updates are coming!
 - **[2026-07-11]** 🎉 **WorldFoundry is officially open-sourced.** We welcome ⭐ stars, bug reports, feature requests, and pull requests from the community!
 
@@ -488,15 +490,18 @@ Community standards and private vulnerability reporting are covered by the
 
 ## 📝 Citation
 
-If you use WorldFoundry in your research, please cite this repository together with the upstream
+If you use WorldFoundry in your research, please cite our [paper](https://arxiv.org/abs/2611.10771) together with the upstream
 methods, checkpoints, datasets, and benchmarks your work depends on:
 
 ```bibtex
-@misc{worldfoundry2026,
-  title  = {WorldFoundry: Unified World Model Inference and Evaluation Infrastructure},
-  author = {OpenEnvision},
-  year   = {2026},
-  url    = {https://github.com/OpenEnvision/WorldFoundry}
+@misc{tian2026worldfoundry,
+  title         = {WorldFoundry: Towards Unified Infrastructure for World Intelligence},
+  author        = {Juanxi Tian and Jiadong Hou and Baiang Li and Xin Lin and Zhengbo Jiao and Weijia Zhang and Yeying Jin and Truong Nguyen and Haitian Zheng and Zhifei Zhang and Jianfei Yang and Ming-Hsuan Yang and Felix Heide and Wei Xiong and Enze Xie and Wanhua Li},
+  year          = {2026},
+  eprint        = {2611.10771},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CV},
+  url           = {https://arxiv.org/abs/2611.10771}
 }
 ```
 
@@ -517,4 +522,4 @@ We also thank:
 
 ---
 
-**WorldFoundry** · [GitHub](https://github.com/OpenEnvision/WorldFoundry) · [Documentation](https://openenvision.github.io/WorldFoundry/docs) · [中文文档](https://openenvision.github.io/WorldFoundry/zh/docs) · [Discord](https://discord.gg/ybUQMDA4x)
+**WorldFoundry** · [Paper](https://arxiv.org/abs/2611.10771) · [GitHub](https://github.com/OpenEnvision/WorldFoundry) · [Documentation](https://openenvision.github.io/WorldFoundry/docs) · [中文文档](https://openenvision.github.io/WorldFoundry/zh/docs) · [Discord](https://discord.gg/ybUQMDA4x)

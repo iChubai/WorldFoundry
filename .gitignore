@@ -372,3 +372,7 @@ worldfoundry/studio/assets/vendor/
 /tests/**/logs/
 /tests/**/outputs/
 /tests/**/.env*
+
+# pi (earendil) session artifacts
+.pi/
+.pi-traces/

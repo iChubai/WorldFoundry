@@ -16,7 +16,7 @@ from worldfoundry.base_models.perception_core.general_perception.dinov2.models.v
 from worldfoundry.base_models.three_dimensions.depth.moge.model.modules import MLP
 from worldfoundry.base_models.three_dimensions.depth.moge.model.v2 import MoGeModel_v2
 from worldfoundry.base_models.three_dimensions.depth.moge.variants.uniworld_view import UniWorldMoGeModel
-from worldfoundry.core.attention import QKVSelfAttention
+from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention
 
 pytestmark = pytest.mark.unit
 

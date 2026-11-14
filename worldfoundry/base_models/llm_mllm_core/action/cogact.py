@@ -9,8 +9,8 @@ from typing import Any
 import torch
 from torch import nn
 
-from worldfoundry.core.attention import QKVSelfAttention as Attention
 from worldfoundry.core.nn.blocks.layers import Mlp
+from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention as Attention
 
 
 class ActionEmbedder(nn.Module):

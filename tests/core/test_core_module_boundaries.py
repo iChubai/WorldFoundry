@@ -262,3 +262,33 @@ def test_core_facade_names_resolve_to_their_defining_modules() -> None:
         if not _binds_at_top_level(path, name):
             indirect.append((name, target))
     assert not indirect, f"worldfoundry.core names that point at a re-exporting module: {indirect}"
+
+
+def test_model_consumers_reference_existing_core_facade_exports() -> None:
+    """Resolve lazy core names statically, including imports behind optional dependencies."""
+    root = Path(__file__).resolve().parents[2]
+    facades = {
+        ".".join(path.relative_to(root).parts[:-1]): set(exports)
+        for path in (root / "worldfoundry/core").rglob("__init__.py")
+        if (exports := _lazy_tables(path))
+    }
+    unresolved = []
+    for path in (root / "worldfoundry").rglob("*.py"):
+        with tokenize.open(path) as stream:
+            source = stream.read()
+        if "worldfoundry.core" not in source:
+            continue
+        package = ".".join(path.relative_to(root).parts[:-1])
+        for node in ast.walk(ast.parse(source)):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            module = resolve_name("." * node.level + (node.module or ""), package) if node.level else node.module or ""
+            if module not in facades:
+                continue
+            for alias in node.names:
+                if alias.name == "*" or alias.name in facades[module]:
+                    continue
+                target = root.joinpath(*module.split("."), alias.name)
+                if not target.with_suffix(".py").is_file() and not (target / "__init__.py").is_file():
+                    unresolved.append((str(path.relative_to(root)), node.lineno, module, alias.name))
+    assert not unresolved, f"model consumers reference missing core facade exports: {unresolved}"

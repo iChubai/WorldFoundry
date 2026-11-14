@@ -6,7 +6,7 @@ from typing import Any
 
 from torch import Tensor
 
-from worldfoundry.core.attention import QKVSelfAttention
+from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention
 
 from ..model.v2 import MoGeModel_v2
 

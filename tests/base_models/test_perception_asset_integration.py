@@ -1,4 +1,3 @@
-
 import pytest
 
 # This test module imports worldfoundry code that requires the optional
@@ -62,6 +61,6 @@ def test_perception_assets_are_in_aggregate_stacks():
     segmentation = BASE_MODEL_STACKS["segmentation_stack"].capability_ids
     heavy = BASE_MODEL_STACKS["spatial_perception_heavy_stack"].capability_ids
 
-    assert {"midas_v21_small_256", "unik3d_vitl"} <= set(depth)
+    assert "midas_v21_small_256" in set(depth)
     assert "repvit_sam" in set(segmentation)
     assert {"midas_v21_small_256", "repvit_sam"} <= set(heavy)

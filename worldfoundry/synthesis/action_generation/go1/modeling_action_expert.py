@@ -1,20 +1,30 @@
 """PyTorch Action Expert(based on InternLM2) model, integrated to models from modeling_internlm2_go1.py."""
 
+import logging
 import math
 import warnings
 from typing import ClassVar
 
 import numpy as np
 import torch
+from einops import rearrange
 from torch import nn
 from transformers import PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutputWithPast
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP, repeat_kv
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import get_unpad_data as _get_unpad_data
 from worldfoundry.core.attention import scaled_dot_product_attention
+from worldfoundry.core.attention.rotary.rope import rotate_half
 
 from .configuration_action_expert import ActionExpertConfig
 from .flash_attn_utils import load_flash_attn
-from .modeling_internlm2 import InternLM2MLP, InternLM2RMSNorm
+from .modeling_internlm2 import (
+    InternLM2DynamicNTKScalingRotaryEmbedding,
+    InternLM2LinearScalingRotaryEmbedding,
+    InternLM2RMSNorm,
+    InternLM2RotaryEmbedding,
+)
 
 flash_attn_func, flash_attn_varlen_func = None, None
 pad_input, index_first_axis, unpad_input = None, None, None
@@ -26,18 +36,6 @@ if has_flash_attn:
     pad_input = _flash_attn_symbols["pad_input"]
     index_first_axis = _flash_attn_symbols["index_first_axis"]
     unpad_input = _flash_attn_symbols["unpad_input"]
-import logging  # noqa: E402 - Follows the conditional setup block.
-
-from .modeling_internlm2 import (  # noqa: E402 - Follows the conditional setup block.
-    InternLM2DynamicNTKScalingRotaryEmbedding,
-    InternLM2LinearScalingRotaryEmbedding,
-    InternLM2RotaryEmbedding,
-    _get_unpad_data,
-    rearrange,
-    repeat_kv,
-    rotate_half,
-)
-
 # warnings.filterwarnings("ignore")
 logger = logging.getLogger(__name__)
 
@@ -413,7 +411,7 @@ class ActionExpertDecoderLayer(nn.Module):
         self.hidden_size = config.hidden_size
         self.attention = ACTIONEXPERT_ATTENTION_CLASSES[config.attn_implementation](config=config)
 
-        self.feed_forward = InternLM2MLP(config)
+        self.feed_forward = QwenMLP(config)
         self.attention_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.ffn_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

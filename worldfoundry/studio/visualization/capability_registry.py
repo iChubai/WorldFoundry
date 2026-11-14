@@ -74,12 +74,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/depth/depth_anything/depth_anything_v3/api.py",
     ),
     _cap(
-        "dvlt",
-        "three_dimensions/depth/dvlt",
-        ("depth", "normal", "camera", "point-cloud"),
-        "three_dimensions/depth/dvlt/viz/camera_overlay.py",
-    ),
-    _cap(
         "metric3d",
         "three_dimensions/depth/metric3d",
         ("depth", "normal"),
@@ -105,12 +99,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/depth/unidepth/models/unidepthv2/unidepthv2.py",
     ),
     _cap(
-        "unik3d",
-        "three_dimensions/depth/unik3d",
-        ("depth", "normal", "point-cloud"),
-        "three_dimensions/depth/unik3d/unik3d.py",
-    ),
-    _cap(
         "longvie-video-depth",
         "three_dimensions/depth/video_depth_anything_longvie",
         ("depth", "media"),
@@ -123,12 +111,6 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/depth/videodepthanything/video_depth.py",
     ),
     # Reconstruction, dynamic scenes, splats, and SLAM.
-    _cap(
-        "dust3r",
-        "three_dimensions/general_3d/dust3r",
-        ("point-cloud", "mesh", "viser"),
-        "three_dimensions/general_3d/dust3r/dust3r/viz/scene3d_dust.py",
-    ),
     _cap(
         "4d-gaussians",
         "three_dimensions/general_3d/four_d_gaussians",
@@ -154,28 +136,10 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "three_dimensions/general_3d/mast3r/mast3r/cloud_opt/sparse_ga.py",
     ),
     _cap(
-        "monst3r",
-        "three_dimensions/general_3d/monst3r",
-        ("point-cloud", "mesh", "viser", "rerun"),
-        "three_dimensions/general_3d/monst3r/demo.py",
-    ),
-    _cap(
         "mvdiffusion",
         "three_dimensions/general_3d/mvdiffusion",
         ("media",),
         "three_dimensions/general_3d/mvdiffusion/mvdiffusion_runtime/demo.py",
-    ),
-    _cap(
-        "splatt3r",
-        "three_dimensions/general_3d/splatt3r",
-        ("gaussian-splat",),
-        "three_dimensions/general_3d/splatt3r/splatt3r_runtime/utils/export.py",
-    ),
-    _cap(
-        "stable-virtual-camera",
-        "three_dimensions/general_3d/stable_virtual_camera",
-        ("media", "camera"),
-        "three_dimensions/general_3d/stable_virtual_camera/stable_virtual_camera_runtime/demo.py",
     ),
     _cap(
         "vipe",
@@ -241,7 +205,7 @@ MODEL_VISUALIZATION_CAPABILITIES = (
         "pixelsplat",
         "three_dimensions/point_clouds/pixelsplat",
         ("media",),
-        "three_dimensions/point_clouds/pixelsplat/decoder_splatting_cuda.py",
+        "three_dimensions/point_clouds/pixelsplat/src/model/decoder/decoder_splatting_cuda.py",
     ),
     _cap(
         "vggt",

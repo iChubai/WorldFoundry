@@ -15,7 +15,6 @@ from .utils import (
 )
 
 # isort: split
-from ..utils.geometry_torch import normalized_view_plane_uv  # noqa: F401 - Keeps the module's import-time setup.
 
 
 class ResidualConvBlock(nn.Module):

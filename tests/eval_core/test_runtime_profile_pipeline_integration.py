@@ -29,11 +29,9 @@ TARGET_PIPELINE_MODEL_IDS = (
     "flashworld",
     "lagernvs",
     "lyra",
-    "monst3r",
     "mvdiffusion",
     "neoverse",
     "recammaster",
-    "stable-virtual-camera",
     "wonderjourney",
     "wonderworld",
     "worldgen",
@@ -81,14 +79,12 @@ TARGET_PIPELINE_MODEL_IDS = (
     "cosmos-transfer-2.5",
     "dreamx-world-5b-cam",
     "hunyuanworld-1",
-    "hunyuanworld-voyager",
     "lingbot-world",
     "matrix-game-2",
     "adaworld",
     "ctrl-world",
     "diamond",
     "dino-wm",
-    "egowm",
     "genie-envisioner",
     "giga-world-0",
     "happyoyster",
@@ -102,14 +98,12 @@ TARGET_PIPELINE_MODEL_IDS = (
     "omniforcing",
     "pointworld",
     "sana-wm",
-    "shotstream",
     "simworld",
     "starwm",
     "tesseract",
     "uwm",
     "vggt-world",
     "vid2world",
-    "wilddet3d",
     "wildworld",
     "worldgrow",
     "worldmem",
@@ -378,10 +372,7 @@ def test_integrated_catalog_entries_expose_pipeline_operator_contracts() -> None
 
 
 def test_pipeline_runner_spec_uses_resolved_runtime_profile_id() -> None:
-    for model_id, expected_profile in (
-        ("cogvideox", "cogvideox-5b-t2v"),
-        ("dust3r", "dust3r-base-model"),
-    ):
+    for model_id, expected_profile in (("cogvideox", "cogvideox-5b-t2v"),):
         resolved = resolve_model_zoo_config(model_id, manifest_dir=MODEL_CATALOG_DIR, runtime={"device": "cpu"})
         spec = build_pipeline_runner_spec(resolved.config)
 

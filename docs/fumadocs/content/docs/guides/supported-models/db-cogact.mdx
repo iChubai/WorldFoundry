@@ -43,6 +43,8 @@ Pick the checkpoint matching your benchmark: libero-db-cogact, calvin-db-cogact,
 
 Validation covers the LIBERO path only: `Dexmal/libero-db-cogact` produces a finite [1, 16, 7] action trace. The CALVIN and SimplerEnv checkpoints are wired but not separately validated.
 
+The released checkpoints use the native Transformers Qwen2 tokenizer. `trust_remote_code` defaults to `false`; requests that enable it are rejected before model/tokenizer cache lookup. Stage the tokenizer assets alongside the checkpoint.
+
 ## Running in WorldFoundry
 
 Run the policy with `wf run db-cogact-libero --pipeline.task-profile default`.

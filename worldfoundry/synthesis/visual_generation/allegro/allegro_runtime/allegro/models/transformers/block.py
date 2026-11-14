@@ -15,8 +15,6 @@ from typing import Any, Optional
 
 import torch
 import torch.nn.functional as F
-from allegro.models.transformers.embedding import CombinedTimestepSizeEmbeddings
-from allegro.models.transformers.rope import PositionGetter3D, RoPE3D
 from diffusers.models.activations import GEGLU, GELU, ApproximateGELU
 from diffusers.models.attention_processor import (
     AttnAddedKVProcessor,
@@ -41,6 +39,14 @@ from diffusers.utils import USE_PEFT_BACKEND, deprecate, is_xformers_available
 from diffusers.utils.torch_utils import maybe_allow_in_graph
 from torch import nn
 from torch.nn.attention import SDPBackend, sdpa_kernel
+
+from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.transformers.embedding import (
+    CombinedTimestepSizeEmbeddings,
+)
+from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.transformers.rope import (
+    PositionGetter3D,
+    RoPE3D,
+)
 
 if is_xformers_available():
     import xformers

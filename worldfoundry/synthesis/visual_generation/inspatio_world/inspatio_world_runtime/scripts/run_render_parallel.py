@@ -2,10 +2,9 @@
 """Render point clouds in parallel across GPUs.
 
 Usage:
-    python run_render_parallel.py \
+    python -m worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.scripts.run_render_parallel \
         --json_path /path/to/new.json \
         --gpu_list 0,1,2,3 \
-        --render_script /path/to/render_point_cloud.py \
         --traj_txt_path /path/to/traj.txt \
         --width 832 --height 480
 """
@@ -17,6 +16,8 @@ import os
 import subprocess
 import sys
 
+from worldfoundry.core.execution.process import package_module_command
+
 
 def render_video(args):
     (
@@ -24,7 +25,6 @@ def render_video(args):
         entry,
         gpu_id,
         total_videos,
-        render_script,
         traj_txt_path,
         width,
         height,
@@ -44,20 +44,21 @@ def render_video(args):
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
-    cmd_render = [
-        sys.executable,
-        render_script,
-        "--da3_dir",
-        da3_output,
-        "--traj_txt_path",
-        traj_txt_path,
-        "--output_dir",
-        render_output,
-        "--width",
-        str(width),
-        "--height",
-        str(height),
-    ]
+    cmd_render = package_module_command(
+        "worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.scripts.render_point_cloud",
+        [
+            "--da3_dir",
+            da3_output,
+            "--traj_txt_path",
+            traj_txt_path,
+            "--output_dir",
+            render_output,
+            "--width",
+            str(width),
+            "--height",
+            str(height),
+        ],
+    )
     if relative_to_source:
         cmd_render.append("--relative_to_source")
     if rotation_only:
@@ -79,7 +80,6 @@ def main():
     parser = argparse.ArgumentParser(description="Render point clouds in parallel across GPUs.")
     parser.add_argument("--json_path", required=True, help="Path to the JSON file with video entries")
     parser.add_argument("--gpu_list", required=True, help="Comma-separated GPU IDs (e.g. 0,1,2,3)")
-    parser.add_argument("--render_script", required=True, help="Path to render_point_cloud.py")
     parser.add_argument("--traj_txt_path", required=True, help="Trajectory file path")
     parser.add_argument("--width", type=int, default=832, help="Render width")
     parser.add_argument("--height", type=int, default=480, help="Render height")
@@ -114,7 +114,6 @@ def main():
                 entry,
                 gpu_id,
                 total_videos,
-                args.render_script,
                 args.traj_txt_path,
                 args.width,
                 args.height,

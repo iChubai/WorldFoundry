@@ -3,6 +3,8 @@ import torch
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.core.nn.blocks.layers import PreNormFeedForward as FeedForward
+
 # helpers
 NUM_FRAMES = 1
 NUM_PATCHES = 1
@@ -21,22 +23,6 @@ def generate_mask_matrix(npatch, nwindow):
         rows.append(row)
     mask = torch.cat(rows, dim=0).unsqueeze(0).unsqueeze(0)
     return mask
-
-
-class FeedForward(nn.Module):
-    def __init__(self, dim, hidden_dim, dropout=0.0):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.LayerNorm(dim),
-            nn.Linear(dim, hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_dim, dim),
-            nn.Dropout(dropout),
-        )
-
-    def forward(self, x):
-        return self.net(x)
 
 
 class Attention(nn.Module):

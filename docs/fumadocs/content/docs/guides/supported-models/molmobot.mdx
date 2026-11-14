@@ -21,6 +21,8 @@ The OLMo-based DROID checkpoints are Apache-2.0. The Pi0-DROID checkpoint is [Ge
 
 Supply a task prompt, the `exo_camera_1` and `wrist_camera` images, and matching robot state. For Pi0-DROID, the verified state has seven arm joint positions plus a two-value gripper state; the output contains arm `(7,)` and gripper `(1,)` actions. Select the Pi0 route with `MolmoBotPipeline.from_pretrained(..., variant="pi0_droid")`, using the released `allenai/MolmoBot-Pi0-DROID` checkpoint. It requires the pinned isolated OpenPI dependencies and PaliGemma tokenizer. The in-tree public adapter does not load the MolmoSpaces simulator.
 
+The released OLMo-based checkpoints use dense sequential blocks. The in-tree runtime supports dense blocks; MoE blocks are unavailable.
+
 ## Limitations
 
 Validation covers offline checkpoint loading, observation preparation, and action inference. The real DROID observation is outside the simulation-trained Pi0 policy's training distribution. No closed-loop robot execution, task-success rate, or semantic action quality has been measured.

@@ -11,7 +11,6 @@ from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
     local_data_root_path,
-    official_runtime_repo_path,
 )
 
 from .. import resolve
@@ -269,33 +268,6 @@ def _causal_rcm_default_call_kwargs() -> dict[str, Any]:
     }
 
 
-def _open_dreamer_default_load_kwargs() -> dict[str, Any]:
-    load_kwargs: dict[str, Any] = {"checkpoint_path": str(checkpoint_root_path("open-dreamer"))}
-    # Only pin an interpreter once the checkout's uv venv exists. Otherwise leave
-    # the key unset so the runtime adapter re-probes at call time.
-    venv_python = official_runtime_repo_path("open-dreamer-inference") / ".venv" / "bin" / "python"
-    if venv_python.is_file():
-        load_kwargs["python_executable"] = str(venv_python)
-    return load_kwargs
-
-
-def _open_dreamer_default_call_kwargs() -> dict[str, Any]:
-    return {
-        # Matches the official larger-rollout example in the upstream inference README.
-        "context_frames": 16,
-        "horizon": 64,
-        "num_steps": 4,
-        "decode_chunk_size": 16,
-        "seed": 0,
-        "use_ema": True,
-        "camera_step_degrees": 5.0,
-        # Upstream publishes no downloadable weights, so Studio plans by default and
-        # only executes once a checkout plus checkpoint are staged.
-        "plan_only": True,
-        "timeout_seconds": 21600,
-    }
-
-
 def _lingbot_world_v2_default_ref() -> str:
     return resolve._checkpoint_model_ref(
         "lingbot-world-v2-14b-causal-fast",
@@ -416,6 +388,7 @@ def _solaris_default_ref() -> str:
 
 
 def _solaris_default_load_kwargs() -> dict[str, Any]:
+    # Keep the default data/work base; inference code is loaded from the installed package.
     runtime_root = str(
         resolve._project_root() / "worldfoundry" / "synthesis" / "visual_generation" / "solaris" / "solaris_runtime"
     )
@@ -777,22 +750,6 @@ def _leworldmodel_default_load_kwargs() -> dict[str, Any]:
     }
 
 
-def _shotstream_default_load_kwargs() -> dict[str, Any]:
-    return {
-        "model_id": "shotstream",
-        "checkpoint_dir": str(checkpoint_root_path("KlingTeam--ShotStream")),
-        "wan_model_dir": str(checkpoint_root_path("Wan-AI--Wan2.1-T2V-1.3B")),
-    }
-
-
-def _egowm_default_load_kwargs() -> dict[str, Any]:
-    return {
-        "model_id": "egowm",
-        "checkpoint_path": str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
-        "base_model_dir": str(checkpoint_root_path("stabilityai--stable-video-diffusion-img2vid")),
-    }
-
-
 def _hma_default_load_kwargs() -> dict[str, Any]:
     return {
         "model_id": "hma",
@@ -879,7 +836,6 @@ def _joyai_echo_wm_default_ref() -> str:
 
 def _joyai_echo_wm_default_load_kwargs() -> dict[str, Any]:
     return {
-        "source_root": resolve._joyai_echo_source_root(),
         "checkpoint_dir": _joyai_echo_wm_default_ref(),
         "gemma_path": resolve._checkpoint_model_ref(
             "google--gemma-3-12b-it-qat-q4_0-unquantized",
@@ -888,13 +844,6 @@ def _joyai_echo_wm_default_load_kwargs() -> dict[str, Any]:
         "python_executable": resolve._joyai_echo_python_executable("joyai-echo-wm"),
         "variant": "base",
     }
-
-
-def _hyworld_worldgen_scene_ref() -> str:
-    configured = os.getenv("HYWORLD_SCENE_PATH", "").strip()
-    if configured:
-        return configured
-    return str(resolve._data_path("test_cases", "hyworld_worldgen", "materialized_scene"))
 
 
 OVERRIDES: dict[str, dict[str, Any]] = {
@@ -1051,84 +1000,14 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "learned-policy evaluation requires a compatible policy checkpoint."
         ),
     },
-    "egowm": {
-        "display_name": "EgoWM",
-        "category": "Video Generation",
-        "summary": "Official action/state-conditioned SVD egocentric navigation video generation.",
-        "default_model_ref": lambda: str(checkpoint_root_path("anuragba--egowm", "svd_25dof_nav.pth")),
-        "default_task_type": "navigation-video",
-        "default_load_kwargs": _egowm_default_load_kwargs,
-        "default_call_kwargs": {
-            "variant": "25dof",
-            "num_frames": 8,
-            "num_inference_steps": 25,
-            "fps": 7,
-            "seed": 42,
-            "height": 512,
-            "width": 512,
-            "motion_bucket_id": 180,
-            "plan_only": False,
-            "timeout_seconds": 21600,
-        },
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "image_path",
-            "input_image",
-            "num_frames",
-            "num_inference_steps",
-            "seed",
-            "height",
-            "width",
-            "motion_bucket_id",
-            "action_scale",
-            "conditions_path",
-            "egowm_conditions_path",
-            "actions_path",
-            "egowm_actions_path",
-            "smoke_synthetic",
-            "variant",
-            "egowm_variant",
-            "plan_only",
-            "timeout_seconds",
-            "return_dict",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "checkpoint_path",
-            "egowm_checkpoint_path",
-            "base_model_dir",
-            "svd_base_model_dir",
-            "image_path",
-            "input_image",
-            "seed",
-            "lazy",
-        ),
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "aliases": ("ego-wm", "egowm-svd-25dof"),
-        "tags": ("world-model", "navigation-video", "action-conditioned", "official-runtime"),
-        "notes": (
-            "Runs the official 25-DoF or 3-DoF navigation checkpoint with an explicit local SVD base model. "
-            "Use paired conditions_path for 25-DoF, or paired normalized actions_path for 3-DoF. "
-            "A constant 3-DoF action_scale is a smoke control, not a paired motion test."
-        ),
-    },
     "hma": {
         "display_name": "HMA",
         "category": "Video Generation",
-        "summary": "Official STMAR continuous action-conditioned robot video generation.",
+        "summary": "STMAR continuous action-conditioned robot video generation.",
         "default_model_ref": lambda: str(checkpoint_root_path("liruiw--hma-base-cont")),
         "default_input_path": lambda: str(
-            official_runtime_repo_path("HMA") / "assets" / "langtable_prompt" / "frame_00.png"
+            resolve.PIPELINES_ROOT.parent
+            / "synthesis/visual_generation/hma/hma_runtime/assets/langtable_prompt/frame_00.png"
         ),
         "default_task_type": "robot-action-video",
         "default_load_kwargs": _hma_default_load_kwargs,
@@ -1526,56 +1405,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "Supply depth_path and normal_path with geometry_mode=files for released-model input parity."
         ),
     },
-    "shotstream": {
-        "display_name": "ShotStream",
-        "category": "Video Generation",
-        "summary": "Official 4-step causal multi-shot video generation through a staged ShotStream checkout.",
-        "default_model_ref": lambda: str(checkpoint_root_path("KlingTeam--ShotStream")),
-        "default_prompt": (
-            "A cinematic science-fiction scene in a bioluminescent forest at night. An astronaut in a white "
-            "exploration suit walks between glowing blue plants while soft mist drifts through the trees."
-        ),
-        "default_task_type": "causal-multi-shot-video",
-        "default_load_kwargs": _shotstream_default_load_kwargs,
-        "default_call_kwargs": {"fps": 16, "seed": 42, "plan_only": False, "timeout_seconds": 21600},
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "data_path",
-            "input_csv",
-            "seed",
-            "plan_only",
-            "timeout_seconds",
-            "return_dict",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "checkpoint_dir",
-            "shotstream_checkpoint_dir",
-            "wan_model_dir",
-            "base_model_dir",
-            "data_path",
-            "input_csv",
-            "seed",
-            "lazy",
-        ),
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "aliases": ("shot-stream", "interactive-video-generation"),
-        "tags": ("world-model", "causal-video", "multi-shot", "official-runtime"),
-        "notes": (
-            "Runs the official ShotStream checkpoint on Wan2.1-T2V-1.3B. A plain prompt produces one 81-frame "
-            "shot; pass an official CSV through data_path/input_csv for multi-shot generation."
-        ),
-    },
     "diamond": {
         "default_interactions": ("forward_left",),
         "supports_stream": True,
@@ -1760,59 +1589,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "Vendored NVlabs Causal-rCM streaming runtime (Apache-2.0). Block-causal Wan2.1 distilled to "
             "1-4 steps per chunk; chunk_t selects the streaming schedule. Requires a distilled DiT "
             "checkpoint plus the Wan2.1 VAE and umT5 text encoder."
-        ),
-    },
-    "open-dreamer": {
-        "display_name": "Open Dreamer",
-        "default_model_ref": lambda: str(checkpoint_root_path("open-dreamer")),
-        "default_load_kwargs": _open_dreamer_default_load_kwargs,
-        "default_call_kwargs": _open_dreamer_default_call_kwargs,
-        "default_prompt": "",
-        "default_interactions": ("forward", "forward_camera_l", "forward", "forward_camera_r"),
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "default_task_type": "minecraft-world-rollout",
-        "call_params": (
-            "prompt",
-            "images",
-            "video",
-            "interactions",
-            "output_path",
-            "fps",
-            "input_mp4",
-            "actions_path",
-            "checkpoint_path",
-            "context_frames",
-            "horizon",
-            "num_steps",
-            "decode_chunk_size",
-            "seed",
-            "parallel_strategy",
-            "use_ema",
-            "no_kv_cache",
-            "camera_step_degrees",
-            "python_executable",
-            "plan_only",
-            "timeout_seconds",
-            "return_dict",
-        ),
-        "load_params": (
-            "model_path",
-            "required_components",
-            "device",
-            "model_id",
-            "checkpoint_path",
-            "input_mp4",
-            "actions_path",
-            "python_executable",
-        ),
-        "aliases": ("open_dreamer", "opendreamer", "dreamer-4", "dreamer4"),
-        "tags": ("interactive-world", "minecraft", "action-conditioned", "world-model", "jax"),
-        "notes": (
-            "Dreamer 4 rollout route bound to a user-staged official checkout; upstream is all-rights-reserved, "
-            "so no source is vendored. Requires the checkout, its CUDA-12 JAX environment, and a trained Orbax "
-            "checkpoint. WorldFoundry interactions are rendered into Minecraft/VPT action JSONL."
         ),
     },
     "matrix-game-1": {
@@ -2694,6 +2470,7 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "show_progress",
         ),
         "tags": ("world-model", "official-runtime"),
+        "notes": "Uses the installed Solaris package; required_components.runtime_root anchors relative data paths and the working directory.",
     },
     "spatia": {
         "display_name": "Spatia",
@@ -2746,9 +2523,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "supports_from_pretrained": True,
         "default_model_ref": _joyai_echo_wm_default_ref,
         "default_load_kwargs": _joyai_echo_wm_default_load_kwargs,
-        "default_input_path": lambda: str(
-            Path(resolve._joyai_echo_source_root()) / "echo_wm" / "examples" / "wm_cases" / "0004" / "input.png"
-        ),
         "default_interactions": ("w-60", "a-60"),
         "default_prompt": (
             "Environment: A warm fantasy workshop with arched windows, hanging lanterns, herbs, and glass "
@@ -2782,7 +2556,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "load_params": (
             "model_path",
             "required_components",
-            "source_root",
             "checkpoint_dir",
             "gemma_path",
             "python_executable",
@@ -2790,36 +2563,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "device",
         ),
         "tags": ("action-control", "audio-video", "camera-control", "world-model", "official-runtime"),
-    },
-    "hyworld-worldgen": {
-        "display_name": "HY-World 2.0 Trajectory Renderer",
-        "category": "Video Generation",
-        "default_task_type": "image-to-video",
-        "default_backend": "from_pretrained",
-        "supports_from_pretrained": True,
-        "default_model_ref": _hyworld_worldgen_scene_ref,
-        "default_load_kwargs": lambda: {"scene_path": _hyworld_worldgen_scene_ref()},
-        "default_input_path": str(resolve._data_path("test_cases", "hunyuan_worldplay", "test.png")),
-        "default_prompt": "Render the materialized HY-World scene along the supplied camera trajectory.",
-        "default_call_kwargs": {
-            "camera_json": str(resolve._data_path("test_cases", "hydra", "camera.json")),
-            "width": 832,
-            "height": 480,
-            "seed": 1024,
-            "return_dict": True,
-        },
-        "call_params": (
-            "images",
-            "image_path",
-            "camera_json",
-            "width",
-            "height",
-            "seed",
-            "output_path",
-            "return_dict",
-        ),
-        "load_params": ("model_path", "required_components", "scene_path", "python_executable", "device"),
-        "tags": ("camera-control", "point-cloud-rendering", "world-model", "in-tree-runtime"),
     },
     "hunyuan-game-craft": {
         "display_name": "Hunyuan Game Craft",

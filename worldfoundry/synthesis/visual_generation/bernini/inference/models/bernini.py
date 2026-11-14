@@ -22,6 +22,8 @@ from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
+from worldfoundry.core.nn.transformer.dit import _rms_norm_reference
+
 from .diffloss_fm import DiffLoss_FM
 from .modeling_qwen2_5_vl import Qwen2_5_VLForConditionalGeneration
 from .wan_diffusion import GEN_Wanx22
@@ -44,7 +46,7 @@ class RMSNorm(nn.Module):
     def forward(self, x):
         dtype = x.dtype
         x = x.float()
-        x = x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
+        x = _rms_norm_reference(x, None, self.eps, "fp32")
         return (x * self.weight).to(dtype)
 
 

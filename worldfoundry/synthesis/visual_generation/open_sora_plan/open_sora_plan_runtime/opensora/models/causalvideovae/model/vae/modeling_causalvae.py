@@ -1,7 +1,9 @@
 try:
     import torch_npu
 
-    from opensora.npu_config import npu_config
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+    )
 except BaseException:
     torch_npu = None
     npu_config = None
@@ -11,9 +13,10 @@ import torch
 import torch.nn as nn
 from diffusers.configuration_utils import register_to_config
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity
+
 from ..modeling_videobase import VideoBaseAE
 from ..modules import Normalize
-from ..modules.ops import nonlinearity
 from ..registry import ModelRegistry
 from ..utils.distrib_utils import DiagonalGaussianDistribution
 from ..utils.module_utils import Module, resolve_str_to_obj

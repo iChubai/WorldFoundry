@@ -15,8 +15,9 @@ import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin
 
+from worldfoundry.core.geometry.transforms import closed_form_inverse_se3
+
 from ..heads.dpt_head import DPTHead
-from ..utils.geometry import closed_form_inverse_se3
 from ..utils.pose_enc import pose_encoding_to_extri_intri
 
 logger = logging.getLogger(__name__)

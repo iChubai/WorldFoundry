@@ -21,7 +21,6 @@ import Imath
 import numpy as np
 import torch
 import torchvision.transforms as transforms
-from packaging import version as pver
 
 
 class ImageTransform:
@@ -97,14 +96,6 @@ class ImageTransform:
         return i, j
 
 
-def custom_meshgrid(*args):
-    # ref: https://pytorch.org/docs/stable/generated/torch.meshgrid.html?highlight=meshgrid#torch.meshgrid
-    if pver.parse(torch.__version__) < pver.parse("1.10"):
-        return torch.meshgrid(*args)
-    else:
-        return torch.meshgrid(*args, indexing="ij")
-
-
 def get_grid_uvs(batch_shape, H, W, device, dtype=None, flip_flag=None, nh=None, nw=None, margin=0):
     if dtype is None:
         dtype = torch.float32
@@ -117,9 +108,10 @@ def get_grid_uvs(batch_shape, H, W, device, dtype=None, flip_flag=None, nh=None,
     # c2w @ dirctions
     B, V = batch_shape
 
-    j, i = custom_meshgrid(
+    j, i = torch.meshgrid(
         torch.linspace(0, H - 1, nh, device=device, dtype=dtype),
         torch.linspace(0, W - 1, nw, device=device, dtype=dtype),
+        indexing="ij",
     )
     i = i.reshape([1, 1, nh * nw]).expand([B, V, nh * nw]) + 0.5  # [B, V, HxW]
     j = j.reshape([1, 1, nh * nw]).expand([B, V, nh * nw]) + 0.5  # [B, V, HxW]
@@ -131,9 +123,10 @@ def get_grid_uvs(batch_shape, H, W, device, dtype=None, flip_flag=None, nh=None,
 
     n_flip = torch.sum(flip_flag).item() if flip_flag is not None else 0
     if n_flip > 0:
-        j_flip, i_flip = custom_meshgrid(
+        j_flip, i_flip = torch.meshgrid(
             torch.linspace(0, H - 1, nh, device=device, dtype=dtype),
             torch.linspace(W - 1, 0, nw, device=device, dtype=dtype),
+            indexing="ij",
         )
         i_flip = i_flip.reshape([1, 1, nh * nw]).expand(B, 1, nh * nw) + 0.5
         j_flip = j_flip.reshape([1, 1, nh * nw]).expand(B, 1, nh * nw) + 0.5

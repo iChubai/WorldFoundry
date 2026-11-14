@@ -2,7 +2,7 @@
 title: "Open-MAGVIT2"
 description: "Open-MAGVIT2 from Tencent (ARC Lab): video tokenization, class conditional image generation, and 1 more task; Verified."
 modelId: "open-magvit2"
-pageSource: generated
+pageSource: authored
 ---
 
 Open-MAGVIT2 is Tencent ARC's open reproduction of the MAGVIT-v2 lookup-free visual tokenizer, plus autoregressive generation on top of it. WorldFoundry runs its class-conditional ImageNet image generation route: 256-token generation produces a 256x256 PNG image, not video. Validated with the released checkpoint: generating ImageNet class 207 yields a semantically correct image.
@@ -34,6 +34,8 @@ Family status: **Verified**.
 Stage the TencentARC/Open-MAGVIT2 weights (apache-2.0) and set class_id to choose the ImageNet category. This route is class-conditional image generation, not prompt-to-video; video tokenization is an upstream tokenizer capability.
 
 The runnable route generates class-conditional images only — no free-form prompts, no video output.
+
+Configuration `class_path` and `target` entries from the released `src.Open_MAGVIT2` namespace resolve to the installed in-tree classes at model load time. Checkpoint paths and sampling parameters keep their configured values.
 
 ## Running in WorldFoundry
 

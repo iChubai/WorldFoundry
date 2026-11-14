@@ -2,7 +2,7 @@
 title: "VerseCrafter"
 description: "VerseCrafter from Tencent ARC Lab: camera-controlled video, image-to-video, and 1 more task; Verified."
 modelId: "versecrafter"
-pageSource: generated
+pageSource: authored
 ---
 
 VerseCrafter from Tencent ARC is a camera-controlled image-to-video world model built on 4D control: a geometry-aware rendering stage produces 4D control signals that guide the diffusion stage along the requested camera path. It runs with the TencentARC/VerseCrafter checkpoint plus Wan-AI/Wan2.1-T2V-14B and Ruicheng/moge-2-vitl-normal.
@@ -36,6 +36,8 @@ Family status: **Verified**.
 Defaults for `default`: frames=81, fps=16, height=480, width=832, seed=2025.
 
 Validated with the released checkpoint: a short camera-controlled video generates end to end, with visible artifacts in late frames.
+
+Depth estimation, 4D-control rendering and diffusion each run as installed WorldFoundry package modules. Diffusion uses a one-rank standalone torchrun rendezvous. The workers use package-qualified VideoX-Fun utilities and retain all five GPU memory modes, explicit checkpoint paths and the package working directory for relative assets.
 
 ## Running in WorldFoundry
 

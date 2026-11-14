@@ -21,6 +21,8 @@ MolmoBot 是 AI2 的机器人策略家族。WorldFoundry 通过仓内推理 Pipe
 
 输入任务提示、`exo_camera_1` 与 `wrist_camera` 图像，以及对应的机器人状态。Pi0-DROID 已验证的状态包含 7 个手臂关节位置和 2 个夹爪值；输出动作包含手臂 `(7,)` 与夹爪 `(1,)`。使用发布的 `allenai/MolmoBot-Pi0-DROID` 权重，并通过 `MolmoBotPipeline.from_pretrained(..., variant="pi0_droid")` 选择 Pi0 路径。它需要固定版本的独立 OpenPI 依赖及 PaliGemma tokenizer；仓内公开适配器不会加载 MolmoSpaces 仿真器。
 
+发布的 OLMo 权重使用稠密 sequential 块。仓内运行时支持稠密块，不提供 MoE 块。
+
 ## 限制
 
 验证仅覆盖离线权重加载、观测预处理和动作推理。对仿真训练的 Pi0 策略而言，真实 DROID 观测属于训练分布外。尚未测量闭环机器人执行、任务成功率或动作语义质量。

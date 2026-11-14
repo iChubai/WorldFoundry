@@ -41,6 +41,8 @@ from huggingface_hub import create_repo, split_torch_state_dict_into_shards
 from huggingface_hub.utils import validate_hf_hub_args
 from torch import Tensor, nn
 
+from worldfoundry.core.nn.blocks.module_properties import get_parameter_dtype
+
 CONFIG_NAME = "config.json"
 WEIGHTS_NAME = "pytorch_model.bin"
 SAFETENSORS_WEIGHTS_NAME = "pytorch_model.safetensors"
@@ -132,28 +134,6 @@ def get_parameter_device(parameter: torch.nn.Module) -> torch.device:
         gen = parameter._named_members(get_members_fn=find_tensor_attributes)
         first_tuple = next(gen)
         return first_tuple[1].device
-
-
-def get_parameter_dtype(parameter: torch.nn.Module) -> torch.dtype:
-    try:
-        params = tuple(parameter.parameters())
-        if len(params) > 0:
-            return params[0].dtype
-
-        buffers = tuple(parameter.buffers())
-        if len(buffers) > 0:
-            return buffers[0].dtype
-
-    except StopIteration:
-        # For torch.nn.DataParallel compatibility in PyTorch 1.5
-
-        def find_tensor_attributes(module: torch.nn.Module) -> list[tuple[str, Tensor]]:
-            tuples = [(k, v) for k, v in module.__dict__.items() if torch.is_tensor(v)]
-            return tuples
-
-        gen = parameter._named_members(get_members_fn=find_tensor_attributes)
-        first_tuple = next(gen)
-        return first_tuple[1].dtype
 
 
 class ModelMixin(torch.nn.Module, PushToHubMixin):
@@ -703,7 +683,9 @@ class ModelMixin(torch.nn.Module, PushToHubMixin):
             model = cls.from_config(config, **unused_kwargs)
 
             # Convert the weights
-            from .modeling_pytorch_flax_utils import load_flax_checkpoint_in_pytorch_model
+            from diffusers.models.modeling_pytorch_flax_utils import (
+                load_flax_checkpoint_in_pytorch_model,
+            )
 
             model = load_flax_checkpoint_in_pytorch_model(model, model_file)
         else:

@@ -1,7 +1,6 @@
 import math
 import os
 
-import kornia
 import numpy as np
 import PIL.Image
 import torch
@@ -748,33 +747,12 @@ def select_frames(timestamps, min_num_frames=2, skip_frame=10, random_start=Fals
     return selected_frame_indices, selected_frame_timestamps
 
 
-def tensor2im(input_image, imtype=np.uint8):
-    if not isinstance(input_image, np.ndarray):
-        if isinstance(input_image, torch.Tensor):  # get the data from a variable
-            image_tensor = input_image.data
-        else:
-            return input_image
-        image_numpy = image_tensor[0].clamp(0.0, 1.0).cpu().float().numpy()  # convert it into a numpy array
-        image_numpy = np.transpose(image_numpy, (1, 2, 0)) * 255.0  # post-processing: tranpose and scaling
-    else:  # if it is a numpy array, do nothing
-        image_numpy = input_image
-    return image_numpy.astype(imtype)
-
-
 class LatentStorer:
     def __init__(self):
         self.latent = None
 
     def __call__(self, i, t, latent):
         self.latent = latent
-
-
-def sobel_filter(disp, mode="sobel", beta=10.0):
-    sobel_grad = kornia.filters.spatial_gradient(disp, mode=mode, normalized=False)
-    sobel_mag = torch.sqrt(sobel_grad[:, :, 0, Ellipsis] ** 2 + sobel_grad[:, :, 1, Ellipsis] ** 2)
-    alpha = torch.exp(-1.0 * beta * sobel_mag).detach()
-
-    return alpha
 
 
 def _write_video(path, video, fps, video_codec, video_options):

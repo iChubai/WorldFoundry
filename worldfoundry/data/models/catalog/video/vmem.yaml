@@ -40,17 +40,26 @@ docs:
   publisher: University of Oxford
   publisher_kind: university
   publisher_zh: 牛津大学
-  overview: 'VMem is an interactive video scene generation model with a surfel-indexed view memory: as you navigate a scene, it remembers which surfaces were seen from where, keeping new views consistent with the past. Validated with the released VMem and CUT3R checkpoints: the pipeline reproduces the official navigation demo.'
-  overview_zh: VMem 是带「面元索引视图记忆」的交互式视频场景生成模型：当你在场景中游走时，它记住哪些表面曾从哪些视角被看到，使新视角与历史保持一致。已用发布的 VMem 与 CUT3R checkpoint 验证：pipeline 复现了官方导航 demo。
-  architecture: VMem indexes past views by surface elements (surfels) and retrieves only the relevant ones to condition generation of the next view (per the publication, arXiv 2506.18903). It uses CUT3R as its geometry backbone.
+  overview: 'VMem is an interactive video scene generation model with a surfel-indexed view memory: as you navigate
+    a scene, it remembers which surfaces were seen from where, keeping new views consistent with the past. Validated
+    with the released VMem and CUT3R checkpoints: the in-tree pipeline reproduces the official navigation demo.'
+  overview_zh: VMem 是带「面元索引视图记忆」的交互式视频场景生成模型：当你在场景中游走时，它记住哪些表面曾从哪些视角被看到，使新视角与历史保持一致。已用发布的 VMem 与 CUT3R checkpoint
+    验证：树内 pipeline 复现了官方导航 demo。
+  architecture: VMem indexes past views by surface elements (surfels) and retrieves only the relevant ones to condition
+    generation of the next view (per the publication, arXiv 2506.18903). It uses CUT3R as its geometry backbone.
   architecture_zh: VMem 以面元（surfel）索引历史视图，检索相关视图作为下一视角生成的条件（见论文 arXiv 2506.18903）。它以 CUT3R 为几何主干。
-  usage_notes: Inputs are a prompt, a starting image, and navigation/interaction actions; the output is a generated video.
-  usage_notes_zh: 输入为提示词、起始图像与导航/交互动作；输出为生成视频。
+  usage_notes: Inputs are a prompt, a starting image, and navigation/interaction actions; the output is a generated
+    video. runtime_root (or VMEM_RUNTIME_ROOT) selects only a configuration/data directory, searched for configs/inference/inference.yaml
+    before the packaged default; config_path selects a file directly. Python code always comes from the installed
+    package.
+  usage_notes_zh: 输入为提示词、起始图像与导航/交互动作；输出为生成视频。runtime_root（或 VMEM_RUNTIME_ROOT）仅选择配置/数据目录，先查找其中的 configs/inference/inference.yaml，再回退到包内默认配置；config_path
+    可直接指定配置文件。Python 代码始终来自已安装的包。
   limitations:
-  - Requires the VMem and CUT3R checkpoints plus the Stable Diffusion 2.1 VAE, CLIP ViT-H-14 image conditioner, and DUSt3R camera preprocessor staged locally.
+  - Requires the VMem and CUT3R checkpoints plus the Stable Diffusion 2.1 VAE and CLIP ViT-H-14 image conditioner
+    staged locally.
   - Scene navigation quality depends on the geometry backbone; extreme viewpoint changes can still break consistency.
   limitations_zh:
-  - 需要在本地准备 VMem 与 CUT3R checkpoint，以及 Stable Diffusion 2.1 VAE、CLIP ViT-H-14 图像条件编码器与 DUSt3R 相机预处理器。
+  - 需要在本地准备 VMem 与 CUT3R checkpoint，以及 Stable Diffusion 2.1 VAE 和 CLIP ViT-H-14 图像条件编码器。
   - 场景游走质量依赖几何主干；极端视角变化仍可能破坏一致性。
   recommended_benchmarks:
   - id: worldscore

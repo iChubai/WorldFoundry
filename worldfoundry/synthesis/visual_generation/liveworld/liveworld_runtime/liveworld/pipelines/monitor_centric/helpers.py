@@ -17,8 +17,14 @@ from peft import LoraConfig, get_peft_model, set_peft_model_state_dict
 from PIL import Image
 from safetensors.torch import load_file
 
-from liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
-from liveworld.wrapper import BidirectionalWanWrapperSP, WanTextEncoder, WanVAEWrapper
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pipeline_unified_backbone import (
+    UnifiedBackbonePipeline,
+)
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.wrapper import (
+    BidirectionalWanWrapperSP,
+    WanTextEncoder,
+    WanVAEWrapper,
+)
 
 from .logger import logger
 
@@ -28,7 +34,7 @@ from .logger import logger
 
 
 def get_project_root() -> str:
-    """Return the repository root for local imports."""
+    """Return the runtime root for relative config lookup."""
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 

@@ -147,3 +147,49 @@ def test_unrelated_model_ids_keep_identity_canonicalization() -> None:
     )
     assert result.returncode == 0, result.stderr
     assert result.stdout.splitlines() == list(model_ids)
+
+
+def test_setup_commands_follow_dependencies_and_precede_validation() -> None:
+    script_source = (REPO_ROOT / "scripts/setup/model_env_install.sh").read_text(encoding="utf-8")
+    source = _bash_function(script_source, "install_dedicated_env")
+    setup = source.index('install_env_setup_commands "$spec_json" "$env_prefix"')
+    assert source.index('"${pip_args[@]}"') < setup
+    assert source.index('"${req_pip_args[@]}"') < setup
+    assert source.index('"${edit_pip_args[@]}"') < setup
+    assert setup < source.index('verify_env_imports "$env_prefix"')
+    unified = _bash_function(script_source, "install_model_env")
+    assert unified.index('install_unified_env "$env_prefix"') < unified.index("install_env_setup_commands")
+    assert 'if [[ "$VERIFY_ONLY" != "1" ]]; then\n      install_env_setup_commands' in unified
+
+
+def test_setup_commands_execute_in_the_selected_conda_environment(tmp_path: Path) -> None:
+    import json
+    import shlex
+    import sys
+
+    source = (REPO_ROOT / "scripts/setup/model_env_install.sh").read_text(encoding="utf-8")
+    commands = ["python -m pip install --no-build-isolation 'extension @ git+https://example.invalid/source'"]
+    fake_conda = tmp_path / "conda"
+    log = tmp_path / "commands.jsonl"
+    fake_conda.write_text(
+        f"#!{sys.executable}\nimport json, sys\n"
+        f"with open({str(log)!r}, 'a') as stream: stream.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+    )
+    fake_conda.chmod(0o755)
+    script = "\n".join(
+        [
+            "set -euo pipefail",
+            f"PYTHON_BIN={shlex.quote(sys.executable)}",
+            f"CONDA_EXE_PATH={shlex.quote(str(fake_conda))}",
+            _bash_function(source, "json_array_lines"),
+            _bash_function(source, "install_env_setup_commands"),
+            "install_env_setup_commands "
+            + shlex.quote(json.dumps({"setup_commands": commands}))
+            + " '/env with spaces'",
+            "install_env_setup_commands '{}' '/unused-env'",
+        ]
+    )
+    subprocess.run(["bash", "-c", script], check=True, timeout=30)
+    assert [json.loads(line) for line in log.read_text().splitlines()] == [
+        ["run", "-p", "/env with spaces", "bash", "-c", commands[0]]
+    ]

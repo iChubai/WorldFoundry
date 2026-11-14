@@ -19,12 +19,13 @@ from PIL import Image
 from safetensors.torch import load_file, save_file
 
 # isort: split
-from helios.diffusers_version.pipeline_helios_diffusers import (
+from worldfoundry.core.nn.diffusion.utils import optimized_scale
+
+from ..helios.diffusers_version.pipeline_helios_diffusers import (
     XLA_AVAILABLE,
     HeliosPipeline,
     HeliosPipelineOutput,
     calculate_shift,
-    optimized_scale,
 )
 
 # isort: split

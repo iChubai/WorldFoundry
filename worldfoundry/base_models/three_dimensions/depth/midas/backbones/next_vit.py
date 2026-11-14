@@ -1,7 +1,6 @@
-import timm
 import torch.nn as nn
 
-from ..external.next_vit.classification.nextvit import *  # noqa: F403 - Upstream star import kept as written.
+from .next_vit_model import NextViT
 from .utils import activations, forward_default, get_activation
 
 
@@ -27,7 +26,7 @@ def _make_next_vit_backbone(
 
 
 def _make_pretrained_next_vit_large_6m(hooks=None):
-    model = timm.create_model("nextvit_large")
+    model = NextViT(stem_chs=(64, 32, 64), depths=(3, 4, 30, 3), path_dropout=0.2)
 
     hooks = [2, 6, 36, 39] if hooks == None else hooks  # noqa: E711 - Keeps `==` for operands that may compare elementwise.
     return _make_next_vit_backbone(

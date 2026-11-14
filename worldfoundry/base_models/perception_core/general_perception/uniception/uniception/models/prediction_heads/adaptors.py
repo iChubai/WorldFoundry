@@ -8,7 +8,7 @@ from math import isfinite
 import numpy as np
 import torch
 
-from uniception.models.prediction_heads import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads import (
     AdaptorInput,
     AdaptorOutput,
     Covariance2DAdaptorOutput,

@@ -5,7 +5,7 @@ modelId: "hy-world-2.0"
 pageSource: authored
 ---
 
-HY-World 2.0 is Tencent's second-generation world stack with three components: HY-Pano 2.0 panorama generation, WorldMirror 2.0 reconstruction, and full text/image-to-3D-world generation. WorldFoundry runs the panorama and reconstruction components; full world generation runs upstream only. The validated WorldMirror 2.0 reconstruction path exports depth, normals, point cloud, Gaussian splat, cameras, COLMAP files, and RRD scene metadata.
+HY-World 2.0 is Tencent's second-generation world stack. WorldFoundry runs its WorldMirror 2.0 reconstruction component, verified through the Workspace infer path; it exports depth, normals, point cloud, Gaussian splat, cameras, COLMAP files, and RRD scene metadata.
 
 <ModelPaperFigures modelId="hy-world-2.0" locale="en" />
 
@@ -19,7 +19,7 @@ Project page: [3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.te
 
 `hy-world-2.0` generates a 3D-consistent world rather than a single clip.
 
-The upstream five-stage world generation chains WorldNav trajectory generation, trajectory rendering, video generation, GS data preparation, and 3DGS composition (traj_generate.py through world_gs_trainer.py) plus a VLM endpoint. WorldFoundry runs HY-Pano 2.0 and WorldMirror 2.0; the other stages run upstream only. It is published by Tencent (Hunyuan).
+WorldMirror 2.0 is a feed-forward reconstruction network that predicts depth, normals, cameras, point clouds and Gaussian splats from images or video. The upstream HY-Pano 2.0 panorama generator and five-stage world generation are not part of WorldFoundry. It is published by Tencent (Hunyuan).
 
 Tasks: default. Aliases: `hyworld2.0`, `hyworld-2.0`, `hy-world2.0`, and `hy-world-2p0` among others.
 
@@ -33,11 +33,7 @@ CLI task profiles: `default`. WorldFoundry binds `HYWorld2Pipeline`.
 
 Family status: **Planned**.
 
-Use the WorldMirror 2.0 reconstruction path for 3D outputs; run full world generation with the upstream code. The trajectory-render stage is available separately as hyworld-worldgen.
-
-Full text/image-to-3D-world generation is not available in WorldFoundry; use the upstream code.
-
-Full World Generation inference code ships upstream; WorldNav, WorldStereo 2.0, and World Composition are not available in WorldFoundry, so there is no full text/image-to-3D-world Studio path.
+Run task `worldrecon` for WorldMirror 2.0 reconstruction from an image directory or video. Only this component is available; panorama and world generation are not.
 
 ## Running in WorldFoundry
 

@@ -17,7 +17,7 @@ import cv2
 import numpy as np
 import torch
 
-from liveworld.geometry_utils import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
     _limit_points_by_density,
     _safe_frame_index,
     render_projection,
@@ -271,14 +271,14 @@ def _depth_based_upsample(
 
 
 # Ensure stream3r is importable, then import at module level
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.pose_enc import (  # noqa: E402 - Follows module-level definitions, as upstream.
-    pose_encoding_to_extri_intri,
-)
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.stream3r import (  # noqa: E402 - Follows module-level definitions, as upstream.
     STream3R,
 )
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.stream_session import (  # noqa: E402 - Follows module-level definitions, as upstream.
     StreamSession,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import (  # noqa: E402 - Follows module-level definitions, as upstream.
+    pose_encoding_to_extri_intri,
 )
 
 

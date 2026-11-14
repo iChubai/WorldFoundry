@@ -333,6 +333,8 @@ worldfoundry/studio/assets/vendor/
 # Runtime source directory, not a checkpoint artifact directory.
 !worldfoundry/synthesis/visual_generation/magi/magi_runtime/inference/infra/checkpoint/
 !worldfoundry/synthesis/visual_generation/magi/magi_runtime/inference/infra/checkpoint/*.py
+!worldfoundry/synthesis/visual_generation/solarwm/solarwm_runtime/solarwm/checkpoint/
+!worldfoundry/synthesis/visual_generation/solarwm/solarwm_runtime/solarwm/checkpoint/*.py
 
 # Small published benchmark/camera inputs required by inference and evaluation.
 !worldfoundry/evals/tasks/execution/runners/stevo_bench/runtime/stevo_bench/generation/world_models/lingbot_actions/s-1_right-15_left-15/intrinsics.npy

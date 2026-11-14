@@ -30,10 +30,11 @@ from diffusers.models.normalization import AdaLayerNormSingle, RMSNorm
 from diffusers.utils import is_torch_version, logging
 from diffusers.utils.torch_utils import maybe_allow_in_graph
 from einops import rearrange
-from models.action_patches.patches import add_action_expert, preprocessing_action_states
-from models.ltx_models.ltx_attention_processor import Attention
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+
+from ..action_patches.patches import add_action_expert, preprocessing_action_states
+from .ltx_attention_processor import Attention
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 

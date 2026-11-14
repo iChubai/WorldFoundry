@@ -11,17 +11,20 @@ from typing import Any
 
 import numpy as np
 import torch
-from mapanything.utils.geometry import (
+
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.geometry import (
     depth_edge,
     get_rays_in_camera_frame,
     normals_edge,
     points_to_normals,
     quaternion_to_rotation_matrix,
     recover_pinhole_intrinsics_from_ray_directions,
-    rotation_matrix_to_quaternion,
 )
-from mapanything.utils.image import rgb
-from mapanything.utils.multiview_confidence import compute_multiview_depth_confidence
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.image import rgb
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.multiview_confidence import (
+    compute_multiview_depth_confidence,
+)
+from worldfoundry.core.geometry.transforms import rotation_matrix_to_quaternion_xyzw as rotation_matrix_to_quaternion
 
 # Hard constraints - exactly what users can provide
 ALLOWED_VIEW_KEYS = {

@@ -180,7 +180,7 @@ class VMemSynthesis(BaseSynthesis):
             surfel_model_path: Path to the surfel model.
             step_size: Step size for the synthesis process.
             num_interpolation_frames: Number of frames for interpolation.
-            runtime_root: Root directory for runtime files.
+            runtime_root: Data root searched for configs/inference/inference.yaml; code stays in-tree.
             visualization_dir: Directory for saving visualizations.
             **kwargs: Arbitrary keyword arguments passed directly to
                       `VMemRuntime.from_pretrained`.

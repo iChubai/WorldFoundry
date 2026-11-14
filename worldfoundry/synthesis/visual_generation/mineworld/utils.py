@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 
 import numpy as np
 import torch
@@ -24,6 +25,22 @@ def tensor_to_uint8(tensor):
 
 
 def load_model_from_config(config, sd, gpu=True, eval_mode=True):
+    # Released configs use upstream module names; resolve them only at the load site.
+    targets = {
+        "lvm.LlamaLVM": "worldfoundry.synthesis.visual_generation.mineworld.lvm.LlamaLVM",
+        "lvm.LlamaForCausalLM": "worldfoundry.synthesis.visual_generation.mineworld.lvm.LlamaForCausalLM",
+        "vae.VAE": "worldfoundry.synthesis.visual_generation.mineworld.vae.VAE",
+    }
+    config = deepcopy(config)
+    params = config.get("params", {})
+    for node, key in (
+        (config, "target"),
+        (params, "model_class"),
+        (params.get("tokenizer_config") or {}, "target"),
+    ):
+        target = node.get(key)
+        if target in targets:
+            node[key] = targets[target]
     model = instantiate_from_config(config)
     if sd is not None:
         missing, unexpected = model.load_state_dict(sd, strict=False)

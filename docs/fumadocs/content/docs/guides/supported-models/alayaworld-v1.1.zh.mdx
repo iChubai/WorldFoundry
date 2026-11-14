@@ -17,7 +17,7 @@ AlayaWorld v1.1 是带 ViGeo 空间记忆的相机控制图生视频世界模型
 
 `alayaworld-v1.1` 以相机位姿为条件生成视频。
 
-固定版本上游的纯推理 rollout 方法配合 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 文本编码和 Alaya 历史编码器运行。Alaya Transformer 扩展和 ViGeo 几何来自固定版本的 AlayaWorld 源码检出。该模型由 AlayaLab 发布。
+仓库内固定版本上游的纯推理 rollout 方法复用 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 文本编码及 Alaya 历史编码器。Alaya LTX-2.3 Transformer 是规范 LTX 组件的变体，ViGeo 使用 WorldFoundry 的共享实现。该模型由 AlayaLab 发布。
 
 任务：图生视频、相机可控视频、交互式世界模型。别名：`alayaworld-v11`、`alaya-world-v1.1`。模态上，它接受图像，输出视频。
 

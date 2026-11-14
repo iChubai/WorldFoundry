@@ -20,14 +20,14 @@ single-image and batch-directory inference modes.
 
 Example usage:
     # Single image inference
-    python inference.py \\
+    python -m worldfoundry.synthesis.visual_generation.scope.scope_runtime.inference \\
         --model_dir ./SCOPE \\
         --input_image /path/to/input/image.png \\
         --action_path /path/to/actions.parquet \\
         --prompt "First-person shooter perspective in a toy garden"
 
     # Batch inference
-    python inference.py \\
+    python -m worldfoundry.synthesis.visual_generation.scope.scope_runtime.inference \\
         --model_dir ./SCOPE \\
         --input_image_dir ./images \\
         --action_path action.parquet \\

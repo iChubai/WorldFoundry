@@ -208,6 +208,7 @@ _EXPORT_MODULES = {
     "read_binary_uri": "worldfoundry.core.io.filesystem.storage",
     "read_image_as_video_tensor": "worldfoundry.core.media.codecs.video",
     "read_text_uri": "worldfoundry.core.io.filesystem.storage",
+    "package_module_command": "worldfoundry.core.execution.process",
     "read_text_tail": "worldfoundry.core.execution.process",
     "read_video": "worldfoundry.core.media.codecs.video",
     "read_video_window_rgb": "worldfoundry.core.media.codecs.video",

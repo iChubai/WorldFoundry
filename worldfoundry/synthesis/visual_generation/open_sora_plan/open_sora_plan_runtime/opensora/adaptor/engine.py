@@ -133,7 +133,9 @@ from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
-from opensora.adaptor.zp_manager import zp_manager
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.adaptor.zp_manager import (
+    zp_manager,
+)
 
 MEMORY_OPT_ALLREDUCE_SIZE = 500000000
 

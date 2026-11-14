@@ -1,6 +1,6 @@
 from functools import partial
 
-from opensora.registry import SCHEDULERS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import SCHEDULERS
 
 from .dpm_solver import DPMS
 

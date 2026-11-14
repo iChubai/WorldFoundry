@@ -38,6 +38,25 @@ from worldfoundry.core.utils.python.tree_utils import _require_tree, tree_value_
 # ──────────────────────────────────────────────────────────────────────────
 
 
+def merge_info(info_a: dict[str, torch.Tensor], info_b: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+    """Concatenate shared episode fields and retain fields present on only one side."""
+    keys_a = set(info_a)
+    keys_b = set(info_b)
+    intersection = keys_a & keys_b
+    return {
+        **{k: info_a[k] for k in keys_a if k not in intersection},
+        **{k: info_b[k] for k in keys_b if k not in intersection},
+        **{k: torch.cat((info_a[k], info_b[k]), dim=0) for k in intersection},
+    }
+
+
+def mult_along_first_dims(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    """Broadcast ``y`` over the trailing dimensions of ``x`` before multiplication."""
+    for _ in range(x.ndim - y.ndim):
+        y = y.unsqueeze(-1)
+    return x * y
+
+
 def weight_init(m):
     """Custom weight initialization function for Conv2D, ConvTranspose2D, and Linear layers.
 

@@ -19,7 +19,7 @@ Project page: [echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page](https://
 
 `joyai-echo-longvideo` is an image-to-video model: a still image in, a video clip out.
 
-The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry calls the official runtime (Python 3.11, PyTorch 2.8, CUDA 12.8) in its dedicated environment through the upstream CLI. It is published by JD.com (JoyAI / Echo Team).
+The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry packages the inference code from jd-opensource/JoyAI-Echo at 0b931fd4, reuses canonical LTX components, and runs its package-module CLI in the dedicated Python 3.11, PyTorch 2.8, CUDA 12.8 environment. It is published by JD.com (JoyAI / Echo Team).
 
 Tasks: reference-to-video, audio video generation, and long video generation. Aliases: `joyai-echo`, `echo-longvideo`, and `joyai-echo-1.5`. Modalities: image in, video out.
 
@@ -35,7 +35,7 @@ Family status: **Runner parity pending**.
 
 Defaults for `interactive-video`: frames=241, fps=25, height=736, width=1280, seed=42.
 
-Clone JoyAI-Echo at the pinned revision, prepare its dedicated environment, and pass source_root plus local Echo and gated Gemma checkpoints. Generation runs only when execute=True is set. FP4 also needs NVIDIA ModelOpt; production voice-memory extraction needs the upstream MSST setup.
+Prepare the dedicated environment and pass the local Echo and gated Gemma checkpoints. Generation runs only when execute=True is set. FP4 also needs NVIDIA ModelOpt.
 
 ## Running in WorldFoundry
 

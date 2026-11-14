@@ -17,9 +17,9 @@ JoyAI-Echo 1.5 是仅推理的长时程音视频生成模型。R2V 请求可组�
 
 ## 用来做什么
 
-`joyai-echo-longvideo` 是图生视频模型：输入静态图，输出视频。
+`joyai-echo-longvideo` 支持参考条件下的长时程音视频生成，可组合提示词、可选首帧及图像/音频记忆槽。
 
-该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry 在专用环境中通过上游 CLI 调用官方运行时（Python 3.11、PyTorch 2.8、CUDA 12.8）。该模型由京东（JoyAI / Echo 团队）发布。
+该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry 将 jd-opensource/JoyAI-Echo 的 0b931fd4 版本推理代码纳入包内，复用规范 LTX 组件，在专用 Python 3.11、PyTorch 2.8、CUDA 12.8 环境中以包模块方式运行 CLI。该模型由京东（JoyAI / Echo 团队）发布。
 
 任务：参考图生成视频、音视频联合生成、长视频生成。别名：`joyai-echo`、`echo-longvideo`、`joyai-echo-1.5`。
 
@@ -33,7 +33,9 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `JoyAIEchoLon
 
 系列状态：**Runner 一致性待确认**。
 
-请检出固定 revision 的 JoyAI-Echo 源码，准备专用环境，并传入 source_root、本地 Echo checkpoint 与受限访问的 Gemma checkpoint。生成必须显式设置 execute=True。FP4 还需 NVIDIA ModelOpt，生产级语音记忆提取需完成上游 MSST 设置。
+请准备专用环境，并传入本地 Echo checkpoint 与受限访问的 Gemma checkpoint。生成必须显式设置 execute=True。FP4 还需 NVIDIA ModelOpt。
+
+命令构造与官方请求 schema 映射已通过 CPU 测试；发布权重的 GPU 音视频产物仍待验证。memory.voice_filter 启用时不接受音频记忆槽，所需的 AGPL-3.0 MSST-WebUI 语音分离器不包含在运行时中。
 
 ## 在 WorldFoundry 中运行
 

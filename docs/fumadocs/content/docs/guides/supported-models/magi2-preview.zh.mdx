@@ -19,10 +19,16 @@ Refiner 按 8×4×4 潜变量块打包视频，使用发布配置中的半径二
 
 准备 `sand-ai/MAGI-2-preview` 的权重布局：`preview/`、`refiner/`、`turbo_vae/`、`stable-audio-open-1.0/` 与 `text_encoder/`。组件按需加载；Preview 层按顺序驻留 GPU。
 
+Qwen3.5 文本编码 worker 使用 `worldfoundry/data/models/runtime/environments/video/magi2-preview.yaml` 声明的 `magi2-preview` 环境（Transformers 5.5）。该环境也须安装 WorldFoundry。Studio 自动选择对应 Python；直接调用 pipeline 时按下例设置 `python_executable`。父 pipeline 可继续使用统一环境。
+
 ```python
 from worldfoundry.pipelines.magi2 import NativeMagi2Pipeline
 
-pipeline = NativeMagi2Pipeline.from_pretrained("/weights/MAGI-2-preview", device="cuda")
+pipeline = NativeMagi2Pipeline.from_pretrained(
+    "/weights/MAGI-2-preview",
+    device="cuda",
+    python_executable="/envs/magi2-preview/bin/python",
+)
 pipeline(
     prompt="A cinematic camera move through a sunlit forest.",
     use_refiner=True,

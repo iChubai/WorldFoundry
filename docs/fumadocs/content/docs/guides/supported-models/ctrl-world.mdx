@@ -13,7 +13,7 @@ Code: [Robert-gyj/Ctrl-World](https://github.com/Robert-gyj/Ctrl-World).
 
 Weights: `yjguo/Ctrl-World` plus `stabilityai/stable-video-diffusion-img2vid` and `openai/clip-vit-base-patch32`. Publisher: Tsinghua / Stanford. No license is specified.
 
-The pipeline runs the released checkpoint with local SVD and CLIP components. Default inputs are synchronized **ALOHA** high / left-wrist / right-wrist demonstration images — the runtime does **not** synthesize cameras. Physically meaningful action conditioning needs checkpoint-matched **DROID** views and the initial seven-value DROID Cartesian pose.
+The installed package module `worldfoundry.synthesis.visual_generation.ctrl_world.infer` runs the released checkpoint with local SVD and CLIP components. Default inputs are synchronized **ALOHA** high / left-wrist / right-wrist demonstration images — the runtime does **not** synthesize cameras. Physically meaningful action conditioning needs checkpoint-matched **DROID** views and the initial seven-value DROID Cartesian pose.
 
 <ModelCommandBuilder modelId="ctrl-world" locale="en" />
 

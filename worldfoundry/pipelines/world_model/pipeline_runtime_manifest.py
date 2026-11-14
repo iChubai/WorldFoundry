@@ -201,6 +201,7 @@ class DIAMONDPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for DIAMOND visual generation."""
 
     MODEL_ID = "diamond"
+    MODEL_PATH_OPTION = "pretrained_dir"
     RUNTIME_GATED_OPTION_KEYS = (
         "variant",
         "spawn_dir",
@@ -340,6 +341,7 @@ class LeWorldModelPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for LeWorldModel visual generation."""
 
     MODEL_ID = "leworldmodel"
+    MODEL_PATH_OPTION = "policy"
 
 
 class MIRAPipeline(WorldModelRuntimePipeline):
@@ -385,28 +387,6 @@ class Oasis500MPipeline(WorldModelRuntimePipeline):
         return kwargs
 
 
-class OpenDreamerPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for Open Dreamer (Dreamer 4) visual generation."""
-
-    MODEL_ID = "open-dreamer"
-    RUNTIME_GATED_OPTION_KEYS = ("input_mp4", "actions_path", "checkpoint_path", "python_executable")
-
-    def _promote_call_options(self, kwargs: dict) -> dict:
-        """Derive ``input_mp4`` from a filesystem context clip.
-
-        The runtime plan records only whether a video was supplied, not its path,
-        so a clip passed as ``video=``/``images=`` has to become an explicit
-        option. Decoded frames and PIL images stay untouched.
-        """
-        if not kwargs.get("input_mp4"):
-            for key in ("video", "images"):
-                candidate = kwargs.get(key)
-                if isinstance(candidate, (str, os.PathLike)):
-                    kwargs["input_mp4"] = os.fspath(candidate)
-                    break
-        return kwargs
-
-
 class SanaWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for SanaWM visual generation."""
 
@@ -417,6 +397,7 @@ class StarWMPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for StarWM visual generation."""
 
     MODEL_ID = "starwm"
+    MODEL_PATH_OPTION = "served_model_id"
 
 
 class TesserActPipeline(WorldModelRuntimePipeline):
@@ -446,42 +427,6 @@ class TesserActPipeline(WorldModelRuntimePipeline):
         "fps",
         "seed",
         "mixed_precision",
-    )
-
-    def _promote_call_options(self, kwargs: dict) -> dict:
-        if not kwargs.get("image_path"):
-            candidate = kwargs.get("images")
-            if isinstance(candidate, (str, os.PathLike)):
-                kwargs["image_path"] = os.fspath(candidate)
-        return kwargs
-
-
-class EgoWMPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for EgoWM visual generation."""
-
-    MODEL_ID = "egowm"
-    RUNTIME_GATED_OPTION_KEYS = (
-        "checkpoint_path",
-        "egowm_checkpoint_path",
-        "base_model_dir",
-        "svd_base_model_dir",
-        "image_path",
-        "input_image",
-        "seed",
-        "num_frames",
-        "num_inference_steps",
-        "fps",
-        "height",
-        "width",
-        "motion_bucket_id",
-        "action_scale",
-        "conditions_path",
-        "egowm_conditions_path",
-        "actions_path",
-        "egowm_actions_path",
-        "smoke_synthetic",
-        "variant",
-        "egowm_variant",
     )
 
     def _promote_call_options(self, kwargs: dict) -> dict:
@@ -560,23 +505,6 @@ class PointWorldPipeline(WorldModelRuntimePipeline):
     MODEL_ID = "pointworld"
 
 
-class ShotStreamPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for ShotStream visual generation."""
-
-    MODEL_ID = "shotstream"
-    RUNTIME_GATED_OPTION_KEYS = (
-        "checkpoint_dir",
-        "checkpoint_path",
-        "shotstream_checkpoint_dir",
-        "wan_model_dir",
-        "base_model_dir",
-        "data_path",
-        "input_csv",
-        "dataset_path",
-        "seed",
-    )
-
-
 class SolarWMPipeline(WorldModelRuntimePipeline):
     """Inference-only pipeline for SolarWM Wan2.2-5B Stage2."""
 
@@ -624,22 +552,6 @@ class Vid2WorldPipeline(WorldModelRuntimePipeline):
     MODEL_ID = "vid2world"
 
 
-class WildDet3DPipeline(WorldModelRuntimePipeline):
-    """Pipeline implementation for WildDet3D visual generation."""
-
-    MODEL_ID = "wilddet3d"
-    RUNTIME_GATED_OPTION_KEYS = (
-        "image_path",
-        "input_image",
-        "checkpoint_path",
-        "lingbot_config_path",
-        "intrinsics_path",
-        "score_threshold",
-        "score_3d_threshold",
-        "python_executable",
-    )
-
-
 class WildWorldPipeline(WorldModelRuntimePipeline):
     """Pipeline implementation for WildWorld visual generation."""
 
@@ -665,7 +577,6 @@ __all__ = [
     "DIAMONDCsgoPipeline",
     "DIAMONDPipeline",
     "DinoWMPipeline",
-    "EgoWMPipeline",
     "GenieEnvisionerPipeline",
     "GigaWorld0Pipeline",
     "HMAPipeline",
@@ -679,10 +590,8 @@ __all__ = [
     "NWMPipeline",
     "Oasis500MPipeline",
     "OmniForcingPipeline",
-    "OpenDreamerPipeline",
     "PointWorldPipeline",
     "SanaWMPipeline",
-    "ShotStreamPipeline",
     "SimWorldPipeline",
     "SolarWMPipeline",
     "StarWMPipeline",
@@ -690,7 +599,6 @@ __all__ = [
     "UWMPipeline",
     "VGGTWorldPipeline",
     "Vid2WorldPipeline",
-    "WildDet3DPipeline",
     "WildWorldPipeline",
     "WorldGrowPipeline",
     "WorldMemPipeline",

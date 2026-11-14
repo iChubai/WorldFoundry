@@ -3,8 +3,9 @@ from collections.abc import Generator
 
 import torch
 import torch.nn as nn
-from envs import TorchEnv, WorldModelEnv
 from torch.distributions.categorical import Categorical
+
+from worldfoundry.synthesis.visual_generation.diamond.envs import TorchEnv, WorldModelEnv
 
 from . import coroutine
 

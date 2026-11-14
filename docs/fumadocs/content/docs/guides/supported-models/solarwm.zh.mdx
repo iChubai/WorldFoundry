@@ -11,7 +11,7 @@ SolarWM 支持从数据索引读取相机轨迹，在 Wan 5B/14B、LTX-2.5 和 M
 
 论文：[arXiv 2609.02886](https://arxiv.org/abs/2609.02886)。
 
-项目页：[junchao-cs.github.io/SolarWM-Web](https://junchao-cs.github.io/SolarWM-Web/)。代码：[Junchao-cs/SolarWM](https://github.com/Junchao-cs/SolarWM)。
+项目页：[junchao-cs.github.io/SolarWM-Web](https://junchao-cs.github.io/SolarWM-Web/)。代码：[Junchao-cs/SolarWM](https://github.com/Junchao-cs/SolarWM)。代码：[Lightricks/LTX-2](https://github.com/Lightricks/LTX-2)。
 
 <ModelCommandBuilder modelId="solarwm" locale="zh" />
 
@@ -19,7 +19,7 @@ SolarWM 支持从数据索引读取相机轨迹，在 Wan 5B/14B、LTX-2.5 和 M
 
 `solarwm-wan2.2-5b` 是世界生成模型。
 
-WorldFoundry 用统一启动器为所选 variant 在对应独立环境中运行官方 solarwm infer 路线。骨干、训练代码与数据流水线来自通过 source_root 传入的上游源码树。该模型由 Junchao-cs 发布。
+WorldFoundry 用统一启动器为所选 variant 在对应独立环境中运行树内 solarwm infer 路线。推理代码来自 Junchao-cs/SolarWM 的 2fe1ea9a 版本，通过模型专用变体复用规范 Wan、LTX 与 MiniMax-H3 组件。该模型由 Junchao-cs 发布。
 
 任务：相机可控视频、交互式世界模型。别名：`solar-wm`、`solarwm-wan2.2-5b`、`solarwm-wan22-5b`、`solarwm-wan2.2-14b` 等。同系列还有 `solarwm-wan2.2-14b`、`solarwm-ltx-22b`、`solarwm-h3-33b`。
 
@@ -33,7 +33,7 @@ CLI task profile：`indexed-inference`。绑定的 pipeline 类是 `SolarWMPipel
 
 建议从 `solarwm-wan2.2-5b` 开始。该系列共有 4 个 variant，可在上方命令构建器中切换：`solarwm-wan2.2-5b`（`camera-conditioned-video`）：Runner 一致性待确认、`solarwm-wan2.2-14b`（`camera-conditioned-video`）：Runner 一致性待确认、`solarwm-ltx-22b`（`camera-conditioned-video`）：Runner 一致性待确认、`solarwm-h3-33b`（`camera-conditioned-video`）：Runner 一致性待确认。系列状态：**Runner 一致性待确认**。
 
-默认 variant=wan-5b-dmd，需提供 source_root、checkpoint_dir、base_path 和 data_root。提示词、图像和相机轨迹来自索引样本。Wan、LTX、H3 使用独立解释器，进程数遵循官方推理配置。
+默认 variant=wan-5b-dmd，需提供 checkpoint_dir、base_path 和 data_root。提示词、图像和相机轨迹来自索引样本。Wan、LTX、H3 使用独立解释器，进程数遵循官方推理配置。
 
 仅提供 infer 操作，不包含训练、预编码与数据引擎命令。
 

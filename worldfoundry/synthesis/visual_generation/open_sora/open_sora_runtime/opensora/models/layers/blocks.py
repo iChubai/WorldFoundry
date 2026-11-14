@@ -10,7 +10,6 @@
 # --------------------------------------------------------
 
 import functools
-import math
 
 import numpy as np
 import torch
@@ -22,8 +21,16 @@ import xformers.ops
 from einops import rearrange
 from timm.models.vision_transformer import Mlp
 
-from opensora.acceleration.communications import all_to_all, split_forward_gather_backward
-from opensora.acceleration.parallel_states import get_sequence_parallel_group
+from worldfoundry.base_models.diffusion_model.models.networks.sana.variants.cpu_frequency import (
+    CpuFrequencyTimestepEmbedder,
+)
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.communications import (
+    all_to_all,
+    split_forward_gather_backward,
+)
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.acceleration.parallel_states import (
+    get_sequence_parallel_group,
+)
 
 
 def approx_gelu():
@@ -590,41 +597,8 @@ class T2IFinalLayer(nn.Module):
 # ===============================================
 
 
-class TimestepEmbedder(nn.Module):
-    """
-    Embeds scalar timesteps into vector representations.
-    """
-
-    def __init__(self, hidden_size, frequency_embedding_size=256):
-        super().__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(frequency_embedding_size, hidden_size, bias=True),
-            nn.SiLU(),
-            nn.Linear(hidden_size, hidden_size, bias=True),
-        )
-        self.frequency_embedding_size = frequency_embedding_size
-
-    @staticmethod
-    def timestep_embedding(t, dim, max_period=10000):
-        """
-        Create sinusoidal timestep embeddings.
-        :param t: a 1-D Tensor of N indices, one per batch element.
-                          These may be fractional.
-        :param dim: the dimension of the output.
-        :param max_period: controls the minimum frequency of the embeddings.
-        :return: an (N, D) Tensor of positional embeddings.
-        """
-        # https://github.com/openai/glide-text2im/blob/main/glide_text2im/nn.py
-        half = dim // 2
-        freqs = torch.exp(-math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half)
-        freqs = freqs.to(device=t.device)
-        args = t[:, None].float() * freqs[None]
-        embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
-        if dim % 2:
-            embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
-        return embedding
-
-    def forward(self, t, dtype):
+class TimestepEmbedder(CpuFrequencyTimestepEmbedder):
+    def forward(self, t: torch.Tensor, dtype: torch.dtype) -> torch.Tensor:
         t_freq = self.timestep_embedding(t, self.frequency_embedding_size)
         if t_freq.dtype != dtype:
             t_freq = t_freq.to(dtype)
@@ -660,40 +634,6 @@ class LabelEmbedder(nn.Module):
         if (train and use_dropout) or (force_drop_ids is not None):
             labels = self.token_drop(labels, force_drop_ids)
         return self.embedding_table(labels)
-
-
-class SizeEmbedder(TimestepEmbedder):
-    """
-    Embeds scalar timesteps into vector representations.
-    """
-
-    def __init__(self, hidden_size, frequency_embedding_size=256):
-        super().__init__(hidden_size=hidden_size, frequency_embedding_size=frequency_embedding_size)
-        self.mlp = nn.Sequential(
-            nn.Linear(frequency_embedding_size, hidden_size, bias=True),
-            nn.SiLU(),
-            nn.Linear(hidden_size, hidden_size, bias=True),
-        )
-        self.frequency_embedding_size = frequency_embedding_size
-        self.outdim = hidden_size
-
-    def forward(self, s, bs):
-        if s.ndim == 1:
-            s = s[:, None]
-        assert s.ndim == 2
-        if s.shape[0] != bs:
-            s = s.repeat(bs // s.shape[0], 1)
-            assert s.shape[0] == bs
-        b, dims = s.shape[0], s.shape[1]
-        s = rearrange(s, "b d -> (b d)")
-        s_freq = self.timestep_embedding(s, self.frequency_embedding_size).to(self.dtype)
-        s_emb = self.mlp(s_freq)
-        s_emb = rearrange(s_emb, "(b d) d2 -> b (d d2)", b=b, d=dims, d2=self.outdim)
-        return s_emb
-
-    @property
-    def dtype(self):
-        return next(self.parameters()).dtype
 
 
 class CaptionEmbedder(nn.Module):

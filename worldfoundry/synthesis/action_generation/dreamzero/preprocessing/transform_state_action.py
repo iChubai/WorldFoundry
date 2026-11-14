@@ -6,8 +6,11 @@ import numpy as np
 import torch
 from pydantic import Field, PrivateAttr, field_validator, model_validator
 
-from .schema import DatasetMetadata, RotationType, StateActionMetadata
-from .transform_base import InvertibleModalityTransform, ModalityTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import (
+    InvertibleModalityTransform,
+)
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.schema import RotationType, StateActionMetadata
+from worldfoundry.synthesis.action_generation.dreamzero.preprocessing.schema import DatasetMetadata
 
 
 class RotationTransform:
@@ -481,60 +484,6 @@ class PerHorizonActionTransform(InvertibleModalityTransform):
         return data
 
 
-class StateActionToTensor(InvertibleModalityTransform):
-    """
-    Transforms states and actions to tensors.
-    """
-
-    input_dtypes: dict[str, np.dtype] = Field(default_factory=dict, description="The input dtypes for each state key.")
-    output_dtypes: dict[str, torch.dtype] = Field(
-        default_factory=dict, description="The output dtypes for each state key."
-    )
-
-    def model_dump(self, *args, **kwargs):
-        include = {"apply_to"} if kwargs.get("mode", "python") == "json" else kwargs.pop("include", None)
-
-        return super().model_dump(*args, include=include, **kwargs)
-
-    @field_validator("input_dtypes", "output_dtypes", mode="before")
-    def validate_dtypes(cls, v):
-        for key, dtype in v.items():
-            if isinstance(dtype, str):
-                if dtype.startswith("torch."):
-                    dtype_split = dtype.split(".")[-1]
-                    v[key] = getattr(torch, dtype_split)
-                elif dtype.startswith(("np.", "numpy.")):
-                    dtype_split = dtype.split(".")[-1]
-                    v[key] = np.dtype(dtype_split)
-                else:
-                    raise ValueError(f"Invalid dtype: {dtype}")
-        return v
-
-    def apply(self, data: dict[str, Any]) -> dict[str, Any]:
-        for key in self.apply_to:
-            if key not in data:
-                continue
-            value = data[key]
-            assert isinstance(value, np.ndarray), f"Unexpected input type: {type(value)}. Expected type: {np.ndarray}"
-            data[key] = torch.from_numpy(value)
-            if key in self.output_dtypes:
-                data[key] = data[key].to(self.output_dtypes[key])
-        return data
-
-    def unapply(self, data: dict[str, Any]) -> dict[str, Any]:
-        for key in self.apply_to:
-            if key not in data:
-                continue
-            value = data[key]
-            assert isinstance(value, torch.Tensor), (
-                f"Unexpected input type: {type(value)}. Expected type: {torch.Tensor}"
-            )
-            data[key] = value.numpy()
-            if key in self.input_dtypes:
-                data[key] = data[key].astype(self.input_dtypes[key])
-        return data
-
-
 class StateActionTransform(InvertibleModalityTransform):
     """
     Class for state or action transform.
@@ -768,22 +717,4 @@ class StateActionTransform(InvertibleModalityTransform):
                 else:
                     raise ValueError(f"Invalid input dtype: {original_dtype}")
             data[key] = state
-        return data
-
-
-class StateActionSinCosTransform(ModalityTransform):
-    """
-    Class for state or action sin-cos transform.
-
-    Args:
-        apply_to (list[str]): The keys in the modality to load and transform.
-    """
-
-    def apply(self, data: dict[str, Any]) -> dict[str, Any]:
-        for key in self.apply_to:
-            state = data[key]
-            assert isinstance(state, torch.Tensor)
-            sin_state = torch.sin(state)
-            cos_state = torch.cos(state)
-            data[key] = torch.cat([sin_state, cos_state], dim=-1)
         return data

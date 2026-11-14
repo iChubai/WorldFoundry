@@ -43,6 +43,8 @@ CLI task profile：`official-t2v`。绑定的 pipeline 类是 `LongCatVideoPipel
 
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
+四个任务入口通过 `worldfoundry.synthesis.visual_generation.longcat_video.longcat_video_runtime` 下已安装的 Python 模块运行。多个上下文并行 worker 由单节点 torchrun 启动；`enable_compile` 编译 DiT。
+
 权重仓库：`meituan-longcat/LongCat-Video`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh longcat-video`；下载缺失的公开权重时加 `--download`。
 
 许可证：MIT。

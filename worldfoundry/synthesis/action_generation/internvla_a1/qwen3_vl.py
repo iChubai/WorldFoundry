@@ -28,7 +28,6 @@ from typing import Any, ClassVar, Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.generation import GenerationMixin
 from transformers.integrations import use_kernel_forward_from_hub
@@ -39,8 +38,30 @@ from transformers.modeling_outputs import BaseModelOutputWithPast, ModelOutput
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 from transformers.processing_utils import Unpack
-from transformers.utils import TransformersKwargs, auto_docstring, is_torchdynamo_compiling
+from transformers.utils import (
+    TransformersKwargs,
+    auto_docstring,
+    is_torchdynamo_compiling,
+)
 from transformers.utils.deprecation import deprecate_kwarg
+
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenMLP as Qwen3VLTextMLP,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    eager_attention_forward,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.vision import (
+    Qwen3VLVisionMLP,
+    Qwen3VLVisionPatchEmbed,
+    Qwen3VLVisionPatchMerger,
+    apply_rotary_pos_emb_vision,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.vision import (
+    VisionRotaryEmbedding as Qwen3VLVisionRotaryEmbedding,
+)
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
+from worldfoundry.core.nn.transformer.dit import _rms_norm_reference
 
 try:
     from transformers.utils.generic import check_model_inputs
@@ -70,129 +91,11 @@ except ImportError:
         return wrapper
 
 
-from transformers.models.qwen3_vl.configuration_qwen3_vl import Qwen3VLConfig, Qwen3VLTextConfig, Qwen3VLVisionConfig
-
-
-class Qwen3VLVisionMLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.linear_fc1 = nn.Linear(self.hidden_size, self.intermediate_size, bias=True)
-        self.linear_fc2 = nn.Linear(self.intermediate_size, self.hidden_size, bias=True)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, hidden_state):
-        return self.linear_fc2(self.act_fn(self.linear_fc1(hidden_state)))
-
-
-class Qwen3VLVisionPatchEmbed(nn.Module):
-    def __init__(self, config) -> None:
-        super().__init__()
-        self.patch_size = config.patch_size
-        self.temporal_patch_size = config.temporal_patch_size
-        self.in_channels = config.in_channels
-        self.embed_dim = config.hidden_size
-
-        kernel_size = [self.temporal_patch_size, self.patch_size, self.patch_size]
-        self.proj = nn.Conv3d(self.in_channels, self.embed_dim, kernel_size=kernel_size, stride=kernel_size, bias=True)
-
-    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        target_dtype = self.proj.weight.dtype
-        hidden_states = hidden_states.view(
-            -1, self.in_channels, self.temporal_patch_size, self.patch_size, self.patch_size
-        )
-        hidden_states = self.proj(hidden_states.to(dtype=target_dtype)).view(-1, self.embed_dim)
-        return hidden_states
-
-
-class Qwen3VLVisionRotaryEmbedding(nn.Module):
-    inv_freq: torch.Tensor  # fix linting for `register_buffer`
-
-    def __init__(self, dim: int, theta: float = 10000.0) -> None:
-        super().__init__()
-        inv_freq = 1.0 / (theta ** (torch.arange(0, dim, 2, dtype=torch.float) / dim))
-        self.register_buffer("inv_freq", inv_freq, persistent=False)
-
-    def forward(self, seqlen: int) -> torch.Tensor:
-        seq = torch.arange(seqlen, device=self.inv_freq.device, dtype=self.inv_freq.dtype)
-        freqs = torch.outer(seq, self.inv_freq)
-        return freqs
-
-
-class Qwen3VLVisionPatchMerger(nn.Module):
-    def __init__(self, config: Qwen3VLVisionConfig, use_postshuffle_norm=False) -> None:
-        super().__init__()
-        self.hidden_size = config.hidden_size * (config.spatial_merge_size**2)
-        self.use_postshuffle_norm = use_postshuffle_norm
-        self.norm = nn.LayerNorm(self.hidden_size if use_postshuffle_norm else config.hidden_size, eps=1e-6)
-        self.linear_fc1 = nn.Linear(self.hidden_size, self.hidden_size)
-        self.act_fn = nn.GELU()
-        self.linear_fc2 = nn.Linear(self.hidden_size, config.out_hidden_size)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.norm(x.view(-1, self.hidden_size) if self.use_postshuffle_norm else x).view(-1, self.hidden_size)
-        x = self.linear_fc2(self.act_fn(self.linear_fc1(x)))
-        return x
-
-
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-def apply_rotary_pos_emb_vision(
-    q: torch.Tensor, k: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor
-) -> tuple[torch.Tensor, torch.Tensor]:
-    orig_q_dtype = q.dtype
-    orig_k_dtype = k.dtype
-    q, k = q.float(), k.float()
-    cos, sin = cos.unsqueeze(-2).float(), sin.unsqueeze(-2).float()
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    q_embed = q_embed.to(orig_q_dtype)
-    k_embed = k_embed.to(orig_k_dtype)
-    return q_embed, k_embed
-
-
-def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
-    """
-    This is the equivalent of torch.repeat_interleave(x, dim=1, repeats=n_rep). The hidden states go from (batch,
-    num_key_value_heads, seqlen, head_dim) to (batch, num_attention_heads, seqlen, head_dim)
-    """
-    batch, num_key_value_heads, slen, head_dim = hidden_states.shape
-    if n_rep == 1:
-        return hidden_states
-    hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
-    return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
-
-
-def eager_attention_forward(
-    module: nn.Module,
-    query: torch.Tensor,
-    key: torch.Tensor,
-    value: torch.Tensor,
-    attention_mask: torch.Tensor | None,
-    scaling: float,
-    dropout: float = 0.0,
-    **kwargs: Unpack[TransformersKwargs],
-):
-    key_states = repeat_kv(key, module.num_key_value_groups)
-    value_states = repeat_kv(value, module.num_key_value_groups)
-
-    attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
-    if attention_mask is not None:
-        causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
-        attn_weights = attn_weights + causal_mask
-
-    attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query.dtype)
-    attn_weights = nn.functional.dropout(attn_weights, p=dropout, training=module.training)
-    attn_output = torch.matmul(attn_weights, value_states)
-    attn_output = attn_output.transpose(1, 2).contiguous()
-
-    return attn_output, attn_weights
+from transformers.models.qwen3_vl.configuration_qwen3_vl import (
+    Qwen3VLConfig,
+    Qwen3VLTextConfig,
+    Qwen3VLVisionConfig,
+)
 
 
 class Qwen3VLVisionAttention(nn.Module):
@@ -394,40 +297,11 @@ class Qwen3VLTextRMSNorm(nn.Module):
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
+        hidden_states = _rms_norm_reference(hidden_states.float(), None, self.variance_epsilon, "fp32")
         return (self.weight * hidden_states).to(input_dtype)
 
     def extra_repr(self):
         return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
-
-
-def apply_rotary_pos_emb(q, k, cos, sin, position_ids=None, unsqueeze_dim=1):
-    """Applies Rotary Position Embedding to the query and key tensors.
-
-    Args:
-        q (`torch.Tensor`): The query tensor.
-        k (`torch.Tensor`): The key tensor.
-        cos (`torch.Tensor`): The cosine part of the rotary embedding.
-        sin (`torch.Tensor`): The sine part of the rotary embedding.
-        position_ids (`torch.Tensor`, *optional*):
-            Deprecated and unused.
-        unsqueeze_dim (`int`, *optional*, defaults to 1):
-            The 'unsqueeze_dim' argument specifies the dimension along which to unsqueeze cos[position_ids] and
-            sin[position_ids] so that they can be properly broadcasted to the dimensions of q and k. For example, note
-            that cos[position_ids] and sin[position_ids] have the shape [batch_size, seq_len, head_dim]. Then, if q and
-            k have the shape [batch_size, heads, seq_len, head_dim], then setting unsqueeze_dim=1 makes
-            cos[position_ids] and sin[position_ids] broadcastable to the shapes of q and k. Similarly, if q and k have
-            the shape [batch_size, seq_len, heads, head_dim], then set unsqueeze_dim=2.
-    Returns:
-        `tuple(torch.Tensor)` comprising of the query and key tensors rotated using the Rotary Position Embedding.
-    """
-    cos = cos.unsqueeze(unsqueeze_dim)
-    sin = sin.unsqueeze(unsqueeze_dim)
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
 
 
 class Qwen3VLTextAttention(nn.Module):
@@ -521,22 +395,6 @@ class Qwen3VLTextAttention(nn.Module):
         attn_output = attn_output.reshape(*input_shape, -1).contiguous()
         attn_output = self.o_proj(attn_output)
         return attn_output, attn_weights
-
-
-class Qwen3VLTextMLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-        return down_proj
 
 
 class Qwen3VLTextDecoderLayer(GradientCheckpointingLayer):

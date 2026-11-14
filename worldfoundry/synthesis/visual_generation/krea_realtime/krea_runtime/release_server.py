@@ -30,9 +30,15 @@ from safetensors.torch import load_file  # noqa: E402 - Follows a module-level s
 from worldfoundry.core.nn import FlowMatchScheduler  # noqa: E402 - Follows a module-level setup call, as upstream.
 
 if TYPE_CHECKING:
-    from pipeline import CausalInferencePipeline
-    from runtime_utils.vae_block3 import VAEDecoderWrapper, VAEEncoderWrapper
-    from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder
+    from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.pipeline import CausalInferencePipeline
+    from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.runtime_utils.vae_block3 import (
+        VAEDecoderWrapper,
+        VAEEncoderWrapper,
+    )
+    from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.utils.wan_wrapper import (
+        WanDiffusionWrapper,
+        WanTextEncoder,
+    )
 
 # Internal / self-forcing imports
 import contextlib  # noqa: E402 - Follows the conditional setup block.
@@ -56,13 +62,21 @@ from msgpack import packb, unpackb  # noqa: E402 - Follows the conditional setup
 from omegaconf import OmegaConf  # noqa: E402 - Follows the conditional setup block.
 from PIL import Image  # noqa: E402 - Follows the conditional setup block.
 from pydantic import BaseModel, ValidationError  # noqa: E402 - Follows the conditional setup block.
-from settings import compiler_stance, resolve_model_asset  # noqa: E402 - Follows the conditional setup block.
 from tqdm import tqdm  # noqa: E402 - Follows the conditional setup block.
-from utils.misc import AtomicCounter  # noqa: E402 - Follows the conditional setup block.
-from v2v import encode_video_latent, get_denoising_schedule  # noqa: E402 - Follows the conditional setup block.
 
 from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows the conditional setup block.
     WanVAE,
+)
+from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.settings import (  # noqa: E402 - Follows the conditional setup block.
+    compiler_stance,
+    resolve_model_asset,
+)
+from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.utils.misc import (  # noqa: E402 - Follows the conditional setup block.
+    AtomicCounter,
+)
+from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.v2v import (  # noqa: E402 - Follows the conditional setup block.
+    encode_video_latent,
+    get_denoising_schedule,
 )
 
 # PyTorch renamed this setting in older releases and removed the compatibility
@@ -158,7 +172,7 @@ def load_text_encoder():
 
         return StaticTextEncoder()
 
-    from utils.wan_wrapper import WanTextEncoder
+    from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.utils.wan_wrapper import WanTextEncoder
 
     t_import = time.time()
     log.debug(f"Text encoder import took: {t_import - t_start:.2f}s")
@@ -180,7 +194,9 @@ def load_transformer(config, meta_transformer=False):
 
     checkpoint_path = config.checkpoint_path
 
-    from utils.wan_wrapper import WanDiffusionWrapper
+    from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.utils.wan_wrapper import (
+        WanDiffusionWrapper,
+    )
 
     t_import = time.time()
     log.debug(f"Transformer import took: {t_import - t_start:.2f}s")
@@ -222,7 +238,10 @@ def load_vae():
 
     log.debug("Using runtime_utils.vae_block3.VAEEncoderWrapper")
     log.debug("Using runtime_utils.vae_block3.VAEDecoderWrapper")
-    from runtime_utils.vae_block3 import VAEDecoderWrapper, VAEEncoderWrapper
+    from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.runtime_utils.vae_block3 import (
+        VAEDecoderWrapper,
+        VAEEncoderWrapper,
+    )
 
     vae_dtype = torch.float16
     vae_path = str(resolve_model_asset("Wan2.1-T2V-1.3B", "Wan2.1_VAE.pth"))
@@ -258,7 +277,7 @@ def load_pipeline(config, device, transformer, text_encoder, vae_decoder):
     """Initialize the causal inference pipeline"""
     t_start = time.time()
 
-    from pipeline import CausalInferencePipeline
+    from worldfoundry.synthesis.visual_generation.krea_realtime.krea_runtime.pipeline import CausalInferencePipeline
 
     t_import = time.time()
     log.debug(f"Pipeline import took: {t_import - t_start:.2f}s")

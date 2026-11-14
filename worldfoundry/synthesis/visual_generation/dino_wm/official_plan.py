@@ -17,16 +17,19 @@ from einops import rearrange
 from omegaconf import OmegaConf, open_dict
 
 # isort: split
-from env.venv import SubprocVectorEnv
+from worldfoundry.synthesis.visual_generation.dino_wm.env.venv import SubprocVectorEnv
 
 # isort: split
 # isort: split
-from custom_resolvers import replace_slash  # noqa: F401 - Keeps the module's import-time setup.
+from worldfoundry.synthesis.visual_generation.dino_wm.custom_resolvers import (
+    replace_slash,  # noqa: F401 - Keeps the module's import-time setup.
+)
 
 # isort: split
-from inference_planning.evaluator import PlanEvaluator
-from preprocessor import Preprocessor
-from utils import cfg_to_dict, seed
+from worldfoundry.synthesis.visual_generation.dino_wm.checkpoint import load_checkpoint, model_config
+from worldfoundry.synthesis.visual_generation.dino_wm.inference_planning.evaluator import PlanEvaluator
+from worldfoundry.synthesis.visual_generation.dino_wm.preprocessor import Preprocessor
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import cfg_to_dict, seed
 
 warnings.filterwarnings("ignore")
 log = logging.getLogger(__name__)
@@ -217,7 +220,7 @@ class PlanWorkspace:
         )
 
         # optional: assume planning horizon equals to goal horizon
-        from inference_planning.mpc import MPCPlanner
+        from worldfoundry.synthesis.visual_generation.dino_wm.inference_planning.mpc import MPCPlanner
 
         if isinstance(self.planner, MPCPlanner):
             self.planner.sub_planner.horizon = cfg_dict["goal_H"]
@@ -353,12 +356,12 @@ class PlanWorkspace:
         }
         with open(self.log_filename, "a") as file:
             file.write(json.dumps(logs_entry) + "\n")
+        np.save("planned_actions.npy", actions.detach().cpu().numpy(), allow_pickle=False)
         return logs
 
 
 def load_ckpt(snapshot_path, device):
-    with snapshot_path.open("rb") as f:
-        payload = torch.load(f, map_location=device)
+    payload = load_checkpoint(snapshot_path, map_location=device)
     loaded_keys = []
     result = {}
     for k, v in payload.items():
@@ -370,6 +373,7 @@ def load_ckpt(snapshot_path, device):
 
 
 def load_model(model_ckpt, train_cfg, num_action_repeat, device):
+    train_cfg = model_config(train_cfg)
     result = {}
     if model_ckpt.exists():
         result = load_ckpt(model_ckpt, device)
@@ -386,11 +390,11 @@ def load_model(model_ckpt, train_cfg, num_action_repeat, device):
         base_path = os.path.dirname(os.path.abspath(__file__))
         if train_cfg.env.decoder_path is not None:
             decoder_path = os.path.join(base_path, train_cfg.env.decoder_path)
-            ckpt = torch.load(decoder_path)
+            ckpt = load_checkpoint(decoder_path)
             if isinstance(ckpt, dict):
                 result["decoder"] = ckpt["decoder"]
             else:
-                result["decoder"] = torch.load(decoder_path)
+                result["decoder"] = ckpt
         else:
             raise ValueError(
                 "Decoder path not found in model checkpoint \
@@ -465,13 +469,13 @@ def planning_main(cfg_dict):
     model = load_model(model_ckpt, model_cfg, num_action_repeat, device=device)
 
     if model_cfg.env.name == "point_maze":
-        from env import register_point_maze
+        from worldfoundry.synthesis.visual_generation.dino_wm.env import register_point_maze
 
         register_point_maze()
 
     # use dummy vector env for wall
     if model_cfg.env.name == "wall":
-        from env.serial_vector_env import SerialVectorEnv
+        from worldfoundry.synthesis.visual_generation.dino_wm.env.serial_vector_env import SerialVectorEnv
 
         env = SerialVectorEnv(
             [

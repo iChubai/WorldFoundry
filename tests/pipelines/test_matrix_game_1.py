@@ -5,9 +5,11 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.pipelines.matrix_game.pipeline_matrix_game_1 import MatrixGame1Pipeline
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.studio.inference.catalog import discover_catalog, find_entry
+from worldfoundry.studio.inference.catalog import resolve as catalog_resolve
 from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_1_runtime import (
     DEFAULT_RUNTIME_CONFIG_ROOT,
     EXPECTED_CHECKPOINT_FILES,
@@ -40,6 +42,7 @@ def test_matrix_game_1_binding_and_catalog_are_registered() -> None:
     assert model_registry.get("matrix-game-1").has_infer is True
     assert studio_entry.model_id == "matrix-game-1"
     assert studio_entry.default_model_ref.endswith(("Skywork--Matrix-Game", "Skywork/Matrix-Game"))
+    assert zoo_entry.pipeline_target is not None
     assert zoo_entry.pipeline_target.endswith("pipeline_matrix_game_1:MatrixGame1Pipeline")
     assert zoo_entry.runner_entry_kind == "runnable_runner"
 
@@ -50,7 +53,7 @@ def test_matrix_game_1_catalog_resolves_persistent_env_layout(tmp_path: Path, mo
     project_root = tmp_path / "WorldFoundry"
     environment = tmp_path / "envs" / "matrix-game-1"
     environment.mkdir(parents=True)
-    monkeypatch.setattr(studio_catalog.resolve, "_project_root", lambda: project_root)
+    monkeypatch.setattr(catalog_resolve, "_project_root", lambda: project_root)
 
     load_kwargs = studio_catalog.models.world_models._matrix_game_1_default_load_kwargs()
 
@@ -218,3 +221,30 @@ def test_matrix_game_1_runtime_profile_documents_world_model_runner_smoke() -> N
     assert profile.backend_stage == "in_tree_runtime"
     assert assets.assets[0].repo_id == "Skywork/Matrix-Game"
     assert any("never routes through Matrix-Game-2" in note for note in profile.notes)
+
+
+@pytest.mark.unit
+def test_matrix_game_1_plan_launches_the_packaged_runner_without_pythonpath(tmp_path: Path) -> None:
+    runtime = MatrixGame1Runtime(checkpoint_dir=tmp_path / "checkpoint", conda_dir=tmp_path / "env")
+    plan = runtime.build_plan(
+        image_path=str(tmp_path / "input.png"),
+        output_dir=tmp_path / "output",
+        inference_steps=3,
+        resolution=(832, 480),
+        video_length=65,
+        interactions=["forward"],
+        gpu_id="2",
+        extra_env={"CUDA_VISIBLE_DEVICES": "2"},
+    )
+
+    module = "worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_1_runtime.inference_bench"
+    assert list(plan.command[:3]) == package_module_command(module, python_executable=runtime.python_executable)
+    assert plan.command[plan.command.index("--inference_steps") + 1] == "3"
+    assert plan.command[plan.command.index("--resolution") + 1 : plan.command.index("--resolution") + 3] == (
+        "832",
+        "480",
+    )
+    assert plan.command[plan.command.index("--interactions") + 1 :] == ("forward",)
+    assert "--bfloat16" in plan.command
+    assert plan.env == {"PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True", "CUDA_VISIBLE_DEVICES": "2"}
+    assert plan.workdir == str(RUNTIME_ROOT)

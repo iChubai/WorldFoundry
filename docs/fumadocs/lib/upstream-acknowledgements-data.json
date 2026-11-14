@@ -1,5 +1,5 @@
 {
-  "modelsTotal": 224,
+  "modelsTotal": 212,
   "benchmarksTotal": 75,
   "infrastructure": [
     {
@@ -218,7 +218,7 @@
       "id": "world_models",
       "label": "World models",
       "labelZh": "世界模型",
-      "count": 96,
+      "count": 90,
       "entries": [
         {
           "name": "ABot-World-0-5B-LF",
@@ -313,10 +313,6 @@
           "url": "https://github.com/jd-opensource/JoyAI-Echo"
         },
         {
-          "name": "EgoWM",
-          "url": "https://github.com/miccooper9/egowm"
-        },
-        {
           "name": "Evoke",
           "url": "https://github.com/AlayaLab/Evoke"
         },
@@ -355,10 +351,6 @@
         {
           "name": "HunyuanWorld-Mirror",
           "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror"
-        },
-        {
-          "name": "HunyuanWorld-Voyager",
-          "url": "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
         },
         {
           "name": "Hy-Nomas",
@@ -469,14 +461,6 @@
           "url": "https://github.com/OmniForcing/OmniForcing"
         },
         {
-          "name": "Open Dreamer",
-          "url": "https://github.com/next-state/open-dreamer"
-        },
-        {
-          "name": "Open Dreamer",
-          "url": "https://github.com/reactor-team/open-dreamer"
-        },
-        {
           "name": "PointWorld",
           "url": "https://github.com/NVlabs/PointWorld"
         },
@@ -495,10 +479,6 @@
         {
           "name": "Self-Forcing",
           "url": "https://github.com/guandeh17/Self-Forcing"
-        },
-        {
-          "name": "ShotStream",
-          "url": "https://github.com/KlingAIResearch/ShotStream"
         },
         {
           "name": "SimWorld",
@@ -557,10 +537,6 @@
           "url": "https://github.com/yyfz/Warp-as-History"
         },
         {
-          "name": "WildDet3D",
-          "url": "https://github.com/allenai/WildDet3D"
-        },
-        {
           "name": "WildWorld",
           "url": "https://github.com/ShandaAI/WildWorld"
         },
@@ -610,7 +586,7 @@
       "id": "three_d_four_d",
       "label": "3D & 4D",
       "labelZh": "3D 与 4D",
-      "count": 34,
+      "count": 28,
       "entries": [
         {
           "name": "CUT3R",
@@ -631,14 +607,6 @@
         {
           "name": "Depth Anything V2",
           "url": "https://github.com/DepthAnything/Depth-Anything-V2"
-        },
-        {
-          "name": "DUSt3R",
-          "url": "https://github.com/naver/dust3r"
-        },
-        {
-          "name": "Déjà View Looping Transformer",
-          "url": "https://github.com/nv-tlabs/dvlt"
         },
         {
           "name": "FantasyWorld",
@@ -677,10 +645,6 @@
           "url": "https://github.com/YvanYin/Metric3D"
         },
         {
-          "name": "MonST3R",
-          "url": "https://github.com/Junyi42/monst3r"
-        },
-        {
           "name": "MVDiffusion",
           "url": "https://github.com/Tangshitao/MVDiffusion"
         },
@@ -709,20 +673,8 @@
           "url": "https://github.com/z-x-yang/Segment-and-Track-Anything"
         },
         {
-          "name": "Splatt3R",
-          "url": "https://github.com/btsmart/splatt3r"
-        },
-        {
-          "name": "Stable Virtual Camera",
-          "url": "https://github.com/Stability-AI/stable-virtual-camera"
-        },
-        {
           "name": "UniDepth V2",
           "url": "https://github.com/lpiccinelli-eth/UniDepth"
-        },
-        {
-          "name": "UniK3D",
-          "url": "https://github.com/lpiccinelli-eth/UniK3D"
         },
         {
           "name": "VGGT",

@@ -6,7 +6,8 @@ from typing import Any
 
 import numpy as np
 import torch
-from utils import StateDictMixin
+
+from worldfoundry.synthesis.visual_generation.diamond.utils import StateDictMixin
 
 from .episode import Episode
 from .segment import Segment, SegmentId

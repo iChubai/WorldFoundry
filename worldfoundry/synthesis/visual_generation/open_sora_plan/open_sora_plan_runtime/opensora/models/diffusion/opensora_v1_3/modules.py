@@ -10,17 +10,32 @@ from torch import nn
 try:
     import torch_npu
 
-    from opensora.acceleration.communications import all_to_all_SBH
-    from opensora.acceleration.parallel_states import get_sequence_parallel_state
-    from opensora.acceleration.parallel_states import hccl_info as xccl_info
-    from opensora.npu_config import npu_config, set_run_dtype
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.communications import (
+        all_to_all_SBH,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.parallel_states import (
+        get_sequence_parallel_state,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.parallel_states import (
+        hccl_info as xccl_info,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+        set_run_dtype,
+    )
 except BaseException:
     torch_npu = None
     npu_config = None
     set_run_dtype = None
-    from opensora.utils.communications import all_to_all_SBH
-    from opensora.utils.parallel_states import get_sequence_parallel_state
-    from opensora.utils.parallel_states import nccl_info as xccl_info
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.communications import (
+        all_to_all_SBH,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+        get_sequence_parallel_state,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+        nccl_info as xccl_info,
+    )
 
 from ..common import PositionGetter3D, RoPE3D
 

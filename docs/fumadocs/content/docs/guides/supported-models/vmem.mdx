@@ -5,7 +5,7 @@ modelId: "vmem"
 pageSource: generated
 ---
 
-VMem is an interactive video scene generation model with a surfel-indexed view memory: as you navigate a scene, it remembers which surfaces were seen from where, keeping new views consistent with the past. Validated with the released VMem and CUT3R checkpoints: the pipeline reproduces the official navigation demo.
+VMem is an interactive video scene generation model with a surfel-indexed view memory: as you navigate a scene, it remembers which surfaces were seen from where, keeping new views consistent with the past. Validated with the released VMem and CUT3R checkpoints: the in-tree pipeline reproduces the official navigation demo.
 
 <ModelPaperFigures modelId="vmem" locale="en" />
 
@@ -33,9 +33,9 @@ CLI task profiles: `interactive-video`. WorldFoundry binds `VMemPipeline`.
 
 Family status: **Verified**.
 
-Inputs are a prompt, a starting image, and navigation/interaction actions; the output is a generated video.
+Inputs are a prompt, a starting image, and navigation/interaction actions; the output is a generated video. runtime_root (or VMEM_RUNTIME_ROOT) selects only a configuration/data directory, searched for configs/inference/inference.yaml before the packaged default; config_path selects a file directly. Python code always comes from the installed package.
 
-Requires the VMem and CUT3R checkpoints plus the Stable Diffusion 2.1 VAE, CLIP ViT-H-14 image conditioner, and DUSt3R camera preprocessor staged locally.
+Requires the VMem and CUT3R checkpoints plus the Stable Diffusion 2.1 VAE and CLIP ViT-H-14 image conditioner staged locally.
 
 ## Running in WorldFoundry
 

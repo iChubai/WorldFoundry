@@ -2,7 +2,7 @@
 title: "Kairos Sensenova"
 description: "Kairos Sensenova from SenseTime (SenseNova): text-to-video, image-to-video, and 2 more tasks; Verified; dedicated `kairos-sensenova`."
 modelId: "kairos-sensenova"
-pageSource: generated
+pageSource: authored
 ---
 
 Kairos Sensenova is SenseTime's embodied world-model video generator: a 4B model covering text-, image-, and text+image-to-video with a robot-oriented distilled recipe. Validated: the default robot 4B 480P DMD text-to-video recipe runs with 8 torchrun ranks.
@@ -36,6 +36,15 @@ Family status: **Verified**.
 Defaults for `default`: frames=81, height=480, width=640, seed=0.
 
 Set WORLDFOUNDRY_KAIROS_MODELS_ROOT (or models_root) to a directory matching the official config layout. 720P and non-distilled variants need the corresponding checkpoint paths and config override.
+
+The worker loads the installed WorldFoundry package. `config_path` accepts JSON or Python data assignments (literals, earlier names and plain f-strings); the shipped `.py` recipe names are unchanged. Checkpoint overrides are applied to data before launch. `master_port`, `nproc_per_node`, the Python/torchrun executable overrides and all inference options retain their behavior.
+
+Prepare the dedicated environment before inference. Kairos uses its pinned SageAttention 20260228 fork; build it after installing PyTorch, with the host CUDA toolkit:
+
+```bash
+python -m pip install --no-build-isolation \
+  "sageattention @ git+https://github.com/kairos-agi/kairos-sensenova.git@40d3fcb518c3ff894501bf4b080ccaa589363adc#subdirectory=kairos/third_party/SageAttention"
+```
 
 ## Running in WorldFoundry
 

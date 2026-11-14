@@ -12,19 +12,28 @@ import torch.distributed as dist
 import torch.nn.functional as F
 
 from worldfoundry.base_models.perception_core.segment.sam3.logger import get_logger
-from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import fast_diag_box_iou
+from worldfoundry.base_models.perception_core.segment.sam3.model.box_ops import (
+    fast_diag_box_iou,
+)
 
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import BatchedDatapoint, NestedTensor
+from worldfoundry.base_models.perception_core.segment.sam3.model.data_misc import (
+    BatchedDatapoint,
+    NestedTensor,
+)
 
 # isort: split
 # isort: split
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_multiplex_detector import Sam3MultiplexDetector
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_multiplex_detector import (
+    Sam3MultiplexDetector,
+)
 
 # isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
     fill_holes_in_mask_scores,
-    mask_to_box,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_ops import (
+    mask_to_box_zero_empty as mask_to_box,
 )
 
 # isort: split
@@ -40,7 +49,9 @@ from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_video_base
 # isort: split
 from torch import Tensor, nn
 
-from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import mask_iou
+from worldfoundry.base_models.perception_core.segment.sam3.perflib.masks_ops import (
+    mask_iou,
+)
 
 # a short 3-min timeout to quickly detect any synchronization failures
 SAM3_COLLECTIVE_OP_TIMEOUT_SEC = int(os.getenv("SAM3_COLLECTIVE_OP_TIMEOUT_SEC", "180"))

@@ -2,13 +2,15 @@ from typing import Literal
 
 import torch
 import torch.nn as nn
-from mmaudio.ext.autoencoder.vae import VAE, get_my_vae
-from mmaudio.ext.bigvgan import BigVGAN
-from mmaudio.ext.bigvgan_v2.bigvgan import BigVGAN as BigVGANv2
-from mmaudio.model.utils.distributions import DiagonalGaussianDistribution
 
 from worldfoundry.synthesis.visual_generation.mmaudio.checkpoints import (
     resolve_bigvgan_v2_checkpoint,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.autoencoder.vae import VAE, get_my_vae
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan import BigVGAN
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan_v2.bigvgan import BigVGAN as BigVGANv2
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.utils.distributions import (
+    DiagonalGaussianDistribution,
 )
 
 

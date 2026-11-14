@@ -2,7 +2,7 @@
 An adapter module for integrating the Solaris inference runtime into WorldFoundry.
 
 This module provides the `SolarisRuntime` class, which acts as a wrapper around the
-official Solaris inference script. It handles path resolution, configuration,
+installed Solaris inference module. It handles path resolution, configuration,
 and execution of the Solaris model for video generation based on specified
 evaluation types and parameters.
 """
@@ -14,6 +14,8 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Any
+
+from worldfoundry.core.execution.process import package_module_command
 
 from .runtime_env import (
     build_eval_dataset_overrides,
@@ -50,10 +52,10 @@ def _visible_cuda_device_count() -> int:
 
 
 class SolarisRuntime:
-    """WorldFoundry adapter around the official Solaris inference script.
+    """WorldFoundry adapter around the installed Solaris inference module.
 
     This class provides a high-level interface to run Solaris inference,
-    managing paths, configurations, and executing the underlying Python script.
+    managing paths, configurations, and executing the installed Python module.
     """
 
     def __init__(
@@ -73,14 +75,14 @@ class SolarisRuntime:
         """Initializes the SolarisRuntime instance with resolved paths and configurations.
 
         Args:
-            runtime_root: The root directory of the Solaris runtime.
+            runtime_root: Base directory for relative data paths and the subprocess working directory.
             pretrained_model_dir: Directory containing pre-trained model checkpoints.
             eval_data_dir: Directory containing evaluation datasets.
             output_dir: Directory where generated videos and logs will be stored.
             checkpoint_dir: Directory for storing model checkpoints (usually for training).
             jax_cache_dir: Directory for JAX compilation cache.
             model_weights_path: Explicit path to the model weights file (e.g., `.pkl`).
-            python_executable: Path to the Python executable to use for running the inference script.
+            python_executable: Path to the Python executable to use for running the inference module.
                                Defaults to `sys.executable`.
             device: The device to use for inference (e.g., "cuda", "cpu").
             defaults: A dictionary of default configuration parameters that can be overridden.
@@ -127,15 +129,15 @@ class SolarisRuntime:
     ) -> SolarisRuntime:
         """Factory method to create a `SolarisRuntime` instance with automatic path resolution.
 
-        This method resolves various directory paths based on `pretrained_model_path` or
-        `runtime_root` and sets up default configurations.
+        This method resolves asset directories relative to `runtime_root` and sets
+        up default configurations. Inference code comes from the installed package.
 
         Args:
-            pretrained_model_path: Path to a pre-trained model, used to infer `runtime_root` if
-                                   not explicitly provided.
+            pretrained_model_path: Unified loading argument; checkpoint locations are selected
+                                   with pretrained_model_dir and model_weights_path.
             args: Legacy argument, currently ignored.
             device: The device to use for inference (e.g., "cuda", "cpu"). Defaults to "cuda".
-            runtime_root: The root directory of the Solaris runtime. If None, inferred from `pretrained_model_path`.
+            runtime_root: Data/work base; defaults to the configured environment or installed runtime directory.
             pretrained_model_dir: Directory containing pre-trained model checkpoints.
             eval_data_dir: Directory containing evaluation datasets.
             output_dir: Directory where generated videos and logs will be stored.
@@ -155,15 +157,14 @@ class SolarisRuntime:
         Raises:
             ValueError: If unsupported keyword arguments are provided.
         """
-        # Discard the legacy 'args' parameter as it's no longer used.
-        del args
+        del pretrained_model_path, args
         # Check for any unexpected keyword arguments to prevent silent misconfigurations.
         if kwargs:
             unknown = ", ".join(sorted(kwargs))
             raise ValueError(f"Unsupported Solaris kwargs: {unknown}")
 
         # Resolve core runtime paths, deriving them if not explicitly provided.
-        resolved_runtime_root = resolve_runtime_root(runtime_root or pretrained_model_path)
+        resolved_runtime_root = resolve_runtime_root(runtime_root)
         resolved_pretrained_model_dir = resolve_pretrained_model_dir(
             pretrained_model_dir,
             resolved_runtime_root,
@@ -226,7 +227,7 @@ class SolarisRuntime:
         num_frames_eval: int,
         enable_jax_cache: bool,
     ) -> list[str]:
-        """Constructs the command-line arguments for the Solaris inference script.
+        """Constructs the command-line arguments for the Solaris inference module.
 
         Args:
             experiment_name: Name of the experiment, used for organizing output.
@@ -244,8 +245,6 @@ class SolarisRuntime:
             A list of strings representing the full command for `subprocess.run`.
         """
         command = [
-            self.python_executable,
-            "src/inference.py",
             f"experiment_name={experiment_name}",
             f"device.data_dir={self.eval_data_dir}",
             f"device.eval_data_dir={self.eval_data_dir}",
@@ -261,7 +260,11 @@ class SolarisRuntime:
         ]
         # Append specific Hydra overrides for each evaluation type to the command.
         command.extend(build_eval_dataset_overrides(eval_types))
-        return command
+        return package_module_command(
+            "worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.inference",
+            command,
+            python_executable=self.python_executable,
+        )
 
     def _collect_generated_videos(
         self,
@@ -322,7 +325,7 @@ class SolarisRuntime:
             model_weights_path: Override the explicit path to the model weights file.
             return_dict: If True, returns a dictionary containing detailed results.
                          If False, returns only the path to the model's output directory.
-            show_progress: If True, inference script output is shown in console.
+            show_progress: If True, inference module output is shown in console.
                            If False, output is suppressed.
 
         Returns:
@@ -375,7 +378,7 @@ class SolarisRuntime:
             num_frames_eval if num_frames_eval is not None else self.defaults["num_frames_eval"]
         )
 
-        # Build the command for the Solaris inference script.
+        # Build the command for the Solaris inference module.
         command = self._build_inference_command(
             experiment_name=experiment_name,
             eval_types=selected_eval_types,
@@ -398,17 +401,11 @@ class SolarisRuntime:
                 self.device,
                 python_executable=self.python_executable,
             )
-            # Add the Solaris runtime root to the PYTHONPATH for the subprocess.
-            existing_pythonpath = inference_env.get("PYTHONPATH", "")
-            pythonpath_parts = [self.runtime_root]
-            if existing_pythonpath:
-                pythonpath_parts.append(existing_pythonpath)
-            inference_env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
-            # Execute the inference script.
+            # Execute the installed module from the configured data/work directory.
             subprocess.run(
                 command,
                 check=True,  # Raise CalledProcessError if the command returns a non-zero exit code.
-                cwd=self.runtime_root,  # Run the command from the Solaris runtime root directory.
+                cwd=self.runtime_root,  # Run the command from the Solaris data/work directory.
                 env=inference_env,
                 stdout=stdout,
                 stderr=stderr,

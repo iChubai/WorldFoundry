@@ -8,6 +8,8 @@ from collections.abc import Callable
 import torch.nn.functional as F
 from torch import Tensor, nn
 
+from worldfoundry.core.nn.blocks.layers import Mlp
+
 from ..utils import cat_keep_shapes, uncat_with_shapes
 
 
@@ -47,3 +49,7 @@ class SwiGLUFFN(nn.Module, ListForwardMixin):
         x2 = self.w2(x)
         hidden = F.silu(x1) * x2
         return self.w3(hidden)
+
+
+class ListMlp(Mlp, ListForwardMixin):
+    """Core MLP projections with DINOv3's flatten/split list forward contract."""

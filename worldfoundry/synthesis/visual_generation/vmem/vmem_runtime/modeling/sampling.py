@@ -6,6 +6,8 @@ import torch.nn as nn
 from einops import rearrange
 from tqdm import tqdm
 
+from worldfoundry.core.nn.diffusion.utils import append_zero as append_zero
+
 
 def get_camera_dist(
     source_c2ws: torch.Tensor,  # N x 3 x 4
@@ -40,10 +42,6 @@ def append_dims(x: torch.Tensor, target_dims: int) -> torch.Tensor:
     if dims_to_append < 0:
         raise ValueError(f"input has {x.ndim} dims but target_dims is {target_dims}, which is less")
     return x[(...,) + (None,) * dims_to_append]
-
-
-def append_zero(x: torch.Tensor) -> torch.Tensor:
-    return torch.cat([x, x.new_zeros([1])])
 
 
 def to_d(x: torch.Tensor, sigma: torch.Tensor, denoised: torch.Tensor) -> torch.Tensor:

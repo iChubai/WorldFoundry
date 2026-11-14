@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.parametrize(
@@ -57,19 +60,26 @@ def test_lyra1_reconstruction_runs_sample_with_packaged_configs(monkeypatch, tmp
         return omegaconf.OmegaConf.merge(*(omegaconf.OmegaConf.load(path) for path in paths))
 
     modules = {
-        "sample": SimpleNamespace(main=run_sample),
-        "src.models.eval_inputs.registry": SimpleNamespace(dataset_registry=registry),
-        "src.models.utils.misc": SimpleNamespace(load_and_merge_configs=load_and_merge_configs),
+        "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.sample": SimpleNamespace(main=run_sample),
+        "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.registry": SimpleNamespace(
+            dataset_registry=registry
+        ),
+        "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.misc": SimpleNamespace(
+            load_and_merge_configs=load_and_merge_configs
+        ),
     }
     monkeypatch.setattr(runtime_v1, "resolve_lyra1_repo_root", lambda path: str(tmp_path))
-    monkeypatch.setattr(runtime_v1, "ensure_repo_on_path", lambda repo_root: None)
     monkeypatch.setattr(runtime_v1.importlib, "import_module", modules.__getitem__)
 
     model = runtime_v1.Lyra1Representation.from_pretrained("lyra-1", device="cpu", checkpoint_dir=str(checkpoints))
+    paths = list(sys.path)
+    previous_cwd = Path.cwd()
     result = model.get_representation(
         {"generated_root": str(generated_root), "mode": "static", "output_dir": str(tmp_path / "out")}
     )
 
+    assert sys.path == paths
+    assert Path.cwd() == previous_cwd
     config = seen["config"]
     root = runtime_v1.LYRA1_CONFIG_ROOT
     assert config.ckpt_path == str(checkpoints / "Lyra" / "lyra_static.pt")

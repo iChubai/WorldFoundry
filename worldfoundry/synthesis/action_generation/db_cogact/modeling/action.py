@@ -9,7 +9,11 @@
 
 import torch.nn as nn
 
-from .diffusion import ModelVarType, create_diffusion
+from worldfoundry.base_models.llm_mllm_core.action.cogact_diffusion import (
+    ModelVarType,
+    create_diffusion,
+)
+
 from .dit import DiT
 
 

@@ -21,6 +21,10 @@ import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint
 from tqdm import tqdm
 
+from worldfoundry.base_models.diffusion_model.models.networks.dit.token import (
+    TokenFinalLayer as FinalLayer,
+)
+
 try:
     from torch.utils.checkpoint import (
         _pt2_selective_checkpoint_context_fn_gen as create_selective_checkpoint_contexts,
@@ -223,25 +227,6 @@ class TimestepEmbedder(nn.Module):
         return t_emb
 
 
-# Copied from transformers.models.llama.modeling_llama.LlamaRMSNorm with Llama->Qwen2
-class Qwen2RMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        """
-        Qwen2RMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        out = self.weight * hidden_states.to(input_dtype)
-        return out
-
-
 class ResBlock(nn.Module):
     """
     A residual block that can optionally change the number of channels.
@@ -280,24 +265,6 @@ class ResBlock(nn.Module):
         if self.out_norm is not None:
             out = self.out_norm(out)
         return x + out
-
-
-class FinalLayer(nn.Module):
-    """
-    The final layer adopted from DiT.
-    """
-
-    def __init__(self, model_channels, out_channels):
-        super().__init__()
-        self.norm_final = nn.LayerNorm(model_channels, elementwise_affine=False, eps=1e-6)
-        self.linear = nn.Linear(model_channels, out_channels, bias=True)
-        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(model_channels, 2 * model_channels, bias=True))
-
-    def forward(self, x, c):
-        shift, scale = self.adaLN_modulation(c).chunk(2, dim=-1)
-        x = modulate(self.norm_final(x), shift, scale)
-        x = self.linear(x)
-        return x
 
 
 class SimpleLinear(nn.Module):

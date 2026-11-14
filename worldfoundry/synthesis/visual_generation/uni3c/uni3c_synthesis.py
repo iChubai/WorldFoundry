@@ -9,6 +9,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 from worldfoundry.runtime.in_tree_cli import execute_in_tree
 from worldfoundry.synthesis.base_synthesis import BaseSynthesis
@@ -146,7 +147,6 @@ class Uni3CSynthesis(BaseSynthesis):
                 "TRANSFORMERS_OFFLINE": "1",
                 "TOKENIZERS_PARALLELISM": "false",
             },
-            python_paths=(runtime_root(),),
             preferred_names=(output.name, "result.mp4"),
         )
         return {
@@ -175,11 +175,15 @@ class Uni3CSynthesis(BaseSynthesis):
         options: Mapping[str, Any],
     ) -> list[str]:
         python = str(options.get("python_executable") or sys.executable)
-        entrypoint = runtime_root() / ("cam_control.py" if mode == "camera" else "uni3c_inference.py")
-        if num_gpus > 1:
-            command = [python, "-m", "torch.distributed.run", "--nproc_per_node", str(num_gpus), str(entrypoint)]
-        else:
-            command = [python, str(entrypoint)]
+        module = "worldfoundry.synthesis.visual_generation.uni3c.uni3c_runtime." + (
+            "cam_control" if mode == "camera" else "uni3c_inference"
+        )
+        command = package_module_command(
+            module,
+            python_executable=python,
+            nproc_per_node=num_gpus if num_gpus > 1 else None,
+            launcher_options=(),
+        )
         controller = Path(assets["controller_path"])
         command.extend(
             [

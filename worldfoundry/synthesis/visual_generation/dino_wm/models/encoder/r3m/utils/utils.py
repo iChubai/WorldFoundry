@@ -8,7 +8,6 @@ import time
 
 import numpy as np
 import torch
-import torch.nn as nn
 from torch import distributions as pyd
 from torch.distributions.utils import _standard_normal
 
@@ -44,18 +43,6 @@ def soft_update_params(net, target_net, tau):
 
 def to_torch(xs, device):
     return tuple(torch.as_tensor(x, device=device) for x in xs)
-
-
-def weight_init(m):
-    if isinstance(m, nn.Linear):
-        nn.init.orthogonal_(m.weight.data)
-        if hasattr(m.bias, "data"):
-            m.bias.data.fill_(0.0)
-    elif isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
-        gain = nn.init.calculate_gain("relu")
-        nn.init.orthogonal_(m.weight.data, gain)
-        if hasattr(m.bias, "data"):
-            m.bias.data.fill_(0.0)
 
 
 def accuracy(output, target, topk=(1,)):

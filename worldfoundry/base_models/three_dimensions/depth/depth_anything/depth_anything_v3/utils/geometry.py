@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from collections.abc import Callable
 from types import SimpleNamespace
 
 import numpy as np
@@ -158,12 +159,16 @@ def get_world_rays(
     coordinates: torch.Tensor,  # "*#batch dim"
     extrinsics: torch.Tensor,  # "*#batch dim+2 dim+2"
     intrinsics: torch.Tensor,  # "*#batch dim+1 dim+1"
+    *,
+    unproject_fn: Callable[[torch.Tensor, torch.Tensor, torch.Tensor], torch.Tensor] = unproject,
+    transform_cam2world_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = transform_cam2world,
 ) -> tuple[
     torch.Tensor,  # origins, "*batch dim+1"
     torch.Tensor,  # directions, "*batch dim+1"
 ]:
+    """Build world rays with explicitly bound inverse and coordinate-dtype policies."""
     # Get camera-space ray directions.
-    directions = unproject(
+    directions = unproject_fn(
         coordinates,
         torch.ones_like(coordinates[..., 0]),
         intrinsics,
@@ -172,7 +177,7 @@ def get_world_rays(
 
     # Transform ray directions to world coordinates.
     directions = homogenize_vectors(directions)
-    directions = transform_cam2world(directions, extrinsics)[..., :-1]
+    directions = transform_cam2world_fn(directions, extrinsics)[..., :-1]
 
     # Tile the ray origins to have the same shape as the ray directions.
     origins = extrinsics[..., :-1, -1].broadcast_to(directions.shape)
@@ -214,11 +219,6 @@ def map_pdf_to_opacity(
 
     # Map the probability density to an opacity.
     return 0.5 * (1 - (1 - pdf) ** exponent + pdf ** (1 / exponent))
-
-
-def normalize_homogenous_points(points):
-    """Normalize the point vectors"""
-    return points / points[..., -1:]
 
 
 def inverse_intrinsic_matrix(ixts):
@@ -263,38 +263,6 @@ def camera_space_to_world_space(camera_space_points, c2w):
     camera_space_points = homogenize_points(camera_space_points)
     world_space_points = torch.einsum("b v i j , b v h w j -> b v h w i", c2w, camera_space_points)
     return world_space_points[..., :3]
-
-
-def camera_space_to_pixel_space(camera_space_points, intrinsics):
-    """
-    Convert camera space points to pixel space points.
-
-    Args:
-        camera_space_points (torch.Tensor): Camera space points with shape (b, v1, v2, h, w, 3)
-        c2w (torch.Tensor): Camera to world extrinsics matrix with shape (b, v2, 3, 3)
-
-    Returns:
-        torch.Tensor: World space points with shape (b, v1, v2, h, w, 2).
-    """
-    camera_space_points = normalize_homogenous_points(camera_space_points)
-    pixel_space_points = torch.einsum("b u i j , b v u h w j -> b v u h w i", intrinsics, camera_space_points)
-    return pixel_space_points[..., :2]
-
-
-def world_space_to_camera_space(world_space_points, c2w):
-    """
-    Convert world space points to pixel space points.
-
-    Args:
-        world_space_points (torch.Tensor): World space points with shape (b, v1, h, w, 3)
-        c2w (torch.Tensor): Camera to world extrinsics matrix with shape (b, v2, 4, 4)
-
-    Returns:
-        torch.Tensor: Camera space points with shape (b, v1, v2, h, w, 3).
-    """
-    world_space_points = homogenize_points(world_space_points)
-    camera_space_points = torch.einsum("b u i j , b v h w j -> b v u h w i", c2w.inverse(), world_space_points)
-    return camera_space_points[..., :3]
 
 
 def unproject_depth(depth, intrinsics, c2w=None, ixt_normalized=False, num_patches_x=None, num_patches_y=None):

@@ -1,8 +1,7 @@
-"""Offline LaST-R1 action inference through its pinned official model code."""
+"""Offline LaST-R1 action inference through its vendored policy model."""
 
 from __future__ import annotations
 
-import contextlib
 import json
 import os
 import shutil
@@ -17,7 +16,8 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-from worldfoundry.core.io.paths import official_runtime_repo_path, project_root, resolve_worldfoundry_path
+from worldfoundry.core.execution.process import package_module_command
+from worldfoundry.core.io.paths import project_root, resolve_worldfoundry_path
 from worldfoundry.synthesis.action_generation.base_action_synthesis import ActionModelSynthesis
 from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
@@ -29,10 +29,9 @@ class LastR1Synthesis(ActionModelSynthesis):
     REVISION = "ba4e939632427e066f734bf9f7abfa11cc4911f6"
     VARIANT = "LaST-R1-RL/last-r1-rl-libero_10"
 
-    def __init__(self, profile, *, checkpoint_path: Path, source_root: Path, python_executable: str, device: str):
+    def __init__(self, profile, *, checkpoint_path: Path, python_executable: str, device: str):
         super().__init__(profile, device=device)
         self.checkpoint_path = checkpoint_path
-        self.source_root = source_root
         self.python_executable = python_executable
 
     @classmethod
@@ -49,17 +48,6 @@ class LastR1Synthesis(ActionModelSynthesis):
             sibling = (project_root().parent / "ckpts" / "chenhao01--LaST-R1" / cls.VARIANT).resolve()
             if not (checkpoint / "config.json").is_file() and (sibling / "config.json").is_file():
                 checkpoint = sibling
-        source = resolve_worldfoundry_path(
-            options.get("source_root")
-            or official_runtime_repo_path("LaST-R1", specific_env="WORLDFOUNDRY_LAST_R1_SOURCE_DIR")
-        ).resolve()
-        if not options.get("source_root") and not os.environ.get("WORLDFOUNDRY_LAST_R1_SOURCE_DIR"):
-            sibling_source = (project_root().parent / "model" / "LaST-R1").resolve()
-            if (
-                not (source / "transformers/models/qwen3_vl/modeling_qwen3_vl.py").is_file()
-                and (sibling_source / "transformers/models/qwen3_vl/modeling_qwen3_vl.py").is_file()
-            ):
-                source = sibling_source
         executable = str(options.get("python_executable") or sys.executable)
         executable = str(Path(shutil.which(executable) or executable).expanduser().absolute())
         selected_device = str(device or options.get("device") or "cuda")
@@ -68,15 +56,12 @@ class LastR1Synthesis(ActionModelSynthesis):
         return cls(
             profile,
             checkpoint_path=checkpoint,
-            source_root=source,
             python_executable=executable,
             device=selected_device,
         )
 
     def preflight(self) -> dict[str, Any]:
         required = [
-            self.source_root / "transformers/models/qwen3_vl/modeling_qwen3_vl.py",
-            self.source_root / "verl/workers/actor/action_tokenizer.py",
             self.checkpoint_path / "config.json",
             self.checkpoint_path / "statistics.json",
             self.checkpoint_path / "model.safetensors.index.json",
@@ -92,21 +77,11 @@ class LastR1Synthesis(ActionModelSynthesis):
                         missing.append(str(self.checkpoint_path / shard))
             except (OSError, ValueError, KeyError, TypeError) as exc:
                 missing.append(f"invalid weight index: {exc}")
-        revision = None
-        if (self.source_root / ".git").exists():
-            with contextlib.suppress(OSError, subprocess.SubprocessError):
-                revision = subprocess.check_output(
-                    ["git", "-C", str(self.source_root), "rev-parse", "HEAD"],
-                    text=True,
-                    timeout=10,
-                ).strip()
         return {
-            "status": "ready" if not missing and revision == self.REVISION else "blocked",
+            "status": "ready" if not missing else "blocked",
             "model_id": self.MODEL_ID,
             "checkpoint": str(self.checkpoint_path),
-            "source_root": str(self.source_root),
-            "source_revision": revision,
-            "source_matches_pin": revision == self.REVISION,
+            "source_revision": self.REVISION,
             "missing_paths": missing,
             "variant": "libero_10",
             "validation_scope": "offline_action_inference_only",
@@ -168,7 +143,6 @@ class LastR1Synthesis(ActionModelSynthesis):
             json.dumps(
                 {
                     "run_dir": str(run_dir),
-                    "source_root": str(self.source_root),
                     "checkpoint_path": str(self.checkpoint_path),
                     "image_path": str(image_path),
                     "instruction": instruction,
@@ -182,7 +156,6 @@ class LastR1Synthesis(ActionModelSynthesis):
         )
         env = os.environ.copy()
         env.update(
-            PYTHONPATH=os.pathsep.join((str(self.source_root), str(project_root()), env.get("PYTHONPATH", ""))),
             HF_HUB_OFFLINE="1",
             TRANSFORMERS_OFFLINE="1",
             TOKENIZERS_PARALLELISM="false",
@@ -191,12 +164,11 @@ class LastR1Synthesis(ActionModelSynthesis):
         )
         if self.device.startswith("cuda:"):
             env["CUDA_VISIBLE_DEVICES"] = self.device[5:]
-        command = [
-            self.python_executable,
-            "-m",
+        command = package_module_command(
             "worldfoundry.synthesis.action_generation.last_r1.worker",
-            str(request_path),
-        ]
+            (request_path,),
+            python_executable=self.python_executable,
+        )
         (run_dir / "plan.json").write_text(
             json.dumps(
                 {
@@ -239,7 +211,6 @@ class LastR1Synthesis(ActionModelSynthesis):
             metadata_path=str(result_path),
             stderr_path=str(stderr_path),
             validation_scope="offline_action_inference_only",
-            source_matches_pin=True,
             observation_state_used=False,
         )
         return result

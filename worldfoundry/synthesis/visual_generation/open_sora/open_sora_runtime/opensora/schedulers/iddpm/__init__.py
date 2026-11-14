@@ -2,7 +2,7 @@ from functools import partial
 
 import torch
 
-from opensora.registry import SCHEDULERS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import SCHEDULERS
 
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps

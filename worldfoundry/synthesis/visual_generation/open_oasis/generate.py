@@ -8,13 +8,19 @@ import os
 from pprint import pprint
 
 import torch
-from dit import DiT_models
 from einops import rearrange
 from safetensors.torch import load_model
 from torch import autocast
 from tqdm import tqdm
-from utils import load_actions, load_prompt, sigmoid_beta_schedule, write_video_compat
-from vae import VAE_models
+
+from worldfoundry.synthesis.visual_generation.open_oasis.dit import DiT_models
+from worldfoundry.synthesis.visual_generation.open_oasis.utils import (
+    load_actions,
+    load_prompt,
+    sigmoid_beta_schedule,
+    write_video_compat,
+)
+from worldfoundry.synthesis.visual_generation.open_oasis.vae import VAE_models
 
 device = os.environ.get("WORLDFOUNDRY_DEVICE") or ("cuda:0" if torch.cuda.is_available() else "cpu")
 device_type = torch.device(device).type

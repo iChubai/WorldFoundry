@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict
 from torch import Tensor
 
 if TYPE_CHECKING:
-    from mira.world_model.actions_config import ActionTensors
+    from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.actions_config import ActionTensors
 
 
 def embeddings_pca_to_rgb(

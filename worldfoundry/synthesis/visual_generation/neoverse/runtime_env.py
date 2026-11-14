@@ -1,7 +1,7 @@
 """Utilities for resolving NeoVerse model and checkpoint paths.
 
 This module provides functions to locate the project root, cache directories,
-and ensure the NeoVerse runtime environment is correctly set up. It also
+and NeoVerse runtime metadata. It also
 includes robust mechanisms for finding NeoVerse model directories,
 reconstructor checkpoints, and LoRA files, supporting both local paths
 and downloading from Hugging Face Hub.
@@ -10,7 +10,6 @@ and downloading from Hugging Face Hub.
 from __future__ import annotations
 
 import os
-import sys
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -73,28 +72,6 @@ def runtime_root() -> Path:
         Path: The absolute path to the NeoVerse runtime directory.
     """
     return Path(__file__).resolve().parent / "neoverse_runtime"
-
-
-def ensure_neoverse_runtime() -> Path:
-    """Ensures the NeoVerse runtime directory is added to sys.path.
-
-    This makes sure that modules within the NeoVerse runtime directory
-    are discoverable by the Python interpreter. It adds the runtime root
-    to the beginning of `sys.path` to give it precedence,
-    removing it first if already present.
-
-    Returns:
-        Path: The absolute path to the NeoVerse runtime directory.
-    """
-    root = runtime_root().resolve()
-
-    # Ensure the runtime root is at the beginning of sys.path for module discovery.
-    for import_root in (root,):
-        root_str = str(import_root)
-        if root_str in sys.path:
-            sys.path.remove(root_str)
-        sys.path.insert(0, root_str)
-    return root
 
 
 def _iter_candidate_paths(source_value: str | os.PathLike | None) -> Iterable[Path]:

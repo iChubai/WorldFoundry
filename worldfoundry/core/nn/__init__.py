@@ -115,6 +115,7 @@ _EXPORT_MODULES = {
     "chunked_interpolate": "worldfoundry.core.nn.blocks.volume",
     "pixel_shuffle_3d": "worldfoundry.core.nn.blocks.volume",
     "pixel_unshuffle_3d": "worldfoundry.core.nn.blocks.volume",
+    "denoised_to_velocity": "worldfoundry.core.nn.transformer.dit",
     "velocity_to_denoised": "worldfoundry.core.nn.transformer.dit",
     "zero_module": "worldfoundry.core.nn.blocks.layers",
 }

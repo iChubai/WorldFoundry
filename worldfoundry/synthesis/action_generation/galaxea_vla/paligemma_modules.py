@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 
+from worldfoundry.core.nn.transformer.dit import _rms_norm_reference
+
 
 class GemmaRMSNorm(nn.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
@@ -8,12 +10,9 @@ class GemmaRMSNorm(nn.Module):
         self.eps = eps
         self.weight = nn.Parameter(torch.zeros(dim))
 
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
-
     @torch.autocast("cuda", enabled=False)
     def forward(self, x):
-        output = self._norm(x.float())
+        output = _rms_norm_reference(x.float(), None, self.eps, "fp32")
         # Llama does x.to(float16) * w whilst Gemma is (x * w).to(float16)
         # See https://github.com/huggingface/transformers/pull/29402
         output = output * (1.0 + self.weight.float())

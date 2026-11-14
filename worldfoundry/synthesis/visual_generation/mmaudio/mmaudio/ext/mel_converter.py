@@ -5,9 +5,9 @@ import torch
 import torch.nn as nn
 from librosa.filters import mel as librosa_mel_fn
 
-
-def dynamic_range_compression_torch(x, C=1, clip_val=1e-5, *, norm_fn):
-    return norm_fn(torch.clamp(x, min=clip_val) * C)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.mel_converter import (
+    dynamic_range_compression_torch,
+)
 
 
 def spectral_normalize_torch(magnitudes, norm_fn):

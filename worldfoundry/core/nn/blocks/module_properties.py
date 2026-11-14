@@ -10,6 +10,7 @@ Not this module:
 
 Public surface:
 
+- :func:`get_parameter_dtype` — first parameter/buffer dtype, or ``None``.
 - :class:`ModuleDeviceDtypeMixin` — ``.device`` / ``.dtype`` from the
   first parameter, else the first buffer.
 """
@@ -24,6 +25,17 @@ from torch import nn
 # ──────────────────────────────────────────────────────────────────────────
 # First-tensor probe — meta / DiskMap modules still expose a reference
 # ──────────────────────────────────────────────────────────────────────────
+
+
+def get_parameter_dtype(module: nn.Module) -> torch.dtype | None:
+    """Return the first parameter dtype, then first buffer dtype, or None for a tensor-free module."""
+    parameters = tuple(module.parameters())
+    if parameters:
+        return parameters[0].dtype
+    buffers = tuple(module.buffers())
+    if buffers:
+        return buffers[0].dtype
+    return None
 
 
 class ModuleDeviceDtypeMixin:
@@ -61,4 +73,4 @@ class ModuleDeviceDtypeMixin:
         return self._reference_tensor().dtype
 
 
-__all__ = ["ModuleDeviceDtypeMixin"]
+__all__ = ["ModuleDeviceDtypeMixin", "get_parameter_dtype"]

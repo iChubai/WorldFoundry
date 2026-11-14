@@ -25,6 +25,5 @@ notes:
   runtime-gated.
 - Missing checkpoints/assets are reported by the runtime plan and are not catalog
   blockers.
-- WorldFoundry tracks upstream source and checkpoint metadata only; no runnable pipeline
-  is registered.
-- Official source is bound from ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/Vid2World at ae24077adbd0783bc6e1b79f705d9b8fad5888ce.
+- The in-tree inference module is worldfoundry.synthesis.visual_generation.vid2world.main.inference;
+  only checkpoint, dataset and config assets are external. Source revision is ae24077adbd0783bc6e1b79f705d9b8fad5888ce.

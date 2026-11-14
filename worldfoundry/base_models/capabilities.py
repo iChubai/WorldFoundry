@@ -100,7 +100,6 @@ def _path_tokens(env: Mapping[str, str] | None = None) -> dict[str, str]:
             Path(environ.get("WORLDFOUNDRY_VBENCH2_CACHE_DIR") or cache_root / "models" / "vbench2").expanduser()
         ),
         "WORLDFOUNDRY_DATA_DIR": str(Path(core_tokens["WORLDFOUNDRY_DATA_DIR"]).expanduser()),
-        "WORLDFOUNDRY_MODEL_SOURCE_DIR": core_tokens["WORLDFOUNDRY_MODEL_SOURCE_DIR"],
         "WORLDFOUNDRY_HFD_ROOT": str(hfd_root),
         "WORLDFOUNDRY_HFD_DATASET_ROOT": str(Path(core_tokens["WORLDFOUNDRY_HFD_DATASET_ROOT"]).expanduser()),
         "WORLDFOUNDRY_CKPT_DIR": core_tokens["WORLDFOUNDRY_CKPT_DIR"],

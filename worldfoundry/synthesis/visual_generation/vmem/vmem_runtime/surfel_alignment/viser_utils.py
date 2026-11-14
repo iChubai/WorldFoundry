@@ -14,6 +14,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from scipy.spatial.transform import Rotation
 
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_numpy
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment.viz import (
     CAM_COLORS,
     OPENGL,
@@ -21,41 +22,6 @@ from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment
     cat_meshes,
     pts3d_to_trimesh,
 )
-
-
-def todevice(batch, device, callback=None, non_blocking=False):
-    """Transfer some variables to another device (i.e. GPU, CPU:torch, CPU:numpy).
-
-    batch: list, tuple, dict of tensors or other things
-    device: pytorch device or 'numpy'
-    callback: function that would be called on every sub-elements.
-    """
-    if callback:
-        batch = callback(batch)
-
-    if isinstance(batch, dict):
-        return {k: todevice(v, device) for k, v in batch.items()}
-
-    if isinstance(batch, (tuple, list)):
-        return type(batch)(todevice(x, device) for x in batch)
-
-    x = batch
-    if device == "numpy":
-        if isinstance(x, torch.Tensor):
-            x = x.detach().cpu().numpy()
-    elif x is not None:
-        if isinstance(x, np.ndarray):
-            x = torch.from_numpy(x)
-        if torch.is_tensor(x):
-            x = x.to(device, non_blocking=non_blocking)
-    return x
-
-
-to_device = todevice  # alias
-
-
-def to_numpy(x):
-    return todevice(x, "numpy")
 
 
 def segment_sky(image):
@@ -466,7 +432,7 @@ class PointCloudViewer:
 
     def _connect_client(self, client: viser.ClientHandle):
         from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.inference import inference_step
-        from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import geotrf
+        from worldfoundry.core.geometry.projection import transform_points as geotrf
 
         wxyz_panel = client.gui.add_text("wxyz:", f"{client.camera.wxyz}")
         position_panel = client.gui.add_text("position:", f"{client.camera.position}")

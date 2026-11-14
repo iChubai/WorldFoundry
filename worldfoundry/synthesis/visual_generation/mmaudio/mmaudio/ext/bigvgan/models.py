@@ -1,18 +1,23 @@
 # Copyright (c) 2022 NVIDIA CORPORATION.
 #   Licensed under the MIT license.
-# ruff: noqa: F405 - Names come from the upstream star import.
 
 # Adapted from https://github.com/jik876/hifi-gan under the MIT license.
 #   LICENSE is in incl_licenses directory.
 
 import torch
 import torch.nn as nn
-from mmaudio.ext.bigvgan import activations
-from mmaudio.ext.bigvgan.alias_free_torch import *  # noqa: F403 - Upstream star import kept as written.
-from mmaudio.ext.bigvgan.utils import get_padding, init_weights
 from torch.nn import Conv1d, ConvTranspose1d
 from torch.nn.utils.parametrizations import weight_norm
 from torch.nn.utils.parametrize import remove_parametrizations
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2 import activations
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.act import (
+    Activation1d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.utils import (
+    init_weights,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan.utils import get_padding
 
 LRELU_SLOPE = 0.1
 

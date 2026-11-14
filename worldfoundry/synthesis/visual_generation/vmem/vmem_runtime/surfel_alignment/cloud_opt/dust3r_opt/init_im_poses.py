@@ -14,11 +14,9 @@ import torch
 from tqdm import tqdm
 
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.post_process import estimate_focal_knowing_depth
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import (
-    geotrf,
-    get_med_dist_between_poses,
-    inv,
-)
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import get_med_dist_between_poses
+from worldfoundry.core.geometry.projection import invert_matrix as inv
+from worldfoundry.core.geometry.projection import transform_points as geotrf
 from worldfoundry.synthesis.visual_generation.vmem.vmem_runtime.surfel_alignment.viz import (
     to_numpy,
 )

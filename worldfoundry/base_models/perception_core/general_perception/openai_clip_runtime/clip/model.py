@@ -5,6 +5,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+from worldfoundry.core.nn.blocks.layers import QuickGELU as QuickGELU
+
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -166,11 +168,6 @@ class LayerNorm(nn.LayerNorm):
         orig_type = x.dtype
         ret = super().forward(x.type(torch.float32))
         return ret.type(orig_type)
-
-
-class QuickGELU(nn.Module):
-    def forward(self, x: torch.Tensor):
-        return x * torch.sigmoid(1.702 * x)
 
 
 class ResidualAttentionBlock(nn.Module):

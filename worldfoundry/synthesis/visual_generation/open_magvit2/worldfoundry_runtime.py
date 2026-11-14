@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core.io.paths import hfd_root_path, package_data_path
-from worldfoundry.core.io.paths import package_module_root as package_root
 
 # Root directory for default Open-MAGVIT2 runtime configurations within worldfoundry data.
 DEFAULT_OPEN_MAGVIT2_CONFIG_ROOT = package_data_path("models", "runtime", "configs", "open_magvit2")
@@ -125,19 +124,6 @@ class OpenMAGVIT2Runtime:
             batch_size=int(options.get("batch_size", 1)),
         )
 
-    @staticmethod
-    def _runtime_root() -> Path:
-        """
-        Returns the root path of the in-tree Open-MAGVIT2 runtime package.
-
-        This path is used to dynamically add the package to `sys.path` to enable
-        local imports of the model's inference logic.
-
-        Returns:
-            Path: The `Path` object pointing to the runtime package directory.
-        """
-        return package_root("worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime")
-
     def _resolve_config(self) -> Path:
         """
         Resolves the configuration file path for the Open-MAGVIT2 model.
@@ -208,9 +194,7 @@ class OpenMAGVIT2Runtime:
         """
         Ensures the Open-MAGVIT2 model and configuration are loaded.
 
-        If the model and config are not already loaded, this method dynamically adds the
-        runtime's path to `sys.path` and imports the `load_model` function to load
-        the model and its configuration based on the resolved paths.
+        Import the installed inference loader and resolve the config and checkpoint assets.
 
         Returns:
             tuple: A tuple containing the loaded model instance and its configuration.
@@ -218,18 +202,6 @@ class OpenMAGVIT2Runtime:
         if self._model is not None:
             return self._model, self._config
 
-        import sys
-
-        runtime_root = self._runtime_root()
-        runtime_path = str(runtime_root)
-
-        # Add the runtime package path to sys.path if not already present,
-        # ensuring dynamic imports from the in-tree package work.
-        if runtime_path not in sys.path:
-            sys.path.insert(0, runtime_path)
-
-        # These imports are dynamic and depend on `runtime_path` being in `sys.path`.
-        from worldfoundry.synthesis.visual_generation.open_magvit2 import open_magvit2_runtime  # noqa: F401
         from worldfoundry.synthesis.visual_generation.open_magvit2.open_magvit2_runtime.inference import load_model
 
         # Load the model and configuration using the resolved paths and specified device.

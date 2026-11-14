@@ -18,8 +18,9 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.model
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.frustum import (
     calculate_unprojected_mask,
 )
-
-from ..utils.geometry import depth_to_world_coords_points
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.geometry import (
+    depth_to_world_coords_points as depth_to_world_coords_points,
+)
 
 
 def _as_homogeneous_matrix(matrices: Tensor) -> Tensor:

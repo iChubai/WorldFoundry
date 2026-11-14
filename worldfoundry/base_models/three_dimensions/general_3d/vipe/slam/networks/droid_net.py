@@ -24,6 +24,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from worldfoundry.base_models.perception_core.optical_flow.raft_features import ResidualBlock
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext import droid_net_ext
 from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.scatter import scatter_mean
 
@@ -193,114 +194,6 @@ class AltCorrBlock:
             corr = corr.squeeze(dim=-1)
 
         return corr.contiguous()
-
-
-class ResidualBlock(nn.Module):
-    def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super().__init__()
-
-        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, padding=1, stride=stride)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, padding=1)
-        self.relu = nn.ReLU(inplace=True)
-
-        num_groups = planes // 8
-
-        if norm_fn == "group":
-            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-            self.norm2 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm3 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-
-        elif norm_fn == "batch":
-            self.norm1 = nn.BatchNorm2d(planes)
-            self.norm2 = nn.BatchNorm2d(planes)
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm3 = nn.BatchNorm2d(planes)
-
-        elif norm_fn == "instance":
-            self.norm1 = nn.InstanceNorm2d(planes)
-            self.norm2 = nn.InstanceNorm2d(planes)
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm3 = nn.InstanceNorm2d(planes)
-
-        elif norm_fn == "none":
-            self.norm1 = nn.Sequential()
-            self.norm2 = nn.Sequential()
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm3 = nn.Sequential()
-
-        if stride == 1:
-            self.downsample = None
-
-        else:
-            self.downsample = nn.Sequential(nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm3)
-
-    def forward(self, x):
-        y = x
-        y = self.relu(self.norm1(self.conv1(y)))
-        y = self.relu(self.norm2(self.conv2(y)))
-
-        if self.downsample is not None:
-            x = self.downsample(x)
-
-        return self.relu(x + y)
-
-
-class BottleneckBlock(nn.Module):
-    def __init__(self, in_planes, planes, norm_fn="group", stride=1):
-        super().__init__()
-
-        self.conv1 = nn.Conv2d(in_planes, planes // 4, kernel_size=1, padding=0)
-        self.conv2 = nn.Conv2d(planes // 4, planes // 4, kernel_size=3, padding=1, stride=stride)
-        self.conv3 = nn.Conv2d(planes // 4, planes, kernel_size=1, padding=0)
-        self.relu = nn.ReLU(inplace=True)
-
-        num_groups = planes // 8
-
-        if norm_fn == "group":
-            self.norm1 = nn.GroupNorm(num_groups=num_groups, num_channels=planes // 4)
-            self.norm2 = nn.GroupNorm(num_groups=num_groups, num_channels=planes // 4)
-            self.norm3 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm4 = nn.GroupNorm(num_groups=num_groups, num_channels=planes)
-
-        elif norm_fn == "batch":
-            self.norm1 = nn.BatchNorm2d(planes // 4)
-            self.norm2 = nn.BatchNorm2d(planes // 4)
-            self.norm3 = nn.BatchNorm2d(planes)
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm4 = nn.BatchNorm2d(planes)
-
-        elif norm_fn == "instance":
-            self.norm1 = nn.InstanceNorm2d(planes // 4)
-            self.norm2 = nn.InstanceNorm2d(planes // 4)
-            self.norm3 = nn.InstanceNorm2d(planes)
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm4 = nn.InstanceNorm2d(planes)
-
-        elif norm_fn == "none":
-            self.norm1 = nn.Sequential()
-            self.norm2 = nn.Sequential()
-            self.norm3 = nn.Sequential()
-            if not stride == 1:  # noqa: SIM201 - Keeps `not ==` for operands that may compare elementwise.
-                self.norm4 = nn.Sequential()
-
-        if stride == 1:
-            self.downsample = None
-
-        else:
-            self.downsample = nn.Sequential(nn.Conv2d(in_planes, planes, kernel_size=1, stride=stride), self.norm4)
-
-    def forward(self, x):
-        y = x
-        y = self.relu(self.norm1(self.conv1(y)))
-        y = self.relu(self.norm2(self.conv2(y)))
-        y = self.relu(self.norm3(self.conv3(y)))
-
-        if self.downsample is not None:
-            x = self.downsample(x)
-
-        return self.relu(x + y)
 
 
 DIM = 32

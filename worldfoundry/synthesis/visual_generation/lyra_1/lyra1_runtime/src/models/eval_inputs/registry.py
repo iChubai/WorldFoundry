@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from src.models.eval_inputs.radym_wrapper import RadymWrapper
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.radym_wrapper import (
+    RadymWrapper,
+)
 
 dataset_registry = {}
 

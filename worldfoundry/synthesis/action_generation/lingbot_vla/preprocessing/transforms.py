@@ -189,36 +189,6 @@ def prepare_images(
     return images, img_masks, pil_images
 
 
-def prepare_state(observation: dict[str, Tensor], max_state_dim):
-    """Pad the state to the maximum state dimension.
-
-    Args:
-        observation (dict[str, Tensor])
-
-    Returns:
-        state (torch.Tensor): (*b, max_state_dim) padded state tensor
-    """
-    state = observation["state"]
-    state = F.pad(state, (0, max_state_dim - state.shape[-1]))
-    return state
-
-
-def prepare_action(observation: dict[str, Tensor], max_action_dim):
-    """Pad the action to the maximum action dimension.
-
-    Args:
-        observation (dict[str, Tensor])
-
-    Returns:
-        action (torch.Tensor): (*b, n, max_action_dim) padded action tensor
-        action_dim (int): the actual dimension of the action before padding
-    """
-    # ipdb.set_trace()
-    action = observation["action"]
-    action = F.pad(action, (0, max_action_dim - action.shape[-1]))
-    return action
-
-
 def prepare_joint_pad(observation: dict[str, Tensor], max_dim):
     """Pad the state to the maximum state dimension.
 

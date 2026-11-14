@@ -19,12 +19,12 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from inference.common.config import MagiConfig
-from inference.model.t5 import T5Embedder
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core import env_is_true, is_last_tp_cp_rank
 from worldfoundry.core.observability.rank_logging import distributed_logger as magi_logger
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.common.config import MagiConfig
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.model.t5 import T5Embedder
 
 try:
     from worldfoundry.core.io.paths import resolve_data_path

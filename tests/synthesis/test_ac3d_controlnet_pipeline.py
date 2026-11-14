@@ -4,10 +4,8 @@
 
 from __future__ import annotations
 
-import importlib.util
+import importlib
 import logging
-import sys
-from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
 import pytest
@@ -15,21 +13,13 @@ import torch
 
 pytestmark = pytest.mark.unit
 
-PIPELINE_SOURCE = (
-    Path(__file__).parents[2] / "worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime/controlnet_pipeline.py"
-)
-
 
 @pytest.fixture
-def pipeline_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
-    # ControlNet is only an annotation at this prompt-encoding boundary.
-    controlnet = ModuleType("cogvideo_controlnet")
-    monkeypatch.setattr(controlnet, "CogVideoXControlnet", object, raising=False)
-    monkeypatch.setitem(sys.modules, "cogvideo_controlnet", controlnet)
-    spec = importlib.util.spec_from_file_location("ac3d_controlnet_pipeline_cpu", PIPELINE_SOURCE)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+def pipeline_module(caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+    module = importlib.import_module("worldfoundry.synthesis.visual_generation.ac3d.ac3d_runtime.controlnet_pipeline")
+    logger = logging.getLogger(module.__name__)
+    monkeypatch.setattr(logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(logger, "propagate", False)
     return module
 
 

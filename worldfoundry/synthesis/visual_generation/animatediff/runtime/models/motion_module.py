@@ -8,14 +8,9 @@ from diffusers.utils.import_utils import is_xformers_available
 from einops import rearrange, repeat
 from torch import nn
 
+from worldfoundry.core.nn.blocks.layers import zero_module as zero_module
+
 from .diffusers_compat import CrossAttention, FeedForward
-
-
-def zero_module(module):
-    # Zero out the parameters of a module and return it.
-    for p in module.parameters():
-        p.detach().zero_()
-    return module
 
 
 @dataclass

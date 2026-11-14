@@ -18,6 +18,8 @@ component options.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
+from functools import partial
 
 import torch
 import torch.nn.functional as functional
@@ -31,7 +33,7 @@ from ....loaders import (
     NativeModuleLoader,
     safetensors_json_metadata,
 )
-from ....optimizations import OffloadMode, RuntimePolicy
+from ....optimizations import OffloadMode, QuantizationPolicy, RuntimePolicy
 from ....runners import MultiModalLatentDecoder
 from ...representations.ltx.patchifiers import AudioPatchifier, VideoLatentPatchifier
 from ...representations.ltx.types import AudioLatentShape, VideoLatentShape, VideoPixelShape
@@ -86,6 +88,7 @@ def _prefixed_state_dict(
     state_dict: Mapping[str, object],
     *,
     prefixes: Mapping[str, str],
+    lazy: bool = False,
 ) -> Mapping[str, object]:
     converted: dict[str, object] = {}
     for key in state_dict:
@@ -97,43 +100,66 @@ def _prefixed_state_dict(
                     "std-of-means",
                 }:
                     break
-                converted[f"{destination}{suffix}"] = state_dict[key]
+                converted[f"{destination}{suffix}"] = key if lazy else state_dict[key]
                 break
+    if lazy:
+        from worldfoundry.core.model_loading.checkpoints.transforms import TransformedStateDict
+
+        return TransformedStateDict(state_dict, converted)
     return converted
 
 
-def convert_ltx_video_encoder_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
+def convert_ltx_video_encoder_state_dict(
+    state_dict: Mapping[str, object],
+    *,
+    lazy: bool = False,
+) -> Mapping[str, object]:
     return _prefixed_state_dict(
         state_dict,
         prefixes={
             "vae.encoder.": "encoder.",
             "vae.per_channel_statistics.": "encoder.per_channel_statistics.",
+            "encoder.": "encoder.",
+            "per_channel_statistics.": "encoder.per_channel_statistics.",
         },
+        lazy=lazy,
     )
 
 
-def convert_ltx_video_decoder_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
+def convert_ltx_video_decoder_state_dict(
+    state_dict: Mapping[str, object], *, lazy: bool = False
+) -> Mapping[str, object]:
     return _prefixed_state_dict(
         state_dict,
         prefixes={
             "vae.decoder.": "decoder.",
             "vae.per_channel_statistics.": "decoder.per_channel_statistics.",
         },
+        lazy=lazy,
     )
 
 
-def convert_ltx_audio_decoder_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
+def convert_ltx_audio_decoder_state_dict(
+    state_dict: Mapping[str, object],
+    *,
+    lazy: bool = False,
+) -> Mapping[str, object]:
     return _prefixed_state_dict(
         state_dict,
         prefixes={
             "audio_vae.decoder.": "decoder.",
             "audio_vae.per_channel_statistics.": "decoder.per_channel_statistics.",
         },
+        lazy=lazy,
     )
 
 
-def convert_ltx_vocoder_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
-    return _prefixed_state_dict(state_dict, prefixes={"vocoder.": "vocoder."})
+def convert_ltx_vocoder_state_dict(
+    state_dict: Mapping[str, object],
+    *,
+    lazy: bool = False,
+) -> Mapping[str, object]:
+    return _prefixed_state_dict(state_dict, prefixes={"vocoder.": "vocoder."}, lazy=lazy)
 
 
 def _load_configured_module(
@@ -142,36 +168,50 @@ def _load_configured_module(
     *,
     module_class: type[torch.nn.Module],
     converter,
+    config: Mapping[str, object] | None = None,
+    lazy_state_dict: bool = False,
 ) -> torch.nn.Module:
     from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule
 
     return NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=module_class,
+            config=config or {},
+            lazy_state_dict=lazy_state_dict,
+            buffer_aware_offload=lazy_state_dict,
             config_resolver=lambda checkpoint: {"checkpoint_config": safetensors_json_metadata(checkpoint)},
             state_dict_converter=converter,
-            vram_module_map={
-                Snake: AutoWrappedModule,
-                SnakeBeta: AutoWrappedModule,
-                torch.nn.Linear: AutoWrappedLinear,
-                torch.nn.Conv1d: AutoWrappedModule,
-                torch.nn.Conv2d: AutoWrappedModule,
-                torch.nn.Conv3d: AutoWrappedModule,
-                torch.nn.ConvTranspose1d: AutoWrappedModule,
-                torch.nn.LayerNorm: AutoWrappedModule,
-                torch.nn.GroupNorm: AutoWrappedModule,
-            },
+            vram_module_map=(
+                {module_class: AutoWrappedModule}
+                if lazy_state_dict and module_class is LTXDiffusionVideoDecoderModule
+                else {
+                    Snake: AutoWrappedModule,
+                    SnakeBeta: AutoWrappedModule,
+                    torch.nn.Linear: AutoWrappedLinear,
+                    torch.nn.Conv1d: AutoWrappedModule,
+                    torch.nn.Conv2d: AutoWrappedModule,
+                    torch.nn.Conv3d: AutoWrappedModule,
+                    torch.nn.ConvTranspose1d: AutoWrappedModule,
+                    torch.nn.LayerNorm: AutoWrappedModule,
+                    torch.nn.GroupNorm: AutoWrappedModule,
+                }
+            ),
         ),
         checkpoint,
-        policy,
+        replace(policy, quantization=QuantizationPolicy()),
     )
 
 
 def load_ltx_video_encoder(context: ComponentBuildContext) -> LTXVideoEncoderModule:
-    return load_ltx_video_encoder_checkpoint(
-        context.require_checkpoint("weights"),
-        context.policy,
-    )
+    if context.component_options.get("split_checkpoint"):
+        return _load_configured_module(
+            context.require_checkpoint("weights"),
+            context.policy,
+            module_class=LTXVideoEncoderModule,
+            converter=partial(convert_ltx_video_encoder_state_dict, lazy=True),
+            lazy_state_dict=True,
+        )
+    return load_ltx_video_encoder_checkpoint(context.require_checkpoint("weights"), context.policy)
 
 
 def load_ltx_video_encoder_checkpoint(
@@ -215,7 +255,15 @@ class LTXMediaDecoder(MultiModalLatentDecoder):
         *,
         compute_dtype: torch.dtype,
         tiling: TilingConfig | None,
+        precision: str = "autocast",
+        spatial_divisor: int = 1,
+        strip_reference_tokens: bool = False,
+        continue_generator: bool = False,
     ) -> None:
+        self.precision = precision
+        self.spatial_divisor = spatial_divisor
+        self.strip_reference_tokens = strip_reference_tokens
+        self.uses_run_generator = continue_generator
         self.video = video
         self.audio = audio
         self.vocoder = vocoder
@@ -238,21 +286,35 @@ class LTXMediaDecoder(MultiModalLatentDecoder):
         self,
         states: Mapping[str, ModalityState],
         request: DiffusionRequest,
+        *,
+        generator: torch.Generator | None = None,
     ) -> Mapping[str, object]:
         """Unpatchify, decode video chunks, and vocode audio from joint states."""
-        video_shape, audio_shape = self._shapes(request)
-        video_latent = VideoLatentPatchifier(1).unpatchify(states["video"].latent, video_shape)
+        video_shape, audio_shape = self._shapes(
+            replace(request, height=request.height // self.spatial_divisor, width=request.width // self.spatial_divisor)
+            if self.spatial_divisor != 1
+            else request
+        )
+        patchifier = VideoLatentPatchifier(1)
+        latent = states["video"].latent
+        if self.strip_reference_tokens:
+            latent = latent[:, : patchifier.get_token_count(video_shape)]
+        video_latent = patchifier.unpatchify(latent, video_shape)
         audio_latent = AudioPatchifier(1).unpatchify(states["audio"].latent, audio_shape)
         with torch.autocast(
             device_type=video_latent.device.type,
             dtype=self.compute_dtype,
-            enabled=self.compute_dtype in {torch.float16, torch.bfloat16},
+            enabled=self.precision == "autocast" and self.compute_dtype in {torch.float16, torch.bfloat16},
         ):
             chunks = list(
                 self.video.decoder.decode_video(
                     video_latent.to(dtype=self.compute_dtype),
                     self.tiling,
-                    generator=torch.Generator(device=video_latent.device).manual_seed(request.sampling.seed),
+                    generator=(
+                        generator
+                        if generator is not None
+                        else torch.Generator(device=video_latent.device).manual_seed(request.sampling.seed)
+                    ),
                 )
             )
             if not chunks:
@@ -546,23 +608,31 @@ def _tiling_from_options(options: Mapping[str, object]) -> TilingConfig | None:
 
 
 def build_ltx_media_decoder(context: ComponentBuildContext) -> LTXMediaDecoder:
+    lazy = context.component_options.get("precision") == "weights"
     video = _load_configured_module(
         context.require_checkpoint("weights"),
         context.policy,
         module_class=LTXVideoDecoderModule,
-        converter=convert_ltx_video_decoder_state_dict,
+        converter=partial(convert_ltx_video_decoder_state_dict, lazy=True)
+        if lazy
+        else convert_ltx_video_decoder_state_dict,
+        lazy_state_dict=lazy,
     )
     audio = _load_configured_module(
         context.require_checkpoint("weights"),
         context.policy,
         module_class=LTXAudioDecoderModule,
-        converter=convert_ltx_audio_decoder_state_dict,
+        converter=partial(convert_ltx_audio_decoder_state_dict, lazy=True)
+        if lazy
+        else convert_ltx_audio_decoder_state_dict,
+        lazy_state_dict=lazy,
     )
     vocoder = _load_configured_module(
         context.require_checkpoint("weights"),
         context.policy,
         module_class=LTXVocoderModule,
-        converter=convert_ltx_vocoder_state_dict,
+        converter=partial(convert_ltx_vocoder_state_dict, lazy=True) if lazy else convert_ltx_vocoder_state_dict,
+        lazy_state_dict=lazy,
     )
     if not isinstance(video, LTXVideoDecoderModule):
         raise TypeError("LTX video decoder construction returned an unexpected module")
@@ -576,6 +646,10 @@ def build_ltx_media_decoder(context: ComponentBuildContext) -> LTXMediaDecoder:
         vocoder,
         compute_dtype=context.policy.dtype,
         tiling=_tiling_from_options(context.component_options),
+        precision=str(context.component_options.get("precision", "autocast")),
+        spatial_divisor=int(context.component_options.get("spatial_divisor", 1)),
+        strip_reference_tokens=bool(context.component_options.get("strip_reference_tokens", False)),
+        continue_generator=bool(context.component_options.get("continue_generator", False)),
     )
 
 
@@ -668,3 +742,149 @@ __all__ = [
     "load_ltx_video_encoder",
     "load_ltx_video_encoder_checkpoint",
 ]
+
+
+class LTXDiffusionVideoDecoderModule(torch.nn.Module):
+    """Configured CausalDiffusionVAE decoder with its selected inference preset."""
+
+    def __init__(self, checkpoint_config: Mapping[str, object], *, mode: str = "chunked_eager") -> None:
+        super().__init__()
+        from .video.diffusion_video_decoder import DiffusionVideoDecoderConfigurator
+        from .video.transformer.apply import apply_diffvae_mode
+        from .video.transformer.config import DiffVAEMode
+
+        if checkpoint_config.get("vae", {}).get("_class_name") != "CausalDiffusionVAE":
+            raise ValueError("LTX split diffusion decoding requires a CausalDiffusionVAE checkpoint")
+        self.decoder = DiffusionVideoDecoderConfigurator.from_config(dict(checkpoint_config))
+        apply_diffvae_mode(self.decoder, DiffVAEMode(mode))
+
+    def forward(
+        self,
+        latent: torch.Tensor,
+        tiling: TilingConfig | None,
+        generator: torch.Generator,
+    ) -> list[torch.Tensor]:
+        """Keep decoder weights materialized until every tiled chunk has been emitted."""
+        return list(self.decoder.decode_video(latent, tiling, generator))
+
+
+class LTXDiffusionMediaDecoder(MultiModalLatentDecoder):
+    """Decode split video/audio checkpoints using the run's continued noise generator."""
+
+    uses_run_generator: bool = True
+
+    def __init__(
+        self,
+        video: LTXDiffusionVideoDecoderModule,
+        audio: LTXAudioDecoderModule,
+        vocoder: LTXVocoderModule,
+        *,
+        compute_dtype: torch.dtype,
+        mode: str,
+        vae_config: Mapping[str, object],
+        model_bytes: int,
+        tiling: object = "auto",
+    ) -> None:
+        self.video = video
+        self.audio = audio
+        self.vocoder = vocoder
+        self.compute_dtype = compute_dtype
+        self.mode = mode
+        self.vae_config = vae_config
+        self.model_bytes = model_bytes
+        self.tiling = tiling
+
+    def decode_modalities(
+        self,
+        states: Mapping[str, ModalityState],
+        request: DiffusionRequest,
+        *,
+        generator: torch.Generator,
+    ) -> Mapping[str, object]:
+        from worldfoundry.core.vram.memory import activation_budget_bytes
+
+        from .video.diffusion_tiling import recommended_decode_tiling_config
+        from .video.diffusion_video_decoder import diffvae_tiling_geometry_from_vae_config
+        from .video.transformer.config import DiffVAEMode
+
+        channels = int(
+            self.vae_config.get("decoder", {}).get("in_channels", self.vae_config.get("latent_channels", 128))
+        )
+        video_shape, audio_shape = LTXMediaDecoder._shapes(request)
+        video_shape = video_shape._replace(channels=channels)
+        patchifier = VideoLatentPatchifier(1)
+        latent = states["video"].latent[:, : patchifier.get_token_count(video_shape)]
+        video = patchifier.unpatchify(latent, video_shape).to(self.compute_dtype)
+        audio = AudioPatchifier(1).unpatchify(states["audio"].latent, audio_shape).to(self.compute_dtype)
+        tiling = self.tiling
+        if tiling == "auto":
+            tiling = recommended_decode_tiling_config(
+                **diffvae_tiling_geometry_from_vae_config(dict(self.vae_config)),
+                height=request.height,
+                width=request.width,
+                num_frames=request.num_frames,
+                mode=DiffVAEMode(self.mode),
+                free_bytes=activation_budget_bytes(video.device),
+                model_bytes=self.model_bytes,
+            )
+        chunks = self.video(video, tiling, generator)
+        if not chunks:
+            raise RuntimeError("LTX diffusion video decoder returned no chunks")
+        decoded_audio = decode_audio(audio, self.audio.decoder, self.vocoder.vocoder)
+        return {
+            "video": torch.cat(chunks, dim=0),
+            "audio": decoded_audio.waveform,
+            "audio_sampling_rate": decoded_audio.sampling_rate,
+        }
+
+
+def build_ltx_diffusion_media_decoder(context: ComponentBuildContext) -> LTXDiffusionMediaDecoder:
+    """Load the diffusion video VAE, audio VAE and BWE vocoder from split files."""
+    from safetensors import safe_open
+
+    from .video.state_dict import convert_ltx_diffusion_decoder_state_dict
+
+    mode = str(context.component_options.get("diffvae_optimization", "chunked_eager"))
+    video_checkpoint = context.require_checkpoint("video_vae")
+    materialized = NativeCheckpointResolver().materialize(video_checkpoint)
+    config = safetensors_json_metadata(materialized)
+    model_bytes = 0
+    with safe_open(materialized.paths[0], framework="pt", device="cpu") as handle:
+        import math
+
+        for key in handle.keys():  # noqa: SIM118  # safetensors handles are not iterable
+            if key.startswith(("vae.decoder.", "decoder.")) or "per_channel_statistics" in key:
+                model_bytes += math.prod(handle.get_slice(key).get_shape()) * 2
+    video = _load_configured_module(
+        video_checkpoint,
+        context.policy,
+        module_class=LTXDiffusionVideoDecoderModule,
+        converter=partial(convert_ltx_diffusion_decoder_state_dict, mode=mode),
+        config={"mode": mode},
+        lazy_state_dict=True,
+    )
+    audio_checkpoint = context.require_checkpoint("audio_vae")
+    audio = _load_configured_module(
+        audio_checkpoint,
+        context.policy,
+        module_class=LTXAudioDecoderModule,
+        converter=partial(convert_ltx_audio_decoder_state_dict, lazy=True),
+        lazy_state_dict=True,
+    )
+    vocoder = _load_configured_module(
+        audio_checkpoint,
+        context.policy,
+        module_class=LTXVocoderModule,
+        converter=partial(convert_ltx_vocoder_state_dict, lazy=True),
+        lazy_state_dict=True,
+    )
+    return LTXDiffusionMediaDecoder(
+        video,
+        audio,
+        vocoder,
+        compute_dtype=context.policy.dtype,
+        mode=mode,
+        vae_config=config["vae"],
+        model_bytes=model_bytes,
+        tiling=context.component_options.get("tiling", "auto"),
+    )

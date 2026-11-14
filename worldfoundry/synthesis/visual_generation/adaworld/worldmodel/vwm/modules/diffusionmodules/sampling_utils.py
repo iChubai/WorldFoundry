@@ -1,6 +1,7 @@
 import torch
 from scipy import integrate
-from vwm.util import append_dims
+
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import append_dims
 
 
 def linear_multistep_coeff(order, t, i, j, epsrel=1e-4):

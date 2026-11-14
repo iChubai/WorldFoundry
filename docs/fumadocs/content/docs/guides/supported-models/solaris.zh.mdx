@@ -5,7 +5,7 @@ modelId: "solaris"
 pageSource: generated
 ---
 
-Solaris 是纽约大学 VisionX 组的多智能体交互视频世界模型（论文 arXiv 2602.22208）：多个智能体在同一个生成世界中行动。WorldFoundry 使用官方 Orbax checkpoint（nyu-visionx/solaris）与官方评估数据集运行推理，二者从 Hugging Face 或本地镜像加载。
+Solaris 是纽约大学 VisionX 组的多智能体交互视频世界模型（论文 arXiv 2602.22208）：多个智能体在同一个生成世界中行动。WorldFoundry 使用官方 Orbax checkpoint（nyu-visionx/solaris）与官方评估数据集运行树内推理代码，二者从 Hugging Face 或本地镜像加载。
 
 <ModelPaperFigures modelId="solaris" locale="zh" />
 
@@ -33,7 +33,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `SolarisPipeline`。
 
 系列状态：**已验证**。
 
-推理按每张可见 GPU 启动一个样本——eval_num_samples 必须是可见 GPU 数的整数倍。官方权重与评估数据集从 HF 或同布局本地镜像解析。
+推理由已安装的 Solaris 包模块执行。runtime_root 是相对资产路径与工作目录的基准。推理按每张可见 GPU 启动一个样本——eval_num_samples 必须是可见 GPU 数的整数倍。官方权重与评估数据集从 HF 或同布局本地镜像解析。
 
 使用前请审查上游许可。
 

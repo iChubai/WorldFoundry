@@ -296,7 +296,6 @@ def test_longvie_declares_pil_frames_and_preserves_continuation(
 def test_longvie_encoder_receives_the_declared_pil_pixels(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import imageio
 
-    from worldfoundry.synthesis.visual_generation.longvie import worldfoundry_runtime as module
     from worldfoundry.synthesis.visual_generation.longvie.longvie_synthesis import LongVieSynthesis
 
     encoded: list[np.ndarray] = []
@@ -317,7 +316,6 @@ def test_longvie_encoder_receives_the_declared_pil_pixels(tmp_path: Path, monkey
         target.write_bytes(b"encoded-video")
         return Writer()
 
-    monkeypatch.setattr(module, "ensure_longvie_runtime", lambda: None)
     monkeypatch.setattr(imageio, "get_writer", writer)
     runtime = _LongVieRuntime()
     synthesis = LongVieSynthesis(runtime=cast(Any, runtime), execute_by_default=True)

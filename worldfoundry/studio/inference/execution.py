@@ -106,7 +106,7 @@ def _output_suffix_from_infer_metadata(entry: CatalogEntry, infer_metadata: dict
             return ".png"
         if kinds & {"video", "generated_video"}:
             return ".mp4"
-        if entry.model_id in {"lagernvs", "stable-virtual-camera", "wonderjourney"}:
+        if entry.model_id in {"lagernvs", "wonderjourney"}:
             return ".mp4"
         if entry.model_id == "wonderworld":
             return ".splat"

@@ -33,7 +33,10 @@ def test_mg2_numerical_contract_changes_require_real_model_replay(path):
         [path],
     )
     assert plan["status"] == "planned"
-    assert plan["selected_cases"] == ["matrix-game2-controls-short"]
+    assert plan["selected_cases"] == [
+        "matrix-game2-controls-short",
+        "matrix-game-2-universal-ref-image-seed42-15f-checkpoint-replay",
+    ]
     assert not plan["uncovered_paths"]
 
 
@@ -1059,3 +1062,37 @@ def test_added_case_cannot_hide_independently_committed_runtime_changes(verifica
     plan = impact.select_cases(matrix, dependencies, root, changes, base=base, head=head)
     assert set(plan["selected_cases"]) == {"a", "b", "extra", MG2_CASE}
     assert not plan["cpu_only_changes"]
+
+
+def test_exact_environment_mapping_precedes_shared_metadata_rule(project: tuple[Path, Path, Path]) -> None:
+    root, matrix, dependencies = project
+    path = "worldfoundry/data/models/runtime/environments/video/a.yaml"
+    policy = json.loads(dependencies.read_text())
+    policy["shared_paths"].append("worldfoundry/data/models/**")
+    policy["environment_variants"] = {path: ["a@a"]}
+    dependencies.write_text(json.dumps(policy))
+    plan = impact.select_cases(matrix, dependencies, root, [path])
+    assert plan["status"] == "planned"
+    assert plan["selected_cases"] == ["a"]
+    assert plan["reasons"]["a"][0]["kind"] == "declared_environment"
+    plan = impact.select_cases(matrix, dependencies, root, [path, "worldfoundry/core/attention/shared.py"])
+    assert plan["selected_cases"] == ["a", "b"]
+    policy["environment_variants"][path].append("missing@missing")
+    dependencies.write_text(json.dumps(policy))
+    plan = impact.select_cases(matrix, dependencies, root, [path])
+    assert plan["status"] == "uncovered"
+    assert plan["selected_cases"] == ["a", "b"]
+    assert plan["uncovered_paths"] == [path]
+
+
+@pytest.mark.parametrize(
+    "mappings",
+    [
+        {"worldfoundry/data/models/runtime/environments/video/*.yaml": ["a@a"]},
+        {"worldfoundry/data/models/runtime/environments/video/a.yaml": []},
+        {"worldfoundry/data/models/runtime/environments/video/a.yaml": ["a"]},
+    ],
+)
+def test_environment_ownership_requires_exact_paths_and_variants(mappings: dict[str, list[str]]) -> None:
+    with pytest.raises(ValueError, match="Environment ownership"):
+        impact.environment_variants({"environment_variants": mappings})

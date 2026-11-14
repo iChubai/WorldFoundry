@@ -4,8 +4,8 @@ import re
 
 import torch
 
-from opensora.datasets import IMG_FPS
-from opensora.datasets.utils import read_from_path
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.datasets import IMG_FPS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.datasets.utils import read_from_path
 
 
 def prepare_multi_resolution_info(info_type, batch_size, image_size, num_frames, fps, device, dtype):

@@ -43,6 +43,8 @@ from worldfoundry.core.attention.backends.native import scaled_dot_product_atten
 class QKVSelfAttention(nn.Module):
     """Linear QKV projection, scaled dot-product attention, and output projection."""
 
+    fused_attn: bool = True
+
     def __init__(
         self,
         dim: int,
@@ -65,7 +67,10 @@ class QKVSelfAttention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x: Tensor, attn_bias: Any = None) -> Tensor:
-        """Self-attend ``[B, N, C]`` tokens; ``attn_bias`` is the SDPA mask slot."""
+        """Self-attend tokens; ``fused_attn=False`` selects unmasked eager attention."""
+
+        if not self.fused_attn:
+            return self._forward(x)
 
         b, n, c = x.shape
         qkv = self.qkv(x).reshape(b, n, 3, self.num_heads, c // self.num_heads).permute(2, 0, 3, 1, 4)
@@ -81,6 +86,23 @@ class QKVSelfAttention(nn.Module):
         )
         x = x.permute(0, 2, 1, 3).reshape(b, n, c)
 
+        x = self.proj(x)
+        x = self.proj_drop(x)
+        return x
+
+    def _forward(self, x: Tensor) -> Tensor:
+        """Use explicit scaled-query matmuls, preserving eager checkpoint arithmetic."""
+
+        b, n, c = x.shape
+        qkv = self.qkv(x).reshape(b, n, 3, self.num_heads, c // self.num_heads).permute(2, 0, 3, 1, 4)
+
+        q, k, v = qkv[0] * self.scale, qkv[1], qkv[2]
+        attn = q @ k.transpose(-2, -1)
+
+        attn = attn.softmax(dim=-1)
+        attn = self.attn_drop(attn)
+
+        x = (attn @ v).transpose(1, 2).reshape(b, n, c)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
@@ -150,23 +172,6 @@ class QKNormRopeSelfAttention(QKVSelfAttention):
             x = attn @ v
 
         x = x.transpose(1, 2).reshape(b, n, c)
-        x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
-
-    def _forward(self, x: Tensor) -> Tensor:
-        """Legacy manual-attention path kept for compatibility."""
-
-        b, n, c = x.shape
-        qkv = self.qkv(x).reshape(b, n, 3, self.num_heads, c // self.num_heads).permute(2, 0, 3, 1, 4)
-
-        q, k, v = qkv[0] * self.scale, qkv[1], qkv[2]
-        attn = q @ k.transpose(-2, -1)
-
-        attn = attn.softmax(dim=-1)
-        attn = self.attn_drop(attn)
-
-        x = (attn @ v).transpose(1, 2).reshape(b, n, c)
         x = self.proj(x)
         x = self.proj_drop(x)
         return x

@@ -14,7 +14,6 @@
 
 import torch.nn as nn
 
-from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.attention import Mlp
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.block import Block
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.model.utils.transform import (
     extri_intri_to_pose_encoding,
@@ -22,6 +21,7 @@ from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anythi
 from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
     affine_inverse,
 )
+from worldfoundry.core.nn.blocks.layers import Mlp
 
 
 class CameraEnc(nn.Module):

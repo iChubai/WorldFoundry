@@ -9,6 +9,10 @@ import math
 import torch
 from torch import nn
 
+from worldfoundry.core.attention.rotary.broadcast import (
+    reshape_for_broadcast as reshape_for_broadcast,
+)
+
 
 class PositionEmbeddingSine(nn.Module):
     """
@@ -134,14 +138,6 @@ def compute_axial_cis(dim: int, end_x: int, end_y: int, theta: float = 10000.0):
     freqs_cis_x = torch.polar(torch.ones_like(freqs_x), freqs_x)
     freqs_cis_y = torch.polar(torch.ones_like(freqs_y), freqs_y)
     return torch.cat([freqs_cis_x, freqs_cis_y], dim=-1)
-
-
-def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
-    ndim = x.ndim
-    assert 0 <= 1 < ndim
-    assert freqs_cis.shape == (x.shape[-2], x.shape[-1])
-    shape = [d if i >= ndim - 2 else 1 for i, d in enumerate(x.shape)]
-    return freqs_cis.view(*shape)
 
 
 def apply_rotary_enc(

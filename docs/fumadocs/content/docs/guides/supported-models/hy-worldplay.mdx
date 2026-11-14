@@ -2,7 +2,7 @@
 title: "HY-WorldPlay"
 description: "HY-WorldPlay from Tencent (Hunyuan): world, video, and 1 more task; Verified."
 modelId: "hy-worldplay"
-pageSource: generated
+pageSource: authored
 ---
 
 HY-WorldPlay is Tencent's real-time interactive world video model: starting from an image, it follows pose/action input to roll the world forward — the interactive arm of the Hunyuan world stack. Validated on the official image-pose-video route with the official 8-GPU execution profile.
@@ -26,6 +26,8 @@ Tasks: world, video, and world model. Aliases: `hunyuan-worldplay` and `hunyuanw
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Interactive world-rollout quality), [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Pose/camera-following accuracy).
 
 ## Runtime contract
+
+Prompts are used as supplied by default. The `prompt_rewrite` option remains accepted; this build does not include the optional rewrite service, so enabling it emits a warning and keeps the raw prompt.
 
 Inputs `image`, `prompt`, and `interactions` (bundled samples are used when omitted); options `num-frames`, `fps`, `height`, `width`, `num-inference-steps`, `seed`, and 4 more; artifacts `hy-worldplay.mp4`.
 

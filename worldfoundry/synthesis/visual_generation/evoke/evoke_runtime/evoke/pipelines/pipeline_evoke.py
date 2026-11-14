@@ -591,7 +591,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
 
     def _geo_init_state(self, source_image_pixel: torch.Tensor, bank_max_size: int | None = None) -> dict:
         """Initialize per-call GEO state with a FrameBank (warp render goes through DA3, see _geo_da3_setup)."""
-        from evoke.modules.geometric_state.frame_bank import FrameBank
+        from ..modules.geometric_state.frame_bank import FrameBank
 
         fb = FrameBank(max_size=bank_max_size)
 
@@ -607,8 +607,8 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         """Init DA3FrameBank + estimator + render-resolution intrinsics (adaptively rescaled from lingbot_Ks)."""
         import numpy as _np
 
-        from evoke.modules.geometric_state.da3_cloud import DA3FrameBank
-        from evoke.modules.geometric_state.depth_backend import build_estimator
+        from ..modules.geometric_state.da3_cloud import DA3FrameBank
+        from ..modules.geometric_state.depth_backend import build_estimator
 
         kn = lingbot_Ks.detach().cpu().numpy().reshape(-1)[:4]  # [fx,fy,cx,cy] @ pose source resolution
         fx, fy, cx, cy = float(kn[0]), float(kn[1]), float(kn[2]), float(kn[3])
@@ -625,14 +625,13 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         # per-case wall time. `reset_stream` is what makes a shared instance correct -- it drops the kv-cache, the
         # locked depth scale, the anchor list and the window counter, i.e. everything that must not cross a video
         # boundary. The FrameBank below is still built fresh, so the point cloud does not cross cases either.
-        from evoke.modules.geometric_state.depth_backend import reset_stream as _depth_reset_stream
+        from ..modules.geometric_state.depth_backend import reset_stream as _depth_reset_stream
 
         _backend = str(cfg.get("depth_backend", "da3"))
         _est_key = (
             _backend.lower(),
             pr,
             str(cfg.get("da3_weights") or ""),
-            str(cfg.get("da3_src") or ""),
             tuple(sorted((k, str(v)) for k, v in vigeo_opts_from_cfg(cfg).items())),
         )
         _est = _GEO_DEPTH_ESTIMATORS.get(_est_key)
@@ -645,7 +644,6 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
                 device,
                 pr,
                 weights=(cfg.get("da3_weights") or None),
-                src=(cfg.get("da3_src") or None),
                 vigeo_opts=vigeo_opts_from_cfg(cfg),
             )
             _GEO_DEPTH_ESTIMATORS[_est_key] = _est
@@ -848,7 +846,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
         """DA3 recall-based warp render (replaces Pi3X). pool = bank frames with chunk <= k-1-lag -> recall -> render to the target GT poses."""
         # multi-source priority fusion (the same _render_multisrc as training build_multisrc_warp, keeping
         # train/infer consistent). Replaces the old recall-cloud render_recalled.
-        from evoke.modules.geometric_state.da3_cloud import _render_multisrc
+        from ..modules.geometric_state.da3_cloud import _render_multisrc
 
         cfg = getattr(self, "_geo_vsnoise_cfg", None) or {}
         bank = geo_state["da3_bank"]
@@ -882,11 +880,11 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
             and bool(getattr(self, "_geo_chunk0_ref_warp", True))
         )
         if _chunk0_ref:
-            from evoke.modules.geometric_state.da3_cloud import build_single_source_warp_mono
+            from ..modules.geometric_state.da3_cloud import build_single_source_warp_mono
 
             _ref = source_frame_pix[0] if source_frame_pix.ndim == 4 else source_frame_pix  # [3,H,W]
             _ref_pose = tgt[0]  # chunk-0 first target pose = the reference view
-            from evoke.modules.geometric_state.da3_cloud import CHUNK0_TARGET_DISPARITY_PX_DEFAULT
+            from ..modules.geometric_state.da3_cloud import CHUNK0_TARGET_DISPARITY_PX_DEFAULT
 
             warp_video, visibility_mask = build_single_source_warp_mono(
                 geo_state["da3_est"],
@@ -905,7 +903,7 @@ class EvokePipeline(DiffusionPipeline, WanLoraLoaderMixin):
             render_mode = "i2v_chunk0_ref"
         elif render_mode in ("backward", "backward_zbuf"):
             # render_mode picks the backward render core: backward (default, single main source) / backward_zbuf (per-pixel multi-source z-buffer).
-            from evoke.modules.geometric_state.da3_cloud import _render_backward, _render_backward_multisrc_zbuf
+            from ..modules.geometric_state.da3_cloud import _render_backward, _render_backward_multisrc_zbuf
 
             _render_bw = _render_backward_multisrc_zbuf if render_mode == "backward_zbuf" else _render_backward
             # the zbuf despeckle params are only accepted by the backward_zbuf path (same function and params as training build_backward_warp) -> only added to kwargs there.

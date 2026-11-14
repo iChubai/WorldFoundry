@@ -1,4 +1,3 @@
-from .checkpoint_utils import init_weights_on_device as init_weights_on_device
 from .checkpoint_utils import load_state_dict as load_state_dict
 from .file_utils import save_image as save_image
 from .file_utils import save_video as save_video

@@ -26,7 +26,11 @@ Individual mixture in PaliGemma format
 import torch  # noqa: E402 - Follows a module-level setup call, as upstream.
 import torch.nn as nn  # noqa: E402 - Follows a module-level setup call, as upstream.
 
-from .model_utils import apply_rotary_pos_emb, repeat_kv  # noqa: E402 - Follows a module-level setup call, as upstream.
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (  # noqa: E402 - Preserve upstream import order.
+    repeat_kv,
+)
+
+from .model_utils import apply_rotary_pos_emb  # noqa: E402 - Follows a module-level setup call, as upstream.
 from .paligemma_modules import (  # noqa: E402 - Follows a module-level setup call, as upstream.
     GemmaMLP,
     GemmaRMSNorm,

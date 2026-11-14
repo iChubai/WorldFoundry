@@ -8,8 +8,11 @@ safetensors metadata via :func:`~...loaders.metadata.safetensors_json_metadata`.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 
 import torch
+
+from worldfoundry.core.nn.transformer.dit import velocity_to_denoised
 
 from ...components import ComponentBuildContext
 from ...contracts import MultiModalDenoiserInput, MultiModalDenoiserOutput
@@ -21,7 +24,6 @@ from ...loaders import (
 )
 from ..networks.ltx.modality import Modality
 from ..networks.ltx.model import LTXModel
-from ..networks.ltx.perturbations import BatchedPerturbationConfig
 from ..networks.ltx.transformer import BasicAVTransformerBlock
 from .ltx_configurator import LTXModelConfigurator, LTXVideoOnlyModelConfigurator
 
@@ -31,9 +33,13 @@ class LTXAVTransformerModule(torch.nn.Module):
 
     CONFIGURATOR = LTXModelConfigurator
 
-    def __init__(self, checkpoint_config: Mapping[str, object]) -> None:
+    def __init__(self, checkpoint_config: Mapping[str, object], *, split_checkpoint: bool = False) -> None:
         super().__init__()
-        self.velocity_model = self.CONFIGURATOR.from_config(dict(checkpoint_config))
+        self.velocity_model = (
+            self.CONFIGURATOR.from_metadata({"config": dict(checkpoint_config)})
+            if split_checkpoint
+            else self.CONFIGURATOR.from_config(dict(checkpoint_config))
+        )
 
     def forward(self, *args, **kwargs):
         return self.velocity_model(*args, **kwargs)
@@ -50,7 +56,11 @@ class LTXVideoTransformerModule(torch.nn.Module):
         return self.velocity_model(*args, **kwargs)
 
 
-def convert_ltx_transformer_state_dict(state_dict: Mapping[str, object]) -> Mapping[str, object]:
+def convert_ltx_transformer_state_dict(
+    state_dict: Mapping[str, object],
+    *,
+    lazy: bool = False,
+) -> Mapping[str, object]:
     """Select transformer weights and strip the official container prefix."""
 
     prefix = "model.diffusion_model."
@@ -58,11 +68,16 @@ def convert_ltx_transformer_state_dict(state_dict: Mapping[str, object]) -> Mapp
         f"{prefix}video_embeddings_connector.",
         f"{prefix}audio_embeddings_connector.",
     )
-    return {
-        f"velocity_model.{key.removeprefix(prefix)}": state_dict[key]
+    keys = {
+        f"velocity_model.{key.removeprefix(prefix)}": key
         for key in state_dict
         if key.startswith(prefix) and not key.startswith(excluded)
     }
+    if lazy:
+        from worldfoundry.core.model_loading.checkpoints.transforms import TransformedStateDict
+
+        return TransformedStateDict(state_dict, keys)
+    return {destination: state_dict[source] for destination, source in keys.items()}
 
 
 def convert_ltx_video_transformer_state_dict(
@@ -77,16 +92,26 @@ def convert_ltx_video_transformer_state_dict(
 
 
 class LTXJointDenoiser:
-    """Adapt the LTX joint velocity model to the canonical multi-modal contract."""
+    """Adapt the LTX joint velocity model to the canonical multi-modal contract.
+
+    ``precision="autocast"`` runs the transformer under autocast to ``compute_dtype`` and
+    returns the clean-sample prediction in the timestep dtype. ``precision="weights"`` runs it
+    in its loaded weight dtype and rounds the prediction to the latent dtype, as the
+    ``ltx_pipelines`` ``X0Model`` does.
+    """
 
     def __init__(
         self,
         model: LTXAVTransformerModule,
         *,
         compute_dtype: torch.dtype,
+        precision: str = "autocast",
     ) -> None:
+        if precision not in {"autocast", "weights"}:
+            raise ValueError(f"unsupported LTX denoiser precision: {precision!r}")
         self.model = model
         self.compute_dtype = compute_dtype
+        self.precision = precision
 
     @staticmethod
     def _modality(
@@ -115,6 +140,7 @@ class LTXJointDenoiser:
             attention_mask=state.attention_mask,
             video_control=video_control,
             attention_cache=attention_cache,
+            keyframes_mask=state.keyframes_mask,
         )
 
     def __call__(self, model_input: MultiModalDenoiserInput) -> MultiModalDenoiserOutput:
@@ -153,13 +179,12 @@ class LTXJointDenoiser:
             context_mask=audio_context_mask,
             attention_cache=model_input.conditioning.get("attention_cache"),
         )
-        perturbations = BatchedPerturbationConfig.empty(video_state.latent.shape[0])
         with torch.autocast(
             device_type=video_state.latent.device.type,
             dtype=self.compute_dtype,
-            enabled=self.compute_dtype in {torch.float16, torch.bfloat16},
+            enabled=self.precision == "autocast" and self.compute_dtype in {torch.float16, torch.bfloat16},
         ):
-            video_velocity, audio_velocity = self.model(video, audio, perturbations)
+            video_velocity, audio_velocity = self.model(video, audio, None)
         if video_velocity is None or audio_velocity is None:
             raise RuntimeError("LTX audio-video transformer returned an absent modality")
         return MultiModalDenoiserOutput(
@@ -169,8 +194,9 @@ class LTXJointDenoiser:
             }
         )
 
-    @staticmethod
-    def _clean_prediction(modality: Modality, velocity: torch.Tensor) -> torch.Tensor:
+    def _clean_prediction(self, modality: Modality, velocity: torch.Tensor) -> torch.Tensor:
+        if self.precision == "weights":
+            return velocity_to_denoised(modality.latent, velocity, modality.timesteps)
         return modality.latent - modality.timesteps * velocity
 
     @staticmethod
@@ -223,13 +249,12 @@ class LTXVideoDenoiser:
             context=context,
             context_mask=context_mask,
         )
-        perturbations = BatchedPerturbationConfig.empty(state.latent.shape[0])
         with torch.autocast(
             device_type=state.latent.device.type,
             dtype=self.compute_dtype,
             enabled=self.compute_dtype in {torch.float16, torch.bfloat16},
         ):
-            velocity, audio_velocity = self.model(video, None, perturbations)
+            velocity, audio_velocity = self.model(video, None, None)
         if velocity is None or audio_velocity is not None:
             raise RuntimeError("LTX-Video transformer returned an unexpected modality set")
         return MultiModalDenoiserOutput(samples={"video": video.latent - video.timesteps * velocity})
@@ -249,6 +274,12 @@ def build_ltx_joint_denoiser(
         AutoWrappedNonRecurseModule,
     )
 
+    from ...optimizations.ltx.quantization import CHECKPOINT_QUANTIZATION_MODES, prepare_ltx_quantized_state_dict
+
+    split_checkpoint = bool(context.component_options.get("split_checkpoint"))
+    checkpoint_quantization = context.policy.quantization.mode in CHECKPOINT_QUANTIZATION_MODES
+    ic_lora_checkpoint = context.checkpoint("ic_lora")
+    lazy_state_dict = split_checkpoint or checkpoint_quantization or ic_lora_checkpoint is not None
     post_load_hook = None
     lora_checkpoint = context.checkpoint("lora")
     if lora_checkpoint is not None:
@@ -277,14 +308,50 @@ def build_ltx_joint_denoiser(
 
         post_load_hook = merge_lora
 
+    state_dict_adapter = (
+        partial(prepare_ltx_quantized_state_dict, policy=context.policy.quantization, device=context.policy.device)
+        if checkpoint_quantization
+        else None
+    )
+    if ic_lora_checkpoint is not None:
+        from worldfoundry.core.vram import DiskMap
+
+        from .ltx_lora import convert_ltx_ic_lora_state_dict, prepare_ltx_ic_lora_state_dict
+
+        materialized = NativeCheckpointResolver().materialize(ic_lora_checkpoint)
+        lora = convert_ltx_ic_lora_state_dict(DiskMap([str(path) for path in materialized.paths], "cpu"))
+        quantization_adapter = state_dict_adapter
+
+        def adapt_ic_lora(
+            module: torch.nn.Module, state_dict: Mapping[str, torch.Tensor]
+        ) -> Mapping[str, torch.Tensor]:
+            fused = prepare_ltx_ic_lora_state_dict(
+                module,
+                state_dict,
+                lora=lora,
+                strength=float(context.component_options.get("lora_strength", 1.0)),
+                device=context.policy.device,
+            )
+            return quantization_adapter(module, fused) if quantization_adapter is not None else fused
+
+        state_dict_adapter = adapt_ic_lora
+
     model = NativeModuleLoader().load(
         ModuleLoadSpec(
             module_class=module_class,
+            config=({"split_checkpoint": True} if split_checkpoint else {}),
             config_resolver=lambda checkpoint: {"checkpoint_config": safetensors_json_metadata(checkpoint)},
-            state_dict_converter=convert_ltx_transformer_state_dict,
+            state_dict_converter=(
+                partial(convert_ltx_transformer_state_dict, lazy=True)
+                if lazy_state_dict
+                else convert_ltx_transformer_state_dict
+            ),
+            lazy_state_dict=lazy_state_dict,
+            buffer_aware_offload=lazy_state_dict,
+            state_dict_adapter=state_dict_adapter,
             vram_module_map={
                 LTXModel: AutoWrappedNonRecurseModule,
-                BasicAVTransformerBlock: AutoWrappedNonRecurseModule,
+                BasicAVTransformerBlock: AutoWrappedModule if lazy_state_dict else AutoWrappedNonRecurseModule,
                 torch.nn.Linear: AutoWrappedLinear,
                 torch.nn.LayerNorm: AutoWrappedModule,
                 torch.nn.RMSNorm: AutoWrappedModule,
@@ -298,7 +365,11 @@ def build_ltx_joint_denoiser(
     if not isinstance(model, LTXAVTransformerModule):
         raise TypeError(f"expected LTXAVTransformerModule, got {type(model).__name__}")
     model.velocity_model.refresh_preprocessor_bindings()
-    return denoiser_class(model, compute_dtype=context.policy.dtype)
+    return denoiser_class(
+        model,
+        compute_dtype=context.policy.dtype,
+        **({"precision": context.component_options["precision"]} if "precision" in context.component_options else {}),
+    )
 
 
 def build_ltx_video_denoiser(context: ComponentBuildContext) -> LTXVideoDenoiser:

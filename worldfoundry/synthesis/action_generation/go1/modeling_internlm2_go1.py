@@ -11,6 +11,7 @@ from torch.nn import CrossEntropyLoss
 from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
 from transformers.utils import logging
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP
 from worldfoundry.core.attention import scaled_dot_product_attention
 
 from .configuration_internlm2 import InternLM2Config
@@ -19,7 +20,6 @@ from .modeling_internlm2 import (
     InternLM2DecoderLayer,
     InternLM2FlashAttention2,
     InternLM2ForCausalLM,
-    InternLM2MLP,
     InternLM2Model,
     InternLM2RMSNorm,
     _import_flash_attn,
@@ -87,7 +87,7 @@ class InternLM2AttentionGO1(InternLM2Attention):
         if past_key_value is not None:
             kv_seq_len += past_key_value[0].shape[-2]
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos[position_ids], sin[position_ids])
 
         if past_key_value is not None:
             # reuse k, v, self_attention
@@ -190,7 +190,7 @@ class InternLM2FlashAttention2GO1(InternLM2FlashAttention2):
 
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
 
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos[position_ids], sin[position_ids])
 
         if past_key_value is not None:
             # reuse k, v, self_attention
@@ -228,7 +228,7 @@ class InternLM2DecoderLayerGO1(InternLM2DecoderLayer):
 
         self.attention = INTERNLM2GO1_ATTENTION_CLASSES[config.attn_implementation](config=config)
 
-        self.feed_forward = InternLM2MLP(config)
+        self.feed_forward = QwenMLP(config)
         self.attention_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.ffn_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

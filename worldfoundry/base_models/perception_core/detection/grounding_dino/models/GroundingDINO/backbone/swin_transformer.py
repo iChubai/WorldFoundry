@@ -18,56 +18,12 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from timm.layers import DropPath, to_2tuple, trunc_normal_
 
-from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import NestedTensor
-
-
-class Mlp(nn.Module):
-    """Multilayer perceptron."""
-
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0):
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features)
-        self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features)
-        self.drop = nn.Dropout(drop)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
-        return x
-
-
-def window_partition(x, window_size):
-    """
-    Args:
-        x: (B, H, W, C)
-    Returns:
-        windows: (num_windows*B, window_size, window_size, C)
-    """
-    B, H, W, C = x.shape
-    x = x.view(B, H // window_size, window_size, W // window_size, window_size, C)
-    windows = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(-1, window_size, window_size, C)
-    return windows
-
-
-def window_reverse(windows, window_size, H, W):
-    """
-    Args:
-        windows: (num_windows*B, window_size, window_size, C)
-        H (int): Height of image
-        W (int): Width of image
-    Returns:
-        x: (B, H, W, C)
-    """
-    B = int(windows.shape[0] / (H * W / window_size / window_size))
-    x = windows.view(B, H // window_size, W // window_size, window_size, window_size, -1)
-    x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
-    return x
+from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
+    NestedTensor,
+)
+from worldfoundry.core.attention.window import window_partition as window_partition
+from worldfoundry.core.attention.window import window_reverse as window_reverse
+from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
 
 
 class WindowAttention(nn.Module):

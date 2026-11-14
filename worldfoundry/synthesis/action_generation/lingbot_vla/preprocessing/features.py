@@ -1,40 +1,19 @@
 """LingBot-VLA v1 observation preprocessing and action postprocessing."""
 
-import ast
 import json
 from collections import OrderedDict
 
 import torch
 import torch.nn.functional as F
 import yaml
-from pydantic import BaseModel
 
-from .transforms import Normalizer, prepare_action, prepare_images, prepare_joint_pad, prepare_language, prepare_state
+from worldfoundry.base_models.llm_mllm_core.action.lingbot.preprocessing import (
+    FeatureInfo,
+    prepare_action,
+    prepare_state,
+)
 
-
-class FeatureInfo(BaseModel):
-    # Stores metadata about robot joints and camera images used for feature extraction.
-    # Parsed from the training data config to determine which joints/images to process.
-    joints: list[str] | None = None
-    images: list[str] | None = None
-    joints_max_dim: dict | None = None
-
-    def update_info(self, data_config):
-        joints_info = data_config.joints
-        self.images = ["observation.images." + image for image in data_config.cameras]
-
-        joints = []
-        joints_max_dim = {}
-        for s in joints_info:
-            joint_info = dict(s) if isinstance(s, dict) else ast.literal_eval(s)
-            joint = next(iter(joint_info.keys()))
-            if joint_info[joint] == 0:
-                continue
-
-            joints.append(joint)
-            joints_max_dim.update(joint_info)
-        self.joints = joints
-        self.joints_max_dim = joints_max_dim
+from .transforms import Normalizer, prepare_images, prepare_joint_pad, prepare_language
 
 
 class FeatureTransform:

@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from worldfoundry.core.io.paths import project_root
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.zoo.runtime.profiles import load_runtime_profile
 
@@ -29,7 +28,6 @@ class WorldModelRuntimeSpec:
     entrypoint_relative: str | None = None
     command_builder_attr: str | None = "build_command"
     missing_requirements_attr: str | None = "missing_requirements"
-    pythonpath_builder_attr: str | None = "pythonpath_entries"
     blocked_reason_attr: str | None = "BLOCKED_REASON"
     blocked_reason: str | None = None
     source_dir_names: tuple[str, ...] = ()
@@ -181,25 +179,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         runtime_module="worldfoundry.synthesis.visual_generation.open_oasis.worldfoundry_runtime",
         input_schema=_MINECRAFT_INPUTS,
     ),
-    "open-dreamer": WorldModelRuntimeSpec(
-        model_id="open-dreamer",
-        display_name="Open Dreamer",
-        runtime_module="worldfoundry.synthesis.visual_generation.open_dreamer.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
-        entrypoint_attr=None,
-        entrypoint_relative="inference.py",
-        # Gating lives in the adapter's missing_requirements so a fully staged
-        # checkout, JAX environment, and checkpoint can actually execute.
-        blocked_reason="",
-        official_repo_url="https://github.com/next-state/open-dreamer",
-        required_assets=(
-            "reactor-team/open-dreamer checkout staged under ${WORLDFOUNDRY_MODEL_SOURCE_DIR}/open-dreamer-inference",
-            "Open Dreamer Orbax checkpoint containing tokenizer and dynamics weights",
-            "Minecraft/VPT context clip at 368x640 (or 360x640)",
-        ),
-        input_schema=_MINECRAFT_INPUTS,
-    ),
     "sana-wm": WorldModelRuntimeSpec(
         model_id="sana-wm",
         display_name="SANA-WM",
@@ -264,26 +243,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         ),
         input_schema={"prompt": True, "image": True, "video": False, "actions": ["camera_navigation", "world_action"]},
     ),
-    "egowm": WorldModelRuntimeSpec(
-        model_id="egowm",
-        display_name="EgoWM",
-        runtime_module="worldfoundry.synthesis.visual_generation.egowm.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
-        official_repo_url="https://github.com/miccooper9/egowm",
-        blocked_reason="",
-        required_assets=(
-            "anuragba/egowm 25-DoF navigation checkpoint",
-            "Stable Video Diffusion img2vid base model",
-            "official EgoWM source checkout",
-        ),
-        input_schema={
-            "prompt": True,
-            "image": True,
-            "video": True,
-            "actions": ["navigation_action", "egocentric_action"],
-        },
-    ),
     "happyoyster": WorldModelRuntimeSpec(
         model_id="happyoyster",
         display_name="HappyOyster",
@@ -296,14 +255,12 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         model_id="hma",
         display_name="HMA",
         runtime_module="worldfoundry.synthesis.visual_generation.hma.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
         official_repo_url="https://github.com/liruiw/HMA",
         blocked_reason="",
         required_assets=(
             "liruiw/hma-base-cont checkpoint",
             "Stable Video Diffusion temporal VAE",
-            "official HMA source checkout and prompt frame or paired trajectory",
+            "prompt frame or paired trajectory",
         ),
         input_schema=_ROBOT_INPUTS,
     ),
@@ -376,33 +333,15 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
             "actions": ["robot_action", "point_cloud_condition"],
         },
     ),
-    "shotstream": WorldModelRuntimeSpec(
-        model_id="shotstream",
-        display_name="ShotStream",
-        runtime_module="worldfoundry.synthesis.visual_generation.shotstream.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
-        official_repo_url="https://github.com/KlingAIResearch/ShotStream",
-        blocked_reason="",
-        required_assets=(
-            "KlingTeam/ShotStream causal checkpoint bundle",
-            "Wan-AI/Wan2.1-T2V-1.3B base model",
-            "official ShotStream source checkout",
-        ),
-        input_schema={"prompt": True, "image": True, "video": True, "actions": ["stream_control", "edit"]},
-    ),
     "solarwm": WorldModelRuntimeSpec(
         model_id="solarwm",
         display_name="SolarWM",
         runtime_module="worldfoundry.synthesis.visual_generation.solarwm.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
         official_repo_url="https://github.com/Junchao-cs/SolarWM",
         blocked_reason="",
         required_assets=(
             "junchaoh-cs/SolarWM-Wan2.2-5B base and Stage2 checkpoint assets",
             "junchaoh-cs/SolarWM-Data release indexes and raw shards",
-            "official SolarWM source checkout",
         ),
         input_schema={
             "prompt": False,
@@ -454,22 +393,6 @@ WORLD_MODEL_RUNTIME_SPECS: Mapping[str, WorldModelRuntimeSpec] = {
         blocked_reason="Vid2World official evaluation route is registered; execution requires Vid2World checkpoints, conditioning videos/actions, and official config assets.",
         required_assets=("Vid2World checkpoint/assets",),
         input_schema={"prompt": True, "image": True, "video": True, "actions": ["action", "world_action"]},
-    ),
-    "wilddet3d": WorldModelRuntimeSpec(
-        model_id="wilddet3d",
-        display_name="WildDet3D",
-        runtime_module="worldfoundry.synthesis.visual_generation.wilddet3d.worldfoundry_runtime",
-        runtime_root_attr=None,
-        runtime_root_func="runtime_root",
-        official_repo_url="https://github.com/allenai/WildDet3D",
-        blocked_reason="",
-        required_assets=(
-            "allenai/WildDet3D checkpoint",
-            "robbyant/lingbot-depth-postrain-dc-vitl14 model.pt",
-            "official source checkout and submodules",
-            "RGB image",
-        ),
-        input_schema={"prompt": True, "image": True, "video": False, "actions": ["detection_query"]},
     ),
     "wildworld": WorldModelRuntimeSpec(
         model_id="wildworld",
@@ -564,6 +487,14 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
 
     def _checkpoint_paths(self) -> list[Path]:
         paths: list[Path] = []
+        if self.model_id == "leworldmodel":
+            from .le_wm.worldfoundry_runtime import policy_checkpoint_path
+
+            policy_path = policy_checkpoint_path(self.options)
+            if policy_path is not None:
+                paths.append(policy_path)
+        if self.model_id == "diamond" and self.options.get("pretrained_dir"):
+            paths.append(expand_worldfoundry_path(str(self.options["pretrained_dir"])))
         for key in (
             "checkpoint_path",
             "checkpoint_dir",
@@ -680,19 +611,10 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
         hook = self._module_hook(self.profile.command_builder_attr)
         if hook is not None:
             return [str(item) for item in hook(context)]
-        if self.entrypoint is None:
-            return []
-        return [sys.executable, str(self.entrypoint)]
+        return []
 
     def _subprocess_env(self, *, output_path: Path, prompt: str, plan_path: Path) -> dict[str, str]:
         env = os.environ.copy()
-        pythonpath_entries: list[str] = []
-        hook = self._module_hook(self.profile.pythonpath_builder_attr)
-        if hook is not None:
-            extra_entries = hook(runtime_root=self.runtime_root, options=self.options, profile=self.runtime_profile)
-            pythonpath_entries.extend(str(item) for item in extra_entries or ())
-        pythonpath_entries.extend([str(self.runtime_root), str(project_root(__file__)), env.get("PYTHONPATH", "")])
-        env["PYTHONPATH"] = os.pathsep.join(item for item in pythonpath_entries if item)
         env["WORLDFOUNDRY_MODEL_ID"] = self.model_id
         env["WORLDFOUNDRY_OUTPUT_PATH"] = str(output_path)
         env["WORLDFOUNDRY_OUTPUT_DIR"] = str(output_path.parent)
@@ -850,7 +772,13 @@ class WorldModelRuntimeSynthesis(BaseSynthesis):
                 "error": f"official entrypoint exited with code {completed.returncode}; see {log_path}",
                 "metadata": {"command": command, "log_path": str(log_path)},
             }
-        produced = self._resolve_produced_artifact(output)
+        produced = None
+        if self.model_id == "nwm":
+            produced = next((path for path in sorted(output.parent.rglob("*.png")) if path.is_file()), None)
+            if produced is not None:
+                output = output.with_suffix(".png")
+        if produced is None:
+            produced = self._resolve_produced_artifact(output)
         if produced is None:
             return {
                 "status": "failed",

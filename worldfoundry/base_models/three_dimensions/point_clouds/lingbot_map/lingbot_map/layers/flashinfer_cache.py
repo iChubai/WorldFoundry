@@ -557,7 +557,7 @@ class FlashInferKVCacheManager:
 def _sanity_check():
     """
     Minimal validation test.
-    Run with:  python -c "from lingbot_map.layers.flashinfer_cache import _sanity_check; _sanity_check()"
+    Run with:  python -c "from worldfoundry.base_models.three_dimensions.point_clouds.lingbot_map.lingbot_map.layers.flashinfer_cache import _sanity_check; _sanity_check()"
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if not torch.cuda.is_available():

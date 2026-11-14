@@ -9,14 +9,18 @@ from huggingface_hub import PyTorchModelHubMixin
 from worldfoundry.base_models.perception_core.general_perception.dinov2.hub.backbones import (
     dinov2_vitl14_reg,
 )
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    homogenize_points,
+)
+from worldfoundry.core.attention.rotary.rope_2d import CrocoRotaryPositionEmbedding2D as RoPE2D
 from worldfoundry.core.nn.blocks.layers import Mlp, PatchEmbed
 
-from ..utils.geometry import get_pixel, homogenize_points, se3_inverse
+from ..utils.geometry import get_pixel, se3_inverse
 from .layers.attention import FlashAttentionRope
 from .layers.block import BlockRope, PoseInjectBlock
 from .layers.camera_head import CameraHead
 from .layers.conv_head import ConvHead
-from .layers.pos_embed import PositionGetter, RoPE2D
+from .layers.pos_embed import PositionGetter
 from .layers.transformer_head import ContextOnlyTransformerDecoder, TransformerDecoder
 
 

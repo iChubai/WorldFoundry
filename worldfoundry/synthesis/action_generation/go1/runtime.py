@@ -17,6 +17,12 @@ from worldfoundry.synthesis.action_generation._native_policy_runtime import (
     runtime_options_cache_key,
 )
 
+_MLP_CHECKPOINT_KEY_MAPPING = {
+    r"^(.*\.feed_forward)\.w1\.weight$": r"\1.gate_proj.weight",
+    r"^(.*\.feed_forward)\.w3\.weight$": r"\1.up_proj.weight",
+    r"^(.*\.feed_forward)\.w2\.weight$": r"\1.down_proj.weight",
+}
+
 
 @dataclass(frozen=True)
 class GO1RuntimeConfig:
@@ -125,6 +131,11 @@ class GO1Runtime:
         if self._model is not None:
             return self._model
 
+        from accelerate import init_empty_weights
+
+        from worldfoundry.core.model_loading.checkpoints.sharded_safetensors import (
+            load_safetensors_into_model_streaming,
+        )
         from worldfoundry.core.platform.device import resolve_inference_device, resolve_inference_dtype
 
         from .configuration_go1 import GO1ModelConfig
@@ -144,19 +155,16 @@ class GO1Runtime:
         config.action_config.attn_implementation = backend
         config.latent_planner_config.attn_implementation = backend
         config.vision_config.use_flash_attn = backend == "flash_attention_2"
-        model = (
-            GO1Model.from_pretrained(
-                snapshot,
-                config=config,
-                torch_dtype=dtype,
-                low_cpu_mem_usage=True,
-                local_files_only=True,
-                trust_remote_code=False,
-                use_safetensors=True,
-            )
-            .to(device=device, dtype=dtype)
-            .eval()
+        with init_empty_weights(include_buffers=False):
+            model = GO1Model(config, torch_dtype=dtype)
+        load_safetensors_into_model_streaming(
+            model,
+            snapshot,
+            device="cpu",
+            dtype=dtype,
+            key_mapping=_MLP_CHECKPOINT_KEY_MAPPING,
         )
+        model = model.to(device=device, dtype=dtype).eval()
         model.torch_dtype = dtype
         model.time_embedder.dtype = dtype
         model.freq_embedder.dtype = dtype

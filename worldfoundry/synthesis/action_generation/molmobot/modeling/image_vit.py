@@ -99,10 +99,6 @@ class VitConfig(BaseConfig):
             raise NotImplementedError(f"Unknown image model type: {self.image_model_type}")
 
 
-def _expand_token(token, batch_size: int):
-    return token.view(1, 1, -1).expand(batch_size, -1, -1)
-
-
 class ViTMultiHeadDotProductAttention(nn.Module):
     """MDPA for the image ViT"""
 
@@ -444,7 +440,7 @@ class VisionTransformer(nn.Module):
         x = self.patch_embedding(x)
 
         # class embeddings and positional embeddings
-        x = torch.cat([_expand_token(self.class_embedding, x.shape[0]).to(x.dtype), x], dim=1)
+        x = torch.cat([self.class_embedding.view(1, 1, -1).expand(x.shape[0], -1, -1).to(x.dtype), x], dim=1)
         x = self.add_pos_emb(x, patch_num)
 
         x = self.pre_ln(x)
@@ -591,7 +587,7 @@ class DinoVisionTransformer(nn.Module):
         x = self.patch_embedding(x)
 
         # class embeddings and positional embeddings
-        x = torch.cat([_expand_token(self.class_embedding, x.shape[0]).to(x.dtype), x], dim=1)
+        x = torch.cat([self.class_embedding.view(1, 1, -1).expand(x.shape[0], -1, -1).to(x.dtype), x], dim=1)
         x = self.add_pos_emb(x, patch_num)
 
         hidden_states = self.transformer(x)

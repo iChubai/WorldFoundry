@@ -9,7 +9,9 @@
 
 from torch import Tensor, nn
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
 
 XFORMERS_AVAILABLE = False
 
@@ -53,6 +55,14 @@ class Attention(nn.Module):
             q = self.rope(q, pos)
             k = self.rope(k, pos)
 
+        x = self._apply_attention(q, k, v)
+
+        x = x.transpose(1, 2).reshape(B, N, C)
+        x = self.proj(x)
+        x = self.proj_drop(x)
+        return x
+
+    def _apply_attention(self, q: Tensor, k: Tensor, v: Tensor) -> Tensor:
         if self.fused_attn:
             x = _worldfoundry_scaled_dot_product_attention(
                 q, k, v, dropout_p=self.attn_drop.p if self.training else 0.0
@@ -64,9 +74,6 @@ class Attention(nn.Module):
             attn = self.attn_drop(attn)
             x = attn @ v
 
-        x = x.transpose(1, 2).reshape(B, N, C)
-        x = self.proj(x)
-        x = self.proj_drop(x)
         return x
 
 

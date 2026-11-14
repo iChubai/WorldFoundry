@@ -18,15 +18,23 @@ from pydantic import BaseModel, ConfigDict
 from torch import Tensor
 from tqdm import tqdm
 
-from mira.codec.codec_model import VideoCodec
-from mira.data.batch import VideoActionBatch
-from mira.inference_support.checkpoints import resolve_checkpoint
-from mira.ml.config_loading import drop_removed_fields, strip_hydra_targets
-from mira.world_model.actions_config import ActionTensors
-from mira.world_model.config import LatentWorldModelConfig, WorldModelInferenceConfig
-from mira.world_model.diffusion_transformer import DiffusionTransformer
-from mira.world_model.layers.action_encoder import ActionEncoder
-from mira.world_model.schedule import build_inference_schedule
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.codec.codec_model import VideoCodec
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.data.batch import VideoActionBatch
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.inference_support.checkpoints import resolve_checkpoint
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.ml.config_loading import (
+    drop_removed_fields,
+    strip_hydra_targets,
+)
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.actions_config import ActionTensors
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.config import (
+    LatentWorldModelConfig,
+    WorldModelInferenceConfig,
+)
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.diffusion_transformer import (
+    DiffusionTransformer,
+)
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.layers.action_encoder import ActionEncoder
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.schedule import build_inference_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -502,7 +510,7 @@ class LatentWorldModel(nn.Module):
             where ``viz_video`` stacks the HUD-annotated prediction over the ground truth vertically.
         """
         # Imported here (not at module load) to keep the model independent of the training package.
-        from mira.inference_support.visualization import (
+        from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.inference_support.visualization import (
             add_prediction_border,
             video_to_uint8,
             visualize_batch,

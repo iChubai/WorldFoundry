@@ -2,7 +2,12 @@ import diffusers
 import torch
 import torch.nn as nn
 from safetensors.torch import load_file as load_safetensors
-from utils import get_valid_paths, print0, tensor_to_uint8
+
+from worldfoundry.synthesis.visual_generation.mineworld.utils import (
+    get_valid_paths,
+    print0,
+    tensor_to_uint8,
+)
 
 
 class VAE(nn.Module):

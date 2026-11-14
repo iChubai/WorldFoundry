@@ -16,7 +16,6 @@ import importlib.util
 import os
 import sys
 from pathlib import Path
-from types import ModuleType
 
 import cv2
 import numpy as np
@@ -39,43 +38,11 @@ def _ensure_torchvision_functional_tensor_alias() -> None:
     sys.modules.setdefault("torchvision.transforms.functional_tensor", functional_tensor)
 
 
-def _ensure_realesrgan_version_module() -> None:
-    """Make editable-install-only metadata importable from a plain checkout."""
-    import sys
-
-    if "realesrgan.version" in sys.modules:
-        return
-
-    for entry in sys.path:
-        base = Path(entry)
-        package_dir = base / "realesrgan"
-        version_file = package_dir / "version.py"
-        version_txt = base / "VERSION"
-        if not package_dir.is_dir():
-            continue
-        if version_file.is_file():
-            return
-        if not version_txt.is_file():
-            continue
-
-        short_version = version_txt.read_text(encoding="utf-8").strip()
-        version_info = tuple(int(item) if item.isdigit() else item for item in short_version.split("."))
-        module = ModuleType("realesrgan.version")
-        module.__file__ = str(version_file)
-        module.__package__ = "realesrgan"
-        module.__version__ = short_version
-        module.__gitsha__ = "unknown"
-        module.version_info = version_info
-        sys.modules.setdefault("realesrgan.version", module)
-        return
-
-
 # ---------------------------------------------------------------------------
 # Import-time compatibility shims.  hy3dworld itself is resolved lazily so this
 # module can always be imported for testing / inspection.
 # ---------------------------------------------------------------------------
 _ensure_torchvision_functional_tensor_alias()
-_ensure_realesrgan_version_module()
 
 Image2PanoramaPipelines = None
 Perspective = None
@@ -166,7 +133,6 @@ def ensure_hy3dworld(path: str | os.PathLike | None = None) -> None:
         )
 
     _ensure_torchvision_functional_tensor_alias()
-    _ensure_realesrgan_version_module()
     _ensure_utils3d_alias()
 
     try:

@@ -9,12 +9,11 @@ import numpy as np
 from omegaconf import OmegaConf, open_dict
 
 # isort: split
-from official_plan import planning_main
+from worldfoundry.synthesis.visual_generation.dino_wm.official_plan import planning_main
 
 # isort: split
-from utils import cfg_to_dict
-
 from worldfoundry.core.io.paths import resolve_data_path
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import cfg_to_dict
 
 
 def _json_default(value):

@@ -21,7 +21,12 @@ Warp-as-History（WAH）是相机可控的**图生视频**方法。论文是 [Wa
 
 准备三份外部缓存：`BestWishYsh/Helios-Distilled`（基座）、`yyfz233/warp-as-history`（`visible_lora_state_step1000.safetensors`），以及从相机位姿渲染 warp 时需要的 `yyfz233/Pi3X`（`model.safetensors`）。用 `model_path` / `lora_path` / `pi3x_ckpt_path` 或 `WAH_HELIOS_DISTILLED_PATH` / `WAH_LORA_PATH` / `WAH_PI3X_CKPT_PATH` 注入。只有从相机位姿而非现成 warp 视频开始时，才需要 Pi3X；其他情况下可选。
 
+相机位姿 warp 复用 WorldFoundry 树内的 Pi3X 模型与几何工具，仅需在外部缓存就位权重。
+
 ## 运行时契约
+
+WorldFoundry 通过包导入在当前进程内调用 `worldfoundry.synthesis.visual_generation.warp_as_history.warp_as_history_runtime.warp_as_history.infer`。
+
 仅使用独立环境：`warp-as-history` 固定 **Python 3.10**、**CUDA 12.1**、**torch==2.5.0**。不要放进统一环境。相机轨迹偏离输入视角过远时，warp 历史和成片都会变差。
 
 ## 在 WorldFoundry 中运行

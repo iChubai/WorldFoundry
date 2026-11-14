@@ -180,16 +180,12 @@ def _category_from_family(family: str, class_name: str, call_params: Sequence[st
         "infinite_vggt",
         "lagernvs",
         "pixelsplat",
-        "splatt3r",
-        "dvlt",
         "lingbot_map",
     }:
         return "3D Scene"
     if family in {
         "depth_anything",
         "worldfm",
-        "dust3r",
-        "dust3r_base_model",
         "geometry_prior",
     } or family.startswith("geometry_prior"):
         return "Depth / Geometry"

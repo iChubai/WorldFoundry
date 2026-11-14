@@ -2,7 +2,7 @@
 title: "Pusa VidGen"
 description: "Pusa VidGen（香港城市大学）：图生视频、文生视频等 3 项任务；Runner 一致性待确认。"
 modelId: "pusa-vidgen"
-pageSource: generated
+pageSource: authored
 ---
 
 Pusa VidGen（Pusa V1）展示了向量化时间步适配：不再让整段视频共享一个扩散时间步，而是每帧独立时间步，从而用一次低成本的 Wan2.2 LoRA 训练同时解锁图生视频、文生视频与视频延展。WorldFoundry 完全用规范化 Wan2.2 组件装配它——推理时不需要外部运行时检出。
@@ -36,6 +36,8 @@ CLI task profile：`default`。绑定的 pipeline 类是 `PusaVidGenPipeline`。
 `default` 的默认值：frames=81, height=720, width=1280, seed=0。
 
 以 execute=True 调用 pipeline 即可写出 generated_video 产物。运行前请同时就位 Wan2.2 基座权重与 Pusa LoRA。
+
+支持的 `runner_version` 为 `v1`，使用 Pusa 高噪声、低噪声 LoRA 与 Wan2.2。请求 `v0` 会报错；执行前必须就位 V1 的两个 LoRA 文件。
 
 ## 在 WorldFoundry 中运行
 

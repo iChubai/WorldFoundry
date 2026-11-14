@@ -52,12 +52,12 @@ from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.model
 from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.frustum import (
     calculate_unprojected_mask,
 )
-
-from .geometry import (
-    closed_form_inverse_se3,
+from worldfoundry.base_models.three_dimensions.point_clouds.hunyuan_mirror.models.utils.geometry import (
     depth_to_world_coords_points,
-    project_world_points_to_image,
 )
+from worldfoundry.core.geometry.transforms import closed_form_inverse_se3
+
+from .geometry import project_world_points_to_image
 
 
 class Gaussians:

@@ -740,36 +740,6 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
             ],
         },
     },
-    "dust3r": {
-        "description": {
-            "en": "NAVER Labs two-view pointmaps, no calibration. Validated on the bundled multi-view case. CC-BY-NC-SA-4.0.",
-            "zh": "NAVER Labs 两视图点图，无需标定。已在捆绑多视图用例上验证。CC-BY-NC-SA-4.0。",
-        },
-        "use_cases": {
-            "en": [
-                "Start on `dust3r` for uncalibrated two-view or multi-view reconstruction. Launch `wf run dust3r`. For streaming reconstruction with metric state, use [CUT3R](/docs/guides/supported-models/cut3r).",
-            ],
-            "zh": [
-                "无标定两视图/多视图重建从 `dust3r` 开始。启动 `wf run dust3r`。需要带米制状态的流式重建时，请使用 [CUT3R](/zh/docs/guides/supported-models/cut3r)。",
-            ],
-        },
-        "contract_extra": {
-            "en": [
-                "Required `image`. Optional `prompt`, `video`. `actions`: `multi_view_reconstruction`. Artifact: `dust3r_point_cloud.ply`. Checkpoint `naver/DUSt3R_ViTLarge_BaseDecoder_512_dpt` (512 DPT).",
-            ],
-            "zh": [
-                "必填 `image`。可选 `prompt`、`video`。`actions`：`multi_view_reconstruction`。产物：`dust3r_point_cloud.ply`。权重 `naver/DUSt3R_ViTLarge_BaseDecoder_512_dpt`（512 DPT）。",
-            ],
-        },
-        "run_extra": {
-            "en": [
-                "Unified `worldfoundry-unified-cu128`. Stage the NAVER `512_dpt` file first. License CC-BY-NC-SA-4.0.",
-            ],
-            "zh": [
-                "统一环境 `worldfoundry-unified-cu128`。先就位 NAVER `512_dpt` 文件。许可证 CC-BY-NC-SA-4.0。",
-            ],
-        },
-    },
     "go1": {
         "description": {
             "en": "AgiBot + OpenDriveLab generalist VLA with a latent planner and diffusion action expert. CC-BY-NC-SA-4.0 (non-commercial).",

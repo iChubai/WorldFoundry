@@ -162,13 +162,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "dualcamctrl": {
         "overview": "https://arxiv.org/html/2511.23127v2/dualcam_framework.png",
     },
-    "dust3r": {
-        "teaser": "https://raw.githubusercontent.com/naver/dust3r/main/assets/dust3r.jpg",
-    },
-    "dvlt": {
-        "teaser": "https://arxiv.org/html/2605.30215v2/teaser_figure.png",
-        "overview": "https://arxiv.org/html/2605.30215v2/method_overview_v3.png",
-    },
     "dynamicrafter": {
         "overview": "https://arxiv.org/html/2310.12190v2/overview3.png",
     },
@@ -260,9 +253,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     },
     "hunyuanworld-mirror": {
         "overview": "https://arxiv.org/html/2510.10726v2/Figs/pipeline.png",
-    },
-    "hunyuanworld-voyager": {
-        "teaser": "https://arxiv.org/html/2405.07719v5/lb.png",
     },
     "hy-embodied-vla": {
         "teaser": "https://arxiv.org/html/2606.14409v2/teaser_1.png",
@@ -394,9 +384,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "molmobot": {
         "teaser": "https://arxiv.org/html/2603.16861v2/MolmoBotTeaser_11.png",
     },
-    "monst3r": {
-        "teaser": "https://raw.githubusercontent.com/Junyi42/monst3r/main/assets/fig1_teaser.png",
-    },
     "mosaicmem": {
         "teaser": "https://arxiv.org/html/2603.17117v1/figs/mem_comparison_V7.jpg",
         "overview": "https://arxiv.org/html/2603.17117v1/figs/method_v4.jpg",
@@ -425,9 +412,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     },
     "omniforcing": {
         "overview": "https://arxiv.org/html/2603.11647v2/teaser_2.png",
-    },
-    "open-dreamer": {
-        "teaser": "https://arxiv.org/html/2509.24527v1/imag.png",
     },
     "open-magvit2": {
         "overview": "https://arxiv.org/html/2409.04410v3/framework.png",
@@ -500,10 +484,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "self-forcing": {
         "overview": "https://arxiv.org/html/2506.08009v2/overview.png",
     },
-    "shotstream": {
-        "teaser": "https://arxiv.org/html/2603.25746v1/overflow.png",
-        "overview": "https://arxiv.org/html/2603.25746v1/method_teacher.png",
-    },
     "show-o": {
         "overview": "https://arxiv.org/html/2408.12528v7/method_comparisons.png",
     },
@@ -528,15 +508,9 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "spatia": {
         "overview": "https://arxiv.org/html/2512.15716v1/overview.png",
     },
-    "splatt3r": {
-        "overview": "https://arxiv.org/html/2408.13912v2/methodology.png",
-    },
     "stable-video-infinity": {
         "teaser": "https://arxiv.org/html/2510.09212v1/Figure/intro.png",
         "overview": "https://arxiv.org/html/2510.09212v1/Figure/overall.png",
-    },
-    "stable-virtual-camera": {
-        "overview": "https://arxiv.org/html/2503.14489v2/overview.png",
     },
     "starvla": {
         "teaser": "https://arxiv.org/html/2604.05014v1/vla-form.png",
@@ -567,10 +541,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "unidepth-v2-prior": {
         "teaser": "https://arxiv.org/html/2502.20110v2/teaser1.png",
         "overview": "https://arxiv.org/html/2502.20110v2/overview3.png",
-    },
-    "unik3d-prior": {
-        "teaser": "https://arxiv.org/html/2503.16591v1/teaser_cr.png",
-        "overview": "https://arxiv.org/html/2503.16591v1/overview_cr.png",
     },
     "uwm": {
         "overview": "https://arxiv.org/html/2504.02792v3/teaser.png",
@@ -667,10 +637,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
         "teaser": "https://arxiv.org/html/2505.22944v3/figures/example1.jpg",
         "overview": "https://arxiv.org/html/2505.22944v3/figures/Pipeline.jpg",
     },
-    "egowm": {
-        "teaser": "https://arxiv.org/html/2601.15284v2/teaser.png",
-        "overview": "https://arxiv.org/html/2601.15284v2/method.png",
-    },
     "emu3.5": {
         "overview": "https://raw.githubusercontent.com/baaivision/Emu3.5/main/assets/arch.png",
     },
@@ -718,10 +684,6 @@ CURATED_FIGURES: dict[str, dict[str, str]] = {
     "vggt": {
         "teaser": "https://arxiv.org/html/2503.11651v1/comparison_vggt_dust3r.png",
         "overview": "https://arxiv.org/html/2503.11651v1/architecture_v4.png",
-    },
-    "wilddet3d": {
-        "teaser": "https://arxiv.org/html/2604.08626v2/teaser_5_flat.png",
-        "overview": "https://arxiv.org/html/2604.08626v2/model_arch_new.png",
     },
 }
 

@@ -22,12 +22,6 @@ import attrs
 import numpy as np
 import torch
 from einops import rearrange
-from lyra_2._src.models.wan_t2v_model import T2VModelConfig, WANDiffusionModel
-from lyra_2._src.modules.conditioner import DataType
-from lyra_2._src.utils.forward_warp_utils_pytorch import (
-    forward_warp_multiframes,
-    unproject_points,
-)
 from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.tensor import DTensor
 
@@ -37,6 +31,15 @@ from worldfoundry.core.distributed.model_parallel.context import broadcast
 from worldfoundry.core.execution import inference_runtime as misc
 from worldfoundry.core.geometry.transforms import ray_condition
 from worldfoundry.core.observability.rank_logging import log
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.models.wan_t2v_model import (
+    T2VModelConfig,
+    WANDiffusionModel,
+)
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.modules.conditioner import DataType
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.utils.forward_warp_utils_pytorch import (
+    forward_warp_multiframes,
+    unproject_points,
+)
 
 try:
     from worldfoundry.core.distributed.model_parallel.megatron_compat import parallel_state
@@ -756,7 +759,9 @@ class Lyra2Model(WANDiffusionModel):
         denoising_step_list: list[int] = [1000, 750, 500, 250]
         num_train_timestep: int = 1000
         if self.dmd_scheduler is None:
-            from lyra_2._src.schedulers.self_forcing_scheduler import FlowMatchScheduler
+            from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.schedulers.self_forcing_scheduler import (
+                FlowMatchScheduler,
+            )
 
             self.dmd_scheduler = FlowMatchScheduler(shift=5.0, sigma_min=0.0, extra_one_step=True)
             self.dmd_scheduler.set_timesteps(num_train_timestep, training=True)

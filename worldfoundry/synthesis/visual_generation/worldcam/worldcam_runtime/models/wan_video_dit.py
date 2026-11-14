@@ -1,10 +1,18 @@
-import math
-
 import torch
 import torch.nn as nn
 from einops import rearrange, repeat
 
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import (
+    precompute_freqs_cis_3d,
+    sinusoidal_embedding_1d,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.model import MLP
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.wam import NativeDtypeHead, TorchGateModule
+from worldfoundry.core.attention import apply_complex_rotary_embedding as rope_apply
+from worldfoundry.core.attention.backends.dispatch import flash_attention_2, flash_attention_3, sage_attention
 from worldfoundry.core.model_loading import hash_state_dict_keys
+from worldfoundry.core.nn import RMSNorm
+from worldfoundry.core.nn import scale_shift as modulate
 
 # isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan import SimpleAdapter
@@ -13,21 +21,21 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan import SimpleA
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 try:
-    import flash_attn_interface
+    import flash_attn_interface  # noqa: F401 - Preserve the family availability probe.
 
     FLASH_ATTN_3_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_3_AVAILABLE = False
 
 try:
-    import flash_attn
+    import flash_attn  # noqa: F401 - Preserve the family availability probe.
 
     FLASH_ATTN_2_AVAILABLE = True
 except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
 
 try:
-    from sageattention import sageattn
+    from sageattention import sageattn  # noqa: F401 - Preserve the family availability probe.
 
     SAGE_ATTN_AVAILABLE = True
 except ModuleNotFoundError:
@@ -59,100 +67,35 @@ class PluckerEmbeddingChannelStack(nn.Module):
         return final_output
 
 
-def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False):
-    if compatibility_mode:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = _worldfoundry_scaled_dot_product_attention(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
-    elif FLASH_ATTN_3_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
-        x = flash_attn_interface.flash_attn_func(q, k, v)
-        if isinstance(x, tuple):
-            x = x[0]
-        x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
-    elif FLASH_ATTN_2_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
-        x = flash_attn.flash_attn_func(q, k, v)
-        x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
-    elif SAGE_ATTN_AVAILABLE:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = sageattn(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
-    else:
-        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
-        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
-        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
-        x = _worldfoundry_scaled_dot_product_attention(q, k, v)
-        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
-    return x
-
-
-def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor):
-    return x * (1 + scale) + shift
-
-
-def sinusoidal_embedding_1d(dim, position):
-    sinusoid = torch.outer(
-        position.type(torch.float64),
-        torch.pow(10000, -torch.arange(dim // 2, dtype=torch.float64, device=position.device).div(dim // 2)),
-    )
-    x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
-    return x.to(position.dtype)
-
-
-def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
-    # 3d rope precompute
-    f_freqs_cis = precompute_freqs_cis(dim - 2 * (dim // 3), end, theta)
-    h_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
-    w_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
-    return f_freqs_cis, h_freqs_cis, w_freqs_cis
-
-
-def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
-    # 1d rope precompute
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].double() / dim))
-    freqs = torch.outer(torch.arange(end, device=freqs.device), freqs)
-    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
-    return freqs_cis
-
-
-def rope_apply(x, freqs, num_heads):
-    x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)
-    x_out = torch.view_as_complex(x.to(torch.float64).reshape(x.shape[0], x.shape[1], x.shape[2], -1, 2))
-    x_out = torch.view_as_real(x_out * freqs).flatten(2)
-    return x_out.to(x.dtype)
-
-
-class RMSNorm(nn.Module):
-    def __init__(self, dim, eps=1e-5):
-        super().__init__()
-        self.eps = eps
-        self.weight = nn.Parameter(torch.ones(dim))
-
-    def norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
-
-    def forward(self, x):
-        dtype = x.dtype
-        return self.norm(x.float()).to(dtype) * self.weight
-
-
-class AttentionModule(nn.Module):
-    def __init__(self, num_heads):
-        super().__init__()
-        self.num_heads = num_heads
-
-    def forward(self, q, k, v):
-        x = flash_attention(q=q, k=k, v=v, num_heads=self.num_heads)
-        return x
+def flash_attention(
+    q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode: bool = False
+) -> torch.Tensor:
+    """Keep WorldCam's FA3 → FA2 → Sage priority with its exact SDPA fallback."""
+    provider = None
+    if not compatibility_mode:
+        if FLASH_ATTN_3_AVAILABLE:
+            provider = flash_attention_3
+        elif FLASH_ATTN_2_AVAILABLE:
+            provider = flash_attention_2
+        elif SAGE_ATTN_AVAILABLE:
+            provider = sage_attention
+    if provider is not None:
+        layout = "b s (n d)"
+        return provider(
+            q,
+            k,
+            v,
+            q_pattern=layout,
+            k_pattern=layout,
+            v_pattern=layout,
+            out_pattern=layout,
+            dims={"n": num_heads},
+        )
+    q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
+    k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
+    v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
+    x = _worldfoundry_scaled_dot_product_attention(q, k, v)
+    return rearrange(x, "b n s d -> b s (n d)", n=num_heads)
 
 
 class SelfAttention(nn.Module):
@@ -169,15 +112,13 @@ class SelfAttention(nn.Module):
         self.norm_q = RMSNorm(dim, eps=eps)
         self.norm_k = RMSNorm(dim, eps=eps)
 
-        self.attn = AttentionModule(self.num_heads)
-
     def forward(self, x, freqs):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(x))
         v = self.v(x)
         q = rope_apply(q, freqs, self.num_heads)
         k = rope_apply(k, freqs, self.num_heads)
-        x = self.attn(q, k, v)
+        x = flash_attention(q, k, v, num_heads=self.num_heads)
         return self.o(x)
 
 
@@ -200,8 +141,6 @@ class CrossAttention(nn.Module):
             self.v_img = nn.Linear(dim, dim)
             self.norm_k_img = RMSNorm(dim, eps=eps)
 
-        self.attn = AttentionModule(self.num_heads)
-
     def forward(self, x: torch.Tensor, y: torch.Tensor):
         if self.has_image_input:
             img = y[:, :257]
@@ -211,23 +150,13 @@ class CrossAttention(nn.Module):
         q = self.norm_q(self.q(x))
         k = self.norm_k(self.k(ctx))
         v = self.v(ctx)
-        x = self.attn(q, k, v)
+        x = flash_attention(q, k, v, num_heads=self.num_heads)
         if self.has_image_input:
             k_img = self.norm_k_img(self.k_img(img))
             v_img = self.v_img(img)
             y = flash_attention(q, k_img, v_img, num_heads=self.num_heads)
             x = x + y
         return self.o(x)
-
-
-class GateModule(nn.Module):
-    def __init__(
-        self,
-    ):
-        super().__init__()
-
-    def forward(self, x, gate, residual):
-        return x + gate * residual
 
 
 class DiTBlock(nn.Module):
@@ -245,7 +174,7 @@ class DiTBlock(nn.Module):
         self.norm3 = nn.LayerNorm(dim, eps=eps)
         self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), nn.GELU(approximate="tanh"), nn.Linear(ffn_dim, dim))
         self.modulation = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5)
-        self.gate = GateModule()
+        self.gate = TorchGateModule()
 
     def forward(self, x, context, t_mod, freqs, plucker_grid):
         # When training with progressive noise the time modulation is per-frame, so
@@ -283,47 +212,6 @@ class DiTBlock(nn.Module):
         x = x + self.cross_attn(self.norm3(x), context)
         input_x = modulate(self.norm2(x), shift_mlp, scale_mlp)
         x = self.gate(x, gate_mlp, self.ffn(input_x))
-        return x
-
-
-class MLP(torch.nn.Module):
-    def __init__(self, in_dim, out_dim, has_pos_emb=False):
-        super().__init__()
-        self.proj = torch.nn.Sequential(
-            nn.LayerNorm(in_dim),
-            nn.Linear(in_dim, in_dim),
-            nn.GELU(),
-            nn.Linear(in_dim, out_dim),
-            nn.LayerNorm(out_dim),
-        )
-        self.has_pos_emb = has_pos_emb
-        if has_pos_emb:
-            self.emb_pos = torch.nn.Parameter(torch.zeros((1, 514, 1280)))
-
-    def forward(self, x):
-        if self.has_pos_emb:
-            x = x + self.emb_pos.to(dtype=x.dtype, device=x.device)
-        return self.proj(x)
-
-
-class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
-        super().__init__()
-        self.dim = dim
-        self.patch_size = patch_size
-        self.norm = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
-        self.head = nn.Linear(dim, out_dim * math.prod(patch_size))
-        self.modulation = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
-
-    def forward(self, x, t_mod):
-        if len(t_mod.shape) == 3:
-            shift, scale = (
-                self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)
-            ).chunk(2, dim=2)
-            x = self.head(self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2))
-        else:
-            shift, scale = (self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(2, dim=1)
-            x = self.head(self.norm(x) * (1 + scale) + shift)
         return x
 
 
@@ -368,7 +256,7 @@ class WanModel(torch.nn.Module):
         self.blocks = nn.ModuleList(
             [DiTBlock(has_image_input, dim, num_heads, ffn_dim, eps) for _ in range(num_layers)]
         )
-        self.head = Head(dim, out_dim, patch_size, eps)
+        self.head = NativeDtypeHead(dim, out_dim, patch_size, eps)
         head_dim = dim // num_heads
         self.freqs = precompute_freqs_cis_3d(head_dim)
 

@@ -20,15 +20,15 @@ import numpy as np
 import torch
 import tqdm
 from einops import rearrange
-from lyra_2._src.models.lyra2_model import Sparse3DCache
-from lyra_2._src.utils.forward_warp_utils_pytorch import (
-    reliable_depth_mask_range_batch,
-)
 
 from worldfoundry.core.distributed.model_parallel.megatron_compat import parallel_state
 from worldfoundry.core.execution import inference_runtime as misc
 from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.data.io import save_img_or_video
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.models.lyra2_model import Sparse3DCache
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.utils.forward_warp_utils_pytorch import (
+    reliable_depth_mask_range_batch,
+)
 
 torch.enable_grad(False)
 
@@ -475,7 +475,9 @@ class Lyra2InferencePipeline:
             first_K = self.intrinsics[:, 0]
             if self.depth_backend == "da3":
                 if self.local_da3_model is None:
-                    from lyra_2._src.inference.depth_utils import load_da3_model
+                    from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.depth_utils import (
+                        load_da3_model,
+                    )
 
                     da3_device = model.tensor_kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
                     self.local_da3_model = load_da3_model(

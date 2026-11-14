@@ -15,10 +15,8 @@ import torch
 import torch.nn as nn
 from timm.models.vision_transformer import Attention, Mlp, PatchEmbed
 
-
-def modulate(x, shift, scale):
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
-
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import FinalLayer
+from worldfoundry.core.nn.transformer.dit import modulate_sequence as modulate
 
 #################################################################################
 #               Embedding Layers for Timesteps and Class Labels                 #
@@ -138,24 +136,6 @@ class CDiTBlock(nn.Module):
             )[0]
         )
         x = x + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm3(x), shift_mlp, scale_mlp))
-        return x
-
-
-class FinalLayer(nn.Module):
-    """
-    The final layer of DiT.
-    """
-
-    def __init__(self, hidden_size, patch_size, out_channels):
-        super().__init__()
-        self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels, bias=True)
-        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True))
-
-    def forward(self, x, c):
-        shift, scale = self.adaLN_modulation(c).chunk(2, dim=1)
-        x = modulate(self.norm_final(x), shift, scale)
-        x = self.linear(x)
         return x
 
 

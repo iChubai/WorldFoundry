@@ -54,7 +54,6 @@ def patch_torch_dynamo_config_aliases():
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Matrix-Game-3 subprocess runner with custom actions.")
-    parser.add_argument("--runtime_root", required=True, type=str)
     parser.add_argument("--ckpt_dir", required=True, type=str)
     parser.add_argument("--actions_json", required=True, type=str)
     parser.add_argument("--image_path", required=True, type=str)
@@ -178,12 +177,6 @@ def build_runtime_args(args):
 
 def main():
     args = parse_args()
-    runtime_root = Path(args.runtime_root).expanduser().resolve()
-    for import_root in (runtime_root,):
-        root_str = str(import_root)
-        if root_str in sys.path:
-            sys.path.remove(root_str)
-        sys.path.insert(0, root_str)
     patch_torch_dynamo_config_aliases()
 
     with open(args.actions_json, encoding="utf-8") as file:
@@ -196,15 +189,15 @@ def main():
     from worldfoundry.base_models.diffusion_model.recipes.wan_configs.action_22 import MAX_AREA_CONFIGS, WAN_CONFIGS
 
     # isort: split
-    import pipeline.inference_pipeline as mg3_inference
+    from .pipeline import inference_pipeline as mg3_inference
 
     # isort: split
-    import utils.visualize as visualize_utils
-    from utils.cam_utils import get_extrinsics
-    from utils.transform import get_video_transform
-    from utils.utils import compute_all_poses_from_actions
-
     from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+
+    from .utils import visualize as visualize_utils
+    from .utils.cam_utils import get_extrinsics
+    from .utils.transform import get_video_transform
+    from .utils.utils import compute_all_poses_from_actions
 
     def custom_get_data(num_frames, height, width, pil_image, device=None, dtype=None):
         if keyboard_condition_np.shape[0] != num_frames or mouse_condition_np.shape[0] != num_frames:

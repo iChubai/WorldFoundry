@@ -8,8 +8,18 @@ import torch
 import torch.nn as nn
 from einops import rearrange, repeat
 from omegaconf import ListConfig
-from vwm.modules.diffusionmodules.openaimodel import Timestep
-from vwm.util import autocast, count_params, default, disabled_train, expand_dims_like, instantiate_from_config
+
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.openaimodel import (
+    Timestep,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import (
+    autocast,
+    count_params,
+    default,
+    disabled_train,
+    expand_dims_like,
+    instantiate_from_config,
+)
 
 
 class AbstractEmbModel(nn.Module):

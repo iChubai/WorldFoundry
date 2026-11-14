@@ -42,7 +42,6 @@ RETAINED_UPSTREAM_LICENSES = (
 )
 REQUIRED_RUNTIME_RESOURCES = (
     "worldfoundry/synthesis/visual_generation/dino_wm/datasets/UPSTREAM.md",
-    "worldfoundry/synthesis/visual_generation/egowm/nav_25dof_stats.json",
     "worldfoundry/synthesis/visual_generation/vid2world/csgo_utils/test_split.txt",
 )
 # License-gated upstream trees never ship in a distribution. Most are ignored

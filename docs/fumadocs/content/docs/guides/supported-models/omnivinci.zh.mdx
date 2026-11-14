@@ -17,7 +17,7 @@ OmniVinci 是英伟达的全模态理解大模型：单一模型同时对图像�
 
 `omnivinci` 是多模态推理模型。
 
-英伟达将 OmniVinci 描述为具备视觉-音频联合对齐的全模态 LLM（公开发布于 nvidia/omnivinci）。输入为 prompt 加图像或视频。该模型由英伟达（NVIDIA）发布。
+OmniVinci 结合 Qwen2 自回归解码器、Dynamic-S2 SigLIP 视觉编码器与 Qwen2Audio 音频编码器，并使用时间池化和旋转位置编码。WorldFoundry 将 nvidia/omnivinci 的 7b3777b 版本 Apache-2.0 推理组件纳入包内，从本地 checkpoint 数据加载模型骨干。该模型由英伟达（NVIDIA）发布。
 
 任务：多模态推理、音频推理、图像问答、视频问答。别名：`nvidia/omnivinci`。
 
@@ -29,7 +29,9 @@ CLI task profile：`multimodal-reasoning`、`audio-reasoning`、`image-question-
 
 系列状态：**Runner 一致性待确认**。
 
-适合用来审视生成模型产出的视频，例如就物理合理性或事件顺序提问。
+用于图像与视频问答，而非内容生成。视频请求默认采样 8 帧（max_video_frames 接受 1–128）；load_audio_in_video 默认为 false。本地 checkpoint 需包含 llm、vision_tower、sound_tower、两个投影器目录、tokenizer 数据和 qwen2.jinja。
+
+尚未验证发布权重的 GPU 产物，runner parity 仍为 pending。
 
 ## 在 WorldFoundry 中运行
 

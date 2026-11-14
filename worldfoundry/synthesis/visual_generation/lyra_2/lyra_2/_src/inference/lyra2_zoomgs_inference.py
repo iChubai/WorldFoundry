@@ -32,21 +32,21 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from lyra_2._src.inference.camera_traj_utils import (
-    CAMERA_TRAJECTORY_CHOICES,
-    build_camera_trajectory,
-)
-from lyra_2._src.inference.lyra2_ar_inference import (
-    run_lyra2_sample,
-    safe_to,
-    save_output,
-)
-from lyra_2._src.utils.model_loader import load_model_from_checkpoint
 
 from worldfoundry.core.attention import attention_backend_context
 from worldfoundry.core.execution import inference_runtime as misc
 from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.data.io import save_img_or_video
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.camera_traj_utils import (
+    CAMERA_TRAJECTORY_CHOICES,
+    build_camera_trajectory,
+)
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.lyra2_ar_inference import (
+    run_lyra2_sample,
+    safe_to,
+    save_output,
+)
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.utils.model_loader import load_model_from_checkpoint
 
 torch.enable_grad(False)
 torch.backends.cudnn.enabled = False
@@ -604,7 +604,7 @@ if __name__ == "__main__":
     target_h, target_w = [int(x) for x in args.resolution.split(",")]
 
     # Load DA3 model
-    from lyra_2._src.inference.depth_utils import load_da3_model
+    from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.depth_utils import load_da3_model
 
     da3_device = model.tensor_kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
     da3_model = load_da3_model(
@@ -617,7 +617,7 @@ if __name__ == "__main__":
     # Optionally load MoGe model for depth scale alignment
     moge_model = None
     if args.use_moge_scale:
-        from lyra_2._src.inference.depth_utils import load_moge_model
+        from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.depth_utils import load_moge_model
 
         moge_device = model.tensor_kwargs.get("device", "cuda" if torch.cuda.is_available() else "cpu")
         moge_model = load_moge_model(moge_device)
@@ -669,7 +669,9 @@ if __name__ == "__main__":
         # Step 1b: Optionally align DA3 depth to MoGe scale
         if args.use_moge_scale and moge_model is not None:
             log.info("Aligning DA3 depth to MoGe scale...", rank0_only=True)
-            from lyra_2._src.inference.depth_utils import moge_infer_depth_intrinsics
+            from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.depth_utils import (
+                moge_infer_depth_intrinsics,
+            )
 
             moge_model.to(desired_device)
             with attention_backend_context(backend="math"):
@@ -737,7 +739,10 @@ if __name__ == "__main__":
             caption = caption.rstrip() + " " + args.prompt_suffix
 
         # Step 2b: T5 embeddings
-        from lyra_2._src.inference.get_t5_emb import get_umt5_embedding, get_umt5_embedding_offloaded
+        from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.inference.get_t5_emb import (
+            get_umt5_embedding,
+            get_umt5_embedding_offloaded,
+        )
 
         if args.offload_when_prompt:
             t5 = get_umt5_embedding_offloaded(caption, device=desired_device).to(dtype=desired_dtype)

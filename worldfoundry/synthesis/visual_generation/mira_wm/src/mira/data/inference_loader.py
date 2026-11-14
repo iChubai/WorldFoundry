@@ -25,7 +25,11 @@ from typing import Any
 import torch
 from torch.utils.data import DataLoader, IterableDataset, get_worker_info
 
-from mira.world_model.actions_config import ActionConfig, ActionTensors, stack_action_tensors
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.actions_config import (
+    ActionConfig,
+    ActionTensors,
+    stack_action_tensors,
+)
 
 from .actions import DEFAULT_RL_KEYS, KeyVocab
 from .batch import VideoActionBatch

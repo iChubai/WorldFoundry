@@ -11,13 +11,19 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
-from mmaudio.ext.bigvgan_v2 import activations
-from mmaudio.ext.bigvgan_v2.alias_free_activation.torch.act import Activation1d as TorchActivation1d
-from mmaudio.ext.bigvgan_v2.env import AttrDict
-from mmaudio.ext.bigvgan_v2.utils import get_padding, init_weights
 from torch.nn import Conv1d, ConvTranspose1d
 from torch.nn.utils.parametrizations import weight_norm
 from torch.nn.utils.parametrize import remove_parametrizations
+
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2 import activations
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.alias_free_activation.torch.act import (
+    Activation1d as TorchActivation1d,
+)
+from worldfoundry.base_models.diffusion_model.models.autoencoders.kandinsky6.mmaudio.ext.bigvgan_v2.utils import (
+    init_weights,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan_v2.env import AttrDict
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.bigvgan_v2.utils import get_padding
 
 
 def load_hparams_from_json(path) -> AttrDict:

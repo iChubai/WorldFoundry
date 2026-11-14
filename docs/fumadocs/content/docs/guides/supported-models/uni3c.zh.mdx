@@ -2,7 +2,7 @@
 title: "Uni3C"
 description: "Uni3C（阿里巴巴达摩院）：图生视频、相机可控视频等 3 项任务；已验证；独立环境 `uni3c`。"
 modelId: "uni3c"
-pageSource: generated
+pageSource: authored
 ---
 
 阿里巴巴达摩院的 Uni3C 将相机控制与人体动作控制统一到图生视频中：PCDController 阶段负责相机操控，统一阶段结合相机与人体动作（RealisDance-DiT）。WorldFoundry 运行两条官方第二阶段推理路径，使用公开的 Apache-2.0 checkpoint（ewrfcas/Uni3C、theFoxofSky/RealisDance-DiT），构建在 Wan2.1-I2V-14B-720P 基座之上。
@@ -36,6 +36,8 @@ CLI task profile：`image-camera-control-video`。绑定的 pipeline 类是 `Uni
 `image-camera-control-video` 的默认值：fps=16, seed=0。
 
 按需选择仅相机或相机+人体统一路线，并提供匹配的预渲染控制包。已在 H100 上用官方 checkpoint 验证：默认 PCDController 相机路线可端到端运行。
+
+独立 `uni3c` 环境中须安装 WorldFoundry。仅相机与统一推理均通过包模块运行，多 GPU 请求使用 torchrun。序列并行、相机模式的 FSDP 与统一模式的顺序 CPU offload 保留原有控制选项；运行时不向导入路径添加源码目录。
 
 ## 在 WorldFoundry 中运行
 

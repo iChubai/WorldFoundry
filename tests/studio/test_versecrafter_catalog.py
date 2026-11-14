@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
+from typing import Any
+
 import numpy as np
 import pytest
 
@@ -58,15 +61,36 @@ def test_versecrafter_default_trajectory_is_deterministic(tmp_path) -> None:
     assert first_extrinsics[-1, 0, 3] > first_extrinsics[0, 0, 3]
 
 
-def test_versecrafter_torchrun_uses_isolated_standalone_rendezvous() -> None:
-    command = VerseCrafterRuntime._torchrun_prefix("/env/bin/python")
+def test_versecrafter_torchrun_uses_isolated_standalone_rendezvous(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from worldfoundry.synthesis.visual_generation.versecrafter import worldfoundry_runtime
 
-    assert command == [
+    calls: list[list[str]] = []
+
+    def execute(command: list[str], **kwargs: Any) -> dict[str, str]:
+        calls.append(command)
+        return {"video": str(kwargs["output_path"])}
+
+    monkeypatch.setattr(worldfoundry_runtime, "require_path", lambda value, *args, **kwargs: Path(value))
+    monkeypatch.setattr(worldfoundry_runtime, "execute_in_tree", execute)
+    monkeypatch.setattr(VerseCrafterRuntime, "_run_stage", lambda *args, **kwargs: None)
+    runtime = VerseCrafterRuntime(python_executable="/env/bin/python")
+    runtime.predict(
+        prompt="orchard",
+        image_path=tmp_path / "image.png",
+        trajectory_npz=tmp_path / "camera.npz",
+        output_path=tmp_path / "result.mp4",
+    )
+    assert calls[0][:8] == [
         "/env/bin/python",
         "-m",
         "torch.distributed.run",
         "--standalone",
-        "--nproc_per_node=1",
+        "--nproc_per_node",
+        "1",
+        "-m",
+        "worldfoundry.synthesis.visual_generation.versecrafter.versecrafter_runtime.inference.versecrafter_inference",
     ]
 
 

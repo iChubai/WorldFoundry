@@ -35,7 +35,7 @@ def cleanup_config(cfg):
     for key in list(keys):
         if key not in VALID_ARGS:
             del config.agent[key]
-    config.agent["_target_"] = "models.encoder.r3m.R3M"
+    config.agent["_target_"] = "worldfoundry.synthesis.visual_generation.dino_wm.models.encoder.r3m.R3M"
     config["device"] = device
 
     ## Hardcodes to remove the language head

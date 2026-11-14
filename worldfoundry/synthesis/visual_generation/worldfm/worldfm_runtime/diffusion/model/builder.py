@@ -1,6 +1,6 @@
 from mmengine.registry import Registry
 
-from .utils import set_grad_checkpoint
+from worldfoundry.core.nn.checkpointing.gradient import set_grad_checkpoint
 
 MODELS = Registry("models")
 

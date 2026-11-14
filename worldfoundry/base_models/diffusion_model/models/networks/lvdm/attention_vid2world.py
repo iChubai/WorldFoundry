@@ -7,9 +7,10 @@ temporal attn uses ``(B·H·W) T C``.
 from functools import partial
 
 import torch
-import torch.nn.functional as F
 from einops import rearrange, repeat
 from torch import einsum, nn
+
+from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention import GEGLU as GEGLU
 
 try:
     import xformers
@@ -594,20 +595,6 @@ class TemporalTransformer(nn.Module):
             x = rearrange(x, "(b h w) c t -> b c t h w", b=b, h=h, w=w).contiguous()
 
         return x + x_in
-
-
-class GEGLU(nn.Module):
-    """Gated-GELU FFN: linear to 2x width, then value * GELU(gate) on the last dim."""
-
-    def __init__(self, dim_in, dim_out):
-        """Linear map ``dim_in → 2 * dim_out`` for the value/gate split."""
-        super().__init__()
-        self.proj = nn.Linear(dim_in, dim_out * 2)
-
-    def forward(self, x):
-        """Return ``value * GELU(gate)`` on the last dimension."""
-        x, gate = self.proj(x).chunk(2, dim=-1)
-        return x * F.gelu(gate)
 
 
 class FeedForward(nn.Module):

@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 from einops import rearrange
-from utils import move_to_device
+
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import move_to_device
 
 from .base_planner import BasePlanner
 

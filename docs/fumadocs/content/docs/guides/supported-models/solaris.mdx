@@ -5,7 +5,7 @@ modelId: "solaris"
 pageSource: generated
 ---
 
-Solaris is a multi-agent interactive video world model from NYU's VisionX group (paper arXiv 2602.22208): multiple agents act inside one generated world. WorldFoundry runs inference from the official Orbax checkpoint (nyu-visionx/solaris) and the official eval datasets, loaded from Hugging Face or a local mirror.
+Solaris is a multi-agent interactive video world model from NYU's VisionX group (paper arXiv 2602.22208): multiple agents act inside one generated world. WorldFoundry runs the in-tree inference runtime with the official Orbax checkpoint (nyu-visionx/solaris) and the official eval datasets, loaded from Hugging Face or a local mirror.
 
 <ModelPaperFigures modelId="solaris" locale="en" />
 
@@ -33,7 +33,7 @@ CLI task profiles: `default`. WorldFoundry binds `SolarisPipeline`.
 
 Family status: **Verified**.
 
-Inference launches one sample per visible GPU — eval_num_samples must be a multiple of the visible GPU count. Official weights and eval datasets resolve from HF or a same-layout local mirror.
+Inference uses the installed Solaris package module. runtime_root anchors relative asset paths and the working directory. Inference launches one sample per visible GPU — eval_num_samples must be a multiple of the visible GPU count. Official weights and eval datasets resolve from HF or a same-layout local mirror.
 
 Review the upstream license before use.
 

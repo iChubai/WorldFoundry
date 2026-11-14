@@ -3,19 +3,19 @@ from dataclasses import dataclass
 
 import torch
 from hydra.core.config_store import ConfigStore
-from lyra_2._src.models.lyra2_model import WAN2PT1_I2V_COND_LATENT_KEY
-from lyra_2._src.modules.conditioner import (
+
+from worldfoundry.core.configuration.lazy_config import LazyCall as L
+from worldfoundry.core.configuration.lazy_config import LazyDict
+from worldfoundry.core.distributed.model_parallel.context import broadcast
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.models.lyra2_model import WAN2PT1_I2V_COND_LATENT_KEY
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.modules.conditioner import (
     BaseCondition,
     GeneralConditioner,
     ReMapkey,
     T2VCondition,
     TextAttrEmptyStringDrop,
 )
-from lyra_2._src.networks.clip_lyra2 import Wan2pt1CLIPEmbLyra2
-
-from worldfoundry.core.configuration.lazy_config import LazyCall as L
-from worldfoundry.core.configuration.lazy_config import LazyDict
-from worldfoundry.core.distributed.model_parallel.context import broadcast
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.networks.clip_lyra2 import Wan2pt1CLIPEmbLyra2
 
 
 @dataclass(frozen=True)

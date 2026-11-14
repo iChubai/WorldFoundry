@@ -21,12 +21,12 @@ from queue import Queue
 
 import torch
 import torch.distributed as dist
-from inference.common.timer import event_path_timer
 from tqdm import tqdm
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core import InferenceParams, print_rank_0
 from worldfoundry.core.distributed import pp_scheduler
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.common.timer import event_path_timer
 
 from .prompt_process import get_negative_special_token_keys, get_special_token_keys, pad_special_token
 

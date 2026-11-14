@@ -26,6 +26,8 @@ from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import CheckpointImpl, CheckpointWrapper
 from torch.distributed.algorithms._checkpoint.checkpoint_wrapper import checkpoint_wrapper as ptd_checkpoint_wrapper
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import MLPProj, sinusoidal_embedding_1d
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.rcm import WanRMSNorm
 from worldfoundry.core.nn.checkpointing.activation_checkpointing import CheckpointMode, SACConfig
 from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.a2a_cp import MinimalA2AAttnOp
@@ -48,7 +50,6 @@ from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.kv_cache imp
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.rope import RopeCache
 
 T5_CONTEXT_TOKEN_NUMBER = 512
-FIRST_LAST_FRAME_CONTEXT_TOKEN_NUMBER = 257 * 2
 
 
 def _uses_append_cache(attn_ctx: AttnContext | None) -> bool:
@@ -187,39 +188,6 @@ class VideoRopePosition3DEmb(nn.Module):
         if self.seq is not None:
             return self.seq.device
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def sinusoidal_embedding_1d(dim, position):
-    # preprocess
-    assert dim % 2 == 0
-    half = dim // 2
-    position = position.type(torch.float64)
-
-    # calculation
-    sinusoid = torch.outer(position, torch.pow(10000, -torch.arange(half).to(position).div(half)))
-    x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
-    return x
-
-
-class WanRMSNorm(nn.Module):
-    def __init__(self, dim, eps=1e-5):
-        super().__init__()
-        self.dim = dim
-        self.eps = eps
-        self.weight = nn.Parameter(torch.ones(dim))
-
-    def reset_parameters(self):
-        self.weight.data.fill_(1.0)
-
-    def forward(self, x):
-        r"""
-        Args:
-            x(Tensor): Shape [B, L, C]
-        """
-        return self._norm(x.float()).type_as(x) * self.weight
-
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):
@@ -482,38 +450,6 @@ class Head(nn.Module):
             e = (self.modulation.unsqueeze(1) + e.unsqueeze(2)).unbind(dim=2)
             x = self.head(self.norm(x) * (1 + e[1]) + e[0])
         return x
-
-
-class MLPProj(torch.nn.Module):
-    def __init__(self, in_dim, out_dim, flf_pos_emb=False):
-        super().__init__()
-
-        self.proj = torch.nn.Sequential(
-            torch.nn.LayerNorm(in_dim),
-            torch.nn.Linear(in_dim, in_dim),
-            torch.nn.GELU(),
-            torch.nn.Linear(in_dim, out_dim),
-            torch.nn.LayerNorm(out_dim),
-        )
-        if flf_pos_emb:  # NOTE: we only use this for `flf2v`
-            self.emb_pos = nn.Parameter(torch.zeros(1, FIRST_LAST_FRAME_CONTEXT_TOKEN_NUMBER, 1280))
-
-    def init_weights(self):
-        self.proj[0].reset_parameters()
-        self.proj[1].reset_parameters()
-        self.proj[3].reset_parameters()
-        self.proj[4].reset_parameters()
-
-        if hasattr(self, "emb_pos"):
-            self.emb_pos.data.zero_()
-
-    def forward(self, image_embeds):
-        if hasattr(self, "emb_pos"):
-            bs, n, d = image_embeds.shape
-            image_embeds = image_embeds.view(-1, 2 * n, d)
-            image_embeds = image_embeds + self.emb_pos
-        clip_extra_context_tokens = self.proj(image_embeds)
-        return clip_extra_context_tokens
 
 
 class WanModel(nn.Module):

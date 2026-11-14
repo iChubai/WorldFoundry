@@ -45,8 +45,8 @@ checkpoints:
 integration:
   status: integrated
   notes:
-  - WorldFoundry normalizes R2V requests and launches the official Echo-LongVideo
-    CLI in its dedicated environment.
+  - WorldFoundry normalizes R2V requests and runs the vendored Echo-LongVideo CLI as a
+    package module in its dedicated environment.
   - BF16, FP8, FP4, consumer, and low-VRAM upstream configuration routes are represented.
   - The local BF16, FP8, and FP4 Echo checkpoints and CUDA devices are present, but
     GPU inference is blocked by the gated Gemma 3 12B encoder and missing dedicated
@@ -67,19 +67,31 @@ docs:
   publisher: JD.com (JoyAI / Echo Team)
   publisher_kind: company
   publisher_zh: 京东（JoyAI / Echo 团队）
-  overview: JoyAI-Echo 1.5 is an inference-only long-form audio-video generator. Its
-    R2V request can combine a prompt, an optional first frame, and as many as seven
-    ordered image/audio memory slots so identity, voice, and story context persist
-    across independently editable shots.
+  overview: JoyAI-Echo 1.5 is an inference-only long-form audio-video generator. Its R2V request can combine a prompt,
+    an optional first frame, and as many as seven ordered image/audio memory slots so identity, voice, and story
+    context persist across independently editable shots.
   overview_zh: JoyAI-Echo 1.5 是仅推理的长时程音视频生成模型。R2V 请求可组合提示词、可选首帧与最多七个有序图像/音频记忆槽，使角色身份、声音与故事上下文在可独立编辑的镜头间延续。
-  architecture: The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry calls the official runtime (Python 3.11, PyTorch 2.8, CUDA 12.8) in its dedicated environment through the upstream CLI.
-  architecture_zh: 该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry 在专用环境中通过上游 CLI 调用官方运行时（Python 3.11、PyTorch 2.8、CUDA 12.8）。
-  usage_notes: Clone JoyAI-Echo at the pinned revision, prepare its dedicated environment, and pass source_root plus local Echo and gated Gemma checkpoints. Generation runs only when execute=True is set. FP4 also needs NVIDIA ModelOpt; production voice-memory extraction needs the upstream MSST setup.
-  usage_notes_zh: 请检出固定 revision 的 JoyAI-Echo，准备专用环境，并传入 source_root、本地 Echo checkpoint 与受限访问的 Gemma checkpoint。生成必须显式设置 execute=True。FP4 还需 NVIDIA ModelOpt，生产级语音记忆提取需完成上游 MSST 设置。
+  architecture: The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory
+    bank. WorldFoundry packages the inference code from jd-opensource/JoyAI-Echo at 0b931fd4, reuses canonical LTX
+    components, and runs its package-module CLI in the dedicated Python 3.11, PyTorch 2.8, CUDA 12.8 environment.
+  architecture_zh: 该版本基于 LTX-2.3，加入少步 DMD 生成与成对跨模态记忆库。WorldFoundry 将 jd-opensource/JoyAI-Echo 的 0b931fd4 版本推理代码纳入包内，复用规范
+    LTX 组件，在专用 Python 3.11、PyTorch 2.8、CUDA 12.8 环境中以包模块方式运行 CLI。
+  usage_notes: Prepare the dedicated environment and pass the local Echo and gated Gemma checkpoints. Generation
+    runs only when execute=True is set. FP4 also needs NVIDIA ModelOpt.
+  usage_notes_zh: 请准备专用环境，并传入本地 Echo checkpoint 与受限访问的 Gemma checkpoint。生成必须显式设置 execute=True。FP4 还需 NVIDIA ModelOpt。
   limitations:
-  - The upstream release is marked for academic research and non-commercial use and remains subject to the LTX-2 Community License.
+  - The upstream release is marked for academic research and non-commercial use and remains subject to the LTX-2
+    Community License.
+  - Checkpoint-backed GPU artifacts and visual parity remain unvalidated; execution requires the gated Gemma 3 12B
+    encoder and the dedicated environment.
+  - Checkpoints and Gemma access are external and are never downloaded during prediction.
+  - Audio memory slots are rejected while memory.voice_filter is enabled: the MSST-WebUI speech separator used by
+      the production voice filter is a separate AGPL-3.0 work that is not part of the runtime.
   limitations_zh:
   - 上游版本标注为学术研究与非商业用途，并受 LTX-2 Community License 约束。
+  - 尚未验证发布权重的 GPU 产物与视觉一致性；运行需要受限访问的 Gemma 3 12B 编码器与专用环境。
+  - Checkpoint 与 Gemma 权限为外部资源，预测期间不会自动下载。
+  - memory.voice_filter 启用时不接受音频记忆槽：生产级语音过滤所用的 MSST-WebUI 语音分离器是独立的 AGPL-3.0 作品，不包含在运行时中。
   recommended_benchmarks:
   - id: chronomagic-bench
     reason: Long-horizon temporal continuity across generated shots.

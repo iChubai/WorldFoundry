@@ -34,7 +34,6 @@ from worldfoundry.pipelines.component_pipelines import (
     DreamZeroPipeline,
     GigaBrain0Pipeline,
     LingBotVAPipeline,
-    Splatt3RPipeline,
 )
 from worldfoundry.synthesis.action_generation.lingbot_va.runtime import (
     LingBotVARuntimeConfig,
@@ -220,7 +219,6 @@ def test_runtime_profiles_cover_catalog_entries() -> None:
 
     assert target_ids.issubset(profiles)
     assert profiles["step-video-t2v"].artifact_kind == "generated_video"
-    assert profiles["splatt3r"].artifact_kind == "generated_3d_asset"
     assert profiles["zeroscope"].integration_status == "integrated"
     assert profiles["zeroscope"].runtime_status == "diffusers_text_to_video_ready"
     assert profiles["openvla"].task_family == "vla_policy"
@@ -452,7 +450,7 @@ def test_local_official_repositories_lock_model_architecture_contracts() -> None
         if not Path(spec["local_dir"]).is_dir()
     ]
     if missing:
-        pytest.skip(f"local official model repositories are not staged: {missing}")
+        raise pytest.skip.Exception(f"local official model repositories are not staged: {missing}")
 
     profiles = load_runtime_profiles()
     registry = load_model_zoo_registry(REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog")
@@ -505,7 +503,7 @@ def test_local_official_repositories_lock_model_architecture_contracts() -> None
 def test_dreamdojo_action_contract_matches_official_posttraining_doc() -> None:
     repo_dir = ACQUISITION_REPO_ROOT / "NVIDIA--DreamDojo"
     if not repo_dir.is_dir():
-        pytest.skip("local DreamDojo official repository is not staged")
+        raise pytest.skip.Exception("local DreamDojo official repository is not staged")
 
     posttrain_doc = (repo_dir / "docs" / "POSTTRAIN.md").read_text(encoding="utf-8")
     expected_slices = {
@@ -706,7 +704,6 @@ def test_dreamdojo_operator_preserves_robot_world_model_action_contract() -> Non
         # StepVideoT2VPipeline is imported lazily: its module transitively
         # imports optional dependencies (ftfy via the wan text encoders).
         ("worldfoundry.pipelines.step_video.pipeline_step_video_t2v:StepVideoT2VPipeline", "step-video-t2v"),
-        ("worldfoundry.pipelines.component_pipelines:Splatt3RPipeline", "splatt3r"),
     ],
 )
 def test_model_specific_pipeline_stubs_load_without_official_cli_bridge(pipeline_target: str, model_id: str) -> None:
@@ -716,19 +713,6 @@ def test_model_specific_pipeline_stubs_load_without_official_cli_bridge(pipeline
     pipe = pipeline_cls.from_pretrained({"model_id": model_id}, device="cpu")
     assert isinstance(pipe, pipeline_cls)
     assert pipe.model_id == model_id
-
-
-def test_splatt3r_uses_model_specific_loader_without_official_cli_bridge(tmp_path: Path) -> None:
-    pipe = Splatt3RPipeline.from_pretrained({"model_id": "splatt3r"}, device="cpu")
-    result = pipe(
-        input_image="memory://rgb.png",
-        output_path=tmp_path / "stub.ply",
-        plan_only=True,
-        return_dict=True,
-    )
-    assert result["status"] in {"blocked", "success", "prepared"}
-    assert result["model_id"] == "splatt3r"
-    assert result["runtime"] != "worldfoundry.runtime_profile.vendor_blocked"
 
 
 def test_examples_mapping_uses_path_a_catalog_targets() -> None:
@@ -741,7 +725,6 @@ def test_examples_mapping_uses_path_a_catalog_targets() -> None:
         "cameractrl": "worldfoundry.pipelines.component_pipelines:CameraCtrlPipeline",
         "motionctrl": "worldfoundry.pipelines.component_pipelines:MotionCtrlPipeline",
         "dreamdojo": "worldfoundry.pipelines.component_pipelines:DreamDojoPipeline",
-        "splatt3r": "worldfoundry.pipelines.component_pipelines:Splatt3RPipeline",
         "pixelsplat": "worldfoundry.pipelines.component_pipelines:PixelSplatPipeline",
         "openvla": "worldfoundry.pipelines.component_pipelines:OpenVLAPipeline",
         "giga-brain-0": "worldfoundry.pipelines.component_pipelines:GigaBrain0Pipeline",
@@ -750,7 +733,6 @@ def test_examples_mapping_uses_path_a_catalog_targets() -> None:
         "lingbot-va": "worldfoundry.pipelines.component_pipelines:LingBotVAPipeline",
         "octo": "worldfoundry.pipelines.component_pipelines:OctoPipeline",
         "diffusion-policy": "worldfoundry.pipelines.component_pipelines:DiffusionPolicyPipeline",
-        "egowm": "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:EgoWMPipeline",
     }
 
     for model_id, target in expected_targets.items():
@@ -759,7 +741,7 @@ def test_examples_mapping_uses_path_a_catalog_targets() -> None:
         assert entry.pipeline_target == target
 
     resolved = resolve_model_zoo_runner(
-        "egowm",
+        "openvla",
         manifest_dir=REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog",
         runtime={"device": "cpu"},
     )
@@ -780,14 +762,11 @@ def test_pipeline_runner_targets_are_generic_and_independent() -> None:
         assert entry.runner_target == PIPELINE_RUNNER_TARGET
         assert entry.pipeline_target is not None
         assert entry.pipeline_target.startswith("worldfoundry.pipelines.")
-    for model_id in ("open-magvit2", "splatt3r", "dreamdojo"):
+    for model_id in ("open-magvit2", "dreamdojo"):
         entry = registry.get(model_id)
         assert entry.runner_target == PIPELINE_RUNNER_TARGET
         assert entry.pipeline_target is not None
         assert entry.pipeline_target.startswith("worldfoundry.pipelines.")
-    egowm = registry.get("egowm")
-    assert egowm.runner_target == PIPELINE_RUNNER_TARGET
-    assert egowm.pipeline_target == "worldfoundry.pipelines.world_model.pipeline_runtime_manifest:EgoWMPipeline"
 
 
 def test_model_zoo_entries_are_in_category_manifests_and_resolve_runner(tmp_path: Path) -> None:
@@ -800,18 +779,9 @@ def test_model_zoo_entries_are_in_category_manifests_and_resolve_runner(tmp_path
     assert entry.runner_target == PIPELINE_RUNNER_TARGET
     assert entry.pipeline_target == "worldfoundry.pipelines.component_pipelines:OpenMAGVIT2Pipeline"
     assert entry.runtime_profile == "runtime-profile:open-magvit2"
-    assert registry.get("splatt3r").runtime_profile == "runtime-profile:splatt3r"
-    assert registry.get("egowm").runtime_profile == "runtime-profile:egowm"
     assert registry.get("dreamdojo").runtime_profile == "runtime-profile:dreamdojo"
     assert registry.get("giga-brain-0").runtime_profile == "runtime-profile:giga-brain-0"
     assert registry.get("dreamzero").runtime_profile == "runtime-profile:dreamzero"
-
-    egowm_resolved = resolve_model_zoo_runner(
-        "egowm",
-        manifest_dir=REPO_ROOT / "worldfoundry" / "data" / "models" / "catalog",
-        runtime={"device": "cpu", "output_dir": str(tmp_path / "egowm")},
-    )
-    assert _is_worldfoundry_pipeline_runner(egowm_resolved.runner)
 
     openvla_resolved = resolve_model_zoo_runner(
         "openvla",

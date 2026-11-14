@@ -9,12 +9,20 @@ import torch.distributed
 import torch.nn.functional as F
 from torch.nn.init import trunc_normal_
 
-from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam.mask_decoder import MaskDecoder
-from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam.prompt_encoder import PromptEncoder
-from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam.transformer import TwoWayTransformer
 from worldfoundry.base_models.perception_core.segment.sam2.modeling.sam2_utils import (
-    get_1d_sine_pe,
     select_closest_cond_frames,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.mask_decoder import (
+    MaskDecoder as MaskDecoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.prompt_encoder import (
+    PromptEncoder as PromptEncoder,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.transformer import (
+    TwoWayTransformer,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
+    get_1d_sine_pe,
 )
 from worldfoundry.core.nn.blocks.layers import SamHeadMLP
 

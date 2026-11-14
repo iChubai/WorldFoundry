@@ -1,5 +1,7 @@
 import torch
 
+from worldfoundry.core.geometry.transforms import quaternion_xyzw_to_rotation_matrix as quat_to_mat
+
 
 def normalized_uv(height: int, width: int, dtype: torch.dtype, device: torch.device) -> torch.Tensor:
     aspect_ratio = width / height
@@ -55,27 +57,6 @@ def pose_encoding_to_extri(pose_encoding):
 
     R = quat_to_mat(quat)
     return torch.cat([R, T[..., None]], dim=-1)
-
-
-def quat_to_mat(quaternions: torch.Tensor) -> torch.Tensor:
-    i, j, k, r = torch.unbind(quaternions, -1)
-    two_s = 2.0 / (quaternions * quaternions).sum(-1)
-
-    o = torch.stack(
-        (
-            1 - two_s * (j * j + k * k),
-            two_s * (i * j - k * r),
-            two_s * (i * k + j * r),
-            two_s * (i * j + k * r),
-            1 - two_s * (i * i + k * k),
-            two_s * (j * k - i * r),
-            two_s * (i * k - j * r),
-            two_s * (j * k + i * r),
-            1 - two_s * (i * i + j * j),
-        ),
-        -1,
-    )
-    return o.reshape(quaternions.shape[:-1] + (3, 3))  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
 
 
 def median(x: torch.Tensor, default_value: float = 1.0) -> torch.Tensor:

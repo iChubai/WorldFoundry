@@ -17,7 +17,7 @@ Code: [nvidia/omnivinci](https://huggingface.co/nvidia/omnivinci).
 
 `omnivinci` is a multimodal reasoning model.
 
-NVIDIA describes OmniVinci as an omni-modal LLM with joint vision-audio alignment (public release at nvidia/omnivinci). Inputs are a prompt plus an image or video.
+OmniVinci combines a Qwen2 causal decoder, a Dynamic-S2 SigLIP vision tower and a Qwen2Audio encoder with temporal pooling and rotary embeddings. WorldFoundry packages the Apache-2.0 inference glue from nvidia/omnivinci revision 7b3777b and loads its backbones from local checkpoint data.
 
 Tasks: multimodal reasoning, audio reasoning, image question answering, and video question answering. Aliases: `nvidia/omnivinci`.
 
@@ -29,7 +29,9 @@ CLI task profiles: `multimodal-reasoning`, `audio-reasoning`, `image-question-an
 
 Family status: **Runner parity pending**.
 
-Use it to interrogate videos produced by generation models, for example by asking about physical plausibility or event order.
+Use it to ask questions about images and videos, rather than to generate content. Video requests default to 8 frames (max_video_frames accepts 1–128); load_audio_in_video is false by default. The local checkpoint must include its llm, vision_tower, sound_tower and both projector directories, tokenizer data and qwen2.jinja.
+
+Checkpoint-backed GPU artifacts have not been verified; runner parity remains pending.
 
 ## Running in WorldFoundry
 

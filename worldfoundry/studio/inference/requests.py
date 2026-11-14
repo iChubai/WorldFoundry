@@ -312,7 +312,7 @@ def _entry_inference_spec(entry: CatalogEntry):
         workload_type=_entry_workload(entry),
         supported_call_params=supported_call_params,
     )
-    if entry.model_id in {"lagernvs", "stable-virtual-camera", "wonderjourney"}:
+    if entry.model_id in {"lagernvs", "wonderjourney"}:
         spec = replace(
             spec,
             tasks=tuple(
@@ -327,7 +327,7 @@ def _entry_inference_spec(entry: CatalogEntry):
                 for task in spec.tasks
             ),
         )
-    if entry.model_id in {"dvlt", "lingbot-map"}:
+    if entry.model_id == "lingbot-map":
         spec = replace(
             spec,
             tasks=tuple(

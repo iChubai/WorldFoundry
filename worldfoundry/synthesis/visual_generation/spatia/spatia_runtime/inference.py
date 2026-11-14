@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from PIL import Image
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io import VideoData, save_video
 from worldfoundry.synthesis.visual_generation.spatia.native_pipeline import load_spatia_pipeline
 from worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.camera_io import (
@@ -24,7 +25,6 @@ from worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.frustu
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR
-UTILS_DIR = SCRIPT_DIR / "utils"
 
 NEGATIVE_PROMPT = (
     "画面切换，画面切出，镜头切换，镜头渐黑，镜头渐亮，最差质量, 节目横幅, 低质量, 正常质量, "
@@ -177,8 +177,6 @@ def run_mapanything(args, round_idx, map_frames, map_extrinsics, intrinsic_path,
     need_map = args.force_rebuild_intermediate or (not points_path.exists()) or (not intrinsic_output_path.exists())
     if need_map:
         map_cmd = [
-            args.map_python,
-            str(UTILS_DIR / "map_anything_inference.py"),
             "--model_path",
             str(args.map_model_path),
             "--vid_path",
@@ -201,7 +199,11 @@ def run_mapanything(args, round_idx, map_frames, map_extrinsics, intrinsic_path,
         if args.per_frame_mask:
             map_cmd.append("--per_frame_mask")
         run_command(
-            map_cmd,
+            package_module_command(
+                "worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.map_anything_inference",
+                map_cmd,
+                python_executable=args.map_python,
+            ),
             cwd=SCRIPT_DIR,
             quiet=not args.verbose_subprocess,
         )
@@ -240,8 +242,6 @@ def run_render(args, round_idx, points_path, map_video_path, round_extrinsic, in
     )
     if need_render:
         render_cmd = [
-            args.render_python,
-            str(UTILS_DIR / "render_point.py"),
             "--data_path",
             str(points_path),
             "--w2c_path",
@@ -269,7 +269,11 @@ def run_render(args, round_idx, points_path, map_video_path, round_extrinsic, in
             str(render_output_dir),
         ]
         run_command(
-            render_cmd,
+            package_module_command(
+                "worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.utils.render_point",
+                render_cmd,
+                python_executable=args.render_python,
+            ),
             cwd=SCRIPT_DIR,
             quiet=not args.verbose_subprocess,
         )

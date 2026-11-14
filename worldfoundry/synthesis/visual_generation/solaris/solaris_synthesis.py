@@ -50,7 +50,7 @@ class SolarisSynthesis(BaseSynthesis):
         necessary components for `SolarisRuntime` instantiation are present.
 
         Args:
-            runtime_root: The root directory for the Solaris runtime. Required if `runtime` is not provided.
+            runtime_root: Data/work base for relative asset paths. Required if `runtime` is not provided.
             pretrained_model_dir: Directory containing pretrained model components. Required if `runtime` is not provided.
             eval_data_dir: Directory for evaluation data. Required if `runtime` is not provided.
             output_dir: Directory for model outputs. Required if `runtime` is not provided.

@@ -4,10 +4,15 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmaudio.ext.rotary_embeddings import compute_rope_rotations
-from mmaudio.model.embeddings import TimestepEmbedder
-from mmaudio.model.low_level import MLP, ChannelLastConv1d, ConvMLP
-from mmaudio.model.transformer_layers import FinalBlock, JointBlock, MMDitSingleBlock
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.rotary_embeddings import compute_rope_rotations
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.embeddings import TimestepEmbedder
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.low_level import MLP, ChannelLastConv1d, ConvMLP
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.transformer_layers import (
+    FinalBlock,
+    JointBlock,
+    MMDitSingleBlock,
+)
 
 log = logging.getLogger()
 

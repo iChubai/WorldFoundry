@@ -28,40 +28,10 @@ import imageio.v2 as iio
 import numpy as np
 import torch
 
+from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import collate_with_cat
+
 # Set random seed for reproducibility.
 random.seed(42)
-
-
-def listify(elems):
-    return [x for e in elems for x in e]
-
-
-def collate_with_cat(whatever, lists=False):
-    if isinstance(whatever, dict):
-        return {k: collate_with_cat(vals, lists=lists) for k, vals in whatever.items()}
-
-    elif isinstance(whatever, (tuple, list)):
-        if len(whatever) == 0:
-            return whatever
-        elem = whatever[0]
-        T = type(whatever)
-
-        if elem is None:
-            return None
-        if isinstance(elem, (bool, float, int, str)):
-            return whatever
-        if isinstance(elem, tuple):
-            return T(collate_with_cat(x, lists=lists) for x in zip(*whatever, strict=False))
-        if isinstance(elem, dict):
-            return {k: collate_with_cat([e[k] for e in whatever], lists=lists) for k in elem}
-
-        if isinstance(elem, torch.Tensor):
-            return listify(whatever) if lists else torch.cat(whatever)
-        if isinstance(elem, np.ndarray):
-            return listify(whatever) if lists else torch.cat([torch.from_numpy(x) for x in whatever])
-
-        # otherwise, we just chain lists
-        return sum(whatever, T())
 
 
 def parse_args():
@@ -310,9 +280,6 @@ def run_inference_from_pil(
         print("CUDA not available. Switching to CPU.")
         device = "cpu"
 
-    # Add the checkpoint path (required for model imports in the dust3r package)
-
-    # Import model and inference functions after adding the ckpt path
     from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.inference import (
         inference,
     )

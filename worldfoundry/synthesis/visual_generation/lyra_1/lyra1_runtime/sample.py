@@ -24,30 +24,53 @@ from omegaconf import OmegaConf
 from tqdm import tqdm
 
 # isort: split
-from src.models.recon.model_latent_recon import LatentRecon
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.recon.model_latent_recon import (
+    LatentRecon,
+)
 
 # isort: split
-from src.utils.visu import create_depth_visu, generate_wave_video, save_video
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.utils.visu import (
+    create_depth_visu,
+    generate_wave_video,
+    save_video,
+)
 
 # isort: split
-from src.models.eval_inputs import get_multi_dataloader
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs import get_multi_dataloader
 
 # isort: split
 # isort: split
-from src.models.utils.model import encode_latent_time_vae, encode_plucker_vae
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.model import (
+    encode_latent_time_vae,
+    encode_plucker_vae,
+)
 
 # isort: split
-from src.models.utils.render import get_plucker_embedding_and_rays, save_ply, save_ply_orig
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.render import (
+    get_plucker_embedding_and_rays,
+    save_ply,
+    save_ply_orig,
+)
 
 # isort: split
-from src.models.utils.model import decode_multi_view_latents, encode_multi_view_video, encode_video, load_vae
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.model import (
+    decode_multi_view_latents,
+    encode_multi_view_video,
+    encode_video,
+    load_vae,
+)
 
 # isort: split
-from src.models.utils.checkpoint import get_most_recent_checkpoint
-from src.models.utils.data import write_dict_to_json
-from src.models.utils.misc import dtype_map, load_and_merge_configs, seed_everything
-
 from worldfoundry.core.io.paths import package_data_path
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.checkpoint import (
+    get_most_recent_checkpoint,
+)
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.data import write_dict_to_json
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.misc import (
+    dtype_map,
+    load_and_merge_configs,
+    seed_everything,
+)
 
 logger = get_logger(__name__, log_level="INFO")
 

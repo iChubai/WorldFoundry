@@ -2,7 +2,7 @@
 title: "InSpatio-World"
 description: "InSpatio-World（InSpatio）：新视角合成；已验证。"
 modelId: "inspatio-world"
-pageSource: generated
+pageSource: authored
 ---
 
 InSpatio-World 是 1.3B 的视频条件世界生成器：给定一段视频与目标轨迹，合成同一世界的轨迹条件新视角。已用发布的 checkpoint 验证：pipeline 生成的 297 帧视频通过了视觉检查。
@@ -30,6 +30,11 @@ checkpoint 为 inspatio/world（apache-2.0），配合 Wan2.1-T2V-1.3B 基座、
 必填 `input-path`；输入 `prompt`（不传时使用内置示例）；参数 `skip-step1`、`skip-step2`、`skip-step3`；产物 `inspatio-world.mp4`。
 
 CLI task profile：`default`。绑定的 pipeline 类是 `InspatioWorldPipeline`。
+
+描述生成、深度估计、渲染和视频生成 worker 均通过同一环境中已安装的 `worldfoundry.*`
+包模块运行。配置、轨迹和 checkpoint 均为本地数据输入。运行计划的 `entrypoint`
+是点分模块名，`cwd` 是已安装的运行时目录。运行时支持分阶段 GPU 选择、`step3_nproc`、
+`master_port`、seed／确定性设置、缓存深度续跑、TAE 和 DiT 编译。
 
 系列状态：**已验证**。
 

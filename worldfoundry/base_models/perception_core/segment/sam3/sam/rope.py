@@ -10,8 +10,14 @@ Adapted from:
 """
 
 import torch
-from einops import rearrange, repeat
-from torch import broadcast_tensors, nn
+from einops import repeat
+from torch import nn
+
+from worldfoundry.core.attention.rotary.broadcast import broadcat as broadcat
+from worldfoundry.core.attention.rotary.broadcast import (
+    reshape_for_broadcast as reshape_for_broadcast,
+)
+from worldfoundry.core.attention.rotary.interleaved import rotate_pairs as rotate_half
 
 
 def init_t_xy(end_x: int, end_y: int, scale: float = 1.0, offset: int = 0, device=None):
@@ -39,14 +45,6 @@ def compute_axial_cis(
     freqs_cis_x = torch.polar(torch.ones_like(freqs_x), freqs_x)
     freqs_cis_y = torch.polar(torch.ones_like(freqs_y), freqs_y)
     return torch.cat([freqs_cis_x, freqs_cis_y], dim=-1)
-
-
-def reshape_for_broadcast(freqs_cis: torch.Tensor, x: torch.Tensor):
-    ndim = x.ndim
-    assert 0 <= 1 < ndim
-    assert freqs_cis.shape == (x.shape[-2], x.shape[-1])
-    shape = [d if i >= ndim - 2 else 1 for i, d in enumerate(x.shape)]
-    return freqs_cis.view(*shape)
 
 
 def apply_rotary_enc(
@@ -107,18 +105,6 @@ def apply_rotary_enc_real(
 
 
 # rotary embedding helper functions
-def broadcat(tensors, dim=-1):
-    broadcasted_tensors = broadcast_tensors(*tensors)
-    return torch.cat(broadcasted_tensors, dim=dim)
-
-
-def rotate_half(x: torch.Tensor):
-    x = rearrange(x, "... (d r) -> ... d r", r=2)
-    x1, x2 = x.unbind(dim=-1)
-    x = torch.stack((-x2, x1), dim=-1)
-    return rearrange(x, "... d r -> ... (d r)")
-
-
 class VisionRotaryEmbeddingVE(nn.Module):
     def __init__(
         self,

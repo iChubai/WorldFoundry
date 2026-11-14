@@ -11,13 +11,15 @@ import math
 import torch
 import torch.nn as nn
 
-from worldfoundry.core.nn import Mlp
-from worldfoundry.core.nn.transformer.vit_qkv import QKVSelfAttention as Attention
-
-
-def modulate(x, shift, scale):
-    return x * (1 + scale) + shift
-
+from worldfoundry.base_models.llm_mllm_core.action.cogact import (
+    ActionEmbedder,
+    DiTBlock,
+    FinalLayer,
+    LabelEmbedder,
+)
+from worldfoundry.base_models.llm_mllm_core.action.cogact import (
+    ActionEmbedder as HistoryEmbedder,
+)
 
 #################################################################################
 #               Embedding Layers for Timesteps and conditions                 #
@@ -65,112 +67,17 @@ class TimestepEmbedder(nn.Module):
         return t_emb
 
 
-class LabelEmbedder(nn.Module):
-    """
-    Embeds conditions into vector representations. Also handles label dropout for classifier-free guidance.
-    """
-
-    def __init__(self, in_size, hidden_size, dropout_prob=0.1, conditions_shape=(1, 1, 4096)):
-        super().__init__()
-        self.linear = nn.Linear(in_size, hidden_size)
-        self.dropout_prob = dropout_prob
-        if dropout_prob > 0:
-            self.uncondition = nn.Parameter(torch.empty(conditions_shape[1:]))
-
-    def token_drop(self, conditions, force_drop_ids=None):
-        """
-        Drops conditions to enable classifier-free guidance.
-        """
-        if force_drop_ids is None:
-            drop_ids = torch.rand(conditions.shape[0], device=conditions.device) < self.dropout_prob
-        else:
-            drop_ids = force_drop_ids == 1
-        conditions = torch.where(
-            drop_ids.unsqueeze(1).unsqueeze(1).expand(conditions.shape[0], *self.uncondition.shape),
-            self.uncondition,
-            conditions,
-        )
-        return conditions
-
-    def forward(self, conditions, train, force_drop_ids=None):
-        use_dropout = self.dropout_prob > 0
-        if (train and use_dropout) or (force_drop_ids is not None):
-            conditions = self.token_drop(conditions, force_drop_ids)
-        embeddings = self.linear(conditions)
-        return embeddings
-
-
 #################################################################################
 #                      Embedding Layers for Actions and                         #
 #################################################################################
 
 
-class ActionEmbedder(nn.Module):
-    def __init__(self, action_size, hidden_size):
-        super().__init__()
-        self.linear = nn.Linear(action_size, hidden_size)
-
-    def forward(self, x):
-        # print(x.dtype, self.linear.weight.dtype)
-        x = self.linear(x)
-        return x
-
-
 # Action_History is not used now
-
-
-class HistoryEmbedder(nn.Module):
-    def __init__(self, action_size, hidden_size):
-        super().__init__()
-        self.linear = nn.Linear(action_size, hidden_size)
-
-    def forward(self, x):
-        x = self.linear(x)
-        return x
 
 
 #################################################################################
 #                                 Core DiT Model                                #
 #################################################################################
-
-
-class DiTBlock(nn.Module):
-    """
-    A DiT block with self-attention conditioning.
-    """
-
-    def __init__(self, hidden_size, num_heads, mlp_ratio=4.0, **block_kwargs):
-        super().__init__()
-        self.norm1 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        self.attn = Attention(hidden_size, num_heads=num_heads, qkv_bias=True, **block_kwargs)
-        self.norm2 = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        mlp_hidden_dim = int(hidden_size * mlp_ratio)
-
-        def approx_gelu():
-            return nn.GELU(approximate="tanh")
-
-        self.mlp = Mlp(in_features=hidden_size, hidden_features=mlp_hidden_dim, act_layer=approx_gelu, drop=0)
-
-    def forward(self, x):
-        x = x + self.attn(self.norm1(x))
-        x = x + self.mlp(self.norm2(x))
-        return x
-
-
-class FinalLayer(nn.Module):
-    """
-    The final layer of DiT.
-    """
-
-    def __init__(self, hidden_size, out_channels):
-        super().__init__()
-        self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        self.linear = nn.Linear(hidden_size, out_channels, bias=True)
-
-    def forward(self, x):
-        x = self.norm_final(x)
-        x = self.linear(x)
-        return x
 
 
 class DiT(nn.Module):
@@ -267,7 +174,7 @@ class DiT(nn.Module):
         # print(x.dtype)
         x = self.x_embedder(x)  # (N, T, D)
         t = self.t_embedder(t)  # (N, D)
-        z = self.z_embedder(z, self.training)  # (N, 1, D)
+        z = self.z_embedder(z)  # (N, 1, D)
         c = t.unsqueeze(1) + z  # (N, 1, D)
         x = torch.cat((c, x), dim=1)  # (N, T+1, D)
         x = x + self.positional_embedding  # (N, T+1, D)

@@ -9,6 +9,9 @@ from torch.nn import functional as F
 from transformers.cache_utils import Cache
 from transformers.configuration_utils import PretrainedConfig
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv as _repeat_kv
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb as _apply_rotary_pos_emb
+
 
 @dataclass
 class _ActionFlowInputs:
@@ -678,34 +681,6 @@ def _copy_inputs_(dst: _ActionFlowInputs, src: _ActionFlowInputs) -> None:
     _copy_context_(dst.context, src.context)
     if src.action_dim_is_pad is not None:
         dst.action_dim_is_pad.copy_(src.action_dim_is_pad)
-
-
-def _rotate_half(x: torch.Tensor) -> torch.Tensor:
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-def _apply_rotary_pos_emb(
-    q: torch.Tensor,
-    k: torch.Tensor,
-    cos: torch.Tensor,
-    sin: torch.Tensor,
-    unsqueeze_dim: int = 1,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    cos = cos.unsqueeze(unsqueeze_dim)
-    sin = sin.unsqueeze(unsqueeze_dim)
-    q_embed = (q * cos) + (_rotate_half(q) * sin)
-    k_embed = (k * cos) + (_rotate_half(k) * sin)
-    return q_embed, k_embed
-
-
-def _repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
-    batch, num_key_value_heads, slen, head_dim = hidden_states.shape
-    if n_rep == 1:
-        return hidden_states
-    hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
-    return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
 
 
 def _capture_cuda_graph(

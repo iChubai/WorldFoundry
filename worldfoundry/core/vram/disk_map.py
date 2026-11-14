@@ -184,6 +184,21 @@ class DiskMap(Mapping):
             self.flush_files()
         return param
 
+    def tensor_metadata(self, name: str) -> tuple[torch.dtype, tuple[int, ...]]:
+        """Read lookup dtype and shape without materializing safetensors payloads."""
+        from safetensors.torch import _getdtype
+
+        if self.rename_dict is not None:
+            name = self.rename_dict[name]
+        reader = self.files[self.name_map[name]]
+        if isinstance(reader, SafetensorsCompatibleBinaryLoader):
+            tensor = reader.get_tensor(name)
+            dtype, shape = tensor.dtype, tuple(tensor.shape)
+        else:
+            view = reader.get_slice(name)
+            dtype, shape = _getdtype(view.get_dtype()), tuple(view.get_shape())
+        return self.torch_dtype or dtype, shape
+
     def fetch_rename_dict(self, state_dict_converter):
         """Build the optional model-key to checkpoint-key mapping."""
         if state_dict_converter is None:

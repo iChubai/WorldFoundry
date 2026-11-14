@@ -162,7 +162,10 @@ class FastWAMRuntime:
 
     @staticmethod
     def _reset_rope(video_expert: Any, action_expert: Any) -> None:
-        from .wan_video_dit import precompute_freqs_cis, precompute_freqs_cis_3d
+        from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import (
+            precompute_freqs_cis,
+            precompute_freqs_cis_3d,
+        )
 
         video_expert.freqs = precompute_freqs_cis_3d(int(video_expert.attn_head_dim))
         action_expert.freqs = precompute_freqs_cis(int(action_expert.attn_head_dim), end=1024)
@@ -269,10 +272,11 @@ class FastWAMRuntime:
             return self._tokenizer, self._text_encoder
         import torch
 
+        from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import WanTextEncoder
         from worldfoundry.core.model_loading.checkpoints.assignment import assign_state_dict_strict
         from worldfoundry.core.model_loading.checkpoints.file import load_state_dict
 
-        from .wan_video_text_encoder import HuggingfaceTokenizer, WanTextEncoder
+        from .wan_video_text_encoder import HuggingfaceTokenizer
 
         self._load_policy()
         assets = self._component_root(

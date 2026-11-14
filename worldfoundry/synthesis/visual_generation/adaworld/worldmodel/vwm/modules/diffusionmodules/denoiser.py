@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from vwm.util import append_dims, instantiate_from_config
+
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import append_dims, instantiate_from_config
 
 
 class Denoiser(nn.Module):

@@ -41,59 +41,29 @@ from diffusers.utils import apply_lora_scale, deprecate, logging
 from diffusers.utils.torch_utils import maybe_allow_in_graph
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.networks.helios.history import (
+    pool_history_visible_mask as pool_history_visible_mask,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.helios.history import (
+    resolve_history_keep_mask as resolve_history_keep_mask,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.helios.model import HeliosOutputNorm as EvokeOutputNorm
+from worldfoundry.base_models.diffusion_model.models.networks.helios.model import (
+    _get_qkv_projections as _get_qkv_projections,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.helios.model import (
+    apply_rotary_emb_transposed as apply_rotary_emb_transposed,
+)
 from worldfoundry.core.attention.cache.kv_arena import KVSegmentArena
+from worldfoundry.core.nn.blocks.volume import center_down_sample_3d as center_down_sample_3d
+from worldfoundry.core.nn.blocks.volume import pad_for_3d_conv as pad_for_3d_conv
 
 from .kernels import attn_varlen_func, create_navit_attention_masks
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
-def pad_for_3d_conv(x, kernel_size):
-    b, c, t, h, w = x.shape
-    pt, ph, pw = kernel_size
-    pad_t = (pt - (t % pt)) % pt
-    pad_h = (ph - (h % ph)) % ph
-    pad_w = (pw - (w % pw)) % pw
-    return torch.nn.functional.pad(x, (0, pad_w, 0, pad_h, 0, pad_t), mode="replicate")
-
-
-def center_down_sample_3d(x, kernel_size):
-    return torch.nn.functional.avg_pool3d(x, kernel_size, stride=kernel_size)
-
-
 # GEO visibility filter helpers: filter history tokens by pixel-domain warp visibility mask.
-
-
-def pool_history_visible_mask(mask, patch_size):
-    """Pool pixel-domain visibility mask to patch granularity via avg_pool3d."""
-    if mask is None:
-        return None
-    if mask.ndim == 4:
-        mask = mask.unsqueeze(1)
-    if mask.ndim != 5:
-        raise ValueError(f"history visible mask must be 4D/5D, got {tuple(mask.shape)}")
-    mask = pad_for_3d_conv(mask.float(), patch_size)
-    return torch.nn.functional.avg_pool3d(mask, kernel_size=patch_size, stride=patch_size)
-
-
-def resolve_history_keep_mask(keep_mask, threshold: float = 0.5):
-    """Threshold patch occupancy mask to a bool keep mask; requires identical masks across batch."""
-    if keep_mask is None:
-        return None
-    if keep_mask.ndim == 5:
-        if keep_mask.shape[1] != 1:
-            raise ValueError(f"history visible mask channel dimension must be 1, got {tuple(keep_mask.shape)}")
-        keep_mask = keep_mask[:, 0]
-    if keep_mask.ndim != 4:
-        raise ValueError(f"history visible mask must reduce to [B,T,H,W], got {tuple(keep_mask.shape)}")
-    keep_flat = keep_mask.flatten(1)
-    if keep_flat.dtype != torch.bool:
-        keep_flat = keep_flat >= float(threshold)
-    if keep_flat.shape[0] == 1:
-        return keep_flat[0]
-    if not torch.equal(keep_flat, keep_flat[0:1].expand_as(keep_flat)):
-        raise ValueError("history visible masking currently requires identical masks across the batch.")
-    return keep_flat[0]
 
 
 def filter_history_tokens_by_mask(hidden_states, rope_freqs, keep_mask, threshold: float = 0.5):
@@ -124,18 +94,6 @@ def replace_history_tokens_by_mask(hidden_states, keep_mask, invisible_token, th
     return torch.where(replace, token, hidden_states)
 
 
-def apply_rotary_emb_transposed(
-    hidden_states: torch.Tensor,
-    freqs_cis: torch.Tensor,
-):
-    x_1, x_2 = hidden_states.unflatten(-1, (-1, 2)).unbind(-1)
-    cos, sin = freqs_cis.unsqueeze(-2).chunk(2, dim=-1)
-    out = torch.empty_like(hidden_states)
-    out[..., 0::2] = x_1 * cos[..., 0::2] - x_2 * sin[..., 1::2]
-    out[..., 1::2] = x_1 * sin[..., 1::2] + x_2 * cos[..., 0::2]
-    return out.type_as(hidden_states)
-
-
 def _compute_noise_slots(
     history_context_length: int,
     original_context_length: int,
@@ -159,25 +117,6 @@ def _compute_noise_slots(
             _off += cur_len
         return slots
     return [(history_context_length, history_context_length + original_context_length)]
-
-
-def _get_qkv_projections(attn: "EvokeAttention", hidden_states: torch.Tensor, encoder_hidden_states: torch.Tensor):
-    if encoder_hidden_states is None:
-        encoder_hidden_states = hidden_states
-
-    if attn.fused_projections:
-        if not attn.is_cross_attention:
-            # Fuse QKV into a single linear for self-attention.
-            query, key, value = attn.to_qkv(hidden_states).chunk(3, dim=-1)
-        else:
-            # Fuse only KV for cross-attention.
-            query = attn.to_q(hidden_states)
-            key, value = attn.to_kv(encoder_hidden_states).chunk(2, dim=-1)
-    else:
-        query = attn.to_q(hidden_states)
-        key = attn.to_k(encoder_hidden_states)
-        value = attn.to_v(encoder_hidden_states)
-    return query, key, value
 
 
 class Discriminator3DHead(nn.Module):
@@ -240,21 +179,6 @@ class LoRALinearLayer(nn.Module):
         down_hidden_states = self.down(hidden_states.to(dtype))
         up_hidden_states = self.up(down_hidden_states)
         return up_hidden_states.to(orig_dtype)
-
-
-class EvokeOutputNorm(nn.Module):
-    def __init__(self, dim: int, eps: float = 1e-6, elementwise_affine: bool = False):
-        super().__init__()
-        self.scale_shift_table = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
-        self.norm = FP32LayerNorm(dim, eps, elementwise_affine=False)
-
-    def forward(self, hidden_states: torch.Tensor, temb: torch.Tensor, original_context_length: int):
-        temb = temb[:, -original_context_length:, :]
-        shift, scale = (self.scale_shift_table.unsqueeze(0).to(temb.device) + temb.unsqueeze(2)).chunk(2, dim=2)
-        shift, scale = shift.squeeze(2).to(hidden_states.device), scale.squeeze(2).to(hidden_states.device)
-        hidden_states = hidden_states[:, -original_context_length:, :]
-        hidden_states = (self.norm(hidden_states.float()) * (1 + scale) + shift).type_as(hidden_states)
-        return hidden_states
 
 
 class EvokeAttnProcessor:

@@ -11,7 +11,6 @@ from worldfoundry.core.io.paths import (
     checkpoint_root_candidates,
     checkpoint_root_path,
     hfd_root_path,
-    official_runtime_repo_path,
 )
 
 from .. import resolve
@@ -346,30 +345,13 @@ def _ltx25_checkpoint_dir() -> str:
     )
 
 
-def _ltx25_source_root() -> str:
-    return resolve._first_existing_path(
-        resolve._project_root() / "cache" / "generative_taxonomy" / "Lightricks--LTX-2",
-        official_runtime_repo_path("Lightricks--LTX-2"),
-    )
-
-
-def _ltx25_python_executable() -> str:
-    workspace_root = resolve._project_root().parent
-    return resolve._first_existing_path(
-        workspace_root / "conda" / "envs" / "ltx-2.5" / "bin" / "python",
-        workspace_root / "envs" / "ltx-2.5" / "bin" / "python",
-    )
-
-
 def _ltx25_default_load_kwargs() -> dict[str, Any]:
-    """Map Studio directly to the official split LTX-2.5 runtime assets."""
+    """Map Studio to the native LTX-2.5 recipe's local split checkpoints."""
 
     checkpoint_dir = Path(_ltx25_checkpoint_dir())
     return {
         "required_components": {
             "checkpoint_dir": str(checkpoint_dir),
-            "source_root": _ltx25_source_root(),
-            "python_executable": _ltx25_python_executable(),
             "transformer_path": str(
                 checkpoint_dir / "diffusion_models" / "ltx-2.5-22b-distilled-transformer-bf16.safetensors"
             ),
@@ -896,7 +878,6 @@ def _kairos_sensenova_default_ref() -> str:
 def _kairos_sensenova_default_load_kwargs() -> dict[str, Any]:
     model_root = Path(_kairos_sensenova_default_ref())
     return {
-        "runtime_root": "",
         "models_root": str(model_root),
         "variant": "pretrained",
         "pretrained_dit": str(model_root / "kairos-common-4B-480P.safetensors"),
@@ -1017,15 +998,16 @@ def _ac3d_default_call_kwargs() -> dict[str, Any]:
     return kwargs
 
 
+def _magi2_python_executable() -> str:
+    workspace_root = resolve._project_root().parent
+    return resolve._first_existing_path(
+        workspace_root / "conda" / "envs" / "magi2-preview" / "bin" / "python",
+        workspace_root / "envs" / "magi2-preview" / "bin" / "python",
+    )
+
+
 def _magi2_default_load_kwargs() -> dict[str, Any]:
-    return {
-        "required_components": {
-            "python_executable": resolve._worldfoundry_unified_python_executable(),
-            "transformers_overlay": str(
-                resolve._project_root() / "artifacts" / "runtime_overlays" / "magi2-transformers-5.5.0"
-            ),
-        }
-    }
+    return {"required_components": {"python_executable": _magi2_python_executable()}}
 
 
 def _warp_as_history_default_ref() -> str:
@@ -1069,7 +1051,6 @@ def _joyai_echo_longvideo_default_ref() -> str:
 
 def _joyai_echo_longvideo_default_load_kwargs() -> dict[str, Any]:
     return {
-        "source_root": resolve._joyai_echo_source_root(),
         "checkpoint_dir": _joyai_echo_longvideo_default_ref(),
         "gemma_path": resolve._checkpoint_model_ref(
             "google--gemma-3-12b-it",
@@ -3479,7 +3460,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "save_fps",
             "nproc_per_node",
             "master_port",
-            "run_manage_libs",
         ),
         "tags": ("robot-video", "official-runtime"),
     },
@@ -3702,7 +3682,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "load_params": (
             "model_path",
             "required_components",
-            "source_root",
             "checkpoint_dir",
             "gemma_path",
             "python_executable",
@@ -3992,8 +3971,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "device",
             "model_id",
             "checkpoint_dir",
-            "source_root",
-            "python_executable",
             "transformer_path",
             "text_encoder_path",
             "video_vae_path",
@@ -4006,8 +3983,8 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "diffvae_optimization",
         ),
         "aliases": ("ltx2.5", "ltx25", "ltx-2.5-distilled"),
-        "tags": ("text-to-video", "image-to-video", "joint-audio-video", "official-runtime"),
-        "notes": "Runs the pinned official LTX-2.5 DistilledPipeline in its dedicated environment.",
+        "tags": ("text-to-video", "image-to-video", "joint-audio-video", "native"),
+        "notes": "Runs the native LTX-2.5 recipe in-process in the ltx-2.5 environment.",
     },
 }
 

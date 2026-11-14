@@ -1,7 +1,6 @@
 # Inference-only Being-H0.5 runtime retained in-tree.
 # Copyright (c) 2026 BeingBeyond Ltd. and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-# ruff: noqa: F405 - Names come from the upstream star import.
 import os
 from typing import ClassVar
 
@@ -14,10 +13,12 @@ from transformers.configuration_utils import PretrainedConfig
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.embodiment_mlp import SmallMLP
+from worldfoundry.base_models.llm_mllm_core.mllm.intern_vit.model import has_flash_attn
+
 from ..preprocessing.constants import CONNECTOR_ARCH, LLM_MODEL_ARCH, VIT_MODEL_ARCH
 from ..preprocessing.conversation import get_conv_template
-from .internvit import has_flash_attn
-from .layers import *  # noqa: F403 - Upstream star import kept as written.
+from .layers import ActionEncoder, MPGEnhancement
 
 logger = logging.get_logger(__name__)
 
@@ -221,7 +222,7 @@ class BeingH(PreTrainedModel):
         self.unified_action_dim = 200
 
         # Proprioception Encoder
-        self.proprio_encoder_robot = SimpleMLP(
+        self.proprio_encoder_robot = SmallMLP(
             input_dim=self.unified_state_dim,
             hidden_dim=self.action_hidden_size,
             output_dim=self.action_hidden_size,
@@ -234,7 +235,7 @@ class BeingH(PreTrainedModel):
                 action_dim=self.unified_action_dim,
                 hidden_size=self.action_hidden_size,
             )
-            self.action_decoder = SimpleMLP(
+            self.action_decoder = SmallMLP(
                 input_dim=self.action_hidden_size,
                 hidden_dim=self.action_hidden_size,
                 output_dim=self.unified_action_dim,
@@ -289,7 +290,7 @@ class BeingH(PreTrainedModel):
         else:
             logger.info("Using special action tokens for prediction.")
 
-            self.action_decoder = SimpleMLP(
+            self.action_decoder = SmallMLP(
                 input_dim=self.action_hidden_size,
                 hidden_dim=self.action_hidden_size,
                 output_dim=self.unified_action_dim,

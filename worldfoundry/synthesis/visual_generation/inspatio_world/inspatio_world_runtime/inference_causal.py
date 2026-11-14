@@ -7,13 +7,10 @@ import torch
 import torch.distributed as dist
 from einops import rearrange
 from omegaconf import OmegaConf
-from pipeline import CausalInferencePipeline
-from pipeline.causal_inference import denoise_block
 from safetensors.torch import load_file
 from torch.utils.data import DataLoader, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm
-from utils.render_warper import convert_mask_video
 
 from worldfoundry.core.media.codecs.video import write_video_torchvision
 from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
@@ -21,6 +18,10 @@ from worldfoundry.core.vram import DynamicSwapInstaller, get_cuda_free_memory_gb
 from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.reproducibility import (
     seed_for_rank,
 )
+
+from .pipeline import CausalInferencePipeline
+from .pipeline.causal_inference import denoise_block
+from .utils.render_warper import convert_mask_video
 
 
 def write_video(filename, video_array, fps):
@@ -109,7 +110,7 @@ pipeline.generator.to(device=device)
 tae_model = None
 
 if args.use_tae:
-    from utils.taehv import TAEHV
+    from .utils.taehv import TAEHV
 
     assert args.tae_checkpoint_path is not None, "--tae_checkpoint_path is required when --use_tae is set"
     print(f"[Rank {rank}] Loading TAE from {args.tae_checkpoint_path}...")
@@ -280,7 +281,7 @@ def encode_video(video_bcthw: torch.Tensor) -> torch.Tensor:
 # ============================================================================
 # Dataset
 # ============================================================================
-from inference_inputs.video_dataset import VideoDataset  # noqa: E402 - Follows module-level definitions, as upstream.
+from .inference_inputs.video_dataset import VideoDataset  # noqa: E402 - Follows module-level definitions, as upstream.
 
 dataset_config = OmegaConf.to_container(config.dataset, resolve=True)
 if args.json_path:

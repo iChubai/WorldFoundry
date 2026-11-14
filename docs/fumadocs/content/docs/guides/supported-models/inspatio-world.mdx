@@ -2,7 +2,7 @@
 title: "InSpatio-World"
 description: "InSpatio-World from InSpatio: video-conditioned world generation, trajectory-conditioned video, and 1 more task; Verified."
 modelId: "inspatio-world"
-pageSource: generated
+pageSource: authored
 ---
 
 InSpatio-World is a 1.3B video-conditioned world generator: given a video and a target trajectory it synthesizes trajectory-conditioned novel views of the same world. Validated with the released checkpoint: the pipeline generates a visually correct 297-frame video.
@@ -30,6 +30,12 @@ Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) 
 Required `input-path`; inputs `prompt` (bundled samples are used when omitted); options `skip-step1`, `skip-step2`, and `skip-step3`; artifacts `inspatio-world.mp4`.
 
 CLI task profiles: `default`. WorldFoundry binds `InspatioWorldPipeline`.
+
+Caption, depth, rendering and generation workers run as installed `worldfoundry.*` package
+modules in the same environment. Configs, trajectories and checkpoints are local data
+inputs. The runtime plan's `entrypoint` is a dotted module name; `cwd` is the installed
+runtime directory. The runtime supports per-stage GPU selection, `step3_nproc`,
+`master_port`, seed/determinism, cached-depth resume, TAE and DiT compilation.
 
 Family status: **Verified**.
 

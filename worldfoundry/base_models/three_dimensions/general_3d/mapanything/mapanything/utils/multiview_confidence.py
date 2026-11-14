@@ -13,11 +13,12 @@ multi-view depth projection consistency, as an alternative to learning-based con
 import torch
 import torch.nn.functional as F
 from einops import einsum
-from mapanything.utils.geometry import (
+
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.geometry import (
     closed_form_pose_inverse,
     depthmap_to_camera_frame,
 )
-from mapanything.utils.wai.intersection_check import (
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.wai.intersection_check import (
     create_frustum_from_intrinsics,
     frustum_intersection_check,
 )

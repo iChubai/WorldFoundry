@@ -17,7 +17,7 @@ Code: [jd-opensource/JoyAI-Echo](https://github.com/jd-opensource/JoyAI-Echo).
 
 Use `joyai-echo-wm` when the viewpoint must follow a given camera path.
 
-Both public variants use an LTX-2.3 audio-visual backbone with UCPE camera conditioning. Base is bidirectional with separate video/audio CFG, while Flash distills guidance with DMD and maintains bounded video, audio, cross-modal, and camera-attention caches. It is published by JD.com (JoyAI / Echo Team).
+Both public variants use an LTX-2.3 audio-visual backbone with UCPE camera conditioning. Base is bidirectional with separate video/audio CFG, while Flash distills guidance with DMD and maintains bounded video, audio, cross-modal, and camera-attention caches. WorldFoundry vendors the official inference code from jd-opensource/JoyAI-Echo at a08f1274. It is published by JD.com (JoyAI / Echo Team).
 
 Tasks: image-to-world-video, camera-controlled video, interactive world model, and audio video generation. Aliases: `echo-wm` and `joyai-echo-world-model`. Modalities: image in, world state and video out.
 
@@ -31,7 +31,7 @@ Task profiles: `image-to-world-video`, `camera-controlled-video`, `interactive-w
 
 Family status: **Runner parity pending**.
 
-Supply a first-frame image, prompt, and Action DSL such as w-60,a-60. Select variant=base or variant=flash at load time. The official source checkout, dedicated CUDA environment, Echo checkpoint, and gated unquantized Gemma encoder must be staged before execute=True.
+Supply a first-frame image, prompt, and Action DSL such as w-60,a-60. Select variant=base or variant=flash at load time. The dedicated CUDA environment, Echo checkpoint, and gated unquantized Gemma encoder must be staged before execute=True.
 
 ## Running in WorldFoundry
 

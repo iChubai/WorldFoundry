@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from collections.abc import Iterable
 from typing import Optional as Optional
 
@@ -6,21 +5,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
-from vwm.modules.video_attention import SpatialVideoTransformer
 
-from .util import avg_pool_nd, conv_nd, linear, normalization, timestep_embedding, zero_module
+from worldfoundry.base_models.diffusion_model.models.networks.lvdm.unet3d import TimestepBlock
+from worldfoundry.core.nn.blocks.layers import zero_module
+from worldfoundry.core.nn.diffusion.convolution import linear
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.video_attention import (
+    SpatialVideoTransformer,
+)
 
-
-class TimestepBlock(nn.Module):
-    """
-    Any module where forward() takes timestep embeddings as a second argument.
-    """
-
-    @abstractmethod
-    def forward(self, x, emb):
-        """
-        Apply the module to 'x' given 'emb' timestep embeddings.
-        """
+from .util import avg_pool_nd, conv_nd, normalization, timestep_embedding
 
 
 class TimestepEmbedSequential(nn.Sequential, TimestepBlock):

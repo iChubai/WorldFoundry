@@ -2,18 +2,31 @@ import argparse
 from pathlib import Path
 
 import torch
-from agent import Agent
-from coroutines.collector import NumToCollect, make_collector
-from envs import WorldModelEnv, make_atari_env
-from eval_inputs import BatchSampler, Dataset, collate_segments_to_batch
-from game import ActionNames, DatasetEnv, Game, Keymap, NamedEnv, PlayEnv, get_keymap_and_action_names
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader
-from utils import get_path_agent_ckpt, prompt_atari_game
 
 from worldfoundry.core.io.paths import checkpoint_root_path, resolve_data_path
+from worldfoundry.synthesis.visual_generation.diamond.agent import Agent
+from worldfoundry.synthesis.visual_generation.diamond.coroutines.collector import NumToCollect, make_collector
+from worldfoundry.synthesis.visual_generation.diamond.envs import WorldModelEnv, make_atari_env
+from worldfoundry.synthesis.visual_generation.diamond.eval_inputs import (
+    BatchSampler,
+    Dataset,
+    collate_segments_to_batch,
+)
+from worldfoundry.synthesis.visual_generation.diamond.game import (
+    ActionNames,
+    DatasetEnv,
+    Game,
+    Keymap,
+    NamedEnv,
+    PlayEnv,
+    get_keymap_and_action_names,
+)
+from worldfoundry.synthesis.visual_generation.diamond.utils import get_path_agent_ckpt, prompt_atari_game
+from worldfoundry.synthesis.visual_generation.diamond.worldfoundry_runtime import use_package_config_targets
 
 OmegaConf.register_new_resolver("eval", eval)
 
@@ -59,6 +72,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--fps", type=int, default=15, help="Frame rate.")
     parser.add_argument("--size", type=int, default=640, help="Window size.")
     parser.add_argument("--no-header", action="store_true")
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument(
         "--headless-steps",
         type=int,
@@ -125,6 +139,8 @@ def prepare_play_mode(cfg: DictConfig, args: argparse.Namespace) -> tuple[PlayEn
         path_ckpt = Path(args.checkpoint).expanduser().resolve()
     else:
         path_ckpt = get_path_agent_ckpt("checkpoints", epoch=-1)
+
+    use_package_config_targets(cfg)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -215,6 +231,11 @@ def main():
     ok = check_args(args)
     if not ok:
         return
+
+    if args.seed is not None:
+        from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+
+        set_seed_everywhere(args.seed)
 
     config_dir = str(Path(args.config_dir).expanduser().resolve())
     with initialize_config_dir(version_base="1.3", config_dir=config_dir):

@@ -8,12 +8,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from worldfoundry.core.geometry.projection import transform_points as geotrf
+
 from ..blocks import (
     ConditionModulationBlock,
     Mlp,
 )
 from ..utils.camera import PoseDecoder, pose_encoding_to_camera
-from ..utils.geometry import geotrf
 from .postprocess import (
     postprocess,
     postprocess_desc,

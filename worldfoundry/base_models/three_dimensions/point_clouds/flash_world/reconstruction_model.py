@@ -4,8 +4,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from worldfoundry.core.geometry.transforms import quaternion_wxyz_to_rotation_matrix as quaternion_to_matrix
+
 from .render import gaussian_render
-from .utils import create_rays, quaternion_to_matrix
+from .utils import create_rays
 
 
 def inverse_sigmoid(x):

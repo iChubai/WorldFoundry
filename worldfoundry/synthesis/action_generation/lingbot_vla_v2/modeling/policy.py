@@ -19,7 +19,16 @@ from .qwen3_vl import (
 )
 
 # isort: split
-from .attention import build_block_mask, flex_attention_forward, flex_attention_with_block_mask
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import make_att_2d_masks
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import (
+    masked_eager_attention_forward as our_eager_attention_forward,
+)
+
+from .attention import (
+    build_block_mask,
+    flex_attention_forward,
+    flex_attention_with_block_mask,
+)
 from .base import (
     FlowMatching as FlowMatchingV1,
 )
@@ -30,13 +39,7 @@ from .qwen2_expert import (
     Qwen2ForCausalLM,
     Qwen2TokenMoeBlock,
 )
-from .utils import (
-    block_suffix_to_fv_,
-    make_att_2d_masks,
-    our_eager_attention_forward,
-    prefix_query_segments,
-    prefix_query_token_spans,
-)
+from .utils import block_suffix_to_fv_, prefix_query_segments, prefix_query_token_spans
 
 try:
     from dinov3.hub.backbones import dinov3_vitb16

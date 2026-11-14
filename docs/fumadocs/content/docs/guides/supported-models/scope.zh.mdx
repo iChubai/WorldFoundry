@@ -25,6 +25,8 @@ SCOPE 是基于 Wan 基座的交互式游戏世界模型：输入图像与逐步
 
 必填：`image`、`prompt`。可选：`video`。动作字段：action_parquet。产物：`generated_video`、`scope.mp4`。向 `SCOPEPipeline` 传入 `execute=True` 才会执行生成；未传入时 pipeline 会立即停止。通过 `model_dir`/`checkpoint_root` 或 `SCOPE_MODEL_DIR` 指向本地权重。
 
+执行时在选定的 Python 环境中启动已安装的 `worldfoundry.synthesis.visual_generation.scope.scope_runtime.inference` 模块。
+
 ## 在 WorldFoundry 中运行
 
 使用统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。先将 `zizhaotong/SCOPE` 准备到本地，再启动 `wf run scope`。

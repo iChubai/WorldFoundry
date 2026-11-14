@@ -1,10 +1,10 @@
 import numpy as np
 
 # isort: split
-from env.pointmaze.maze_model import MazeEnv
+from worldfoundry.synthesis.visual_generation.dino_wm.env.pointmaze.maze_model import MazeEnv
 
 # isort: split
-from utils import aggregate_dct
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import aggregate_dct
 
 STATE_RANGES = np.array(
     [

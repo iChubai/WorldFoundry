@@ -2,12 +2,20 @@
 # https://github.com/YvanYin/Metric3D
 # Licensed under the BSD-2 License. See repository-root THIRD-PARTY-NOTICES for details.
 
+from __future__ import annotations
+
+import ast
 import os
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn as nn
 
 from .model.dense_pipeline import BaseDepthModel
+
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 
 class DepthModel(BaseDepthModel):
@@ -43,17 +51,28 @@ def get_configured_monodepth_model(
     return model
 
 
-def config_from_py_file(file_path: str) -> dict:
-    """
-    Args:
-    @ file_path: string representing path to config file.
-    Returns:
-    # config: dict containing all configs.
-    """
-    namespace = {}
-    with open(file_path) as f:
-        exec(f.read(), namespace)
-    return namespace["config"]
+def config_from_py_file(file_path: str) -> DictConfig:
+    """Read the bundled ``config = DictConfig({...})`` data without executing Python."""
+    from omegaconf import DictConfig
+
+    tree = ast.parse(Path(file_path).read_text(encoding="utf-8"), filename=file_path)
+    for node in tree.body:
+        if not isinstance(node, ast.Assign) or len(node.targets) != 1:
+            continue
+        target = node.targets[0]
+        if not isinstance(target, ast.Name) or target.id != "config":
+            continue
+        value = node.value
+        if (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Name)
+            and value.func.id == "DictConfig"
+            and len(value.args) == 1
+            and not value.keywords
+        ):
+            return DictConfig(ast.literal_eval(value.args[0]))
+        raise ValueError(f"Expected a literal DictConfig assignment in {file_path}")
+    raise ValueError(f"No config assignment found in {file_path}")
 
 
 metric3d_dir = os.path.dirname(__file__)

@@ -29,7 +29,7 @@ MIRA 是多人交互世界模型：多名玩家在同一个由动作条件生成
 
 输入 `load.checkpoint-path`、`load.dataset-path`（不传时使用内置示例）；参数 `plan-only`、`timeout-seconds`；产物 `generated_video`、`mira.mp4`。
 
-CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPipeline`。
+CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPipeline`。工作进程运行 `worldfoundry.synthesis.visual_generation.mira_wm.infer` 包模块，复用树内统一的 DINOv3 骨干。冻结骨干从 codec checkpoint 恢复；独立预训练权重可通过 `RS_DINO_WEIGHTS_DIR` 提供。
 
 系列状态：**Runner 一致性待确认**。
 

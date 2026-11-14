@@ -19,6 +19,8 @@ from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import Upsample as WanUpsample
+
 from .config import WAN22_LATENTS_MEAN, WAN22_LATENTS_STD
 
 __all__ = ["TurboVAED", "get_turbo_vaed"]
@@ -344,13 +346,6 @@ class TurboVAEDResNetBlock3d(nn.Module):
 
         hidden_states = hidden_states + inputs
         return hidden_states
-
-
-class WanUpsample(nn.Upsample):
-    r"""Upsample while ensuring the output tensor keeps the input's data type."""
-
-    def forward(self, x):
-        return super().forward(x.float()).type_as(x)
 
 
 class WanResample(nn.Module):

@@ -13,8 +13,10 @@ import torch
 import torch.nn as nn
 from transformers import PretrainedConfig, PreTrainedModel
 
+from worldfoundry.core.attention.rotary.rope_2d import CrocoRotaryPositionEmbedding2D as RoPE2D
+
 from .blocks import Block, DecoderBlock, PatchEmbed
-from .pos_embed import RoPE2D, get_2d_sincos_pos_embed
+from .pos_embed import get_2d_sincos_pos_embed
 
 
 class CrocoConfig(PretrainedConfig):

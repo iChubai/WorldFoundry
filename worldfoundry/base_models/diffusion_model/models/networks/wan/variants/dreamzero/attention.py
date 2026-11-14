@@ -29,15 +29,6 @@ try:
 except ModuleNotFoundError:
     FLASH_ATTN_2_AVAILABLE = False
 
-try:
-    import transformer_engine  # noqa: F401 - Import checks optional dependency availability.
-
-    from .cudnn_attention import DotProductAttention
-
-    TRANSFORMER_ENGINE_AVAILABLE = True
-except ModuleNotFoundError:
-    TRANSFORMER_ENGINE_AVAILABLE = False
-
 import warnings
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
@@ -246,12 +237,12 @@ class AttentionModule(torch.nn.Module):
         if os.getenv("ENABLE_TENSORRT", "False").lower() == "true":
             backend = "torch"
 
-        # Fall back to FA backend if TE is specified but not available
-        if backend == "TE" and not TRANSFORMER_ENGINE_AVAILABLE:
+        # The Transformer Engine backend is not bundled; TE requests use FA2.
+        if backend == "TE":
             print("Warning: Transformer Engine is not available. Falling back to FA2 backend.")
             backend = "FA2"
 
-        assert backend in ["torch", "FA2", "FA3", "TE", "torch_onnx"]
+        assert backend in ["torch", "FA2", "FA3", "torch_onnx"]
         self.backend = backend
 
         if backend == "torch":
@@ -310,26 +301,6 @@ class AttentionModule(torch.nn.Module):
 
             self.attn_func = _torch_onnx_impl
 
-        elif backend == "TE" and TRANSFORMER_ENGINE_AVAILABLE:
-            self.attn_backend = DotProductAttention(
-                num_attention_heads=num_heads,
-                kv_channels=head_dim,
-                qkv_format="bshd",
-                attn_mask_type="causal" if causal else "no_mask",
-                window_size=window_size,
-                attention_dropout=dropout_p,
-            )
-
-            def _te_impl(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
-                out_dtype = q.dtype
-                return self.attn_backend(
-                    query_layer=q.to(dtype),
-                    key_layer=k.to(dtype),
-                    value_layer=v.to(dtype),
-                ).to(out_dtype)
-
-            self.attn_func = _te_impl
-
         elif backend == "FA2" or backend == "FA3":
 
             def _flash_attn_impl(
@@ -368,11 +339,7 @@ class AttentionModule(torch.nn.Module):
         q_lens: torch.Tensor | None = None,
         k_lens: torch.Tensor | None = None,
     ):
-        if (
-            self.backend == "torch"
-            or self.backend == "torch_onnx"
-            or (self.backend == "TE" and TRANSFORMER_ENGINE_AVAILABLE)
-        ):
+        if self.backend == "torch" or self.backend == "torch_onnx":
             if q_lens is not None or k_lens is not None:
                 warnings.warn(
                     "Padding mask is disabled when using scaled_dot_product_attention. It can have a significant impact on performance.",

@@ -8,18 +8,15 @@ from torch.nn import functional as F
 
 _logger = logging.getLogger(__name__)
 
+from worldfoundry.core.nn.blocks.layers import QuickGELU  # noqa: E402 - Follows the logging setup.
+
 from .model import (  # noqa: E402 - Follows the logging setup.
     CLIPTextCfg,
     CLIPVisionCfg,
     _build_text_tower,
     _build_vision_tower,
 )
-from .transformer import (  # noqa: E402 - Follows the logging setup.
-    LayerNorm,
-    LayerNormFp32,
-    MultimodalTransformer,
-    QuickGELU,
-)
+from .transformer import LayerNorm, LayerNormFp32, MultimodalTransformer  # noqa: E402 - Follows the logging setup.
 
 
 @dataclass

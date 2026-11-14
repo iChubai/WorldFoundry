@@ -10,7 +10,7 @@ This pipeline handles:
 6. Multi-iteration video generation
 
 Usage:
-    from liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
+    from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pipeline_unified_backbone import UnifiedBackbonePipeline
     pipeline = UnifiedBackbonePipeline(config, device, generator, text_encoder, vae)
     video = pipeline.run_single_iteration(...)
     # or for multi-iteration:
@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import time as _time
 import traceback
 from dataclasses import dataclass, field
@@ -34,10 +33,19 @@ from einops import rearrange
 from PIL import Image
 from tqdm import tqdm
 
-from liveworld.pipelines.pointcloud_updater import ReconstructionResult, create_pointcloud_updater
-from liveworld.utils import FlowMatchScheduler, set_seed
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc_compat import (
+    FlowUniPCMultistepScheduler as FlowUniPCMultistepScheduler,
+)
 from worldfoundry.base_models.perception_core.general_perception.qwen3_vl_entity import (
     Qwen3VLEntityExtractor,
+)
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
+    ReconstructionResult,
+    create_pointcloud_updater,
+)
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.utils import (
+    FlowMatchScheduler,
+    set_seed,
 )
 
 from ..geometry_utils import (
@@ -62,7 +70,6 @@ from ..geometry_utils import (
     scale_intrinsics as scale_intrinsics_from_size,
 )
 from ..utils import save_video_h264
-from ..wan.utils.fm_solvers_unipc import FlowUniPCMultistepScheduler
 
 # isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter import (
@@ -949,11 +956,6 @@ class UnifiedBackbonePipeline:
 # =============================================================================
 
 
-def _get_project_root() -> str:
-    """Return the repository root for local imports."""
-    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
 def load_frame_from_image(image_path: str, target_size: tuple[int, int]) -> Image.Image:
     """Load the first frame from an image file.
 
@@ -1332,10 +1334,6 @@ def generate_scene_projection_with_handler(
         (scene_proj_latent, points_world, colors, first_frame,
          intrinsics, alignment_transform, intrinsics_size)
     """
-    project_root = _get_project_root()
-    if project_root not in sys.path:
-        sys.path.insert(0, project_root)
-
     if not os.path.exists(first_frame_image):
         raise FileNotFoundError(f"First frame image not found: {first_frame_image}")
 

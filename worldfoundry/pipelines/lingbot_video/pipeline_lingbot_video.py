@@ -91,7 +91,6 @@ class LingBotVideoGenerationPipeline(PipelineABC):
             checkpoint_dir=checkpoint_dir,
             device=device,
             python_executable=python_executable,
-            inference_root=options.pop("inference_root", None),
         )
         return cls(runtime, model_id=resolved_model_id, variant=variant)
 

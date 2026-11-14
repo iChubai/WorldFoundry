@@ -5,24 +5,14 @@
 # LICENSE file in the root directory of this source tree.
 
 
-import collections
 from collections.abc import Callable
 from functools import partial
-from itertools import repeat
 
 import torch.nn as nn
+from timm.layers import to_ntuple as _ntuple
 
 
 # From PyTorch internals
-def _ntuple(n):
-    def parse(x):
-        if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
-            return tuple(x)
-        return tuple(repeat(x, n))
-
-    return parse
-
-
 def exists(val):
     return val is not None
 

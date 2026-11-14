@@ -19,7 +19,7 @@ Echo-WM 是在连续导航控制下联合演化视频、环境音、音乐与语
 
 视角需要沿指定相机路径运动时，用 `joyai-echo-wm`。
 
-两个公开变体均使用带 UCPE 相机条件的 LTX-2.3 音视频骨干。Base 为双向模型并分别使用视频/音频 CFG；Flash 以 DMD 蒸馏 guidance，并维护有界的视频、音频、跨模态及相机注意力缓存。该模型由京东（JoyAI / Echo 团队）发布。
+两个公开变体均使用带 UCPE 相机条件的 LTX-2.3 音视频骨干。Base 为双向模型并分别使用视频/音频 CFG；Flash 以 DMD 蒸馏 guidance，并维护有界的视频、音频、跨模态及相机注意力缓存。WorldFoundry vendor 了官方推理代码（jd-opensource/JoyAI-Echo，a08f1274）。该模型由京东（JoyAI / Echo 团队）发布。
 
 任务：image-to-world-video、相机可控视频、交互式世界模型、音视频联合生成。别名：`echo-wm`、`joyai-echo-world-model`。
 
@@ -35,7 +35,7 @@ CLI task profile：`image-to-video`。绑定的 pipeline 类是 `JoyAIEchoWMPipe
 
 `image-to-video` 的默认值：width=1280, height=704, fps=24, seed=4。
 
-需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或 variant=flash。执行 execute=True 前必须准备官方源码检出、专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。
+需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或 variant=flash。执行 execute=True 前必须准备专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。
 
 ## 在 WorldFoundry 中运行
 

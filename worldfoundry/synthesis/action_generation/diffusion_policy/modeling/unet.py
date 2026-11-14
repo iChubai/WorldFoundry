@@ -5,61 +5,17 @@ import logging
 import einops
 import torch
 import torch.nn as nn
-from einops.layers.torch import Rearrange
 
-from .convolution import Conv1dBlock, Downsample1d, Upsample1d
+from worldfoundry.base_models.llm_mllm_core.action.diffusion_policy import (
+    ConditionalResidualBlock1D,
+    Conv1dBlock,
+    Downsample1d,
+    Upsample1d,
+)
+
 from .embeddings import SinusoidalPosEmb
 
 logger = logging.getLogger(__name__)
-
-
-class ConditionalResidualBlock1D(nn.Module):
-    def __init__(self, in_channels, out_channels, cond_dim, kernel_size=3, n_groups=8, cond_predict_scale=False):
-        super().__init__()
-
-        self.blocks = nn.ModuleList(
-            [
-                Conv1dBlock(in_channels, out_channels, kernel_size, n_groups=n_groups),
-                Conv1dBlock(out_channels, out_channels, kernel_size, n_groups=n_groups),
-            ]
-        )
-
-        # FiLM modulation https://arxiv.org/abs/1709.07871
-        # predicts per-channel scale and bias
-        cond_channels = out_channels
-        if cond_predict_scale:
-            cond_channels = out_channels * 2
-        self.cond_predict_scale = cond_predict_scale
-        self.out_channels = out_channels
-        self.cond_encoder = nn.Sequential(
-            nn.Mish(),
-            nn.Linear(cond_dim, cond_channels),
-            Rearrange("batch t -> batch t 1"),
-        )
-
-        # make sure dimensions compatible
-        self.residual_conv = nn.Conv1d(in_channels, out_channels, 1) if in_channels != out_channels else nn.Identity()
-
-    def forward(self, x, cond):
-        """
-        x : [ batch_size x in_channels x horizon ]
-        cond : [ batch_size x cond_dim]
-
-        returns:
-        out : [ batch_size x out_channels x horizon ]
-        """
-        out = self.blocks[0](x)
-        embed = self.cond_encoder(cond)
-        if self.cond_predict_scale:
-            embed = embed.reshape(embed.shape[0], 2, self.out_channels, 1)
-            scale = embed[:, 0, ...]
-            bias = embed[:, 1, ...]
-            out = scale * out + bias
-        else:
-            out = out + embed
-        out = self.blocks[1](out)
-        out = out + self.residual_conv(x)
-        return out
 
 
 class ConditionalUnet1D(nn.Module):

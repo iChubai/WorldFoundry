@@ -1,7 +1,9 @@
 # ruff: noqa: F405 - Names come from the upstream star import.
-from vwm.modules.diffusionmodules.openaimodel import *  # noqa: F403 - Upstream star import kept as written.
-from vwm.modules.video_attention import SpatialVideoTransformer
-from vwm.util import default, repeat_img_seq
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.openaimodel import *  # noqa: F403 - Upstream star import kept as written.
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.video_attention import (
+    SpatialVideoTransformer,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import default, repeat_img_seq
 
 from .util import AlphaBlender
 

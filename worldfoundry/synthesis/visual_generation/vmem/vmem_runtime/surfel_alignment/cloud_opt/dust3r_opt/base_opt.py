@@ -15,7 +15,8 @@ import tqdm
 from PIL import Image
 
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.device import to_numpy
-from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.geometry import geotrf, inv
+from worldfoundry.core.geometry.projection import invert_matrix as inv
+from worldfoundry.core.geometry.projection import transform_points as geotrf
 
 # isort: split
 from worldfoundry.base_models.three_dimensions.point_clouds.cut3r.utils.image import rgb

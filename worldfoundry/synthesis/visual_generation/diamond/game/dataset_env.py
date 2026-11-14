@@ -1,8 +1,9 @@
 from typing import Any
 
 import torch
-from eval_inputs import Dataset
 from torch import Tensor
+
+from worldfoundry.synthesis.visual_generation.diamond.eval_inputs import Dataset
 
 
 class DatasetEnv:

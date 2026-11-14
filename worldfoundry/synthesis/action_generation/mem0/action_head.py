@@ -7,21 +7,15 @@ from __future__ import annotations
 from typing import Any
 
 import torch
-import torch.nn.functional as F
 from torch import nn
 
-from .action_encoder import SinusoidalPositionalEncoding, swish
+from worldfoundry.base_models.diffusion_model.models.autoencoders.lvdm.blocks import nonlinearity as swish
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.dreamzero.action_encoder import (
+    SinusoidalPositionalEncoding,
+)
+from worldfoundry.core.nn.blocks.layers import TwoLayerReLU as MLP
+
 from .cross_attention_dit import DiT
-
-
-class MLP(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int, output_dim: int) -> None:
-        super().__init__()
-        self.layer1 = nn.Linear(input_dim, hidden_dim)
-        self.layer2 = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, value: torch.Tensor) -> torch.Tensor:
-        return self.layer2(F.relu(self.layer1(value)))
 
 
 class ActionEncoder(nn.Module):

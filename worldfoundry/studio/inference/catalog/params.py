@@ -100,8 +100,6 @@ def _official_video_load_params() -> tuple[str, ...]:
         "model_id",
         "checkpoint_path",
         "checkpoint_candidates",
-        "repo_root",
-        "repo_root_candidates",
         "kind",
         "pipeline_target",
         "torch_dtype",

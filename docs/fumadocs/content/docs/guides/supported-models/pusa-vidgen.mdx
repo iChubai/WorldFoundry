@@ -2,7 +2,7 @@
 title: "Pusa VidGen"
 description: "Pusa VidGen from City University of Hong Kong: image-to-video, text-to-video, and 1 more task; Runner parity pending."
 modelId: "pusa-vidgen"
-pageSource: generated
+pageSource: authored
 ---
 
 Pusa VidGen (Pusa V1) demonstrates vectorized timestep adaptation: instead of one shared diffusion timestep for the whole video, each frame gets its own, which unlocks image-to-video, text-to-video, and video extension from one cheap LoRA training run on Wan2.2. WorldFoundry assembles it entirely from canonical Wan2.2 components — no external runtime checkout is needed at inference time.
@@ -36,6 +36,8 @@ Family status: **Runner parity pending**.
 Defaults for `default`: frames=81, height=720, width=1280, seed=0.
 
 Call the pipeline with execute=True to write the generated_video artifact. Stage the Wan2.2 base weights plus the Pusa LoRA before running.
+
+The supported `runner_version` is `v1`, backed by the Pusa high- and low-noise LoRAs and Wan2.2. Requests for `v0` raise an error; both V1 LoRA files must be staged before execution.
 
 ## Running in WorldFoundry
 

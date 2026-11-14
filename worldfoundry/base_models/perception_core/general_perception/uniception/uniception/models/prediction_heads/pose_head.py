@@ -12,7 +12,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from uniception.models.prediction_heads.base import PredictionHeadInput, SummaryTaskOutput
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.base import (
+    PredictionHeadInput,
+    SummaryTaskOutput,
+)
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 

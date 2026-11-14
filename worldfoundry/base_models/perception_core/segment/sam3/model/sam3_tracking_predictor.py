@@ -11,14 +11,20 @@ import torch
 from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_base import (
     NO_OBJ_SCORE,
     Sam3TrackerBase,
+)
+from worldfoundry.base_models.perception_core.segment.sam_components.utils import (
     concat_points,
 )
 
 # isort: split
 from tqdm.auto import tqdm
 
-from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import fill_holes_in_mask_scores
-from worldfoundry.base_models.perception_core.segment.sam3.model.utils.sam2_utils import load_video_frames
+from worldfoundry.base_models.perception_core.segment.sam3.model.sam3_tracker_utils import (
+    fill_holes_in_mask_scores,
+)
+from worldfoundry.base_models.perception_core.segment.sam3.model.utils.sam2_utils import (
+    load_video_frames,
+)
 
 
 class Sam3TrackerPredictor(Sam3TrackerBase):

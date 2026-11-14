@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from PIL import Image
 from torchvision.transforms import ToTensor
 
-from src.camera import get_camera_embedding
-from src.utils import load_video
+from .camera import get_camera_embedding
+from .utils import load_video
 
 
 def load_dataset(

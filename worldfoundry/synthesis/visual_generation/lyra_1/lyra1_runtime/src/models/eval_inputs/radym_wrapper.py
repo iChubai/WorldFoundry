@@ -16,7 +16,8 @@
 import os
 
 import torch
-from src.models.eval_inputs.radym import Radym
+
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.radym import Radym
 
 
 class RadymWrapper(Radym):

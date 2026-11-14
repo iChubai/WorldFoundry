@@ -12,22 +12,35 @@ import logging
 import math
 from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Any
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init
 import torch.utils.checkpoint
+from timm.layers import DropPath as DropPath
 from torch import Tensor
 from torch.nn.init import trunc_normal_
 
-from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import (
-    index_select_cat,
-    memory_efficient_attention,
-    scaled_index_add,
+from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.construction import (
+    init_weights_vit_timm as init_weights_vit_timm,
 )
+from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_dav2.layers.block import (
+    drop_add_residual_stochastic_depth_list as drop_add_residual_stochastic_depth_list,
+)
+from worldfoundry.base_models.perception_core.general_perception.dinov2.variants.vipe_dav2.layers.block import (
+    get_attn_bias_and_cat as get_attn_bias_and_cat,
+)
+from worldfoundry.base_models.three_dimensions.general_3d.vipe.ext.xformers import (
+    memory_efficient_attention,
+)
+from worldfoundry.core.nn.blocks.layers import LayerScale as LayerScale
+from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused as SwiGLUFFNFused
 from worldfoundry.core.nn.blocks.module_utils import named_apply
+from worldfoundry.core.nn.blocks.stochastic_depth import add_residual as add_residual
+from worldfoundry.core.nn.blocks.stochastic_depth import (
+    get_branges_scales as get_branges_scales,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -152,44 +165,6 @@ def make_2tuple(x):
 
     assert isinstance(x, int)
     return (x, x)
-
-
-def drop_path(x, drop_prob: float = 0.0, training: bool = False):
-    if drop_prob == 0.0 or not training:
-        return x
-    keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
-    random_tensor = x.new_empty(shape).bernoulli_(keep_prob)
-    if keep_prob > 0.0:
-        random_tensor.div_(keep_prob)
-    output = x * random_tensor
-    return output
-
-
-class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks)."""
-
-    def __init__(self, drop_prob=None):
-        super().__init__()
-        self.drop_prob = drop_prob
-
-    def forward(self, x):
-        return drop_path(x, self.drop_prob, self.training)
-
-
-class LayerScale(nn.Module):
-    def __init__(
-        self,
-        dim: int,
-        init_values: float | Tensor = 1e-5,
-        inplace: bool = False,
-    ) -> None:
-        super().__init__()
-        self.inplace = inplace
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x: Tensor) -> Tensor:
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class PatchEmbed(nn.Module):
@@ -361,27 +336,6 @@ class SwiGLUFFN(nn.Module):
 
 fmha = None
 XFORMERS_AVAILABLE = False
-
-
-class SwiGLUFFNFused(SwiGLUFFN):
-    def __init__(
-        self,
-        in_features: int,
-        hidden_features: int | None = None,
-        out_features: int | None = None,
-        act_layer: Callable[..., nn.Module] | None = None,
-        drop: float = 0.0,
-        bias: bool = True,
-    ) -> None:
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        hidden_features = (int(hidden_features * 2 / 3) + 7) // 8 * 8
-        super().__init__(
-            in_features=in_features,
-            hidden_features=hidden_features,
-            out_features=out_features,
-            bias=bias,
-        )
 
 
 class Attention(nn.Module):
@@ -615,85 +569,6 @@ def drop_add_residual_stochastic_depth(
     # 3) add the residual
     x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
     return x_plus_residual.view_as(x)
-
-
-def get_branges_scales(x, sample_drop_ratio=0.0):
-    b, n, d = x.shape
-    sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
-    brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
-    residual_scale_factor = b / sample_subset_size
-    return brange, residual_scale_factor
-
-
-def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None):
-    if scaling_vector is None:
-        x_flat = x.flatten(1)
-        residual = residual.flatten(1)
-        x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
-    else:
-        x_plus_residual = scaled_index_add(
-            x,
-            brange,
-            residual.to(dtype=x.dtype),
-            scaling=scaling_vector,
-            alpha=residual_scale_factor,
-        )
-    return x_plus_residual
-
-
-attn_bias_cache: dict[tuple, Any] = {}
-
-
-def get_attn_bias_and_cat(x_list, branges=None):
-    """
-    this will perform the index select, cat the tensors, and provide the attn_bias from cache
-    """
-    if fmha is None:
-        raise NotImplementedError("Nested tensor attention requires xFormers, which is disabled in ViPE")
-
-    batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
-    if all_shapes not in attn_bias_cache:
-        seqlens = []
-        for b, x in zip(batch_sizes, x_list, strict=False):
-            for _ in range(b):
-                seqlens.append(x.shape[1])
-        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
-        attn_bias._batch_sizes = batch_sizes
-        attn_bias_cache[all_shapes] = attn_bias
-
-    if branges is not None:
-        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])
-    else:
-        tensors_bs1 = tuple(x.reshape([1, -1, *x.shape[2:]]) for x in x_list)
-        cat_tensors = torch.cat(tensors_bs1, dim=1)
-
-    return attn_bias_cache[all_shapes], cat_tensors
-
-
-def drop_add_residual_stochastic_depth_list(
-    x_list: list[Tensor],
-    residual_func: Callable[[Tensor, Any], Tensor],
-    sample_drop_ratio: float = 0.0,
-    scaling_vector=None,
-) -> Tensor:
-    # 1) generate random set of indices for dropping samples in the batch
-    branges_scales = [get_branges_scales(x, sample_drop_ratio=sample_drop_ratio) for x in x_list]
-    branges = [s[0] for s in branges_scales]
-    residual_scale_factors = [s[1] for s in branges_scales]
-
-    # 2) get attention bias and index+concat the tensors
-    attn_bias, x_cat = get_attn_bias_and_cat(x_list, branges)
-
-    # 3) apply residual_func to get residual, and split the result
-    residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
-
-    outputs = []
-    for x, brange, residual, residual_scale_factor in zip(
-        x_list, branges, residual_list, residual_scale_factors, strict=False
-    ):
-        outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
-    return outputs
 
 
 class NestedTensorBlock(Block):
@@ -1120,14 +995,6 @@ class DinoVisionTransformer(nn.Module):
         #     return ret
         # else:
         #     return self.head(ret["x_norm_clstoken"])
-
-
-def init_weights_vit_timm(module: nn.Module, name: str = ""):
-    """ViT weight initialization, original timm impl (for reproducibility)"""
-    if isinstance(module, nn.Linear):
-        trunc_normal_(module.weight, std=0.02)
-        if module.bias is not None:
-            nn.init.zeros_(module.bias)
 
 
 def load_ckpt_dino(checkpoint, model):

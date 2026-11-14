@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: LicenseRef-LTX-2.x-Community
 """LTX video / audio latent patchify and unpatchify.
 
 :class:`VideoLatentPatchifier` rearranges ``B C (F p1) (H p2) (W p3)``
@@ -183,6 +184,15 @@ def get_pixel_coords(
         pixel_coords[:, 0, ...] = (pixel_coords[:, 0, ...] + 1 - scale_factors.time).clamp(min=0)
 
     return pixel_coords
+
+
+def get_pixel_coords_tuple_order(
+    latent_coords: torch.Tensor,
+    scale_factors: tuple[int, int, int],
+    causal_fix: bool = False,
+) -> torch.Tensor:
+    """Scale LTX coordinate axes by tuple order rather than the scale object's field names."""
+    return get_pixel_coords(latent_coords, SpatioTemporalScaleFactors(*scale_factors), causal_fix)
 
 
 class AudioPatchifier(Patchifier):

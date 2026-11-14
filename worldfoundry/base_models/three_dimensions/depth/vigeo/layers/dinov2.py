@@ -10,7 +10,6 @@
 
 import logging
 import math
-from collections.abc import Callable
 from functools import partial
 from typing import Literal
 
@@ -21,39 +20,18 @@ from einops import rearrange
 from torch.nn.init import trunc_normal_
 from torch.utils.checkpoint import checkpoint
 
+from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.construction import (
+    init_weights_vit_timm as init_weights_vit_timm,
+)
+from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
+from worldfoundry.core.nn.blocks.layers import PatchEmbed as PatchEmbed
+from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused as SwiGLUFFNFused
+from worldfoundry.core.nn.blocks.module_utils import named_apply as named_apply
+
 from .attention import Attention
 from .block import Block
-from .mlp import Mlp
-from .patch_embed import PatchEmbed
-from .swiglu_ffn import SwiGLUFFNFused
 
 logger = logging.getLogger("dinov2")
-
-
-def named_apply(fn: Callable, module: nn.Module, name="", depth_first=True, include_root=False) -> nn.Module:
-    if not depth_first and include_root:
-        fn(module=module, name=name)
-    for child_name, child_module in module.named_children():
-        child_name = ".".join((name, child_name)) if name else child_name
-        named_apply(fn=fn, module=child_module, name=child_name, depth_first=depth_first, include_root=True)
-    if depth_first and include_root:
-        fn(module=module, name=name)
-    return module
-
-
-def init_weights_vit_timm(module: nn.Module, name: str = ""):
-    """ViT weight initialization, original timm impl (for reproducibility)"""
-    if isinstance(module, nn.Linear):
-        trunc_normal_(module.weight, std=0.02)
-        if module.bias is not None:
-            nn.init.zeros_(module.bias)
-
-
-class BlockChunk(nn.ModuleList):
-    def forward(self, x):
-        for b in self:
-            x = b(x)
-        return x
 
 
 class DinoVisionTransformer(nn.Module):

@@ -34,6 +34,8 @@ RoboFlamingo 将 OpenFlamingo 扩展为语言条件机器人策略：VLM 编码�
 - `openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct` → `openflamingo--OpenFlamingo-3B-vitl-mpt1b-langinstruct`
 - `anas-awadalla/mpt-1b-redpajama-200b-dolly` → `anas-awadalla--mpt-1b-redpajama-200b-dolly`
 
+发布的 MPT-1B 权重使用 `mosaic_gpt`。WorldFoundry 通过规范实现 `worldfoundry.base_models.llm_mllm_core.mllm.mosaic_gpt` 加载其配置与权重，不执行 checkpoint 中的 Python 文件。
+
 视觉编码器文件应位于 `${WORLDFOUNDRY_CKPT_DIR}/open_clip/ViT-L-14.pt`。完整的官方 CALVIN 评测还需要 CALVIN 资产。
 
 ## 在 WorldFoundry 中运行
@@ -44,6 +46,6 @@ RoboFlamingo 将 OpenFlamingo 扩展为语言条件机器人策略：VLM 编码�
 wf run roboflamingo
 ```
 
-该模型未列出许可证。生产使用前请确认 RoboFlamingo / OpenFlamingo / MPT 条款。
+该模型未列出许可证。MosaicGPT 源码采用 Apache-2.0，语言权重采用 CC-BY-SA-3.0。生产使用前请确认 RoboFlamingo / OpenFlamingo / MPT 条款。
 
 <ModelRelatedRecipes modelId="roboflamingo" locale="zh" />

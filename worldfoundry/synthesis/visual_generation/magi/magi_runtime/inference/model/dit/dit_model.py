@@ -20,8 +20,6 @@ import torch
 import torch.distributed
 import torch.nn as nn
 from einops import rearrange
-from inference.common.config import MagiConfig
-from inference.infra.checkpoint.checkpointing import load_checkpoint
 
 import worldfoundry.core.distributed.model_parallel.groups as mpu
 from worldfoundry.core import (
@@ -35,6 +33,10 @@ from worldfoundry.core import (
 )
 from worldfoundry.core.attention import cp_post_process, cp_pre_process
 from worldfoundry.core.distributed import pp_scheduler
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.common.config import MagiConfig
+from worldfoundry.synthesis.visual_generation.magi.magi_runtime.inference.infra.checkpoint.checkpointing import (
+    load_checkpoint,
+)
 
 from .dit_module import CaptionEmbedder, FinalLinear, LearnableRotaryEmbeddingCat, TimestepEmbedder, TransformerBlock
 

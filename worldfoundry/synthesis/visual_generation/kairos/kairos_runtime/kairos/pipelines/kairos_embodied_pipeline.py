@@ -7,36 +7,49 @@ from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
+from worldfoundry.core.vram.initialization import init_weights_on_device
+
 from .base_pipeline import BasePipeline, PipelineUnit, PipelineUnitRunner
 
 # isort: split
-from kairos.modules.utils import init_weights_on_device, load_state_dict
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (
+    load_state_dict,
+)
 
 # isort: split
 # isort: split
-from kairos.modules.dits import sinusoidal_embedding_1d
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.dits import sinusoidal_embedding_1d
 
 # isort: split
-from kairos.modules.vaes import WanVideoVAE
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.vaes import WanVideoVAE
 
 # isort: split
-from kairos.modules.text_encoders import QwenVLTextEncoder
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.text_encoders import (
+    QwenVLTextEncoder,
+)
 
 # isort: split
 import torch.distributed as dist
-from kairos.apis.builder import KAIROS_PROCESSOR
-from kairos.modules.schedulers.flow_match import FlowMatchScheduler
+
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.apis.builder import KAIROS_PROCESSOR
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.schedulers.flow_match import (
+    FlowMatchScheduler,
+)
 
 # isort: split
-from kairos.modules.utils import parallel_state
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import parallel_state
 
 # isort: split
-from kairos.modules.vaes.parallel_vae_wrapper import ParallelVAEWrapper
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.vaes.parallel_vae_wrapper import (
+    ParallelVAEWrapper,
+)
 
 # isort: split
 import contextlib
 
-from kairos.modules.utils.tp_utils import _distribute_input_sp
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils.tp_utils import (
+    _distribute_input_sp,
+)
 
 
 @KAIROS_PROCESSOR.register_module()

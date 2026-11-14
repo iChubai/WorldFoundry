@@ -1,10 +1,10 @@
 import numpy as np
 
 # isort: split
-from env.pusht.pusht_env import PushTEnv
+from worldfoundry.synthesis.visual_generation.dino_wm.env.pusht.pusht_env import PushTEnv
 
 # isort: split
-from utils import aggregate_dct
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import aggregate_dct
 
 
 class PushTWrapper(PushTEnv):

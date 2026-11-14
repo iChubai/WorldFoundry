@@ -46,7 +46,7 @@ integration:
   status: integrated
   notes:
   - The Base and Flash Preview entrypoints share one WorldFoundry pipeline and select
-    variant-specific official CLIs.
+    variant-specific vendored CLIs.
   - Action DSL, first-frame, audio toggles, guidance, cache-window, and action-overlay
     controls are mapped explicitly.
   - Checkpoint-backed GPU artifact parity remains pending because this workspace has
@@ -74,18 +74,20 @@ docs:
     for autoregressive rollout.
   overview_zh: Echo-WM 是在连续导航控制下联合演化视频、环境音、音乐与语音的全模态世界模型。Base 生成约十秒内容；Flash Preview
     使用四步去噪与有界 sink-plus-FIFO 缓存进行自回归滚动。
-  architecture: Both public variants use an LTX-2.3 audio-visual backbone with UCPE
-    camera conditioning. Base is bidirectional with separate video/audio CFG, while
-    Flash distills guidance with DMD and maintains bounded video, audio, cross-modal,
-    and camera-attention caches.
-  architecture_zh: 两个公开变体均使用带 UCPE 相机条件的 LTX-2.3 音视频骨干。Base 为双向模型并分别使用视频/音频 CFG；Flash
-    以 DMD 蒸馏 guidance，并维护有界的视频、音频、跨模态及相机注意力缓存。
+  architecture: Both public variants use an LTX-2.3 audio-visual backbone with UCPE camera
+    conditioning. Base is bidirectional with separate video/audio CFG, while Flash
+    distills guidance with DMD and maintains bounded video, audio, cross-modal, and
+    camera-attention caches. WorldFoundry vendors the official inference code from
+    jd-opensource/JoyAI-Echo at a08f1274.
+  architecture_zh: 两个公开变体均使用带 UCPE 相机条件的 LTX-2.3 音视频骨干。Base 为双向模型并分别使用视频/音频 CFG；Flash 以
+    DMD 蒸馏 guidance，并维护有界的视频、音频、跨模态及相机注意力缓存。WorldFoundry vendor
+    了官方推理代码（jd-opensource/JoyAI-Echo，a08f1274）。
   usage_notes: Supply a first-frame image, prompt, and Action DSL such as w-60,a-60.
-    Select variant=base or variant=flash at load time. The official source checkout,
-    dedicated CUDA environment, Echo checkpoint, and gated unquantized Gemma encoder
-    must be staged before execute=True.
-  usage_notes_zh: 需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或 variant=flash。执行
-    execute=True 前必须准备官方源码检出、专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。
+    Select variant=base or variant=flash at load time. The dedicated CUDA environment,
+    Echo checkpoint, and gated unquantized Gemma encoder must be staged before
+    execute=True.
+  usage_notes_zh: 需提供首帧图像、提示词与形如 w-60,a-60 的 Action DSL。加载时选择 variant=base 或
+    variant=flash。执行 execute=True 前必须准备专用 CUDA 环境、Echo checkpoint 与受限访问的未量化 Gemma 编码器。
   limitations:
   - The upstream release is marked for academic research and non-commercial use and remains subject to the LTX-2 Community License.
   - Echo-WM Base expects a six-field prompt; Flash accepts the released free-form example captions.

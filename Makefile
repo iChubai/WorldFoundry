@@ -42,9 +42,12 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/eval_core/test_run_manifest.py \
 	tests/runtime/test_geometry_regression_lazy_dispatch.py \
 	tests/runtime/test_native_coverage_policy.py \
+	tests/runtime/test_geometry_regression_declarations.py \
 	tests/runtime/test_junit_contract_validator.py \
 	tests/core/test_repository_policies.py \
 	tests/scripts/test_pr_checks.py \
+	tests/scripts/test_model_env_install_shell_compatibility.py \
+	tests/runtime/test_conda_setup_commands.py \
 	tests/core/test_docs_toolchain.py \
 	tests/core/test_agent_skills.py \
 	tests/core/test_inference_validation_guidance.py \
@@ -55,6 +58,9 @@ PUBLIC_GATE_CONTRACTS = \
 	tests/runtime/test_inference_actions_evidence.py \
 	tests/synthesis/test_matrix_game_2_historical_reference.py \
 	tests/studio/test_canonical_catalog_lookup.py \
+	tests/studio/test_ltx25_workspace_contract.py \
+	tests/eval_core/test_ltx25_integration.py::test_ltx25_catalog_binding_profile_and_environment_are_wired \
+	tests/eval_core/test_ltx25_integration.py::test_ltx25_pipeline_loads_from_standard_runner_spec \
 	tests/studio/test_catalog_class_constants.py \
 	tests/base_models/diffusion_model/test_module_boundaries.py \
 	tests/base_models/test_transnetv2_unsupported_options.py \
@@ -149,7 +155,129 @@ DIFFUSION_ACCELERATION_CPU_CONTRACTS = \
 	tests/base_models/diffusion_model/test_image_request_batching.py \
 	tests/base_models/diffusion_model/loaders/test_module_compile_wiring.py
 INFER_TENSOR_CONTRACTS = \
+	tests/base_models/test_device_coefficient_flow_unipc_scheduler.py \
+	tests/base_models/diffusion_model/models/autoencoders/wan/test_shared_leaves.py \
+	tests/base_models/diffusion_model/models/autoencoders/wan/test_diffusers_blocks.py \
+	tests/base_models/diffusion_model/models/encoders/wan/test_clip_bindings.py \
+	tests/synthesis/test_navigation_input_contracts.py \
+	tests/synthesis/test_wan_camera_component_reuse.py \
+	tests/synthesis/test_open_magvit2_component_reuse.py \
+	tests/synthesis/test_conditioning_component_reuse.py \
+	tests/synthesis/test_perception_component_reuse.py \
+	tests/synthesis/test_mmaudio_component_reuse.py \
+	tests/core/test_sharded_safetensors.py \
+	tests/synthesis/test_go1_checkpoint_loading.py \
+	tests/synthesis/test_lda_1b_checkpoint_loading.py \
+	tests/synthesis/test_galaxea_vla_mixture.py \
+	tests/core/attention/test_qk_rotary_embedding.py \
+	tests/base_models/llm_mllm_core/test_qwen_layers.py \
+	tests/base_models/llm_mllm_core/test_qwen_rotary.py \
+	tests/base_models/llm_mllm_core/test_qwen_vision.py \
+	tests/base_models/llm_mllm_core/test_action_tensor_ops.py \
+	tests/base_models/llm_mllm_core/test_lingbot_components.py \
+	tests/base_models/llm_mllm_core/test_rms_norm_variants.py \
+	tests/base_models/llm_mllm_core/test_diffusion_policy_components.py \
+	tests/base_models/llm_mllm_core/test_cogact_components.py \
+	tests/base_models/llm_mllm_core/test_molmo_preprocessing.py \
+	tests/base_models/llm_mllm_core/test_mllm_sampling.py \
+	tests/base_models/llm_mllm_core/test_action_transformer.py \
+	tests/base_models/llm_mllm_core/test_rdt.py \
+	tests/base_models/diffusion_model/models/networks/dit/test_token.py \
+	tests/base_models/diffusion_model/models/representations/ltx/test_conditioning_helpers.py \
+	tests/base_models/perception_core/optical_flow/test_raft_features.py \
+	tests/base_models/diffusion_model/models/networks/helios/test_shared_components.py \
+	tests/core/nn/blocks/test_volume.py \
+	tests/base_models/three_dimensions/point_clouds/pi3_inference/test_conv_head.py \
+	tests/core/nn/blocks/test_module_properties.py \
+	tests/core/nn/blocks/test_layers.py \
+	tests/core/attention/rotary/test_rope_2d.py \
+	tests/base_models/llm_mllm_core/test_prismatic.py \
+	tests/base_models/diffusion_model/models/autoencoders/test_alias_free.py \
+	tests/base_models/llm_mllm_core/action/gr00t/test_dit_components.py \
+	tests/base_models/diffusion_model/models/networks/lvdm/test_shared_feedforward.py \
+	tests/core/nn/diffusion/test_schedulers.py \
+	tests/core/nn/blocks/test_normalization.py \
+	tests/core/nn/diffusion/test_utils.py \
+	tests/core/attention/rotary/test_interleaved.py \
+	tests/core/attention/rotary/test_rope_nd.py \
+	tests/core/attention/rotary/test_embedding.py \
+	tests/base_models/three_dimensions/point_clouds/pi3_inference/test_prope.py \
+	tests/base_models/three_dimensions/point_clouds/hyworldmirror_2p0/test_inference_helpers.py \
+	tests/base_models/diffusion_model/models/networks/gamma_world/test_multiagent_rope.py \
+	tests/base_models/diffusion_model/models/networks/wan/test_varlen_cross_attention.py \
+	tests/core/media/processing/test_video_transforms.py \
+	tests/core/utils/tensors/test_torch.py \
+	tests/base_models/test_hyperflow_components.py \
+	tests/synthesis/test_hyperflow_runtime.py \
+	tests/base_models/test_minimax_h3_dit.py \
+	tests/base_models/diffusion_model/models/initializers/test_easyanimate_conditioning.py \
+	tests/synthesis/test_easyanimate_runtime.py \
+	tests/synthesis/test_lyra1_attention_reuse.py \
+	tests/synthesis/test_adaworld_component_reuse.py \
+	tests/base_models/diffusion_model/models/networks/animatediff/test_resnet.py \
+	tests/synthesis/test_wan_text_encoder_reuse.py \
+	tests/synthesis/test_wan_vae_component_reuse.py \
+	tests/synthesis/test_wan_transformer_component_reuse.py \
+	tests/synthesis/test_wan_family_components.py \
+	tests/synthesis/test_rcm_wan_components.py \
+	tests/synthesis/test_gr00t_preprocessing.py \
+	tests/synthesis/test_being_h05_components.py \
+	tests/base_models/test_omnivinci_components.py \
+	tests/synthesis/test_omnivinci_runtime.py \
+	tests/synthesis/test_spatia_runtime.py \
+	tests/synthesis/test_versecrafter_runtime.py \
+	tests/synthesis/test_uni3c_synthesis.py \
+	tests/synthesis/test_minwm_runtime.py \
+	tests/synthesis/test_evoke_runtime.py \
+	tests/synthesis/test_evoke_shared_geometry.py \
+	tests/synthesis/test_official_runtime_launches.py \
+	tests/synthesis/test_unianimate_worldfoundry_runner.py \
+	tests/synthesis/test_kairos_config.py \
+	tests/synthesis/test_moverse_runtime.py \
+	tests/synthesis/test_mira_dino.py \
+	tests/base_models/test_mosaic_gpt.py \
+	tests/synthesis/test_roboflamingo_factory.py \
+	tests/synthesis/test_official_policy_runtime.py \
+	tests/synthesis/test_official_policy_dispatch.py \
+	tests/synthesis/test_molmobot_runtime.py \
+	tests/synthesis/test_molmobot_llm.py \
+	tests/synthesis/test_lingbot_va_runtime.py \
+	tests/synthesis/test_tesseract_runtime.py \
+	tests/synthesis/test_dreamzero_runtime.py \
+	tests/synthesis/test_lyra2_imports.py \
+	tests/synthesis/test_starwm_runtime.py \
+	tests/synthesis/test_pusa_vidgen_adapter.py \
+	tests/synthesis/test_open_oasis_runtime.py \
+	tests/synthesis/test_open_magvit2_runtime.py \
+	tests/synthesis/test_nwm_runtime.py \
+	tests/synthesis/test_le_wm_runtime.py \
+	tests/synthesis/test_hunyuan_worldplay_runtime.py \
+	tests/synthesis/test_giga_world_0_runtime.py \
+	tests/synthesis/test_easyanimate_runtime.py \
+	tests/synthesis/test_bernini_runtime.py \
+	tests/synthesis/test_allegro_runtime.py \
+	tests/synthesis/test_adaworld_runtime.py \
+	tests/synthesis/test_show_o_runtime.py \
+	tests/synthesis/test_mineworld_runtime.py \
+	tests/synthesis/test_diamond_runtime.py \
+	tests/synthesis/test_dino_wm_runtime.py \
+	tests/synthesis/test_scope_runtime.py \
+	tests/synthesis/test_scope_device_routing.py \
+	tests/synthesis/test_hydra_runtime.py \
+	tests/synthesis/test_vmem_runtime.py \
+	tests/synthesis/test_neoverse_runtime.py \
+	tests/synthesis/test_longvie_runtime.py \
+	tests/synthesis/test_animatediff_runtime.py \
+	tests/synthesis/test_liveworld_runtime.py \
+	tests/synthesis/test_ctrl_world_runtime.py \
+	tests/synthesis/test_warp_as_history_runtime.py \
+	tests/synthesis/test_magic_world_runtime.py \
+	tests/synthesis/test_video_x_fun_runtime.py \
+	tests/synthesis/test_solaris_runtime.py \
+	tests/synthesis/test_longcat_video_runtime.py \
 	tests/synthesis/test_ac3d_controlnet_pipeline.py \
+	tests/pipelines/test_ac3d_integration.py \
+	tests/synthesis/test_genie_envisioner_runtime.py \
 	tests/synthesis/test_wan2pt1_t2v_causal_infer.py \
 	tests/base_models/test_vqascore_llama32_molmo_gemini.py \
 	tests/pipelines/test_kandinsky6_replay_recipes.py \
@@ -157,12 +285,49 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_inspatio_v15_tensors.py \
 	tests/synthesis/test_inspatio_reproducibility.py \
 	tests/synthesis/test_inspatio_python_orchestration.py \
+	tests/synthesis/test_inspatio_world_runtime.py \
 	tests/core/execution \
 	tests/core/platform \
 	tests/core/model_loading/test_checkpoint_roundtrip.py \
+	tests/core/model_loading/test_checkpoint_transforms.py \
+	tests/core/acceleration/test_checkpoint_quantization.py \
+	tests/core/test_bt709_audio_video.py \
+	tests/base_models/test_ltx25_canonical_components.py \
+	tests/base_models/test_ltx_attention_masks.py \
+	tests/base_models/test_ltx_sigma_schedules.py \
+	tests/base_models/test_ltx25_native_recipe.py \
+	tests/base_models/test_ltx_ic_lora.py \
+	tests/pipelines/test_ltx2_v2v.py \
+	tests/base_models/diffusion_model/test_joint_multistage_hooks.py \
+	tests/eval_core/test_ltx25_integration.py \
 	tests/core/geometry/test_geometry_conventions.py \
+	tests/core/geometry/test_shared_rotation_transforms.py \
+	tests/core/geometry/test_projection.py \
+	tests/base_models/three_dimensions/depth/midas/test_fusion.py \
+	tests/base_models/three_dimensions/depth/depth_anything/test_geometry_bindings.py \
+	tests/base_models/three_dimensions/depth/test_temporal.py \
+	tests/base_models/perception_core/general_perception/dinov2/test_shared_vision_leaves.py \
+	tests/base_models/perception_core/general_perception/dinov3/test_omega_components.py \
+	tests/base_models/three_dimensions/point_clouds/vggt/test_shared_blocks.py \
+	tests/base_models/three_dimensions/point_clouds/vggt/test_head_utils.py \
+	tests/core/attention/test_indexed_2d.py \
+	tests/base_models/perception_core/segment/sam_components/test_heads.py \
+	tests/base_models/perception_core/segment/sam_components/test_mask_ops.py \
+	tests/base_models/perception_core/segment/sam_components/test_memory.py \
+	tests/base_models/perception_core/segment/sam_components/test_transformer.py \
+	tests/core/attention/test_window.py \
+	tests/core/geometry/test_boxes.py \
 	tests/runtime/test_geometry_regression.py \
+	tests/runtime/test_geometry_regression_declarations.py \
 	tests/synthesis/test_dreamx_world_backend_policy.py \
+	tests/synthesis/test_solarwm_component_reuse.py \
+	tests/synthesis/test_solarwm_inference_only.py \
+	tests/synthesis/test_solarwm_ltx_component_reuse.py \
+	tests/synthesis/test_solarwm_wan_network_reuse.py \
+	tests/synthesis/test_joyai_ltx_component_reuse.py \
+	tests/synthesis/test_ltx_media_reuse.py \
+	tests/synthesis/test_joyai_ltx_transformer_reuse.py \
+	tests/synthesis/test_alayaworld_v11_ltx_reuse.py \
 	tests/core/test_diffusion_rounding.py \
 	tests/core/test_kernel_dispatch_receipt.py \
 	tests/core/test_diffusion_mutating_kernel.py \
@@ -206,6 +371,7 @@ INFER_TENSOR_CONTRACTS = \
 	tests/pipelines/test_gen3c_workspace_contract.py \
 	tests/studio/test_trajectory_output_dispatch.py \
 	tests/studio/test_lyra1_catalog.py \
+	tests/eval_core/test_lyra1_reconstruction.py \
 	tests/synthesis/test_lyra2_output_contracts.py \
 	tests/synthesis/test_lyra2_runtime_paths.py \
 	tests/synthesis/test_visual_frame_memory_outputs.py \
@@ -231,6 +397,9 @@ INFER_TENSOR_CONTRACTS = \
 	tests/synthesis/test_lingbot_decoder_contracts.py \
 	tests/synthesis/test_lingbot_world_v2_realtime.py \
 	tests/synthesis/test_lingbot_world_v2_small.py \
+	tests/synthesis/test_lingbot_world_v2_runtime.py \
+	tests/synthesis/test_lingbot_video_runtime.py \
+	tests/synthesis/test_lingbot_video_checkpoint_loading.py \
 	tests/synthesis/test_hunyuan_worldplay_realtime.py \
 	tests/synthesis/test_hunyuan_worldplay_state.py \
 	tests/synthesis/test_lingbot_realtime_cache_cursors.py \
@@ -241,6 +410,8 @@ INFER_TENSOR_CONTRACTS = \
 	tests/pipelines/test_sana_integration.py \
 	tests/operators/test_worldfm_operator.py \
 	tests/pipelines/test_matrix_game_batch_outputs.py \
+	tests/pipelines/test_matrix_game_1.py \
+	tests/synthesis/test_matrix_game_3p5_runtime_assets.py \
 	tests/pipelines/test_matrix_game_2_seed_repro.py \
 	tests/pipelines/test_worldfm_contracts.py \
 	tests/pipelines/test_lingbot_distributed_loading.py \
@@ -248,6 +419,13 @@ INFER_TENSOR_CONTRACTS = \
 	tests/base_models/test_sd2_marigold_components.py \
 	tests/base_models/test_decoded_depth_guidance.py \
 	tests/base_models/test_scene_segmentation.py \
+	tests/base_models/test_moge_uniworld_variant.py \
+	tests/base_models/test_metric3d_config.py \
+	tests/base_models/test_midas_checkpoint_compat.py \
+	tests/base_models/test_vggsfm_dino_loading.py \
+	tests/base_models/test_open_flamingo_imports.py \
+	tests/base_models/test_vipe_native_extension.py \
+	tests/core/test_vit_qkv.py \
 	tests/synthesis/test_wonderworld_stages.py \
 	tests/core/test_gaussian_surfels.py \
 	tests/base_models/diffusion_model/models/encoders/test_wan_animate_pose_render.py \

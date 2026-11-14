@@ -12,7 +12,7 @@ def _require_local_source(relative: str) -> Path:
     """Skip when a license-gated source tree is absent from this checkout."""
     path = REPO_ROOT / relative
     if not path.exists():
-        pytest.skip(f"license-gated source tree is not present: {relative}")
+        raise pytest.skip.Exception(f"license-gated source tree is not present: {relative}")
     return path
 
 
@@ -95,8 +95,6 @@ def test_empty_synthesis_compat_packages_are_not_reintroduced():
         "worldfoundry/synthesis/visual_generation/neoverse/neoverse_runtime/diffsynth/lora",
         "worldfoundry/synthesis/visual_generation/neoverse/neoverse_runtime/diffsynth/extensions/ESRGAN",
         "worldfoundry/synthesis/visual_generation/neoverse/neoverse_runtime/diffsynth/extensions/RIFE",
-        "worldfoundry/base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime/src/mast3r_src",
-        "worldfoundry/base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime/src/pixelsplat_src",
         "worldfoundry/base_models/three_dimensions/general_3d/lagernvs/runtime/vendor",
         "worldfoundry/synthesis/action_generation/roboflamingo/roboflamingo_runtime/vendor/open_flamingo_src",
         "worldfoundry/synthesis/action_generation/roboflamingo/roboflamingo_runtime/vendor",
@@ -151,116 +149,6 @@ def test_empty_synthesis_compat_packages_are_not_reintroduced():
     ]
 
     assert [path for path in removed_paths if (REPO_ROOT / path).exists()] == []
-
-
-def test_dust3r_is_independent_general_3d_integration_with_mast3r_reexport():
-    _require_local_source("worldfoundry/base_models/three_dimensions/general_3d/dust3r")
-    _require_local_source("worldfoundry/base_models/three_dimensions/general_3d/mast3r")
-    general_3d_root = REPO_ROOT / "worldfoundry/base_models/three_dimensions/general_3d"
-    canonical = general_3d_root / "dust3r"
-    mast3r_root = general_3d_root / "mast3r"
-    legacy = mast3r_root / "dust3r"
-    catalog = REPO_ROOT / "worldfoundry/data/models/catalog/three_d_four_d/dust3r.yaml"
-
-    assert (canonical / "dust3r/model.py").is_file()
-    assert (canonical / "croco/models/croco.py").is_file()
-    assert (canonical / "__init__.py").is_file()
-    assert not legacy.exists()
-
-    mast3r_init = (mast3r_root / "__init__.py").read_text(encoding="utf-8")
-    path_bridge = (mast3r_root / "mast3r/utils/path_to_dust3r.py").read_text(encoding="utf-8")
-
-    assert "GENERAL_3D_ROOT = SOURCE_ROOT.parent" in mast3r_init
-    assert 'DUST3R_ROOT = GENERAL_3D_ROOT / "dust3r"' in mast3r_init
-    assert "worldfoundry.base_models.three_dimensions.general_3d.dust3r" in mast3r_init
-    assert "../../../dust3r" in path_bridge
-
-    catalog_text = catalog.read_text(encoding="utf-8")
-    assert "id: dust3r" in catalog_text
-    assert "base_model_target: worldfoundry.base_models.three_dimensions.general_3d.dust3r" in catalog_text
-    assert "general_3d/mast3r/dust3r" not in catalog_text
-
-
-def test_mast3r_import_path_prioritizes_canonical_dust3r():
-    _require_local_source("worldfoundry/base_models/three_dimensions/general_3d/dust3r")
-    _require_local_source("worldfoundry/base_models/three_dimensions/general_3d/mast3r")
-    import sys
-
-    original_sys_path = list(sys.path)
-    module_names = [
-        name
-        for name in sys.modules
-        if name == "dust3r"
-        or name.startswith("dust3r.")
-        or name == "mast3r"
-        or name.startswith("mast3r.")
-        or name.startswith("worldfoundry.base_models.three_dimensions.general_3d.mast3r")
-    ]
-    for name in module_names:
-        sys.modules.pop(name, None)
-
-    try:
-        mast3r = importlib.import_module("worldfoundry.base_models.three_dimensions.general_3d.mast3r")
-        mast3r.ensure_import_paths()
-        canonical_dust3r = importlib.import_module("worldfoundry.base_models.three_dimensions.general_3d.dust3r")
-        reexported_dust3r = importlib.import_module(
-            "worldfoundry.base_models.three_dimensions.general_3d.mast3r.dust3r"
-        )
-        dust3r = importlib.import_module("dust3r")
-        inner_mast3r = importlib.import_module("mast3r")
-        assert dust3r.__file__ is not None
-        dust3r_file = Path(dust3r.__file__).resolve()
-
-        assert mast3r.dust3r is canonical_dust3r
-        assert inner_mast3r.dust3r is canonical_dust3r
-        assert reexported_dust3r is canonical_dust3r
-        assert sys.path.index(str(mast3r.DUST3R_ROOT)) < sys.path.index(str(mast3r.SOURCE_ROOT))
-        assert dust3r_file.is_relative_to(mast3r.DUST3R_ROOT)
-        assert not dust3r_file.is_relative_to(mast3r.SOURCE_ROOT / "dust3r")
-    finally:
-        sys.path[:] = original_sys_path
-        for name in [
-            "dust3r",
-            "mast3r",
-            "mast3r.dust3r",
-            "worldfoundry.base_models.three_dimensions.general_3d.dust3r",
-            "worldfoundry.base_models.three_dimensions.general_3d.mast3r",
-            "worldfoundry.base_models.three_dimensions.general_3d.mast3r.dust3r",
-        ]:
-            sys.modules.pop(name, None)
-
-
-def test_canonical_dust3r_initializes_its_own_import_paths():
-    _require_local_source("worldfoundry/base_models/three_dimensions/general_3d/dust3r")
-    import sys
-
-    original_sys_path = list(sys.path)
-    module_names = [
-        name
-        for name in sys.modules
-        if name == "dust3r"
-        or name.startswith("dust3r.")
-        or name.startswith("worldfoundry.base_models.three_dimensions.general_3d.dust3r")
-    ]
-    for name in module_names:
-        sys.modules.pop(name, None)
-
-    try:
-        canonical_dust3r = importlib.import_module("worldfoundry.base_models.three_dimensions.general_3d.dust3r")
-        dust3r = importlib.import_module("dust3r")
-        assert dust3r.__file__ is not None
-        dust3r_file = Path(dust3r.__file__).resolve()
-
-        assert str(canonical_dust3r.SOURCE_ROOT) in sys.path
-        assert str(canonical_dust3r.CROCO_ROOT) in sys.path
-        assert dust3r_file.is_relative_to(canonical_dust3r.DUST3R_PACKAGE_ROOT)
-    finally:
-        sys.path[:] = original_sys_path
-        for name in [
-            "dust3r",
-            "worldfoundry.base_models.three_dimensions.general_3d.dust3r",
-        ]:
-            sys.modules.pop(name, None)
 
 
 def test_base_model_pure_demo_and_ui_app_dirs_are_pruned():
@@ -347,7 +235,6 @@ def test_perception_and_3d_base_models_do_not_package_training_data_helpers():
     removed_paths = [
         base_models / "perception_core/detection/grounding_dino/datasets",
         base_models / "perception_core/tracking/track_anything/groundingdino",
-        base_models / "three_dimensions/depth/dvlt/dvlt_runtime/src/dvlt/callbacks",
         base_models / "three_dimensions/slam/droid_slam/data_readers",
         base_models / "three_dimensions/slam/droid_slam/geom/losses.py",
         base_models / "three_dimensions/depth/moge/utils/data_augmentation.py",
@@ -382,60 +269,6 @@ def test_wan_vram_helpers_are_core_owned():
     assert hasattr(core_vram, "DynamicSwapInstaller")
     assert hasattr(core_vram, "get_cuda_free_memory_gb")
     assert not [path for path in removed_shims if path.exists()]
-
-
-def test_splatt3r_dust3r_only_modules_use_canonical_dust3r_import_paths():
-    splatt3r_root = REPO_ROOT / "worldfoundry/base_models/three_dimensions/general_3d/splatt3r"
-    profile = REPO_ROOT / "worldfoundry/data/models/runtime/profiles/splatt3r.yaml"
-    removed_dust3r_shims = [
-        splatt3r_root / "splatt3r_runtime/utils/export.py",
-    ]
-
-    assert not [path for path in removed_dust3r_shims if path.exists()]
-
-    profile_text = profile.read_text(encoding="utf-8")
-    assert "canonical sibling base_models paths" in profile_text
-    assert "vendors the Splatt3R MASt3R, DUSt3R" not in profile_text
-
-
-def test_splatt3r_runtime_is_inference_only_after_pruning():
-    runtime_root = REPO_ROOT / "worldfoundry/base_models/three_dimensions/general_3d/splatt3r/splatt3r_runtime"
-    removed_paths = [
-        runtime_root / "data",
-        runtime_root / "workspace.py",
-        runtime_root / "demo.py",
-        runtime_root / "main.py",
-        runtime_root / "utils/compute_ssim.py",
-        runtime_root / "utils/export.py",
-        runtime_root / "utils/loss_mask.py",
-        runtime_root / "utils/sh_utils.py",
-    ]
-
-    for path in removed_paths:
-        assert not path.exists(), path
-
-    model_text = (runtime_root / "model.py").read_text(encoding="utf-8")
-    init_text = (runtime_root / "__init__.py").read_text(encoding="utf-8")
-
-    assert "class MAST3RGaussians" in model_text
-    assert "def forward" in model_text
-    for token in (
-        "training_step",
-        "validation_step",
-        "test_step",
-        "configure_optimizers",
-        "run_experiment",
-        "DataLoader",
-        "Trainer(",
-        "wandb",
-        "lpips",
-        "scannetpp",
-    ):
-        assert token not in model_text
-
-    assert not (runtime_root / "main.py").exists()
-    assert "from . import data" not in init_text
-    assert "from . import workspace" not in init_text
 
 
 def test_lyra1_pipeline_can_plan_without_external_representation_assets(monkeypatch: pytest.MonkeyPatch):
@@ -543,7 +376,8 @@ def test_lingbot_map_representation_uses_base_model_runtime():
     wrapper = REPO_ROOT / "worldfoundry/base_models/three_dimensions/point_clouds/lingbot_map/runtime.py"
     text = wrapper.read_text(encoding="utf-8")
 
-    assert "Path(__file__).resolve().parent" in text
+    assert "from .lingbot_map.models.gct_stream import GCTStream" in text
+    assert "sys.path" not in text
     assert not (
         REPO_ROOT / "worldfoundry/representations/point_clouds_generation/lingbot_map/lingbot_map_runtime"
     ).exists()
@@ -965,54 +799,6 @@ def test_kling_recammaster_runtime_lives_under_synthesis():
     assert ".recammaster." not in text
 
 
-def test_hy_world_2p0_panogen_runtime_lives_under_synthesis():
-    _require_local_source("worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime")
-    runtime_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_panogen_runtime"
-    old_runtime_root = REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0/panogen"
-    synthesis_path = (
-        REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hunyuan_world_family_synthesis.py"
-    )
-    pipeline_path = REPO_ROOT / "worldfoundry/pipelines/hunyuan_world/pipeline_hy_world_2p0.py"
-
-    assert not old_runtime_root.exists()
-    assert (runtime_root / "pipeline.py").is_file()
-    assert (runtime_root / "pipeline_with_qwen_image.py").is_file()
-    assert (runtime_root / "setup.py").is_file()
-
-    for path in (synthesis_path, pipeline_path):
-        text = path.read_text(encoding="utf-8")
-        assert "synthesis.visual_generation.hunyuan_world.hy_world_2p0_panogen_runtime" in text
-        assert "hy_world_2p0.panogen" not in text
-
-
-def test_hy_world_2p0_worldgen_diagnostics_do_not_probe_external_checkouts(monkeypatch, tmp_path: Path):
-    from worldfoundry.synthesis.visual_generation.hunyuan_world.hy_world_2p0_worldgen_runtime import (
-        get_hy_world_2p0_worldgen_plan,
-        inspect_official_worldgen_checkout,
-    )
-
-    runtime_text = (
-        REPO_ROOT / "worldfoundry/synthesis/visual_generation/hunyuan_world/hy_world_2p0_worldgen_runtime.py"
-    ).read_text(encoding="utf-8")
-    assert "github_repos" not in runtime_text
-
-    monkeypatch.delenv("WORLDFOUNDRY_HY_WORLD_2P0_REPO", raising=False)
-    plan = get_hy_world_2p0_worldgen_plan()
-    assert plan["official_checkout"]["repo_path"] is None
-    assert plan["official_checkout"]["exists"] is False
-
-    official_root = tmp_path / "HY-World-2.0"
-    required_file = official_root / "hyworld2/worldgen/traj_generate.py"
-    required_file.parent.mkdir(parents=True)
-    required_file.write_text("# fixture\n", encoding="utf-8")
-    monkeypatch.setenv("WORLDFOUNDRY_HY_WORLD_2P0_REPO", str(official_root))
-
-    checkout = inspect_official_worldgen_checkout()
-    assert checkout["repo_path"] == str(official_root)
-    assert checkout["exists"] is True
-    assert "hyworld2/worldgen/traj_generate.py" not in checkout["missing_files"]
-
-
 def test_matrix_game_1_runtime_logic_lives_under_base_models():
     runtime_path = REPO_ROOT / "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_1_runtime/runtime.py"
     synthesis_path = REPO_ROOT / "worldfoundry/synthesis/visual_generation/matrix_game/matrix_game_1_synthesis.py"
@@ -1316,7 +1102,6 @@ def test_geometric_priors_are_independent_model_catalog_entries():
         "prior-depth-anything": "worldfoundry.base_models.three_dimensions.depth.priorda",
         "track-anything-prior": "worldfoundry.base_models.perception_core.tracking.track_anything",
         "unidepth-v2-prior": "worldfoundry.base_models.three_dimensions.depth.unidepth",
-        "unik3d-prior": "worldfoundry.base_models.three_dimensions.depth.unik3d",
         "video-depth-anything-prior": "worldfoundry.base_models.three_dimensions.depth.videodepthanything",
     }
 
@@ -1344,46 +1129,35 @@ def test_geometric_priors_are_independent_model_catalog_entries():
         assert "prior" in runtime_profile.groups
 
 
-def test_three_d_four_d_external_repo_resolution_requires_explicit_root(monkeypatch, tmp_path: Path):
-    from worldfoundry.base_models.three_dimensions.three_d_four_d import (
-        runtime as runtime_module,
-    )
-    from worldfoundry.base_models.three_dimensions.three_d_four_d.runtime import (
-        ThreeDFourDRuntimeSpec,
-    )
+def test_three_d_four_d_runtimes_run_vendored_package_modules(monkeypatch, tmp_path: Path) -> None:
+    import importlib.util
+
+    from worldfoundry.base_models.three_dimensions.three_d_four_d import runtime as runtime_module
 
     runtime_text = (REPO_ROOT / "worldfoundry/base_models/three_dimensions/three_d_four_d/runtime.py").read_text(
         encoding="utf-8"
     )
     assert "github_repos" not in runtime_text
+    assert "PYTHONPATH" not in runtime_text
 
-    spec = ThreeDFourDRuntimeSpec(
-        model_id="fixture-three-d",
-        display_name="Fixture 3D",
-        repo_names=("fixture-repo",),
-        entrypoint="demo.py",
-        command_kind="fixture",
-        artifact_kind="generated_3d_asset",
-        artifact_filename="fixture.ply",
+    for model_id, spec in runtime_module.THREE_D_FOUR_D_RUNTIME_SPECS.items():
+        module = runtime_module.runtime_module(spec)
+        found = importlib.util.find_spec(module)
+        assert module.startswith("worldfoundry."), model_id
+        assert found is not None and found.origin is not None, model_id
+        assert Path(found.origin) == runtime_module.runtime_dir(spec) / spec.entrypoint
+
+    synthesis = runtime_module.ThreeDFourDRuntimeSynthesis(
+        spec=runtime_module.three_d_four_d_runtime_spec("worldgen"), device="cpu"
     )
-    fake_repo_root = tmp_path / "WorldFoundry"
-    sibling = tmp_path / "github_repos" / "fixture-repo"
-    sibling.mkdir(parents=True)
-    (sibling / "demo.py").write_text("# sibling fixture\n", encoding="utf-8")
+    plan = synthesis.predict(prompt="a quiet harbor", run_dir=tmp_path / "run", plan_only=True)
 
-    monkeypatch.setattr(runtime_module, "REPO_ROOT", fake_repo_root)
-    monkeypatch.setenv("WORLDFOUNDRY_ALLOW_EXTERNAL_THREE_D_FOUR_D_REPOS", "1")
-    monkeypatch.delenv("WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT", raising=False)
-
-    assert runtime_module._resolve_source_root(spec, {}, ()) is None
-
-    explicit_root = tmp_path / "explicit_repos"
-    explicit_repo = explicit_root / "fixture-repo"
-    explicit_repo.mkdir(parents=True)
-    (explicit_repo / "demo.py").write_text("# explicit fixture\n", encoding="utf-8")
-    monkeypatch.setenv("WORLDFOUNDRY_THREE_D_FOUR_D_REPOS_ROOT", str(explicit_root))
-
-    assert runtime_module._resolve_source_root(spec, {}, ()) == explicit_repo
+    assert plan["command"][1:3] == [
+        "-m",
+        "worldfoundry.synthesis.visual_generation.worldgen.worldgen_runtime.inference",
+    ]
+    monkeypatch.delenv("PYTHONPATH", raising=False)
+    assert "PYTHONPATH" not in synthesis._subprocess_env()
 
 
 def test_giga_brain_variant_selector_resolves_0p1_checkpoint(tmp_path: Path) -> None:

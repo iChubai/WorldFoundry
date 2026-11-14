@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import hfd_root_path, resolve_local_hf_model_path
 from worldfoundry.runtime.in_tree_cli import ensure_in_tree_runtime, execute_in_tree, require_path
 
@@ -58,20 +59,6 @@ class SpatiaRuntime:
     @staticmethod
     def bundled_repo_root() -> Path:
         return Path(__file__).resolve().parent / "spatia_runtime"
-
-    @staticmethod
-    def project_root() -> Path:
-        return Path(__file__).resolve().parents[4]
-
-    @staticmethod
-    def mapanything_root() -> Path:
-        worldfoundry_root = Path(__file__).resolve().parents[3]
-        return worldfoundry_root / "base_models" / "three_dimensions" / "general_3d" / "mapanything"
-
-    @staticmethod
-    def uniception_root() -> Path:
-        worldfoundry_root = Path(__file__).resolve().parents[3]
-        return worldfoundry_root / "base_models" / "perception_core" / "general_perception" / "uniception"
 
     @classmethod
     def from_pretrained(cls, pretrained_model_path: Any = None, **kwargs: Any) -> SpatiaRuntime:
@@ -174,9 +161,7 @@ class SpatiaRuntime:
             require_path(self.map_model_path, "MapAnything checkpoint", kind="dir"),
             required_files=("config.json", "model.safetensors"),
         )
-        command: list[Any] = [
-            self.python_executable,
-            "inference.py",
+        command_args: list[Any] = [
             "--img_path",
             image,
             "--camera_w2c_path",
@@ -215,11 +200,11 @@ class SpatiaRuntime:
             self.device,
         ]
         if lora and Path(lora).is_file():
-            command.extend(["--lora_path", lora])
+            command_args.extend(["--lora_path", lora])
         if masks:
-            command.extend(["--mask_path", *masks])
+            command_args.extend(["--mask_path", *masks])
         if force_rebuild_intermediate:
-            command.append("--force_rebuild_intermediate")
+            command_args.append("--force_rebuild_intermediate")
         runtime_env = {
             "HF_HUB_OFFLINE": "1",
             "TRANSFORMERS_OFFLINE": "1",
@@ -227,17 +212,15 @@ class SpatiaRuntime:
             **self.env,
         }
         result = execute_in_tree(
-            command,
+            package_module_command(
+                "worldfoundry.synthesis.visual_generation.spatia.spatia_runtime.inference",
+                command_args,
+                python_executable=self.python_executable,
+            ),
             cwd=self.repo_root,
             output_path=output,
             search_roots=(input_dir / "assets",),
             env=runtime_env,
-            python_paths=(
-                self.project_root(),
-                self.repo_root,
-                self.mapanything_root(),
-                self.uniception_root(),
-            ),
         )
         return result if return_dict else result.get("video")
 

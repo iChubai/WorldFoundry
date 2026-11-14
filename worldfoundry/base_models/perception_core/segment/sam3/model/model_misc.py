@@ -20,23 +20,14 @@ from torch import Tensor, nn
 from torch.overrides import handle_torch_function, has_torch_function
 from typing_extensions import override
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
 
 try:
     import xformers
 except ImportError:
     xformers = None
-
-
-def inverse_sigmoid(x, eps=1e-3):
-    """
-    The inverse function for sigmoid activation function.
-    Note: It might face numberical issues with fp16 small eps.
-    """
-    x = x.clamp(min=0, max=1)
-    x1 = x.clamp(min=eps)
-    x2 = (1 - x).clamp(min=eps)
-    return torch.log(x1 / x2)
 
 
 def get_sdpa_settings():
@@ -348,7 +339,9 @@ def multi_head_attention_forward(
 
     if attn_type == AttentionType.Vanilla:
         if attn_mask is None and not is_causal and use_fa3:
-            from worldfoundry.base_models.perception_core.segment.sam3.perflib.fa3 import flash_attn_func
+            from worldfoundry.base_models.perception_core.segment.sam3.perflib.fa3 import (
+                flash_attn_func,
+            )
 
             assert dropout_p == 0.0
             attn_output = flash_attn_func(q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2)).transpose(1, 2)
@@ -703,21 +696,6 @@ class DotProductScoring(torch.nn.Module):
         return scores
 
 
-class LayerScale(nn.Module):
-    def __init__(
-        self,
-        dim: int,
-        init_values: float | Tensor = 1e-5,
-        inplace: bool = False,
-    ) -> None:
-        super().__init__()
-        self.inplace = inplace
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x: Tensor) -> Tensor:
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
-
-
 class TransformerWrapper(nn.Module):
     def __init__(
         self,
@@ -784,23 +762,8 @@ class MLP(nn.Module):
         return x
 
 
-def get_clones(module, N):
-    return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
-
-
 def get_clones_seq(module, N):
     return nn.Sequential(*[copy.deepcopy(module) for i in range(N)])
-
-
-def get_activation_fn(activation):
-    """Return an activation function given a string"""
-    if activation == "relu":
-        return F.relu
-    if activation == "gelu":
-        return F.gelu
-    if activation == "glu":
-        return F.glu
-    raise RuntimeError(f"activation should be relu/gelu, not {activation}.")
 
 
 def get_activation_module(activation):

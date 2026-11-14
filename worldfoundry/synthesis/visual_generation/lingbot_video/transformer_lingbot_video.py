@@ -16,6 +16,17 @@ from diffusers.models.modeling_utils import ModelMixin
 
 from worldfoundry.core.kernels import silu_mul
 
+from .moe_pack_kernels import reorder_tokens_triton_pack
+from .moe_restore_kernels import restore_tokens_triton
+from .sglang_moe_shim import (
+    LightSglangMoeRunnerConfig,
+    LightSglangStandardTopKOutput,
+    ensure_sglang_moe_ready,
+    fp8_scale_from_amax,
+    quantize_to_fp8_e4m3fn,
+    sglang_fused_experts,
+)
+
 try:
     from flash_attn_interface import flash_attn_varlen_func as flash_attn_varlen_func_v3
 except Exception:  # pragma: no cover - optional CUDA kernel.
@@ -36,30 +47,6 @@ def _flash_attn_varlen_v3_compat(**kwargs):
     if "seqused_k" in parameters:
         kwargs.setdefault("seqused_k", None)
     return flash_attn_varlen_func_v3(**kwargs)
-
-
-try:
-    from .moe_pack_kernels import reorder_tokens_triton_pack
-    from .moe_restore_kernels import restore_tokens_triton
-    from .sglang_moe_shim import (
-        LightSglangMoeRunnerConfig,
-        LightSglangStandardTopKOutput,
-        ensure_sglang_moe_ready,
-        fp8_scale_from_amax,
-        quantize_to_fp8_e4m3fn,
-        sglang_fused_experts,
-    )
-except ImportError:  # pragma: no cover - allows direct file loading in diagnostics.
-    from moe_pack_kernels import reorder_tokens_triton_pack
-    from moe_restore_kernels import restore_tokens_triton
-    from sglang_moe_shim import (
-        LightSglangMoeRunnerConfig,
-        LightSglangStandardTopKOutput,
-        ensure_sglang_moe_ready,
-        fp8_scale_from_amax,
-        quantize_to_fp8_e4m3fn,
-        sglang_fused_experts,
-    )
 
 
 LINGBOT_VIDEO_FP32_MODULES = (

@@ -1,6 +1,7 @@
 import cv2
-import lib.Perspec2Equirec as P2E
 import numpy as np
+
+from . import Perspec2Equirec as P2E
 
 
 class Perspective:

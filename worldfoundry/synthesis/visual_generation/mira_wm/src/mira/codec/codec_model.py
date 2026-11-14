@@ -1,9 +1,9 @@
 """The RAEv2 temporal-downsampling video codec: encode/decode plus checkpoint loading.
 
 :class:`VideoCodec` wraps the frozen-DINOv3 :class:`RAEEncoder` and the :class:`ViTVideoDecoder`.
-It is video-only (no audio). The frozen DINOv3 backbone is loaded via ``torch.hub`` (see
-:mod:`mira.codec.dino`); :meth:`VideoCodec.load_from_checkpoint` restores the backbone
-weights from the checkpoint, so a deployment environment does not need a separate DINO weights path.
+It is video-only (no audio). The frozen backbone uses the canonical in-tree DINOv3 implementation.
+:meth:`VideoCodec.load_from_checkpoint` restores the backbone weights from the checkpoint,
+so a deployment environment does not need a separate DINO weights path.
 """
 
 from __future__ import annotations
@@ -16,11 +16,14 @@ import torch
 from einops import rearrange
 from torch import Tensor, nn
 
-from mira.codec.config import VideoCodecConfig
-from mira.codec.rae_encoder import RAEEncoder, RAEEncoderOutputs
-from mira.codec.vit_decoder import ViTVideoDecoder
-from mira.data.batch import VideoActionBatch
-from mira.ml.config_loading import drop_removed_fields, strip_hydra_targets
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.codec.config import VideoCodecConfig
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.codec.rae_encoder import RAEEncoder, RAEEncoderOutputs
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.codec.vit_decoder import ViTVideoDecoder
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.data.batch import VideoActionBatch
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.ml.config_loading import (
+    drop_removed_fields,
+    strip_hydra_targets,
+)
 
 logger = logging.getLogger(__name__)
 

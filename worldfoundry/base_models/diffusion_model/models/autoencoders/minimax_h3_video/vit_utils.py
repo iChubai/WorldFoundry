@@ -17,6 +17,8 @@ from collections.abc import Sequence
 
 import torch
 
+from worldfoundry.core.attention.rotary.embedding import rotate_half_chunked as _rotate_half
+
 
 def _env_flag(name, default="0"):
     value = os.environ.get(name, default)
@@ -83,11 +85,6 @@ def create_token_ids(patch_dims, device, dtype, id_type="length_normalized", fla
         coords = coords.flatten(0, len(patch_dims) - 1)
 
     return coords.unsqueeze(0)
-
-
-def _rotate_half(x: torch.Tensor) -> torch.Tensor:
-    x1, x2 = torch.chunk(x, 2, dim=-1)
-    return torch.cat((-x2, x1), dim=-1)
 
 
 def _apply_rotary_pos_emb_impl(t: torch.Tensor, rotary_pos_emb: tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:

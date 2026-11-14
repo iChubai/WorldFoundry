@@ -6,7 +6,8 @@ import torch
 
 # from diffusers import TextToVideoSDPipeline, StableVideoDiffusionPipeline
 from diffusers import TextToVideoSDPipeline
-from models.pipeline_stable_video_diffusion import StableVideoDiffusionPipeline
+
+from .pipeline_stable_video_diffusion import StableVideoDiffusionPipeline
 
 try:
     from diffusers.pipelines.text_to_video_synthesis.pipeline_text_to_video_synth import TextToVideoSDPipelineOutput

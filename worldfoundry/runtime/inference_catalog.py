@@ -49,7 +49,6 @@ from worldfoundry.runtime.inference_specs.depth_anything3 import DEPTH_ANYTHING3
 from worldfoundry.runtime.inference_specs.diamond import DIAMOND_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.dino_wm import DINO_WM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.dreamdojo import DREAMDOJO_STUDENT_INFERENCE_SPEC
-from worldfoundry.runtime.inference_specs.egowm import EGOWM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.fantasyworld import (
     FANTASYWORLD_INFERENCE_SPEC,
     FANTASYWORLD_WAN21_INFERENCE_SPEC,
@@ -61,7 +60,6 @@ from worldfoundry.runtime.inference_specs.giga_world_0 import GIGA_WORLD_0_INFER
 from worldfoundry.runtime.inference_specs.helios import HELIOS_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hma import HMA_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hunyuan_gamecraft import HUNYUAN_GAMECRAFT_INFERENCE_SPEC
-from worldfoundry.runtime.inference_specs.hunyuan_world_voyager import HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hy_worldplay import HY_WORLDPLAY_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.hyperflow import HYPERFLOW_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.leworld_model import LEWORLD_MODEL_INFERENCE_SPEC
@@ -87,7 +85,6 @@ from worldfoundry.runtime.inference_specs.sana_streaming import (
     SANA_STREAMING_BIDIRECTIONAL_INFERENCE_SPEC,
     SANA_STREAMING_INFERENCE_SPEC,
 )
-from worldfoundry.runtime.inference_specs.shotstream import SHOTSTREAM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.stable_video_infinity import STABLE_VIDEO_INFINITY_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.starwm import STARWM_INFERENCE_SPEC
 from worldfoundry.runtime.inference_specs.tesseract import TESSERACT_INFERENCE_SPEC
@@ -116,7 +113,6 @@ _STATIC_ASSET_GATED_WORLD_RUNTIME_MODEL_IDS = frozenset(
         "ctrl-world",
         "diamond",
         "dino-wm",
-        "egowm",
         "genie-envisioner",
         "giga-world-0",
         "happyoyster",
@@ -128,17 +124,14 @@ _STATIC_ASSET_GATED_WORLD_RUNTIME_MODEL_IDS = frozenset(
         "motionbricks",
         "omniforcing",
         "oasis-500m",
-        "open-dreamer",
         "pointworld",
         "sana-wm",
-        "shotstream",
         "simworld",
         "starwm",
         "tesseract",
         "uwm",
         "vggt-world",
         "vid2world",
-        "wilddet3d",
         "wildworld",
         "worldgrow",
         "worldmem",
@@ -235,11 +228,9 @@ _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     CTRL_WORLD_INFERENCE_SPEC.model_family_id: CTRL_WORLD_INFERENCE_SPEC,
     DIAMOND_INFERENCE_SPEC.model_family_id: DIAMOND_INFERENCE_SPEC,
     DINO_WM_INFERENCE_SPEC.model_family_id: DINO_WM_INFERENCE_SPEC,
-    EGOWM_INFERENCE_SPEC.model_family_id: EGOWM_INFERENCE_SPEC,
     HMA_INFERENCE_SPEC.model_family_id: HMA_INFERENCE_SPEC,
     TESSERACT_INFERENCE_SPEC.model_family_id: TESSERACT_INFERENCE_SPEC,
     LEWORLD_MODEL_INFERENCE_SPEC.model_family_id: LEWORLD_MODEL_INFERENCE_SPEC,
-    SHOTSTREAM_INFERENCE_SPEC.model_family_id: SHOTSTREAM_INFERENCE_SPEC,
     LINGBOT_WORLD_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_INFERENCE_SPEC,
     LINGBOT_WORLD_V2_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_V2_INFERENCE_SPEC,
     LINGBOT_WORLD_V2_SMALL_INFERENCE_SPEC.model_family_id: LINGBOT_WORLD_V2_SMALL_INFERENCE_SPEC,
@@ -268,7 +259,6 @@ _MODEL_INFERENCE_SPECS: dict[str, ModelInferenceSpec] = {
     LONGCAT_VIDEO_INFERENCE_SPEC.model_family_id: LONGCAT_VIDEO_INFERENCE_SPEC,
     STABLE_VIDEO_INFINITY_INFERENCE_SPEC.model_family_id: STABLE_VIDEO_INFINITY_INFERENCE_SPEC,
     HUNYUAN_GAMECRAFT_INFERENCE_SPEC.model_family_id: HUNYUAN_GAMECRAFT_INFERENCE_SPEC,
-    HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC.model_family_id: HUNYUAN_WORLD_VOYAGER_INFERENCE_SPEC,
     HY_WORLDPLAY_INFERENCE_SPEC.model_family_id: HY_WORLDPLAY_INFERENCE_SPEC,
     CAMERACTRL_INFERENCE_SPEC.model_family_id: CAMERACTRL_INFERENCE_SPEC,
     DEPTH_ANYTHING3_INFERENCE_SPEC.model_family_id: DEPTH_ANYTHING3_INFERENCE_SPEC,

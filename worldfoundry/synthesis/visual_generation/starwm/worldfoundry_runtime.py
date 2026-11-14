@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import resolve_data_path
 
 RUNTIME_DIR = Path(__file__).resolve().parent
@@ -54,8 +55,6 @@ def build_command(context):
     options = dict(context.get("options") or {})
     output_file = options.get("output_file") or context["output_path"]
     command = [
-        context["python"],
-        context["entrypoint"],
         "--input_file",
         str(options.get("input_file") or options.get("dataset_path") or DEFAULT_INPUT_FILE),
         "--output_file",
@@ -71,7 +70,13 @@ def build_command(context):
         "--max_workers",
         str(options.get("max_workers", 8)),
     ]
-    return command
+    if options.get("seed") is not None:
+        command.extend(["--seed", str(int(options["seed"]))])
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.starwm.offline_infer.run_inference_client",
+        command,
+        python_executable=context["python"],
+    )
 
 
 __all__ = [

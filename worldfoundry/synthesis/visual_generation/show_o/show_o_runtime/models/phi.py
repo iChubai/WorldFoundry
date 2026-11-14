@@ -18,7 +18,6 @@ import math
 from typing import ClassVar
 
 import torch
-import torch.nn.functional as F
 import torch.utils.checkpoint
 from packaging import version
 from torch import nn
@@ -44,7 +43,14 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    get_unpad_data as _get_unpad_data,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import repeat_kv
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
 if is_flash_attn_2_available():
     from flash_attn import flash_attn_func, flash_attn_varlen_func
@@ -55,19 +61,6 @@ logger = logging.get_logger(__name__)
 
 _CHECKPOINT_FOR_DOC = "microsoft/phi-1"
 _CONFIG_FOR_DOC = "PhiConfig"
-
-
-# Copied from transformers.models.llama.modeling_llama._get_unpad_data
-def _get_unpad_data(attention_mask):
-    seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
-    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
-    max_seqlen_in_batch = seqlens_in_batch.max().item()
-    cu_seqlens = F.pad(torch.cumsum(seqlens_in_batch, dim=0, dtype=torch.int32), (1, 0))
-    return (
-        indices,
-        cu_seqlens,
-        max_seqlen_in_batch,
-    )
 
 
 # Copied from transformers.models.mixtral.modeling_mixtral.MixtralRotaryEmbedding with Mixtral->Phi
@@ -154,43 +147,6 @@ class PhiDynamicNTKScalingRotaryEmbedding(PhiRotaryEmbedding):
         self.register_buffer("sin_cached", emb.sin().to(dtype), persistent=False)
 
 
-# Copied from transformers.models.llama.modeling_llama.rotate_half
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-# Copied from transformers.models.mixtral.modeling_mixtral.apply_rotary_pos_emb
-def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
-    """Applies Rotary Position Embedding to the query and key tensors.
-
-    Args:
-        q (`torch.Tensor`): The query tensor.
-        k (`torch.Tensor`): The key tensor.
-        cos (`torch.Tensor`): The cosine part of the rotary embedding.
-        sin (`torch.Tensor`): The sine part of the rotary embedding.
-        position_ids (`torch.Tensor`):
-            The position indices of the tokens corresponding to the query and key tensors. For example, this can be
-            used to pass offsetted position ids when working with a KV-cache.
-        unsqueeze_dim (`int`, *optional*, defaults to 1):
-            The 'unsqueeze_dim' argument specifies the dimension along which to unsqueeze cos[position_ids] and
-            sin[position_ids] so that they can be properly broadcasted to the dimensions of q and k. For example, note
-            that cos[position_ids] and sin[position_ids] have the shape [batch_size, seq_len, head_dim]. Then, if q and
-            k have the shape [batch_size, heads, seq_len, head_dim], then setting unsqueeze_dim=1 makes
-            cos[position_ids] and sin[position_ids] broadcastable to the shapes of q and k. Similarly, if q and k have
-            the shape [batch_size, seq_len, heads, head_dim], then set unsqueeze_dim=2.
-    Returns:
-        `tuple(torch.Tensor)` comprising of the query and key tensors rotated using the Rotary Position Embedding.
-    """
-    cos = cos[position_ids].unsqueeze(unsqueeze_dim)
-    sin = sin[position_ids].unsqueeze(unsqueeze_dim)
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
-
-
 # Copied from transformers.models.clip.modeling_clip.CLIPMLP with CLIP->Phi
 class PhiMLP(nn.Module):
     def __init__(self, config):
@@ -205,19 +161,6 @@ class PhiMLP(nn.Module):
         hidden_states = self.activation_fn(hidden_states)
         hidden_states = self.fc2(hidden_states)
         return hidden_states
-
-
-# Copied from transformers.models.llama.modeling_llama.repeat_kv with llama->phi
-def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
-    """
-    This is the equivalent of torch.repeat_interleave(x, dim=1, repeats=n_rep). The hidden states go from (batch,
-    num_key_value_heads, seqlen, head_dim) to (batch, num_attention_heads, seqlen, head_dim)
-    """
-    batch, num_key_value_heads, slen, head_dim = hidden_states.shape
-    if n_rep == 1:
-        return hidden_states
-    hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
-    return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
 
 
 class PhiAttention(nn.Module):
@@ -339,7 +282,7 @@ class PhiAttention(nn.Module):
             key_states[..., self.rotary_emb.dim :],
         )
         # [batch_size, seq_length, num_heads, head_dim // config.partial_rotary_factor]
-        query_rot, key_rot = apply_rotary_pos_emb(query_rot, key_rot, cos, sin, position_ids)
+        query_rot, key_rot = apply_rotary_pos_emb(query_rot, key_rot, cos[position_ids], sin[position_ids])
 
         # [batch_size, seq_length, num_heads, head_dim]
         query_states = torch.cat((query_rot, query_pass), dim=-1)
@@ -455,7 +398,7 @@ class PhiFlashAttention2(PhiAttention):
             key_states[..., self.rotary_emb.dim :],
         )
         # [batch_size, seq_length, num_heads, head_dim // config.partial_rotary_factor]
-        query_rot, key_rot = apply_rotary_pos_emb(query_rot, key_rot, cos, sin, position_ids)
+        query_rot, key_rot = apply_rotary_pos_emb(query_rot, key_rot, cos[position_ids], sin[position_ids])
 
         # [batch_size, seq_length, num_heads, head_dim]
         query_states = torch.cat((query_rot, query_pass), dim=-1)
@@ -683,7 +626,7 @@ class PhiSdpaAttention(PhiAttention):
             key_states[..., self.rotary_emb.dim :],
         )
         # [batch_size, seq_length, num_heads, head_dim // config.partial_rotary_factor]
-        query_rot, key_rot = apply_rotary_pos_emb(query_rot, key_rot, cos, sin, position_ids)
+        query_rot, key_rot = apply_rotary_pos_emb(query_rot, key_rot, cos[position_ids], sin[position_ids])
 
         # [batch_size, seq_length, num_heads, head_dim]
         query_states = torch.cat((query_rot, query_pass), dim=-1)

@@ -38,18 +38,19 @@ from diffusers.utils import BaseOutput, is_torch_version
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.beingh.qwen2.modeling_qwen2 import Qwen2RMSNorm
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
+from worldfoundry.core.nn.blocks.layers import zero_module
 
 from .attention import (
     EasyAnimateDiTBlock,
     HunyuanDiTBlock,
     SelfAttentionTemporalTransformerBlock,
     TemporalTransformerBlock,
-    zero_module,
 )
 from .embeddings import HunyuanCombinedTimestepTextSizeStyleEmbedding, TimePositionalEncoding
 from .hf_loading import resolve_pretrained_subfolder
-from .norm import AdaLayerNormSingle, EasyAnimateRMSNorm
+from .norm import AdaLayerNormSingle
 from .patch import CasualPatchEmbed3D, PatchEmbed3D, PatchEmbedF3D, TemporalUpsampler3D, UnPatch1D
 from .resampler import Resampler
 
@@ -1525,12 +1526,10 @@ class EasyAnimateTransformer3DModel(ModelMixin, ConfigMixin):
             if text_embed_dim_t5 is not None:
                 self.text_proj_t5 = nn.Linear(text_embed_dim_t5, self.inner_dim)
         else:
-            self.text_proj = nn.Sequential(
-                EasyAnimateRMSNorm(text_embed_dim), nn.Linear(text_embed_dim, self.inner_dim)
-            )
+            self.text_proj = nn.Sequential(Qwen2RMSNorm(text_embed_dim), nn.Linear(text_embed_dim, self.inner_dim))
             if text_embed_dim_t5 is not None:
                 self.text_proj_t5 = nn.Sequential(
-                    EasyAnimateRMSNorm(text_embed_dim), nn.Linear(text_embed_dim_t5, self.inner_dim)
+                    Qwen2RMSNorm(text_embed_dim), nn.Linear(text_embed_dim_t5, self.inner_dim)
                 )
 
         if ref_channels is not None:

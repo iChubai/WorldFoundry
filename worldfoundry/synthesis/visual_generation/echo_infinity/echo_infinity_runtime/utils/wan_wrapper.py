@@ -19,9 +19,9 @@ from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.echo_
     RegisterTokens,
     WanModel,
 )
+from worldfoundry.core.nn.diffusion.schedulers import SchedulerInterface
 from worldfoundry.synthesis.visual_generation.echo_infinity.echo_infinity_runtime.utils.scheduler import (
     FlowMatchScheduler,
-    SchedulerInterface,
 )
 
 

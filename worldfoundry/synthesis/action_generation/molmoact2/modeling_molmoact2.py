@@ -39,6 +39,14 @@ from transformers.utils import (
     logging,
 )
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    eager_attention_forward,
+    repeat_kv,
+)
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
+from worldfoundry.core.nn.transformer.dit import _rms_norm_reference
+from worldfoundry.core.nn.transformer.dit import modulate_sequence as _modulate
+
 from .configuration_molmoact2 import (
     MolmoAct2ActionExpertConfig,
     MolmoAct2AdapterConfig,
@@ -86,10 +94,6 @@ _QUESTION_PREFIX_PATTERNS = tuple(
 
 _DEPTH_REASONING_PATCH_SIZE = 32
 _DEPTH_REASONING_THRESHOLD = 0.996
-
-
-def _modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
 def _round_up_multiple(value: int, multiple_of: int) -> int:
@@ -147,8 +151,7 @@ class ActionExpertRMSNorm(nn.Module):
         with torch.autocast(enabled=False, device_type=x.device.type):
             dtype = x.dtype
             x_float = x.to(torch.float32)
-            variance = x_float.pow(2).mean(dim=-1, keepdim=True)
-            out = x_float * torch.rsqrt(variance + self.eps)
+            out = _rms_norm_reference(x_float, None, self.eps, "fp32")
             out = out.to(dtype)
         if self.weight is not None:
             out = out * self.weight
@@ -1788,41 +1791,6 @@ class MolmoAct2VisionBackbone(nn.Module):
 # Copied from transformers.models.llama.modeling_llama.rotate_half
 
 
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-# Copied from transformers.models.llama.modeling_llama.apply_rotary_pos_emb
-def apply_rotary_pos_emb(q, k, cos, sin, position_ids=None, unsqueeze_dim=1):
-    """Applies Rotary Position Embedding to the query and key tensors.
-
-    Args:
-        q (`torch.Tensor`): The query tensor.
-        k (`torch.Tensor`): The key tensor.
-        cos (`torch.Tensor`): The cosine part of the rotary embedding.
-        sin (`torch.Tensor`): The sine part of the rotary embedding.
-        position_ids (`torch.Tensor`, *optional*):
-            Deprecated and unused.
-        unsqueeze_dim (`int`, *optional*, defaults to 1):
-            The 'unsqueeze_dim' argument specifies the dimension along which to unsqueeze cos[position_ids] and
-            sin[position_ids] so that they can be properly broadcasted to the dimensions of q and k. For example, note
-            that cos[position_ids] and sin[position_ids] have the shape [batch_size, seq_len, head_dim]. Then, if q and
-            k have the shape [batch_size, heads, seq_len, head_dim], then setting unsqueeze_dim=1 makes
-            cos[position_ids] and sin[position_ids] broadcastable to the shapes of q and k. Similarly, if q and k have
-            the shape [batch_size, seq_len, heads, head_dim], then set unsqueeze_dim=2.
-    Returns:
-        `tuple(torch.Tensor)` comprising of the query and key tensors rotated using the Rotary Position Embedding.
-    """
-    cos = cos.unsqueeze(unsqueeze_dim)
-    sin = sin.unsqueeze(unsqueeze_dim)
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
-
-
 class MolmoAct2RotaryEmbedding(nn.Module):
     inv_freq: torch.Tensor  # fix linting for `register_buffer`
 
@@ -1973,53 +1941,13 @@ class MolmoAct2RMSNorm(nn.Module):
         with torch.autocast(enabled=False, device_type=x.device.type):
             og_dtype = x.dtype
             x = x.to(torch.float32)
-            variance = x.pow(2).mean(-1, keepdim=True)
-            x = x * torch.rsqrt(variance + self.eps)
+            x = _rms_norm_reference(x, None, self.eps, "fp32")
             x = x.to(og_dtype)
 
         return self.weight * x
 
     def extra_repr(self):
         return f"{tuple(self.weight.shape)}, eps={self.eps}"
-
-
-# Copied from transformers.models.llama.modeling_llama.repeat_kv
-def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
-    """
-    This is the equivalent of torch.repeat_interleave(x, dim=1, repeats=n_rep). The hidden states go from (batch,
-    num_key_value_heads, seqlen, head_dim) to (batch, num_attention_heads, seqlen, head_dim)
-    """
-    batch, num_key_value_heads, slen, head_dim = hidden_states.shape
-    if n_rep == 1:
-        return hidden_states
-    hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
-    return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
-
-
-def eager_attention_forward(
-    module: nn.Module,
-    query: torch.Tensor,
-    key: torch.Tensor,
-    value: torch.Tensor,
-    attention_mask: torch.Tensor | None,
-    scaling: float,
-    dropout: float = 0.0,
-    **kwargs,
-) -> tuple[torch.Tensor, torch.Tensor | None]:
-    key_states = repeat_kv(key, module.num_key_value_groups)
-    value_states = repeat_kv(value, module.num_key_value_groups)
-
-    attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling
-    if attention_mask is not None:
-        causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
-        attn_weights = attn_weights + causal_mask
-
-    attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query.dtype)
-    attn_weights = nn.functional.dropout(attn_weights, p=dropout, training=module.training)
-    attn_output = torch.matmul(attn_weights, value_states)
-    attn_output = attn_output.transpose(1, 2).contiguous()
-
-    return attn_output, attn_weights
 
 
 class MolmoAct2Attention(nn.Module):

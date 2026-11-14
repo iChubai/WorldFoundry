@@ -35,6 +35,8 @@ Family status: **Runner parity pending**.
 
 Inputs are prompt, image, and trajectory (native motion tokens). Stage the HY15 Action2V DMD subset before running. For the Wan-based variant use `minwm-wan-action2v`.
 
+Both minWM Action2V routes launch installed WorldFoundry package modules under torchrun. HY uses one process; Wan retains its `sp_size` process count and optional `master_port` rendezvous. The workers inherit the caller’s environment without changing `PYTHONPATH`; checkpoint and input paths remain explicit.
+
 ## Running in WorldFoundry
 
 Run `wf run minwm-hy-action2v --pipeline.task-profile default` to follow the camera path.

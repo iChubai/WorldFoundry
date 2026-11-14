@@ -9,11 +9,12 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
+
 from .infer import _load_json, _normalize_actions, _resolve_checkpoint
 
 RUNTIME_DIR = Path(__file__).resolve().parent
 OFFICIAL_ENTRYPOINT = RUNTIME_DIR / "infer.py"
-RUNTIME_SRC = RUNTIME_DIR / "src"
 BLOCKED_REASON = ""
 
 
@@ -163,16 +164,14 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile):
 
 
 def build_command(context):
-    """Build the standalone ``infer.py`` command used by Workspace."""
+    """Build the in-tree inference command used by Workspace."""
     options = dict(context.get("options") or {})
     checkpoint = _option(options, "checkpoint", "checkpoint_path", "checkpoint_dir", "model_path")
     dataset = _option(options, "dataset", "dataset_path", "data_path")
     if not checkpoint or not dataset:
         raise ValueError("MIRA Workspace execution requires checkpoint_path and dataset_path")
 
-    command = [
-        str(context["python"]),
-        str(context["entrypoint"]),
+    arguments = [
         "--checkpoint",
         str(checkpoint),
         "--dataset",
@@ -198,27 +197,22 @@ def build_command(context):
     ]
     actions_path = _actions_path(options, Path(str(context["output_dir"])))
     if actions_path is not None:
-        command.extend(["--actions-file", str(actions_path)])
+        arguments.extend(["--actions-file", str(actions_path)])
     if _as_bool(options.get("compile")):
-        command.append("--compile")
+        arguments.append("--compile")
     if not _as_bool(options.get("overlay_actions"), default=True):
-        command.append("--no-overlay-actions")
+        arguments.append("--no-overlay-actions")
     if _as_bool(options.get("generated_only")):
-        command.append("--generated-only")
-    return command
-
-
-def pythonpath_entries(*, runtime_root, options, profile):
-    del runtime_root, options, profile
-    return (RUNTIME_SRC,)
+        arguments.append("--generated-only")
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.mira_wm.infer", arguments, python_executable=context["python"]
+    )
 
 
 __all__ = [
     "BLOCKED_REASON",
     "OFFICIAL_ENTRYPOINT",
     "RUNTIME_DIR",
-    "RUNTIME_SRC",
     "build_command",
     "missing_requirements",
-    "pythonpath_entries",
 ]

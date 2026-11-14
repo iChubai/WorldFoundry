@@ -610,6 +610,16 @@ post_install_model_env() {
   esac
 }
 
+install_env_setup_commands() {
+  local spec_json="$1"
+  local env_prefix="$2"
+  local setup_command
+  while IFS= read -r setup_command; do
+    [[ -n "$setup_command" ]] || continue
+    "$CONDA_EXE_PATH" run -p "$env_prefix" bash -c "$setup_command"
+  done < <(json_array_lines "$spec_json" setup_commands)
+}
+
 install_dedicated_env() {
   local spec_json="$1"
   local model_id env_name env_prefix python_version pip_extra_index
@@ -723,6 +733,7 @@ install_dedicated_env() {
         } >"$site_packages/worldfoundry.pth"
       fi
     fi
+    install_env_setup_commands "$spec_json" "$env_prefix"
     post_install_model_env "$model_id" "$env_prefix"
   fi
   verify_env_imports "$env_prefix" "${validation_imports[@]}"
@@ -744,6 +755,7 @@ install_model_env() {
   if [[ "$env_name" == worldfoundry-unified-* ]]; then
     install_unified_env "$env_prefix" "$cuda_profile"
     if [[ "$VERIFY_ONLY" != "1" ]]; then
+      install_env_setup_commands "$spec_json" "$env_prefix"
       post_install_model_env "$model_id" "$env_prefix"
     fi
   else

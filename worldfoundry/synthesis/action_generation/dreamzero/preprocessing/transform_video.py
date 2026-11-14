@@ -11,8 +11,9 @@ import torchvision.transforms.v2 as T
 from einops import rearrange
 from pydantic import Field, PrivateAttr, field_validator
 
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import ModalityTransform
+
 from .schema import DatasetMetadata
-from .transform_base import ModalityTransform
 
 
 class VideoTransform(ModalityTransform):

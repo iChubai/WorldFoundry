@@ -1,6 +1,6 @@
 import torch
 
-from opensora.registry import MODELS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import MODELS
 
 
 @MODELS.register_module("classes")

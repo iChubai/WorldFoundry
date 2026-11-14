@@ -423,15 +423,6 @@ DreamDojoPipeline = _component_pipeline_class(
 )
 
 
-DVLTPipeline = _component_pipeline_class(
-    "DVLTPipeline",
-    doc="WorldFoundry pipeline for the in-tree DVLT multi-view 3D reconstruction runtime.",
-    model_id="dvlt",
-    operator_target="worldfoundry.operators.dvlt_operator:DVLTOperator",
-    memory_target="worldfoundry.synthesis.visual_generation.memory.runtime:RuntimeMemory",
-    synthesis_target="worldfoundry.base_models.three_dimensions.depth.dvlt:DVLTSynthesis",
-)
-DVLTPipeline.MODEL_PATH_OPTION = "checkpoint_path"
 OpenMAGVIT2Pipeline = _component_pipeline_class(
     "OpenMAGVIT2Pipeline",
     doc="WorldFoundry video/token-generation pipeline for Open-MAGVIT2.",
@@ -457,15 +448,6 @@ ShowOPipeline = _component_pipeline_class(
     memory_target="worldfoundry.synthesis.visual_generation.memory.runtime:RuntimeMemory",
     synthesis_target="worldfoundry.synthesis.visual_generation.show_o:ShowOSynthesis",
 )
-Splatt3RPipeline = _component_pipeline_class(
-    "Splatt3RPipeline",
-    doc="WorldFoundry 3D Gaussian splatting pipeline for Splatt3R.",
-    model_id="splatt3r",
-    operator_target="worldfoundry.operators.splatt3r_operator:Splatt3ROperator",
-    memory_target="worldfoundry.synthesis.visual_generation.memory.runtime:RuntimeMemory",
-    synthesis_target="worldfoundry.base_models.three_dimensions.general_3d.splatt3r:Splatt3RSynthesis",
-)
-Splatt3RPipeline.MODEL_PATH_OPTION = "checkpoint_path"
 ZeroScopePipeline = _component_pipeline_class(
     "ZeroScopePipeline",
     doc="WorldFoundry video-generation pipeline for ZeroScope.",
@@ -485,7 +467,6 @@ __all__ = [
     "CogACTPipeline",
     "ComponentPipeline",
     "DBCogACTPipeline",
-    "DVLTPipeline",
     "DiffusionPolicyPipeline",
     "DreamDojoPipeline",
     "DreamZeroPipeline",
@@ -512,7 +493,6 @@ __all__ = [
     "ShowOPipeline",
     "SmolVLAPipeline",
     "SpiritV15Pipeline",
-    "Splatt3RPipeline",
     "StarVLAPipeline",
     "VLANeXtPipeline",
     "XVLAPipeline",

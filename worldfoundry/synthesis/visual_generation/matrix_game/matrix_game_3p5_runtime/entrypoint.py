@@ -43,7 +43,6 @@ import shutil
 import subprocess
 import sys
 import time
-from pathlib import Path
 
 import numpy as np
 
@@ -52,7 +51,6 @@ from worldfoundry.synthesis.visual_generation.matrix_game.matrix_game_3p5_runtim
 )
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = str(Path(__file__).resolve().parents[5])
 PYTHON_BIN = os.environ.get("WORLDFOUNDRY_MATRIX_GAME_3P5_PYTHON", sys.executable)
 MIN_POSES = 86  # dataset minimum: 84 generated + anchor + 1
 
@@ -404,7 +402,6 @@ def main():
         sys.exit("ERROR: --refs is only supported with --person third")
 
     env = dict(os.environ)
-    env["PYTHONPATH"] = PROJECT_ROOT + os.pathsep + env.get("PYTHONPATH", "")
     env["DA3_MODEL_PATH"] = resolve_weight("da3", args.da3_dir)
     env.setdefault("WORLDFOUNDRY_SKIP_MODEL_DOWNLOAD", "true")
 

@@ -14,13 +14,9 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 
-from .blocks import (
-    FinalLayer,
-    RDTBlock,
-    TimestepEmbedder,
-    get_1d_sincos_pos_embed_from_grid,
-    get_multimodal_cond_pos_embed,
-)
+from worldfoundry.base_models.llm_mllm_core.action.rdt import TimestepEmbedder
+
+from .blocks import FinalLayer, RDTBlock, get_1d_sincos_pos_embed_from_grid, get_multimodal_cond_pos_embed
 
 
 class RDT(nn.Module):

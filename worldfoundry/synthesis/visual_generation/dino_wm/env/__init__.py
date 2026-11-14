@@ -8,7 +8,7 @@ def register_point_maze():
 
     register(
         id="point_maze",
-        entry_point="env.pointmaze:PointMazeWrapper",
+        entry_point="worldfoundry.synthesis.visual_generation.dino_wm.env.pointmaze:PointMazeWrapper",
         max_episode_steps=300,
         kwargs={
             "maze_spec": U_MAZE,
@@ -23,13 +23,13 @@ def register_point_maze():
 
 register(
     id="pusht",
-    entry_point="env.pusht.pusht_wrapper:PushTWrapper",
+    entry_point="worldfoundry.synthesis.visual_generation.dino_wm.env.pusht.pusht_wrapper:PushTWrapper",
     max_episode_steps=300,
     reward_threshold=1.0,
 )
 register(
     id="wall",
-    entry_point="env.wall.wall_env_wrapper:WallEnvWrapper",
+    entry_point="worldfoundry.synthesis.visual_generation.dino_wm.env.wall.wall_env_wrapper:WallEnvWrapper",
     max_episode_steps=300,
     reward_threshold=1.0,
 )

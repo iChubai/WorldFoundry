@@ -5,7 +5,7 @@ modelId: "ltx-2.5"
 pageSource: authored
 ---
 
-LTX-2.5 is a 22B joint audio-video model. WorldFoundry runs the official fast two-stage DistilledPipeline (inference only) for text-to-video and image-to-video, including synchronized audio generation.
+LTX-2.5 is a 22B joint audio-video model. WorldFoundry runs a native fast two-stage distilled recipe for text-to-video and image-to-video, including synchronized audio generation.
 
 <ModelPaperFigures modelId="ltx-2.5" locale="en" />
 
@@ -17,7 +17,7 @@ Code: [Lightricks/LTX-2](https://github.com/Lightricks/LTX-2).
 
 Use `ltx-2.5` for both text-to-video and image-to-video generation.
 
-The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. WorldFoundry calls the official source directly because the LTX-2.3 monolithic loader is not compatible with LTX-2.5. It is published by Lightricks.
+The official distilled path encodes prompts with the bundled Gemma 4 12B text encoder, jointly denoises video and audio at half resolution, applies the LTX-2.5 latent spatial upscaler, performs the short second-stage refinement, and decodes through separate video and audio VAEs. `NativeDiffusionPipeline` runs the `ltx-2.5` joint-multistage recipe in-process with canonical Gemma 4, transformer, diffusion video decoder and duration-head components. Loading, quantization, offload and BT.709 H.264/AAC encoding use shared core components. Definitions follow Lightricks/LTX-2 at `a95ab856`.
 
 Tasks: text-to-video, image-to-video, and audio video generation. Aliases: `ltx2.5`, `ltx25`, and `ltx-2.5-distilled`. Modalities: text and image in, video out.
 
@@ -27,15 +27,21 @@ LTX-2.5 audio-video generation from a prompt. Sibling cards cover 2.x and LTX-Vi
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `seed`, `execute`, and 2 more; artifacts `generated_video` and `ltx-2.5.mp4`.
+Inputs `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `seed`, `execute`, and 2 more; artifacts `generated_video` and `ltx-2.5.mp4` with adjacent JSON metadata.
 
 CLI task profiles: `interactive-video`. WorldFoundry binds `LTX25Pipeline`.
 
 Family status: **Runner parity pending**.
 
-Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, clone the pinned source revision, install its ltx-core and ltx-pipelines dependencies in the dedicated environment, and pass execute=True. The optional duration head enables prompt-based automatic duration.
+Accept the Hugging Face model terms, download the five required split components while preserving their repository folders, create the dedicated ltx-2.5 environment, and pass execute=True. The optional duration head enables prompt-based automatic duration.
 
-Validated without a GPU: WorldFoundry builds the official command and maps the split components correctly.
+Execution stays in the active `ltx-2.5` environment. `timeout_seconds` defaults to `7200`; cooperative checks run between stages/steps and before artifact writes. A running CUDA kernel cannot be preempted.
+
+`offload_mode` accepts `none`, `cpu`, or `disk`. Quantization retains the distinct `fp8-cast`, `fp8-scaled-mm`, `nvfp4-cast`, and `nvfp4-prequant` implementations. NVFP4 modes require the optional `ltx-kernels` package. Automatic duration, generated keyframes, prompt enhancement with a local Gemma checkpoint, and DiffVAE optimization remain available.
+
+## Validation and limitations
+
+Reduced random split-checkpoint CPU replays match pinned upstream stage latents and decoded tensors exactly for T2V, I2V, automatic duration and generated keyframes, including disk-backed loading. These fixtures do not establish released-weight quality. Released-checkpoint GPU/MPS, quantization, offload and complete encoded-artifact parity remain pending.
 
 ## Running in WorldFoundry
 

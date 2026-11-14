@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -21,16 +20,6 @@ DEFAULT_CHECKPOINT_CANDIDATES = (
     "model.pt",
     "pytorch_model.bin",
 )
-
-
-def _runtime_root() -> Path:
-    return Path(__file__).resolve().parent
-
-
-def _ensure_runtime_importable() -> None:
-    root = str(_runtime_root())
-    if root not in sys.path:
-        sys.path.insert(0, root)
 
 
 def _collect_image_paths(path: str | os.PathLike[str]) -> list[str]:
@@ -199,7 +188,6 @@ class LingBotMapRepresentation:
         device: str | None = None,
         **kwargs: Any,
     ) -> LingBotMapRepresentation:
-        _ensure_runtime_importable()
         mode = str(kwargs.get("mode", "streaming"))
         if mode not in {"streaming", "windowed"}:
             raise ValueError("LingBot-Map mode must be 'streaming' or 'windowed'.")
@@ -209,9 +197,9 @@ class LingBotMapRepresentation:
             kwargs.get("checkpoint_name"),
         )
         if mode == "windowed":
-            from lingbot_map.models.gct_stream_window import GCTStream
+            from .lingbot_map.models.gct_stream_window import GCTStream
         else:
-            from lingbot_map.models.gct_stream import GCTStream
+            from .lingbot_map.models.gct_stream import GCTStream
 
         model = GCTStream(
             img_size=int(kwargs.get("image_size", 518)),
@@ -249,7 +237,6 @@ class LingBotMapRepresentation:
         )
 
     def _prepare_images(self, images: Any, **kwargs: Any) -> torch.Tensor:
-        _ensure_runtime_importable()
         image_size = int(kwargs.get("image_size", self.image_size))
         patch_size = int(kwargs.get("patch_size", self.patch_size))
         mode = str(kwargs.get("preprocess_mode", self.preprocess_mode))
@@ -257,12 +244,12 @@ class LingBotMapRepresentation:
         if isinstance(images, torch.Tensor):
             tensor = images.float()
         elif isinstance(images, (str, os.PathLike)):
-            from lingbot_map.utils.load_fn import load_and_preprocess_images
+            from .lingbot_map.utils.load_fn import load_and_preprocess_images
 
             paths = _collect_image_paths(images)
             tensor = load_and_preprocess_images(paths, mode=mode, image_size=image_size, patch_size=patch_size)
         elif isinstance(images, (list, tuple)) and all(isinstance(item, (str, os.PathLike)) for item in images):
-            from lingbot_map.utils.load_fn import load_and_preprocess_images
+            from .lingbot_map.utils.load_fn import load_and_preprocess_images
 
             tensor = load_and_preprocess_images(
                 [str(item) for item in images],
@@ -322,8 +309,7 @@ class LingBotMapRepresentation:
                     output_device=output_device,
                 )
 
-        _ensure_runtime_importable()
-        from lingbot_map.utils.pose_enc import pose_encoding_to_extri_intri
+        from .lingbot_map.utils.pose_enc import pose_encoding_to_extri_intri
 
         extrinsic, intrinsic = pose_encoding_to_extri_intri(predictions["pose_enc"], images.shape[-2:])
         result: dict[str, Any] = {

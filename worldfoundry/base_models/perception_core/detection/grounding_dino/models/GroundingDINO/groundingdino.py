@@ -23,9 +23,9 @@ from torch import nn
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util import get_tokenlizer
 from worldfoundry.base_models.perception_core.detection.grounding_dino.util.misc import (
     NestedTensor,
-    inverse_sigmoid,
     nested_tensor_from_tensor_list,
 )
+from worldfoundry.core.nn.blocks.layers import inverse_sigmoid
 
 from ..registry import MODULE_BUILD_FUNCS
 from .backbone import build_backbone

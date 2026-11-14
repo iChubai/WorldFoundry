@@ -7,30 +7,21 @@
 import io
 import math
 import os
-import sys
 from pathlib import Path
 
-_THIS_FILE = Path(__file__).resolve()
-for _path in (
-    _THIS_FILE.parents[6],
-    _THIS_FILE.parents[3] / "point_clouds" / "vggt",
-):
-    _path_str = str(_path)
-    if _path_str not in sys.path:
-        sys.path.insert(0, _path_str)
+import av
+import einops
+import numpy as np
+import torch
+import torch.nn.functional as F
+from PIL import Image
+from torchvision import transforms as TF
 
-import av  # noqa: E402 - Follows the sys.path setup.
-import einops  # noqa: E402 - Follows the sys.path setup.
-import numpy as np  # noqa: E402 - Follows the sys.path setup.
-import torch  # noqa: E402 - Follows the sys.path setup.
-import torch.nn.functional as F  # noqa: E402 - Follows the sys.path setup.
-from PIL import Image  # noqa: E402 - Follows the sys.path setup.
-from torchvision import transforms as TF  # noqa: E402 - Follows the sys.path setup.
-from vggt.models.vggt import VGGT  # noqa: E402 - Follows the sys.path setup.
-from vggt.utils.load_fn import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.models.vggt import VGGT
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.load_fn import (
     load_and_preprocess_images as _vggt_load_and_preprocess_images,
 )
-from vggt.utils.pose_enc import pose_encoding_to_extri_intri  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import pose_encoding_to_extri_intri
 
 
 def _round_to_multiple(value, multiple):

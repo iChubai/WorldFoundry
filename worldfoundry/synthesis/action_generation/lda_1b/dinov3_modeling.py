@@ -29,6 +29,12 @@ from transformers.activations import ACT2FN
 from transformers.modeling_outputs import BaseModelOutputWithPooling
 from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenMLP as DINOv3ViTGatedMLP,
+)
+from worldfoundry.core.attention.rotary.rope import rotate_half
+from worldfoundry.core.nn.blocks.layers import LayerScale
+
 from .dinov3_configuration import DINOv3ViTConfig
 
 
@@ -175,13 +181,6 @@ class DINOv3ViTRopePositionEmbedding(nn.Module):
         return cos.to(dtype=dtype), sin.to(dtype=dtype)
 
 
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
 def eager_attention_forward(
     module: nn.Module,
     query: torch.Tensor,
@@ -311,15 +310,6 @@ class DINOv3ViTAttention(nn.Module):
         return attn_output, attn_weights
 
 
-class DINOv3ViTLayerScale(nn.Module):
-    def __init__(self, config) -> None:
-        super().__init__()
-        self.lambda1 = nn.Parameter(config.layerscale_value * torch.ones(config.hidden_size))
-
-    def forward(self, hidden_state: torch.Tensor) -> torch.Tensor:
-        return hidden_state * self.lambda1
-
-
 def drop_path(input: torch.Tensor, drop_prob: float = 0.0, training: bool = False) -> torch.Tensor:
     """
     Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
@@ -368,22 +358,6 @@ class DINOv3ViTMLP(nn.Module):
         return self.down_proj(self.act_fn(self.up_proj(x)))
 
 
-class DINOv3ViTGatedMLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=config.mlp_bias)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-        return down_proj
-
-
 class DINOv3ViTLayer(nn.Module):
     """This corresponds to the Block class in the original implementation."""
 
@@ -392,16 +366,16 @@ class DINOv3ViTLayer(nn.Module):
 
         self.norm1 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.attention = DINOv3ViTAttention(config)
-        self.layer_scale1 = DINOv3ViTLayerScale(config)
+        self.layer_scale1 = LayerScale(config.hidden_size, init_values=config.layerscale_value)
         self.drop_path = DINOv3ViTDropPath(config.drop_path_rate) if config.drop_path_rate > 0.0 else nn.Identity()
 
         self.norm2 = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
 
         if config.use_gated_mlp:
-            self.mlp = DINOv3ViTGatedMLP(config)
+            self.mlp = DINOv3ViTGatedMLP(config, bias=config.mlp_bias)
         else:
             self.mlp = DINOv3ViTMLP(config)
-        self.layer_scale2 = DINOv3ViTLayerScale(config)
+        self.layer_scale2 = LayerScale(config.hidden_size, init_values=config.layerscale_value)
 
     def forward(
         self,
@@ -473,8 +447,8 @@ class DINOv3ViTPreTrainedModel(PreTrainedModel):
                     std=self.config.initializer_range,
                 ).to(module.register_tokens.dtype)
             module.mask_token.data.zero_()
-        elif isinstance(module, DINOv3ViTLayerScale):
-            module.lambda1.data.fill_(self.config.layerscale_value)
+        elif isinstance(module, LayerScale):
+            module.gamma.data.fill_(self.config.layerscale_value)
 
 
 class DINOv3ViTModel(DINOv3ViTPreTrainedModel):

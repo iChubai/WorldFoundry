@@ -26,8 +26,9 @@ import torch
 import torch.utils.data
 from decord import VideoReader
 from lru import LRU
-from src.models.eval_inputs.base import BaseDataset
-from src.models.eval_inputs.datafield import DataField
+
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.base import BaseDataset
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.datafield import DataField
 
 
 class Radym(BaseDataset):

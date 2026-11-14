@@ -23,6 +23,8 @@ from diffusers.models.normalization import FP32LayerNorm, LayerNorm, RMSNorm
 from diffusers.models.normalization import AdaLayerNormContinuous as _DiffusersAdaLayerNormContinuous
 
 from worldfoundry.core.attention import get_cu_seqlens
+from worldfoundry.core.nn.blocks.volume import center_down_sample_3d as center_down_sample_3d
+from worldfoundry.core.nn.blocks.volume import pad_for_3d_conv as pad_for_3d_conv
 
 # Modified by WorldFoundry: upstream FramePack executed the monkey patches below at
 # module import time, which rewrote torch.nn.LayerNorm.forward (and several diffusers
@@ -143,24 +145,6 @@ except BaseException:
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
-
-
-def pad_for_3d_conv(x, kernel_size):
-    b, c, t, h, w = x.shape
-    pt, ph, pw = kernel_size
-    pad_t = (pt - (t % pt)) % pt
-    pad_h = (ph - (h % ph)) % ph
-    pad_w = (pw - (w % pw)) % pw
-    return torch.nn.functional.pad(x, (0, pad_w, 0, pad_h, 0, pad_t), mode="replicate")
-
-
-def center_down_sample_3d(x, kernel_size):
-    # pt, ph, pw = kernel_size
-    # cp = (pt * ph * pw) // 2
-    # xp = einops.rearrange(x, 'b c (t pt) (h ph) (w pw) -> (pt ph pw) b c t h w', pt=pt, ph=ph, pw=pw)
-    # xc = xp[cp]
-    # return xc
-    return torch.nn.functional.avg_pool3d(x, kernel_size, stride=kernel_size)
 
 
 def apply_rotary_emb_transposed(x, freqs_cis):

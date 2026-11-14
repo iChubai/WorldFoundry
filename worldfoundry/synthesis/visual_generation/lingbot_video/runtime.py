@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from worldfoundry.core import cuda_visible_devices_from_device
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 
 SOURCE_ROOT = Path(__file__).resolve().parents[4]
@@ -32,7 +33,6 @@ REQUIRED_RUNTIME_FILES = (
     "pipeline_lingbot_video.py",
     "pipeline_lingbot_video_i2v.py",
     "transformer_lingbot_video.py",
-    "scheduling_flow_unipc.py",
     "utils.py",
 )
 
@@ -119,12 +119,11 @@ class LingBotVideoRuntime:
         *,
         device: str = "cuda",
         python_executable: str | Path | None = None,
-        inference_root: str | Path | None = None,
     ) -> None:
         self.checkpoint_dir = _expand_path(checkpoint_dir)
         self.device = str(device)
         self.python_executable = Path(python_executable or sys.executable).expanduser().resolve()
-        self.inference_root = _expand_path(inference_root) or INFERENCE_ROOT
+        self.inference_root = INFERENCE_ROOT
 
     @classmethod
     def from_pretrained(
@@ -211,8 +210,6 @@ class LingBotVideoRuntime:
             raise ValueError("LingBot-Video ti2v inference requires an image.")
 
         base_args = [
-            "-m",
-            RUNNER_MODULE,
             "--backend",
             str(request.get("backend") or "diffusers"),
             "--model_dir",
@@ -311,22 +308,14 @@ class LingBotVideoRuntime:
                 "LingBot-Video nproc_per_node must equal cfg_parallel_degree * context_parallel_degree "
                 f"({topology_size}), got {nproc}."
             )
-        command = [str(self.python_executable)]
-        if nproc > 1:
-            command.extend(
-                (
-                    "-m",
-                    "torch.distributed.run",
-                    "--standalone",
-                    "--nproc_per_node",
-                    str(nproc),
-                )
-            )
-        command.extend(base_args)
+        command = package_module_command(
+            RUNNER_MODULE,
+            base_args,
+            python_executable=self.python_executable,
+            nproc_per_node=nproc if nproc > 1 else None,
+        )
 
-        env = {
-            "PYTHONPATH": f"{SOURCE_ROOT}{os.pathsep + os.environ['PYTHONPATH'] if os.environ.get('PYTHONPATH') else ''}",
-        }
+        env: dict[str, str] = {}
         visible_devices = cuda_visible_devices_from_device(self.device)
         if visible_devices:
             env["CUDA_VISIBLE_DEVICES"] = visible_devices

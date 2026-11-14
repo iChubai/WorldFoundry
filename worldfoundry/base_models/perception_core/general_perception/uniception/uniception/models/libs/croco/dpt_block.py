@@ -13,6 +13,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
+from worldfoundry.base_models.three_dimensions.depth.midas.fusion import Interpolate as Interpolate
+
 
 def pair(t):
     return t if isinstance(t, tuple) else (t, t)
@@ -286,40 +288,6 @@ def make_fusion_block(features, use_bn, width_ratio=1, nonlinearity="relu"):
         align_corners=True,
         width_ratio=width_ratio,
     )
-
-
-class Interpolate(nn.Module):
-    """Interpolation module."""
-
-    def __init__(self, scale_factor, mode, align_corners=False):
-        """
-        Args:
-            scale_factor (float): scaling
-            mode (str): interpolation mode
-        """
-        super().__init__()
-
-        self.interp = nn.functional.interpolate
-        self.scale_factor = scale_factor
-        self.mode = mode
-        self.align_corners = align_corners
-
-    def forward(self, x):
-        """
-        Args:
-            x (tensor): input
-        Returns:
-            tensor: interpolated data
-        """
-
-        x = self.interp(
-            x,
-            scale_factor=self.scale_factor,
-            mode=self.mode,
-            align_corners=self.align_corners,
-        )
-
-        return x
 
 
 class DPTOutputAdapter(nn.Module):

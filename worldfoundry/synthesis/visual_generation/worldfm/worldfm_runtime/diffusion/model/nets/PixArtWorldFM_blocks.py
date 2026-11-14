@@ -5,24 +5,18 @@
 # Modified from PixArt-Sigma's repos:
 #   https://github.com/PixArt-alpha/PixArt-sigma/blob/master/diffusion/model/nets/PixArt_blocks.py
 # --------------------------------------------------------
-import math
 import os
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import xformers.ops
-from einops import rearrange
 from timm.models.vision_transformer import Attention as Attention_
 from timm.models.vision_transformer import Mlp
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
 
 from ...utils.logger import get_root_logger
-
-
-def modulate(x, shift, scale):
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
 def t2i_modulate(x, shift, scale):
@@ -412,24 +406,6 @@ class Attention(Attention_):
         return x
 
 
-class FinalLayer(nn.Module):
-    """
-    The final layer of PixArtWorldFM.
-    """
-
-    def __init__(self, hidden_size, patch_size, out_channels):
-        super().__init__()
-        self.norm_final = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        self.linear = nn.Linear(hidden_size, patch_size * patch_size * out_channels, bias=True)
-        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True))
-
-    def forward(self, x, c):
-        shift, scale = self.adaLN_modulation(c).chunk(2, dim=1)
-        x = modulate(self.norm_final(x), shift, scale)
-        x = self.linear(x)
-        return x
-
-
 class T2IFinalLayer(nn.Module):
     """
     The final layer of PixArtWorldFM.
@@ -449,122 +425,9 @@ class T2IFinalLayer(nn.Module):
         return x
 
 
-class MaskFinalLayer(nn.Module):
-    """
-    The final layer of PixArtWorldFM.
-    """
-
-    def __init__(self, final_hidden_size, c_emb_size, patch_size, out_channels):
-        super().__init__()
-        self.norm_final = nn.LayerNorm(final_hidden_size, elementwise_affine=False, eps=1e-6)
-        self.linear = nn.Linear(final_hidden_size, patch_size * patch_size * out_channels, bias=True)
-        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(c_emb_size, 2 * final_hidden_size, bias=True))
-
-    def forward(self, x, t):
-        shift, scale = self.adaLN_modulation(t).chunk(2, dim=1)
-        x = modulate(self.norm_final(x), shift, scale)
-        x = self.linear(x)
-        return x
-
-
-class DecoderLayer(nn.Module):
-    """
-    The final layer of PixArtWorldFM.
-    """
-
-    def __init__(self, hidden_size, decoder_hidden_size):
-        super().__init__()
-        self.norm_decoder = nn.LayerNorm(hidden_size, elementwise_affine=False, eps=1e-6)
-        self.linear = nn.Linear(hidden_size, decoder_hidden_size, bias=True)
-        self.adaLN_modulation = nn.Sequential(nn.SiLU(), nn.Linear(hidden_size, 2 * hidden_size, bias=True))
-
-    def forward(self, x, t):
-        shift, scale = self.adaLN_modulation(t).chunk(2, dim=1)
-        x = modulate(self.norm_decoder(x), shift, scale)
-        x = self.linear(x)
-        return x
-
-
 #################################################################################
 #               Embedding Layers for Timesteps and Class Labels                 #
 #################################################################################
-class TimestepEmbedder(nn.Module):
-    """
-    Embeds scalar timesteps into vector representations.
-    """
-
-    def __init__(self, hidden_size, frequency_embedding_size=256):
-        super().__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(frequency_embedding_size, hidden_size, bias=True),
-            nn.SiLU(),
-            nn.Linear(hidden_size, hidden_size, bias=True),
-        )
-        self.frequency_embedding_size = frequency_embedding_size
-
-    @staticmethod
-    def timestep_embedding(t, dim, max_period=10000):
-        """
-        Create sinusoidal timestep embeddings.
-        :param t: a 1-D Tensor of N indices, one per batch element.
-                          These may be fractional.
-        :param dim: the dimension of the output.
-        :param max_period: controls the minimum frequency of the embeddings.
-        :return: an (N, D) Tensor of positional embeddings.
-        """
-        # https://github.com/openai/glide-text2im/blob/main/glide_text2im/nn.py
-        half = dim // 2
-        freqs = torch.exp(
-            -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32, device=t.device) / half
-        )
-        args = t[:, None].float() * freqs[None]
-        embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
-        if dim % 2:
-            embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
-        return embedding
-
-    def forward(self, t):
-        t_freq = self.timestep_embedding(t, self.frequency_embedding_size).to(self.dtype)
-        t_emb = self.mlp(t_freq)
-        return t_emb
-
-    @property
-    def dtype(self):
-        return next(self.parameters()).dtype
-
-
-class SizeEmbedder(TimestepEmbedder):
-    """
-    Embeds scalar timesteps into vector representations.
-    """
-
-    def __init__(self, hidden_size, frequency_embedding_size=256):
-        super().__init__(hidden_size=hidden_size, frequency_embedding_size=frequency_embedding_size)
-        self.mlp = nn.Sequential(
-            nn.Linear(frequency_embedding_size, hidden_size, bias=True),
-            nn.SiLU(),
-            nn.Linear(hidden_size, hidden_size, bias=True),
-        )
-        self.frequency_embedding_size = frequency_embedding_size
-        self.outdim = hidden_size
-
-    def forward(self, s, bs):
-        if s.ndim == 1:
-            s = s[:, None]
-        assert s.ndim == 2
-        if s.shape[0] != bs:
-            s = s.repeat(bs // s.shape[0], 1)
-            assert s.shape[0] == bs
-        b, dims = s.shape[0], s.shape[1]
-        s = rearrange(s, "b d -> (b d)")
-        s_freq = self.timestep_embedding(s, self.frequency_embedding_size).to(self.dtype)
-        s_emb = self.mlp(s_freq)
-        s_emb = rearrange(s_emb, "(b d) d2 -> b (d d2)", b=b, d=dims, d2=self.outdim)
-        return s_emb
-
-    @property
-    def dtype(self):
-        return next(self.parameters()).dtype
 
 
 from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import (  # noqa: E402 - Follows module-level definitions, as upstream.

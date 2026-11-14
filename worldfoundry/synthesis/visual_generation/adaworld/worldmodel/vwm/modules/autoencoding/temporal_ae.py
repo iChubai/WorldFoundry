@@ -3,9 +3,15 @@ from typing import ClassVar
 
 import torch
 from einops import rearrange
-from vwm.modules.diffusionmodules.model import Decoder, ResnetBlock
-from vwm.modules.diffusionmodules.openaimodel import ResBlock
-from vwm.util import partialclass
+
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.model import (
+    Decoder,
+    ResnetBlock,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.openaimodel import (
+    ResBlock,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import partialclass
 
 
 class VideoResBlock(ResnetBlock):

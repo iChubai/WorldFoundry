@@ -11,7 +11,6 @@ from typing import Any
 from worldfoundry.base_models.three_dimensions.point_clouds.lyra.utils import (
     _candidate_lyra1_weights_subdir,
     default_local_lyra1_checkpoint_root,
-    ensure_repo_on_path,
     maybe_set_cuda_device,
     resolve_lyra1_repo_root,
     resolve_path,
@@ -117,12 +116,17 @@ class Lyra1Representation:
         )
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        ensure_repo_on_path(self.repo_root)
         maybe_set_cuda_device(self.device)
         try:
-            sample_module = importlib.import_module("sample")
-            dataset_registry_module = importlib.import_module("src.models.eval_inputs.registry")
-            misc_module = importlib.import_module("src.models.utils.misc")
+            sample_module = importlib.import_module(
+                "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.sample"
+            )
+            dataset_registry_module = importlib.import_module(
+                "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.registry"
+            )
+            misc_module = importlib.import_module(
+                "worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.utils.misc"
+            )
         except ModuleNotFoundError as error:
             raise ModuleNotFoundError(
                 "Lyra-1 runtime dependencies are missing. "

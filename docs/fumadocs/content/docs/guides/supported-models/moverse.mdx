@@ -35,6 +35,8 @@ Family status: **Runner parity pending**.
 
 Execution is offline and needs four pre-staged Hugging Face snapshots (`Orange-3DV-Team/MoVerse`, `black-forest-labs/FLUX.1-Fill-dev`, `depth-anything/DA3NESTED-GIANT-LARGE-1.1`, `Wan-AI/Wan2.1-T2V-1.3B`) plus ffmpeg, gsplat, and compatible CUDA kernels.
 
+The orchestrator and its panorama, depth, Gaussian and video stages run as installed WorldFoundry package modules in the selected Python environment. Plans validate the staged checkpoints and YAML configs; model code is resolved by package imports. The checkpoint/data paths, camera trajectory, precision and sampling options are unchanged.
+
 ## Running in WorldFoundry
 
 Run `wf run moverse --pipeline.task-profile default` to follow the camera path.

@@ -48,6 +48,8 @@ print(command)  # 这里只构造命令，不会启动进程
 
 只有当前进程确实应当负责启动并捕获一个单机 job 时，才使用 `run_torchrun_module`。即使子进程非零退出，它也会返回 `CompletedProcess`，调用方必须检查 `returncode` 与日志。
 
+模型运行时通过 `package_module_command` 启动 worker：它只接受 `worldfoundry.` 模块，返回 `python -m MODULE ARGS`；设置 `nproc_per_node` 时返回 torchrun 形式。子进程继承调用方的环境和导入路径，命令不会添加 `PYTHONPATH` 条目。
+
 ## 完整参考
 
 以下为该类别的生成签名。可用本页符号索引跳转；源码链接指向各惰性导出背后的具体实现。

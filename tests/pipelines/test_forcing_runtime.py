@@ -1,6 +1,7 @@
 """Weight-free contracts for the Forcing subprocess bridge."""
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -17,7 +18,7 @@ def validation_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
     import torch
 
     def forbid_execution(*args: object, **kwargs: object) -> None:
-        pytest.fail("Validation must not load checkpoints, initialize CUDA, or launch inference")
+        raise pytest.fail.Exception("Validation must not load checkpoints, initialize CUDA, or launch inference")
 
     def stop_after_validation(self: object, root: Path) -> Path:
         raise _ValidatedRequest
@@ -25,7 +26,7 @@ def validation_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(torch.cuda, "_lazy_init", forbid_execution)
     monkeypatch.setattr(torch, "load", forbid_execution)
     monkeypatch.setattr(runtime_module.subprocess, "run", forbid_execution)
-    monkeypatch.setattr(runtime_module._ForcingRuntime, "_runtime_cwd", stop_after_validation)
+    monkeypatch.setattr(runtime_module.RollingForcingRuntime, "_runtime_cwd", stop_after_validation)
 
 
 @pytest.mark.parametrize(
@@ -58,11 +59,28 @@ def test_subprocess_env_maps_cuda_visibility(
         assert runtime_module.os.environ["CUDA_VISIBLE_DEVICES"] == inherited
 
 
-def test_subprocess_env_prepends_shared_torchvision_shim(validation_boundary: None) -> None:
+@pytest.mark.unit
+@pytest.mark.parametrize("inherited", [None, "operator-owned-path"])
+def test_subprocess_env_preserves_pythonpath(
+    monkeypatch: pytest.MonkeyPatch, validation_boundary: None, inherited: str | None
+) -> None:
+    if inherited is None:
+        monkeypatch.delenv("PYTHONPATH", raising=False)
+    else:
+        monkeypatch.setenv("PYTHONPATH", inherited)
     runtime = RollingForcingRuntime()
-    compat_dir = runtime_module.TORCHVISION_VIDEO_COMPAT_DIR
 
-    env = runtime._subprocess_env(compat_dir=compat_dir)
+    env = runtime._subprocess_env()
 
-    assert (compat_dir / "sitecustomize.py").is_file()
-    assert env["PYTHONPATH"].split(runtime_module.os.pathsep)[0] == str(compat_dir)
+    assert env.get("PYTHONPATH") == inherited
+    assert runtime.runtime_root == str(runtime_module.RUNTIME_DIR)
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("option", ["images", "i2v"])
+def test_rolling_forcing_rejects_images_before_launch(validation_boundary: None, tmp_path: Path, option: str) -> None:
+    runtime = RollingForcingRuntime()
+
+    options: dict[str, Any] = {option: True}
+    with pytest.raises(ValueError, match="text-to-video only"):
+        runtime.predict(output_path=tmp_path / "video.mp4", **options)

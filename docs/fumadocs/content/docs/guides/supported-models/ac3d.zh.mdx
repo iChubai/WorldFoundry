@@ -5,7 +5,7 @@ modelId: "ac3d"
 pageSource: authored
 ---
 
-AC3D 是 Snap Research 为 CogVideoX 提供的 **ControlNet 风格**相机插件：输入文本、源视频和 **19 列**相机位姿行，输出沿相机轨迹生成的视频片段。WorldFoundry 以 `AC3DPipeline` 运行官方推理代码。别名 `ac3d-cogvideox`、`ac3d-2b`、`ac3d-5b` 解析到这里。
+AC3D 是 Snap Research 为 CogVideoX 提供的 **ControlNet 风格**相机插件：输入文本、源视频和 **19 列**相机位姿行，输出沿相机轨迹生成的视频片段。WorldFoundry 将官方推理运行时纳入 `worldfoundry/synthesis/visual_generation/ac3d/ac3d_runtime`，通过已安装的 `worldfoundry.synthesis.visual_generation.ac3d.runtime` 模块启动，对外提供 `AC3DPipeline`。别名 `ac3d-cogvideox`、`ac3d-2b`、`ac3d-5b` 解析到这里。
 
 <ModelPaperFigures modelId="ac3d" locale="zh" />
 

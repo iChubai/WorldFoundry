@@ -3,6 +3,7 @@ from einops import rearrange
 from torch import nn
 
 from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.core.nn.blocks.layers import PreNormFeedForward as FeedForward
 
 
 def modulate(x, shift, scale):
@@ -37,24 +38,6 @@ class SIGReg(torch.nn.Module):
         err = (x_t.cos().mean(-3) - self.phi).square() + x_t.sin().mean(-3).square()
         statistic = (err @ self.weights) * proj.size(-2)
         return statistic.mean()  # average over projections and time
-
-
-class FeedForward(nn.Module):
-    """FeedForward network used in Transformers"""
-
-    def __init__(self, dim, hidden_dim, dropout=0.0):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.LayerNorm(dim),
-            nn.Linear(dim, hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_dim, dim),
-            nn.Dropout(dropout),
-        )
-
-    def forward(self, x):
-        return self.net(x)
 
 
 class Attention(nn.Module):

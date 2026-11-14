@@ -30,13 +30,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from worldfoundry import base_models
-
 from .da3_cloud import _umeyama_scale_collinear_safe
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-# Model source has one canonical owner; checkpoint locations remain configurable.
-_VIGEO_SRC = Path(base_models.__file__).resolve().parent / "three_dimensions/depth/vigeo"
 _VIGEO_WEIGHTS = Path(os.environ.get("EVOKE_VIGEO_WEIGHTS", str(_REPO_ROOT / "models" / "ViGeo1.1")))
 
 _PATCH = 14  # ViGeo.patch_size
@@ -58,19 +54,9 @@ _MIN_KEEP_FRAMES = 4
 _FATAL_EXC = (MemoryError, KeyError, AttributeError, ImportError, TypeError, ValueError)
 
 
-def check_assets(src=None, weights=None) -> None:
-    """Raise if the ViGeo source tree or weights are missing.
-
-    Called from the config validator and the inference pre-flight check. Without it the first failure
-    surfaces inside a per-window `except` and is reported as geometric degeneracy, so a run with a bad
-    path produces an all-black warp and still exits successfully.
-    """
-    src = Path(src).expanduser().resolve() if src else _VIGEO_SRC
+def check_assets(weights: str | Path | None = None) -> None:
+    """Check weights before the per-window geometry exception handling begins."""
     weights = Path(weights) if weights else _VIGEO_WEIGHTS
-    if src != _VIGEO_SRC:
-        raise ValueError("Evoke uses WorldFoundry's shared ViGeo implementation; omit the ViGeo source override.")
-    if not (src / "vigeo.py").is_file():
-        raise FileNotFoundError(f"ViGeo source is missing from the shared base model at {src}.")
     if not (weights / "vigeo.pt").is_file():
         raise FileNotFoundError(
             f"ViGeo weights not found: {weights / 'vigeo.pt'} does not exist. Fetch the "
@@ -103,7 +89,6 @@ class ViGeoDepthEstimator:
         self,
         device="cuda",
         process_res: int = 644,
-        src: Path = _VIGEO_SRC,
         weights: Path = _VIGEO_WEIGHTS,
         num_tokens: int | None = None,
         mode: str = "chunk",
@@ -136,7 +121,6 @@ class ViGeoDepthEstimator:
             raise ValueError(f"ViGeo conf_transform must be exp/none, got {conf_transform!r}")
         self.device = torch.device(device)
         self.process_res = int(process_res)
-        self.src = Path(src)
         self.weights = Path(weights)
         # 0 is the project-wide "auto" sentinel for this knob; passing it straight through would ask ViGeo
         # for a 1x1-patch encoder, whose 1-pixel depth map is then upsampled into flat garbage silently.
@@ -246,7 +230,7 @@ class ViGeoDepthEstimator:
     def _lazy(self):
         if self._model is not None:
             return
-        check_assets(self.src, self.weights)
+        check_assets(self.weights)
         from worldfoundry.base_models.three_dimensions.depth.vigeo import ViGeo
 
         self._model = ViGeo.from_pretrained(str(self.weights)).to(self.device).eval()

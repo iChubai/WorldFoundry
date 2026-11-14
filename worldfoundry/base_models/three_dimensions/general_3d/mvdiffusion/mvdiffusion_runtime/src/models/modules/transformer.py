@@ -1,17 +1,8 @@
 import torch
-import torch.nn.functional as F
 from einops import rearrange
 from torch import einsum, nn
 
-
-class GEGLU(nn.Module):
-    def __init__(self, dim_in, dim_out):
-        super().__init__()
-        self.proj = nn.Linear(dim_in, dim_out * 2)
-
-    def forward(self, x):
-        x, gate = self.proj(x).chunk(2, dim=-1)
-        return x * F.gelu(gate)
+from worldfoundry.base_models.diffusion_model.models.networks.lvdm.attention import GEGLU as GEGLU
 
 
 class FeedForward(nn.Module):

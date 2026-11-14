@@ -9,15 +9,17 @@
 
 import os
 from collections.abc import Callable
-from typing import Any
 
-import torch
+from timm.layers import DropPath as DropPath
 from torch import Tensor, nn
 
+from worldfoundry.base_models.perception_core.general_perception.dinov2.layers.block import (
+    get_attn_bias_and_cat as get_attn_bias_and_cat,
+)
+from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
+
 from .attention import Attention, MemEffAttention
-from .drop_path import DropPath
 from .layer_scale import LayerScale
-from .mlp import Mlp
 
 XFORMERS_ENABLED = os.environ.get("XFORMERS_DISABLED") is None
 try:
@@ -149,30 +151,3 @@ class NestedTensorBlock(Block):
             return self.forward_nested(x_or_x_list)
         else:
             raise AssertionError
-
-
-attn_bias_cache: dict[tuple, Any] = {}
-
-
-def get_attn_bias_and_cat(x_list, branges=None):
-    """
-    this will perform the index select, cat the tensors, and provide the attn_bias from cache
-    """
-    batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
-    if all_shapes not in attn_bias_cache:
-        seqlens = []
-        for b, x in zip(batch_sizes, x_list, strict=False):
-            for _ in range(b):
-                seqlens.append(x.shape[1])
-        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)
-        attn_bias._batch_sizes = batch_sizes
-        attn_bias_cache[all_shapes] = attn_bias
-
-    if branges is not None:
-        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])
-    else:
-        tensors_bs1 = tuple(x.reshape([1, -1, *x.shape[2:]]) for x in x_list)
-        cat_tensors = torch.cat(tensors_bs1, dim=1)
-
-    return attn_bias_cache[all_shapes], cat_tensors

@@ -1,5 +1,5 @@
 {
-  "modelsListed": 267,
+  "modelsListed": 255,
   "benchmarksTotal": 75,
   "modelFamilies": [
     {
@@ -524,7 +524,7 @@
       "id": "world_models",
       "label": "World models",
       "blurb": "Interactive worlds, camera/action conditioning, navigation, and simulator-shaped systems.",
-      "count": 107,
+      "count": 101,
       "entries": [
         {
           "id": "abot-world-0-5b-lf",
@@ -732,14 +732,6 @@
           ]
         },
         {
-          "id": "egowm",
-          "name": "EgoWM",
-          "status": "runtime_ported",
-          "aliases": [
-            "egowm"
-          ]
-        },
-        {
           "id": "evoke",
           "name": "Evoke",
           "status": "integrated",
@@ -828,14 +820,6 @@
           ]
         },
         {
-          "id": "hunyuanworld-voyager",
-          "name": "HunyuanWorld-Voyager",
-          "status": "integrated",
-          "aliases": [
-            "hunyuanworld-voyager"
-          ]
-        },
-        {
           "id": "hy-nomas",
           "name": "Hy-Nomas",
           "status": "integrated",
@@ -849,14 +833,6 @@
           "status": "component_verified",
           "aliases": [
             "hy-world-2.0"
-          ]
-        },
-        {
-          "id": "hyworld-worldgen",
-          "name": "HY-World 2.0 Trajectory Renderer",
-          "status": "runtime_ported",
-          "aliases": [
-            "hyworld-worldgen"
           ]
         },
         {
@@ -1107,14 +1083,6 @@
           ]
         },
         {
-          "id": "open-dreamer",
-          "name": "Open Dreamer",
-          "status": "runtime_ported",
-          "aliases": [
-            "open-dreamer"
-          ]
-        },
-        {
           "id": "pointworld",
           "name": "PointWorld",
           "status": "runtime_ported",
@@ -1152,14 +1120,6 @@
           "status": "integrated",
           "aliases": [
             "self-forcing"
-          ]
-        },
-        {
-          "id": "shotstream",
-          "name": "ShotStream",
-          "status": "runtime_ported",
-          "aliases": [
-            "shotstream"
           ]
         },
         {
@@ -1293,14 +1253,6 @@
           ]
         },
         {
-          "id": "wilddet3d",
-          "name": "WildDet 3D",
-          "status": "runtime_ported",
-          "aliases": [
-            "wilddet3d"
-          ]
-        },
-        {
           "id": "wildworld",
           "name": "WildWorld",
           "status": "runtime_ported",
@@ -1418,7 +1370,7 @@
       "id": "three_d_four_d",
       "label": "3D / 4D",
       "blurb": "Reconstruction, depth, point clouds, scene representations, and dynamic geometry.",
-      "count": 34,
+      "count": 28,
       "entries": [
         {
           "id": "cut3r",
@@ -1463,27 +1415,6 @@
           "status": "integrated",
           "aliases": [
             "depth-anything-v2-prior"
-          ]
-        },
-        {
-          "id": "dust3r",
-          "name": "DUSt3R",
-          "status": "verified",
-          "aliases": [
-            "dust3r",
-            "dust3r-base-model"
-          ],
-          "versions": [
-            "Catalog",
-            "Base"
-          ]
-        },
-        {
-          "id": "dvlt",
-          "name": "Déjà View Looping Transformer",
-          "status": "integrated",
-          "aliases": [
-            "dvlt"
           ]
         },
         {
@@ -1559,14 +1490,6 @@
           ]
         },
         {
-          "id": "monst3r",
-          "name": "MonST 3R",
-          "status": "verified",
-          "aliases": [
-            "monst3r"
-          ]
-        },
-        {
           "id": "mvdiffusion",
           "name": "MVDiffusion",
           "status": "integrated",
@@ -1623,35 +1546,11 @@
           ]
         },
         {
-          "id": "splatt3r",
-          "name": "Splatt 3R",
-          "status": "verified",
-          "aliases": [
-            "splatt3r"
-          ]
-        },
-        {
-          "id": "stable-virtual-camera",
-          "name": "Stable Virtual Camera",
-          "status": "integrated",
-          "aliases": [
-            "stable-virtual-camera"
-          ]
-        },
-        {
           "id": "unidepth-v2-prior",
           "name": "UniDepth V 2 Prior",
           "status": "integrated",
           "aliases": [
             "unidepth-v2-prior"
-          ]
-        },
-        {
-          "id": "unik3d-prior",
-          "name": "UniK 3D Prior",
-          "status": "integrated",
-          "aliases": [
-            "unik3d-prior"
           ]
         },
         {

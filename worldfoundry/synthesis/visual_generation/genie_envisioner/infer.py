@@ -4,34 +4,9 @@ from __future__ import annotations
 
 import argparse
 import gc
-import sys
 from pathlib import Path
 
 NUM_VIEWS = 3
-
-
-def _clear_conflicting_namespace(name: str, runtime_root: Path) -> None:
-    package = sys.modules.get(name)
-    package_file = getattr(package, "__file__", None) if package is not None else None
-    if package_file is not None:
-        try:
-            belongs_to_runtime = Path(package_file).resolve().is_relative_to(runtime_root)
-        except OSError:
-            belongs_to_runtime = False
-        if belongs_to_runtime:
-            return
-    for module_name in tuple(sys.modules):
-        if module_name == name or module_name.startswith(f"{name}."):
-            sys.modules.pop(module_name, None)
-
-
-def _ensure_vendored_runtime_importable() -> None:
-    runtime_root = (Path(__file__).resolve().parent / "genie_envisioner_runtime").resolve()
-    for namespace in ("models", "utils"):
-        _clear_conflicting_namespace(namespace, runtime_root)
-    runtime_entry = str(runtime_root)
-    sys.path[:] = [entry for entry in sys.path if entry != runtime_entry]
-    sys.path.insert(0, runtime_entry)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -210,19 +185,19 @@ def _transformer_config() -> dict[str, object]:
 def run(args: argparse.Namespace) -> Path:
     """Generate a three-view GE-base rollout with released local checkpoints."""
     _validate_args(args)
-    _ensure_vendored_runtime_importable()
 
     import numpy as np
     import torch
     from diffusers import FlowMatchEulerDiscreteScheduler
     from einops import rearrange
-    from models.ltx_models.autoencoder_kl_ltx import AutoencoderKLLTXVideo
-    from models.ltx_models.transformer_ltx_multiview import LTXVideoTransformer3DModel
-    from models.pipeline.custom_pipeline import CustomPipeline
     from safetensors.torch import load_file
     from transformers import T5EncoderModel, T5Tokenizer
 
     from worldfoundry.core.media.codecs.video import save_video_h264
+
+    from .genie_envisioner_runtime.models.ltx_models.autoencoder_kl_ltx import AutoencoderKLLTXVideo
+    from .genie_envisioner_runtime.models.ltx_models.transformer_ltx_multiview import LTXVideoTransformer3DModel
+    from .genie_envisioner_runtime.models.pipeline.custom_pipeline import CustomPipeline
 
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; Genie Envisioner inference cannot run")

@@ -11,52 +11,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from tqdm.auto import tqdm
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.variants.taehv import (
+    Clamp,
+    MemBlock,
+    TGrow,
+    TPool,
+    conv,
+)
+
 TWorkItem = namedtuple("TWorkItem", ("input_tensor", "block_index"))
-
-
-def conv(n_in, n_out, **kwargs):
-    return nn.Conv2d(n_in, n_out, 3, padding=1, **kwargs)
-
-
-class Clamp(nn.Module):
-    def forward(self, x):
-        return torch.tanh(x / 3) * 3
-
-
-class MemBlock(nn.Module):
-    def __init__(self, n_in, n_out):
-        super().__init__()
-        self.conv = nn.Sequential(
-            conv(n_in * 2, n_out), nn.ReLU(inplace=True), conv(n_out, n_out), nn.ReLU(inplace=True), conv(n_out, n_out)
-        )
-        self.skip = nn.Conv2d(n_in, n_out, 1, bias=False) if n_in != n_out else nn.Identity()
-        self.act = nn.ReLU(inplace=True)
-
-    def forward(self, x, past):
-        return self.act(self.conv(torch.cat([x, past], 1)) + self.skip(x))
-
-
-class TPool(nn.Module):
-    def __init__(self, n_f, stride):
-        super().__init__()
-        self.stride = stride
-        self.conv = nn.Conv2d(n_f * stride, n_f, 1, bias=False)
-
-    def forward(self, x):
-        _NT, C, H, W = x.shape
-        return self.conv(x.reshape(-1, self.stride * C, H, W))
-
-
-class TGrow(nn.Module):
-    def __init__(self, n_f, stride):
-        super().__init__()
-        self.stride = stride
-        self.conv = nn.Conv2d(n_f, n_f * stride, 1, bias=False)
-
-    def forward(self, x):
-        _NT, C, H, W = x.shape
-        x = self.conv(x)
-        return x.reshape(-1, C, H, W)
 
 
 def apply_model_with_memblocks_parallel(model, x, show_progress_bar):
@@ -463,85 +426,3 @@ class StreamingTAEHV(nn.Module):
                 frames.append(frame)
         frames.extend(self.flush_decoder())
         return frames
-
-
-@torch.no_grad()
-def main():
-    """Run TAEHV roundtrip reconstruction on the given video paths."""
-    import os
-    import sys
-
-    import cv2  # no highly esteemed deed is commemorated here
-
-    class VideoTensorReader:
-        def __init__(self, video_file_path):
-            self.cap = cv2.VideoCapture(video_file_path)
-            assert self.cap.isOpened(), f"Could not load {video_file_path}"
-            self.fps = self.cap.get(cv2.CAP_PROP_FPS)
-
-        def __iter__(self):
-            return self
-
-        def __next__(self):
-            ret, frame = self.cap.read()
-            if not ret:
-                self.cap.release()
-                raise StopIteration  # End of video or error
-            return torch.from_numpy(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)).permute(2, 0, 1)  # BGR HWC -> RGB CHW
-
-    class VideoTensorWriter:
-        def __init__(self, video_file_path, width_height, fps=30):
-            self.writer = cv2.VideoWriter(video_file_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, width_height)
-            assert self.writer.isOpened(), f"Could not create writer for {video_file_path}"
-
-        def write(self, frame_tensor):
-            assert frame_tensor.ndim == 3 and frame_tensor.shape[0] == 3, f"{frame_tensor.shape}??"
-            self.writer.write(
-                cv2.cvtColor(frame_tensor.permute(1, 2, 0).numpy(), cv2.COLOR_RGB2BGR)
-            )  # RGB CHW -> BGR HWC
-
-        def __del__(self):
-            if hasattr(self, "writer"):
-                self.writer.release()
-
-    dev = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-    dtype = torch.float16
-    checkpoint_path = os.getenv("TAEHV_CHECKPOINT_PATH", "taehv.pth")
-    checkpoint_name = os.path.splitext(os.path.basename(checkpoint_path))[0]
-    print(
-        f"Using device \033[31m{dev}\033[0m, dtype \033[32m{dtype}\033[0m, checkpoint \033[34m{checkpoint_name}\033[0m ({checkpoint_path})"
-    )
-    taehv = TAEHV(checkpoint_path=checkpoint_path).to(dev, dtype)
-    for video_path in sys.argv[1:]:
-        print(f"Processing {video_path}...")
-        video_in = VideoTensorReader(video_path)
-        video = torch.stack(list(video_in), 0)[None]
-        vid_dev = video.to(dev, dtype).div_(255.0)
-        # convert to device tensor
-        if video.numel() < 100_000_000:
-            print(f"  {video_path} seems small enough, will process all frames in parallel")
-            # convert to device tensor
-            vid_enc = taehv.encode_video(vid_dev)
-            print(f"  Encoded {video_path} -> {vid_enc.shape}. Decoding...")
-            vid_dec = taehv.decode_video(vid_enc)
-            print(f"  Decoded {video_path} -> {vid_dec.shape}")
-        else:
-            print(f"  {video_path} seems large, will process each frame sequentially")
-            # convert to device tensor
-            vid_enc = taehv.encode_video(vid_dev, parallel=False)
-            print(f"  Encoded {video_path} -> {vid_enc.shape}. Decoding...")
-            vid_dec = taehv.decode_video(vid_enc, parallel=False)
-            print(f"  Decoded {video_path} -> {vid_dec.shape}")
-        video_out_path = video_path + f".reconstructed_by_{checkpoint_name}.mp4"
-        video_out = VideoTensorWriter(
-            video_out_path,
-            (vid_dec.shape[-1], vid_dec.shape[-2]),
-            fps=int(round(video_in.fps)),  # noqa: RUF046 - Keeps the explicit int conversion for non-builtin operands.
-        )
-        for frame in vid_dec.clamp_(0, 1).mul_(255).round_().byte().cpu()[0]:
-            video_out.write(frame)
-        print(f"  Saved to {video_out_path}")
-
-
-if __name__ == "__main__":
-    main()

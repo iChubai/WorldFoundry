@@ -1,4 +1,3 @@
-import torch
 from einops import rearrange
 
 
@@ -12,10 +11,6 @@ def video_to_image(func):
         return x
 
     return wrapper
-
-
-def nonlinearity(x):
-    return x * torch.sigmoid(x)
 
 
 def cast_tuple(t, length=1):

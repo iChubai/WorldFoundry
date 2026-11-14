@@ -45,13 +45,6 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
     return emb
 
 
-class BlockChunk(nn.ModuleList):
-    def forward(self, x):
-        for b in self:
-            x = b(x)
-        return x
-
-
 class DinoVisionTransformer(nn.Module):
     def __init__(
         self,

@@ -16,10 +16,11 @@ import math
 import sys
 
 import cv2
-import dwpose.util as util
 import numpy as np
 import torch
-from dwpose.wholebody import Wholebody
+
+from .dwpose import util
+from .dwpose.wholebody import Wholebody
 
 
 def smoothing_factor(t_e, cutoff):

@@ -11,13 +11,9 @@ import argparse
 import contextlib
 import json
 import random
-import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
-
-RUNTIME_DIR = Path(__file__).resolve().parent
-RUNTIME_SRC = RUNTIME_DIR / "src"
 
 
 def _noise_level(value: str) -> float | None:
@@ -181,15 +177,13 @@ def _next_clip(loader: Any, clip_index: int) -> tuple[Any, Any]:
 
 def main() -> int:
     args = parse_args()
-    if str(RUNTIME_SRC) not in sys.path:
-        sys.path.insert(0, str(RUNTIME_SRC))
-
     import numpy as np
     import torch
-    from mira.data.inference_loader import create_loader
-    from mira.inference.loading import load_world_model
-    from mira.inference_support.visualization import videos_to_grid, write_video_ffmpeg
-    from mira.world_model.config import WorldModelInferenceConfig
+
+    from .src.mira.data.inference_loader import create_loader
+    from .src.mira.inference.loading import load_world_model
+    from .src.mira.inference_support.visualization import videos_to_grid, write_video_ffmpeg
+    from .src.mira.world_model.config import WorldModelInferenceConfig
 
     device_text = args.device
     if device_text == "auto":

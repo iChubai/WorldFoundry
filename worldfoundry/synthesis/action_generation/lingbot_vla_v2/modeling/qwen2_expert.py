@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 import transformers.models.qwen2.modeling_qwen2 as hf_qwen2
 from torch import nn
-from transformers.activations import ACT2FN
 from transformers.generation import GenerationMixin
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
 from transformers.modeling_layers import GradientCheckpointingLayer
@@ -27,38 +26,10 @@ from transformers.models.qwen2.modeling_qwen2 import (
 from transformers.processing_utils import Unpack
 from transformers.utils import auto_docstring, logging
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenRMSNorm as FixQwen2RMSNorm
+
 logger = logging.get_logger(__name__)
-
-
-# Modified from transformers.models.mistral.modeling_mistral.MistralMLP with Mistral->Qwen2Moe
-class Qwen2MoeRoutedExpertMLP(nn.Module):
-    def __init__(self, config, intermediate_size=None):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-
-
-class Qwen2MoeSharedExpertMLP(nn.Module):
-    def __init__(self, config, intermediate_size=None):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
 
 
 class Qwen2FusedExperts(nn.Module):
@@ -148,30 +119,6 @@ class Qwen2FusedExperts(nn.Module):
         )
 
 
-class FixQwen2RMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        """
-        FixQwen2RMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        # print(f'self.weight dtype is {self.weight.dtype}')
-        input_dtype = hidden_states.dtype
-        # print(f'input_dtype is {input_dtype}')
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        # print(f'hidden_states dtype is {hidden_states.dtype}')
-        # print(f'output dtype is {(self.weight * hidden_states.to(input_dtype)).dtype}')
-        return self.weight * hidden_states.to(input_dtype)
-
-    def extra_repr(self):
-        return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
-
-
 class Qwen2TokenMoeBlock(nn.Module):
     """Token-level routing MoE block with all-to-all computation for torch.compile compatibility."""
 
@@ -202,13 +149,10 @@ class Qwen2TokenMoeBlock(nn.Module):
             )
         else:
             self.experts = nn.ModuleList(
-                [
-                    Qwen2MoeRoutedExpertMLP(config, intermediate_size=config.moe_intermediate_size)
-                    for _ in range(self.num_experts)
-                ]
+                [QwenMLP(config, intermediate_size=config.moe_intermediate_size) for _ in range(self.num_experts)]
             )
 
-        self.shared_expert = Qwen2MoeSharedExpertMLP(config, intermediate_size=config.shared_expert_intermediate_size)
+        self.shared_expert = QwenMLP(config, intermediate_size=config.shared_expert_intermediate_size)
         self._router_activation = getattr(config, "router_activation", "softmax")
         self.routed_scaling_factor = getattr(config, "routed_scaling_factor", 1.0)
         self._use_shared_expert_gate = getattr(config, "use_shared_expert_gate", True)

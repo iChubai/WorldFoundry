@@ -18,6 +18,8 @@ from transformers.models.qwen2.modeling_qwen2 import (
 )
 from transformers.utils import logging
 
+from worldfoundry.base_models.llm_mllm_core.action.lingbot.modeling import AdaRMSNorm
+
 from .qwen25_vl import Qwen2_5_VLForConditionalGeneration
 
 try:  # noqa: SIM105 - The handler carries an explanatory comment.
@@ -28,18 +30,27 @@ try:  # noqa: SIM105 - The handler carries an explanatory comment.
     )
 except BaseException:
     pass
-from .attention import build_block_mask, flex_attention_forward, flex_attention_with_block_mask
-from .depth_head import TaskTokenDepthHead
+from worldfoundry.base_models.llm_mllm_core.action.lingbot.modeling import (
+    TaskTokenDepthHead,
+)
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import (
+    apply_rope,
+    create_sinusoidal_pos_embedding,
+    make_att_2d_masks,
+)
+from worldfoundry.base_models.llm_mllm_core.action.tensor_ops import (
+    masked_eager_attention_forward as our_eager_attention_forward,
+)
+
+from .attention import (
+    build_block_mask,
+    flex_attention_forward,
+    flex_attention_with_block_mask,
+)
 from .qwen2_expert import (
     FixQwen2RMSNorm,
     Qwen2ForCausalLM,
     Qwen2TokenMoeBlock,
-)
-from .utils import (
-    apply_rope,
-    create_sinusoidal_pos_embedding,
-    make_att_2d_masks,
-    our_eager_attention_forward,
 )
 
 logger = logging.get_logger(__name__)
@@ -176,66 +187,11 @@ class QwenvlWithExpertConfig(PretrainedConfig):
             )
 
 
-class AdaRMSNorm(nn.Module):
-    def __init__(self, hidden_size, cond_dim, eps=1e-6):
-        """
-        AdaRMSNorm: RMSNorm + FiLM
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-        self.gamma = nn.Linear(cond_dim, hidden_size)
-        self.beta = nn.Linear(cond_dim, hidden_size)
+class FixAdaRMSNorm(AdaRMSNorm):
+    """Keep the fixed-condition path's float32 Linear inputs."""
 
-        # DiT style init: gamma.weight=0, gamma.bias=1; beta.weight=0, beta.bias=0
-        nn.init.zeros_(self.gamma.weight)
-        nn.init.zeros_(self.gamma.bias)
-        nn.init.zeros_(self.beta.weight)
-        nn.init.zeros_(self.beta.bias)
-
-    def forward(self, hidden_states, cond):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-
-        hidden_states = self.weight * hidden_states
-        # cond = cond.to(torch.float32)
-        gamma = self.gamma(cond).unsqueeze(1)  # [B, 1, H]
-        beta = self.beta(cond).unsqueeze(1)  # [B, 1, H]
-        hidden_states = (1 + gamma.to(torch.float32)) * hidden_states + beta.to(torch.float32)
-        return hidden_states.to(input_dtype)
-
-
-class FixAdaRMSNorm(nn.Module):
-    def __init__(self, hidden_size, cond_dim, eps=1e-6):
-        """
-        AdaRMSNorm: RMSNorm + FiLM
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-        self.gamma = nn.Linear(cond_dim, hidden_size)
-        self.beta = nn.Linear(cond_dim, hidden_size)
-
-        # DiT style init: gamma.weight=0, gamma.bias=1; beta.weight=0, beta.bias=0
-        nn.init.zeros_(self.gamma.weight)
-        nn.init.zeros_(self.gamma.bias)
-        nn.init.zeros_(self.beta.weight)
-        nn.init.zeros_(self.beta.bias)
-
-    def forward(self, hidden_states, cond):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-
-        hidden_states = self.weight * hidden_states
-        cond = cond.to(torch.float32)
-        gamma = self.gamma(cond).unsqueeze(1)  # [B, 1, H]
-        beta = self.beta(cond).unsqueeze(1)  # [B, 1, H]
-        hidden_states = (1 + gamma.to(torch.float32)) * hidden_states + beta.to(torch.float32)
-        return hidden_states.to(input_dtype)
+    def forward(self, hidden_states: torch.Tensor, cond: torch.Tensor) -> torch.Tensor:
+        return super().forward(hidden_states, cond.float())
 
 
 # HACK: show directly use this norm during initialization

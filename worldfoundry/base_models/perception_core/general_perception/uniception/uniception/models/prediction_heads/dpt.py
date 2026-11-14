@@ -13,8 +13,16 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.utils.checkpoint import checkpoint
 
-from uniception.models.libs.croco.dpt_block import make_fusion_block, make_nonlinearity, make_scratch, pair
-from uniception.models.prediction_heads.base import PixelTaskOutput, PredictionHeadLayeredInput
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.libs.croco.dpt_block import (
+    make_fusion_block,
+    make_nonlinearity,
+    make_scratch,
+    pair,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.base import (
+    PixelTaskOutput,
+    PredictionHeadLayeredInput,
+)
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 

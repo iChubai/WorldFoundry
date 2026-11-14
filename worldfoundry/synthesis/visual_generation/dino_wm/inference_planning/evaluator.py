@@ -3,7 +3,8 @@ import numpy as np
 import torch
 from einops import rearrange
 from torchvision import utils
-from utils import (
+
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import (
     move_to_device,
 )
 

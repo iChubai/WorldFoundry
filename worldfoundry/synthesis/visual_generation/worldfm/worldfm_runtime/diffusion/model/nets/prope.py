@@ -19,6 +19,15 @@ from functools import partial
 
 import torch
 
+from worldfoundry.base_models.diffusion_model.models.networks.worldcrafter.ucpe.prope import _lift_K
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import (
+    _apply_block_diagonal,
+    _apply_tiled_projmat,
+    _invert_K,
+    _invert_SE3,
+    _rope_precompute_coeffs,
+)
+
 
 def get_rope_coeffs_2d(
     *,
@@ -205,40 +214,6 @@ def reorder_tokens_from_camera_major(
         return x.view(B, patches_y * patches_x_total, Hh, D)
 
 
-def _apply_tiled_projmat(
-    feats: torch.Tensor,  # (B, num_heads, seqlen, feat_dim)
-    matrix: torch.Tensor,  # (B, cameras, D, D)
-) -> torch.Tensor:
-    (batch, num_heads, seqlen, feat_dim) = feats.shape
-    cameras = matrix.shape[1]
-    assert seqlen > cameras and seqlen % cameras == 0
-    D = matrix.shape[-1]
-    assert matrix.shape == (batch, cameras, D, D)
-    assert feat_dim % D == 0
-    return torch.einsum(
-        "bcij,bncpkj->bncpki",
-        matrix,
-        feats.reshape((batch, num_heads, cameras, -1, feat_dim // D, D)),
-    ).reshape(feats.shape)
-
-
-def _rope_precompute_coeffs(
-    positions: torch.Tensor,  # (seqlen,)
-    freq_base: float,
-    freq_scale: float,
-    feat_dim: int,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    assert len(positions.shape) == 1
-    assert feat_dim % 2 == 0
-    num_freqs = feat_dim // 2
-    freqs = freq_scale * (
-        freq_base ** (-torch.arange(num_freqs, device=positions.device)[None, None, None, :] / num_freqs)
-    )
-    angles = positions[None, None, :, None] * freqs
-    assert angles.shape == (1, 1, positions.shape[0], num_freqs)
-    return torch.cos(angles), torch.sin(angles)
-
-
 def _rope_apply_coeffs(
     feats: torch.Tensor,  # (B, num_heads, seqlen, feat_dim)
     coeffs: tuple[torch.Tensor, torch.Tensor],
@@ -261,44 +236,3 @@ def _rope_apply_coeffs(
         ),
         dim=-1,
     )
-
-
-def _apply_block_diagonal(
-    feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
-) -> torch.Tensor:
-    funcs, block_sizes = zip(*func_size_pairs, strict=False)
-    assert feats.shape[-1] == sum(block_sizes)
-    x_blocks = torch.split(feats, block_sizes, dim=-1)
-    out = torch.cat([f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)], dim=-1)
-    assert out.shape == feats.shape
-    return out
-
-
-def _invert_SE3(transforms: torch.Tensor) -> torch.Tensor:
-    assert transforms.shape[-2:] == (4, 4)
-    Rinv = transforms[..., :3, :3].transpose(-1, -2)
-    out = torch.zeros_like(transforms)
-    out[..., :3, :3] = Rinv
-    out[..., :3, 3] = -torch.einsum("...ij,...j->...i", Rinv, transforms[..., :3, 3])
-    out[..., 3, 3] = 1.0
-    return out
-
-
-def _lift_K(Ks: torch.Tensor) -> torch.Tensor:
-    assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros(Ks.shape[:-2] + (4, 4), device=Ks.device, dtype=Ks.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
-    out[..., :3, :3] = Ks
-    out[..., 3, 3] = 1.0
-    return out
-
-
-def _invert_K(Ks: torch.Tensor) -> torch.Tensor:
-    assert Ks.shape[-2:] == (3, 3)
-    out = torch.zeros_like(Ks)
-    out[..., 0, 0] = 1.0 / Ks[..., 0, 0]
-    out[..., 1, 1] = 1.0 / Ks[..., 1, 1]
-    out[..., 0, 2] = -Ks[..., 0, 2] / Ks[..., 0, 0]
-    out[..., 1, 2] = -Ks[..., 1, 2] / Ks[..., 1, 1]
-    out[..., 2, 2] = 1.0
-    return out

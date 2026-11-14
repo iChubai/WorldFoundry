@@ -27,6 +27,7 @@ from safetensors.torch import load as load_from_bytes
 from safetensors.torch import load_file
 from tqdm.auto import tqdm
 
+from worldfoundry.core.model_loading.checkpoints.remap import remap_checkpoint_keys
 from worldfoundry.core.observability.rank_logging import print_per_rank
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -199,6 +200,7 @@ def load_safetensors_into_model_streaming(
     device: str | torch.device = "cpu",
     dtype: torch.dtype | None = None,
     assign: bool | None = None,
+    key_mapping: dict[str, str] | None = None,
 ) -> dict[str, int]:
     """Load checkpoint shards one at a time and validate the complete key set.
 
@@ -207,7 +209,8 @@ def load_safetensors_into_model_streaming(
     directly on ``device``; floating checkpoint tensors may also be converted
     to ``dtype`` while streaming. Strict validation is performed after every
     shard has been applied, so the result is equivalent to one strict
-    full-checkpoint load.
+    full-checkpoint load. Optional regex ``key_mapping`` rules rename checkpoint
+    keys before shape, key-set and duplicate validation.
     """
 
     expected_state = model.state_dict()
@@ -276,6 +279,8 @@ def load_safetensors_into_model_streaming(
         if not assign:
             read_device = "cpu" if dtype is not None else device
             shard = load_file(str(path), device=str(read_device))
+            if key_mapping is not None:
+                shard = remap_checkpoint_keys(shard, key_mapping)
             if dtype is not None:
                 shard = {key: convert_tensor(value) for key, value in shard.items()}
             apply_tensors(shard)
@@ -293,6 +298,8 @@ def load_safetensors_into_model_streaming(
         with safe_open(str(path), framework="pt", device=read_device) as handle:
             for key in handle.keys():  # noqa: SIM118  # safetensors handles are not iterable
                 tensor = handle.get_tensor(key)
+                if key_mapping is not None:
+                    key, tensor = remap_checkpoint_keys({key: tensor}, key_mapping).popitem()
                 if key in expected_shapes and tuple(tensor.shape) != expected_shapes[key]:
                     mismatched.append((key, tuple(tensor.shape), expected_shapes[key]))
                 assign_tensor(key, tensor)

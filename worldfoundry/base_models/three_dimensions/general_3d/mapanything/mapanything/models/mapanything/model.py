@@ -14,43 +14,29 @@ from typing import Any
 import torch
 import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin
-from mapanything.utils.device import (
-    empty_cache,
-    get_amp_dtype,
-    get_autocast_device_type,
-)
-from mapanything.utils.geometry import (
-    apply_log_to_norm,
-    convert_ray_dirs_depth_along_ray_pose_trans_quats_to_pointmap,
-    normalize_depth_using_non_zero_pixels,
-    normalize_pose_translations,
-    transform_pose_using_quats_and_trans_2_to_1,
-)
-from mapanything.utils.inference import (
-    postprocess_model_outputs_for_inference,
-    preprocess_input_views_for_inference,
-    validate_input_views_for_inference,
-)
-from uniception.models.encoders import (
+
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.encoders import (
     EncoderGlobalRepInput,
     ViTEncoderInput,
     ViTEncoderNonImageInput,
     encoder_factory,
 )
-from uniception.models.info_sharing.alternating_attention_transformer import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.info_sharing.alternating_attention_transformer import (
     MultiViewAlternatingAttentionTransformer,
     MultiViewAlternatingAttentionTransformerIFR,
 )
-from uniception.models.info_sharing.base import MultiViewTransformerInput
-from uniception.models.info_sharing.cross_attention_transformer import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.info_sharing.base import (
+    MultiViewTransformerInput,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.info_sharing.cross_attention_transformer import (
     MultiViewCrossAttentionTransformer,
     MultiViewCrossAttentionTransformerIFR,
 )
-from uniception.models.info_sharing.global_attention_transformer import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.info_sharing.global_attention_transformer import (
     MultiViewGlobalAttentionTransformer,
     MultiViewGlobalAttentionTransformerIFR,
 )
-from uniception.models.prediction_heads.adaptors import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.adaptors import (
     CamTranslationPlusQuatsAdaptor,
     PointMapAdaptor,
     PointMapPlusRayDirectionsPlusDepthAdaptor,
@@ -70,17 +56,46 @@ from uniception.models.prediction_heads.adaptors import (
     RayMapPlusDepthWithMaskAdaptor,
     ScaleAdaptor,
 )
-from uniception.models.prediction_heads.base import (
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.base import (
     AdaptorInput,
     PredictionHeadInput,
     PredictionHeadLayeredInput,
     PredictionHeadTokenInput,
 )
-from uniception.models.prediction_heads.dpt import DPTFeature, DPTRegressionProcessor
-from uniception.models.prediction_heads.linear import LinearFeature
-from uniception.models.prediction_heads.mlp_head import MLPHead
-from uniception.models.prediction_heads.pose_head import PoseHead
-from uniception.models.utils.transformer_blocks import Mlp, SwiGLUFFNFused
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.dpt import (
+    DPTFeature,
+    DPTRegressionProcessor,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.linear import (
+    LinearFeature,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.mlp_head import (
+    MLPHead,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.pose_head import (
+    PoseHead,
+)
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.utils.transformer_blocks import (
+    Mlp,
+)
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.device import (
+    empty_cache,
+    get_amp_dtype,
+    get_autocast_device_type,
+)
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.geometry import (
+    apply_log_to_norm,
+    convert_ray_dirs_depth_along_ray_pose_trans_quats_to_pointmap,
+    normalize_depth_using_non_zero_pixels,
+    normalize_pose_translations,
+    transform_pose_using_quats_and_trans_2_to_1,
+)
+from worldfoundry.base_models.three_dimensions.general_3d.mapanything.mapanything.utils.inference import (
+    postprocess_model_outputs_for_inference,
+    preprocess_input_views_for_inference,
+    validate_input_views_for_inference,
+)
+from worldfoundry.core.nn.blocks.layers import SwiGLUFFNFused
 
 # Enable TF32 precision if supported (for GPU >= Ampere and PyTorch >= 1.12)
 if hasattr(torch.backends.cuda, "matmul") and hasattr(torch.backends.cuda.matmul, "allow_tf32"):

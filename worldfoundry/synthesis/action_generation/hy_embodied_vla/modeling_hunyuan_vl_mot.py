@@ -36,15 +36,27 @@ from typing import (
 import torch
 import torch.nn.functional as F
 from torch import nn
-from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.generation import GenerationMixin
-from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast, ModelOutput
+from transformers.modeling_outputs import (
+    BaseModelOutputWithPast,
+    CausalLMOutputWithPast,
+    ModelOutput,
+)
 from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 from transformers.modeling_utils import PreTrainedModel
 from transformers.processing_utils import Unpack
 from transformers.utils import TransformersKwargs, auto_docstring
 from transformers.utils.deprecation import deprecate_kwarg
+
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as HunYuanVLMoTRMSNorm,
+)
+from worldfoundry.core.attention.rotary.embedding import (
+    apply_rotary_pos_emb as _apply_rotary_pos_emb,
+)
+from worldfoundry.core.nn.blocks.layers import LayerScale as _ViTLayerScale
 
 try:
     from timm.layers import (
@@ -62,7 +74,7 @@ except ImportError:
 
 import itertools
 
-from .configuration_hunyuan_vl_mot import HunYuanVLMoTConfig
+from .configuration_hunyuan_vl_mot import HunYuanVLMoTConfig, HunYuanVLMoTTextConfig
 
 logger = logging.getLogger(__name__)
 
@@ -145,12 +157,6 @@ class HunYuanVLMoTModelOutputWithPast(ModelOutput):
 # ============================================================================
 
 
-def _rotate_half(x):
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
 def _repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
     bs, slen, n_kv_heads, head_dim = x.shape
     if n_rep == 1:
@@ -162,51 +168,9 @@ def _repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
     )
 
 
-def _apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
-    cos = cos.unsqueeze(unsqueeze_dim)
-    sin = sin.unsqueeze(unsqueeze_dim)
-    return (q * cos) + (_rotate_half(q) * sin), (k * cos) + (_rotate_half(k) * sin)
-
-
 # ============================================================================
 # RMSNorm
 # ============================================================================
-
-
-class HunYuanVLMoTRMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps: float = 1e-6):
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        return self.weight * hidden_states.to(input_dtype)
-
-    def extra_repr(self):
-        return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
-
-
-# ============================================================================
-# MLP
-# ============================================================================
-
-
-class HunYuanVLMoTMLP(nn.Module):
-    def __init__(self, config: HunYuanVLMoTConfig):
-        super().__init__()
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=config.mlp_bias)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        return self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
 
 
 # ============================================================================
@@ -971,18 +935,18 @@ class HunYuanVLMoTAttention(nn.Module):
 class HunYuanVLMoTDecoderLayer(nn.Module):
     """A single transformer decoder layer with per-modality norm and MLP paths."""
 
-    def __init__(self, config: HunYuanVLMoTConfig, layer_idx: int):
+    def __init__(self, config: HunYuanVLMoTTextConfig, layer_idx: int):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = HunYuanVLMoTAttention(config=config, layer_idx=layer_idx)
 
         # Text paths
-        self.mlp = HunYuanVLMoTMLP(config)
+        self.mlp = QwenMLP(config, bias=config.mlp_bias)
         self.input_layernorm = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
         # Vision paths (_v suffix matches checkpoint keys)
-        self.mlp_v = HunYuanVLMoTMLP(config)
+        self.mlp_v = QwenMLP(config, bias=config.mlp_bias)
         self.input_layernorm_v = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm_v = HunYuanVLMoTRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
@@ -1240,16 +1204,6 @@ class _HunYuanVLMoTTextForCausalLM(_HunYuanVLMoTInnerPreTrainedModel, Generation
 
 
 # ViT Attention / Block
-
-
-class _ViTLayerScale(nn.Module):
-    def __init__(self, dim: int, init_values: float = 1e-5, inplace: bool = False) -> None:
-        super().__init__()
-        self.inplace = inplace
-        self.gamma = nn.Parameter(init_values * torch.ones(dim))
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class _ViTAttention(nn.Module):

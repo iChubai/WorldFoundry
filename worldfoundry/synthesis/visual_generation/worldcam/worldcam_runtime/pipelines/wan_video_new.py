@@ -8,20 +8,23 @@ from einops import rearrange, repeat
 from PIL import Image
 from tqdm import tqdm
 
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import sinusoidal_embedding_1d
 from worldfoundry.base_models.diffusion_model.runners import (
     InferenceStage,
     InferenceStageRunner,
     StagedDiffusionPipeline,
 )
 from worldfoundry.core.model_loading import ModelConfig
+from worldfoundry.core.nn import RMSNorm
 
 from ..models.model_manager import ModelManager, load_state_dict
-from ..models.wan_video_dit import RMSNorm, WanModel, sinusoidal_embedding_1d
+from ..models.wan_video_dit import WanModel
 
 # isort: split
 from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.s2v import rope_precompute
 
 # isort: split
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d, RMS_norm, Upsample
 from worldfoundry.base_models.diffusion_model.models.encoders.wan import WanImageEncoder, WanPrompter
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.model import (
     T5LayerNorm,
@@ -34,7 +37,7 @@ from worldfoundry.core.nn import FlowMatchScheduler
 from worldfoundry.core.vram import AutoWrappedLinear, AutoWrappedModule, WanAutoCastLayerNorm, enable_vram_management
 
 from ..models.wan_video_vace import VaceWanModel
-from ..models.wan_video_vae import CausalConv3d, RMS_norm, Upsample, WanVideoVAE
+from ..models.wan_video_vae import WanVideoVAE
 
 
 def realign_poses(poses_to_align, origin_pose):

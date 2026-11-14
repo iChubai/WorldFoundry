@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import checkpoint_root_path, project_root
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
@@ -243,8 +244,6 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
     input_mode = str(settings.get("input_mode", "explicit-three-view"))
     action_mode = str(settings.get("action_mode", "absolute-pose"))
     command = [
-        str(context["python"]),
-        str(context["entrypoint"]),
         "--checkpoint-path",
         str(_checkpoint_path(settings)),
         "--base-model-dir",
@@ -286,10 +285,10 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         views = _input_views(settings)
         if len(views) != 3:
             raise ValueError("Ctrl-World explicit-three-view mode requires exactly three input_views")
-        command[6:6] = ["--input-views", *(str(view) for view in views)]
+        command[4:4] = ["--input-views", *(str(view) for view in views)]
     else:
         image = _path_option(settings, "image_path", "input_image", default=DEFAULT_INPUT_IMAGE)
-        command[6:6] = ["--input-image", str(image)]
+        command[4:4] = ["--input-image", str(image)]
     if action_mode == "absolute-pose":
         pose = _initial_pose(settings)
         if pose is None:
@@ -310,7 +309,11 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         command.extend(["--action-scale", str(settings.get("action_scale", 0.2))])
     else:
         raise ValueError(f"unsupported Ctrl-World action mode: {action_mode}")
-    return command
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.ctrl_world.infer",
+        command,
+        python_executable=str(context["python"]),
+    )
 
 
 __all__ = [

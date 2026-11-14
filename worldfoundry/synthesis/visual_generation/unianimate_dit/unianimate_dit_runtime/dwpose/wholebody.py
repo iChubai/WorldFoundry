@@ -1,8 +1,8 @@
 import numpy as np
 import onnxruntime as ort
 
-from dwpose.onnxdet import inference_detector
-from dwpose.onnxpose import inference_pose
+from .onnxdet import inference_detector
+from .onnxpose import inference_pose
 
 
 class Wholebody:

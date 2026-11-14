@@ -1,4 +1,4 @@
-"""Inference-only image and video routes for official UniWorld-View."""
+"""Inference-only image and video routes for the vendored official UniWorld-View runtime."""
 
 from __future__ import annotations
 
@@ -10,16 +10,15 @@ from worldfoundry.core.execution.inference import (
     InferenceVariantSpec,
     ModelInferenceSpec,
 )
-from worldfoundry.core.io.paths import official_runtime_repo_path
+from worldfoundry.core.io.paths import package_data_path
 
 
 def _field(name: str, label: str, kind: str = "string", *, target: str = "call_kwargs", default=None, required=False):
     return InferenceFieldSpec(name, label, kind=kind, target=target, default=default, required=required)
 
 
-_SOURCE = str(official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO"))
+_SAMPLES = package_data_path("test_cases", "uniworld_view")
 _COMMON = (
-    _field("repo_root", "Official Source", "path", target="load_kwargs", default=_SOURCE),
     _field("python_executable", "Official Python", "path", target="load_kwargs"),
     _field("checkpoint_root", "Checkpoint Root", "path", target="load_kwargs"),
     _field("render_method", "Renderer", default="hybrid"),
@@ -53,7 +52,9 @@ def _task(task_id: str, label: str, mode: str) -> InferenceTaskProfile:
             "path",
             target="input_path",
             required=True,
-            default=f"{_SOURCE}/test/videos/2.mp4" if mode == "dynamic_view" else f"{_SOURCE}/test/images/fruit.jpg",
+            default=str(_SAMPLES / "videos" / "2.mp4")
+            if mode == "dynamic_view"
+            else str(_SAMPLES / "images" / "fruit.jpg"),
         ),
         _field("mode", "View Mode", default=mode),
         *_COMMON,
@@ -81,7 +82,7 @@ UNIWORLD_VIEW_INFERENCE_SPEC = ModelInferenceSpec(
         InferenceVariantSpec(
             variant_id="official",
             label="Official UniView + Wan VACE 14B",
-            status="requires_local_source_and_checkpoints",
+            status="requires_local_checkpoints",
             checkpoints=(
                 InferenceCheckpointRef("primary", "${WORLDFOUNDRY_CKPT_DIR}/Drexubery--UniView"),
                 InferenceCheckpointRef(
@@ -99,10 +100,9 @@ UNIWORLD_VIEW_INFERENCE_SPEC = ModelInferenceSpec(
                 ),
                 InferenceCheckpointRef("stream3r", "${WORLDFOUNDRY_CKPT_DIR}/yslan--STream3R", required=False),
             ),
-            load_kwargs={"repo_root": _SOURCE},
             aliases=("default",),
             notes=(
-                "Official source, STream3R, an isolated Python environment, and multiple local weight bundles are required.",
+                "An isolated Python environment and multiple local weight bundles (STream3R for dynamic view) are required.",
             ),
         ),
     ),

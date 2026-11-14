@@ -52,14 +52,24 @@ docs:
   publisher: AlayaLab
   publisher_kind: lab
   publisher_zh: AlayaLab
-  overview: AlayaWorld v1.1 is a camera-controlled image-to-video world model with ViGeo spatial memory. It offers autoregressive (AR) inference and four-step DMD inference.
+  overview: AlayaWorld v1.1 is a camera-controlled image-to-video world model with ViGeo spatial memory. It offers
+    autoregressive (AR) inference and four-step DMD inference.
   overview_zh: AlayaWorld v1.1 是带 ViGeo 空间记忆的相机控制图生视频世界模型，提供自回归（AR）推理和四步 DMD 推理。
-  architecture: Inference-only rollout methods from the pinned upstream run with WorldFoundry checkpoint/LoRA loaders, the LTX VAE, Gemma text encoding, and the Alaya history encoder. The Alaya transformer extension and ViGeo geometry come from the pinned AlayaWorld source checkout.
-  architecture_zh: 固定版本上游的纯推理 rollout 方法配合 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 文本编码和 Alaya 历史编码器运行。Alaya Transformer 扩展和 ViGeo 几何来自固定版本的 AlayaWorld 源码检出。
-  usage_notes: Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weights, the LTX-2.3 base, Gemma and ViGeo1.1 are required; DMD additionally needs the stage3 LoRA. Gemma is gated and requires accepting its license. This route does not use the merged DA3 checkpoint of the original AlayaWorld.
-  usage_notes_zh: 选择 variant=ar（30 步）或 dmd（4 步）。需 stage2b Transformer/历史权重、LTX-2.3 基座、Gemma 和 ViGeo1.1；DMD 另需 stage3 LoRA。Gemma 为门控模型，需先接受其许可。此路线不使用原版 AlayaWorld 的 DA3 合并 checkpoint。
+  architecture: In-tree inference-only rollout methods from the pinned upstream use WorldFoundry checkpoint/LoRA
+    loaders, the LTX VAE, Gemma text encoding and the Alaya history encoder. The Alaya LTX-2.3 transformer is a
+    variant of the canonical LTX stack; ViGeo uses the shared WorldFoundry implementation.
+  architecture_zh: 仓库内固定版本上游的纯推理 rollout 方法复用 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 文本编码及 Alaya 历史编码器。Alaya
+    LTX-2.3 Transformer 是规范 LTX 组件的变体，ViGeo 使用 WorldFoundry 的共享实现。
+  usage_notes: Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weights, the LTX-2.3 base,
+    Gemma and ViGeo1.1 are required; DMD additionally needs the stage3 LoRA. Gemma is gated and requires accepting
+    its license. This route does not use the merged DA3 checkpoint of the original AlayaWorld.
+  usage_notes_zh: 选择 variant=ar（30 步）或 dmd（4 步）。需 stage2b Transformer/历史权重、LTX-2.3 基座、Gemma 和 ViGeo1.1；DMD 另需 stage3
+    LoRA。Gemma 为门控模型，需先接受其许可。此路线不使用原版 AlayaWorld 的 DA3 合并 checkpoint。
   limitations:
   - Runs on a single GPU; full-window native VAE encoding may use more peak memory than the upstream streaming encoder.
+  - CPU configuration and adapter contracts are checked; checkpoint loading, VRAM usage and GPU artifact parity
+    remain pending.
   limitations_zh:
   - 单 GPU 运行；整窗原生 VAE 编码的峰值显存可能高于上游流式编码器。
+  - 已检查 CPU 配置与适配器契约；checkpoint 加载、显存占用和 GPU 产物一致性仍待验证。
   recommended_benchmarks: []

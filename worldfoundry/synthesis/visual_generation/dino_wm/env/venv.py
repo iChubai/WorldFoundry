@@ -11,7 +11,8 @@ from typing import Any
 import cloudpickle
 import gym
 import numpy as np
-from utils import aggregate_dct
+
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import aggregate_dct
 
 gym_old_venv_step_type = tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 gym_new_venv_step_type = tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]

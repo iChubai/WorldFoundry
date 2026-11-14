@@ -4,10 +4,11 @@ from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
-from envs import TorchEnv
-from eval_inputs import Dataset, Episode
 from tqdm import tqdm
-from utils import Logs
+
+from worldfoundry.synthesis.visual_generation.diamond.envs import TorchEnv
+from worldfoundry.synthesis.visual_generation.diamond.eval_inputs import Dataset, Episode
+from worldfoundry.synthesis.visual_generation.diamond.utils import Logs
 
 from . import coroutine
 from .env_loop import make_env_loop

@@ -170,6 +170,10 @@ def write_prediction_frames(output_dir, idxs, sec, x_pred_pixels):
 @torch.no_grad()
 def main(args):
     _, _, device, _ = dist.init_distributed()
+    if args.seed is not None:
+        from worldfoundry.core.utils.tensors.torch import set_seed_everywhere
+
+        set_seed_everywhere(args.seed)
     print(args)
     device = torch.device(device)
     num_tasks = dist.get_world_size()
@@ -286,6 +290,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--output_dir", type=str, default=None, help="output directory")
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--exp", type=str, default=None, help="experiment name")
     parser.add_argument("--ckp", type=str, default="0100000")
     parser.add_argument("--num_sec_eval", type=int, default=5)

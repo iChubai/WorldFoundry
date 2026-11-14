@@ -19,6 +19,7 @@ OpenCV convention: +X right, +Y down, +Z forward.
 from __future__ import annotations
 
 import math
+from typing import cast, overload
 
 import numpy as np
 import torch
@@ -204,6 +205,233 @@ def _sqrt_positive_part(value: Tensor) -> Tensor:
         result[positive] = torch.sqrt(value[positive])
         return result
     return torch.where(positive, torch.sqrt(value), result)
+
+
+# WXYZ conversion is adapted from PyTorch3D (BSD-3-Clause), Copyright Meta Platforms, Inc.
+def quaternion_wxyz_to_rotation_matrix(quaternions: torch.Tensor) -> torch.Tensor:
+    """
+    Convert rotations given as quaternions to rotation matrices.
+
+    Args:
+        quaternions: quaternions with real part first,
+            as tensor of shape (..., 4).
+
+    Returns:
+        Rotation matrices as tensor of shape (..., 3, 3).
+    """
+    r, i, j, k = torch.unbind(quaternions, -1)
+
+    two_s = 2.0 / (quaternions * quaternions).sum(-1)
+
+    o = torch.stack(
+        (
+            1 - two_s * (j * j + k * k),
+            two_s * (i * j - k * r),
+            two_s * (i * k + j * r),
+            two_s * (i * j + k * r),
+            1 - two_s * (i * i + k * k),
+            two_s * (j * k - i * r),
+            two_s * (i * k - j * r),
+            two_s * (j * k + i * r),
+            1 - two_s * (i * i + j * j),
+        ),
+        -1,
+    )
+    return o.reshape((*quaternions.shape[:-1], 3, 3))
+
+
+def standardize_quaternion_wxyz(quaternions: Tensor) -> Tensor:
+    """Choose the equivalent WXYZ quaternion whose real part is non-negative."""
+    return torch.where(quaternions[..., 0:1] < 0, -quaternions, quaternions)
+
+
+def normalize_quaternion_wxyz(quaternions: Tensor) -> Tensor:
+    """Normalize WXYZ quaternions before choosing the non-negative real part."""
+    return standardize_quaternion_wxyz(F.normalize(quaternions, p=2, dim=-1))
+
+
+def rotation_matrix_to_quaternion_wxyz_tensor(matrix: Tensor) -> Tensor:
+    """Return best-conditioned WXYZ quaternions without a second normalization."""
+    return rotation_matrix_to_quaternion_xyzw(matrix)[..., (3, 0, 1, 2)]
+
+
+def rotation_matrix_to_unit_quaternion_wxyz(matrix: Tensor) -> Tensor:
+    """Return normalized WXYZ quaternions for CUT3R and LingBot pose heads."""
+    return normalize_quaternion_wxyz(rotation_matrix_to_quaternion_wxyz_tensor(matrix))
+
+
+# Mirror rendering uses trace selection and normalize-first products rather than
+# the best-conditioned PyTorch3D arithmetic above. Source: Tencent HunyuanWorld-Mirror.
+def rotation_matrix_to_quaternion_wxyz_trace(R: Tensor) -> Tensor:
+    """Convert rotations to WXYZ using the trace branch, without sign standardization."""
+    trace = R[..., 0, 0] + R[..., 1, 1] + R[..., 2, 2]
+
+    q = torch.zeros(R.shape[:-2] + (4,), device=R.device, dtype=R.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+
+    # Case where trace > 0
+    mask1 = trace > 0
+    s = torch.sqrt(trace[mask1] + 1.0) * 2  # s=4*qw
+    q[mask1, 0] = 0.25 * s  # qw
+    q[mask1, 1] = (R[mask1, 2, 1] - R[mask1, 1, 2]) / s  # qx
+    q[mask1, 2] = (R[mask1, 0, 2] - R[mask1, 2, 0]) / s  # qy
+    q[mask1, 3] = (R[mask1, 1, 0] - R[mask1, 0, 1]) / s  # qz
+
+    # Case where R[0,0] > R[1,1] and R[0,0] > R[2,2]
+    mask2 = (~mask1) & (R[..., 0, 0] > R[..., 1, 1]) & (R[..., 0, 0] > R[..., 2, 2])
+    s = torch.sqrt(1.0 + R[mask2, 0, 0] - R[mask2, 1, 1] - R[mask2, 2, 2]) * 2  # s=4*qx
+    q[mask2, 0] = (R[mask2, 2, 1] - R[mask2, 1, 2]) / s  # qw
+    q[mask2, 1] = 0.25 * s  # qx
+    q[mask2, 2] = (R[mask2, 0, 1] + R[mask2, 1, 0]) / s  # qy
+    q[mask2, 3] = (R[mask2, 0, 2] + R[mask2, 2, 0]) / s  # qz
+
+    # Case where R[1,1] > R[2,2]
+    mask3 = (~mask1) & (~mask2) & (R[..., 1, 1] > R[..., 2, 2])
+    s = torch.sqrt(1.0 + R[mask3, 1, 1] - R[mask3, 0, 0] - R[mask3, 2, 2]) * 2  # s=4*qy
+    q[mask3, 0] = (R[mask3, 0, 2] - R[mask3, 2, 0]) / s  # qw
+    q[mask3, 1] = (R[mask3, 0, 1] + R[mask3, 1, 0]) / s  # qx
+    q[mask3, 2] = 0.25 * s  # qy
+    q[mask3, 3] = (R[mask3, 1, 2] + R[mask3, 2, 1]) / s  # qz
+
+    # Remaining case
+    mask4 = (~mask1) & (~mask2) & (~mask3)
+    s = torch.sqrt(1.0 + R[mask4, 2, 2] - R[mask4, 0, 0] - R[mask4, 1, 1]) * 2  # s=4*qz
+    q[mask4, 0] = (R[mask4, 1, 0] - R[mask4, 0, 1]) / s  # qw
+    q[mask4, 1] = (R[mask4, 0, 2] + R[mask4, 2, 0]) / s  # qx
+    q[mask4, 2] = (R[mask4, 1, 2] + R[mask4, 2, 1]) / s  # qy
+    q[mask4, 3] = 0.25 * s  # qz
+
+    return q
+
+
+def quaternion_wxyz_to_rotation_matrix_normalized(q: Tensor) -> Tensor:
+    """Normalize WXYZ components before multiplication, preserving Mirror rendering arithmetic."""
+    w, x, y, z = q[..., 0], q[..., 1], q[..., 2], q[..., 3]
+
+    # Normalize quaternion
+    norm = torch.sqrt(w * w + x * x + y * y + z * z)
+    w, x, y, z = w / norm, x / norm, y / norm, z / norm
+
+    R = torch.zeros(q.shape[:-1] + (3, 3), device=q.device, dtype=q.dtype)  # noqa: RUF005 - Keeps `+` semantics for the operand's runtime type.
+
+    R[..., 0, 0] = 1 - 2 * (y * y + z * z)
+    R[..., 0, 1] = 2 * (x * y - w * z)
+    R[..., 0, 2] = 2 * (x * z + w * y)
+    R[..., 1, 0] = 2 * (x * y + w * z)
+    R[..., 1, 1] = 1 - 2 * (x * x + z * z)
+    R[..., 1, 2] = 2 * (y * z - w * x)
+    R[..., 2, 0] = 2 * (x * z - w * y)
+    R[..., 2, 1] = 2 * (y * z + w * x)
+    R[..., 2, 2] = 1 - 2 * (x * x + y * y)
+
+    return R
+
+
+def slerp_quaternions(q1: Tensor, q2: Tensor, t: Tensor | float) -> Tensor:
+    """Interpolate unit quaternions along the shorter arc, linearizing close pairs."""
+    # Compute dot product
+    dot = (q1 * q2).sum(dim=-1, keepdim=True)
+
+    # If dot product is negative, slerp won't take the shorter path.
+    # Note that q and -q represent the same rotation, so we can flip one.
+    mask = dot < 0
+    q2 = torch.where(mask, -q2, q2)
+    dot = torch.where(mask, -dot, dot)
+
+    # If the inputs are too close for comfort, linearly interpolate
+    # and normalize the result.
+    DOT_THRESHOLD = 0.9995
+    mask_linear = dot > DOT_THRESHOLD
+
+    result = torch.zeros_like(q1)
+
+    # Linear interpolation for close quaternions
+    if mask_linear.any():
+        result_linear = q1 + t * (q2 - q1)
+        norm = torch.norm(result_linear, dim=-1, keepdim=True)
+        result_linear = result_linear / norm
+        result = torch.where(mask_linear, result_linear, result)
+
+    # Spherical interpolation for distant quaternions
+    mask_slerp = ~mask_linear
+    if mask_slerp.any():
+        theta_0 = torch.acos(torch.abs(dot))
+        sin_theta_0 = torch.sin(theta_0)
+
+        theta = theta_0 * t
+        sin_theta = torch.sin(theta)
+
+        s0 = torch.cos(theta) - dot * sin_theta / sin_theta_0
+        s1 = sin_theta / sin_theta_0
+
+        result_slerp = (s0 * q1) + (s1 * q2)
+        result = torch.where(mask_slerp, result_slerp, result)
+
+    return result
+
+
+# Batched SE3 inversion is shared with VGGT (Copyright Meta Platforms, Inc.).
+@overload
+def closed_form_inverse_se3(se3: Tensor, R: Tensor | None = None, T: Tensor | None = None) -> Tensor: ...
+
+
+@overload
+def closed_form_inverse_se3(
+    se3: np.ndarray, R: np.ndarray | None = None, T: np.ndarray | None = None
+) -> np.ndarray: ...
+
+
+def closed_form_inverse_se3(
+    se3: Tensor | np.ndarray, R: Tensor | np.ndarray | None = None, T: Tensor | np.ndarray | None = None
+) -> Tensor | np.ndarray:
+    """
+    Compute the inverse of each 4x4 (or 3x4) SE3 matrix in a batch.
+
+    If `R` and `T` are provided, they must correspond to the rotation and translation
+    components of `se3`. Otherwise, they will be extracted from `se3`.
+
+    Args:
+        se3: Nx4x4 or Nx3x4 array or tensor of SE3 matrices.
+        R (optional): Nx3x3 array or tensor of rotation matrices.
+        T (optional): Nx3x1 array or tensor of translation vectors.
+
+    Returns:
+        Inverted SE3 matrices with the same type and device as `se3`.
+
+    Shapes:
+        se3: (N, 4, 4)
+        R: (N, 3, 3)
+        T: (N, 3, 1)
+    """
+    # Check if se3 is a numpy array or a torch tensor
+    is_numpy = isinstance(se3, np.ndarray)
+
+    # Validate shapes
+    if se3.shape[-2:] != (4, 4) and se3.shape[-2:] != (3, 4):
+        raise ValueError(f"se3 must be of shape (N,4,4), got {se3.shape}.")
+
+    # Extract R and T if not provided
+    if R is None:
+        R = se3[:, :3, :3]  # (N,3,3)
+    if T is None:
+        T = se3[:, :3, 3:]  # (N,3,1)
+
+    if is_numpy:
+        rotation_numpy = np.transpose(cast(np.ndarray, R), (0, 2, 1))
+        translation_numpy = -np.matmul(rotation_numpy, cast(np.ndarray, T))
+        inverse_numpy = np.tile(np.eye(4), (len(R), 1, 1))
+        inverse_numpy[:, :3, :3] = rotation_numpy
+        inverse_numpy[:, :3, 3:] = translation_numpy
+        return inverse_numpy
+
+    R = cast(Tensor, R)
+    T = cast(Tensor, T)
+    rotation = R.transpose(1, 2)
+    translation = -torch.bmm(rotation, T)
+    inverse = torch.eye(4, 4)[None].repeat(len(R), 1, 1)
+    inverse = inverse.to(R.dtype).to(R.device)
+    inverse[:, :3, :3] = rotation
+    inverse[:, :3, 3:] = translation
+    return inverse
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -431,14 +659,23 @@ def render_point_cloud_frames_torch(
 
 
 __all__ = [
+    "closed_form_inverse_se3",
     "euler_angles_to_rotation_matrix_zyx",
+    "normalize_quaternion_wxyz",
+    "quaternion_wxyz_to_rotation_matrix",
+    "quaternion_wxyz_to_rotation_matrix_normalized",
     "quaternion_xyzw_to_rotation_matrix",
     "ray_condition",
     "render_point_cloud_frames_torch",
     "rotation_matrix_to_euler_angles_opencv",
     "rotation_matrix_to_euler_angles_zyx",
     "rotation_matrix_to_quaternion_wxyz",
+    "rotation_matrix_to_quaternion_wxyz_tensor",
+    "rotation_matrix_to_quaternion_wxyz_trace",
     "rotation_matrix_to_quaternion_xyzw",
+    "rotation_matrix_to_unit_quaternion_wxyz",
+    "slerp_quaternions",
+    "standardize_quaternion_wxyz",
     "standardize_quaternion_xyzw",
     "torch_meshgrid_ij",
 ]

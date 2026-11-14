@@ -12,7 +12,7 @@ from typing import Any, ClassVar
 
 import torch
 
-from mira.world_model.actions_config import ActionTensors
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.actions_config import ActionTensors
 
 
 # A dataclass (not Pydantic) because Pydantic + torch.compile() has issues: Pydantic's validation

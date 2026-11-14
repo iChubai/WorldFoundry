@@ -45,6 +45,7 @@ from transformers.utils import (
 )
 
 from worldfoundry.core.attention import scaled_dot_product_attention
+from worldfoundry.core.attention.window import window_partition as window_partition
 
 from .configuration_florence2 import Florence2Config, Florence2LanguageConfig
 
@@ -347,13 +348,6 @@ class ChannelBlock(nn.Module):
         x, size = self.ffn(x, size)
 
         return x, size
-
-
-def window_partition(x, window_size: int):
-    B, H, W, C = x.shape
-    x = x.view(B, H // window_size, window_size, W // window_size, window_size, C)
-    windows = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(-1, window_size, window_size, C)
-    return windows
 
 
 def window_reverse(windows, batch_size: int, window_size: int, H: int, W: int):

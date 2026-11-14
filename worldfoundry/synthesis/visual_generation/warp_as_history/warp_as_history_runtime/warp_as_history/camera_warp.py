@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 import os
-import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,13 +11,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image, ImageOps
-
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
-    SOURCE_ROOT as PI3_SOURCE_ROOT,
-)
-from worldfoundry.base_models.three_dimensions.point_clouds.pi3_source import (
-    ensure_import_paths as ensure_pi3_import_paths,
-)
 
 try:
     import cv2
@@ -59,10 +52,6 @@ CAMERA_CONTROL_PI3X_KEYFRAME_FOCAL_CLAMP_MAX = 1.35
 CAMERA_CONTROL_PI3X_KEYFRAME_FOCAL_SMOOTH_ALPHA = 0.5
 CAMERA_CONTROL_PI3X_KEYFRAME_DEPTH_SCALE_CLAMP_MIN = 0.1
 CAMERA_CONTROL_PI3X_KEYFRAME_DEPTH_SCALE_CLAMP_MAX = 10.0
-
-
-def default_pi3_repo() -> Path:
-    return PI3_SOURCE_ROOT
 
 
 def default_pi3x_ckpt() -> Path:
@@ -161,14 +150,11 @@ def _pi3_target_size(width: int, height: int, pixel_limit: int) -> tuple[int, in
     return max(1, m) * 14, max(1, k) * 14
 
 
-def _import_pi3(pi3_repo: Path):
-    repo = Path(pi3_repo).expanduser().resolve()
-    if repo == PI3_SOURCE_ROOT:
-        ensure_pi3_import_paths()
-    elif str(repo) not in sys.path:
-        sys.path.insert(0, str(repo))
-    from pi3.models.pi3x import Pi3X
-    from pi3.utils.geometry import recover_intrinsic_from_rays_d
+def _import_pi3() -> tuple[type[torch.nn.Module], Callable[..., torch.Tensor]]:
+    from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.pi3x import Pi3X
+    from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.utils.geometry import (
+        recover_intrinsic_from_rays_d,
+    )
 
     return Pi3X, recover_intrinsic_from_rays_d
 
@@ -1231,22 +1217,19 @@ class Pi3XWarpRenderer:
         self.config = config if config is not None else Pi3XWarpRendererConfig(**kwargs)
         self._pi3x_runtime: dict[str, Any] | None = None
 
-    def _runtime_key(self) -> tuple[str, str | None]:
-        repo = default_pi3_repo().expanduser().resolve()
-        ckpt_key = str(default_pi3x_ckpt().expanduser().resolve())
-        return str(repo), ckpt_key
+    def _runtime_key(self) -> str:
+        return str(default_pi3x_ckpt().expanduser().resolve())
 
     def _get_pi3x_runtime(self, device: torch.device) -> dict[str, Any]:
-        repo_key, ckpt_key = self._runtime_key()
+        ckpt_key = self._runtime_key()
         runtime = self._pi3x_runtime
-        if runtime is None or runtime.get("repo_key") != repo_key or runtime.get("ckpt_key") != ckpt_key:
-            Pi3X, recover_intrinsic_from_rays_d = _import_pi3(Path(repo_key))
+        if runtime is None or runtime.get("ckpt_key") != ckpt_key:
+            Pi3X, recover_intrinsic_from_rays_d = _import_pi3()
             model = _load_pi3x_model(Pi3X, device)
             runtime = {
                 "ckpt_key": ckpt_key,
                 "model": model,
                 "recover_intrinsic_from_rays_d": recover_intrinsic_from_rays_d,
-                "repo_key": repo_key,
             }
             self._pi3x_runtime = runtime
 

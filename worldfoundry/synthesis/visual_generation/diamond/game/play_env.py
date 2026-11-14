@@ -5,11 +5,12 @@ from typing import Any
 
 import pygame
 import torch
-from agent import Agent
-from envs import WorldModelEnv
-from eval_inputs import Dataset, Episode
-from game.keymap import ActionNames, Keymap
 from torch import Tensor
+
+from worldfoundry.synthesis.visual_generation.diamond.agent import Agent
+from worldfoundry.synthesis.visual_generation.diamond.envs import WorldModelEnv
+from worldfoundry.synthesis.visual_generation.diamond.eval_inputs import Dataset, Episode
+from worldfoundry.synthesis.visual_generation.diamond.game.keymap import ActionNames, Keymap
 
 NamedEnv = namedtuple("NamedEnv", "name env")
 OneStepData = namedtuple("OneStepData", "obs act rew end trunc")

@@ -31,6 +31,9 @@ from diffusers.models.normalization import FP32LayerNorm
 from diffusers.utils import apply_lora_scale, logging
 from diffusers.utils.torch_utils import maybe_allow_in_graph
 
+from worldfoundry.core.nn.blocks.volume import center_down_sample_3d as center_down_sample_3d
+from worldfoundry.core.nn.blocks.volume import pad_for_3d_conv as pad_for_3d_conv
+
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
@@ -108,19 +111,6 @@ def _gather_main_tokens(
         outputs = [torch.empty_like(tensor) for _ in range(world_size)]
     torch.distributed.all_gather(outputs, tensor, group=group)
     return torch.cat(outputs, dim=dim).contiguous()
-
-
-def pad_for_3d_conv(x, kernel_size):
-    b, c, t, h, w = x.shape
-    pt, ph, pw = kernel_size
-    pad_t = (pt - (t % pt)) % pt
-    pad_h = (ph - (h % ph)) % ph
-    pad_w = (pw - (w % pw)) % pw
-    return torch.nn.functional.pad(x, (0, pad_w, 0, pad_h, 0, pad_t), mode="replicate")
-
-
-def center_down_sample_3d(x, kernel_size):
-    return torch.nn.functional.avg_pool3d(x, kernel_size, stride=kernel_size)
 
 
 def apply_rotary_emb_transposed(

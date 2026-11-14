@@ -67,6 +67,36 @@ def hash_assets(assets: dict) -> dict:
     return hashes
 
 
+def verify_asset_pins(case: dict) -> None:
+    """Check operator-pinned input files before checkpoint hashing or model loading."""
+    for name, expected in case.get("asset_sha256", {}).items():
+        if name not in case["assets"]:
+            raise ValueError(f"SHA256 pin needs a declared asset: {name}")
+        if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValueError(f"Asset needs a SHA256 pin: {name}")
+        if sha256(Path(case["assets"][name]).expanduser()) != expected:
+            raise ValueError(f"Asset SHA256 differs: {name}")
+
+
+def materialize_input_json(case: dict, output_dir: Path) -> dict:
+    """Load declared observation data only after verifying its required content pin."""
+    call = dict(case["call"])
+    declared = {Path(value).expanduser().resolve() for value in case["assets"].values()}
+    for argument, source in case.get("input_json", {}).items():
+        if argument in call:
+            raise ValueError(f"JSON input collides with an explicit call argument: {argument}")
+        path = Path(source["path"]).expanduser().resolve()
+        if path not in declared:
+            raise ValueError(f"JSON input is not a declared asset: {path}")
+        expected = source["sha256"]
+        if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValueError(f"JSON input needs a SHA256 pin: {argument}")
+        if sha256(path) != expected:
+            raise ValueError(f"JSON input SHA256 differs: {argument}")
+        call[argument] = expand(json.loads(path.read_text(encoding="utf-8")), output_dir)
+    return call
+
+
 def collect_arrays(value, arrays: dict, key: str = "result") -> None:
     # AttrDict-style configuration objects fabricate missing attributes. Handle
     # mappings first so probing for tensor methods cannot invoke or mutate them.
@@ -148,6 +178,40 @@ def validate_contracts(arrays: dict, contracts: dict, comparisons: list[dict]) -
             raise ValueError(f"Output relation {relation} failed: {left}, {right}")
 
 
+def collect_output_fields(result: Any, arrays: dict, prefix: str, fields: list[str] | None) -> None:
+    """Select generated result fields without comparing unrelated runtime metadata."""
+    if fields is None:
+        collect_arrays(result, arrays, prefix)
+        return
+    if not isinstance(fields, list) or len(set(fields)) != len(fields):
+        raise ValueError(f"Invalid output selection: {prefix}")
+    for path in fields:
+        selected = result
+        for attribute in path.split("."):
+            selected = selected[attribute] if isinstance(selected, dict) else getattr(selected, attribute)
+        key = prefix + "." + path
+        if isinstance(selected, (str, Path)) and Path(selected).suffix.lower() in {
+            ".npy",
+            ".npz",
+            ".splat",
+            ".ply",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".json",
+            ".mp4",
+            ".webm",
+            ".mov",
+            ".mkv",
+        }:
+            artifact = Path(selected)
+            exported_prefix = "export." + artifact.name
+            for exported_key, value in exported_arrays(artifact.parent, [str(artifact)]).items():
+                arrays[key + exported_key.removeprefix(exported_prefix)] = value
+        else:
+            collect_arrays(selected, arrays, key)
+
+
 def run_sequence(pipeline, sequence: list[dict], arrays: dict) -> list[dict]:
     """Exercise one resident model, including failures, reset and A/B/A requests."""
     if not isinstance(sequence, list) or not sequence:
@@ -182,42 +246,40 @@ def run_sequence(pipeline, sequence: list[dict], arrays: dict) -> list[dict]:
         if expected is not None:
             raise ValueError(f"Expected inference failure did not occur: {name}")
         step_arrays = {}
-        outputs = step.get("outputs")
-        if outputs is None:
-            collect_arrays(result, step_arrays, name)
-        else:
-            if not isinstance(outputs, list) or len(set(outputs)) != len(outputs):
-                raise ValueError(f"Invalid output selection: {name}")
-            for path in outputs:
-                selected = result
-                for attribute in path.split("."):
-                    selected = selected[attribute] if isinstance(selected, dict) else getattr(selected, attribute)
-                key = name + "." + path
-                if isinstance(selected, (str, Path)) and Path(selected).suffix.lower() in {
-                    ".npy",
-                    ".npz",
-                    ".splat",
-                    ".ply",
-                    ".png",
-                    ".jpg",
-                    ".jpeg",
-                    ".json",
-                    ".mp4",
-                    ".webm",
-                    ".mov",
-                    ".mkv",
-                }:
-                    artifact = Path(selected)
-                    prefix = "export." + artifact.name
-                    for exported_key, value in exported_arrays(artifact.parent, [str(artifact)]).items():
-                        step_arrays[key + exported_key.removeprefix(prefix)] = value
-                else:
-                    collect_arrays(selected, step_arrays, key)
+        collect_output_fields(result, step_arrays, name, step.get("outputs"))
         # Some resident runtimes return views of reusable CPU buffers. Preserve
         # each response now so later requests cannot rewrite the earlier evidence.
         arrays.update({key: value.copy() for key, value in step_arrays.items()})
         events.append({"name": name, "status": "passed"})
     return events
+
+
+def emu35_story_arrays(path: Path, key: str) -> dict[str, np.ndarray]:
+    """Decode generated Story content, excluding the question and reference images."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    from worldfoundry.synthesis.visual_generation.emu35.emu35_runtime.src.proto import emu_pb
+
+    story = getattr(emu_pb, "Story")()
+    story.ParseFromString(path.read_bytes())
+    arrays = {}
+    for clip_index, clip in enumerate(story.clips):
+        for segment_index, segment in enumerate(clip.segments):
+            suffix = f"{clip_index}.{segment_index}"
+            if segment.asr:
+                arrays[f"{key}.text.{suffix}"] = np.frombuffer(segment.asr.encode("utf-8"), dtype=np.uint8).copy()
+            for image_index, metadata in enumerate(segment.images):
+                if not metadata.image.image_data:
+                    raise ValueError("Emu3.5 generated image has no PNG payload")
+                with Image.open(BytesIO(metadata.image.image_data)) as image:
+                    arrays[f"{key}.images.{suffix}.{image_index}"] = np.asarray(image).copy()
+    if not any(name.startswith(key + ".text.") for name in arrays) or not any(
+        name.startswith(key + ".images.") for name in arrays
+    ):
+        raise ValueError("Emu3.5 Story must contain generated clip text and images")
+    return arrays
 
 
 def exported_arrays(root: Path, files: list[str]) -> dict:
@@ -248,6 +310,15 @@ def exported_arrays(root: Path, files: list[str]) -> dict:
                 collect_arrays(np.asarray(image), arrays, key)
         elif path.suffix == ".json":
             collect_arrays(json.loads(path.read_text()), arrays, key)
+        elif path.suffix == ".pb":
+            arrays.update(emu35_story_arrays(path, key))
+        elif path.suffix == ".flac":
+            import soundfile
+
+            samples, sample_rate = soundfile.read(path, dtype="int32", always_2d=True)
+            collect_arrays(samples, arrays, key + ".samples")
+            collect_arrays(np.array([sample_rate], dtype=np.int64), arrays, key + ".sample_rate")
+            collect_arrays(np.array([samples.shape[1]], dtype=np.int64), arrays, key + ".channels")
         elif path.suffix.lower() in {".mp4", ".webm", ".mov", ".mkv"}:
             import av
 
@@ -261,6 +332,53 @@ def exported_arrays(root: Path, files: list[str]) -> dict:
                     raise ValueError(f"Video has no decodable frames: {path}")
                 collect_arrays(np.stack(frames), arrays, key + ".frames")
                 collect_arrays(np.array([rate.numerator, rate.denominator], dtype=np.int64), arrays, key + ".fps")
+    return arrays
+
+
+def exported_text_arrays(root: Path, fields: dict[str, list[str]]) -> dict[str, np.ndarray]:
+    """Capture only explicitly selected generated-text fields from JSON artifacts."""
+    arrays = {}
+    for relative, selected in fields.items():
+        path = Path(relative)
+        if path.is_absolute() or ".." in path.parts or path.suffix != ".json":
+            raise ValueError(f"Text output must name a relative JSON artifact: {relative}")
+        if not isinstance(selected, list) or not selected or len(set(selected)) != len(selected):
+            raise ValueError(f"Text output needs distinct field paths: {relative}")
+        payload = json.loads((root / path).read_text())
+        for field in selected:
+            value = payload
+            for name in field.split("."):
+                value = value[name]
+            if not isinstance(value, str):
+                raise ValueError(f"Text output is not a string: {relative}:{field}")
+            arrays[f"text.{relative}.{field}"] = np.frombuffer(value.encode("utf-8"), dtype=np.uint8).copy()
+    return arrays
+
+
+def exported_audio_arrays(root: Path, files: list[str]) -> dict[str, np.ndarray]:
+    """Decode only selected video soundtracks as exact float32 PCM and stream metadata."""
+    arrays = {}
+    for relative in files:
+        path = Path(relative)
+        if path.is_absolute() or ".." in path.parts or path.suffix.lower() not in {".mp4", ".mov", ".webm", ".mkv"}:
+            raise ValueError(f"Audio output must name a relative video artifact: {relative}")
+        import av
+
+        with av.open(str(root / path)) as container:
+            if not container.streams.audio:
+                raise ValueError(f"Required generated soundtrack is missing: {relative}")
+            stream = container.streams.audio[0]
+            rate = stream.codec_context.sample_rate
+            resampler = av.AudioResampler(format="fltp", layout=stream.layout, rate=rate)
+            chunks = [part.to_ndarray() for frame in container.decode(stream) for part in resampler.resample(frame)]
+            chunks.extend(part.to_ndarray() for part in resampler.resample(None))
+            if not chunks:
+                raise ValueError(f"Generated soundtrack has no decoded samples: {relative}")
+            key = "audio." + relative
+            arrays[key + ".samples"] = np.concatenate(chunks, axis=-1)
+            arrays[key + ".sample_rate"] = np.array([rate], dtype=np.int64)
+            arrays[key + ".channels"] = np.array([len(stream.layout.channels)], dtype=np.int64)
+            arrays[key + ".layout"] = np.frombuffer(stream.layout.name.encode("utf-8"), dtype=np.uint8).copy()
     return arrays
 
 
@@ -315,14 +433,24 @@ def run_case(case_file: Path, source_root: Path, output_dir: Path, case_id: str 
         torch.manual_seed(seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
+        requires_gpu = case.get("requires_gpu", False)
+        if not isinstance(requires_gpu, bool):
+            raise ValueError("requires_gpu must be a boolean")
+        if requires_gpu and not torch.cuda.is_available():
+            raise RuntimeError("This replay case requires CUDA")
         resolved = expand(case, output_dir)
+        verify_asset_pins(resolved)
+        if resolved.get("input_json"):
+            if "sequence" in resolved:
+                raise ValueError("JSON inputs require a single explicit call")
+            resolved["call"] = materialize_input_json(resolved, output_dir)
         manifest["assets"] = hash_assets(resolved["assets"])
         module_name, class_name = resolved["target"].split(":")
         module = importlib.import_module(module_name)
         if module.__file__ is None or not Path(module.__file__).resolve().is_relative_to(source_root):
             raise RuntimeError("The requested source tree was not imported")
         pipeline = getattr(module, class_name).from_pretrained(**resolved["load"])
-        arrays = {}
+        arrays: dict[str, Any] = {}
         for model_path in resolved.get("capture_modules", []):
             model = pipeline
             for attribute in model_path.split("."):
@@ -339,7 +467,7 @@ def run_case(case_file: Path, source_root: Path, output_dir: Path, case_id: str 
         else:
             method = getattr(pipeline, resolved.get("method", "__call__"))
             result = method(**resolved["call"])
-            collect_arrays(result, arrays)
+            collect_output_fields(result, arrays, "result", resolved.get("result_outputs"))
             for name, extra in resolved.get("extra_calls", {}).items():
                 collect_arrays(getattr(pipeline, extra["method"])(**extra["call"]), arrays, name)
         if resolved.get("save", False):
@@ -372,6 +500,8 @@ def run_case(case_file: Path, source_root: Path, output_dir: Path, case_id: str 
                     arrays.update({name.replace("export.", "artifact.", 1): value for name, value in decoded.items()})
                 else:
                     raise ValueError(f"Unsupported numerical artifact: {path}")
+        arrays.update(exported_text_arrays(output_dir, resolved.get("text_outputs", {})))
+        arrays.update(exported_audio_arrays(output_dir, resolved.get("audio_outputs", [])))
         exports = exported_arrays(output_dir, manifest.get("exported_files", []))
         validate_arrays({**arrays, **exports}, resolved["required_outputs"])
         validate_contracts({**arrays, **exports}, resolved.get("array_contracts", {}), resolved.get("comparisons", []))
@@ -433,8 +563,18 @@ def compare_runs(reference: Path, candidate: Path, *, atol: float = 0, rtol: flo
     ):
         if set(left.files) != set(right.files):
             raise ValueError("Numerical output keys differ or are empty")
-        arrays_a = {**dict(left), **exported_arrays(reference, exports_a)}
-        arrays_b = {**dict(right), **exported_arrays(candidate, exports_b)}
+        arrays_a = {
+            **dict(left),
+            **exported_arrays(reference, exports_a),
+            **exported_text_arrays(reference, meta_a["case"].get("text_outputs", {})),
+            **exported_audio_arrays(reference, meta_a["case"].get("audio_outputs", [])),
+        }
+        arrays_b = {
+            **dict(right),
+            **exported_arrays(candidate, exports_b),
+            **exported_text_arrays(candidate, meta_b["case"].get("text_outputs", {})),
+            **exported_audio_arrays(candidate, meta_b["case"].get("audio_outputs", [])),
+        }
         if not arrays_a or not arrays_b:
             raise ValueError("Numerical output keys differ or are empty")
         if arrays_a.keys() != arrays_b.keys():
@@ -445,9 +585,13 @@ def compare_runs(reference: Path, candidate: Path, *, atol: float = 0, rtol: flo
                 raise ValueError(f"Output shape or dtype changed: {key}")
             validate_arrays({key: a}, [])
             validate_arrays({key: b}, [])
-            # Masks, images, counts and IDs must remain exact even with float tolerances.
+            # Discrete outputs and selected decoded soundtracks remain exact with float tolerances.
             exact = np.array_equal(a, b)
-            passed = exact if a.dtype.kind in "biu" else bool(np.allclose(b, a, atol=atol, rtol=rtol, equal_nan=False))
+            passed = (
+                exact
+                if a.dtype.kind in "biu" or key.startswith("audio.")
+                else bool(np.allclose(b, a, atol=atol, rtol=rtol, equal_nan=False))
+            )
             dtype = np.complex128 if a.dtype.kind == "c" else np.float64
             delta = np.abs(b.astype(dtype) - a.astype(dtype))
             report["outputs"][key] = {

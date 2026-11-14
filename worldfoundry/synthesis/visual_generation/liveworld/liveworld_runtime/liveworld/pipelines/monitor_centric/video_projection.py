@@ -28,14 +28,12 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.load_fn import (
-    load_and_preprocess_images,
-)
-from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.components.utils.pose_enc import (
-    pose_encoding_to_extri_intri,
-)
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.models.stream3r import STream3R
 from worldfoundry.base_models.three_dimensions.point_clouds.stream3r.stream_session import StreamSession
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.load_fn import (
+    load_and_preprocess_images as load_and_preprocess_images,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.utils.pose_enc import pose_encoding_to_extri_intri
 
 # isort: split
 from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter import (

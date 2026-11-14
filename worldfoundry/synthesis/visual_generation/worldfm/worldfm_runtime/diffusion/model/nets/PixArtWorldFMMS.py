@@ -13,6 +13,8 @@ import torch.nn as nn
 from timm.models.layers import DropPath
 from timm.models.vision_transformer import Mlp
 
+from worldfoundry.base_models.diffusion_model.models.networks.sana.sana_blocks import SizeEmbedder
+
 from ...utils.logger import get_root_logger
 from ..builder import MODELS
 from ..utils import auto_grad_checkpoint, to_2tuple
@@ -21,7 +23,6 @@ from .PixArtWorldFM_blocks import (
     AttentionKVCompress,
     CaptionEmbedder,
     MultiHeadCrossAttention,
-    SizeEmbedder,
     T2IFinalLayer,
     t2i_modulate,
 )

@@ -3,20 +3,27 @@ import torch.distributed as dist  # noqa: F401 - Loads torch before compiled ext
 from mmengine import Config as MMConfig
 
 # isort: split
-from kairos.modules.utils import save_image, save_video  # noqa: F401 - Keeps the module's import-time setup.
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (  # noqa: F401 - Keeps the module's import-time setup.
+    save_image,
+    save_video,
+)
 
 # isort: split
 # isort: split
-from kairos.modules.utils import load_state_dict
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import load_state_dict
 
 # isort: split
 # isort: split
-from kairos.pipelines.kairos_embodied_pipeline import (
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.pipelines.kairos_embodied_pipeline import (
     KairosEmbodiedPipeline,  # noqa: F401 - Keeps the module's import-time setup.
 )
 
 # isort: split
-from kairos.apis.builder import DITS, KAIROS_PROCESSOR, PIPELINES_API
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.apis.builder import (
+    DITS,
+    KAIROS_PROCESSOR,
+    PIPELINES_API,
+)
 
 
 @PIPELINES_API.register_module()

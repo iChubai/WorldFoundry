@@ -22,7 +22,7 @@ integration:
   status: integrated
   notes:
   - WorldFoundry exposes an in-tree runtime subprocess adapter for MVDiffusion.
-  - Missing source checkout, checkpoints, or CUDA dependencies are reported at inference time.
+  - Missing checkpoints or CUDA dependencies are reported at inference time.
 confirmation: Upstream project page links code/demo; no license file was confirmed in the repo, so this is not marked open_source.
 output_artifacts:
 - generated_image

@@ -91,12 +91,6 @@ def _round_to_multiple(value: int, multiple: int) -> int:
     return max(multiple, round(value / multiple) * multiple)
 
 
-def _is_module(value: Any) -> bool:
-    """True only for an instantiated nn.Module (not a bare class placeholder)."""
-
-    return isinstance(value, torch.nn.Module)
-
-
 def _resolve_component_devices(
     device: str,
     overrides: Mapping[str, str] | None = None,
@@ -617,9 +611,9 @@ class NativeMiniMaxH3Pipeline(PipelineABC):
         )
         result["video_latent"] = video_latent
         result["audio_latent"] = audio_latent
-        if _is_module(self.video_vae):
+        if isinstance(self.video_vae, torch.nn.Module):
             result["video"] = self._decode_video(video_latent.to(self.component_devices["video_vae"]))
-        if _is_module(self.audio_vae):
+        if isinstance(self.audio_vae, torch.nn.Module):
             result["audio"] = self._decode_audio(audio_latent.to(self.component_devices["audio_vae"]))
         return result
 

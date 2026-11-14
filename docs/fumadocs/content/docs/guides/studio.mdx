@@ -770,23 +770,23 @@ frame:
   VGGT-Omega official GLBs use `+Y` up and `alignment=none`.
 - A raw VGGT/VGGT-Omega prediction NPZ remains in the model's OpenCV frame, so
   Viser applies `coordinate_preset=opencv-to-opengl` once and uses `+Y` up.
-- Raw UniDepth V2 and UniK3D model-point NPZ files also use the OpenCV camera
-  frame. Their Workspace PLY exporter instead persists `x-right/y-up/z-forward`,
-  so those PLY files use `asset-native`, `+Y` up, and `alignment=none` without a
+- Raw UniDepth V2 model-point NPZ files also use the OpenCV camera frame. Its
+  Workspace PLY exporter instead persists `x-right/y-up/z-forward`, so those PLY
+  files use `asset-native`, `+Y` up, and `alignment=none` without a
   second flip.
-- DUSt3R, LoGeR, and Pi3 PLY point clouds keep their predicted camera-to-world
+- LoGeR and Pi3 PLY point clouds keep their predicted camera-to-world
   sidecars. Viser applies `first-camera-opengl` to points and cameras together,
   uses `+Y` up, and frames the central 5-95% geometry range so sparse outliers do
   not shrink the useful scene.
 - Rerun recordings must log the world `ViewCoordinates` and use the same camera
-  convention in every `Pinhole`. Cut3R and MonST3R use RDF for both world and
-  camera entities.
+  convention in every `Pinhole`. Cut3R uses RDF for both world and camera
+  entities.
 - Never fix an orientation mismatch by flipping only the point cloud. Apply the
   same rigid transform to geometry and camera-to-world poses, then verify reset,
   orbit, and timeline interaction in a browser.
 
-Workspace resolves the proven VGGT, DUSt3R, LoGeR, and Pi3 defaults automatically.
-The Visualizer defaults also cover UniDepth V2 and UniK3D raw/Workspace assets.
+Workspace resolves the proven VGGT, LoGeR, and Pi3 defaults automatically.
+The Visualizer defaults also cover UniDepth V2 raw/Workspace assets.
 The Visualizer Params JSON remains an explicit override for other exporters. Viser reports the
 actual bound port when its requested port is occupied. Rerun uses WebGPU
 by default; set `WORLDFOUNDRY_STUDIO_RERUN_RENDERER=webgl` only when the target

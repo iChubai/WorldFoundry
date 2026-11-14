@@ -64,6 +64,7 @@ class Modality:
     attention_mask: torch.Tensor | None = None
     video_control: object | None = None
     attention_cache: ContextAttentionCache | None = None
+    keyframes_mask: torch.Tensor | None = None  # (B, T, 1), marks generated keyframe tokens.
 
     def split(self, sizes: list[int]) -> list[Modality]:
         """Split along the batch dimension into chunks of the given sizes."""

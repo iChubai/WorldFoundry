@@ -5,7 +5,10 @@ from einops import rearrange
 from jaxtyping import Float
 from torch import Tensor, nn
 
-from ....geometry.projection import sample_image_grid
+from worldfoundry.base_models.three_dimensions.depth.depth_anything.depth_anything_v3.utils.geometry import (
+    sample_image_grid,
+)
+
 from ...encodings.positional_encoding import PositionalEncoding
 from ...transformer.transformer import Transformer
 

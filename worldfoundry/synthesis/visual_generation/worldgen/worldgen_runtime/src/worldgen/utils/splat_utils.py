@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 from plyfile import PlyData, PlyElement
-from pytorch3d.transforms import matrix_to_quaternion
+
+from .rotation import matrix_to_quaternion
 
 
 class SplatFile:

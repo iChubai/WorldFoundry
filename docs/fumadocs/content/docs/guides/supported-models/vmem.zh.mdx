@@ -5,7 +5,7 @@ modelId: "vmem"
 pageSource: generated
 ---
 
-VMem 是带「面元索引视图记忆」的交互式视频场景生成模型：当你在场景中游走时，它记住哪些表面曾从哪些视角被看到，使新视角与历史保持一致。已用发布的 VMem 与 CUT3R checkpoint 验证：pipeline 复现了官方导航 demo。
+VMem 是带「面元索引视图记忆」的交互式视频场景生成模型：当你在场景中游走时，它记住哪些表面曾从哪些视角被看到，使新视角与历史保持一致。已用发布的 VMem 与 CUT3R checkpoint 验证：树内 pipeline 复现了官方导航 demo。
 
 <ModelPaperFigures modelId="vmem" locale="zh" />
 
@@ -33,9 +33,9 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `VMemPipeline
 
 系列状态：**已验证**。
 
-输入为提示词、起始图像与导航/交互动作；输出为生成视频。
+输入为提示词、起始图像与导航/交互动作；输出为生成视频。runtime_root（或 VMEM_RUNTIME_ROOT）仅选择配置/数据目录，先查找其中的 configs/inference/inference.yaml，再回退到包内默认配置；config_path 可直接指定配置文件。Python 代码始终来自已安装的包。
 
-需要在本地准备 VMem 与 CUT3R checkpoint，以及 Stable Diffusion 2.1 VAE、CLIP ViT-H-14 图像条件编码器与 DUSt3R 相机预处理器。
+需要在本地准备 VMem 与 CUT3R checkpoint，以及 Stable Diffusion 2.1 VAE 和 CLIP ViT-H-14 图像条件编码器。
 
 ## 在 WorldFoundry 中运行
 

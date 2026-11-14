@@ -19,10 +19,16 @@ The Refiner packs video in 8×4×4 latent blocks and uses the released radius-tw
 
 Prepare the `sand-ai/MAGI-2-preview` checkpoint layout: `preview/`, `refiner/`, `turbo_vae/`, `stable-audio-open-1.0/`, and `text_encoder/`. Components load lazily; Preview layers use sequential GPU residency.
 
+The Qwen3.5 text-encoding worker uses the `magi2-preview` environment declared in `worldfoundry/data/models/runtime/environments/video/magi2-preview.yaml` (Transformers 5.5). Install WorldFoundry in that environment too. Studio selects its Python automatically; direct pipeline calls set `python_executable` as below. The parent pipeline can stay in the unified environment.
+
 ```python
 from worldfoundry.pipelines.magi2 import NativeMagi2Pipeline
 
-pipeline = NativeMagi2Pipeline.from_pretrained("/weights/MAGI-2-preview", device="cuda")
+pipeline = NativeMagi2Pipeline.from_pretrained(
+    "/weights/MAGI-2-preview",
+    device="cuda",
+    python_executable="/envs/magi2-preview/bin/python",
+)
 pipeline(
     prompt="A cinematic camera move through a sunlit forest.",
     use_refiner=True,

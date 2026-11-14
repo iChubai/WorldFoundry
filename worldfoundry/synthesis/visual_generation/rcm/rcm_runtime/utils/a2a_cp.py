@@ -23,49 +23,13 @@ import torch.distributed as dist
 from einops import rearrange
 from torch.distributed import ProcessGroup
 
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.context_parallel import (
+    post_all2all,
+    single_all_to_all,
+)
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.attention import attention
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.kv_cache import AttnContext, KVCacheMode
 from worldfoundry.synthesis.visual_generation.rcm.rcm_runtime.utils.rope import apply_rope
-
-
-def post_all2all(local_seq_2_local_head, seq_world_size):
-    def post_func(input):
-        # b, s, n, h
-        if local_seq_2_local_head:
-            output = rearrange(input, "w bs seq h d -> bs (w seq) h d")
-        else:
-            output = rearrange(input, "w bs s h d -> bs s (w h) d", w=seq_world_size)
-
-        return output
-
-    return post_func
-
-
-def single_all_to_all(input, local_seq_2_local_head, group, async_op=False):
-    seq_world_size = dist.get_world_size(group)
-
-    # b, s, n, h
-    if local_seq_2_local_head:
-        bs, local_seq_len, num_total_head, head_dim = input.shape
-        assert num_total_head % seq_world_size == 0, (
-            f"Number of heads ({num_total_head}) must be divisible by the sequence parallel size ({seq_world_size})!"
-        )
-        input_t = rearrange(
-            input, "bs seq_len (w h) d -> w bs seq_len h d", w=seq_world_size, h=num_total_head // seq_world_size
-        ).contiguous()
-        post_all2all_fun = post_all2all(local_seq_2_local_head, seq_world_size)
-    else:
-        bs, global_seq_len, num_local_head, head_dim = input.shape
-        input_t = rearrange(
-            input, "bs (w s) h d -> w bs s h d", w=seq_world_size, s=global_seq_len // seq_world_size
-        ).contiguous()
-        post_all2all_fun = post_all2all(local_seq_2_local_head, seq_world_size)
-
-    output = torch.empty_like(input_t)
-    dist.all_to_all_single(output, input_t, group=group, async_op=async_op)
-
-    res = post_all2all_fun(output)
-    return res
 
 
 def async_a2a_communicate(

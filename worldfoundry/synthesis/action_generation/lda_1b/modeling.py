@@ -16,6 +16,9 @@ from diffusers.models.attention import Attention, FeedForward
 from diffusers.models.embeddings import TimestepEmbedding, Timesteps
 from torch import Tensor, nn
 
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.embodiment_mlp import (
+    SmallMLP as MLP,
+)
 from worldfoundry.core.attention import scaled_dot_product_attention
 
 from .dinov3_configuration import DINOv3ViTConfig
@@ -398,16 +401,6 @@ class CategorySpecificMLP(nn.Module):
 
     def forward(self, value: Tensor, category_ids: Tensor) -> Tensor:
         return self.layer2(F.relu(self.layer1(value, category_ids)), category_ids)
-
-
-class MLP(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int, output_dim: int) -> None:
-        super().__init__()
-        self.layer1 = nn.Linear(input_dim, hidden_dim)
-        self.layer2 = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, value: Tensor) -> Tensor:
-        return self.layer2(F.relu(self.layer1(value)))
 
 
 class ActionEncoder(nn.Module):

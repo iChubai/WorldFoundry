@@ -5,8 +5,12 @@ import numpy as np
 import torch
 from pydantic import Field, PrivateAttr
 
-from .schema import DatasetMetadata, StateActionMetadata
-from .transform_base import InvertibleModalityTransform, ModalityTransform
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import (
+    InvertibleModalityTransform,
+    ModalityTransform,
+)
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.schema import StateActionMetadata
+from worldfoundry.synthesis.action_generation.dreamzero.preprocessing.schema import DatasetMetadata
 
 
 class ConcatTransform(InvertibleModalityTransform):

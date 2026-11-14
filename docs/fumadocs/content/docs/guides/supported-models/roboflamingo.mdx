@@ -34,6 +34,8 @@ Checkpoint directories — all must already exist under `${WORLDFOUNDRY_HFD_ROOT
 - `openflamingo/OpenFlamingo-3B-vitl-mpt1b-langinstruct` → `openflamingo--OpenFlamingo-3B-vitl-mpt1b-langinstruct`
 - `anas-awadalla/mpt-1b-redpajama-200b-dolly` → `anas-awadalla--mpt-1b-redpajama-200b-dolly`
 
+The released MPT-1B checkpoint uses `mosaic_gpt`. WorldFoundry loads its configuration and weights with the canonical `worldfoundry.base_models.llm_mllm_core.mllm.mosaic_gpt` implementation; checkpoint Python files are not executed.
+
 The vision encoder file is expected at `${WORLDFOUNDRY_CKPT_DIR}/open_clip/ViT-L-14.pt`. Full official CALVIN evaluation also needs the CALVIN assets.
 
 ## Running in WorldFoundry
@@ -44,6 +46,6 @@ The environment profile is `worldfoundry-unified-cu128`; its environment YAML pi
 wf run roboflamingo
 ```
 
-No license is listed for this model. Confirm RoboFlamingo / OpenFlamingo / MPT terms before production use.
+No license is listed for this model. MosaicGPT source is Apache-2.0 and its language weights are CC-BY-SA-3.0. Confirm RoboFlamingo / OpenFlamingo / MPT terms before production use.
 
 <ModelRelatedRecipes modelId="roboflamingo" locale="en" />

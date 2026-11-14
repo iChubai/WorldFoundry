@@ -8,7 +8,6 @@ directly — no lazy loading.
 
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
 
 import torch
@@ -30,7 +29,7 @@ from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter impor
 from .entity_matcher import EntityMatcher
 
 # isort: split
-from .helpers import get_project_root, load_unified_backbone_pipeline, parse_target_resolution
+from .helpers import load_unified_backbone_pipeline, parse_target_resolution
 
 # isort: split
 # isort: split
@@ -38,7 +37,10 @@ from .logger import logger
 
 # isort: split
 # isort: split
-from liveworld.pipelines.pointcloud_updater import PointCloudUpdater, create_pointcloud_updater
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
+    PointCloudUpdater,
+    create_pointcloud_updater,
+)
 
 
 @dataclass
@@ -54,10 +56,6 @@ class SharedModels:
 
 def create_shared_models(config: dict) -> SharedModels:
     """Create all heavyweight models from a config."""
-    project_root = get_project_root()
-    if project_root not in sys.path:
-        sys.path.insert(0, project_root)
-
     device_str = config["runtime"]["device"]
     device = torch.device(device_str)
     cpu_offload = config["runtime"]["cpu_offload"]

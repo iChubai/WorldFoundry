@@ -10,10 +10,9 @@ import numpy as np
 import torch
 from PIL import Image
 
-from ..base_models.three_dimensions.point_clouds.flash_world.utils import (
-    matrix_to_quaternion,
-    quaternion_to_matrix,
-)
+from worldfoundry.core.geometry.transforms import quaternion_wxyz_to_rotation_matrix as quaternion_to_matrix
+from worldfoundry.core.geometry.transforms import rotation_matrix_to_quaternion_wxyz_tensor as matrix_to_quaternion
+
 from .base_operator import BaseOperator
 
 

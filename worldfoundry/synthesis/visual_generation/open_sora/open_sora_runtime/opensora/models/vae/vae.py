@@ -6,8 +6,10 @@ from diffusers.models import AutoencoderKL, AutoencoderKLTemporalDecoder
 from einops import rearrange
 from transformers import PretrainedConfig, PreTrainedModel
 
-from opensora.registry import MODELS, build_module
-from opensora.utils.ckpt_utils import load_checkpoint
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import MODELS, build_module
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.utils.ckpt_utils import (
+    load_checkpoint,
+)
 
 
 @MODELS.register_module()

@@ -69,8 +69,8 @@ LLM_MODEL_ARCH = _LazyArchRegistry(
 VIT_MODEL_ARCH = _LazyArchRegistry(
     {
         "InternVisionModel": (
-            ("worldfoundry.synthesis.action_generation.being_h05.modeling.internvit", "InternVisionConfig"),
-            ("worldfoundry.synthesis.action_generation.being_h05.modeling.internvit", "InternVisionModel"),
+            ("worldfoundry.base_models.llm_mllm_core.mllm.intern_vit.configuration", "InternVisionConfig"),
+            ("worldfoundry.base_models.llm_mllm_core.mllm.intern_vit.model", "InternVisionModel"),
         ),
     }
 )

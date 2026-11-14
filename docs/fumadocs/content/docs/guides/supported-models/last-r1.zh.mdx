@@ -19,7 +19,7 @@ LaST-R1 是 MIT 许可的 VLA 策略。WorldFoundry 已通过模型专用 latent
 
 `last-r1` 把相机观测和指令映射为动作轨迹。
 
-LaST-R1 是基于 Qwen3-VL、经强化学习精调的 VLA 策略；WorldFoundry 运行官方源码（CHEN-H01/LaST-R1），通过其 latent/action token 解码动作。
+LaST-R1 在 Qwen3-VL 上增加 latent 推理 token、由 56 个双向注意的动作 token 解码出的 8 步 7 维动作，以及价值头。WorldFoundry 已将官方模型代码（CHEN-H01/LaST-R1，ba4e9396）的推理路径纳入包内。
 
 任务：视觉-语言-动作（VLA）、reinforcement_learning、策略执行。
 
@@ -33,7 +33,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LastR1Pipeli
 
 系列状态：**Runner 一致性待确认**。
 
-安装锁定版本的 LaST-R1 源码并设置 WORLDFOUNDRY_LAST_R1_SOURCE_DIR（或向 LastR1Pipeline.from_pretrained 传入 source_root），并准备 chenhao01/LaST-R1 中的 libero_10 RL 权重。适配器从一幅图像与一条指令返回八步七维动作。
+准备 chenhao01/LaST-R1 中的 libero_10 RL 权重。树内适配器从一幅图像与一条指令返回八步有限值的七维动作。
 
 集成范围为离线动作推理；尚未验证闭环 LIBERO rollout 与任务成功率。
 

@@ -15,7 +15,7 @@ AdaWorld 从视频中提取潜在动作，用它们驱动可适配的世界模�
 
 ## 模型用途
 
-AdaWorld 的潜在动作自编码器从视频中提取运动表示，用于条件化世界模型的生成帧。运行时沿用官方 FDM 推理路径。任务标签为 `latent-action-world-model`、`action-conditioned-video` 和 `multi-domain-world-model`。
+AdaWorld 的潜在动作自编码器从视频中提取运动表示，用于条件化世界模型的生成帧。仓内运行时通过已安装的 `worldfoundry.synthesis.visual_generation.adaworld.worldmodel.sample` 模块沿用官方 FDM 推理路径。任务标签为 `latent-action-world-model`、`action-conditioned-video` 和 `multi-domain-world-model` 三项；已完成的 GPU 验证只覆盖短源视频滚动生成，不代表这些任务各自的基准测试已完成。
 
 ## 输入与权重
 

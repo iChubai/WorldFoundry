@@ -21,7 +21,6 @@ import hashlib
 import json
 import math
 import os
-import re
 import select
 import subprocess
 import sys
@@ -815,15 +814,18 @@ def _official_video_internal_torchrun_nproc(
     call_kwargs: Mapping[str, Any],
     load_kwargs: Mapping[str, Any],
 ) -> int:
-    """Return nproc for official video configs whose command launches torchrun."""
+    """Return the process count declared by an in-tree official CLI module."""
+    import yaml
+
     config_path = _package_root() / "data" / "models" / "runtime" / "configs" / "video_official" / f"{model_id}.yaml"
     if not config_path.is_file():
         return 0
     try:
-        text = config_path.read_text(encoding="utf-8")
+        config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     except OSError:
         return 0
-    if "{torchrun}" not in text:
+    runtime = config.get("runtime") or {}
+    if runtime.get("kind") != "official_cli" or "nproc_per_node" not in runtime:
         return 0
     requested = (
         call_kwargs.get("nproc_per_node")
@@ -834,8 +836,7 @@ def _official_video_internal_torchrun_nproc(
         or load_kwargs.get("torchrun_nproc")
     )
     if requested in {None, ""}:
-        match = re.search(r"(?m)^\s+nproc_per_node:\s*([0-9]+)\s*$", text)
-        requested = match.group(1) if match else 0
+        requested = str(runtime["nproc_per_node"]).format(**(runtime.get("defaults") or {}))
     try:
         return int(requested or 0)
     except Exception:

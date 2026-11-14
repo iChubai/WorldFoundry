@@ -11,6 +11,8 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset
 
+from worldfoundry.core.utils.tensors.torch import merge_info as merge_info
+
 
 @dataclass
 class SegmentId:
@@ -104,18 +106,6 @@ class Episode:
         d = {k: v.add(1).div(2).mul(255).byte() if k == "obs" else v for k, v in self.__dict__.items()}
         torch.save(d, path.with_suffix(".tmp"))
         path.with_suffix(".tmp").rename(path)
-
-
-def merge_info(info_a, info_b):
-    keys_a = set(info_a)
-    keys_b = set(info_b)
-    intersection = keys_a & keys_b
-    info = {
-        **{k: info_a[k] for k in keys_a if k not in intersection},
-        **{k: info_b[k] for k in keys_b if k not in intersection},
-        **{k: torch.cat((info_a[k], info_b[k]), dim=0) for k in intersection},
-    }
-    return info
 
 
 class CSGOHdf5Dataset(StateDictMixin, Dataset):

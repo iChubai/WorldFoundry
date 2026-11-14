@@ -1,9 +1,6 @@
 # ruff: noqa: F405 - Names come from the upstream star import.
-import importlib
-import importlib.util
 import json
 import math
-import os
 import time
 import warnings
 from functools import wraps
@@ -288,10 +285,3 @@ class no_warnings:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.warnings_manager.__exit__(exc_type, exc_val, exc_tb)
-
-
-def import_file_as_module(file_path: Union[str, os.PathLike], module_name: str):
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module

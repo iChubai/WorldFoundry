@@ -11,21 +11,14 @@ from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.modeling_utils import ModelMixin
 from einops import rearrange
 
+from worldfoundry.base_models.diffusion_model.models.networks.wan.reference_21 import (
+    WanRMSNorm,
+    sinusoidal_embedding_1d,
+)
+
 from .attention import attention
 
 __all__ = ["XWAMModel"]
-
-
-def sinusoidal_embedding_1d(dim, position):
-    # preprocess
-    assert dim % 2 == 0
-    half = dim // 2
-    position = position.type(torch.float64)
-
-    # calculation
-    sinusoid = torch.outer(position, torch.pow(10000, -torch.arange(half).to(position).div(half)))
-    x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
-    return x
 
 
 @torch.amp.autocast("cuda", enabled=False)
@@ -51,24 +44,6 @@ def rope_apply_1d(x, freqs):
     x_complex = torch.view_as_complex(x.to(torch.float64).reshape(B, L, H, D // 2, 2))
 
     return torch.view_as_real(x_complex * freqs).flatten(3).float()
-
-
-class WanRMSNorm(nn.Module):
-    def __init__(self, dim, eps=1e-5):
-        super().__init__()
-        self.dim = dim
-        self.eps = eps
-        self.weight = nn.Parameter(torch.ones(dim))
-
-    def forward(self, x):
-        r"""
-        Args:
-            x(Tensor): Shape [B, L, C]
-        """
-        return self._norm(x.float()).type_as(x) * self.weight
-
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
 
 
 class WanLayerNorm(nn.LayerNorm):

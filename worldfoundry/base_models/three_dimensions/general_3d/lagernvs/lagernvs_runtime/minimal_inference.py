@@ -32,27 +32,13 @@ use run_eval.py with ground truth camera poses instead.
 """
 
 import argparse
-import sys
 from pathlib import Path
 
-_THIS_FILE = Path(__file__).resolve()
-for _path in (
-    _THIS_FILE.parents[6],
-    _THIS_FILE.parents[3] / "point_clouds" / "vggt",
-):
-    _path_str = str(_path)
-    if _path_str not in sys.path:
-        sys.path.insert(0, _path_str)
+import torch
+from huggingface_hub import hf_hub_download
 
-import torch  # noqa: E402 - Follows the sys.path setup.
-from huggingface_hub import hf_hub_download  # noqa: E402 - Follows the sys.path setup.
-from inference_utils import (  # noqa: E402 - Follows the sys.path setup.
-    create_target_camera_path,
-    load_and_preprocess_images_compat,
-    render_chunked,
-    save_video,
-)
-from models.encoder_decoder import EncDec_VitB8  # noqa: E402 - Follows the sys.path setup.
+from .inference_utils import create_target_camera_path, load_and_preprocess_images_compat, render_chunked, save_video
+from .models.encoder_decoder import EncDec_VitB8
 
 
 def _resolve_checkpoint(model_repo):

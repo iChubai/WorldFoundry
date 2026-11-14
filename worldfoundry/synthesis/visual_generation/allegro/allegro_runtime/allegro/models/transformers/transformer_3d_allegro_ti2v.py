@@ -12,8 +12,6 @@ from typing import Any
 
 import torch
 import torch.nn.functional as F
-from allegro.models.transformers.block import AdaLayerNormSingle, BasicTransformerBlock, to_2tuple
-from allegro.models.transformers.embedding import PatchEmbed2D, PatchEmbed2DTI2V
 from diffusers.configuration_utils import ConfigMixin, register_to_config
 from diffusers.models.embeddings import PixArtAlphaTextProjection
 from diffusers.models.modeling_utils import ModelMixin
@@ -21,13 +19,18 @@ from diffusers.utils import BaseOutput, logging
 from einops import rearrange
 from torch import nn
 
+from worldfoundry.core.nn.diffusion.convolution import zero_module as zero_module
+from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.transformers.block import (
+    AdaLayerNormSingle,
+    BasicTransformerBlock,
+    to_2tuple,
+)
+from worldfoundry.synthesis.visual_generation.allegro.allegro_runtime.allegro.models.transformers.embedding import (
+    PatchEmbed2D,
+    PatchEmbed2DTI2V,
+)
+
 logger = logging.get_logger(__name__)
-
-
-def zero_module(module):
-    for p in module.parameters():
-        nn.init.zeros_(p)
-    return module
 
 
 @dataclass

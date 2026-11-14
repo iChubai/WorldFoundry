@@ -9,7 +9,6 @@ pipeline, and handling input/output for video generation.
 from __future__ import annotations
 
 import os
-import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -126,8 +125,6 @@ class AnimateDiffRuntime:
         If the pipeline (`_pipe`) is not already created, this method
         initializes it by loading models, tokenizers, and schedulers,
         and then loads the specified motion module and DreamBooth weights.
-        It also ensures the `src` directory of the repository is in `sys.path`
-        for module imports.
 
         Returns:
             The initialized `AnimationPipeline` instance.
@@ -141,11 +138,6 @@ class AnimateDiffRuntime:
             return self._pipe
         if not self.motion_module_path:
             raise ValueError("AnimateDiffRuntime requires a local motion_module_path.")
-
-        # Add the repository's 'src' directory to Python path to enable local module imports
-        src_root = REPO_ROOT
-        if str(src_root) not in sys.path:
-            sys.path.insert(0, str(src_root))
 
         import torch
         from diffusers import AutoencoderKL, DDIMScheduler
@@ -248,18 +240,12 @@ class AnimateDiffRuntime:
         Prepares the environment variables required for running the official
         AnimateDiff repository's scripts (e.g., via subprocess).
 
-        This includes setting `PYTHONPATH` and Hugging Face Hub cache paths,
-        and setting offline flags.
+        This sets Hugging Face Hub cache paths and offline flags.
 
         Returns:
             A dictionary of environment variables.
         """
         env = os.environ.copy()
-        pythonpath = [str(REPO_ROOT)]
-        # Append existing PYTHONPATH if it exists
-        if env.get("PYTHONPATH"):
-            pythonpath.append(env["PYTHONPATH"])
-        env["PYTHONPATH"] = os.pathsep.join(pythonpath)
         # Set Hugging Face cache directories, resolving and expanding paths
         env["HF_HOME"] = str(Path(self.hf_hub_cache).expanduser().resolve().parent)
         env["HUGGINGFACE_HUB_CACHE"] = str(Path(self.hf_hub_cache).expanduser().resolve())

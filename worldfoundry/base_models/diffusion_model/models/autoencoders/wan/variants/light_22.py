@@ -17,6 +17,12 @@ import logging
 import torch
 import torch._dynamo
 
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import AvgDown3D as AvgDown3D
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import CausalConv3d as CausalConv3d
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import DupUp3D as DupUp3D
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import patchify as patchify
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import unpatchify as unpatchify
+
 if hasattr(torch._dynamo.config, "recompile_limit"):
     torch._dynamo.config.recompile_limit = 1024
 elif hasattr(torch._dynamo.config, "accumulated_recompile_limit"):
@@ -28,7 +34,6 @@ import os  # noqa: E402 - Follows module-level setup, as upstream.
 import time  # noqa: E402 - Follows module-level setup, as upstream.
 
 import torch.nn as nn  # noqa: E402 - Follows module-level setup, as upstream.
-import torch.nn.functional as F  # noqa: E402 - Follows module-level setup, as upstream.
 from einops import rearrange  # noqa: E402 - Follows module-level setup, as upstream.
 
 from worldfoundry.core.attention import (  # noqa: E402 - Follows module-level setup, as upstream.
@@ -206,34 +211,6 @@ def convert_to_channels_last_3d(module):
             child.weight.data = child.weight.data.to(memory_format=torch.channels_last_3d)
         else:
             convert_to_channels_last_3d(child)
-
-
-class CausalConv3d(nn.Conv3d):
-    """
-    Causal 3d convolusion.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._padding = (
-            self.padding[2],
-            self.padding[2],
-            self.padding[1],
-            self.padding[1],
-            2 * self.padding[0],
-            0,
-        )
-        self.padding = (0, 0, 0)
-
-    def forward(self, x, cache_x=None):
-        padding = list(self._padding)
-        if cache_x is not None and self._padding[4] > 0:
-            cache_x = cache_x.to(x.device)
-            x = torch.cat([cache_x, x], dim=2)
-            padding[4] -= cache_x.shape[2]
-        x = F.pad(x, padding)
-
-        return super().forward(x)
 
 
 class RMS_norm(nn.Module):
@@ -440,141 +417,6 @@ class AttentionBlock(nn.Module):
         x = self.proj(x)
         x = rearrange(x, "(b t) c h w-> b c t h w", t=t)
         return x + identity
-
-
-def patchify(x, patch_size):
-    if patch_size == 1:
-        return x
-    if x.dim() == 4:
-        x = rearrange(x, "b c (h q) (w r) -> b (c r q) h w", q=patch_size, r=patch_size)
-    elif x.dim() == 5:
-        x = rearrange(
-            x,
-            "b c f (h q) (w r) -> b (c r q) f h w",
-            q=patch_size,
-            r=patch_size,
-        )
-    else:
-        raise ValueError(f"Invalid input shape: {x.shape}")
-
-    return x
-
-
-def unpatchify(x, patch_size):
-    if patch_size == 1:
-        return x
-
-    if x.dim() == 4:
-        x = rearrange(x, "b (c r q) h w -> b c (h q) (w r)", q=patch_size, r=patch_size)
-    elif x.dim() == 5:
-        x = rearrange(
-            x,
-            "b (c r q) f h w -> b c f (h q) (w r)",
-            q=patch_size,
-            r=patch_size,
-        )
-    return x
-
-
-class AvgDown3D(nn.Module):
-    """Avg down d implementation."""
-
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        factor_t,
-        factor_s=1,
-    ):
-        super().__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.factor_t = factor_t
-        self.factor_s = factor_s
-        self.factor = self.factor_t * self.factor_s * self.factor_s
-
-        assert in_channels * self.factor % out_channels == 0
-        self.group_size = in_channels * self.factor // out_channels
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        pad_t = (self.factor_t - x.shape[2] % self.factor_t) % self.factor_t
-        pad = (0, 0, 0, 0, pad_t, 0)
-        x = F.pad(x, pad)
-        B, C, T, H, W = x.shape
-        x = x.view(
-            B,
-            C,
-            T // self.factor_t,
-            self.factor_t,
-            H // self.factor_s,
-            self.factor_s,
-            W // self.factor_s,
-            self.factor_s,
-        )
-        x = x.permute(0, 1, 3, 5, 7, 2, 4, 6).contiguous()
-        x = x.view(
-            B,
-            C * self.factor,
-            T // self.factor_t,
-            H // self.factor_s,
-            W // self.factor_s,
-        )
-        x = x.view(
-            B,
-            self.out_channels,
-            self.group_size,
-            T // self.factor_t,
-            H // self.factor_s,
-            W // self.factor_s,
-        )
-        x = x.mean(dim=2)
-        return x
-
-
-class DupUp3D(nn.Module):
-    """Dup up d implementation."""
-
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        factor_t,
-        factor_s=1,
-    ):
-        super().__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-
-        self.factor_t = factor_t
-        self.factor_s = factor_s
-        self.factor = self.factor_t * self.factor_s * self.factor_s
-
-        assert out_channels * self.factor % in_channels == 0
-        self.repeats = out_channels * self.factor // in_channels
-
-    def forward(self, x: torch.Tensor, first_chunk=False) -> torch.Tensor:
-        x = x.repeat_interleave(self.repeats, dim=1)
-        x = x.view(
-            x.size(0),
-            self.out_channels,
-            self.factor_t,
-            self.factor_s,
-            self.factor_s,
-            x.size(2),
-            x.size(3),
-            x.size(4),
-        )
-        x = x.permute(0, 1, 5, 2, 6, 3, 7, 4).contiguous()
-        x = x.view(
-            x.size(0),
-            self.out_channels,
-            x.size(2) * self.factor_t,
-            x.size(4) * self.factor_s,
-            x.size(6) * self.factor_s,
-        )
-        if first_chunk:
-            x = x[:, :, self.factor_t - 1 :, :, :]
-        return x
 
 
 class Down_ResidualBlock(nn.Module):

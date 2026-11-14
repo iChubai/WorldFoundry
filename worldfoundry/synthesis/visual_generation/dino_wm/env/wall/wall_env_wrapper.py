@@ -1,6 +1,7 @@
 import numpy as np
 from torchvision import transforms
-from utils import aggregate_dct
+
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import aggregate_dct
 
 from .envs.wall import DotWall, WallDatasetConfig
 from .layouts.wall_utils import generate_wall_layouts

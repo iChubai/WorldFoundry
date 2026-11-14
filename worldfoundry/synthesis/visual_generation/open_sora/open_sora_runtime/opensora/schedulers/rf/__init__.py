@@ -1,7 +1,7 @@
 import torch
 from tqdm import tqdm
 
-from opensora.registry import SCHEDULERS
+from worldfoundry.synthesis.visual_generation.open_sora.open_sora_runtime.opensora.registry import SCHEDULERS
 
 from .rectified_flow import RFlowScheduler, timestep_transform
 

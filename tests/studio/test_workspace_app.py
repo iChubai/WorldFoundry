@@ -208,9 +208,6 @@ def test_workspace_catalog_models_expose_official_links() -> None:
     assert fantasyworld["project"] == "https://fantasy-amap.github.io/fantasy-world/"
     assert fantasyworld["paper"] == "https://arxiv.org/abs/2509.21657"
 
-    voyager = models["hunyuanworld-voyager"]["links"]
-    assert voyager["github"] == "https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager"
-
     sana = models["sana"]["links"]
     assert sana["github"] == "https://github.com/NVlabs/Sana"
     assert sana["project"] == "https://nvlabs.github.io/Sana/"

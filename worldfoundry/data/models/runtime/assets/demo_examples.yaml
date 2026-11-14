@@ -32,13 +32,3 @@ assets:
       source_paths:
         - examples/images
         - examples/sky_images
-  - asset_id: stable-virtual-camera-demos
-    kind: demo_bundle
-    role: stable_virtual_camera
-    required: false
-    local_dir: "{WORLDFOUNDRY_DATA_ROOT}/models/runtime_assets/stable_virtual_camera"
-    metadata:
-      size_hint_mb: 34
-      source_repo: https://github.com/Stability-AI/stable-virtual-camera
-      source_paths:
-        - assets

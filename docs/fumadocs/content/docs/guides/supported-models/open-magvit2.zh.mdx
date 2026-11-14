@@ -2,7 +2,7 @@
 title: "Open-MAGVIT2"
 description: "Open-MAGVIT2，腾讯（ARC Lab）：视频分词；已验证。"
 modelId: "open-magvit2"
-pageSource: generated
+pageSource: authored
 ---
 
 Open-MAGVIT2 是腾讯 ARC 对 MAGVIT-v2 免查表（lookup-free）视觉分词器的开源复现，并在其上构建自回归生成。WorldFoundry 运行其 ImageNet 类条件图像生成路径：256 token 生成产出 256x256 的 PNG 图像，而非视频。已用发布的 checkpoint 验证：生成 ImageNet 类别 207 得到语义正确的图像。
@@ -34,6 +34,8 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `OpenMAGVIT2P
 请就位 TencentARC/Open-MAGVIT2 权重（apache-2.0），并用 class_id 选择 ImageNet 类别。该路径是类条件图像生成，不是提示词生成视频；视频分词是其分词器在上游支持的能力。
 
 可运行路径仅支持类条件图像生成——没有自由提示词，也没有视频输出。
+
+加载模型时，已发布配置中 `src.Open_MAGVIT2` 命名空间下的 `class_path` 和 `target` 会解析到已安装的树内类。权重路径与采样参数保持配置值。
 
 ## 在 WorldFoundry 中运行
 

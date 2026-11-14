@@ -21,13 +21,25 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, TypeGuard
+from typing import TYPE_CHECKING, Any, TypeGuard
 
 import torch
 import torch.utils.checkpoint
 
 if TYPE_CHECKING:
     from torch.distributed.tensor import DTensor
+
+
+def set_grad_checkpoint(model: torch.nn.Module, use_fp32_attention: bool = False, gc_step: int = 1) -> None:
+    """Configure the checkpoint attributes read by video transformer blocks."""
+    assert isinstance(model, torch.nn.Module)
+
+    def set_attr(module: Any) -> None:
+        module.grad_checkpointing = True
+        module.fp32_attention = use_fp32_attention
+        module.grad_checkpointing_step = gc_step
+
+    model.apply(set_attr)
 
 
 def create_custom_forward(module):
@@ -234,4 +246,5 @@ __all__ = [
     "create_custom_forward",
     "get_total_norm",
     "gradient_checkpoint_forward",
+    "set_grad_checkpoint",
 ]

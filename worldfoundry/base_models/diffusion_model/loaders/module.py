@@ -25,6 +25,7 @@ StateDictConverter = Callable[[Mapping[str, object]], Mapping[str, object]]
 CheckpointConfigResolver = Callable[[MaterializedCheckpoint], Mapping[str, object]]
 ApproximateAttentionStateResolver = Callable[[], Mapping[str, object]]
 PostLoadHook = Callable[[torch.nn.Module], None]
+CheckpointStateAdapter = Callable[[torch.nn.Module, Mapping[str, torch.Tensor]], Mapping[str, torch.Tensor]]
 
 if TYPE_CHECKING:
     from worldfoundry.core.platform.compile_cache import CompilePolicy
@@ -192,6 +193,10 @@ class ModuleLoadSpec:
     post_load_hook: PostLoadHook | None = None
     supports_acceleration_plugins: bool = False
     compile_regions: tuple[str, ...] = ()
+    # Tensor-transform converters return a lazy Mapping rather than a name-only map.
+    lazy_state_dict: bool = False
+    state_dict_adapter: CheckpointStateAdapter | None = None
+    buffer_aware_offload: bool = False
 
 
 class NativeModuleLoader:
@@ -237,12 +242,20 @@ class NativeModuleLoader:
                 raise ValueError(f"static and checkpoint-derived module config overlap: {overlap}")
             config.update(resolved_config)
 
-        if policy.offload.mode is OffloadMode.DISK and policy.quantization.mode is not QuantizationMode.NONE:
+        if (
+            policy.offload.mode is OffloadMode.DISK
+            and policy.quantization.mode is not QuantizationMode.NONE
+            and spec.state_dict_adapter is None
+        ):
             raise NotImplementedError(
                 "quantization with disk offload is not supported because the "
                 "load-time weight transform requires materialized parameters"
             )
-        if policy.offload.mode is OffloadMode.BLOCK and policy.quantization.mode is not QuantizationMode.NONE:
+        if (
+            policy.offload.mode is OffloadMode.BLOCK
+            and policy.quantization.mode is not QuantizationMode.NONE
+            and not spec.buffer_aware_offload
+        ):
             raise NotImplementedError(
                 "quantization with block offload is not certified: quantized "
                 "weights are registered buffers, while the asynchronous "
@@ -300,7 +313,24 @@ class NativeModuleLoader:
                 device=policy.device,
                 state_dict_converter=spec.state_dict_converter,
                 module_map=dict(spec.vram_module_map),
+                **(
+                    {
+                        "lazy_state_dict": True,
+                        "preparing_dtype": policy.dtype,
+                        "state_dict_adapter": spec.state_dict_adapter,
+                    }
+                    if spec.lazy_state_dict
+                    else {}
+                ),
+                **({"include_buffers": True} if spec.buffer_aware_offload else {}),
             )
+            if spec.state_dict_adapter is not None:
+                from worldfoundry.core.model_loading.optimize import AppliedOptimizations, apply_quantization_policy
+
+                applied = AppliedOptimizations()
+                applied.record_quantization(apply_quantization_policy(module, policy.quantization))
+                applied.record_offload(requested_mode="disk", effective="lazy-checkpoint-wrapper")
+                module._worldfoundry_applied_optimizations = applied
         else:
             vram_config = None
             module_map = None
@@ -330,6 +360,12 @@ class NativeModuleLoader:
                 vram_config=vram_config,
                 vram_limit=spec.vram_limit_gib,
                 post_load_hook=spec.post_load_hook,
+                **(
+                    {"lazy_state_dict": True, "state_dict_adapter": spec.state_dict_adapter}
+                    if spec.lazy_state_dict
+                    else {}
+                ),
+                **({"include_buffers": True} if spec.buffer_aware_offload else {}),
             )
 
             # Load-time transforms run after checkpoint restoration (and any
@@ -512,6 +548,7 @@ class NativeModuleLoader:
                     layer_container=spec.layer_container,
                     device=policy.device,
                     pin_memory=policy.offload.pin_memory,
+                    **({"include_buffers": True} if spec.buffer_aware_offload else {}),
                 )
                 if not offload_handle.enabled:
                     raise RuntimeError(

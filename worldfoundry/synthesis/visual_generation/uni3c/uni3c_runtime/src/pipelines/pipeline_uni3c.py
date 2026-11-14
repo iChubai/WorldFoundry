@@ -33,7 +33,7 @@ from einops import rearrange
 from transformers import AutoTokenizer, CLIPImageProcessor, CLIPVisionModel, UMT5EncoderModel
 from transformers.image_utils import OPENAI_CLIP_MEAN, OPENAI_CLIP_STD
 
-from src.models.uni3c import RealisDanceDiT
+from ..models.uni3c import RealisDanceDiT
 
 if is_torch_xla_available():
     import torch_xla.core.xla_model as xm

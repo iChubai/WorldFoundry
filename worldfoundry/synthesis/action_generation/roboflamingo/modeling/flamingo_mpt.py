@@ -3,8 +3,9 @@ import copy
 
 import torch
 from einops import rearrange, repeat
-from open_flamingo.src.helpers import PerceiverResampler
 from torch import nn
+
+from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo.src.helpers import PerceiverResampler
 
 from .action_head import DeterministicDecoder, DiffusionDecoder, FCDecoder, GPTDecoder
 

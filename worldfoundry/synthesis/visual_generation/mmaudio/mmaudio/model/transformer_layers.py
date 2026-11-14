@@ -3,8 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from einops.layers.torch import Rearrange
-from mmaudio.ext.rotary_embeddings import apply_rope
-from mmaudio.model.low_level import MLP, ChannelLastConv1d, ConvMLP
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.ext.rotary_embeddings import apply_rope
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.low_level import MLP, ChannelLastConv1d, ConvMLP
 
 
 def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor):

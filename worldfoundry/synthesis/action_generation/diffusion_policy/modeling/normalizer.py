@@ -3,7 +3,9 @@
 import numpy as np
 import torch
 
-from .tensor_dict import DictOfTensorMixin
+from worldfoundry.base_models.llm_mllm_core.action.diffusion_policy import (
+    DictOfTensorMixin,
+)
 
 
 class LinearNormalizer(DictOfTensorMixin):

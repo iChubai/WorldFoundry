@@ -1,23 +1,20 @@
+import argparse
+import json
 import os
 import sys
 from pathlib import Path
 
-# When run as `python3 pipeline/vae_worker.py`, the parent package is unknown; add repo root like other entrypoints.
-_repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _repo_root not in sys.path:
-    sys.path.insert(0, _repo_root)
+import numpy as np
+import torch
+import torch.multiprocessing as mp
+from einops import rearrange
 
-import argparse  # noqa: E402 - Follows the sys.path setup.
-import json  # noqa: E402 - Follows the sys.path setup.
-
-import numpy as np  # noqa: E402 - Follows the sys.path setup.
-import torch  # noqa: E402 - Follows the sys.path setup.
-import torch.multiprocessing as mp  # noqa: E402 - Follows the sys.path setup.
-from einops import rearrange  # noqa: E402 - Follows the sys.path setup.
-from utils.visualize import process_video  # noqa: E402 - Follows the sys.path setup.
+from ..utils.visualize import process_video
 
 # isort: split
-from pipeline.vae_config import load_vae  # noqa: E402 - Follows the sys.path setup.
+from .vae_config import load_vae
+
+_repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _matrix_game3_asset_root() -> str:

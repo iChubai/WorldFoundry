@@ -1,18 +1,29 @@
 # Copyright Alibaba Inc. All Rights Reserved.
 
 from collections.abc import Callable
-from typing import Any
 
 import torch
 from torch import Tensor, nn
 
-from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.attention import Attention
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.attention import (
+    Attention,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.block import (
+    Block as VGGTBlock,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.vggt.vggt.layers.block import (
+    NestedTensorBlock as VGGTNestedTensorBlock,
+)
 from worldfoundry.core.nn.blocks.layers import DropPath, LayerScale, Mlp
+from worldfoundry.core.nn.blocks.stochastic_depth import add_residual as add_residual
+from worldfoundry.core.nn.blocks.stochastic_depth import (
+    get_branges_scales as get_branges_scales,
+)
 
 XFORMERS_AVAILABLE = False
 
 
-class Block(nn.Module):
+class Block(VGGTBlock):
     def __init__(
         self,
         dim: int,
@@ -33,7 +44,7 @@ class Block(nn.Module):
         fused_attn: bool = True,  # use _worldfoundry_scaled_dot_product_attention or not
         rope=None,
     ) -> None:
-        super().__init__()
+        nn.Module.__init__(self)
 
         self.norm1 = norm_layer(dim)
 
@@ -115,157 +126,6 @@ class Block(nn.Module):
         return self.forward(x, run_remaining=True, modifiers=e)
 
 
-def drop_add_residual_stochastic_depth(
-    x: Tensor, residual_func: Callable[[Tensor], Tensor], sample_drop_ratio: float = 0.0, pos=None
-) -> Tensor:
-    # 1) extract subset using permutation
-    b, n, d = x.shape
-    sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
-    brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
-    x_subset = x[brange]
-
-    # 2) apply residual_func to get residual
-    if pos is not None:
-        # if necessary, apply rope to the subset
-        pos = pos[brange]
-        residual = residual_func(x_subset, pos=pos)
-    else:
-        residual = residual_func(x_subset)
-
-    x_flat = x.flatten(1)
-    residual = residual.flatten(1)
-
-    residual_scale_factor = b / sample_subset_size
-
-    # 3) add the residual
-    x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
-    return x_plus_residual.view_as(x)
-
-
-def get_branges_scales(x, sample_drop_ratio=0.0):
-    b, n, d = x.shape
-    sample_subset_size = max(int(b * (1 - sample_drop_ratio)), 1)
-    brange = (torch.randperm(b, device=x.device))[:sample_subset_size]
-    residual_scale_factor = b / sample_subset_size
-    return brange, residual_scale_factor
-
-
-def add_residual(x, brange, residual, residual_scale_factor, scaling_vector=None):
-    if scaling_vector is None:
-        x_flat = x.flatten(1)
-        residual = residual.flatten(1)
-        x_plus_residual = torch.index_add(x_flat, 0, brange, residual.to(dtype=x.dtype), alpha=residual_scale_factor)
-    else:
-        x_plus_residual = scaled_index_add(  # noqa: F821 - Name is undefined in the upstream source.
-            x, brange, residual.to(dtype=x.dtype), scaling=scaling_vector, alpha=residual_scale_factor
-        )
-    return x_plus_residual
-
-
-attn_bias_cache: dict[tuple, Any] = {}
-
-
-def get_attn_bias_and_cat(x_list, branges=None):
-    """
-    this will perform the index select, cat the tensors, and provide the attn_bias from cache
-    """
-    batch_sizes = [b.shape[0] for b in branges] if branges is not None else [x.shape[0] for x in x_list]
-    all_shapes = tuple((b, x.shape[1]) for b, x in zip(batch_sizes, x_list, strict=False))
-    if all_shapes not in attn_bias_cache:
-        seqlens = []
-        for b, x in zip(batch_sizes, x_list, strict=False):
-            for _ in range(b):
-                seqlens.append(x.shape[1])
-        attn_bias = fmha.BlockDiagonalMask.from_seqlens(seqlens)  # noqa: F821 - Name is undefined in the upstream source.
-        attn_bias._batch_sizes = batch_sizes
-        attn_bias_cache[all_shapes] = attn_bias
-
-    if branges is not None:
-        cat_tensors = index_select_cat([x.flatten(1) for x in x_list], branges).view(1, -1, x_list[0].shape[-1])  # noqa: F821 - Name is undefined in the upstream source.
-    else:
-        tensors_bs1 = tuple(x.reshape([1, -1, *x.shape[2:]]) for x in x_list)
-        cat_tensors = torch.cat(tensors_bs1, dim=1)
-
-    return attn_bias_cache[all_shapes], cat_tensors
-
-
-def drop_add_residual_stochastic_depth_list(
-    x_list: list[Tensor],
-    residual_func: Callable[[Tensor, Any], Tensor],
-    sample_drop_ratio: float = 0.0,
-    scaling_vector=None,
-) -> Tensor:
-    # 1) generate random set of indices for dropping samples in the batch
-    branges_scales = [get_branges_scales(x, sample_drop_ratio=sample_drop_ratio) for x in x_list]
-    branges = [s[0] for s in branges_scales]
-    residual_scale_factors = [s[1] for s in branges_scales]
-
-    # 2) get attention bias and index+concat the tensors
-    attn_bias, x_cat = get_attn_bias_and_cat(x_list, branges)
-
-    # 3) apply residual_func to get residual, and split the result
-    residual_list = attn_bias.split(residual_func(x_cat, attn_bias=attn_bias))  # type: ignore
-
-    outputs = []
-    for x, brange, residual, residual_scale_factor in zip(
-        x_list, branges, residual_list, residual_scale_factors, strict=False
-    ):
-        outputs.append(add_residual(x, brange, residual, residual_scale_factor, scaling_vector).view_as(x))
-    return outputs
-
-
-class NestedTensorBlock(Block):
-    def forward_nested(self, x_list: list[Tensor]) -> list[Tensor]:
-        """
-        x_list contains a list of tensors to nest together and run
-        """
-        assert isinstance(self.attn, MemEffAttention)  # noqa: F821 - Name is undefined in the upstream source.
-
-        if self.training and self.sample_drop_ratio > 0.0:
-
-            def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                return self.attn(self.norm1(x), attn_bias=attn_bias)
-
-            def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                return self.mlp(self.norm2(x))
-
-            x_list = drop_add_residual_stochastic_depth_list(
-                x_list,
-                residual_func=attn_residual_func,
-                sample_drop_ratio=self.sample_drop_ratio,
-                scaling_vector=(self.ls1.gamma if isinstance(self.ls1, LayerScale) else None),
-            )
-            x_list = drop_add_residual_stochastic_depth_list(
-                x_list,
-                residual_func=ffn_residual_func,
-                sample_drop_ratio=self.sample_drop_ratio,
-                scaling_vector=(self.ls2.gamma if isinstance(self.ls1, LayerScale) else None),
-            )
-            return x_list
-        else:
-
-            def attn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                return self.ls1(self.attn(self.norm1(x), attn_bias=attn_bias))
-
-            def ffn_residual_func(x: Tensor, attn_bias=None) -> Tensor:
-                return self.ls2(self.mlp(self.norm2(x)))
-
-            attn_bias, x = get_attn_bias_and_cat(x_list)
-            x = x + attn_residual_func(x, attn_bias=attn_bias)
-            x = x + ffn_residual_func(x)
-            return attn_bias.split(x)
-
-    def forward(self, x_or_x_list):
-        if isinstance(x_or_x_list, Tensor):
-            return super().forward(x_or_x_list)
-        elif isinstance(x_or_x_list, list):
-            if not XFORMERS_AVAILABLE:
-                raise AssertionError("xFormers is required for using nested tensors")
-            return self.forward_nested(x_or_x_list)
-        else:
-            raise AssertionError
-
-
 class CamTokenProjector(nn.Module):
     def __init__(self, out_dim: int, hidden: int = 128):
         super().__init__()
@@ -286,34 +146,5 @@ class CamTokenProjector(nn.Module):
         return cam
 
 
-class Projection_Head(nn.Module):
-    def __init__(
-        self,
-        mode: str = "conv",
-        in_channels: int = 5120,
-        out_channels: int = 1024,
-    ):
-        super().__init__()
-        assert mode in {"conv", "linear"}
-        self.mode = mode
-
-        if mode == "conv":
-            self.proj = nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
-        else:
-            self.proj = nn.Linear(in_channels, out_channels, bias=False)
-
-        self.norm = nn.LayerNorm(out_channels)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.mode == "conv":
-            x = x.permute(0, 4, 1, 2, 3).contiguous()
-            x = self.proj(x)
-            x = x.permute(0, 2, 3, 4, 1).contiguous()
-        else:  # linear
-            B, T, H, W, C_in = x.shape
-            x = self.proj(x.view(B * T * H * W, C_in))
-            x = x.view(B, T, H, W, -1)
-
-        B, T, H, W, C = x.shape
-        x = self.norm(x.view(-1, C)).view(B, T, H, W, C)
-        return x
+class NestedTensorBlock(VGGTNestedTensorBlock, Block):
+    """VGGT nested interface with the family block constructor and forward."""

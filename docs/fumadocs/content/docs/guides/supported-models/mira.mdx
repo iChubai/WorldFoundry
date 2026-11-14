@@ -29,7 +29,7 @@ Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmode
 
 Inputs `load.checkpoint-path` and `load.dataset-path` (bundled samples are used when omitted); options `plan-only` and `timeout-seconds`; artifacts `generated_video` and `mira.mp4`.
 
-CLI task profiles: `rocket-science-rollout`. WorldFoundry binds `MIRAPipeline`.
+CLI task profiles: `rocket-science-rollout`. WorldFoundry binds `MIRAPipeline`. The worker runs as `worldfoundry.synthesis.visual_generation.mira_wm.infer` and uses the canonical in-tree DINOv3 backbone. The frozen backbone is restored from the codec checkpoint; standalone pretrained weights can be supplied through `RS_DINO_WEIGHTS_DIR`.
 
 Family status: **Runner parity pending**.
 

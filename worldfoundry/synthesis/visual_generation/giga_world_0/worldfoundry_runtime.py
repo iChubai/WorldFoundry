@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from worldfoundry.core.execution.process import package_module_command
 from worldfoundry.core.io.paths import checkpoint_root_path, project_root
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 from worldfoundry.synthesis.visual_generation.runtime_manifest import command_settings
@@ -177,9 +178,7 @@ def missing_requirements(*, options, runtime_root, entrypoint, profile) -> list[
 def build_command(context: Mapping[str, Any]) -> list[str]:
     settings = command_settings(context)
     image = _path_option(settings, "image_path", "input_image", default=DEFAULT_INPUT_IMAGE)
-    return [
-        str(context["python"]),
-        str(context["entrypoint"]),
+    command = [
         "--transformer-model-dir",
         str(_transformer_model_dir(settings)),
         "--text-encoder-model-dir",
@@ -215,6 +214,11 @@ def build_command(context: Mapping[str, Any]) -> list[str]:
         "--mixed-precision",
         str(settings.get("mixed_precision", "bf16")),
     ]
+    return package_module_command(
+        "worldfoundry.synthesis.visual_generation.giga_world_0.infer",
+        command,
+        python_executable=str(context["python"]),
+    )
 
 
 __all__ = [

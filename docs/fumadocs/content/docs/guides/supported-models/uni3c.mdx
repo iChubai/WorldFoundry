@@ -2,7 +2,7 @@
 title: "Uni3C"
 description: "Uni3C from Alibaba DAMO Academy: image-to-video, camera-controlled video, and 1 more task; Verified; dedicated `uni3c`."
 modelId: "uni3c"
-pageSource: generated
+pageSource: authored
 ---
 
 Uni3C from Alibaba DAMO Academy unifies camera control and human-motion control for image-to-video generation: the PCDController stage steers the camera while the unified stage combines camera plus human motion (RealisDance-DiT). WorldFoundry runs both official stage-two inference paths with public Apache-2.0 checkpoints (ewrfcas/Uni3C, theFoxofSky/RealisDance-DiT) on top of the Wan2.1-I2V-14B-720P base.
@@ -36,6 +36,8 @@ Family status: **Verified**.
 Defaults for `image-camera-control-video`: fps=16, seed=0.
 
 Choose the camera-only or unified camera-plus-human route and provide the matching pre-rendered control bundle. Validated on an H100 with the released checkpoints: the default PCDController camera route runs end to end.
+
+The dedicated `uni3c` environment must have WorldFoundry installed. Camera and unified inference run as package modules, with torchrun for multi-GPU requests. Sequence parallelism, camera-mode FSDP and unified-mode sequential CPU offload retain their existing controls; the runtime does not add source directories to the import path.
 
 ## Running in WorldFoundry
 

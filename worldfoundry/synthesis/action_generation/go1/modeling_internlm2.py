@@ -22,12 +22,10 @@ import warnings
 from typing import ClassVar
 
 import torch
-import torch.nn.functional as F
 import torch.utils.checkpoint
 from einops import rearrange
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from transformers.activations import ACT2FN
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
@@ -41,7 +39,15 @@ from transformers.utils import (
     replace_return_docstrings,
 )
 
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP, repeat_kv
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as InternLM2RMSNorm,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    get_unpad_data as _get_unpad_data,
+)
 from worldfoundry.core.attention import scaled_dot_product_attention
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
 
 try:
     from transformers.generation.streamers import BaseStreamer
@@ -81,19 +87,6 @@ def _import_flash_attn():
     unpad_input = symbols["unpad_input"]
 
 
-# Copied from transformers.models.llama.modeling_llama._get_unpad_data
-def _get_unpad_data(attention_mask):
-    seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
-    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
-    max_seqlen_in_batch = seqlens_in_batch.max().item()
-    cu_seqlens = F.pad(torch.cumsum(seqlens_in_batch, dim=0, dtype=torch.torch.int32), (1, 0))
-    return (
-        indices,
-        cu_seqlens,
-        max_seqlen_in_batch,
-    )
-
-
 # Copied from transformers.models.bart.modeling_bart._make_causal_mask
 def _make_causal_mask(
     input_ids_shape: torch.Size, dtype: torch.dtype, device: torch.device, past_key_values_length: int = 0
@@ -125,24 +118,6 @@ def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: int | None = N
     inverted_mask = 1.0 - expanded_mask
 
     return inverted_mask.masked_fill(inverted_mask.to(torch.bool), torch.finfo(dtype).min)
-
-
-# Copied from transformers.models.llama.modeling_llama.LlamaRMSNorm with Llama->InternLM2
-class InternLM2RMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        """
-        InternLM2RMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        return self.weight * hidden_states.to(input_dtype)
 
 
 # Copied from transformers.model.llama.modeling_llama.LlamaRotaryEmbedding with Llama->InternLM2
@@ -229,54 +204,6 @@ class InternLM2DynamicNTKScalingRotaryEmbedding(InternLM2RotaryEmbedding):
         emb = torch.cat((freqs, freqs), dim=-1)
         self.register_buffer("cos_cached", emb.cos().to(dtype), persistent=False)
         self.register_buffer("sin_cached", emb.sin().to(dtype), persistent=False)
-
-
-# Copied from transformers.model.llama.modeling_llama.rotate_half
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-# Copied from transformers.model.llama.modeling_llama.apply_rotary_pos_emb
-def apply_rotary_pos_emb(q, k, cos, sin, position_ids, unsqueeze_dim=1):
-    """Applies Rotary Position Embedding to the query and key tensors."""
-    cos = cos[position_ids].unsqueeze(unsqueeze_dim)
-    sin = sin[position_ids].unsqueeze(unsqueeze_dim)
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
-
-
-class InternLM2MLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.w1 = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.w3 = nn.Linear(self.hidden_size, self.intermediate_size, bias=False)
-        self.w2 = nn.Linear(self.intermediate_size, self.hidden_size, bias=False)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.w2(self.act_fn(self.w1(x)) * self.w3(x))
-
-        return down_proj
-
-
-# Copied from transformers.model.llama.modeling_llama.repeat_kv
-def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
-    """
-    This is the equivalent of torch.repeat_interleave(x, dim=1, repeats=n_rep). The hidden states go from (batch,
-    num_key_value_heads, seqlen, head_dim) to (batch, num_attention_heads, seqlen, head_dim)
-    """
-    batch, num_key_value_heads, slen, head_dim = hidden_states.shape
-    if n_rep == 1:
-        return hidden_states
-    hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)
-    return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)
 
 
 # Modified from transformers.model.llama.modeling_llama.LlamaAttention
@@ -381,7 +308,7 @@ class InternLM2Attention(nn.Module):
         if past_key_value is not None:
             kv_seq_len += past_key_value[0].shape[-2]
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos[position_ids], sin[position_ids])
 
         if past_key_value is not None:
             # reuse k, v, self_attention
@@ -485,7 +412,7 @@ class InternLM2FlashAttention2(InternLM2Attention):
 
         cos, sin = self.rotary_emb(value_states, seq_len=kv_seq_len)
 
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos[position_ids], sin[position_ids])
 
         if past_key_value is not None:
             # reuse k, v, self_attention
@@ -615,7 +542,7 @@ class InternLM2DecoderLayer(nn.Module):
 
         self.attention = INTERNLM2_ATTENTION_CLASSES[config.attn_implementation](config=config)
 
-        self.feed_forward = InternLM2MLP(config)
+        self.feed_forward = QwenMLP(config)
         self.attention_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.ffn_norm = InternLM2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

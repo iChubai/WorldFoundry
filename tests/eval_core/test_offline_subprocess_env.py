@@ -31,7 +31,6 @@ def test_three_d_four_d_child_preserves_explicit_offline_mode(tmp_path, monkeypa
     monkeypatch.setenv("WORLDFOUNDRY_CKPT_DIR", str(tmp_path / "ckpts"))
     runtime = ThreeDFourDRuntimeSynthesis(
         spec=three_d_four_d_runtime_spec("mvdiffusion"),
-        source_root=tmp_path,
         device="cpu",
     )
 

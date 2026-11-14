@@ -22,12 +22,17 @@ from torch import nn
 from transformers import AutoConfig, AutoModel, PreTrainedModel
 from transformers.feature_extraction_utils import BatchFeature
 
-from .config import Gr00tN1d7Config
-from .dit import AlternateVLDiT, DiT, SelfAttentionTransformer
-from .embodiment_mlp import (
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.dit import (
+    AlternateVLDiT,
+    DiT,
+    SelfAttentionTransformer,
+)
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.embodiment_mlp import (
     CategorySpecificMLP,
     MultiEmbodimentActionEncoder,
 )
+
+from .config import Gr00tN1d7Config
 
 logger = logging.getLogger(__name__)
 

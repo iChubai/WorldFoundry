@@ -46,6 +46,13 @@ import torch
 import torch.nn.functional as F
 from einops import rearrange, repeat
 
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import (
+    _apply_block_diagonal as _apply_block_diagonal,
+)
+from worldfoundry.base_models.three_dimensions.point_clouds.pi3_inference.models.layers.prope import (
+    _invert_SE3 as _invert_SE3,
+)
+
 _COMPILE_DISABLE = os.environ.get("GDN_DISABLE_COMPILE", "0") not in ("0", "false")
 
 
@@ -523,33 +530,6 @@ def _apply_complex_rope(
         freqs = freqs.conj()
     x_out = torch.view_as_real(x_complex * freqs).flatten(-2, -1)
     return x_out.type_as(hidden_states)
-
-
-def _apply_block_diagonal(
-    feats: torch.Tensor,  # (..., dim)
-    func_size_pairs: list[tuple[Callable[[torch.Tensor], torch.Tensor], int]],
-) -> torch.Tensor:
-    """Apply a block-diagonal function: split features by sizes, transform each, concat."""
-    funcs, block_sizes = zip(*func_size_pairs, strict=False)
-    assert feats.shape[-1] == sum(block_sizes)
-    x_blocks = torch.split(feats, block_sizes, dim=-1)
-    out = torch.cat(
-        [f(x_block) for f, x_block in zip(funcs, x_blocks, strict=False)],
-        dim=-1,
-    )
-    assert out.shape == feats.shape, "Input/output shapes should match."
-    return out
-
-
-def _invert_SE3(transforms: torch.Tensor) -> torch.Tensor:
-    """Closed-form inverse of a 4x4 SE(3) batch."""
-    assert transforms.shape[-2:] == (4, 4)
-    Rinv = transforms[..., :3, :3].transpose(-1, -2)
-    out = torch.zeros_like(transforms)
-    out[..., :3, :3] = Rinv
-    out[..., :3, 3] = -torch.einsum("...ij,...j->...i", Rinv, transforms[..., :3, 3])
-    out[..., 3, 3] = 1.0
-    return out
 
 
 # ---------------------------------------------------------------------------

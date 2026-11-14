@@ -1,8 +1,6 @@
 """Lyra reconstruction paths, checkpoints, and runtime environment helpers."""
 
-import importlib
 import os
-import sys
 from collections.abc import Iterable
 from contextlib import contextmanager
 from pathlib import Path
@@ -206,13 +204,6 @@ def _candidate_lyra1_weights_subdir(path_value: Path) -> Path | None:
         if (candidate / "lyra_static.pt").is_file() and (candidate / "lyra_dynamic.pt").is_file():
             return candidate.resolve()
     return None
-
-
-def ensure_repo_on_path(repo_root: str):
-    repo_root = os.path.abspath(repo_root)
-    if repo_root not in sys.path:
-        sys.path.insert(0, repo_root)
-    importlib.invalidate_caches()
 
 
 def configure_lyra_runtime_env():

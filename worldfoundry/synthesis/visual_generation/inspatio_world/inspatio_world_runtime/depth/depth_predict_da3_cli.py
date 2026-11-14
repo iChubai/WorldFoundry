@@ -3,13 +3,13 @@
 
 Usage:
     # Single video
-    python code/depth/depth_predict_da3_cli.py --input video.mp4 --output ./output
+    python -m worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.depth.depth_predict_da3_cli --input video.mp4 --output ./output
 
     # Video directory
-    python code/depth/depth_predict_da3_cli.py --input ./videos/ --output ./output
+    python -m worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.depth.depth_predict_da3_cli --input ./videos/ --output ./output
 
     # With explicit config
-    python depth/depth_predict_da3_cli.py --input video.mp4 --output ./output \
+    python -m worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.depth.depth_predict_da3_cli --input video.mp4 --output ./output \
         --config-json '{"model_path": "./checkpoints/DA3"}'
 """
 
@@ -20,15 +20,11 @@ import os
 import sys
 import traceback
 
-# Add code/ to path so sibling packages are importable
-_code_dir = os.path.join(os.path.dirname(__file__), "..")
-if _code_dir not in sys.path:
-    sys.path.insert(0, _code_dir)
-
-from depth.depth_predict_da3 import DepthPredictDA3  # noqa: E402 - Follows the sys.path setup.
-from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.reproducibility import (  # noqa: E402 - Follows the sys.path setup.
+from worldfoundry.synthesis.visual_generation.inspatio_world.inspatio_world_runtime.utils.reproducibility import (
     initialize_reproducibility,
 )
+
+from .depth_predict_da3 import DepthPredictDA3
 
 logging.basicConfig(
     level=logging.INFO,

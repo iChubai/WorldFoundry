@@ -29,6 +29,8 @@ tencent/HY-WorldPlay 动作权重运行在 tencent/HunyuanVideo-1.5 视频模型
 
 ## 运行时契约
 
+默认直接使用原始提示词。`prompt_rewrite` 仍可传入；本构建不包含可选提示词重写服务，启用时会给出警告并继续使用原始提示词。
+
 输入 `image`、`prompt`、`interactions`（不传时使用内置示例）；参数 `num-frames`、`fps`、`height`、`width`、`num-inference-steps`、`seed` 等 10 项；产物 `hy-worldplay.mp4`。
 
 CLI task profile：`official-image-pose-video`。绑定的 pipeline 类是 `HunyuanWorldPlayPipeline`。

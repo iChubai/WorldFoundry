@@ -3,8 +3,12 @@ from typing import ClassVar
 
 from einops import repeat
 
-from vwm.modules.attention import *  # noqa: F403 - Upstream star import kept as written.
-from vwm.modules.diffusionmodules.util import AlphaBlender, linear, timestep_embedding
+from worldfoundry.core.nn.diffusion.convolution import linear
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.attention import *  # noqa: F403 - Upstream star import kept as written.
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.util import (
+    AlphaBlender,
+    timestep_embedding,
+)
 
 
 class TimeMixSequential(nn.Sequential):

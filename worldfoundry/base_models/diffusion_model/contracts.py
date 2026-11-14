@@ -417,7 +417,9 @@ class ModalityState:
 
     ``denoise_mask`` marks the region updated on this step.  ``clean_latent``
     is the frozen / conditioned reference; a masked-latent strategy projects
-    frozen regions back after every step.
+    frozen regions back after every step.  ``keyframes_mask`` optionally marks
+    tokens that encode a single standalone pixel frame (LTX-2.5 keyframe
+    position embedding); it shares ``denoise_mask``'s layout.
     """
 
     latent: Tensor
@@ -425,6 +427,7 @@ class ModalityState:
     positions: Tensor
     clean_latent: Tensor
     attention_mask: Tensor | None = None
+    keyframes_mask: Tensor | None = None
 
     def with_updates(self, **changes: object) -> ModalityState:
         """Immutable field replacement."""
@@ -438,6 +441,7 @@ class ModalityState:
             positions=self.positions.clone(),
             clean_latent=self.clean_latent.clone(),
             attention_mask=self.attention_mask.clone() if self.attention_mask is not None else None,
+            keyframes_mask=self.keyframes_mask.clone() if self.keyframes_mask is not None else None,
         )
 
 

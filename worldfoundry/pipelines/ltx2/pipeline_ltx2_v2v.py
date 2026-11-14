@@ -1,10 +1,7 @@
-"""Control-video generation through the official LTX-2 IC-LoRA pipeline."""
+"""Control-video generation through the canonical in-process LTX IC-LoRA recipes."""
 
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
 from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -14,6 +11,7 @@ from worldfoundry.pipelines.pipeline_utils import PipelineABC
 from worldfoundry.runtime.assets import expand_worldfoundry_path
 
 if TYPE_CHECKING:
+    from worldfoundry.base_models.diffusion_model import NativeDiffusionPipeline
     from worldfoundry.core.contracts import PipelineInvocation
 
 
@@ -34,7 +32,7 @@ def _required_dir(value: str | Path, label: str) -> Path:
 
 
 class _LTXICLoRAV2VPipeline(PipelineABC):
-    """Use upstream video conditioning rather than the unrelated I2V path."""
+    """Encode typed control video and run the native adapted/base two-stage stack."""
 
     CHECKPOINT_DIR = ""
     CHECKPOINT_FILE = ""
@@ -50,7 +48,6 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
         spatial_upsampler_path: str | Path,
         gemma_root: str | Path,
         ic_lora_path: str | Path,
-        python_executable: str | Path | None = None,
         device: str = "cuda",
     ) -> None:
         super().__init__(model_id=self.MODEL_ID, device=device)
@@ -58,7 +55,6 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
         self.spatial_upsampler_path = _required_file(spatial_upsampler_path, "spatial upsampler")
         self.gemma_root = _required_dir(gemma_root, "Gemma root")
         self.ic_lora_path = _required_file(ic_lora_path, "control IC-LoRA")
-        self.python_executable = str(python_executable or os.getenv("LTX_PIPELINES_PYTHON") or sys.executable)
 
     @classmethod
     def from_pretrained(  # ty: ignore[invalid-method-override]  # model-specific loader arguments, passed by keyword
@@ -81,7 +77,7 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
         options.setdefault("spatial_upsampler_path", f"{root}/{cls.CHECKPOINT_DIR}/{cls.UPSAMPLER_FILE}")
         options.setdefault("ic_lora_path", f"{root}/{cls.IC_LORA_DIR}/{cls.IC_LORA_FILE}")
         options.setdefault("gemma_root", f"{root}/gemma-3-12b-it-qat-q4_0-unquantized")
-        accepted = {"checkpoint_path", "spatial_upsampler_path", "ic_lora_path", "gemma_root", "python_executable"}
+        accepted = {"checkpoint_path", "spatial_upsampler_path", "ic_lora_path", "gemma_root"}
         unknown = set(options) - accepted
         if unknown:
             raise ValueError(f"unsupported LTX IC-LoRA loading options: {sorted(unknown)}")
@@ -137,54 +133,79 @@ class _LTXICLoRAV2VPipeline(PipelineABC):
         target = target.expanduser().resolve()
         target.parent.mkdir(parents=True, exist_ok=True)
         log_path = target.with_suffix(".ltx.log")
-        command = [
-            self.python_executable,
-            "-u",
-            "-m",
-            "ltx_pipelines.ic_lora",
-            "--distilled-checkpoint-path",
-            str(self.checkpoint_path),
-            "--gemma-root",
-            str(self.gemma_root),
-            "--spatial-upsampler-path",
-            str(self.spatial_upsampler_path),
-            "--lora",
-            str(self.ic_lora_path),
-            str(lora_strength),
-            "--video-conditioning",
-            str(reference),
-            str(control_strength),
-            "--prompt",
-            str(prompt),
-            "--height",
-            str(height),
-            "--width",
-            str(width),
-            "--num-frames",
-            str(num_frames),
-            "--frame-rate",
-            str(fps),
-            "--seed",
-            str(seed),
-            "--offload",
-            offload,
-            "--output-path",
-            str(target),
-        ]
-        if skip_stage_2:
-            command.append("--skip-stage-2")
-        env = os.environ.copy()
-        if self.device.startswith("cuda:") and "CUDA_VISIBLE_DEVICES" not in env:
-            env["CUDA_VISIBLE_DEVICES"] = self.device.partition(":")[2]
+        from worldfoundry.base_models.diffusion_model.contracts import DiffusionRequest, SamplingConfig
+        from worldfoundry.core.media.codecs.pyav import save_audio_video_h264
+
         with log_path.open("w", encoding="utf-8") as log:
-            result = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=False, env=env)
-        if result.returncode or not target.is_file():
-            tail = "\n".join(log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-20:])
-            raise RuntimeError(f"{self.MODEL_ID} IC-LoRA generation failed (exit {result.returncode}):\n{tail}")
+            log.write(f"{self.MODEL_ID}: worldfoundry.native_diffusion IC-LoRA\n")
+            try:
+                pipeline = self._build_native_pipeline(
+                    lora_strength=lora_strength, offload=offload, skip_stage_2=skip_stage_2
+                )
+                output = pipeline(
+                    DiffusionRequest(
+                        prompt=prompt,
+                        height=height,
+                        width=width,
+                        num_frames=num_frames,
+                        sampling=SamplingConfig(
+                            num_inference_steps=8 if skip_stage_2 else 11, seed=seed, guidance_scale=1.0
+                        ),
+                        inputs={"video": str(reference), "control_strength": control_strength, "frame_rate": fps},
+                    )
+                )
+                save_audio_video_h264(
+                    output.sample,
+                    target,
+                    fps=fps,
+                    waveform=output.artifacts["audio"],
+                    sample_rate=int(output.artifacts["audio_sampling_rate"]),
+                )
+            except Exception as error:
+                log.write(f"failed: {type(error).__name__}: {error}\n")
+                raise RuntimeError(f"{self.MODEL_ID} IC-LoRA generation failed: {error}") from error
+            log.write(f"success: {target}\n")
         record = {"status": "success", "artifact_path": str(target), "video": str(target), "log_path": str(log_path)}
         return record if return_dict else str(target)
 
+    def _build_native_pipeline(
+        self, *, lora_strength: float, offload: str, skip_stage_2: bool
+    ) -> NativeDiffusionPipeline:
+        import torch
+
+        from worldfoundry.base_models.diffusion_model import NativeDiffusionPipeline
+        from worldfoundry.base_models.diffusion_model.assembly import NativeDiffusionAssembler
+        from worldfoundry.base_models.diffusion_model.loaders import CheckpointSpec
+        from worldfoundry.base_models.diffusion_model.optimizations import (
+            OffloadMode,
+            OffloadPolicy,
+            RuntimePolicy,
+            parse_offload_policy,
+        )
+        from worldfoundry.base_models.diffusion_model.recipes.ltx import ltx2_v2v_recipe, ltx23_v2v_recipe
+
+        factory = ltx2_v2v_recipe if self.MODEL_ID == "ltx-2-v2v" else ltx23_v2v_recipe
+        policy = parse_offload_policy(offload, owner="LTX IC-LoRA")
+        if policy.mode is OffloadMode.BLOCK and torch.device(self.device).type == "mps":
+            policy = OffloadPolicy(mode=OffloadMode.COMPONENT, target="cpu")
+        checkpoints = {
+            "model": self.checkpoint_path,
+            "gemma": self.gemma_root,
+            "ic_lora": self.ic_lora_path,
+        }
+        if not skip_stage_2:
+            checkpoints["upsampler"] = self.spatial_upsampler_path
+        runner = NativeDiffusionAssembler().build(
+            factory(skip_stage_2=skip_stage_2),
+            policy=RuntimePolicy(device=self.device, dtype=torch.bfloat16, offload=policy),
+            checkpoint_overrides={name: CheckpointSpec(source=str(path)) for name, path in checkpoints.items()},
+            component_options={"denoiser:main": {"lora_strength": lora_strength}},
+        )
+        return NativeDiffusionPipeline(runner)
+
     def run_pipeline_invocation(self, invocation: PipelineInvocation) -> Mapping[str, Any]:
+        if invocation.image is not None:
+            raise ValueError("LTX IC-LoRA V2V does not accept images")
         options = dict(invocation.pipeline_kwargs)
         options.pop("operator_kwargs", None)
         return self(

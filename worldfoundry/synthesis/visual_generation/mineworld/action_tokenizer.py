@@ -2,7 +2,8 @@ import collections
 
 import attr
 import numpy as np
-from utils import print0
+
+from worldfoundry.synthesis.visual_generation.mineworld.utils import print0
 
 
 # https://github.com/openai/Video-Pre-Training/blob/main/lib/actions.py#L8 with some modifications

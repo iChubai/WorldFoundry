@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 import torch
-from einops import rearrange, repeat
+
+from worldfoundry.base_models.diffusion_model.models.networks.magi2.preview_layers import apply_rotary_emb_torch
 
 try:
     from flash_attn.layers.rotary import apply_rotary_emb as flash_apply_rotary_emb
@@ -28,30 +29,6 @@ class RopeCache:
     current_key_freqs: torch.Tensor | None = None
     use_fused: bool = True
     cached_k_rotated: bool = True
-
-
-def rotate_half(x: torch.Tensor, interleaved: bool = False) -> torch.Tensor:
-    if not interleaved:
-        x1, x2 = x.chunk(2, dim=-1)
-        return torch.cat((-x2, x1), dim=-1)
-    x1, x2 = x[..., ::2], x[..., 1::2]
-    return rearrange(torch.stack((-x2, x1), dim=-1), "... d two -> ... (d two)", two=2)
-
-
-def apply_rotary_emb_torch(
-    x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor, interleaved: bool = False
-) -> torch.Tensor:
-    ro_dim = cos.shape[-1] * 2
-    assert ro_dim <= x.shape[-1]
-    cos = repeat(cos, "... d -> ... 1 (2 d)" if not interleaved else "... d -> ... 1 (d 2)")
-    sin = repeat(sin, "... d -> ... 1 (2 d)" if not interleaved else "... d -> ... 1 (d 2)")
-    return torch.cat(
-        [
-            x[..., :ro_dim] * cos + rotate_half(x[..., :ro_dim], interleaved=interleaved) * sin,
-            x[..., ro_dim:],
-        ],
-        dim=-1,
-    )
 
 
 def apply_rope(x: torch.Tensor, freqs: torch.Tensor | None, fused: bool = True) -> torch.Tensor:

@@ -9,7 +9,6 @@ from typing import Any
 
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
-    official_runtime_repo_path,
     resolve_worldfoundry_path,
 )
 
@@ -132,15 +131,6 @@ def _last_r1_default_ref() -> str:
         if (sibling / "config.json").is_file():
             return str(sibling)
     return str(configured)
-
-
-def _last_r1_default_load_kwargs() -> dict[str, Any]:
-    source = official_runtime_repo_path("LaST-R1", specific_env="WORLDFOUNDRY_LAST_R1_SOURCE_DIR")
-    if not source.is_dir() and not os.environ.get("WORLDFOUNDRY_LAST_R1_SOURCE_DIR"):
-        sibling = PIPELINES_ROOT.parents[2] / "model" / "LaST-R1"
-        if sibling.is_dir():
-            source = sibling
-    return {"source_root": str(source)}
 
 
 def _cogact_default_call_kwargs() -> dict[str, Any]:
@@ -1333,12 +1323,10 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "summary": "Offline image-and-instruction inference with the libero_10 RL policy.",
         "default_model_ref": _last_r1_default_ref,
         "default_prompt": "Pick up the red block and place it in the bowl.",
-        "default_load_kwargs": _last_r1_default_load_kwargs,
         "supports_from_pretrained": True,
         "default_backend": "from_pretrained",
         "tags": ("vla", "policy", "robot-action", "libero"),
-        "env_hints": ("WORLDFOUNDRY_LAST_R1_SOURCE_DIR",),
-        "notes": "The pinned official source is required. Offline action inference is verified; LIBERO task success is unmeasured.",
+        "notes": "Offline action inference is verified; LIBERO task success is unmeasured.",
     },
     "cogact": {
         "display_name": "CogACT",

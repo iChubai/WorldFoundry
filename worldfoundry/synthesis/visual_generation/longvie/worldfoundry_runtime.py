@@ -11,7 +11,6 @@ import numpy as np
 from PIL import Image
 
 from .runtime_env import (
-    ensure_longvie_runtime,
     resolve_control_weight_path,
     resolve_dit_weight_path,
     resolve_wan21_i2v_dir,
@@ -83,7 +82,6 @@ def video_to_frames(value: Any, *, target_size: tuple[int, int] = TARGET_SIZE) -
     if value is None:
         raise ValueError("LongVie requires dense and sparse control videos.")
     if isinstance(value, (str, Path)):
-        ensure_longvie_runtime()
         import decord
 
         video = decord.VideoReader(str(value))
@@ -212,7 +210,6 @@ class LongVieOfficialRuntime:
                     f"ring_degree({self.ring_degree}) * ulysses_degree({self.ulysses_degree}) "
                     f"!= WORLD_SIZE({world_size})."
                 )
-        ensure_longvie_runtime()
         try:
             from worldfoundry.base_models.diffusion_model.models.autoencoders.wan import (
                 WanVideoVAE,
@@ -320,7 +317,6 @@ class LongVieOfficialRuntime:
 
     @staticmethod
     def save_video(video: Any, output_path: str | Path, *, fps: int = 16, quality: int = 10) -> Path:
-        ensure_longvie_runtime()
         from worldfoundry.core.io import save_video
 
         target = Path(output_path).expanduser().resolve()

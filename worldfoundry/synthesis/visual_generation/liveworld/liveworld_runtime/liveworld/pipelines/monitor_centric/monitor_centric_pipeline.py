@@ -9,7 +9,6 @@ from __future__ import annotations
 import json
 import os
 import random
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -36,7 +35,7 @@ from worldfoundry.base_models.perception_core.segment.sam3.video_segmenter impor
 )
 
 # isort: split
-from liveworld.geometry_utils import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
     BackboneInferenceOptions,
     _get_visible_points_and_coverage_gpu,
     compute_iteration_plan,
@@ -45,20 +44,24 @@ from liveworld.geometry_utils import (
 )
 
 # isort: split
-from liveworld.pipelines.pipeline_unified_backbone import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pipeline_unified_backbone import (
     generate_scene_projection_from_pointcloud,
     retrieve_reference_frames,
 )
 
 # isort: split
-from liveworld.geometry_utils import scale_intrinsics
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
+    scale_intrinsics,
+)
 
 # isort: split
-from liveworld.pipelines.pointcloud_updater import create_pointcloud_updater
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
+    create_pointcloud_updater,
+)
 
 # isort: split
 # isort: split
-from liveworld.pipelines.pointcloud_updater import (
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.pipelines.pointcloud_updater import (
     ReconstructionResult,
 )
 
@@ -81,7 +84,6 @@ from .shared_models import SharedModels
 # isort: split
 # isort: split
 from .helpers import (
-    get_project_root,
     load_frame_from_image,
     load_geometry_poses,
     load_unified_backbone_pipeline,
@@ -103,7 +105,10 @@ from .io_utils import (
 from .observer_adapter import ObserverAdapter, ObserverIterationInput
 
 # isort: split
-from liveworld.geometry_utils import project_points, transform_points
+from worldfoundry.synthesis.visual_generation.liveworld.liveworld_runtime.liveworld.geometry_utils import (
+    project_points,
+    transform_points,
+)
 
 from .event_types import EventObservation, EventVideo, make_event_id
 from .projection_compositor import ProjectionCompositor, overlay_fg_on_scene
@@ -181,11 +186,6 @@ class MonitorCentricEvolutionPipeline:
 
         device_str = self.runtime.device
         device = torch.device(device_str)
-
-        # Ensure project root is on sys.path for local imports (Qwen, SAM3).
-        project_root = get_project_root()
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
 
         event_cfg = config["event"]
         projection_cfg = event_cfg.get("projection", {})

@@ -3,7 +3,8 @@ import copy
 
 import torch
 import torch.nn as nn
-from open_flamingo.src.helpers import PerceiverResampler
+
+from worldfoundry.base_models.llm_mllm_core.mllm.open_flamingo.src.helpers import PerceiverResampler
 
 from .normalizer import LinearNormalizer
 from .trajectory_gpt2 import get_gpt_model

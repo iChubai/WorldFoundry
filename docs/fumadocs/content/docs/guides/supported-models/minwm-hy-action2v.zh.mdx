@@ -2,7 +2,7 @@
 title: "minWM HY Action2V"
 description: "minWM HY Action2V，生数科技（Shengshu AI）：交互式世界模型、动作条件视频等 3 项任务；Runner 一致性待确认。"
 modelId: "minwm-hy-action2v"
-pageSource: generated
+pageSource: authored
 ---
 
 minWM HY Action2V 基于 HunyuanVideo-1.5，从提示词、图像和轨迹生成相机可控视频。
@@ -36,6 +36,8 @@ CLI task profile：`default`。绑定的 pipeline 类是 `MinWMHYAction2VPipelin
 `default` 的默认值：frames=77, fps=16, height=480, width=832, seed=0。
 
 准备 HY15/Action2V/dmd 及 HunyuanVideo-1.5 的编码器、VAE；minWM 仓库只需这一子集。公开入口使用相机条件四步自回归推理和 VAE 空间分块解码。已在单张 H100 上验证：带相机轨迹、四步 DMD 生成 832×480 的 77 帧视频。
+
+两条 minWM Action2V 路由均通过 torchrun 启动已安装的 WorldFoundry 包模块。HY 使用单进程；Wan 保留 `sp_size` 进程数与可选 `master_port` 会合端口。工作进程继承调用方环境，不修改 `PYTHONPATH`；权重与输入路径保持显式传入。
 
 ## 在 WorldFoundry 中运行
 

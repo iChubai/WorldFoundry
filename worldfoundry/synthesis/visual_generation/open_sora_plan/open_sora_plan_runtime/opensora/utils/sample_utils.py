@@ -28,24 +28,47 @@ from transformers import AutoModelForCausalLM as AutoModelForCausalLM
 
 try:
     import torch_npu
-    from opensora.acceleration.parallel_states import hccl_info as hccl_info
-    from opensora.acceleration.parallel_states import initialize_sequence_parallel_state
-    from opensora.npu_config import npu_config
+
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.parallel_states import (
+        hccl_info as hccl_info,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.acceleration.parallel_states import (
+        initialize_sequence_parallel_state,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.npu_config import (
+        npu_config,
+    )
 except BaseException:
     torch_npu = None
     npu_config = None
-    from opensora.utils.parallel_states import initialize_sequence_parallel_state
-    from opensora.utils.parallel_states import nccl_info as nccl_info
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+        initialize_sequence_parallel_state,
+    )
+    from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.parallel_states import (
+        nccl_info as nccl_info,
+    )
 
 
-from opensora.models.causalvideovae import ae_stride_config, ae_wrapper
-from opensora.models.diffusion.opensora_v1_3.modeling_inpaint import OpenSoraInpaint_v1_3
-from opensora.models.diffusion.opensora_v1_3.modeling_opensora import OpenSoraT2V_v1_3
-from opensora.sample.pipeline_inpaint import OpenSoraInpaintPipeline
-from opensora.sample.pipeline_opensora import OpenSoraPipeline
-from opensora.utils.utils import set_seed
 from transformers import AutoTokenizer, CLIPTextModelWithProjection, MT5EncoderModel, T5EncoderModel
 from transformers import T5Tokenizer as T5Tokenizer
+
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.causalvideovae import (
+    ae_stride_config,
+    ae_wrapper,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.opensora_v1_3.modeling_inpaint import (
+    OpenSoraInpaint_v1_3,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.models.diffusion.opensora_v1_3.modeling_opensora import (
+    OpenSoraT2V_v1_3,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.sample.pipeline_inpaint import (
+    OpenSoraInpaintPipeline,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.sample.pipeline_opensora import (
+    OpenSoraPipeline,
+)
+from worldfoundry.synthesis.visual_generation.open_sora_plan.open_sora_plan_runtime.opensora.utils.utils import set_seed
 
 
 def get_scheduler(args):
@@ -179,15 +202,9 @@ def prepare_pipeline(args, dtype, device):
         if args.model_type == "inpaint" or args.model_type == "i2v":
             raise NotImplementedError("Inpainting model is not available in v1_5")
         else:
-            from opensora.models.diffusion.opensora_v1_5.modeling_opensora import OpenSoraT2V_v1_5
-
-            transformer_model = OpenSoraT2V_v1_5.from_pretrained(
-                args.model_path,
-                subfolder=model_subdir,
-                cache_dir=cache_dir,
-                # device_map=None,
-                torch_dtype=weight_dtype,
-            ).eval()
+            raise NotImplementedError(
+                "Open-Sora-Plan v1.5 is not available in this in-tree build; the shipped route is v1.3"
+            )
 
     scheduler = get_scheduler(args)
     pipeline_class = (

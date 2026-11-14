@@ -14,7 +14,6 @@ _EXPORTS = {
     "FantasyWorldWan22Synthesis": ".fantasy_world",
     "EchoInfinitySynthesis": ".echo_infinity",
     "Gen3CSynthesis": ".gen3c",
-    "HYWorld2PanoSynthesis": ".hunyuan_world",
     "HYWorld2Synthesis": ".hunyuan_world",
     "HunyuanGameCraftSynthesis": ".hunyuan_world",
     "HunyuanWorld1Synthesis": ".hunyuan_world",

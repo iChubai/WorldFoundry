@@ -2,13 +2,23 @@
 Wrap the Huggingface Transformers Llama to PyTorch Lightning Module.
 """
 
-import inspect
-import os
-import sys
-
 import torch
 import torch.utils.checkpoint
-from diagonal_decoding import (
+from torch import nn
+from transformers import LlamaConfig
+from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
+from transformers.modeling_utils import PreTrainedModel
+from transformers.utils import logging
+
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import QwenMLP as LlamaMLP
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as LlamaRMSNorm,
+)
+from worldfoundry.core.attention import (
+    scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention,
+)
+from worldfoundry.core.attention.rotary.embedding import apply_rotary_pos_emb
+from worldfoundry.synthesis.visual_generation.mineworld.diagonal_decoding import (
     decode_n_tokens,
     decode_one_token,
     decode_some_token,
@@ -16,51 +26,14 @@ from diagonal_decoding import (
     prefill,
     video_diagd_decode_n_tokens,
 )
-from torch import nn
-from transformers import LlamaConfig
-from transformers.activations import ACT2FN
-from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS
-from transformers.modeling_utils import PreTrainedModel
-from transformers.utils import logging
-from utils import get_obj_from_str, instantiate_from_config
-
-from worldfoundry.core.attention import scaled_dot_product_attention as _worldfoundry_scaled_dot_product_attention
+from worldfoundry.synthesis.visual_generation.mineworld.utils import (
+    get_obj_from_str,
+    instantiate_from_config,
+)
 
 torch.backends.cuda.matmul.allow_tf32 = False
 
 logger = logging.get_logger(__name__)
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-
-if parentdir not in sys.path:
-    sys.path.insert(0, parentdir)
-
-
-def rotate_half(x):
-    """Rotates half the hidden dims of the input."""
-    x1 = x[..., : x.shape[-1] // 2]
-    x2 = x[..., x.shape[-1] // 2 :]
-    return torch.cat((-x2, x1), dim=-1)
-
-
-def apply_rotary_pos_emb(q, k, cos, sin, position_ids):
-    """
-    Apply rotary position embeddings to query and key tensors.
-
-    Args:
-        q (torch.Tensor): Query tensor.
-        k (torch.Tensor): Key tensor.
-        cos (torch.Tensor): Cosine values.
-        sin (torch.Tensor): Sine values.
-
-    Returns:
-        torch.Tensor: Query and key tensors with rotary position embeddings applied.
-    """
-    cos = cos[position_ids].unsqueeze(0).unsqueeze(2)
-    sin = sin[position_ids].unsqueeze(0).unsqueeze(2)
-    q_embed = (q * cos) + (rotate_half(q) * sin)
-    k_embed = (k * cos) + (rotate_half(k) * sin)
-    return q_embed, k_embed
 
 
 class LlamaLVM(torch.nn.Module):
@@ -75,26 +48,6 @@ class LlamaLVM(torch.nn.Module):
         self.transformer = get_obj_from_str(model_class)(self.config)
         if tokenizer_config is not None:
             self.tokenizer = instantiate_from_config(tokenizer_config)
-
-
-class LlamaRMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        """
-        LlamaRMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        return self.weight * hidden_states.to(input_dtype)
-
-    def extra_repr(self):
-        return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"
 
 
 class LlamaRotaryEmbedding(nn.Module):
@@ -152,22 +105,6 @@ class LlamaRotaryEmbedding(nn.Module):
         )
 
 
-class LlamaMLP(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.hidden_size = config.hidden_size
-        self.intermediate_size = config.intermediate_size
-        self.gate_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.up_proj = nn.Linear(self.hidden_size, self.intermediate_size, bias=config.mlp_bias)
-        self.down_proj = nn.Linear(self.intermediate_size, self.hidden_size, bias=config.mlp_bias)
-        self.act_fn = ACT2FN[config.hidden_act]
-
-    def forward(self, x):
-        down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))
-        return down_proj
-
-
 class LlamaAttention(nn.Module):
     def __init__(self, config: LlamaConfig):
         super().__init__()
@@ -210,7 +147,9 @@ class LlamaAttention(nn.Module):
 
         cos, sin = positions_embedding
 
-        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, position_ids)
+        query_states, key_states = apply_rotary_pos_emb(
+            query_states, key_states, cos[position_ids].unsqueeze(0), sin[position_ids].unsqueeze(0), unsqueeze_dim=2
+        )
 
         self.cache_k[:bsz, position_ids] = key_states
         self.cache_v[:bsz, position_ids] = value_states
@@ -247,7 +186,7 @@ class LlamaDecoderLayer(nn.Module):
         super().__init__()
         self.hidden_size = config.hidden_size
         self.self_attn = LlamaAttention(config=config)
-        self.mlp = LlamaMLP(config)
+        self.mlp = LlamaMLP(config, bias=config.mlp_bias)
         self.input_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 

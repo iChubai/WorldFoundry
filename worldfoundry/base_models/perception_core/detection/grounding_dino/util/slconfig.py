@@ -2,13 +2,8 @@
 # Modified from mmcv
 # ==========================================================
 import ast
-import os
 import os.path as osp
-import shutil
-import sys
-import tempfile
 from argparse import Action
-from importlib import import_module
 
 from addict import Dict
 from yapf.yapflib.yapf_api import FormatCode
@@ -74,26 +69,43 @@ class SLConfig:
             raise SyntaxError(f"There are syntax errors in config file {filename}")  # noqa: B904 - Keeps the implicit exception context.
 
     @staticmethod
+    def _literal_assignments(filename):
+        """Read a Python config file made of literal top-level assignments without executing it.
+
+        Args:
+            filename: Path to a ``.py`` config whose statements are ``name = <literal>``.
+
+        Returns:
+            Mapping of the assigned names, excluding dunder names, to their literal values.
+
+        Raises:
+            ValueError: If the file contains a statement other than a docstring or a literal assignment.
+        """
+        with open(filename, encoding="utf-8") as f:
+            tree = ast.parse(f.read(), filename=filename)
+        cfg_dict = {}
+        for node in tree.body:
+            if (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            ):
+                continue
+            if not (isinstance(node, ast.Assign) and all(isinstance(target, ast.Name) for target in node.targets)):
+                raise ValueError(f"{filename}:{node.lineno}: config files may only assign literal values to names")
+            value = ast.literal_eval(node.value)
+            for target in node.targets:
+                if not target.id.startswith("__"):
+                    cfg_dict[target.id] = value
+        return cfg_dict
+
+    @staticmethod
     def _file2dict(filename):
         filename = osp.abspath(osp.expanduser(filename))
         check_file_exist(filename)
         if filename.lower().endswith(".py"):
-            with tempfile.TemporaryDirectory() as temp_config_dir:
-                temp_config_file = tempfile.NamedTemporaryFile(dir=temp_config_dir, suffix=".py")  # noqa: SIM115 - Keeps the upstream file-handle lifetime.
-                temp_config_name = osp.basename(temp_config_file.name)
-                if os.name == "nt":
-                    temp_config_file.close()
-                shutil.copyfile(filename, osp.join(temp_config_dir, temp_config_name))
-                temp_module_name = osp.splitext(temp_config_name)[0]
-                sys.path.insert(0, temp_config_dir)
-                SLConfig._validate_py_syntax(filename)
-                mod = import_module(temp_module_name)
-                sys.path.pop(0)
-                cfg_dict = {name: value for name, value in mod.__dict__.items() if not name.startswith("__")}
-                # delete imported module
-                del sys.modules[temp_module_name]
-                # close temp file
-                temp_config_file.close()
+            SLConfig._validate_py_syntax(filename)
+            cfg_dict = SLConfig._literal_assignments(filename)
         elif filename.lower().endswith((".yml", ".yaml", ".json")):
             from .slio import slload
 

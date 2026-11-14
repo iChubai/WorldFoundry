@@ -12,11 +12,11 @@ from pydantic import Field, PrivateAttr
 from transformers import AutoTokenizer
 from transformers.feature_extraction_utils import BatchFeature
 
+from worldfoundry.base_models.llm_mllm_core.action.gr00t.preprocessing.base import InvertibleModalityTransform
 from worldfoundry.core.io.paths import resolve_local_hf_model_path
 
 from .language import formalize_language
 from .schema import DatasetMetadata, EmbodimentTag
-from .transform_base import InvertibleModalityTransform
 
 
 def basic_clean(text):

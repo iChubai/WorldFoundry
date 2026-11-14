@@ -8,6 +8,12 @@ import math
 import torch
 import torch.nn as nn
 
+from worldfoundry.base_models.llm_mllm_core.action.diffusion_policy import (
+    Conv1dBlock,
+    Downsample1d,
+    Upsample1d,
+)
+
 # =================== UNet for Diffusion ==============
 
 
@@ -42,62 +48,6 @@ class SinusoidalPosEmb(nn.Module):
         emb = x[:, None] * emb[None, :]
         emb = torch.cat((emb.sin(), emb.cos()), dim=-1)
         return emb
-
-
-class Downsample1d(nn.Module):
-    """
-    1D downsampling layer using convolution.
-
-    Args:
-        dim: The number of input and output channels.
-    """
-
-    def __init__(self, dim):
-        super().__init__()
-        self.conv = nn.Conv1d(dim, dim, 3, 2, 1)
-
-    def forward(self, x):
-        return self.conv(x)
-
-
-class Upsample1d(nn.Module):
-    """
-    1D upsampling layer using transposed convolution.
-
-    Args:
-        dim: The number of input and output channels.
-    """
-
-    def __init__(self, dim):
-        super().__init__()
-        self.conv = nn.ConvTranspose1d(dim, dim, 4, 2, 1)
-
-    def forward(self, x):
-        return self.conv(x)
-
-
-class Conv1dBlock(nn.Module):
-    """
-    A block consisting of Conv1d, GroupNorm, and Mish activation.
-
-    Args:
-        inp_channels: Number of input channels.
-        out_channels: Number of output channels.
-        kernel_size: Size of the convolutional kernel.
-        n_groups: Number of groups for GroupNorm.
-    """
-
-    def __init__(self, inp_channels, out_channels, kernel_size, n_groups=8):
-        super().__init__()
-
-        self.block = nn.Sequential(
-            nn.Conv1d(inp_channels, out_channels, kernel_size, padding=kernel_size // 2),
-            nn.GroupNorm(n_groups, out_channels),
-            nn.Mish(),
-        )
-
-    def forward(self, x):
-        return self.block(x)
 
 
 class ConditionalResidualBlock1D(nn.Module):

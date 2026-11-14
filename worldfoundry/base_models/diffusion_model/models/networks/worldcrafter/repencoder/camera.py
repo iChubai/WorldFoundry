@@ -9,6 +9,8 @@ from dataclasses import dataclass
 import torch
 import torch.nn.functional as F
 
+from worldfoundry.core.geometry.transforms import _sqrt_positive_part as _sqrt_positive_part
+
 NUM_SOURCE_VIEWS = 9
 NUM_TARGET_VIEWS = 4
 RAY_HEIGHT = 384
@@ -108,15 +110,6 @@ def normalize_source_target_cameras(
         scale_tokens.contiguous(),
         scene_scale.contiguous(),
     )
-
-
-def _sqrt_positive_part(value: torch.Tensor) -> torch.Tensor:
-    result = torch.zeros_like(value)
-    positive = value > 0
-    if torch.is_grad_enabled():
-        result[positive] = torch.sqrt(value[positive])
-        return result
-    return torch.where(positive, torch.sqrt(value), result)
 
 
 def _mat_to_quat_scalar_last(matrix: torch.Tensor) -> torch.Tensor:

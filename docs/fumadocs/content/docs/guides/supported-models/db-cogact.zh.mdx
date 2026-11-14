@@ -43,6 +43,8 @@ WorldFoundry 通过独立的 DB-CogACT 合成入口实现 Dexbotic v1 推理契�
 
 已使用 `Dexmal/libero-db-cogact` 验证：LIBERO 路径写出形状为 **`[1, 16, 7]`** 的有限动作轨迹。CALVIN 与 SimplerEnv checkpoint 已接入，但尚未单独验证其动作轨迹。
 
+已发布权重使用 Transformers 原生 Qwen2 tokenizer。`trust_remote_code` 默认为 `false`；启用该选项的请求会在查询模型与 tokenizer 缓存之前报错。请将 tokenizer 资产与权重一起就位。
+
 ## 在 WorldFoundry 中运行
 
 用 `wf run db-cogact-libero --pipeline.task-profile default` 运行策略。

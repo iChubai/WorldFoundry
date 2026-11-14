@@ -7,13 +7,14 @@ from diffusers import AutoencoderKLWan
 from diffusers.schedulers import UniPCMultistepScheduler
 from diffusers.utils import export_to_video
 from omegaconf import OmegaConf
-from src.dataset import load_dataset
-from src.fsdp import hook_for_multi_gpu_inference
-from src.models.uni3c import RealisDanceDiT
-from src.pipelines.pipeline_uni3c import RealisDanceDiTPipeline
-from src.utils import create_logger, is_main_process, set_seed
-from src.xfuser_compat import require_xfuser
 from transformers import AutoTokenizer, CLIPImageProcessor, CLIPVisionModel, UMT5EncoderModel
+
+from .src.dataset import load_dataset
+from .src.fsdp import hook_for_multi_gpu_inference
+from .src.models.uni3c import RealisDanceDiT
+from .src.pipelines.pipeline_uni3c import RealisDanceDiTPipeline
+from .src.utils import create_logger, is_main_process, set_seed
+from .src.xfuser_compat import require_xfuser
 
 
 def main():

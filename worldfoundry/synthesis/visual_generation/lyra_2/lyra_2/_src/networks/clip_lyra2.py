@@ -1,9 +1,9 @@
 import os
 
 import torch
-from lyra_2._src.modules.conditioner import AbstractEmbModel
 
 from worldfoundry.base_models.diffusion_model.models.encoders.wan.clip import CLIPModel
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.modules.conditioner import AbstractEmbModel
 
 
 class Wan2pt1CLIPEmbLyra2(AbstractEmbModel):

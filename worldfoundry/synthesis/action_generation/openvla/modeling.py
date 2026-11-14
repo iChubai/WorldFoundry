@@ -15,7 +15,6 @@ References [LLaVa, IDEFICS-2]:
 
 # Vendored into WorldFoundry from the openvla/openvla-7b HuggingFace snapshot
 # so runtime imports do not depend on external repo code or HF remote-code cache.
-
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -30,6 +29,9 @@ from timm.models.vision_transformer import LayerScale
 from transformers import AutoModelForCausalLM, PretrainedConfig, PreTrainedModel
 from transformers.generation import GenerationMixin
 from transformers.modeling_outputs import ModelOutput
+
+from worldfoundry.base_models.llm_mllm_core.mllm.prismatic import PrismaticProjector as PrismaticProjector
+from worldfoundry.base_models.llm_mllm_core.mllm.prismatic import ls_apply_patch as ls_apply_patch
 
 from .configuration import OpenVLAConfig, PrismaticConfig
 
@@ -49,14 +51,6 @@ def unpack_tuple(fn: Callable[[Any], tuple[Any]]) -> Callable[[Any], Any]:
 # HF Transformers overwrites parameters with names containing `gamma`; we're going to patch VisionBackbone.LayerScale.
 #   =>> TIMM :: https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py#L109
 #   =>> Transformers :: https://github.com/huggingface/transformers/blob/main/src/transformers/modeling_utils.py#L3960
-def _ls_new_forward(self, x: torch.Tensor) -> torch.Tensor:
-    return x.mul_(self.scale_factor) if self.inplace else x * self.scale_factor
-
-
-def ls_apply_patch(ls_module: LayerScale):
-    ls_module.scale_factor = nn.Parameter(ls_module.gamma.clone())
-    ls_module.forward = _ls_new_forward.__get__(ls_module, LayerScale)
-    del ls_module.gamma
 
 
 # === Prismatic Vision Backbone (nn.Module) Definitions (w/ Fused Backbone Support) ===
@@ -124,38 +118,6 @@ class PrismaticVisionBackbone(nn.Module):
 
 
 # === Prismatic Projector (nn.Module) Definitions ===
-class PrismaticProjector(nn.Module):
-    def __init__(self, use_fused_vision_backbone: bool, vision_dim: int, llm_dim: int) -> None:
-        super().__init__()
-        self.use_fused_vision_backbone = use_fused_vision_backbone
-        self.vision_dim, self.llm_dim = vision_dim, llm_dim
-
-        # Switch on `use_fused_vision_backbone` =>> use slightly different MLPs and projection factors!
-        if not self.use_fused_vision_backbone:
-            self.fc1 = nn.Linear(self.vision_dim, self.llm_dim, bias=True)
-            self.fc2 = nn.Linear(self.llm_dim, self.llm_dim, bias=True)
-            self.act_fn1 = nn.GELU()
-        else:
-            initial_projection_dim = 4 * vision_dim
-            self.fc1 = nn.Linear(self.vision_dim, initial_projection_dim, bias=True)
-            self.fc2 = nn.Linear(initial_projection_dim, self.llm_dim, bias=True)
-            self.fc3 = nn.Linear(self.llm_dim, self.llm_dim, bias=True)
-            self.act_fn1 = nn.GELU()
-            self.act_fn2 = nn.GELU()
-
-    def forward(self, img_patches: torch.Tensor) -> torch.Tensor:
-        if not self.use_fused_vision_backbone:
-            projected_features = self.fc1(img_patches)
-            projected_features = self.act_fn1(projected_features)
-            projected_features = self.fc2(projected_features)
-        else:
-            projected_features = self.fc1(img_patches)
-            projected_features = self.act_fn1(projected_features)
-            projected_features = self.fc2(projected_features)
-            projected_features = self.act_fn2(projected_features)
-            projected_features = self.fc3(projected_features)
-
-        return projected_features
 
 
 # === Main HF Class Definitions ===

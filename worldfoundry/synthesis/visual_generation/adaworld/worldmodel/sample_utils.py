@@ -1,10 +1,15 @@
+import copy
+from typing import Any
 from typing import List as List  # noqa: UP035 - Re-exported to modules that star-import this namespace.
 
 import torch
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
 from safetensors.torch import load_file as load_safetensors
-from vwm.modules.diffusionmodules.sampling import EulerEDMSampler
-from vwm.util import instantiate_from_config
+
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.sampling import (
+    EulerEDMSampler,
+)
+from worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.util import instantiate_from_config
 
 
 def init_model(config, ckpt, load_ckpt: bool = True):
@@ -13,7 +18,27 @@ def init_model(config, ckpt, load_ckpt: bool = True):
     return model
 
 
+def qualify_vwm_config(config: DictConfig) -> DictConfig:
+    """Resolve staged AdaWorld config targets without editing the supplied config."""
+    resolved = copy.deepcopy(config)
+
+    def qualify(value: Any) -> None:
+        if isinstance(value, (dict, DictConfig)):
+            target = value.get("target")
+            if isinstance(target, str) and target.startswith("vwm."):
+                value["target"] = "worldfoundry.synthesis.visual_generation.adaworld.worldmodel." + target
+            for child in value.values():
+                qualify(child)
+        elif isinstance(value, (list, ListConfig)):
+            for child in value:
+                qualify(child)
+
+    qualify(resolved)
+    return resolved
+
+
 def load_model_from_config(config, ckpt: str | None = None):
+    config = qualify_vwm_config(config)
     model = instantiate_from_config(config.model)
 
     if ckpt is not None:
@@ -53,9 +78,14 @@ def load_model_from_config(config, ckpt: str | None = None):
 
 def get_guider(guider, scale):
     if guider == "IdentityGuider":
-        guider_config = {"target": "vwm.modules.diffusionmodules.guiders.IdentityGuider"}
+        guider_config = {
+            "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.guiders.IdentityGuider"
+        }
     elif guider == "VanillaCFG":
-        guider_config = {"target": "vwm.modules.diffusionmodules.guiders.VanillaCFG", "params": {"scale": scale}}
+        guider_config = {
+            "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.guiders.VanillaCFG",
+            "params": {"scale": scale},
+        }
     else:
         raise ValueError(f"Unknown guider {guider}")
     return guider_config
@@ -77,7 +107,9 @@ def init_sampling(
 
 def get_discretization(discretization):
     if discretization == "EDMShiftDiscretization":
-        discretization_config = {"target": "vwm.modules.diffusionmodules.discretizer.EDMShiftDiscretization"}
+        discretization_config = {
+            "target": "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.discretizer.EDMShiftDiscretization"
+        }
     else:
         raise ValueError(f"Unknown discretization {discretization}")
     return discretization_config

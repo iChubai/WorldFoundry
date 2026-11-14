@@ -17,7 +17,9 @@ from collections.abc import Callable
 
 from torch import Tensor, nn
 
-from .attention import Attention, LayerScale, Mlp
+from worldfoundry.core.nn.blocks.layers import LayerScale, Mlp
+
+from .attention import Attention
 
 
 class Block(nn.Module):

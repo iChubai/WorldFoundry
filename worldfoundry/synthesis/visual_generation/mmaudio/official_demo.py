@@ -4,10 +4,18 @@ from pathlib import Path
 
 import torch
 import torchaudio
-from mmaudio.eval_utils import ModelConfig, all_model_cfg, generate, load_video, make_video, setup_eval_logging
-from mmaudio.model.flow_matching import FlowMatching
-from mmaudio.model.networks import MMAudio, get_my_mmaudio
-from mmaudio.model.utils.features_utils import FeaturesUtils
+
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.eval_utils import (
+    ModelConfig,
+    all_model_cfg,
+    generate,
+    load_video,
+    make_video,
+    setup_eval_logging,
+)
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.flow_matching import FlowMatching
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.networks import MMAudio, get_my_mmaudio
+from worldfoundry.synthesis.visual_generation.mmaudio.mmaudio.model.utils.features_utils import FeaturesUtils
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -16,7 +24,7 @@ log = logging.getLogger()
 
 
 @torch.inference_mode()
-def main():
+def main(argv: list[str] | None = None) -> None:
     setup_eval_logging()
 
     parser = ArgumentParser()
@@ -37,7 +45,7 @@ def main():
     parser.add_argument("--skip_video_composite", action="store_true")
     parser.add_argument("--full_precision", action="store_true")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.variant not in all_model_cfg:
         raise ValueError(f"Unknown model variant: {args.variant}")

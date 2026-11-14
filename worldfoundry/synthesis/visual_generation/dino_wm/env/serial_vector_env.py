@@ -1,5 +1,6 @@
 import numpy as np
-from utils import aggregate_dct
+
+from worldfoundry.synthesis.visual_generation.dino_wm.utils import aggregate_dct
 
 
 # for debugging environments, and envs that are not compatible with SubprocVectorEnv

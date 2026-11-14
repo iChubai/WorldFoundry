@@ -8,6 +8,12 @@ import torch.nn.functional as F
 from einops import rearrange
 from transformers.activations import ACT2CLS
 
+from worldfoundry.base_models.diffusion_model.models.networks.gamma_world.multiagent_rope import (
+    precompute_freqs_cis_3d,
+    sinusoidal_embedding_1d,
+)
+from worldfoundry.base_models.diffusion_model.models.networks.wan.variants.wam import NativeDtypeHead, TorchGateModule
+
 try:
     from apex.normalization.fused_layer_norm import FusedRMSNorm
 except ModuleNotFoundError:
@@ -40,7 +46,9 @@ IS_CUDA = torch.cuda.is_available()
 if not IS_CUDA:
     os.environ["TORCHDYNAMO_DISABLE"] = "1"
 
-from kairos.modules.utils import FLAGS_KAIROS_CUDA_SM  # noqa: E402 - Follows the environment setup.
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (  # noqa: E402 - Follows the environment setup.
+    FLAGS_KAIROS_CUDA_SM,
+)
 
 SUPPORTED_ARCHS = {80, 89, 120, 121}
 if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
@@ -57,17 +65,20 @@ if FLAGS_KAIROS_CUDA_SM in SUPPORTED_ARCHS:
 import torch.distributed as dist  # noqa: E402 - Follows the conditional setup block.
 from fla.layers import GatedDeltaNet  # noqa: E402 - Follows the conditional setup block.
 from fla.models.utils import Cache as FlaCache  # noqa: E402 - Follows the conditional setup block.
-from kairos.apis.builder import DITS  # noqa: E402 - Follows the conditional setup block.
+
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.apis.builder import (  # noqa: E402 - Follows the conditional setup block.
+    DITS,
+)
 
 # isort: split
-from kairos.modules.utils import (  # noqa: E402 - Follows the conditional setup block.
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils import (  # noqa: E402 - Follows the conditional setup block.
     FLAGS_KAIROS_IS_METAX,
     parallel_state,
 )
 
 # isort: split
 # isort: split
-from kairos.modules.utils.tp_utils import (  # noqa: E402 - Follows the conditional setup block.
+from worldfoundry.synthesis.visual_generation.kairos.kairos_runtime.kairos.modules.utils.tp_utils import (  # noqa: E402 - Follows the conditional setup block.
     all2all_head_to_seq,
     all2all_seq_to_head,
     build_tp_chunk_list,
@@ -406,31 +417,6 @@ def modulate(x: torch.Tensor, shift: torch.Tensor, scale: torch.Tensor):
     return x
 
 
-def sinusoidal_embedding_1d(dim, position):
-    sinusoid = torch.outer(
-        position.type(torch.float64),
-        torch.pow(10000, -torch.arange(dim // 2, dtype=torch.float64, device=position.device).div(dim // 2)),
-    )
-    x = torch.cat([torch.cos(sinusoid), torch.sin(sinusoid)], dim=1)
-    return x.to(position.dtype)
-
-
-def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
-    # 3d rope precompute
-    f_freqs_cis = precompute_freqs_cis(dim - 2 * (dim // 3), end, theta)
-    h_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
-    w_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
-    return f_freqs_cis, h_freqs_cis, w_freqs_cis
-
-
-def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
-    # 1d rope precompute
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].double() / dim))
-    freqs = torch.outer(torch.arange(end, device=freqs.device), freqs)
-    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)
-    return freqs_cis
-
-
 def rope_apply(x, freqs, num_heads):
     x = rearrange(x, "b s (n d) -> b s n d", n=num_heads)
     x_out = torch.view_as_complex(x.to(torch.float16).reshape(x.shape[0], x.shape[1], x.shape[2], -1, 2))
@@ -447,20 +433,6 @@ def rope_apply_for3d(x, num_frames, freqs, num_heads):
 
     x_out = x_out.reshape(B, L, D)
     return x_out.to(x.dtype)
-
-
-class RMSNorm(nn.Module):
-    def __init__(self, dim, eps=1e-5):
-        super().__init__()
-        self.eps = eps
-        self.weight = nn.Parameter(torch.ones(dim))
-
-    def norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(dim=-1, keepdim=True) + self.eps)
-
-    def forward(self, x):
-        dtype = x.dtype
-        return self.norm(x.float()).to(dtype) * self.weight
 
 
 class AttentionModule(nn.Module):
@@ -787,16 +759,6 @@ class CrossAttention(nn.Module):
         return self.o(x)
 
 
-class GateModule(nn.Module):
-    def __init__(
-        self,
-    ):
-        super().__init__()
-
-    def forward(self, x, gate, residual):
-        return x + gate * residual
-
-
 def _broadcast_from_owner(x_chunk, owner_rank, chunk_shape, dtype, device, group):
     rank = dist.get_rank(group)
     if rank != owner_rank:
@@ -912,7 +874,7 @@ class DiTBlock(nn.Module):
 
         self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), ACT2CLS["silu"](), nn.Linear(ffn_dim, dim))
         self.modulation = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5)
-        self.gate = GateModule()
+        self.gate = TorchGateModule()
 
     @_optional_torch_compile
     def forward(self, x, context, t_mod, freqs, grid_size, context_mask=None):
@@ -1111,27 +1073,6 @@ class PosEmbed2D(nn.Module):
         return x + pos.to(x.dtype)
 
 
-class Head(nn.Module):
-    def __init__(self, dim: int, out_dim: int, patch_size: tuple[int, int, int], eps: float):
-        super().__init__()
-        self.dim = dim
-        self.patch_size = patch_size
-        self.norm = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
-        self.head = nn.Linear(dim, out_dim * math.prod(patch_size))
-        self.modulation = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
-
-    def forward(self, x, t_mod):
-        if len(t_mod.shape) == 3:
-            shift, scale = (
-                self.modulation.unsqueeze(0).to(dtype=t_mod.dtype, device=t_mod.device) + t_mod.unsqueeze(2)
-            ).chunk(2, dim=2)
-            x = self.head(self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2))
-        else:
-            shift, scale = (self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(2, dim=1)
-            x = self.head(self.norm(x) * (1 + scale) + shift)
-        return x
-
-
 @DITS.register_module()
 class KairosDiT(torch.nn.Module):
     def __init__(
@@ -1224,7 +1165,7 @@ class KairosDiT(torch.nn.Module):
         print(f"{self.__class__.__name__} use_seq_parallel: {use_seq_parallel}")
         print(f"{self.__class__.__name__} use_tp_in_getaeddeltanet: {use_tp_in_getaeddeltanet}")
         print(f"{self.__class__.__name__} use_tp_in_self_attn: {use_tp_in_self_attn}")
-        self.head = Head(dim, out_dim, patch_size, eps)
+        self.head = NativeDtypeHead(dim, out_dim, patch_size, eps)
         head_dim = dim // num_heads
 
         self.freqs = precompute_freqs_cis_3d(head_dim)

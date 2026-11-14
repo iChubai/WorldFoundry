@@ -1,6 +1,5 @@
-"""Isolated LaST-R1 step using the pinned official Qwen3-VL implementation."""
+"""Isolated LaST-R1 policy step on the vendored Qwen3-VL policy model."""
 
-import importlib.util
 import json
 import os
 import sys
@@ -12,26 +11,23 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from PIL import Image
-from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
+from transformers import AutoProcessor
+
+from worldfoundry.synthesis.action_generation.last_r1.modeling import (
+    LastR1Qwen3VLForConditionalGeneration,
+    decode_action_tokens,
+)
 
 if len(sys.argv) != 2:
     raise SystemExit("usage: python -m worldfoundry.synthesis.action_generation.last_r1.worker REQUEST_JSON")
 request = json.loads(Path(sys.argv[1]).read_text())
 root = Path(request["run_dir"]).resolve()
 root.mkdir(parents=True, exist_ok=True)
-source = Path(request["source_root"]).resolve()
 checkpoint = Path(request["checkpoint_path"]).resolve()
-tokenizer_spec = importlib.util.spec_from_file_location(
-    "last_r1_action_tokenizer", source / "verl/workers/actor/action_tokenizer.py"
-)
-tokenizer_module = importlib.util.module_from_spec(tokenizer_spec)
-tokenizer_spec.loader.exec_module(tokenizer_module)
-ActionTokenizer = tokenizer_module.ActionTokenizer
 status = {
     "status": "starting",
     "started_at": time.time(),
     "checkpoint": str(checkpoint),
-    "source": str(source),
     "gpu": os.environ.get("CUDA_VISIBLE_DEVICES"),
 }
 
@@ -42,9 +38,6 @@ def write(name, payload):
 
 write("status.json", status)
 try:
-    import transformers
-
-    assert Path(transformers.__file__).resolve().is_relative_to(source), transformers.__file__
     assert checkpoint.joinpath("config.json").is_file()
     assert checkpoint.joinpath("model.safetensors.index.json").is_file()
     processor = AutoProcessor.from_pretrained(checkpoint, local_files_only=True)
@@ -54,8 +47,9 @@ try:
     latent_end = tokenizer.vocab["<latent_end>"]
     latent_pad = tokenizer.vocab["<latent_pad>"]
     assert [tokenizer.vocab[f"<action_{index}>"] for index in range(256)] == list(range(action_zero, action_zero + 256))
-    action_tokenizer = ActionTokenizer(tokenizer, need_to_sub=3)
-    assert action_tokenizer.my_vocab_size == action_zero + 256
+    # The three latent control tokens follow the 256 action tokens at the end of the vocabulary.
+    action_vocab_end = len(tokenizer) - 3
+    assert action_vocab_end == action_zero + 256
 
     picture = Image.open(request["image_path"]).convert("RGB")
     if request.get("center_crop", True):
@@ -105,7 +99,7 @@ try:
 
     status["status"] = "loading_model"
     write("status.json", status)
-    model, loading = Qwen3VLForConditionalGeneration.from_pretrained(
+    model, loading = LastR1Qwen3VLForConditionalGeneration.from_pretrained(
         checkpoint, dtype=torch.bfloat16, local_files_only=True, device_map="cuda:0", output_loading_info=True
     )
     model.eval()
@@ -232,7 +226,9 @@ try:
         action_bins = torch.multinomial(probabilities.reshape(-1, 256), 1).reshape(1, action_count)
         action_ids = (action_bins + action_zero).cpu().numpy()
 
-    normalized = action_tokenizer.decode_token_ids_to_actions(action_ids).reshape(1, action_chunks, action_width)
+    normalized = decode_action_tokens(action_ids, action_vocab_end=action_vocab_end).reshape(
+        1, action_chunks, action_width
+    )
     normalized[..., 6] = (normalized[..., 6] >= 0.5).astype(int)
     stats = json.loads((checkpoint / "statistics.json").read_text())["libero"]["action"]
     mask = np.asarray(stats["mask"])
@@ -243,7 +239,6 @@ try:
         "status": "success",
         "model_id": "last-r1",
         "checkpoint": str(checkpoint),
-        "official_source": str(source),
         "official_revision": "ba4e939632427e066f734bf9f7abfa11cc4911f6",
         "input_kind": "image_language_offline",
         "instruction": instruction,

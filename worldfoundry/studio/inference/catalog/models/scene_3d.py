@@ -8,7 +8,6 @@ from typing import Any
 from worldfoundry.core.io.paths import (
     checkpoint_root_path,
     hfd_root_path,
-    official_runtime_repo_path,
     resolve_local_hf_model_path,
 )
 
@@ -372,29 +371,12 @@ def _lagernvs_default_ref() -> str:
     )
 
 
-def _dvlt_default_ref() -> str:
-    return resolve._prefer_existing_model_ref(
-        str(checkpoint_root_path("dvlt")),
-        *resolve._cache_candidates("nvidia--dvlt", "dvlt"),
-        "nvidia/dvlt",
-    )
-
-
 def _pixelsplat_default_ref() -> str:
     return resolve._prefer_existing_model_ref(
         str(checkpoint_root_path("pixelSplat", "re10k.ckpt")),
         str(checkpoint_root_path("hfd", "3DGeneration--pixelSplat", "re10k.ckpt")),
         *resolve._cache_candidates("dylanebert--pixelSplat", "3DGeneration--pixelSplat", "pixelSplat"),
         "dylanebert/pixelSplat",
-    )
-
-
-def _splatt3r_default_ref() -> str:
-    return resolve._prefer_existing_model_ref(
-        str(checkpoint_root_path("splatt3r_v1.0", "epoch=19-step=1200.ckpt")),
-        str(checkpoint_root_path("hfd", "3DGeneration--splatt3r_v1.0", "epoch=19-step=1200.ckpt")),
-        *resolve._cache_candidates("brandonsmart--splatt3r_v1.0", "3DGeneration--splatt3r_v1.0", "splatt3r_v1.0"),
-        "brandonsmart/splatt3r_v1.0",
     )
 
 
@@ -411,15 +393,7 @@ def _lingbot_map_default_ref() -> str:
 
 _IN_TREE_REPO_PARTS: dict[str, tuple[str, ...]] = {
     "lagernvs": ("base_models", "three_dimensions", "general_3d", "lagernvs", "lagernvs_runtime"),
-    "monst3r": ("base_models", "three_dimensions", "general_3d", "monst3r"),
     "MVDiffusion": ("base_models", "three_dimensions", "general_3d", "mvdiffusion", "mvdiffusion_runtime"),
-    "stable-virtual-camera": (
-        "base_models",
-        "three_dimensions",
-        "general_3d",
-        "stable_virtual_camera",
-        "stable_virtual_camera_runtime",
-    ),
     "WonderJourney": ("synthesis", "visual_generation", "wonderjourney", "wonderjourney_runtime"),
     "WorldGen": ("synthesis", "visual_generation", "worldgen", "worldgen_runtime"),
 }
@@ -470,25 +444,6 @@ def _three_d_four_d_runtime_call_kwargs(**kwargs: Any) -> dict[str, Any]:
     }
     call_kwargs.update(kwargs)
     return call_kwargs
-
-
-def _monst3r_default_call_kwargs() -> dict[str, Any]:
-    checkpoint_dir = checkpoint_root_path("MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt")
-    legacy_checkpoint = checkpoint_dir / "MonST3R_PO-TA-S-W_ViTLarge_BaseDecoder_512_dpt.pth"
-    if legacy_checkpoint.is_file():
-        weights = legacy_checkpoint
-    elif (checkpoint_dir / "config.json").is_file() and (checkpoint_dir / "model.safetensors").is_file():
-        weights = checkpoint_dir
-    else:
-        weights = legacy_checkpoint
-    return _three_d_four_d_runtime_call_kwargs(
-        weights=str(weights),
-        seq_name="worldfoundry",
-        niter=300,
-        flow_loss_weight=0.0,
-        skip_pair_dynamic_mask=True,
-        silent=True,
-    )
 
 
 def _geometry_prior_call_params(*model_params: str) -> tuple[str, ...]:
@@ -548,15 +503,6 @@ def _cut3r_default_ref() -> str:
     )
 
 
-def _hunyuan_world_voyager_default_ref() -> str:
-    return resolve._checkpoint_model_ref(
-        "HunyuanWorld-Voyager",
-        "tencent--HunyuanWorld-Voyager",
-        "hfd/tencent--HunyuanWorld-Voyager",
-        fallback="tencent/HunyuanWorld-Voyager",
-    )
-
-
 def _worldfm_default_ref() -> str:
     return resolve._prefer_existing_model_ref(
         *resolve._cache_candidates("worldfm", "inspatio--worldfm"),
@@ -582,10 +528,6 @@ def _worldfm_demo_meta_path() -> str:
 
 def _worldfm_demo_panorama_path() -> str:
     return str(resolve._data_path("test_cases", "worldfm", "mario.png"))
-
-
-def _hunyuan_world_voyager_case1_dir() -> Path:
-    return resolve._data_path("test_cases", "hunyuan_world_voyager", "case1")
 
 
 def _lyra1_default_call_kwargs() -> dict[str, Any]:
@@ -665,22 +607,14 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "display_name": "UniWorld-View",
         "category": "Video Generation",
         "summary": "Official UniView novel-view synthesis from one image or a monocular video.",
-        "default_model_ref": lambda: str(
-            official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")
+        "default_model_ref": lambda: resolve._checkpoint_model_ref(
+            "UniWorld-View", fallback=str(checkpoint_root_path("UniWorld-View"))
         ),
-        "default_input_path": lambda: str(
-            official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")
-            / "test"
-            / "images"
-            / "fruit.jpg"
-        ),
+        "default_input_path": str(resolve._data_path("test_cases", "uniworld_view", "images", "fruit.jpg")),
         "default_prompt": "",
         "default_task_type": "image-to-video",
         "default_backend": "from_pretrained",
         "supports_from_pretrained": True,
-        "default_load_kwargs": lambda: {
-            "repo_root": str(official_runtime_repo_path("UniWorld-View", specific_env="UNIWORLD_VIEW_REPO")),
-        },
         "default_call_kwargs": {
             "mode": "single_view",
             "geometry_backend": "stream3r",
@@ -730,7 +664,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "return_dict",
         ),
         "load_params": (
-            "repo_root",
             "python_executable",
             "checkpoint_root",
             "transformer_path",
@@ -1130,21 +1063,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "tags": ("novel-view", "video-to-video", "camera-control", "trajectory"),
         "notes": "Video-to-video model that re-renders an input clip along a new camera trajectory.",
     },
-    "dvlt": {
-        "category": "3D Scene",
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "default_model_ref": _dvlt_default_ref,
-        "default_task_type": "multi-view-3d-reconstruction",
-        "default_call_kwargs": _geometry_prior_default_call_kwargs(
-            input_path=_geometry_prior_image_fixture(),
-        ),
-        "call_params": _geometry_prior_call_params(),
-        "load_params": _geometry_prior_load_params(),
-        "tags": ("3d", "point-reconstruction", "multi-view"),
-        "notes": "Multi-view point cloud reconstruction; not image-to-video generation.",
-    },
     "lingbot-map": {
         "category": "3D Scene",
         "supports_stream": False,
@@ -1184,19 +1102,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         },
         "tags": ("novel-view", "poses", "scene-context"),
         "notes": "Supports pose-matrix JSON directly. Navigation tokens can also be converted into pose trajectories.",
-    },
-    "hunyuanworld-voyager": {
-        "display_name": "HunyuanWorld-Voyager",
-        "category": "3D Scene",
-        "default_model_ref": _hunyuan_world_voyager_default_ref,
-        "default_input_path": str(_hunyuan_world_voyager_case1_dir() / "ref_image.png"),
-        "default_prompt": "An old-fashioned European village with thatched roofs on the houses.",
-        "default_call_kwargs": {
-            "condition_dir": str(_hunyuan_world_voyager_case1_dir()),
-            "seed": 0,
-            "infer_steps": 50,
-        },
-        "tags": ("world-model", "video-to-3d", "local-checkpoint"),
     },
     "vggt": {
         "display_name": "VGGT",
@@ -1239,33 +1144,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
             "output_name",
         ),
         "tags": ("3dgs", "reconstruction", "camera-control"),
-    },
-    "splatt3r": {
-        "display_name": "Splatt3R",
-        "category": "3D Scene",
-        "supports_stream": False,
-        "supports_from_pretrained": True,
-        "default_backend": "from_pretrained",
-        "default_model_ref": _splatt3r_default_ref,
-        "default_task_type": "3d-reconstruction",
-        "default_input_path": str(resolve._data_path("test_cases", "vggt", "examples", "kitchen", "images")),
-        "call_params": (
-            "images",
-            "image_path",
-            "input_path",
-            "interactions",
-            "output_path",
-            "return_dict",
-        ),
-        "load_params": (
-            "checkpoint_path",
-            "model_path",
-            "device",
-            "image_size",
-            *DISPATCH_LOAD_PARAMS,
-        ),
-        "tags": ("3dgs", "gaussian-splatting", "reconstruction"),
-        "notes": "Inference-only Splatt3R wrapper reconstructs a Gaussian PLY from one or two images.",
     },
     "fantasyworld": {
         "display_name": "FantasyWorld",
@@ -1557,49 +1435,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "env_hints": ("HF_TOKEN",),
         "notes": "Uses the local official LagrNVS minimal_inference.py entrypoint when weights and dependencies are staged.",
     },
-    "monst3r": {
-        "display_name": "MonST3R",
-        "category": "3D Scene",
-        "default_backend": "from_pretrained",
-        "default_model_ref": lambda: _in_tree_repo_ref("monst3r"),
-        "supports_from_pretrained": True,
-        "supports_stream": False,
-        "default_task_type": "monst3r_demo",
-        "default_call_kwargs": _monst3r_default_call_kwargs,
-        "call_params": _three_d_four_d_runtime_call_params(
-            "images",
-            "video",
-            "fps",
-            "weights",
-            "model_name",
-            "image_size",
-            "seq_name",
-            "save_name",
-            "num_frames",
-            "batch_size",
-            "niter",
-            "scenegraph_type",
-            "winsize",
-            "refid",
-            "min_conf_thr",
-            "cam_size",
-            "temporal_smoothing_weight",
-            "translation_weight",
-            "flow_loss_weight",
-            "flow_loss_start_iter",
-            "flow_loss_threshold",
-            "not_batchify",
-            "real_time",
-            "window_wise",
-            "window_size",
-            "window_overlap_ratio",
-            "skip_pair_dynamic_mask",
-            "silent",
-        ),
-        "load_params": _three_d_four_d_runtime_load_params(),
-        "tags": ("4d", "reconstruction", "dynamic-scene"),
-        "notes": "Runs the in-tree MonST3R demo.py entrypoint and exports a GLB scene artifact. Studio defaults disable optional flow loss so missing RAFT2/SAM2 assets do not block preview output.",
-    },
     "mvdiffusion": {
         "display_name": "MVDiffusion",
         "category": "Video Generation",
@@ -1624,42 +1459,6 @@ OVERRIDES: dict[str, dict[str, Any]] = {
         "load_params": _three_d_four_d_runtime_load_params(),
         "tags": ("multi-view", "diffusion", "3d"),
         "notes": "Runs the official MVDiffusion demo.py entrypoint from the local official repo. The 20-step default produces a visually structured panorama; one step is suitable only for runtime smoke testing.",
-    },
-    "stable-virtual-camera": {
-        "display_name": "Stable Virtual Camera",
-        "category": "Video Generation",
-        "default_backend": "from_pretrained",
-        "default_model_ref": lambda: _in_tree_repo_ref("stable-virtual-camera"),
-        "supports_from_pretrained": True,
-        "supports_stream": False,
-        "default_task_type": "stable_virtual_camera_demo",
-        "default_input_path": str(resolve._data_path("test_cases", "stable_virtual_camera", "basic", "blue-car.jpg")),
-        "default_call_kwargs": _three_d_four_d_runtime_call_kwargs(
-            version="1.1",
-            task="img2trajvid_s-prob",
-            pretrained_model_name_or_path=str(checkpoint_root_path("stable-virtual-camera")),
-            weight_name="modelv1.1.safetensors",
-            H=576,
-            W=576,
-            T=21,
-            num_steps=50,
-            seed=23,
-        ),
-        "call_params": _three_d_four_d_runtime_call_params(
-            "images",
-            "version",
-            "task",
-            "pretrained_model_name_or_path",
-            "weight_name",
-            "H",
-            "W",
-            "T",
-            "num_steps",
-            "seed",
-        ),
-        "load_params": _three_d_four_d_runtime_load_params(),
-        "tags": ("camera-control", "novel-view", "video"),
-        "notes": "Runs the official Stable Virtual Camera demo.py entrypoint from the local official repo.",
     },
     "wonderjourney": {
         "display_name": "WonderJourney",
@@ -2083,40 +1882,6 @@ OVERRIDES.update(
             "aliases": ("dav3-prior", "da3metric-large-prior"),
             "tags": ("depth", "geometry", "metric-depth", "prior"),
         },
-        "dust3r": {
-            "display_name": "DUSt3R",
-            "category": "Depth / Geometry",
-            "supports_from_pretrained": True,
-            "supports_stream": False,
-            "default_backend": "from_pretrained",
-            "default_task_type": "multi-view-3d-reconstruction",
-            "default_call_kwargs": _geometry_prior_default_call_kwargs(
-                input_path=str(resolve._data_path("test_cases", "cut3r", "examples", "001")),
-                max_points=10000,
-            ),
-            "call_params": _geometry_prior_call_params("max_points"),
-            "load_params": _geometry_prior_load_params(),
-            "aliases": ("naver-dust3r", "geometric-3d-vision-made-easy"),
-            "tags": ("3d", "geometry", "reconstruction", "prior"),
-            "notes": "Point/multi-view 3D reconstruction; not text-to-video generation.",
-        },
-        "dust3r-base-model": {
-            "display_name": "DUSt3R Base Model",
-            "category": "Depth / Geometry",
-            "supports_from_pretrained": True,
-            "supports_stream": False,
-            "default_backend": "from_pretrained",
-            "default_task_type": "multi-view-3d-reconstruction",
-            "default_call_kwargs": _geometry_prior_default_call_kwargs(
-                input_path=str(resolve._data_path("test_cases", "cut3r", "examples", "001")),
-                max_points=10000,
-            ),
-            "call_params": _geometry_prior_call_params("max_points"),
-            "load_params": _geometry_prior_load_params(),
-            "aliases": ("dust3r-base",),
-            "tags": ("3d", "geometry", "reconstruction", "point-reconstruction"),
-            "notes": "Point/multi-view 3D reconstruction; not text-to-video generation.",
-        },
         "geocalib-prior": {
             "category": "Depth / Geometry",
             "supports_from_pretrained": True,
@@ -2196,23 +1961,6 @@ OVERRIDES.update(
             "load_params": _geometry_prior_load_params(),
             "aliases": ("unidepth-v2", "unidepth-v2-vitl14", "unidepth_v2_vitl14"),
             "tags": ("depth", "geometry", "metric-depth", "prior"),
-        },
-        "unik3d-prior": {
-            "category": "Depth / Geometry",
-            "supports_from_pretrained": True,
-            "supports_stream": False,
-            "default_backend": "from_pretrained",
-            "default_task_type": "metric-3d-estimation",
-            "default_call_kwargs": _geometry_prior_default_call_kwargs(
-                input_path=_geometry_prior_image_fixture(),
-                type="l",
-                camera_model="auto",
-                max_points=50_000,
-            ),
-            "call_params": _geometry_prior_call_params("type", "camera_model"),
-            "load_params": _geometry_prior_load_params(),
-            "aliases": ("unik3d", "unik3d-vitl"),
-            "tags": ("depth", "geometry", "panorama", "prior"),
         },
         "video-depth-anything-prior": {
             "category": "Depth / Geometry",

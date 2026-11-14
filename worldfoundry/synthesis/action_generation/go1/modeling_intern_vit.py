@@ -11,11 +11,17 @@ import torch.utils.checkpoint
 from einops import rearrange
 from timm.layers import DropPath
 from torch import nn
-from transformers.activations import ACT2FN
 from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPooling
 from transformers.modeling_utils import PreTrainedModel
 from transformers.utils import logging
 
+from worldfoundry.base_models.llm_mllm_core.mllm.intern_vit.model import (
+    InternMLP,
+    InternVisionEmbeddings,
+)
+from worldfoundry.base_models.llm_mllm_core.mllm.qwen.layers import (
+    QwenRMSNorm as InternRMSNorm,
+)
 from worldfoundry.core.attention import scaled_dot_product_attention
 
 from .configuration_intern_vit import InternVisionConfig
@@ -31,75 +37,10 @@ except BaseException:
 logger = logging.get_logger(__name__)
 
 
-class InternRMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6):
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-
-    def forward(self, hidden_states):
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        return self.weight * hidden_states.to(input_dtype)
-
-
 NORM2FN = {
     "rms_norm": InternRMSNorm,
     "layer_norm": nn.LayerNorm,
 }
-
-
-class InternVisionEmbeddings(nn.Module):
-    def __init__(self, config: InternVisionConfig):
-        super().__init__()
-        self.config = config
-        self.embed_dim = config.hidden_size
-        self.image_size = config.image_size
-        self.patch_size = config.patch_size
-
-        self.class_embedding = nn.Parameter(
-            torch.randn(1, 1, self.embed_dim),
-        )
-
-        self.patch_embedding = nn.Conv2d(
-            in_channels=3, out_channels=self.embed_dim, kernel_size=self.patch_size, stride=self.patch_size
-        )
-
-        self.num_patches = (self.image_size // self.patch_size) ** 2
-        self.num_positions = self.num_patches + 1
-
-        self.position_embedding = nn.Parameter(torch.randn(1, self.num_positions, self.embed_dim))
-
-    def _get_pos_embed(self, pos_embed, H, W):
-        target_dtype = pos_embed.dtype
-        pos_embed = (
-            pos_embed.float()
-            .reshape(1, self.image_size // self.patch_size, self.image_size // self.patch_size, -1)
-            .permute(0, 3, 1, 2)
-        )
-        pos_embed = (
-            F.interpolate(pos_embed, size=(H, W), mode="bicubic", align_corners=False)
-            .reshape(1, -1, H * W)
-            .permute(0, 2, 1)
-            .to(target_dtype)
-        )
-        return pos_embed
-
-    def forward(self, pixel_values: torch.FloatTensor) -> torch.Tensor:
-        target_dtype = self.patch_embedding.weight.dtype
-        patch_embeds = self.patch_embedding(pixel_values)  # shape = [*, channel, width, height]
-        batch_size, _, height, width = patch_embeds.shape
-        patch_embeds = patch_embeds.flatten(2).transpose(1, 2)
-        class_embeds = self.class_embedding.expand(batch_size, 1, -1).to(target_dtype)
-        embeddings = torch.cat([class_embeds, patch_embeds], dim=1)
-        position_embedding = torch.cat(
-            [self.position_embedding[:, :1, :], self._get_pos_embed(self.position_embedding[:, 1:, :], height, width)],
-            dim=1,
-        )
-        embeddings = embeddings + position_embedding.to(target_dtype)
-        return embeddings
 
 
 class InternAttention(nn.Module):
@@ -178,21 +119,6 @@ class InternAttention(nn.Module):
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         x = self._naive_attn(hidden_states) if not self.use_flash_attn else self._flash_attn(hidden_states)
         return x
-
-
-class InternMLP(nn.Module):
-    def __init__(self, config: InternVisionConfig):
-        super().__init__()
-        self.config = config
-        self.act = ACT2FN[config.hidden_act]
-        self.fc1 = nn.Linear(config.hidden_size, config.intermediate_size)
-        self.fc2 = nn.Linear(config.intermediate_size, config.hidden_size)
-
-    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        hidden_states = self.fc1(hidden_states)
-        hidden_states = self.act(hidden_states)
-        hidden_states = self.fc2(hidden_states)
-        return hidden_states
 
 
 class InternVisionEncoderLayer(nn.Module):

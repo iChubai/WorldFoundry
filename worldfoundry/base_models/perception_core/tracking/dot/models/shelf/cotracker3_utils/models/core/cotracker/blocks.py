@@ -4,14 +4,13 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-import collections
 from collections.abc import Callable
 from functools import partial
-from itertools import repeat
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from timm.layers import to_ntuple as _ntuple
 
 from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracker3_utils.models.core.model_utils import (
     bilinear_sampler,
@@ -19,15 +18,6 @@ from worldfoundry.base_models.perception_core.tracking.dot.models.shelf.cotracke
 
 
 # From PyTorch internals
-def _ntuple(n):
-    def parse(x):
-        if isinstance(x, collections.abc.Iterable) and not isinstance(x, str):
-            return tuple(x)
-        return tuple(repeat(x, n))
-
-    return parse
-
-
 def exists(val):
     return val is not None
 

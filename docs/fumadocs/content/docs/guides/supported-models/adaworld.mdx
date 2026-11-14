@@ -15,7 +15,7 @@ The project is described in [arXiv 2503.18938](https://arxiv.org/abs/2503.18938)
 
 ## What it does
 
-AdaWorld's latent-action autoencoder extracts motion representations from video, which condition the world model's generated frames. The runtime follows the official FDM inference path. Its tasks are `latent-action-world-model`, `action-conditioned-video`, and `multi-domain-world-model`.
+AdaWorld's latent-action autoencoder extracts motion representations from video, which condition the world model's generated frames. The in-tree runtime follows the official FDM inference path through the installed `worldfoundry.synthesis.visual_generation.adaworld.worldmodel.sample` module. Its tasks are `latent-action-world-model`, `action-conditioned-video`, and `multi-domain-world-model`; the completed GPU check covers a short source-video rollout, not separate task benchmarks.
 
 ## Inputs and checkpoint
 

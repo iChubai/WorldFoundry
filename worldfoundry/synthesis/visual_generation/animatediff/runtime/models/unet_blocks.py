@@ -4,9 +4,11 @@
 import torch
 from torch import nn
 
+from worldfoundry.base_models.diffusion_model.models.networks.animatediff.resnet import Downsample3D, Upsample3D
+
 from .attention import Transformer3DModel
 from .motion_module import get_motion_module
-from .resnet import Downsample3D, ResnetBlock3D, Upsample3D
+from .resnet import ResnetBlock3D
 
 
 def get_down_block(

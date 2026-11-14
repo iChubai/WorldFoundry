@@ -2,23 +2,28 @@ import jax
 import jax.experimental
 import jax.experimental.multihost_utils
 import jax.numpy as jnp
-import src.data.utils as data_utils
-import src.utils.sharding as sharding_utils
 import torch
 from einops import rearrange, repeat
 from flax import nnx
-from src.models.utils import jax_to_torch
-from src.models.wan_vae import VAE_SCALE
-from src.runners.base_runner import BaseRunner
-from src.utils.multiplayer import handle_multiplayer_input, handle_multiplayer_output
-from src.utils.preprocessing_mp import wan_image_condition_preprocess
-from src.utils.rollout import (
+
+import worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.data.utils as data_utils
+import worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.sharding as sharding_utils
+from worldfoundry.core.media.codecs.video import write_video as _worldfoundry_write_video
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.utils import jax_to_torch
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.wan_vae import VAE_SCALE
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.runners.base_runner import BaseRunner
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.multiplayer import (
+    handle_multiplayer_input,
+    handle_multiplayer_output,
+)
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.preprocessing_mp import (
+    wan_image_condition_preprocess,
+)
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.rollout import (
     change_tensor_range,
     perform_bidirectional_multiplayer_rollout,
     perform_multiplayer_rollout,
 )
-
-from worldfoundry.core.media.codecs.video import write_video as _worldfoundry_write_video
 
 
 def write_video(path, video, fps=20):

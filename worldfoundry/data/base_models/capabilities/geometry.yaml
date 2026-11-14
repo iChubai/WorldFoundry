@@ -163,26 +163,6 @@ unidepth_v2_vitl14:
       required_files: [config.json, model.safetensors]
       note: UniDepth v2 ViT-L depth prior reused by ViPE-style geometric perception paths.
 
-unik3d_vitl:
-  family: depth_geometry
-  canonical_path: worldfoundry/base_models/three_dimensions/depth/unik3d
-  package_imports: [torch, torchvision, numpy, einops, huggingface_hub, safetensors]
-  install_packages: [torch, torchvision, numpy, einops, huggingface-hub, safetensors]
-  assets:
-    - id: unik3d_vitl_model_dir
-      kind: dir
-      role: model_dir
-      env: [WORLDFOUNDRY_UNIK3D_VITL_MODEL_DIR]
-      local_path: ${WORLDFOUNDRY_HFD_ROOT}/lpiccinelli--unik3d-vitl
-      alternate_paths:
-        - ${WORLDFOUNDRY_CKPT_DIR}/unik3d-vitl
-        - ${WORLDFOUNDRY_WORKSPACE_ROOT}/ckpt/hfd/lpiccinelli--unik3d-vitl
-        - ${WORLDFOUNDRY_WORKSPACE_ROOT}/ckpt/unik3d-vitl
-      hf_repo_id: lpiccinelli/unik3d-vitl
-      min_file_count: 2
-      required_files: [config.json, model.safetensors]
-      note: Official UniK3D ViT-L universal-camera metric-3D model directory.
-
 midas_v21_small_256:
   family: depth
   canonical_path: worldfoundry/base_models/three_dimensions/depth/midas

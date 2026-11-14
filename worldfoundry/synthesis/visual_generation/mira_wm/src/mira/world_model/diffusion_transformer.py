@@ -14,12 +14,14 @@ import torch.utils.checkpoint
 from einops import rearrange
 from torch import Tensor
 
-from mira.ml.attention import SelfAttentionConfig
-from mira.ml.init import init_weights
-from mira.world_model.config import LatentWorldModelConfig
-from mira.world_model.layers.rope import RoPE, SpatialRoPE2D
-from mira.world_model.layers.timestep_encoder import DiffusionTimeEmbedding
-from mira.world_model.layers.transformer import AdaSTBlock
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.ml.attention import SelfAttentionConfig
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.ml.init import init_weights
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.config import LatentWorldModelConfig
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.layers.rope import RoPE, SpatialRoPE2D
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.layers.timestep_encoder import (
+    DiffusionTimeEmbedding,
+)
+from worldfoundry.synthesis.visual_generation.mira_wm.src.mira.world_model.layers.transformer import AdaSTBlock
 
 
 class DiffusionTransformer(nn.Module):

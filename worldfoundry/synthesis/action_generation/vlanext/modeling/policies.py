@@ -5,14 +5,12 @@ import math
 import torch
 import torch.nn as nn
 
+from worldfoundry.core.nn.transformer.dit import modulate_sequence as modulate
+
 
 # -----------------------------------------------------------------------------
 # ----------------------------- Shared Components -----------------------------
 # -----------------------------------------------------------------------------
-def modulate(x, shift, scale):
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
-
-
 class MetaQueryBlock(nn.Module):
     def __init__(self, hidden_size, num_heads, mlp_ratio=4.0):
         super().__init__()

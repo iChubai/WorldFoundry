@@ -13,7 +13,6 @@ import torch
 from .runtime_env import (
     DEFAULT_NEOVERSE_LORA_NAME,
     DEFAULT_NEOVERSE_REPO,
-    ensure_neoverse_runtime,
     resolve_neoverse_lora_path,
     resolve_neoverse_model_dir,
     resolve_neoverse_reconstructor_path,
@@ -88,7 +87,6 @@ class NeoVerseOfficialRuntime:
         **kwargs,
     ) -> NeoVerseOfficialRuntime:
         del args, kwargs
-        ensure_neoverse_runtime()
         from worldfoundry.base_models.diffusion_model.models.autoencoders.wan import (
             WanVideoVAE,
             WanVideoVAEStateDictConverter,
@@ -269,7 +267,6 @@ class NeoVerseOfficialRuntime:
         orbit_radius: float | None = None,
         use_first_frame: bool = True,
     ):
-        ensure_neoverse_runtime()
         from worldfoundry.synthesis.visual_generation.neoverse.native.auxiliary import (
             CameraTrajectory,
         )
@@ -388,7 +385,6 @@ class NeoVerseOfficialRuntime:
         **kwargs,
     ):
         del kwargs
-        ensure_neoverse_runtime()
         from worldfoundry.synthesis.visual_generation.neoverse.native.auxiliary import (
             homo_matrix_inverse,
             load_video,

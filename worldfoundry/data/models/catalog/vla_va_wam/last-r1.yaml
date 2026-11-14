@@ -37,13 +37,19 @@ docs:
   publisher: Open-source research release (institution not recorded)
   publisher_kind: lab
   publisher_zh: 开源研究发布（仓库未记录正式机构）
-  overview: LaST-R1 is an MIT-licensed VLA policy. WorldFoundry integrates offline image-and-instruction inference through its model-specific latent/action-token adapter.
+  overview: LaST-R1 is an MIT-licensed VLA policy. WorldFoundry integrates offline image-and-instruction inference
+    through its model-specific latent/action-token adapter.
   overview_zh: LaST-R1 是 MIT 许可的 VLA 策略。WorldFoundry 已通过模型专用 latent/action-token 适配器接入离线图像与指令推理。
-  architecture: LaST-R1 is a reinforcement-learning-refined VLA policy built on Qwen3-VL; WorldFoundry runs the official source (CHEN-H01/LaST-R1) and decodes actions through its latent/action tokens.
-  architecture_zh: LaST-R1 是基于 Qwen3-VL、经强化学习精调的 VLA 策略；WorldFoundry 运行官方源码（CHEN-H01/LaST-R1），通过其 latent/action token 解码动作。
-  usage_notes: Install the pinned LaST-R1 source and set WORLDFOUNDRY_LAST_R1_SOURCE_DIR (or pass source_root to LastR1Pipeline.from_pretrained), and stage the libero_10 RL checkpoint from chenhao01/LaST-R1. The adapter returns eight seven-dimensional actions from one image and instruction.
-  usage_notes_zh: 安装锁定版本的 LaST-R1 源码并设置 WORLDFOUNDRY_LAST_R1_SOURCE_DIR（或向 LastR1Pipeline.from_pretrained 传入 source_root），并准备 chenhao01/LaST-R1 中的 libero_10 RL 权重。适配器从一幅图像与一条指令返回八步七维动作。
+  architecture: LaST-R1 extends Qwen3-VL with latent reasoning tokens, a bidirectional block of 56 action tokens
+    decoded into eight 7-D actions, and a value head. WorldFoundry vendors the inference path of the official model
+    code (CHEN-H01/LaST-R1 at ba4e9396).
+  architecture_zh: LaST-R1 在 Qwen3-VL 上增加 latent 推理 token、由 56 个双向注意的动作 token 解码出的 8 步 7 维动作，以及价值头。WorldFoundry
+    已将官方模型代码（CHEN-H01/LaST-R1，ba4e9396）的推理路径纳入包内。
+  usage_notes: Stage the libero_10 RL checkpoint from chenhao01/LaST-R1. The in-tree adapter returns eight finite
+    seven-dimensional actions from one image and instruction.
+  usage_notes_zh: 准备 chenhao01/LaST-R1 中的 libero_10 RL 权重。树内适配器从一幅图像与一条指令返回八步有限值的七维动作。
   limitations:
-  - Integration is scoped to offline action inference; closed-loop LIBERO rollout and task success rate are not validated.
+  - Integration is scoped to offline action inference; closed-loop LIBERO rollout and task success rate are not
+    validated.
   limitations_zh:
   - 集成范围为离线动作推理；尚未验证闭环 LIBERO rollout 与任务成功率。

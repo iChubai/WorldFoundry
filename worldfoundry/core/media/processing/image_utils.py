@@ -38,6 +38,16 @@ from worldfoundry.core.utils.tensors.torch import torch_normalize
 # ──────────────────────────────────────────────────────────────────────────
 
 
+def numpy_to_pil(images: np.ndarray) -> list[Image.Image]:
+    """Round unit-range HWC or NHWC arrays to uint8 PIL images, retaining grayscale."""
+    if images.ndim == 3:
+        images = images[None, ...]
+    images = (images * 255).round().astype("uint8")
+    if images.shape[-1] == 1:
+        return [Image.fromarray(image.squeeze(), mode="L") for image in images]
+    return [Image.fromarray(image) for image in images]
+
+
 def to_image(img, channel_order="auto"):
     """
     Returns:

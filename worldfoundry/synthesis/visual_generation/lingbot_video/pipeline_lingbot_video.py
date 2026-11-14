@@ -12,7 +12,8 @@ from diffusers.utils import BaseOutput
 from diffusers.utils.torch_utils import randn_tensor
 from torchvision.transforms.functional import normalize as normalize_image_tensor
 
-from .scheduling_flow_unipc import FlowUniPCMultistepScheduler
+from worldfoundry.base_models.diffusion_model.schedulers.flow_unipc_compat import FlowUniPCMultistepScheduler
+
 from .utils import (
     LOW_NOISE_TAIL_V1_DEFAULT_STEPS,
     batch_cfg_prompt_inputs,
@@ -95,11 +96,26 @@ class LingBotVideoPipeline(DiffusionPipeline):
 
     model_cpu_offload_seq = "text_encoder->transformer->vae"
 
+    @classmethod
+    def extract_init_dict(
+        cls, config_dict: dict[str, Any], **kwargs: Any
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """Resolve the released model-index component names inside this package."""
+        config = dict(config_dict)
+        if config.get("transformer") == ["lingbot_video.transformer_lingbot_video", "LingBotVideoTransformer3DModel"]:
+            config["transformer"] = [f"{__package__}.transformer_lingbot_video", "LingBotVideoTransformer3DModel"]
+        if config.get("scheduler") in (
+            ["lingbot_video.scheduling_flow_unipc", "FlowUniPCMultistepScheduler"],
+            [f"{__package__}.scheduling_flow_unipc", "FlowUniPCMultistepScheduler"],
+        ):
+            config["scheduler"] = [FlowUniPCMultistepScheduler.__module__, FlowUniPCMultistepScheduler.__name__]
+        return super().extract_init_dict(config, **kwargs)
+
     def __init__(self, transformer, vae, text_encoder, processor, scheduler):
         super().__init__()
         if scheduler is not None and scheduler.__class__.__name__ != FlowUniPCMultistepScheduler.__name__:
             raise TypeError(
-                "LingBotVideoPipeline requires vendored FlowUniPCMultistepScheduler; "
+                "LingBotVideoPipeline requires canonical FlowUniPCMultistepScheduler; "
                 f"got {scheduler.__class__.__name__}."
             )
         self.register_modules(

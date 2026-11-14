@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import io
-import json
 import re
 import tarfile
 import zipfile
@@ -178,6 +177,29 @@ def test_repository_license_gate_uses_narrow_hunyuan_excludes() -> None:
         assert package.replace(".", "/") in gated_paths
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "package",
+    [
+        "worldfoundry.synthesis.visual_generation.alayaworld_v11.alayaworld_v11_runtime.alaya",
+        "worldfoundry.synthesis.visual_generation.astronex_world.astronex_world_runtime",
+        "worldfoundry.synthesis.visual_generation.joyai_echo.echo_wm_runtime",
+        "worldfoundry.synthesis.visual_generation.joyai_echo.echo_longvideo_runtime",
+        "worldfoundry.synthesis.visual_generation.solarwm.solarwm_runtime.solarwm",
+        "worldfoundry.synthesis.visual_generation.hma.hma_runtime",
+        "worldfoundry.synthesis.visual_generation.emu35.emu35_runtime",
+        "worldfoundry.synthesis.visual_generation.uniworld_view.uniworld_view_runtime",
+        "worldfoundry.synthesis.visual_generation.vmem.vmem_runtime",
+        "worldfoundry.synthesis.action_generation.gr00t.legacy_n1_runtime",
+        "worldfoundry.base_models.three_dimensions.slam.mega_sam_runtime",
+    ],
+)
+def test_in_tree_runtime_namespaces_are_discovered(package: str) -> None:
+    config = load_find_config()
+    packages = discover_packages(config)
+    assert package in selected_packages(packages, config["exclude"])
+
+
 def test_gate_list_must_match_manifest_and_gitignore() -> None:
     manifest = (REPO_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
     gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
@@ -309,19 +331,17 @@ def test_distribution_requires_exact_license_text(
 
 @pytest.mark.parametrize("format_name", ["wheel", "sdist"])
 @pytest.mark.parametrize("damage", ["none", "missing", "changed"])
-def test_model_runtime_resource_gate_detects_missing_or_changed_statistics(
+def test_model_runtime_resource_gate_detects_missing_or_changed_resources(
     tmp_path: Path,
     format_name: str,
     damage: str,
 ) -> None:
     payloads = {name: (REPO_ROOT / name).read_bytes() for name in REQUIRED_RUNTIME_RESOURCES}
-    statistics = next(name for name in payloads if name.endswith("nav_25dof_stats.json"))
+    split = next(name for name in payloads if name.endswith("csgo_utils/test_split.txt"))
     if damage == "missing":
-        payloads.pop(statistics)
+        payloads.pop(split)
     elif damage == "changed":
-        changed = json.loads(payloads[statistics])
-        changed["state_stats"]["min"][0] += 0.01
-        payloads[statistics] = json.dumps(changed).encode()
+        payloads[split] += b"extra_episode\n"
     artifact = tmp_path / ("worldfoundry.whl" if format_name == "wheel" else "worldfoundry.tar.gz")
     if format_name == "wheel":
         with zipfile.ZipFile(artifact, "w") as archive:

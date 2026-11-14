@@ -4,7 +4,8 @@ from dataclasses import dataclass
 import torch
 import torch.nn as nn
 from torch import Tensor
-from utils import init_lstm
+
+from worldfoundry.synthesis.visual_generation.diamond.utils import init_lstm
 
 from .blocks import Conv3x3, SmallResBlock
 

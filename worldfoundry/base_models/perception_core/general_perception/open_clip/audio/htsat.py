@@ -18,6 +18,11 @@ from torch.nn.init import _calculate_fan_in_and_fan_out
 from torchlibrosa.augmentation import SpecAugmentation
 from torchlibrosa.stft import LogmelFilterBank, Spectrogram
 
+from worldfoundry.core.attention.window import window_partition as window_partition
+from worldfoundry.core.attention.window import window_reverse as window_reverse
+from worldfoundry.core.nn.blocks.layers import Mlp as Mlp
+from worldfoundry.core.nn.blocks.stochastic_depth import UniformDropPath as DropPath
+
 from .fusion import AFF, DAF, iAFF
 
 
@@ -64,35 +69,6 @@ to_2tuple = _ntuple(2)
 to_3tuple = _ntuple(3)
 to_4tuple = _ntuple(4)
 to_ntuple = _ntuple
-
-
-def drop_path(x, drop_prob: float = 0.0, training: bool = False):
-    """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
-    This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
-    the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
-    See discussion: https://github.com/tensorflow/tpu/issues/494#issuecomment-532968956 ... I've opted for
-    changing the layer and argument names to 'drop path' rather than mix DropConnect as a layer name and use
-    'survival rate' as the argument.
-    """
-    if drop_prob == 0.0 or not training:
-        return x
-    keep_prob = 1 - drop_prob
-    shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
-    random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
-    random_tensor.floor_()  # binarize
-    output = x.div(keep_prob) * random_tensor
-    return output
-
-
-class DropPath(nn.Module):
-    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks)."""
-
-    def __init__(self, drop_prob=None):
-        super().__init__()
-        self.drop_prob = drop_prob
-
-    def forward(self, x):
-        return drop_path(x, self.drop_prob, self.training)
 
 
 class PatchEmbed(nn.Module):
@@ -199,27 +175,6 @@ class PatchEmbed(nn.Module):
         return x
 
 
-class Mlp(nn.Module):
-    """MLP as used in Vision Transformer, MLP-Mixer and related networks"""
-
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.0):
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features)
-        self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features)
-        self.drop = nn.Dropout(drop)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
-        return x
-
-
 def _no_grad_trunc_normal_(tensor, mean, std, a, b):
     # Cut & paste from PyTorch official master until it's in a few official releases - RW
     # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
@@ -304,34 +259,6 @@ def variance_scaling_(tensor, scale=1.0, mode="fan_in", distribution="normal"):
 
 def lecun_normal_(tensor):
     variance_scaling_(tensor, mode="fan_in", distribution="truncated_normal")
-
-
-def window_partition(x, window_size):
-    """
-    Args:
-        x: (B, H, W, C)
-    Returns:
-        windows: (num_windows*B, window_size, window_size, C)
-    """
-    B, H, W, C = x.shape
-    x = x.view(B, H // window_size, window_size, W // window_size, window_size, C)
-    windows = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(-1, window_size, window_size, C)
-    return windows
-
-
-def window_reverse(windows, window_size, H, W):
-    """
-    Args:
-        windows: (num_windows*B, window_size, window_size, C)
-        H (int): Height of image
-        W (int): Width of image
-    Returns:
-        x: (B, H, W, C)
-    """
-    B = int(windows.shape[0] / (H * W / window_size / window_size))
-    x = windows.view(B, H // window_size, W // window_size, window_size, window_size, -1)
-    x = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(B, H, W, -1)
-    return x
 
 
 class WindowAttention(nn.Module):

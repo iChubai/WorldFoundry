@@ -29,22 +29,14 @@ opening_direction_correction: false
 model_kwargs:
   model_name: transformer
   model_root: "@weights"
-  timestep_shift: 5.0
   local_attn_size: 20
   sink_size: 4
   use_camera: true
   use_action: true
   action_dim: 64
-  action_output: false
   num_embodiments: 32
-  prope_scale: 1.0
   prope_chunk_anchor: true
   prope_num_layers: 30
-  prope_exclude_sink: false
-  prope_sink_dual: false
-  sink_attention_repeat: 1
-  history_cross_attention: false
-  history_cross_active: false
 retrieval_window: true
 retrieval_recent_frames: 4
 retrieval_min_overlap: 0.3

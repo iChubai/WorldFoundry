@@ -1,9 +1,12 @@
 import hydra
 from absl import logging
 
-from src.utils.config import instantiate_from_config, resolve_device_paths
-from src.utils.jax import init_jax_distributed
 from worldfoundry.core.io.paths import package_data_path
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.config import (
+    instantiate_from_config,
+    resolve_device_paths,
+)
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.jax import init_jax_distributed
 
 
 @hydra.main(
@@ -19,7 +22,7 @@ def main(cfg):
     # NOTE: we should import jax cache AFTER setting up the environment variables.
     import jax
 
-    from src.utils.jax import setup_jax_cache
+    from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.jax import setup_jax_cache
 
     if cfg.enable_jax_cache:
         setup_jax_cache(cfg.device.jax_cache_dir)

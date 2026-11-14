@@ -19,7 +19,7 @@ Project page: [siriyep.github.io/last-r1](https://siriyep.github.io/last-r1/). C
 
 `last-r1` maps camera observations and an instruction to an action trajectory.
 
-LaST-R1 is a reinforcement-learning-refined VLA policy built on Qwen3-VL; WorldFoundry runs the official source (CHEN-H01/LaST-R1) and decodes actions through its latent/action tokens.
+LaST-R1 extends Qwen3-VL with latent reasoning tokens, a bidirectional block of 56 action tokens decoded into eight 7-D actions, and a value head. WorldFoundry vendors the inference path of the official model code (CHEN-H01/LaST-R1 at ba4e9396).
 
 Tasks: VLA, reinforcement learning, and policy rollout.
 
@@ -33,7 +33,7 @@ CLI task profiles: `interactive-video`. WorldFoundry binds `LastR1Pipeline`.
 
 Family status: **Runner parity pending**.
 
-Install the pinned LaST-R1 source and set WORLDFOUNDRY_LAST_R1_SOURCE_DIR (or pass source_root to LastR1Pipeline.from_pretrained), and stage the libero_10 RL checkpoint from chenhao01/LaST-R1. The adapter returns eight seven-dimensional actions from one image and instruction.
+Stage the libero_10 RL checkpoint from chenhao01/LaST-R1. The in-tree adapter returns eight finite seven-dimensional actions from one image and instruction.
 
 Integration is scoped to offline action inference; closed-loop LIBERO rollout and task success rate are not validated.
 

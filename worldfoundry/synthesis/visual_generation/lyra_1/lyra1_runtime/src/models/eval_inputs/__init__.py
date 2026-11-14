@@ -16,7 +16,8 @@
 import time
 
 import torch
-from src.models.eval_inputs.provider import Provider
+
+from worldfoundry.synthesis.visual_generation.lyra_1.lyra1_runtime.src.models.eval_inputs.provider import Provider
 
 
 def get_multi_dataloader(opt, accelerator=None):

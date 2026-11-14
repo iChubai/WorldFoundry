@@ -7,7 +7,7 @@ from collections.abc import Mapping
 _TARGET_PREFIXES = (
     (
         "groot.vla.model.n1_5.modules.cross_attention_dit",
-        "worldfoundry.synthesis.action_generation.gr00t.modeling.dit",
+        "worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.dit",
     ),
     (
         "groot.vla.model.dreamzero.modules.wan_video_dit_action_casual_chunk",
@@ -70,7 +70,7 @@ _TARGET_PREFIXES = (
 
 _ALLOWED_INFERENCE_TARGET_PREFIXES = (
     "worldfoundry.synthesis.action_generation.dreamzero.",
-    "worldfoundry.synthesis.action_generation.gr00t.modeling.dit.",
+    "worldfoundry.base_models.llm_mllm_core.action.gr00t.modeling.dit.",
     "worldfoundry.base_models.diffusion_model.models.networks.wan.",
     "worldfoundry.base_models.diffusion_model.models.encoders.wan.",
     "worldfoundry.base_models.diffusion_model.models.autoencoders.wan.",

@@ -3,9 +3,12 @@ import jax.numpy as jnp
 from einops import rearrange, repeat
 from flax import nnx
 
-from src.models import wan_vae
-from src.models.kv_cache import KVCacheDict
-from src.utils.multiplayer import handle_multiplayer_input, handle_multiplayer_output
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models import wan_vae
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.models.kv_cache import KVCacheDict
+from worldfoundry.synthesis.visual_generation.solaris.solaris_runtime.src.utils.multiplayer import (
+    handle_multiplayer_input,
+    handle_multiplayer_output,
+)
 
 
 def flow_match_inference_timesteps(

@@ -6,7 +6,10 @@ Assumes inputs of size BC (B: batch, C: Channels)
 
 import torch.nn as nn
 
-from uniception.models.prediction_heads.base import PredictionHeadTokenInput, SummaryTaskOutput
+from worldfoundry.base_models.perception_core.general_perception.uniception.uniception.models.prediction_heads.base import (
+    PredictionHeadTokenInput,
+    SummaryTaskOutput,
+)
 from worldfoundry.core.model_loading.checkpoints import load_tensor_state_dict
 
 

@@ -256,10 +256,6 @@ def _checkpoint_file_if_present(*relative_paths: str) -> str | None:
     return None
 
 
-def _joyai_echo_source_root() -> str:
-    return str(_project_root() / "cache" / "generative_taxonomy" / "jd-opensource--JoyAI-Echo")
-
-
 def _joyai_echo_python_executable(environment_name: str) -> str:
     workspace_root = _project_root().parent
     return _first_existing_path(

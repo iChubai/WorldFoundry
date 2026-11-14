@@ -27,6 +27,8 @@ from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.image_processor import PipelineImageInput
 from transformers import AutoTokenizer, UMT5EncoderModel
 
+from worldfoundry.core.nn.diffusion.utils import optimized_scale as optimized_scale
+
 try:
     from diffusers.loaders import HeliosLoraLoaderMixin
 except ImportError:
@@ -124,18 +126,6 @@ EXAMPLE_DOC_STRING = """
         >>> export_to_video(output, "output.mp4", fps=24)
         ```
 """
-
-
-def optimized_scale(positive_flat, negative_flat):
-    positive_flat = positive_flat.float()
-    negative_flat = negative_flat.float()
-    # Calculate dot production
-    dot_product = torch.sum(positive_flat * negative_flat, dim=1, keepdim=True)
-    # Squared norm of uncondition
-    squared_norm = torch.sum(negative_flat**2, dim=1, keepdim=True) + 1e-8
-    # st_star = v_cond^T * v_uncond / ||v_uncond||^2
-    st_star = dot_product / squared_norm
-    return st_star
 
 
 def basic_clean(text):

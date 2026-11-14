@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 from packaging import version
 
-OPENAIUNETWRAPPER = "vwm.modules.diffusionmodules.wrappers.OpenAIWrapper"
+OPENAIUNETWRAPPER = (
+    "worldfoundry.synthesis.visual_generation.adaworld.worldmodel.vwm.modules.diffusionmodules.wrappers.OpenAIWrapper"
+)
 
 
 class IdentityWrapper(nn.Module):

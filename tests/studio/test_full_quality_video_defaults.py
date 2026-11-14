@@ -23,6 +23,7 @@ from worldfoundry.pipelines.hunyuan_video.pipeline_hunyuan_video import NativeHu
 from worldfoundry.runtime.inference_catalog import get_model_inference_spec
 from worldfoundry.studio.inference import catalog as studio_catalog
 from worldfoundry.studio.inference.catalog import find_entry
+from worldfoundry.studio.inference.catalog import resolve as catalog_resolve
 from worldfoundry.synthesis.visual_generation.framepack.worldfoundry_runner import _parse_bool
 from worldfoundry.synthesis.visual_generation.official_video_runtime import OfficialVideoRuntime
 
@@ -67,7 +68,7 @@ def test_framepack_workspace_uses_official_full_quality_defaults() -> None:
     tunable = {"cfg", "gs", "rs", "use_teacache", "mp4_crf"}
     assert tunable.issubset(entry.call_params)
 
-    command = runtime.runtime["command"]
+    command = runtime.runtime["args"]
     expected_cli_values = {
         "--cfg": "{cfg}",
         "--gs": "{gs}",
@@ -92,8 +93,8 @@ def test_krea_runtime_accepts_normalized_hugging_face_checkpoint_directory() -> 
     runtime = OfficialVideoRuntime.from_model_id("krea-realtime-video")
 
     assert any(str(path).endswith("/krea--krea-realtime-video") for path in runtime.runtime["checkpoint_candidates"])
-    model_folder_flag = runtime.runtime["command"].index("--model-folder")
-    assert runtime.runtime["command"][model_folder_flag + 1] == "{checkpoint_parent}"
+    model_folder_flag = runtime.runtime["args"].index("--model-folder")
+    assert runtime.runtime["args"][model_folder_flag + 1] == "{checkpoint_parent}"
 
 
 def test_wan_fun_camera_workspace_uses_upstream_full_demo_defaults() -> None:
@@ -132,7 +133,7 @@ def test_pusa_lightx2v_load_defaults_accept_hugging_face_mirror_name(monkeypatch
         requested_names.append(names)
         return fallback
 
-    monkeypatch.setattr(studio_catalog.resolve, "_checkpoint_model_ref", capture_checkpoint_names)
+    monkeypatch.setattr(catalog_resolve, "_checkpoint_model_ref", capture_checkpoint_names)
     studio_catalog.models.video_generation._pusa_vidgen_default_load_kwargs()
 
     assert (
@@ -385,13 +386,6 @@ def test_failed_world_demo_defaults_use_matching_image_fixtures() -> None:
         "enable_group_offloading": True,
         "overlap_group_offloading": False,
     }
-
-    stable_virtual_camera = find_entry("stable-virtual-camera")
-    assert stable_virtual_camera.default_input_path.endswith("stable_virtual_camera/basic/blue-car.jpg")
-    assert stable_virtual_camera.default_call_kwargs["H"] == 576
-    assert stable_virtual_camera.default_call_kwargs["W"] == 576
-    assert stable_virtual_camera.default_call_kwargs["T"] == 21
-    assert stable_virtual_camera.default_call_kwargs["num_steps"] == 50
 
     oasis = find_entry("oasis-500m")
     assert oasis.default_input_path.endswith("oasis/sample_image_0.png")

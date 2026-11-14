@@ -2,12 +2,12 @@ import numpy as np
 import torch
 from einops import rearrange
 
-from .cam_utils import (
-    _interpolate_camera_poses_handedness,
+from worldfoundry.base_models.diffusion_model.models.networks.wan.camera_geometry import (
     compute_relative_poses,
-    get_extrinsics,
     get_plucker_embeddings,
 )
+
+from .cam_utils import _interpolate_camera_poses_handedness, get_extrinsics
 from .conditions import Bench_actions_universal
 from .transform import get_video_transform
 

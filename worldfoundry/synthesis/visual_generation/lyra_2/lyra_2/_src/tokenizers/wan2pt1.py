@@ -20,14 +20,13 @@ from contextlib import nullcontext
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from lyra_2._src.tokenizers.interface import VideoTokenizerInterface
 
 from worldfoundry.core.configuration.lazy_config import LazyCall as L
 from worldfoundry.core.configuration.lazy_config import LazyDict
 from worldfoundry.core.distributed.runtime.torch_process_group import broadcast, get_rank, sync_model_states
 from worldfoundry.core.observability.rank_logging import log
 from worldfoundry.data.io import easy_io
+from worldfoundry.synthesis.visual_generation.lyra_2.lyra_2._src.tokenizers.interface import VideoTokenizerInterface
 
 __all__ = [
     "WanVAE",
@@ -36,35 +35,10 @@ __all__ = [
 CACHE_T = 2
 
 
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level setup, as upstream.
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.model import (  # noqa: E402 - Follows module-level setup, as upstream.
     CausalConv3d,
 )
-
-
-class RMS_norm(nn.Module):
-    def __init__(self, dim, channel_first=True, images=True, bias=False):
-        super().__init__()
-        broadcastable_dims = (1, 1, 1) if not images else (1, 1)
-        shape = (dim, *broadcastable_dims) if channel_first else (dim,)
-
-        self.channel_first = channel_first
-        self.scale = dim**0.5
-        self.gamma = nn.Parameter(torch.ones(shape))
-        self.bias = nn.Parameter(torch.zeros(shape)) if bias else 0.0
-
-    def forward(self, x):
-        return F.normalize(x, dim=(1 if self.channel_first else -1)) * self.scale * self.gamma + self.bias
-
-
-class Upsample(nn.Upsample):
-    def forward(self, x):
-        """
-        Fix bfloat16 support for nearest neighbor interpolation.
-        """
-        return super().forward(x.float()).type_as(x)
-
-
-from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level definitions, as upstream.
+from worldfoundry.base_models.diffusion_model.models.autoencoders.wan.reference_21 import (  # noqa: E402 - Follows module-level setup, as upstream.
     Decoder3d,
     Encoder3d,
 )

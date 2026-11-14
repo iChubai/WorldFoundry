@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """LingBot versions load the same task-token alignment graph and joint metadata."""
 
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -97,3 +99,34 @@ def test_lingbot_v2_moe_keeps_expert_widths_and_storage(implementation: str) -> 
     inputs = torch.randn(2, 5, 8)
     for actual, expected in zip(reloaded(inputs), block(inputs), strict=True):
         torch.testing.assert_close(actual, expected, atol=0, rtol=0)
+
+
+def test_lingbot_logging_stays_within_its_family() -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+import logging
+import os
+
+os.environ["VEOMNI_VERBOSITY"] = "WARNING"
+parents = (logging.getLogger(), logging.getLogger("worldfoundry"))
+before = [(logger.level, logger.propagate, tuple(logger.handlers)) for logger in parents]
+
+from worldfoundry.synthesis.action_generation.lingbot_vla_v2.preprocessing import logging as lingbot_logging
+
+family_logger = lingbot_logging.get_logger()
+after = [(logger.level, logger.propagate, tuple(logger.handlers)) for logger in parents]
+assert after == before, "LingBot changed the application logger configuration"
+assert family_logger.name == "worldfoundry.synthesis.action_generation.lingbot_vla_v2"
+model_logger = lingbot_logging.get_logger(f"{family_logger.name}.modeling.policy")
+assert model_logger.getEffectiveLevel() == logging.WARNING
+lingbot_logging.set_verbosity_info()
+assert model_logger.getEffectiveLevel() == logging.INFO
+assert [(logger.level, logger.propagate, tuple(logger.handlers)) for logger in parents] == before
+""",
+        ],
+        check=True,
+        timeout=60,
+    )

@@ -62,7 +62,8 @@ def _get_default_logging_level() -> "logging._Level":
 
 
 def _get_library_name() -> str:
-    return __name__.split(".")[0]
+    """Cover this family's modeling and preprocessing logger namespaces."""
+    return __name__.rsplit(".", 2)[0]
 
 
 def _get_library_root_logger() -> "logging.Logger":

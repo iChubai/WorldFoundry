@@ -19,7 +19,11 @@ const labels = {
     invocation: 'Invocation',
     runner: 'Runner',
     environment: 'Environment',
+    runtime: 'Runtime',
+    status: 'Status',
     device: 'Device',
+    dedicatedSuffix: 'Dedicated',
+    unifiedSuffix: 'Unified',
     taskContract: 'Task contract',
     inputs: 'Inputs',
     artifacts: 'Artifacts',
@@ -57,7 +61,11 @@ const labels = {
     invocation: '调用方式',
     runner: 'Runner',
     environment: '环境',
+    runtime: '运行时',
+    status: '状态',
     device: '设备',
+    dedicatedSuffix: '独立',
+    unifiedSuffix: '统一',
     taskContract: '任务契约',
     inputs: '输入',
     artifacts: '输出',
@@ -465,6 +473,36 @@ function ContractFieldRow({
   );
 }
 
+function formatInvocationMode(mode: string, locale: Locale) {
+  const normalized = mode.trim().toLowerCase();
+  if (normalized === 'native_or_standard_invocation') {
+    return locale === 'zh' ? '原生或标准调用' : 'Native or standard';
+  }
+  if (normalized === 'native_diffusion_invocation') {
+    return locale === 'zh' ? '原生扩散调用' : 'Native diffusion';
+  }
+  return mode.replaceAll('_', ' ');
+}
+
+function deduplicateArtifacts(artifacts: Array<{ kind?: string; filename?: string; description?: string }>) {
+  const kindsWithFilename = new Set(
+    artifacts.filter((item) => item.filename && item.kind).map((item) => item.kind),
+  );
+  if (artifacts.some((item) => item.filename?.endsWith('.mp4'))) {
+    for (const kind of ['generated_video', 'generated_world_video', 'generated_world', 'predicted_video']) {
+      kindsWithFilename.add(kind);
+    }
+  }
+  if (artifacts.some((item) => item.filename?.endsWith('_action_trace.json'))) {
+    for (const kind of ['actions', 'action_trace']) {
+      kindsWithFilename.add(kind);
+    }
+  }
+  return artifacts.filter(
+    (item) => (item.kind || item.filename) && (item.filename || !kindsWithFilename.has(item.kind)),
+  );
+}
+
 function ContractPanel({
   t,
   description,
@@ -480,7 +518,7 @@ function ContractPanel({
   const keyFields = fields.filter(isKeyField);
   const primaryFields = keyFields.length ? keyFields : fields;
   const extraFields = keyFields.length ? fields.filter((field) => !isKeyField(field)) : [];
-  const outputItems = artifacts.filter((item) => item.kind || item.filename);
+  const outputItems = deduplicateArtifacts(artifacts);
   const lead = taskLead(description);
   const [open, setOpen] = useState(false);
   const [extraOpen, setExtraOpen] = useState(false);
@@ -645,9 +683,18 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
   const selectedPipeline = recipe.variants.length > 0
     ? selected?.pipelineTarget
     : selected?.pipelineTarget ?? recipe.runtime.pipelineTarget;
-  const selectedRunner = selected?.runner ?? recipe.runtime.runner ?? recipe.runtime.runnerTarget;
   const selectedEnvironment = selected?.environmentName ?? recipe.runtime.environmentName;
+  const selectedEnvKind = selected?.environmentKind ?? recipe.runtime.environmentKind;
+  const selectedPython = selected?.python ?? recipe.runtime.python;
   const selectedDevice = selected?.cudaLabel ?? recipe.runtime.cudaLabel;
+  const selectedRuntimeStack = [selectedPython ? `Python ${selectedPython}` : '', selectedDevice]
+    .filter(Boolean)
+    .join(' · ');
+  const selectedStatusLabel = readerStatusLabel(
+    selected?.runtimeStatus || selected?.status || recipe.status.label,
+    locale,
+    t.notRecorded,
+  );
   const selectedProfile = selected?.runtimeProfile || recipe.runtime.profileId;
   const selectedInputContract = selectedTask.source === 'cli' || selectedTask.inputs.length
     ? selectedTask.inputs
@@ -697,31 +744,43 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
 
       <div className="wf-command-builder-panel">
         <div className="wf-command-builder-controls">
-          <label>
-            <span>{t.variant}</span>
-            <select
-              title={selected ? variantLabel(selected, t.notRecorded, locale) : t.notRecorded}
-              value={selectedId}
-              onChange={(event) => {
-                const nextId = event.target.value;
-                const nextChoice = choices.find((choice) => choice.id === nextId);
-                setSelectedId(nextId);
-                const compatible = allTasks.filter(
-                  (task) => task.variantIds.length === 0 || task.variantIds.includes(nextId),
-                );
-                const nextTask = compatible.find((task) => task.id === selectedTaskId) ?? compatible[0];
-                if (nextTask) setSelectedTaskId(nextTask.id);
-                if (tab === 'run' && (!nextChoice || !isRunnableVariant(nextChoice))) setTab('check');
-                setCopied(false);
-              }}
-            >
-              {choices.map((choice) => (
-                <option value={choice.id} key={choice.id}>
-                  {variantLabel(choice, t.notRecorded, locale)}
-                </option>
-              ))}
-            </select>
-          </label>
+          {choices.length > 1 ? (
+            <label>
+              <span>{t.variant}</span>
+              <select
+                title={selected ? variantLabel(selected, t.notRecorded, locale) : t.notRecorded}
+                value={selectedId}
+                onChange={(event) => {
+                  const nextId = event.target.value;
+                  const nextChoice = choices.find((choice) => choice.id === nextId);
+                  setSelectedId(nextId);
+                  const compatible = allTasks.filter(
+                    (task) => task.variantIds.length === 0 || task.variantIds.includes(nextId),
+                  );
+                  const nextTask = compatible.find((task) => task.id === selectedTaskId) ?? compatible[0];
+                  if (nextTask) setSelectedTaskId(nextTask.id);
+                  if (tab === 'run' && (!nextChoice || !isRunnableVariant(nextChoice))) setTab('check');
+                  setCopied(false);
+                }}
+              >
+                {choices.map((choice) => (
+                  <option value={choice.id} key={choice.id}>
+                    {variantLabel(choice, t.notRecorded, locale)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <div>
+              <span>{t.variant}</span>
+              <strong>
+                {selected?.id ?? recipe.id}
+                {selected && !isRunnableVariant(selected) ? (
+                  <code>{readerStatusLabel(selected.status, locale, t.notRecorded)}</code>
+                ) : null}
+              </strong>
+            </div>
+          )}
           <div>
             <span>{t.task}</span>
             {taskChoices.length > 1 ? (
@@ -748,36 +807,31 @@ export function ModelCommandBuilder({ recipe, locale = 'en' }: { recipe: ModelRe
             )}
           </div>
         </div>
-        {selectedEnvironment || selectedDevice || selectedRunner || selected?.loadingMethod || recipe.runtime.loadingMethod || selected?.invocationMode || recipe.runtime.invocationMode ? (
+        {selectedEnvironment || selectedRuntimeStack || selectedStatusLabel ? (
         <div className="wf-command-builder-runtime">
           {selectedEnvironment ? (
           <div>
             <span>{t.environment}</span>
-            <strong title={selectedEnvironment}>{selectedEnvironment}</strong>
+            <strong title={selectedEnvironment}>
+              {selectedEnvironment}
+              {selectedEnvKind === 'dedicated'
+                ? ` · ${t.dedicatedSuffix}`
+                : selectedEnvKind === 'unified'
+                  ? ` · ${t.unifiedSuffix}`
+                  : ''}
+            </strong>
           </div>
           ) : null}
-          {selectedDevice ? (
+          {selectedRuntimeStack ? (
           <div>
-            <span>{t.device}</span>
-            <strong title={selectedDevice}>{selectedDevice}</strong>
+            <span>{t.runtime}</span>
+            <strong title={selectedRuntimeStack}>{selectedRuntimeStack}</strong>
           </div>
           ) : null}
-          {selectedRunner ? (
+          {selectedStatusLabel ? (
           <div>
-            <span>{t.runner}</span>
-            <code title={selectedRunner}>{selectedRunner}</code>
-          </div>
-          ) : null}
-          {selected?.loadingMethod || recipe.runtime.loadingMethod ? (
-          <div>
-            <span>{t.loading}</span>
-            <strong>{selected?.loadingMethod ?? recipe.runtime.loadingMethod}</strong>
-          </div>
-          ) : null}
-          {selected?.invocationMode || recipe.runtime.invocationMode ? (
-          <div>
-            <span>{t.invocation}</span>
-            <strong>{selected?.invocationMode ?? recipe.runtime.invocationMode}</strong>
+            <span>{t.status}</span>
+            <strong title={selectedStatusLabel}>{selectedStatusLabel}</strong>
           </div>
           ) : null}
         </div>

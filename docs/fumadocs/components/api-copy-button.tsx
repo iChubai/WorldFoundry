@@ -27,6 +27,7 @@ export function ApiCopyButton({
     <button
       type="button"
       className="wf-api-copy"
+      data-copied={copied ? 'true' : undefined}
       onClick={onCopy}
       aria-label={copied ? doneLabel : label}
     >

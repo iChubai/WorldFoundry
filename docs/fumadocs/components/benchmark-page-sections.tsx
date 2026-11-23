@@ -46,7 +46,7 @@ const copy = {
     dimensions: '评测维度',
     data: '数据组成',
     metrics: '指标',
-    leaderboard: 'Leaderboard',
+    leaderboard: '排行榜',
     kind: '类型',
     direction: '方向',
     higher: '越高越好',
@@ -72,6 +72,31 @@ const copy = {
     },
   },
 } as const;
+
+const MODALITY_LABELS: Record<string, { en: string; zh: string }> = {
+  '3d': { en: '3D', zh: '3D' },
+  '4d': { en: '4D', zh: '4D' },
+  action: { en: 'Action', zh: '动作' },
+  camera: { en: 'Camera', zh: '相机' },
+  'camera-trajectory': { en: 'Camera trajectory', zh: '相机轨迹' },
+  depth: { en: 'Depth', zh: '深度' },
+  frames: { en: 'Frames', zh: '帧序列' },
+  'generated-video': { en: 'Generated video', zh: '生成视频' },
+  image: { en: 'Image', zh: '图像' },
+  language: { en: 'Language', zh: '语言' },
+  observation: { en: 'Observation', zh: '观测' },
+  pointcloud: { en: 'Point cloud', zh: '点云' },
+  proprioception: { en: 'Proprioception', zh: '本体感知' },
+  rgb: { en: 'RGB', zh: 'RGB' },
+  state: { en: 'State', zh: '状态' },
+  text: { en: 'Text', zh: '文本' },
+  video: { en: 'Video', zh: '视频' },
+  vision: { en: 'Vision', zh: '视觉' },
+};
+
+function modalityLabel(value: string, locale: Locale) {
+  return MODALITY_LABELS[value]?.[locale] ?? value;
+}
 
 function kindLabel(kind: string, locale: Locale) {
   const labels = copy[locale].kinds;
@@ -130,7 +155,7 @@ export function BenchmarkPageSections({
   if (entry.data.modalities.length > 0) {
     dataRows.push({
       name: t.modalities,
-      description: entry.data.modalities.join(' · '),
+      description: entry.data.modalities.map((item) => modalityLabel(item, locale)).join(' · '),
     });
   }
   if (entry.data.license) {
@@ -147,13 +172,19 @@ export function BenchmarkPageSections({
     });
   }
 
-  const metricRows: KvCatalogRow[] = entry.metrics.map((metric) => ({
-    name: metric.id,
-    hintLabel: t.direction,
-    hint: metric.higherIsBetter ? t.higher : t.lower,
-    description: localizedMetricDescription(metric, locale) || metric.name,
-    reads: metric.primary ? [{ label: t.primary, value: metric.name }] : undefined,
-  }));
+  const metricRows: KvCatalogRow[] = entry.metrics.map((metric) => {
+    const rawDesc = localizedMetricDescription(metric, locale);
+    const fallbackName = metric.name !== metric.id ? metric.name : undefined;
+    const description = rawDesc || fallbackName;
+    const showPrimaryRead = metric.primary && Boolean(rawDesc);
+    return {
+      name: metric.id,
+      hintLabel: t.direction,
+      hint: `${metric.higherIsBetter ? t.higher : t.lower}${metric.primary && !showPrimaryRead ? ` · ${t.primary}` : ''}`,
+      description,
+      reads: showPrimaryRead ? [{ label: t.primary, value: metric.name }] : undefined,
+    };
+  });
 
   const heroFigures = getBenchmarkHeroFigures(id, locale);
 

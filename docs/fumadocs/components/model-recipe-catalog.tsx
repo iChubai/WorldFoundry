@@ -7,9 +7,10 @@ import { type CSSProperties, useDeferredValue, useMemo, useState } from 'react';
 import { ModelIdentityMark } from '@/components/model-identity-mark';
 import { modelRecipeIndex } from '@/lib/model-recipe-index';
 import { formatCudaLabel } from '@/lib/runtime-labels';
-import type {
-  ModelRecipeIndexEntry,
-  ModelRecipeStatusGroup,
+import {
+  catalogReadinessLabel,
+  type ModelRecipeIndexEntry,
+  type ModelRecipeStatusGroup,
 } from '@/lib/model-recipe-types';
 
 type Locale = 'en' | 'zh';
@@ -28,6 +29,7 @@ const STATUS_RANK: Record<ModelRecipeStatusGroup, number> = {
 
 const copy = {
   en: {
+    modelsCount: 'models',
     coverage: 'runtime data from repository manifests',
     search: 'Search by model, task, provider, or alias…',
     all: 'All',
@@ -38,6 +40,8 @@ const copy = {
     allRuntimes: 'All runtimes',
     dedicated: 'Dedicated environment',
     unified: 'Unified environment',
+    dedicatedShort: 'Dedicated env',
+    unifiedShort: 'Unified env',
     unrecorded: 'Runtime not recorded',
     sort: 'Sort',
     readiness: 'Readiness',
@@ -50,6 +54,7 @@ const copy = {
     more: 'Show more recipes',
   },
   zh: {
+    modelsCount: '个模型',
     coverage: '运行时数据来自仓库 manifest',
     search: '按模型、任务、提供方或别名搜索…',
     all: '全部',
@@ -60,6 +65,8 @@ const copy = {
     allRuntimes: '全部运行时',
     dedicated: '独立环境',
     unified: '统一环境',
+    dedicatedShort: '独立环境',
+    unifiedShort: '统一环境',
     unrecorded: '未记录运行时',
     sort: '排序',
     readiness: '按就绪度',
@@ -79,9 +86,12 @@ function includesQuery(recipe: ModelRecipeIndexEntry, query: string) {
     recipe.id,
     recipe.name,
     recipe.provider,
+    recipe.providerZh ?? '',
     recipe.summary,
+    recipe.summaryZh ?? '',
     ...recipe.aliases,
     ...recipe.tasks,
+    ...(recipe.tasksZh ?? []),
   ]
     .join(' ')
     .toLowerCase();
@@ -93,20 +103,66 @@ function recipeHref(recipe: ModelRecipeIndexEntry, locale: Locale) {
   return `${prefix}/docs/guides/supported-models/${recipe.id}`;
 }
 
+const GENERIC_RAW_TASKS = new Set(['world', 'video', 'multimodal', 'three_dimension']);
+
+const TASK_ACRONYMS: Record<string, string> = {
+  '3d': '3D',
+  '4d': '4D',
+  '3dgs': '3DGS',
+  api: 'API',
+  jepa: 'JEPA',
+  rgb: 'RGB',
+  umi: 'UMI',
+  va: 'VA',
+  vam: 'VAM',
+  vla: 'VLA',
+  vlm: 'VLM',
+  wam: 'WAM',
+};
+
 function taskFactLabel(task: string) {
-  const spaced = task.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
-  if (!spaced) return task;
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  const words = task
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => TASK_ACRONYMS[word.toLowerCase()] ?? word);
+  if (!words.length) return task;
+  const joined = words.join(' ');
+  return joined.charAt(0).toUpperCase() + joined.slice(1);
 }
 
-function recipeFacts(recipe: ModelRecipeIndexEntry, t: (typeof copy)[Locale]) {
-  const facts = [
-    recipe.tasks[0] ? taskFactLabel(recipe.tasks[0]) : '',
-    [recipe.runtime.python ? `${t.python} ${recipe.runtime.python}` : '', formatCudaLabel(recipe.runtime.cudaLabel)]
-      .filter(Boolean)
-      .join(' · '),
+function primaryTaskFact(recipe: ModelRecipeIndexEntry, locale: Locale) {
+  const rawTasks = recipe.tasks ?? [];
+  if (!rawTasks.length) return '';
+  const specificIndex = rawTasks.findIndex((item) => !GENERIC_RAW_TASKS.has(item.toLowerCase()));
+  const index = specificIndex >= 0 ? specificIndex : 0;
+  if (locale === 'zh' && recipe.tasksZh?.[index]) {
+    return recipe.tasksZh[index];
+  }
+  return taskFactLabel(rawTasks[index]);
+}
+
+function recipeFacts(recipe: ModelRecipeIndexEntry, t: (typeof copy)[Locale], locale: Locale) {
+  const envFact =
+    recipe.runtime.environmentKind === 'dedicated'
+      ? t.dedicatedShort
+      : recipe.runtime.environmentKind === 'unified'
+        ? t.unifiedShort
+        : '';
+  const stackFact = [
+    envFact,
+    recipe.runtime.python ? `${t.python} ${recipe.runtime.python}` : '',
+    formatCudaLabel(recipe.runtime.cudaLabel),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return [
+    catalogReadinessLabel(recipe.status.group, locale),
+    primaryTaskFact(recipe, locale),
+    stackFact,
   ].filter(Boolean);
-  return facts.slice(0, 2);
 }
 
 export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
@@ -140,7 +196,9 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
   return (
     <div className="wf-recipe-catalog">
       <div className="wf-recipe-catalog-coverage">
-        <span>{modelRecipeIndex.total} models</span>
+        <span>
+          {modelRecipeIndex.total} {t.modelsCount}
+        </span>
         <span aria-hidden="true">·</span>
         <span>{t.coverage}</span>
       </div>
@@ -207,12 +265,12 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
               }}
             >
               <option value="all">{t.allStatuses}</option>
-              <option value="verified">Runner verified</option>
-              <option value="integrated">Integrated</option>
-              <option value="runtime_ported">Runtime ported</option>
-              <option value="profile">Profile only</option>
-              <option value="planned">Planned</option>
-              <option value="blocked">Blocked</option>
+              <option value="verified">{catalogReadinessLabel('verified', locale)}</option>
+              <option value="integrated">{catalogReadinessLabel('integrated', locale)}</option>
+              <option value="runtime_ported">{catalogReadinessLabel('runtime_ported', locale)}</option>
+              <option value="profile">{catalogReadinessLabel('profile', locale)}</option>
+              <option value="planned">{catalogReadinessLabel('planned', locale)}</option>
+              <option value="blocked">{catalogReadinessLabel('blocked', locale)}</option>
             </select>
           </label>
           <label className={runtime !== 'all' ? 'is-set' : undefined}>
@@ -243,7 +301,11 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
       <div className="wf-recipe-table wf-model-table wf-recipe-list" role="list" aria-label="Model recipes">
         {visibleResults.length > 0 ? (
           visibleResults.map((recipe, index) => {
-            const facts = recipeFacts(recipe, t);
+            const facts = recipeFacts(recipe, t, locale);
+            const providerLabel =
+              (locale === 'zh' ? recipe.providerZh || recipe.provider : recipe.provider) ||
+              (locale === 'zh' ? recipe.categoryLabelZh : recipe.categoryLabel);
+            const summaryText = locale === 'zh' ? recipe.summaryZh || recipe.summary : recipe.summary;
             return (
             <Link
               className="wf-recipe-row"
@@ -263,9 +325,9 @@ export function ModelRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
                 <span className="wf-recipe-row-identity">
                   <span>
                     <strong>{recipe.name}</strong>
-                    <em>{recipe.provider}</em>
+                    {providerLabel ? <em>{providerLabel}</em> : null}
                   </span>
-                  <small>{recipe.summary}</small>
+                  <small>{summaryText}</small>
                   {facts.length > 0 ? (
                     <span className="wf-recipe-row-facts">
                       {facts.map((fact) => (

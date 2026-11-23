@@ -25,14 +25,14 @@ const labels = {
     demo: 'Live demo',
   },
   zh: {
-    eyebrow: 'Studio 可视化 Demo',
-    overviewCaption: 'WorldFoundry Workspace · Visualizers 页面',
+    eyebrow: 'Studio 可视化演示',
+    overviewCaption: 'WorldFoundry Workspace · 可视化面板',
     overviewAlt: 'WorldFoundry Workspace 可视化入口总览',
     port: '端口',
-    aliases: 'Alias',
+    aliases: '别名',
     artifacts: '产物',
-    launch: '启动',
-    demo: '实时演示',
+    launch: '启动命令',
+    demo: '在线演示',
   },
 } satisfies Record<StudioGalleryLocale, Record<string, string>>;
 
@@ -41,11 +41,11 @@ const demos = [
     id: 'world',
     title: {
       en: 'World Rollout Viewer',
-      zh: '世界模型分段 Rollout',
+      zh: '世界模型分段推演查看器',
     },
     subtitle: {
       en: 'Buffered realtime target for action-conditioned roaming. Controls are sampled continuously while generated chunks are prefetched.',
-      zh: '面向实时漫游的缓冲式动作条件 rollout。前端持续采样控制输入并预取生成片段。',
+      zh: '面向实时漫游的缓冲式动作条件推演。前端持续采样控制输入并预取生成片段。',
     },
     aliases: {
       en: 'interactive-world, world-model, world-rollout',
@@ -59,11 +59,11 @@ const demos = [
     id: 'viser',
     title: {
       en: 'Viser Geometry Viewer',
-      zh: 'Viser Geometry Viewer',
+      zh: 'Viser 几何查看器',
     },
     subtitle: {
       en: 'Point clouds, depth-derived point sets, meshes, camera poses, and trajectories.',
-      zh: '点云、depth 转 point set、mesh、camera pose 和 trajectory。',
+      zh: '查看点云、深度转换点集、网格、相机位姿与运动轨迹。',
     },
     aliases: {
       en: 'viser, geometry, pointcloud',
@@ -77,11 +77,11 @@ const demos = [
     id: 'rerun',
     title: {
       en: 'Rerun Timeline Viewer',
-      zh: 'Rerun Timeline Viewer',
+      zh: 'Rerun 时间线查看器',
     },
     subtitle: {
       en: '`.rrd` timelines and recordings with synchronized cameras, frames, tracks, and 3D entities.',
-      zh: '`.rrd` timeline / recording，同步 camera、frame、track 与 3D entity。',
+      zh: '加载 `.rrd` 时间线与录制文件，同步查看相机、视频帧、轨迹与三维实体。',
     },
     aliases: {
       en: 'rrd',
@@ -95,11 +95,11 @@ const demos = [
     id: 'spark',
     title: {
       en: 'Spark Gaussian Splat Viewer',
-      zh: 'Spark Gaussian Splat Viewer',
+      zh: 'Spark 3DGS 查看器',
     },
     subtitle: {
       en: '3D Gaussian splats via the in-tree Spark frontend. Live preview uses the Spark.js Hello World butterfly demo.',
-      zh: '通过仓内 Spark frontend 查看 3D Gaussian splat。实时预览来自 Spark.js Hello World butterfly demo。',
+      zh: '通过内置 Spark 前端查看三维高斯泼溅（3DGS）场景，在线预览搭载 Spark.js 官方示例。',
     },
     aliases: {
       en: '3dgs, splat',

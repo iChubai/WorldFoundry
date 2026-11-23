@@ -37,7 +37,7 @@ const copy = {
     openLive: '打开实时榜',
     embedFailed: '实时榜拒绝嵌入，或官方 Space 处于休眠。下面是官方论文图与表；更新请看实时源。',
     paperNote: '论文报告结果（非实时榜；不是 WorldFoundry 跑分）。',
-    emptyBoard: '尚未收录官方 leaderboard。',
+    emptyBoard: '尚未收录官方排行榜。',
     upstream: '上游页面',
     model: '模型',
   },

@@ -26,7 +26,12 @@ export function DocsCopyMarkdownButton({
   }
 
   return (
-    <button type="button" className="pi-doc-action-link" onClick={onCopy}>
+    <button
+      type="button"
+      className="pi-doc-action-link"
+      data-copied={copied ? 'true' : undefined}
+      onClick={onCopy}
+    >
       {copied ? copiedLabel : label}
     </button>
   );

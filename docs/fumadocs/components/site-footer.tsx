@@ -55,8 +55,6 @@ const footerColumns: FooterColumn[] = [
     title: 'Ecosystem',
     links: [
       { label: 'OpenEnvision', href: '/openenvision' },
-      { label: 'Blog', href: '/blog' },
-      { label: 'Events', href: '/events' },
       { label: 'Awesome World Modeling', href: OPENENVISION_AWESOME_WORLD_MODELING, external: true },
       { label: 'BlogrXiv', href: OPENENVISION_BLOGXIV_SITE, external: true },
     ],

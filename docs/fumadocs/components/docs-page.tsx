@@ -62,6 +62,41 @@ function getNavGroups(locale: Locale) {
   return getDocsSidebarGroups(locale);
 }
 
+function renderInlineCode(text: string) {
+  const parts = text.split(/(`[^`]+`)/g);
+  if (parts.length === 1) return text;
+  return parts.map((part, index) =>
+    part.startsWith('`') && part.endsWith('`') && part.length > 2 ? (
+      <code key={index}>{part.slice(1, -1)}</code>
+    ) : (
+      part
+    ),
+  );
+}
+
+function formatModelPageDescription(description: string, title: string) {
+  if (description.startsWith(`${title} from `)) {
+    const rest = description.slice(`${title} from `.length).replace(/\.\s*$/, '');
+    return rest.replace(/:\s+/, ' · ').replace(/;\s+/g, ' · ');
+  }
+  if (description.startsWith(`${title}: `)) {
+    const rest = description.slice(`${title}: `.length).replace(/\.\s*$/, '');
+    return rest.replace(/;\s+/g, ' · ');
+  }
+  if (description.startsWith(`${title}（`)) {
+    const afterTitle = description.slice(title.length);
+    const match = afterTitle.match(/^（([^）]+)）：(.+)$/);
+    if (match) {
+      return `${match[1]} · ${match[2].replace(/。$/, '').replace(/；/g, ' · ')}`;
+    }
+  }
+  if (description.startsWith(`${title}：`)) {
+    const rest = description.slice(`${title}：`.length).replace(/。$/, '');
+    return rest.replace(/；/g, ' · ');
+  }
+  return description;
+}
+
 export async function DocsPage({ slug, locale }: { slug: string[] | undefined; locale: string }) {
   const normalized = normalizeLocale(locale);
   const page = source.getPage(slug, normalized);
@@ -89,6 +124,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
       ? page.slugs[2]
       : undefined;
   const benchmarkEntry = benchmarkId ? getBenchmarkCatalogEntry(benchmarkId) : undefined;
+  const isBenchmarkRecipePage = Boolean(benchmarkEntry);
   const modelId =
     page.slugs[0] === 'guides' && page.slugs[1] === 'supported-models' && page.slugs.length === 3
       ? page.slugs[2]
@@ -113,7 +149,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
       className={[
         'pi-doc-shell',
         isWelcomePage ? 'pi-doc-shell-welcome' : '',
-        benchmarkId ? 'pi-doc-shell-benchmark-detail' : '',
+        isBenchmarkRecipePage ? 'pi-doc-shell-benchmark-detail' : '',
         isModelRecipePage ? 'pi-doc-shell-model-detail' : '',
         apiHubPage ? 'pi-doc-shell-api-hub' : '',
         metricNav ? 'pi-doc-shell-has-metric-nav' : '',
@@ -130,9 +166,8 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
         docsHref={docsHref}
         docsLabel={t.docs}
         homeLabel={t.home}
-        blogLabel={t.blog}
-        eventsLabel={t.events}
         communityLabel={t.community}
+        openEnvisionHref={normalized === 'zh' ? '/zh/openenvision' : '/openenvision'}
         openEnvisionLabel={t.openEnvision}
         searchLabel={t.search}
         languageAriaLabel={t.language}
@@ -252,7 +287,7 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
 
         <div className="pi-doc-main">
           <article
-            className={['pi-doc-article', benchmarkId ? 'wf-benchmark-detail' : '']
+            className={['pi-doc-article', isBenchmarkRecipePage ? 'wf-benchmark-detail' : '']
               .filter(Boolean)
               .join(' ')}
           >
@@ -314,8 +349,14 @@ export async function DocsPage({ slug, locale }: { slug: string[] | undefined; l
                   {modelId ? <ModelPaperThumb modelId={modelId} locale={normalized} /> : null}
                 </div>
 
-                {benchmarkId || !page.data.description ? null : (
-                  <p className="pi-doc-description">{page.data.description}</p>
+                {isBenchmarkRecipePage || !page.data.description ? null : (
+                  <p className="pi-doc-description">
+                    {renderInlineCode(
+                      isModelRecipePage
+                        ? formatModelPageDescription(page.data.description, page.data.title)
+                        : page.data.description,
+                    )}
+                  </p>
                 )}
 
                 <DocsPageActions

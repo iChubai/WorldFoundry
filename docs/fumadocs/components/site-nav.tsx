@@ -5,10 +5,10 @@ import { WORLDFOUNDRY_SLACK_INVITE } from '@/lib/site-links';
 export type SiteNavItemId =
   | 'home'
   | 'docs'
-  | 'blog'
-  | 'events'
   | 'community'
-  | 'openenvision';
+  | 'openenvision'
+  | 'blog'
+  | 'events';
 
 type SiteNavItem = {
   id: SiteNavItemId;
@@ -24,9 +24,8 @@ type SiteNavProps = {
   docsHref?: string;
   docsLabel?: string;
   homeLabel?: string;
-  blogLabel?: string;
-  eventsLabel?: string;
   communityLabel?: string;
+  openEnvisionHref?: string;
   openEnvisionLabel?: string;
 };
 
@@ -37,23 +36,20 @@ export function SiteNav({
   docsHref = '/docs',
   docsLabel = 'Docs',
   homeLabel = 'Home',
-  blogLabel = 'Blog',
-  eventsLabel = 'Events',
   communityLabel = 'Community',
+  openEnvisionHref = '/openenvision',
   openEnvisionLabel = 'OpenEnvision',
 }: SiteNavProps) {
   const items: SiteNavItem[] = [
     { id: 'home', href: '/', label: homeLabel },
     { id: 'docs', href: docsHref, label: docsLabel },
-    { id: 'blog', href: '/blog', label: blogLabel },
-    { id: 'events', href: '/events', label: eventsLabel },
     {
       id: 'community',
       href: WORLDFOUNDRY_SLACK_INVITE,
       label: communityLabel,
       external: true,
     },
-    { id: 'openenvision', href: '/openenvision', label: openEnvisionLabel },
+    { id: 'openenvision', href: openEnvisionHref, label: openEnvisionLabel },
   ];
 
   return (

@@ -45,26 +45,31 @@ export function ModelRelatedRecipes({
     <section className="wf-recipe-related" aria-labelledby="wf-related-models">
       <h2 id="wf-related-models">{heading}</h2>
       <div>
-        {related.map((item) => (
-          <Link className="wf-recipe-related-card" href={`${basePath}/${item.id}`} key={item.id}>
-            <div className="wf-recipe-related-identity">
-              <ModelIdentityMark
-                id={item.id}
-                name={item.name}
-                provider={item.provider}
-                category={item.category}
-                size="small"
-              />
-              <span>
-                <span>{item.provider}</span>
-                <strong>{item.name}</strong>
-              </span>
-            </div>
-            <small>
-              {details} <ArrowRight aria-hidden="true" size={12} />
-            </small>
-          </Link>
-        ))}
+        {related.map((item) => {
+          const providerLabel =
+            (locale === 'zh' ? item.providerZh || item.provider : item.provider) ||
+            (locale === 'zh' ? item.categoryLabelZh : item.categoryLabel);
+          return (
+            <Link className="wf-recipe-related-card" href={`${basePath}/${item.id}`} key={item.id}>
+              <div className="wf-recipe-related-identity">
+                <ModelIdentityMark
+                  id={item.id}
+                  name={item.name}
+                  provider={item.provider}
+                  category={item.category}
+                  size="small"
+                />
+                <span>
+                  <span>{providerLabel}</span>
+                  <strong>{item.name}</strong>
+                </span>
+              </div>
+              <small>
+                {details} <ArrowRight aria-hidden="true" size={12} />
+              </small>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

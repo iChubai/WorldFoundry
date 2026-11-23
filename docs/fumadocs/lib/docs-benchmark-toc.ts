@@ -12,7 +12,7 @@ const SECTION_TITLES: Record<Locale, Array<{ title: string; url: string }>> = {
     { title: '评测维度', url: '#benchmark-dimensions' },
     { title: '数据组成', url: '#benchmark-data' },
     { title: '指标', url: '#benchmark-metrics' },
-    { title: 'Leaderboard', url: '#benchmark-leaderboard' },
+    { title: '排行榜', url: '#benchmark-leaderboard' },
   ],
 };
 

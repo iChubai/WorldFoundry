@@ -15,8 +15,17 @@ export const catalogReadinessLabels: Record<ModelRecipeStatusGroup, string> = {
   blocked: 'Blocked',
 };
 
-export function catalogReadinessLabel(group: ModelRecipeStatusGroup): string {
-  return catalogReadinessLabels[group];
+export const catalogReadinessLabelsZh: Record<ModelRecipeStatusGroup, string> = {
+  verified: 'Runner 已验证',
+  integrated: '已集成',
+  runtime_ported: '运行时已移植',
+  profile: '仅配置档案',
+  planned: '规划中',
+  blocked: '受阻',
+};
+
+export function catalogReadinessLabel(group: ModelRecipeStatusGroup, locale: 'en' | 'zh' = 'en'): string {
+  return locale === 'zh' ? catalogReadinessLabelsZh[group] : catalogReadinessLabels[group];
 }
 
 export type ModelRecipeStatus = {
@@ -50,9 +59,12 @@ export type ModelRecipeIndexEntry = {
   categoryLabel: string;
   categoryLabelZh: string;
   provider: string;
+  providerZh?: string;
   summary: string;
+  summaryZh?: string;
   aliases: string[];
   tasks: string[];
+  tasksZh?: string[];
   status: ModelRecipeStatus;
   runtime: ModelRecipeRuntimeSummary;
   checkpoint: {

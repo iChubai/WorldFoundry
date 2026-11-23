@@ -22,9 +22,8 @@ export type SiteHeaderProps = {
   docsHref?: string;
   docsLabel?: string;
   homeLabel?: string;
-  blogLabel?: string;
-  eventsLabel?: string;
   communityLabel?: string;
+  openEnvisionHref?: string;
   openEnvisionLabel?: string;
   searchLabel?: string;
   brandLeading?: ReactNode;
@@ -46,9 +45,8 @@ export function SiteHeader({
   docsHref,
   docsLabel,
   homeLabel,
-  blogLabel,
-  eventsLabel,
   communityLabel,
+  openEnvisionHref,
   openEnvisionLabel,
   searchLabel,
   brandLeading,
@@ -84,9 +82,8 @@ export function SiteHeader({
             docsHref={docsHref}
             docsLabel={docsLabel}
             homeLabel={homeLabel}
-            blogLabel={blogLabel}
-            eventsLabel={eventsLabel}
             communityLabel={communityLabel}
+            openEnvisionHref={openEnvisionHref}
             openEnvisionLabel={openEnvisionLabel}
           />
           <SiteSearchTrigger label={searchLabel} />

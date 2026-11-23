@@ -39,10 +39,10 @@ const copy = {
   zh: {
     aria: 'WorldFoundry 端到端工作流',
     stages: [
-      { label: '发现', title: '模型与 benchmark' },
-      { label: 'TUI', title: 'Runtime 与资产' },
+      { label: '发现', title: '模型与评测基准' },
+      { label: 'TUI', title: '运行时与资产' },
       { label: 'Studio', title: '统一生成' },
-      { label: '检查', title: '持久 artifact' },
+      { label: '检查', title: '持久化产物' },
       { label: '评测', title: '可审查证据' },
     ],
   },

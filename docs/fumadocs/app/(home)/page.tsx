@@ -13,6 +13,7 @@ import {
 import { CatalogCoverage } from '@/components/catalog-coverage';
 import { HomeConfigureSection } from '@/components/home-configure-section';
 import { HomeHeroMedia } from '@/components/home-hero-media';
+import { HomeSectionNav } from '@/components/home-section-nav';
 import { type HomeRecipeOption } from '@/components/home-run-configurator';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
@@ -185,6 +186,7 @@ const workflowRail = ['Discover', 'Prepare', 'Run', 'Inspect', 'Evaluate'] as co
 export default function HomePage() {
   return (
     <main className="pi-home-shell wf-home-shell">
+      <HomeSectionNav />
       <div className="wf-home-stage">
         <SiteHeader
           variant="hero"
@@ -198,29 +200,28 @@ export default function HomePage() {
 
         <section className="wf-home-hero" aria-labelledby="wf-home-title">
           <div className="wf-home-hero-showcase">
-            <HomeHeroMedia>
-              <div className="wf-home-hero-content">
-                <p className="wf-home-hero-kicker">Toward a general infrastructure for world intelligence</p>
-                <h1 id="wf-home-title">WorldFoundry</h1>
-                <p className="wf-home-hero-lead">
-                  Discover, run, inspect, and evaluate world models under one operational
-                  definition — without flattening them into a single interface.
-                </p>
-                <div className="wf-home-hero-actions">
-                  <Link href="/docs/quickstart" className="wf-home-button wf-home-button-primary">
-                    <span>Get started</span>
-                    <ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />
-                  </Link>
-                  <Link href="/docs/guides/supported-models" className="wf-home-button wf-home-button-secondary">
-                    <span>Explore model recipes</span>
-                  </Link>
-                </div>
-                <Link className="wf-home-hero-catalog-link" href="/docs/guides/supported-models">
-                  {modelRecipeIndex.total} models · {catalogCoverage.benchmarksTotal} browsable benchmarks
-                  <ArrowRight aria-hidden="true" size={13} strokeWidth={1.7} />
-                </Link>
-              </div>
-            </HomeHeroMedia>
+            <HomeHeroMedia />
+          </div>
+          <div className="wf-home-hero-content">
+            <p className="wf-home-hero-kicker">Toward a general infrastructure for world intelligence</p>
+            <h1 id="wf-home-title">WorldFoundry</h1>
+            <p className="wf-home-hero-lead">
+              Discover, run, inspect, and evaluate world models under one operational
+              definition — without flattening them into a single interface.
+            </p>
+            <div className="wf-home-hero-actions">
+              <Link href="/docs/quickstart" className="wf-home-button wf-home-button-primary">
+                <span>Get started</span>
+                <ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />
+              </Link>
+              <Link href="/docs/guides/supported-models" className="wf-home-button wf-home-button-secondary">
+                <span>Explore model recipes</span>
+              </Link>
+            </div>
+            <Link className="wf-home-hero-catalog-link" href="/docs/guides/supported-models">
+              {modelRecipeIndex.total} models · {catalogCoverage.benchmarksTotal} browsable benchmarks
+              <ArrowRight aria-hidden="true" size={13} strokeWidth={1.7} />
+            </Link>
           </div>
         </section>
       </div>
@@ -457,7 +458,7 @@ export default function HomePage() {
             <h2 id="wf-resources-title">
               Resources &amp; <span>ecosystem</span>
             </h2>
-            <p>Notes, events, and sibling projects in the OpenEnvision network.</p>
+            <p>Sibling projects and resources in the OpenEnvision network.</p>
           </header>
           <div className="wf-home-resource-grid">
             {resourceLinks.map((item) => (

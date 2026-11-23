@@ -27,8 +27,6 @@ export type DocsChromeLabels = {
   nav: string;
   navGroups: Record<DocsNavGroupId, string>;
   openEnvision: string;
-  blog: string;
-  events: string;
   community: string;
   search: string;
   onThisPage: string;
@@ -245,8 +243,6 @@ export const docsLabels: Record<Locale, DocsChromeLabels> = {
       training: 'Training',
     },
     openEnvision: 'OpenEnvision',
-    blog: 'Blog',
-    events: 'Events',
     community: 'Community',
     search: 'Search',
     onThisPage: 'On this page',
@@ -287,8 +283,6 @@ export const docsLabels: Record<Locale, DocsChromeLabels> = {
       training: '训练',
     },
     openEnvision: 'OpenEnvision',
-    blog: '博客',
-    events: '活动',
     community: '社区',
     search: '搜索',
     onThisPage: '本页内容',

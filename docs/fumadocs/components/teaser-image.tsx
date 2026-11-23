@@ -1,11 +1,11 @@
 import { DocsZoomImage } from '@/components/docs-zoom-image';
 import { withBasePath } from '@/lib/site-path';
 
-const homeTeaserSrc = withBasePath('/teaser.png');
-const docsTeaserSrc = withBasePath('/docs-teaser.png');
+const homeTeaserSrc = withBasePath('/cover_4x4_hero-poster.webp');
+const docsTeaserSrc = withBasePath('/cover_4x4_hero-poster.webp');
 
-const docsTeaserWidth = 1024;
-const docsTeaserHeight = 682;
+const docsTeaserWidth = 1600;
+const docsTeaserHeight = 900;
 
 type TeaserImageProps = {
   alt: string;

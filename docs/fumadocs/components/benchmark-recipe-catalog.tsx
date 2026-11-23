@@ -159,19 +159,72 @@ function humanize(value: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
+const RUNTIME_LABELS: Record<string, { en: string; zh: string }> = {
+  native_closed_loop_simulator: { en: 'Closed-loop sim', zh: '闭环仿真' },
+  external_official_results_runner: { en: 'Official results', zh: '官方结果导入' },
+  in_tree_artifact_metric_importer: { en: 'Artifact metrics', zh: '产物指标导入' },
+  in_tree_composite_evaluator: { en: 'Composite evaluator', zh: '综合评测器' },
+  in_tree_judge_runtime: { en: 'Judge runtime', zh: '评审运行时' },
+  in_tree_model_backed: { en: 'Model-backed evaluator', zh: '模型驱动评测' },
+  in_tree_model_backed_evaluator: { en: 'Model-backed evaluator', zh: '模型驱动评测' },
+  in_tree_multi_track_evaluator: { en: 'Multi-track evaluator', zh: '多赛道评测器' },
+  in_tree_official_judge_runtime: { en: 'Official judge runtime', zh: '官方评审运行时' },
+  in_tree_official_runner: { en: 'Official runner', zh: '官方运行器' },
+  in_tree_official_runtime: { en: 'Official runtime', zh: '官方运行时' },
+  in_tree_official_runtime_bounded_clip_metrics: {
+    en: 'Official clip metrics',
+    zh: '官方片段指标运行时',
+  },
+  in_tree_official_runtime_hosted_judges: {
+    en: 'Official runtime + hosted judge',
+    zh: '官方运行时 + 托管评审',
+  },
+  in_tree_official_source: { en: 'Official source', zh: '官方评测源' },
+  in_tree_protocol_runtime_external_assets: {
+    en: 'Protocol runtime (external assets)',
+    zh: '协议运行时（外部资产）',
+  },
+  in_tree_result_importer: { en: 'Result importer', zh: '结果导入' },
+  in_tree_result_importer_and_bounded_caption_qa: {
+    en: 'Result import + caption QA',
+    zh: '结果导入 + 字幕问答评测',
+  },
+  in_tree_result_importer_and_bounded_overall_aggregator: {
+    en: 'Result import + aggregator',
+    zh: '结果导入 + 汇总评测',
+  },
+};
+
 function runtimeLabel(entry: BenchmarkCatalogItem, locale: Locale) {
   const value = entry.runtimeKind;
   if (!value) return copy[locale].notRecorded;
-  if (value === 'native_closed_loop_simulator') return locale === 'zh' ? '闭环仿真' : 'Closed-loop sim';
-  if (value === 'external_official_results_runner') return locale === 'zh' ? '官方结果导入' : 'Official results';
-  if (value.includes('judge')) return locale === 'zh' ? 'Judge runtime' : 'Judge runtime';
-  if (value.includes('importer')) return locale === 'zh' ? 'Artifact 导入' : 'Artifact import';
-  if (value.includes('official')) return locale === 'zh' ? '官方 runtime' : 'Official runtime';
+  const mapped = RUNTIME_LABELS[value];
+  if (mapped) return mapped[locale];
+  if (value.includes('judge')) return locale === 'zh' ? '评审运行时' : 'Judge runtime';
+  if (value.includes('importer')) return locale === 'zh' ? '产物导入' : 'Artifact import';
+  if (value.includes('official')) return locale === 'zh' ? '官方运行时' : 'Official runtime';
+  if (value.includes('evaluator') || value.includes('model_backed')) {
+    return locale === 'zh' ? '仓内评测器' : 'In-tree evaluator';
+  }
   return humanize(value);
 }
 
+function rowSubtitle(entry: BenchmarkCatalogItem, locale: Locale) {
+  const categoryLabel =
+    copy[locale].categories[entry.category as BenchmarkCategory] ?? entry.category;
+  const normalizedName = entry.name.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  const normalizedId = entry.id.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  if (normalizedName === normalizedId) {
+    return categoryLabel;
+  }
+  return `${categoryLabel} · ${entry.id}`;
+}
+
 function rowFacts(entry: BenchmarkCatalogItem, locale: Locale, status: StatusGroup) {
-  return [runtimeLabel(entry, locale), copy[locale][status]].filter(Boolean).slice(0, 2);
+  const metricsPreview = entry.metrics.slice(0, 2).join(', ');
+  return [copy[locale][status], runtimeLabel(entry, locale), metricsPreview]
+    .filter(Boolean)
+    .slice(0, 3);
 }
 
 export function BenchmarkRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
@@ -206,7 +259,9 @@ export function BenchmarkRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
   return (
     <div className="wf-recipe-catalog wf-benchmark-catalog">
       <div className="wf-recipe-catalog-coverage">
-        <span>{benchmarkCatalogEntries.length} benchmarks</span>
+        <span>
+          {benchmarkCatalogEntries.length} {t.results}
+        </span>
         <span aria-hidden="true">·</span>
         <span>{t.coverage}</span>
       </div>
@@ -328,7 +383,7 @@ export function BenchmarkRecipeCatalog({ locale = 'en' }: { locale?: Locale }) {
                   <span className="wf-recipe-row-identity">
                     <span>
                       <strong>{entry.name}</strong>
-                      <em>{entry.id}</em>
+                      <em>{rowSubtitle(entry, locale)}</em>
                     </span>
                     <small>{locale === 'zh' ? entry.summaryZh : entry.summary}</small>
                     {facts.length > 0 ? (

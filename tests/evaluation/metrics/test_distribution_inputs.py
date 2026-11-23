@@ -74,7 +74,7 @@ class DistributionInputTests(unittest.TestCase):
                     self.assertEqual(actual, expected)
 
     def test_swav_lists_match_directory_statistics(self):
-        from worldfoundry.evals.tasks.metrics.fid.swav import _swav_fid_module
+        from worldfoundry.evals.tasks.metrics.distribution.fid.swav import _swav_fid_module
 
         module = _swav_fid_module()
         native_statistics = module.calculate_activation_statistics

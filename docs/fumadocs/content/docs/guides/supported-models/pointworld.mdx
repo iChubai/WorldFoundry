@@ -9,9 +9,7 @@ PointWorld is NVIDIA's point-cloud world model for robotics: instead of predicti
 
 <ModelPaperFigures modelId="pointworld" locale="en" />
 
-Paper: [arXiv 2601.03782](https://arxiv.org/abs/2601.03782).
-
-Code: [NVlabs/PointWorld](https://github.com/NVlabs/PointWorld).
+Paper: [arXiv 2601.03782](https://arxiv.org/abs/2601.03782). Code: [NVlabs/PointWorld](https://github.com/NVlabs/PointWorld).
 
 <ModelCommandBuilder modelId="pointworld" locale="en" />
 
@@ -27,11 +25,9 @@ Suggested benchmarks: [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Embod
 
 ## Runtime contract
 
-Artifacts `generated_3d_asset` and `pointworld_runtime_plan.json`.
+Artifact `pointworld_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `PointWorldPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `PointWorldPipeline`. Family status: **Runner parity pending**.
 
 Stage the nvidia/PointWorld_models checkpoints and the point-cloud assets before running; until they are staged, a run returns a plan that lists the missing assets instead of generating. Inputs include point clouds alongside the usual prompt/image/video/actions.
 

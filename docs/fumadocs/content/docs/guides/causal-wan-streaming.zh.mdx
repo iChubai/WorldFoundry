@@ -127,7 +127,7 @@ result = pipeline(image="testcase/012_abandoned-room.png", interactions=["forwar
 
 采样保留 FP32 sigma、整数 timestep 和 network-dtype clean state。初始噪声使用 channel-first FP32 bank，每 20 chunks 补充下一 bank，支持持续 rollout。相机条件、KV reductions、VAE history 和 generator 均由请求/会话持有。
 
-## Scaled attention
+## 缩放注意力（Scaled Attention）
 
 `scaled_int8_fp8` 使用带 scale 的 INT8 Q/K 和 FP8 V，保留 FP32 softmax 与累加；请求级 finalized-key reduction 可以复用同一 chunk 的固定历史。
 

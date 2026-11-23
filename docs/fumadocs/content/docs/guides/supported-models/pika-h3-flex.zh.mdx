@@ -1,26 +1,42 @@
 ---
 title: "Pika H3 Flex"
-description: "基于共享 MiniMax-H3 运行时的 Pika H3 Flex 六步联合音视频生成。"
+description: "Pika H3 Flex（Pika Labs）：文生视频、图生视频等 4 项任务；Runner 一致性待确认。"
 modelId: "pika-h3-flex"
-pageSource: authored
+pageSource: generated
 ---
 
-Pika H3 Flex 是基于 MiniMax-H3 的六步联合音视频适配器，运行在 MiniMax-H3 基础模型及其 Qwen3-VL 条件编码器之上。
+基于 MiniMax-H3 的六步联合音视频适配器，支持首尾帧与多模态图像参考。
+
+<ModelPaperFigures modelId="pika-h3-flex" locale="zh" />
 
 代码：[Pika-Labs/Pika-H3-Flex](https://github.com/Pika-Labs/Pika-H3-Flex)。
 
+<ModelCommandBuilder modelId="pika-h3-flex" locale="zh" />
+
+## 用来做什么
+
+`pika-h3-flex` 同时支持文生视频与图生视频：输入提示词和可选的静态图，输出视频。该模型由 Pika Labs 发布。
+
+任务：文生视频、图生视频、参考图生成视频、音视频联合生成。别名：`pika-h3`、`pika-h3-flex-fl2va`、`pika-h3-flex-ref2va`。模态上，它接受文本、图像，输出视频、音频。
+
 ## 运行时契约
 
-文本和首尾帧生成使用 `fl2va` 适配器，图像参考生成使用 `ref2va` 适配器。输出为 24 FPS 视频及同步的 32 kHz 立体声音频。
+输入 `prompt`（不传时使用内置示例）；参数 `num-frames`、`short-edge`、`aspect-ratio`、`seed`；产物 `pika-h3-flex.mp4`。
 
-加载适配器时使用 `adapter_task=fl2va` 或 `adapter_task=ref2va`：
+CLI task profile：`t2va`、`i2va`、`l2va`、`fl2va`、`ref2va`。绑定的 pipeline 类是 `PikaH3FlexPipeline`。系列状态：**Runner 一致性待确认**。`t2va`、`i2va`、`l2va` 的默认值：num-frames=124, seed=0。
 
-```bash
-wf run pika-h3-flex --pipeline.task-profile t2va --json
-```
+将 Pika H3 Flex 的 fl2va 或 ref2va 适配器与固定版本 MiniMax-H3 基础快照一起准备；参考图生成使用 adapter_task=ref2va。
 
-运行前准备固定版本的 MiniMax-H3 基础快照和 Pika 适配器文件。
+原生输出为 24 fps、32 kHz 立体声，并执行六次生成评估。参考生成仅接受图像参考；不支持视频与独立音频参考。多卡执行、完整 480p/768p bucket 以及真实权重输出尚未验证。
 
-## 限制
+## 在 WorldFoundry 中运行
 
-参考生成仅接受图像参考；不支持视频与独立音频参考。多卡执行、完整 480p/768p bucket 以及真实权重输出尚未验证。
+运行 `wf run pika-h3-flex --pipeline.task-profile t2va` 生成视频。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`Pika-Labs/Pika-H3-Flex`、`MiniMaxAI/MiniMax-H3`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh pika-h3-flex`；下载缺失的公开权重时加 `--download`。
+
+许可证：minimax-h3-community。
+
+<ModelRelatedRecipes modelId="pika-h3-flex" locale="zh" />

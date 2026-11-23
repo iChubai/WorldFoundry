@@ -1,6 +1,6 @@
 ---
 title: "Vid2World"
-description: "Vid2World（清华大学（THUML 机器学习组））：交互式世界模型、动作条件视频等 3 项任务；Runner 一致性待确认。"
+description: "Vid2World（清华大学（THUML 机器学习组））：交互式世界模型、视频扩散适配等 3 项任务；Runner 一致性待确认。"
 modelId: "vid2world"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ pageSource: generated
 
 <ModelPaperFigures modelId="vid2world" locale="zh" />
 
-论文：[arXiv 2505.14357](https://arxiv.org/abs/2505.14357)。
-
-项目页：[knightnemo.github.io/vid2world](https://knightnemo.github.io/vid2world/)。代码：[thuml/Vid2World](https://github.com/thuml/Vid2World)。
+论文：[arXiv 2505.14357](https://arxiv.org/abs/2505.14357)。项目页：[knightnemo.github.io/vid2world](https://knightnemo.github.io/vid2world/)。代码：[thuml/Vid2World](https://github.com/thuml/Vid2World)。
 
 <ModelCommandBuilder modelId="vid2world" locale="zh" />
 
@@ -21,19 +19,15 @@ pageSource: generated
 
 核心思想是视频扩散适配：把全序列扩散模型改造成因果、动作条件的滚动生成。官方代码：thuml/Vid2World。该模型由清华大学（THUML 机器学习组）发布。
 
-任务：交互式世界模型、video-diffusion-adaptation、动作条件视频。
+任务：交互式世界模型、视频扩散适配、动作条件视频。模态上，它接受动作，输出视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（动作条件交互滚动生成质量）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `interactions`、`frames`、`fps`、`seed`；产物 `generated_video`、`vid2world_runtime_plan.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `interactions`、`frames`、`fps`、`seed`；产物 `vid2world_runtime_plan.json`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `Vid2WorldPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`interactive-video` 的默认值：frames=16, fps=16, seed=42。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `Vid2WorldPipeline`。系列状态：**Runner 一致性待确认**。`interactive-video` 的默认值：frames=16, fps=16, seed=42。
 
 在所需 checkpoint 与配置资产就位前，生成会返回列出缺失资产的运行时计划。
 

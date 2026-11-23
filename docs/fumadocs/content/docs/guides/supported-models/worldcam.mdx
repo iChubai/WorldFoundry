@@ -9,9 +9,7 @@ WorldCam, from KAIST's CV Lab with Adobe Research and MAUM AI, is an interactive
 
 <ModelPaperFigures modelId="worldcam" locale="en" />
 
-Paper: [arXiv 2603.16871](https://arxiv.org/abs/2603.16871).
-
-Project page: [cvlab-kaist.github.io/WorldCam](https://cvlab-kaist.github.io/WorldCam/). Code: [cvlab-kaist/WorldCam](https://github.com/cvlab-kaist/WorldCam).
+Paper: [arXiv 2603.16871](https://arxiv.org/abs/2603.16871). Project page: [cvlab-kaist.github.io/WorldCam](https://cvlab-kaist.github.io/WorldCam/). Code: [cvlab-kaist/WorldCam](https://github.com/cvlab-kaist/WorldCam).
 
 <ModelCommandBuilder modelId="worldcam" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) 
 
 ## Runtime contract
 
-Required `input-path`; inputs `prompt` (bundled samples are used when omitted); options `fps`, `height`, `width`, `steps`, `guidance-scale`, `seed`, and 7 more; artifacts `worldcam.mp4`.
+Required `input-path`; input `prompt` (bundled samples are used when omitted); options `fps`, `height`, `width`, `steps`, `guidance-scale`, `seed`, and 7 more; artifact `worldcam.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `WorldCamPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `interactive-video`: fps=30, height=480, width=832, seed=0.
+CLI task profile: `interactive-video`. WorldFoundry binds `WorldCamPipeline`. Family status: **Verified**. Defaults for `interactive-video`: fps=30, height=480, width=832, steps=50, guidance-scale=4, seed=0.
 
 The release is code-only, so stage the WorldCam and Wan2.1-T2V-1.3B assets locally yourself; the wrapper's load_model=False mode lets you check planning without weights.
+
+Code-only release: official checkpoints are not confirmed.
 
 ## Running in WorldFoundry
 

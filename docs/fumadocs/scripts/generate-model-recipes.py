@@ -133,7 +133,12 @@ os.environ.update(
 
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from generate_model_home_prose import task_phrase_en as prose_task_phrase_en  # noqa: E402
+from generate_model_home_prose import (  # noqa: E402
+    task_phrase_en as prose_task_phrase_en,
+)
+from generate_model_home_prose import (  # noqa: E402
+    task_phrase_zh as prose_task_phrase_zh,
+)
 from model_page_mdx import sync_model_pages  # noqa: E402
 
 from worldfoundry.cli.model_run import load_model_run_schema  # noqa: E402
@@ -239,7 +244,32 @@ def compact_text(value: Any, limit: int = 420) -> str | None:
     result = re.sub(r"\s+", " ", result).strip()
     if len(result) <= limit:
         return result
-    return result[: limit - 1].rstrip() + "…"
+    window = result[: limit - 1]
+    if " " in window[limit // 2 :]:
+        return window.rsplit(" ", 1)[0].rstrip(" ,;:-—(") + "…"
+    return window.rstrip() + "…"
+
+
+def compact_summary(value: Any, limit: int = 240) -> str | None:
+    result = text(value)
+    if not result:
+        return None
+    result = re.sub(r"\s+", " ", result).strip()
+    if len(result) <= limit:
+        return result
+    window = result[: limit + 1]
+    zh_period = window.rfind("。")
+    en_period = window.rfind(". ")
+    period = max(zh_period, en_period)
+    if period >= limit // 3:
+        return window[: period + 1].strip()
+    cut_window = result[: limit - 1]
+    if " " in cut_window[limit // 2 :]:
+        return cut_window.rsplit(" ", 1)[0].rstrip(" ,;:-—(") + "…"
+    clause = max(cut_window.rfind("，"), cut_window.rfind("；"))
+    if clause >= limit // 2:
+        return cut_window[:clause].rstrip() + "…"
+    return cut_window.rstrip() + "…"
 
 
 def _canonical_checkpoint_ref(*repo_dir_names: str, fallback: str = "") -> str:
@@ -314,10 +344,51 @@ def unique_strings(values: Iterable[Any], limit: int | None = None) -> list[str]
     return output
 
 
+HUMANIZE_TOKENS = {
+    "3d": "3D",
+    "4d": "4D",
+    "3dgs": "3DGS",
+    "api": "API",
+    "cpu": "CPU",
+    "fl2va": "FL2VA",
+    "fps": "FPS",
+    "gpu": "GPU",
+    "i2i": "I2I",
+    "i2v": "I2V",
+    "i2va": "I2VA",
+    "jepa": "JEPA",
+    "l2va": "L2VA",
+    "pusht": "PushT",
+    "r2v": "R2V",
+    "ref2va": "Ref2VA",
+    "rgb": "RGB",
+    "rv2v": "RV2V",
+    "sdg": "SDG",
+    "soh": "SOH",
+    "starcraft": "StarCraft",
+    "t2i": "T2I",
+    "t2v": "T2V",
+    "t2va": "T2VA",
+    "ti2v": "TI2V",
+    "umi": "UMI",
+    "unet": "UNet",
+    "v2a": "V2A",
+    "v2v": "V2V",
+    "va": "VA",
+    "vam": "VAM",
+    "vla": "VLA",
+    "vlm": "VLM",
+    "vqa": "VQA",
+    "wam": "WAM",
+    "zoomgs": "ZoomGS",
+}
+
+
 def humanize(value: str | None) -> str:
     if not value:
         return "Not recorded"
-    return re.sub(r"\s+", " ", value.replace("_", " ").replace("-", " ")).strip().title()
+    words = re.sub(r"\s+", " ", value.replace("_", " ").replace("-", " ")).strip().split(" ")
+    return " ".join(HUMANIZE_TOKENS.get(word.lower(), word.title()) for word in words if word)
 
 
 def model_items(path: Path) -> list[dict[str, Any]]:
@@ -576,8 +647,11 @@ def checkpoint_data(item: dict[str, Any], profile: dict[str, Any] | None) -> lis
         for record in as_list(profile.get("checkpoints")):
             add(record)
     source = as_dict(item.get("source"))
+    source_license = text(source.get("license") or item.get("license"))
     if source.get("hf_repo_id"):
-        add({"repo_id": source.get("hf_repo_id"), "license": source.get("license")})
+        add({"repo_id": source.get("hf_repo_id"), "license": source_license})
+    if output and source_license and not any(entry.get("license") for entry in output):
+        output[0]["license"] = source_license
     return output
 
 
@@ -863,7 +937,12 @@ def artifact_data(item: dict[str, Any], profile: dict[str, Any] | None) -> list[
             for artifact in as_list(area.get("expected_artifacts")):
                 if isinstance(artifact, dict):
                     add("expected artifact", artifact.get("path"))
-    return output
+    kinds_with_filename = {entry["kind"] for entry in output if entry["filename"]}
+    if any(entry["filename"].endswith(".mp4") for entry in output):
+        kinds_with_filename.update({"generated_video", "generated_world_video", "generated_world", "predicted_video"})
+    if any(entry["filename"].endswith("_action_trace.json") for entry in output):
+        kinds_with_filename.update({"actions", "action_trace"})
+    return [entry for entry in output if entry["filename"] or entry["kind"] not in kinds_with_filename]
 
 
 # The shared ``interactive-video`` profile is the default `wf run` / Studio route
@@ -877,10 +956,30 @@ DEFAULT_PROFILE_LABELS = {
     "hosted_api": "Hosted generation",
 }
 
+TASK_PROFILE_LABELS = {
+    "t2v": "Text-to-video",
+    "i2v": "Image-to-video",
+    "ti2v": "Text/image-to-video",
+    "v2v": "Video-to-video",
+    "r2v": "Reference-to-video",
+    "rv2v": "Reference video-to-video",
+    "t2i": "Text-to-image",
+    "i2i": "Image-to-image",
+    "t2va": "Text-to-video/audio",
+    "i2va": "Image-to-video/audio",
+    "fl2va": "First/last-frame to video/audio",
+    "l2va": "Last-frame to video/audio",
+    "ref2va": "Reference to video/audio",
+    "vla": "VLA policy",
+    "wam": "World-action model",
+}
+
 
 def task_label(task_id: str, category_id: str) -> str:
     if task_id == "interactive-video":
         return DEFAULT_PROFILE_LABELS.get(category_id, "Default inference")
+    if task_id.lower() in TASK_PROFILE_LABELS:
+        return TASK_PROFILE_LABELS[task_id.lower()]
     return humanize(task_id)
 
 
@@ -1261,13 +1360,49 @@ def modality_data(tasks: list[str], docs: dict[str, Any]) -> dict[str, list[str]
                 push(inputs, token)
             for token in right.split("-"):
                 push(outputs, token)
+        elif normalized in {"audio-video-generation", "audio-video", "audio-visual-world-model"}:
+            push(outputs, "video")
+            push(outputs, "audio")
+        elif normalized == "audio-guided-video":
+            push(inputs, "audio")
+            push(outputs, "video")
+        elif normalized == "audio-generation":
+            push(outputs, "audio")
+        elif normalized in {"depth-controlled-video", "depth-conditioned"}:
+            push(inputs, "depth")
+            push(outputs, "video")
+        elif normalized in {"trajectory-controlled-video", "trajectory-conditioned-video"}:
+            push(inputs, "trajectory")
+            push(outputs, "video")
+        elif normalized in {
+            "camera-controlled-video",
+            "camera-control-video",
+            "camera-pose-controlled-video",
+            "camera-controlled-video-generation",
+        }:
+            push(inputs, "camera")
+            push(outputs, "video")
+        elif normalized in {
+            "action-conditioned-video",
+            "action-conditioned-generation",
+            "action-conditioned-world-model",
+        }:
+            push(inputs, "action")
+            push(outputs, "video")
         elif normalized.endswith("video-generation") or normalized in {"video", "video-generation"}:
             push(outputs, "video")
+            if "audio" in normalized:
+                push(outputs, "audio")
         elif "depth" in normalized:
             push(inputs, "image")
             push(outputs, "depth")
         elif "point-cloud" in normalized or "pointcloud" in normalized:
             push(outputs, "point-cloud")
+        elif normalized in {"audio-reasoning", "image-question-answering", "video-question-answering"}:
+            for token in ("audio", "image", "video"):
+                if token in normalized:
+                    push(inputs, token)
+            push(outputs, "text")
     return {"inputs": inputs, "outputs": outputs}
 
 
@@ -1278,7 +1413,7 @@ def task_phrase_en(task: str) -> str:
 def task_phrase_zh(task: str) -> str:
     # Unmapped task ids stay as the recorded identifier: an accurate English
     # term reads better in a Chinese sentence than a fabricated translation.
-    return TASK_PHRASES_ZH.get(task) or TASK_PHRASES_ZH.get(task.lower()) or task
+    return prose_task_phrase_zh(task) or TASK_PHRASES_ZH.get(task) or TASK_PHRASES_ZH.get(task.lower()) or task
 
 
 def join_en(items: list[str]) -> str:
@@ -1550,11 +1685,11 @@ def docs_data(
 
 def summary_for(item: dict[str, Any], tasks: list[str], notes: list[str]) -> str:
     for candidate in [item.get("description"), item.get("summary")]:
-        normalized = compact_text(candidate, 240)
+        normalized = compact_summary(candidate, 240)
         if normalized:
             return normalized
     if notes:
-        return compact_text(notes[0], 240) or notes[0]
+        return compact_summary(notes[0], 240) or notes[0]
     if tasks:
         labels = ", ".join(humanize(task).lower() for task in tasks[:3])
         return f"Manifested for {labels}. Open the recipe to inspect runtime and provenance records."
@@ -1694,7 +1829,28 @@ def main() -> int:
                         docs["overview"][0],
                         maxsplit=1,
                     )[0].strip()
-                    summary = compact_text(lead, 240) or compact_text(docs["overview"][0], 240) or summary
+                    summary = compact_summary(lead, 240) or compact_summary(docs["overview"][0], 240) or summary
+
+                summary_zh = summary
+                if docs.get("overviewZh"):
+                    lead_zh = re.split(
+                        r"(?:在本 catalog|本 catalog|WorldFoundry 通过|WorldFoundry 将它|WorldFoundry 在|在 WorldFoundry|它运行在)",
+                        docs["overviewZh"][0],
+                        maxsplit=1,
+                    )[0].strip()
+                    summary_zh = compact_summary(lead_zh, 240) or compact_summary(docs["overviewZh"][0], 240) or summary
+
+                publisher_zh = text((docs.get("publisher") or {}).get("nameZh")) or ""
+                if publisher_zh and re.search(r"not recorded|未记录", publisher_zh, re.IGNORECASE):
+                    publisher_zh = ""
+                provider_zh = publisher_zh or (
+                    "托管服务商"
+                    if provider == "Hosted provider"
+                    else "上游项目"
+                    if provider == "Upstream project"
+                    else provider
+                )
+                tasks_zh = [prose_task_phrase_zh(task) for task in tasks]
 
                 recipe = {
                     "id": model_id,
@@ -1703,9 +1859,12 @@ def main() -> int:
                     "categoryLabel": category["label"],
                     "categoryLabelZh": category["label_zh"],
                     "provider": provider,
+                    "providerZh": provider_zh,
                     "summary": summary,
+                    "summaryZh": summary_zh,
                     "aliases": aliases,
                     "tasks": tasks,
+                    "tasksZh": tasks_zh,
                     "status": status,
                     "runtime": runtime,
                     "sources": links,
@@ -1755,9 +1914,12 @@ def main() -> int:
                 "categoryLabel": recipe["categoryLabel"],
                 "categoryLabelZh": recipe["categoryLabelZh"],
                 "provider": recipe["provider"],
+                "providerZh": recipe["providerZh"],
                 "summary": recipe["summary"],
+                "summaryZh": recipe["summaryZh"],
                 "aliases": recipe["aliases"],
                 "tasks": recipe["tasks"],
+                "tasksZh": recipe["tasksZh"],
                 "status": recipe["status"],
                 "runtime": {
                     key: recipe["runtime"].get(key)

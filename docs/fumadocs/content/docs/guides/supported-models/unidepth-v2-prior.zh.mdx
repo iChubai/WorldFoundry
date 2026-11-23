@@ -9,9 +9,7 @@ UniDepth V2 是通用单目米制深度模型：对任意相机的单张图像�
 
 <ModelPaperFigures modelId="unidepth-v2-prior" locale="zh" />
 
-论文：[arXiv 2502.20110](https://arxiv.org/abs/2502.20110)。
-
-项目页：[lpiccinelli-eth.github.io/pub/unidepth](https://lpiccinelli-eth.github.io/pub/unidepth/)。代码：[lpiccinelli-eth/UniDepth](https://github.com/lpiccinelli-eth/UniDepth)。
+论文：[arXiv 2502.20110](https://arxiv.org/abs/2502.20110)。项目页：[lpiccinelli-eth.github.io/pub/unidepth](https://lpiccinelli-eth.github.io/pub/unidepth/)。代码：[lpiccinelli-eth/UniDepth](https://github.com/lpiccinelli-eth/UniDepth)。
 
 <ModelCommandBuilder modelId="unidepth-v2-prior" locale="zh" />
 
@@ -27,13 +25,11 @@ UniDepth V2 是通用单目米制深度模型：对任意相机的单张图像�
 
 输入 `input-path`（不传时使用内置示例）；参数 `type`、`focal-length`、`execute`、`max-points`；产物 `unidepth-v2-prior.npz`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `UniDepthV2PriorPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `UniDepthV2PriorPipeline`。系列状态：**已验证**。
 
 UniDepth V2 可作为独立几何先验运行，也可由 ViPE 等上层管线调用以获得米制深度。
 
-CC-BY-NC-4.0：下游适用非商用许可条款。
+CC-BY-NC-4.0：下游适用非商用许可条款。单帧估计；视频时序稳定性不在其范围内。
 
 ## 在 WorldFoundry 中运行
 

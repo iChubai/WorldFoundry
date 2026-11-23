@@ -1,6 +1,6 @@
 ---
 title: "Causal-rCM"
-description: "Causal-rCM from NVIDIA: autoregressive video generation, streaming video generation, and 3 more tasks; Runner parity pending; dedicated `causal-rcm`."
+description: "Causal-rCM from NVIDIA: autoregressive video generation, streaming video generation, and 3 more tasks; Runner parity pending; dedicated env causal-rcm."
 modelId: "causal-rcm"
 pageSource: authored
 ---
@@ -31,9 +31,9 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Video qua
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `steps`, `seed`, `plan-only`, `timeout-seconds`, `model-size`, and 6 more; artifacts `generated_world`, `generated_video`, and `causal-rcm.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `steps`, `seed`, `plan-only`, `timeout-seconds`, `model-size`, and 6 more; artifact `causal-rcm.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `CausalRCMPipeline`.
+CLI task profile: `default`. WorldFoundry binds `CausalRCMPipeline`.
 
 Family status: **Runner parity pending**.
 

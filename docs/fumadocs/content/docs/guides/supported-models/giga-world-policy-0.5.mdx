@@ -25,11 +25,9 @@ Tasks: VLA, VLA action prediction, and VLA world action model. Aliases: `giga-wo
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `giga_world_policy_0_5_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `giga_world_policy_0_5_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `GigaWorldPolicyPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `GigaWorldPolicyPipeline`. Family status: **Runner parity pending**.
 
 The released transformer is a pretrained initialization: task deployment additionally requires local post-training statistics (task-specific norm_stats_delta.json) and, when applicable, a task-finetuned transformer directory. All Hub assets must be staged locally; runtime network access is disabled.
 
@@ -42,5 +40,7 @@ Run the policy with `wf run giga-world-policy-0.5 --pipeline.task-profile defaul
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8, torch>=2.7.1).
 
 Weights: `open-gigaai/Giga-World-Policy-0.5` and `Wan-AI/Wan2.2-TI2V-5B-Diffusers`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh giga-world-policy-0.5`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="giga-world-policy-0.5" locale="en" />

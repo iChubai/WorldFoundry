@@ -1,6 +1,6 @@
 ---
 title: "Sana"
-description: "Sana（英伟达（NVIDIA））：文生图、文生视频等 4 项任务；Runner 一致性待确认; 20 个 variant。"
+description: "Sana（英伟达（NVIDIA））：文生图、文生视频等 4 项任务；Runner 一致性待确认；20 个 variant。"
 modelId: "sana"
 pageSource: authored
 ---
@@ -21,7 +21,7 @@ Sana 是英伟达的高效生成系列，共二十个 variant，覆盖文生图�
 
 Sana 的高效来自深压缩自编码器（32x）、线性注意力 DiT 块与小型 LLM 文本编码器，见论文（arXiv 2410.10629）。SANA-Streaming 路径使用官方 BF16 CLI，包含混合 DiT 块、融合 GDN 核与因果 LTX-2 VAE。该模型由英伟达（NVIDIA）发布。
 
-任务：文生图、文生视频、视频到视频、image-conditioned-generation。别名：`sana-video`、`longsana-video`、`sana-streaming`、`sana-streaming-bidirectional`。模态上，它接受文本、视频，输出图像、视频。同系列还有 `sana-600m-1024px`、`sana-1600m-512px`、`sana-1600m-512px-multiling`。
+任务：文生图、文生视频、视频到视频、图像条件生成。别名：`sana-video`、`longsana-video`、`sana-streaming`、`sana-streaming-bidirectional`。模态上，它接受文本、视频，输出图像、视频。同系列还有 `sana-600m-1024px`、`sana-1600m-512px`、`sana-1600m-512px-multiling`。
 
 推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（Sana-Video 文生视频路径的质量评测）、[SANA-WM 80-Scene Benchmark](/zh/docs/evaluation/benchmark-hub/sana-wm-bench)（针对 Sana 的世界模型评测）。
 

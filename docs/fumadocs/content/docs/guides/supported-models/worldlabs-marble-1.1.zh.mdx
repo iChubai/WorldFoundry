@@ -1,6 +1,6 @@
 ---
 title: "World Labs Marble 1.1"
-description: "World Labs Marble 1.1（World Labs）：已集成的 3D 世界生成 API。"
+description: "World Labs Marble 1.1（World Labs（世界实验室））：世界生成、3D 世界生成等 3 项任务；Runner 一致性待确认。"
 modelId: "worldlabs-marble-1.1"
 pageSource: authored
 ---
@@ -19,7 +19,7 @@ World Labs Marble 1.1 是 3D 世界生成的商业 API：从提示生成可探�
 
 闭源 API 服务，架构细节未公开。官方来源为发布说明与 API 端点。
 
-任务：世界生成、3D 世界生成、api-world-model。别名：`marble-1.1`、`worldlab-marble-1.1`。
+任务：世界生成、3D 世界生成、API 世界模型。别名：`marble-1.1`、`worldlab-marble-1.1`。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（可探索 3D 世界生成质量）。
 
@@ -29,9 +29,7 @@ World Labs Marble 1.1 是 3D 世界生成的商业 API：从提示生成可探�
 
 产物 `worldlabs-marble-1.1.zip`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `WorldLabsMarble11Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `WorldLabsMarble11Pipeline`。系列状态：**Runner 一致性待确认**。
 
 需要 World Labs API 凭证；请求经 WorldLabs API pipeline 发出，模型 id 为 marble-1.1。
 
@@ -44,7 +42,5 @@ CLI task profile：`default`。绑定的 pipeline 类是 `WorldLabsMarble11Pipel
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh worldlabs-marble-1.1`；下载缺失的公开权重时加 `--download`。
-
-状态：**Runner 一致性待确认**。
 
 <ModelRelatedRecipes modelId="worldlabs-marble-1.1" locale="zh" />

@@ -1,6 +1,6 @@
 ---
 title: "LagrNVS"
-description: "LagrNVS（Meta AI（FAIR））：新视角合成、3d-scene-rendering等 3 项任务；Runner 一致性待确认。"
+description: "LagrNVS（Meta AI（FAIR））：新视角合成、3D 场景渲染等 3 项任务；Runner 一致性待确认。"
 modelId: "lagernvs"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ LagrNVS 是 Meta 的新视角合成模型，用于沿新的相机路径渲染场
 
 <ModelPaperFigures modelId="lagernvs" locale="zh" />
 
-论文：[arXiv 2603.20176](https://arxiv.org/abs/2603.20176)。
-
-项目页：[szymanowiczs.github.io/lagernvs](https://szymanowiczs.github.io/lagernvs)。代码：[facebookresearch/lagernvs](https://github.com/facebookresearch/lagernvs)。
+论文：[arXiv 2603.20176](https://arxiv.org/abs/2603.20176)。项目页：[szymanowiczs.github.io/lagernvs](https://szymanowiczs.github.io/lagernvs)。代码：[facebookresearch/lagernvs](https://github.com/facebookresearch/lagernvs)。
 
 <ModelCommandBuilder modelId="lagernvs" locale="zh" />
 
@@ -19,21 +17,19 @@ LagrNVS 是 Meta 的新视角合成模型，用于沿新的相机路径渲染场
 
 `lagernvs` 根据输入视图估计场景几何。
 
-512 分辨率的新视角/相机路径渲染模型。该模型由Meta AI（FAIR）发布。
+512 分辨率的新视角/相机路径渲染模型。该模型由 Meta AI（FAIR）发布。
 
-任务：新视角合成、3d-scene-rendering、camera-path-rendering。别名：`lager-nvs`、`facebook/lagernvs_general_512`、`facebookresearch/lagernvs`。
+任务：新视角合成、3D 场景渲染、相机路径渲染。别名：`lager-nvs`、`facebook/lagernvs_general_512`、`facebookresearch/lagernvs`。
 
 ## 运行时契约
 
-输入 `input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`model-repo`、`python-executable`；产物 `generated_video`、`lagernvs.mp4`。
+输入 `input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`model-repo`、`python-executable`；产物 `lagernvs.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `LagrNVSPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`default` 的默认值：frames=16, fps=25。
+CLI task profile：`default`。绑定的 pipeline 类是 `LagrNVSPipeline`。系列状态：**Runner 一致性待确认**。`default` 的默认值：frames=16, fps=25。
 
 运行需要 gated checkpoint 与 CUDA GPU。运行前请先在 Hugging Face 接受 gated 条款并设置 HF_TOKEN。
+
+checkpoint 为 gated，受 FAIR 非商用研究许可约束。
 
 ## 在 WorldFoundry 中运行
 
@@ -43,6 +39,6 @@ CLI task profile：`default`。绑定的 pipeline 类是 `LagrNVSPipeline`。
 
 权重仓库：`facebook/lagernvs_general_512`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lagernvs`；下载缺失的公开权重时加 `--download`。
 
-gated 权重：`facebook/lagernvs_general_512`（下载前需在上游接受条款）。
+许可证：FAIR 非商用研究许可；gated 权重：`facebook/lagernvs_general_512`（下载前需在上游接受条款）。
 
 <ModelRelatedRecipes modelId="lagernvs" locale="zh" />

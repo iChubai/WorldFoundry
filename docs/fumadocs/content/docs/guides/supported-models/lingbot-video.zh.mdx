@@ -21,13 +21,13 @@ LingBot-Video 是蚂蚁灵波（Robbyant）的视频生成系列，支持文生�
 
 稠密 1.3B 与 MoE 30B-A3B（激活 3B）两个 checkpoint 共享同一推理面；MoE 线增加了细化阶段。支持的执行路径包括直连 Diffusers、可选 SGLang、FSDP、上下文并行与 CFG 并行。上游推荐栈要求专用的 Transformers 5 / Diffusers 0.39 环境。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
-任务：文生图、文生视频、text-image-to-video、video-refinement。别名：`lingbot-video-dense`、`lingbot-video-moe`。模态上，它接受文本、图像，输出图像、视频。
+任务：文生图、文生视频、图文生成视频、视频精炼。别名：`lingbot-video-dense`、`lingbot-video-moe`。模态上，它接受文本、图像，输出图像、视频。
 
 推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（两条 checkpoint 线通用的文生视频质量评测）。
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `backend`、`mode`、`height`、`width`、`num-frames`、`num-inference-steps` 等 19 项；产物 `generated_image`、`generated_video`、`lingbot_video.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `backend`、`mode`、`height`、`width`、`num-frames`、`num-inference-steps` 等 19 项；产物 `generated_image`、`lingbot_video.mp4`。
 
 CLI task profile：`t2v`、`ti2v`、`t2i`。绑定的 pipeline 类是 `LingBotVideoGenerationPipeline`。
 

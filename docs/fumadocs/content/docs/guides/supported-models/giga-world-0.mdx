@@ -33,7 +33,7 @@ For the policy model in the same family, see [GigaWorld-Policy-0.5](/docs/guides
 
 ## Runtime contract
 
-Required `prompt` and `image`; optional `video` and `actions` (robot_action, world_action); artifacts `giga-world-0.mp4`.
+Inputs `input-path`, `prompt`, `load.transformer-model-dir`, `load.text-encoder-model-dir`, and `load.vae-model-dir` (bundled samples are used when omitted); options `attention-backend`, `height`, `width`, `num-frames`, `num-inference-steps`, `guidance-scale`, and 6 more; artifact `giga-world-0.mp4`.
 
 Recorded task profiles: `robotics-world-model`, `video-generation`, `action-conditioned-generation`, and `robot-image-to-video`. WorldFoundry binds `GigaWorld0Pipeline`.
 

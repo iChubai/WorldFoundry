@@ -1,6 +1,6 @@
 ---
 title: "Depth Any Panoramas"
-description: "Depth Any Panoramas（影石 Insta360（研究团队））：米制深度估计、几何先验等 3 项任务；已验证。"
+description: "Depth Any Panoramas（影石 Insta360（研究团队））：全景深度估计、米制深度估计等 3 项任务；已验证。"
 modelId: "dap"
 pageSource: authored
 ---
@@ -23,7 +23,7 @@ Depth Any Panoramas（DAP）是影石 Insta360 面向全景图像的米制深度
 
 基于 Depth-Anything 系模型，适配全景输入与米制输出：DINOv3-Large 骨干配 DPT 风格解码器，带稠密米制深度头，以及标出超出可信距离像素的 range-mask 头。该模型由影石 Insta360（研究团队）发布。
 
-任务：panoramic-depth-estimation、米制深度估计、几何先验。别名：`depth-any-panoramas`、`insta360-dap`。模态上，它接受图像，输出深度。
+任务：全景深度估计、米制深度估计、几何先验。别名：`depth-any-panoramas`、`insta360-dap`。模态上，它接受图像，输出深度。
 
 输入一张等距柱状投影 `image`，得到 `dap-depth.npz`。普通针孔照片请改用 Depth Anything V2/V3 先验。
 

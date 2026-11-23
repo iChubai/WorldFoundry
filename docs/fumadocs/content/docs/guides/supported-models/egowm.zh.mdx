@@ -21,7 +21,7 @@ EgoWM 根据初始视角和导航动作预测移动智能体**第一人称**会�
 
 ## 运行时契约
 
-必填 `image`、`prompt`；可选 `video`；`actions`：navigation_action, egocentric_action；产物 `generated_video`、`egowm.mp4`。
+必填 `input-path`；输入 `load.checkpoint-path`、`load.base-model-dir`（不传时使用内置示例）；参数 `variant`、`num-frames`、`num-inference-steps`、`fps`、`seed`、`height` 等 11 项；产物 `egowm.mp4`。
 
 | 旋钮 | 默认 |
 | --- | --- |

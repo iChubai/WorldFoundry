@@ -9,9 +9,7 @@ WorldGrow generates worlds by expansion: starting from a seed scene it progressi
 
 <ModelPaperFigures modelId="worldgrow" locale="en" />
 
-Paper: [arXiv 2510.21682](https://arxiv.org/abs/2510.21682).
-
-Project page: [world-grow.github.io](https://world-grow.github.io/). Code: [world-grow/WorldGrow](https://github.com/world-grow/WorldGrow).
+Paper: [arXiv 2510.21682](https://arxiv.org/abs/2510.21682). Project page: [world-grow.github.io](https://world-grow.github.io/). Code: [world-grow/WorldGrow](https://github.com/world-grow/WorldGrow).
 
 <ModelCommandBuilder modelId="worldgrow" locale="en" />
 
@@ -27,11 +25,9 @@ Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (G
 
 ## Runtime contract
 
-Artifacts `generated_world` and `worldgrow_runtime_plan.json`.
+Artifact `worldgrow_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `WorldGrowPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `WorldGrowPipeline`. Family status: **Runner parity pending**.
 
 Stage both the WorldGrow checkpoint and the TRELLIS assets before running; until they are staged, a run returns a plan that lists the missing assets.
 
@@ -44,5 +40,7 @@ Run `wf run worldgrow --pipeline.task-profile default` to roll out the world mod
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `UranusITS/WorldGrow`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh worldgrow`. Add `--download` to fetch missing public checkpoints.
+
+License: manual_review:missing_root_license.
 
 <ModelRelatedRecipes modelId="worldgrow" locale="en" />

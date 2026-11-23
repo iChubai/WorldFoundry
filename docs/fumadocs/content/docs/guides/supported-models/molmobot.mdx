@@ -1,28 +1,50 @@
 ---
 title: "MolmoBot"
-description: "MolmoBot DROID and Pi0-DROID policies have completed checkpoint-backed offline GPU action inference."
+description: "MolmoBot from Allen Institute for AI (AI2): VLA, VLA action prediction, and 2 more tasks; Verified; 2 variants."
 modelId: "molmobot"
 pageSource: authored
 ---
 
-MolmoBot is AI2's robot policy family. WorldFoundry exposes the OLMo-based action-chunk route and the separate Pi0-DROID joint-position route through in-tree inference-only pipelines.
+MolmoBot is AI2's robot policy family around the Molmo VLM, with Apache-2.0 checkpoints for Franka DROID, image-conditioned DROID, and RBY1 multitask; the Pi0-based DROID checkpoint is Gemma-licensed. WorldFoundry supports both action inference routes.
 
 <ModelPaperFigures modelId="molmobot" locale="en" />
 
-See [arXiv 2603.16861](https://arxiv.org/abs/2603.16861), the [project page](https://allenai.github.io/MolmoBot), and the [official repository](https://github.com/allenai/MolmoBot).
+Paper: [arXiv 2603.16861](https://arxiv.org/abs/2603.16861).
 
-## Validated variants
+Project page: [allenai.github.io/MolmoBot](https://allenai.github.io/MolmoBot). Code: [allenai/MolmoBot](https://github.com/allenai/MolmoBot).
 
-The released `MolmoBot-DROID` and `MolmoBot-Img-DROID` checkpoints run offline GPU action inference on a real DROID observation with two cameras and robot state. For `MolmoBot-Pi0-DROID`, `MolmoBotPipeline` prepares the same camera, state, and prompt inputs as the official `PiJointPosPolicy` and returns finite 7D arm and 1D gripper actions; values differ between runs because sampling is stochastic.
+<ModelCommandBuilder modelId="molmobot" locale="en" />
 
-The OLMo-based DROID checkpoints are Apache-2.0. The Pi0-DROID checkpoint is [Gemma-licensed](https://huggingface.co/allenai/MolmoBot-Pi0-DROID). `MolmoBot-RBY1Multitask` is available but has not been validated.
+## What it is for
+
+`molmobot-droid` is a vision-language-action policy: an instruction and observations in, actions out.
+
+The OLMo-based path returns robot-specific action chunks; the separate Pi0-DROID path loads the released OpenPI checkpoint and decodes joint-position arm/gripper actions. It is published by Allen Institute for AI (AI2).
+
+Tasks: VLA, VLA action prediction, VLA policy rollout, and robot policy. Aliases: `molmob0t`, `molmobot-droid`, and `molmobot-pi0`. Other variants: `molmobot-pi0-droid`.
 
 ## Runtime contract
 
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); option `official-policy-observation`; artifact `molmobot_action_trace.json`.
+
+CLI task profile: `default`. WorldFoundry binds `MolmoBotPipeline`.
+
+Start with `molmobot-droid`. The family has 2 variants, selectable in the command builder above: `molmobot-droid` (`vla.policy_rollout`) — Runner parity pending; `molmobot-pi0-droid` (`vla.policy_rollout`) — Runner parity pending. Family status: **Verified**.
+
+MolmoBot-DROID, MolmoBot-Img-DROID, and MolmoBot-Pi0-DROID are validated with offline inference on a real DROID observation. Pi0 requires its pinned OpenPI dependencies and PaliGemma tokenizer. RBY1Multitask has not been validated.
+
+No closed-loop robot task success or semantic action quality has been measured. The Pi0 probe used an out-of-distribution real observation for a simulation-trained policy.
+
 Supply a task prompt, the `exo_camera_1` and `wrist_camera` images, and matching robot state. For Pi0-DROID, the verified state has seven arm joint positions plus a two-value gripper state; the output contains arm `(7,)` and gripper `(1,)` actions. Select the Pi0 route with `MolmoBotPipeline.from_pretrained(..., variant="pi0_droid")`, using the released `allenai/MolmoBot-Pi0-DROID` checkpoint. It requires the pinned isolated OpenPI dependencies and PaliGemma tokenizer. The in-tree public adapter does not load the MolmoSpaces simulator.
 
-## Limitations
+## Running in WorldFoundry
 
-Validation covers offline checkpoint loading, observation preparation, and action inference. The real DROID observation is outside the simulation-trained Pi0 policy's training distribution. No closed-loop robot execution, task-success rate, or semantic action quality has been measured.
+Run `wf run molmobot-droid --pipeline.task-profile default` to predict actions.
+
+It runs in the dedicated environment `worldfoundry-molmobot-pi0-cu128` (Python 3.11, CUDA 12.8, torch==2.7.1).
+
+Weights: `allenai/MolmoBot-DROID`, `allenai/MolmoBot-Pi0-DROID`, and `allenai/MolmoBot-Img-DROID` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh molmobot-droid`. Add `--download` to fetch missing public checkpoints.
+
+Licenses: Apache-2.0 and Gemma Terms of Use.
 
 <ModelRelatedRecipes modelId="molmobot" locale="en" />

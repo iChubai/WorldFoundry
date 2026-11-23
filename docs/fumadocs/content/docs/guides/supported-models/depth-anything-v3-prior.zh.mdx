@@ -29,13 +29,11 @@ DA3 扩展了 Depth Anything 的训练配方并增加米制与几何头。该先
 
 输入 `input-path`（不传时使用内置示例）；参数 `focal-length`、`execute`、`max-points`；产物 `depth-anything-v3-prior.npz`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `DepthAnythingV3PriorPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `DepthAnythingV3PriorPipeline`。系列状态：**已验证**。
 
 将它作为米制深度先验，通过共享的几何先验接口供其他管线（如 ViPE）使用。官方 SOH 导出路径请使用 depth-anything-v3。
 
-仅提供深度先验：完整的 DA3 重建请使用 depth-anything-v3。
+仅提供深度先验：完整的 DA3 重建请使用 depth-anything-v3。非常规焦距图像下米制尺度可能漂移。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +42,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `DepthAnythingV3PriorPi
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`depth-anything/DA3METRIC-LARGE`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh depth-anything-v3-prior`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="depth-anything-v3-prior" locale="zh" />

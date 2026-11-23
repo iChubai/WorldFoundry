@@ -1,6 +1,6 @@
 ---
 title: "Xiaomi-Robotics-1"
-description: "Xiaomi-Robotics-1（小米机器人（Xiaomi Robotics））：视觉-语言-动作（VLA）、VLA 动作预测等 4 项任务；Runner 一致性待确认; 独立环境 `worldfoundry-xiaomi-robotics-1-cu128`。"
+description: "Xiaomi-Robotics-1（小米机器人（Xiaomi Robotics））：视觉-语言-动作（VLA）、VLA 动作预测等 4 项任务；Runner 一致性待确认；独立环境 worldfoundry-xiaomi-robotics-1-cu128。"
 modelId: "xiaomi-robotics-1"
 pageSource: authored
 ---
@@ -9,9 +9,7 @@ Xiaomi-Robotics-1 是小米的下一代 VLA（Apache-2.0）：Qwen3-VL 策略 to
 
 <ModelPaperFigures modelId="xiaomi-robotics-1" locale="zh" />
 
-论文：[arXiv 2607.15330](https://arxiv.org/abs/2607.15330)。
-
-代码：[XiaomiRobotics/Xiaomi-Robotics-1](https://github.com/XiaomiRobotics/Xiaomi-Robotics-1)。
+论文：[arXiv 2607.15330](https://arxiv.org/abs/2607.15330)。代码：[XiaomiRobotics/Xiaomi-Robotics-1](https://github.com/XiaomiRobotics/Xiaomi-Robotics-1)。
 
 <ModelCommandBuilder modelId="xiaomi-robotics-1" locale="zh" />
 
@@ -27,11 +25,9 @@ Qwen3-VL 骨干产生策略 token，由 rectified-flow DiT 消费并解码相对
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`xiaomi_robotics_1_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `xiaomi_robotics_1_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `XiaomiRobotics1Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `XiaomiRobotics1Pipeline`。系列状态：**Runner 一致性待确认**。
 
 checkpoint 就位于 $\{WORLDFOUNDRY_CKPT_DIR\}/embodied_action/xiaomi-robotics-1。模型、processor 与 checkpoint 只从本地文件加载。
 

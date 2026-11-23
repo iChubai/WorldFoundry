@@ -1,6 +1,6 @@
 ---
 title: "Bernini-R 14B"
-description: "Bernini-R 14B from ByteDance: text-to-image, image-to-image, and 4 more tasks; Runner parity pending; dedicated `worldfoundry-bernini-cu124`."
+description: "Bernini-R 14B from ByteDance: text-to-image, image-to-image, and 4 more tasks; Runner parity pending; dedicated env worldfoundry-bernini-cu124."
 modelId: "bernini-r-14b"
 pageSource: authored
 ---
@@ -31,7 +31,7 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Checks th
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `task-type`, `num-frames`, `height`, `width`, `num-inference-steps`, `seed`, and 4 more; artifacts `generated_image`, `generated_video`, and `bernini-r-14b.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `task-type`, `num-frames`, `height`, `width`, `num-inference-steps`, `seed`, and 4 more; artifacts `generated_image` and `bernini-r-14b.mp4`.
 
 CLI task profiles: `t2v`, `t2i`, `i2i`, `v2v`, `r2v`, and `rv2v`. WorldFoundry binds `BerniniWorldFoundryPipeline`.
 

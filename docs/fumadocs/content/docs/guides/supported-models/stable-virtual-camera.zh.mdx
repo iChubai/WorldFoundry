@@ -1,6 +1,6 @@
 ---
 title: "Stable Virtual Camera"
-description: "Stable Virtual Camera（Stability AI）：3D 与 4D；Runner 一致性待确认。"
+description: "Stable Virtual Camera（Stability AI）：相机可控生成式新视角合成；Runner 一致性待确认。"
 modelId: "stable-virtual-camera"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Stable Virtual Camera（SEVA）把一张或几张 2D 图像变成沿用户自定
 
 <ModelPaperFigures modelId="stable-virtual-camera" locale="zh" />
 
-论文：[Stable Virtual Camera: Generative View Synthesis with Diffusion Models](https://arxiv.org/abs/2503.14489)（2025）。
-
-项目页：[stable-virtual-camera.github.io](https://stable-virtual-camera.github.io/)。代码：[Stability-AI/stable-virtual-camera](https://github.com/Stability-AI/stable-virtual-camera)。
+论文：[Stable Virtual Camera: Generative View Synthesis with Diffusion Models](https://arxiv.org/abs/2503.14489)（2025）。项目页：[stable-virtual-camera.github.io](https://stable-virtual-camera.github.io/)。代码：[Stability-AI/stable-virtual-camera](https://github.com/Stability-AI/stable-virtual-camera)。
 
 <ModelCommandBuilder modelId="stable-virtual-camera" locale="zh" />
 
@@ -21,21 +19,19 @@ Stable Virtual Camera（SEVA）把一张或几张 2D 图像变成沿用户自定
 
 按论文（arXiv 2503.14489），多视角扩散模型以两阶段程序化方式在采样相机位姿处生成目标视图，在轨迹通用性与一致性之间取得平衡。
 
-任务：generative novel view synthesis with camera control。别名：`SEVA`。
+任务：相机可控生成式新视角合成。别名：`SEVA`。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（评估生成视图的相机路径控制质量）。
 
 ## 运行时契约
 
-输入 `input-path`（不传时使用内置示例）；参数 `steps`、`seed`、`version`、`task`、`pretrained-model-name-or-path`、`weight-name` 等 10 项；产物 `generated_video`、`stable_virtual_camera.mp4`。
+输入 `input-path`（不传时使用内置示例）；参数 `steps`、`seed`、`version`、`task`、`pretrained-model-name-or-path`、`weight-name` 等 10 项；产物 `stable_virtual_camera.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `StableVirtualCameraPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`default` 的默认值：seed=23。
+CLI task profile：`default`。绑定的 pipeline 类是 `StableVirtualCameraPipeline`。系列状态：**Runner 一致性待确认**。`default` 的默认值：steps=50, seed=23。
 
 运行前请在 Hugging Face 接受 gated checkpoint 条款并设置 HF_TOKEN。适配器驱动上游 demo.py 的 Fire 入口。
+
+checkpoint 为 gated：适用 Stability AI 社区许可条款。尚未与官方画廊结果比对生成产物。
 
 ## 在 WorldFoundry 中运行
 

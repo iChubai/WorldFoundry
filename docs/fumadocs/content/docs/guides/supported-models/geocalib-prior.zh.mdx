@@ -1,19 +1,15 @@
 ---
 title: "GeoCalib"
-description: "GeoCalib（苏黎世联邦理工学院（CVG 组））：camera-calibration、gravity-estimation等 3 项任务；已验证。"
+description: "GeoCalib（苏黎世联邦理工学院（CVG 组））：相机标定、重力估计等 3 项任务；已验证。"
 modelId: "geocalib-prior"
-pageSource: authored
+pageSource: generated
 ---
 
 GeoCalib 通过几何优化与深度学习结合，从单张图像估计相机标定与重力方向。WorldFoundry 将它作为相机标定先验提供，上层管线（尤其是 ViPE）通过共享 geometry-prior 契约调用。
 
 <ModelPaperFigures modelId="geocalib-prior" locale="zh" />
 
-论文：[arXiv 2409.06704](https://arxiv.org/abs/2409.06704)。
-
-项目页：[cvg.ethz.ch/research/geocalib](https://www.cvg.ethz.ch/research/geocalib/)。代码：[cvg/GeoCalib](https://github.com/cvg/GeoCalib)。
-
-权重：[cvg/GeoCalib](https://github.com/cvg/GeoCalib) v1.0 发布的 `geocalib-pinhole.tar`（**Apache-2.0**）。别名：`geocalib`、`cvg-geocalib`。
+论文：[arXiv 2409.06704](https://arxiv.org/abs/2409.06704)。项目页：[cvg.ethz.ch/research/geocalib](https://www.cvg.ethz.ch/research/geocalib/)。代码：[cvg/GeoCalib](https://github.com/cvg/GeoCalib)。
 
 <ModelCommandBuilder modelId="geocalib-prior" locale="zh" />
 
@@ -23,15 +19,13 @@ GeoCalib 通过几何优化与深度学习结合，从单张图像估计相机�
 
 神经网络预测几何线索，可微优化层将其转化为焦距与重力估计（见上游 ECCV 2024 发布）。官方代码为 apache-2.0。该模型由苏黎世联邦理工学院（CVG 组）发布。
 
-任务：camera-calibration、gravity-estimation、几何先验。别名：`geocalib`、`cvg-geocalib`。
+任务：相机标定、重力估计、几何先验。别名：`geocalib`、`cvg-geocalib`。
 
 ## 运行时契约
 
 输入 `input-path`（不传时使用内置示例）；参数 `camera-model`、`execute`、`max-points`；产物 `geocalib-prior.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `GeoCalibPriorPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `GeoCalibPriorPipeline`。系列状态：**已验证**。
 
 请就位官方 GitHub v1.0 发布的 geocalib-pinhole.tar 权重。可直接通过 geometry-prior pipeline 运行，也可由 ViPE 作为标定先验调用。
 

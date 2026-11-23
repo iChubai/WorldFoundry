@@ -1,6 +1,6 @@
 ---
 title: "InSpatio-WorldFM"
-description: "InSpatio-WorldFM（InSpatio）：世界模型、video等 3 项任务；已验证。"
+description: "InSpatio-WorldFM（InSpatio）：世界模型、视频生成等 3 项任务；已验证。"
 modelId: "worldfm"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ InSpatio-WorldFM 是面向空间智能与帧生成的 3D 世界基础模型，�
 
 <ModelPaperFigures modelId="worldfm" locale="zh" />
 
-论文：[arXiv 2603.11911](https://arxiv.org/abs/2603.11911)。
-
-项目页：[inspatio.github.io/worldfm](https://inspatio.github.io/worldfm)。代码：[inspatio/worldfm](https://github.com/inspatio/worldfm)。
+论文：[arXiv 2603.11911](https://arxiv.org/abs/2603.11911)。项目页：[inspatio.github.io/worldfm](https://inspatio.github.io/worldfm)。代码：[inspatio/worldfm](https://github.com/inspatio/worldfm)。
 
 <ModelCommandBuilder modelId="worldfm" locale="zh" />
 
@@ -21,21 +19,19 @@ InSpatio-WorldFM 是面向空间智能与帧生成的 3D 世界基础模型，�
 
 输出同时覆盖视频与全景图产物，体现其超越单一固定视口的世界生成设计。
 
-任务：世界模型、video。输出模态为视频。
+任务：世界模型、视频生成。输出模态为视频。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（3D 世界输出的统一世界生成质量）。
 
 ## 运行时契约
 
-输入 `input-path`、`prompt`、`meta-path`（不传时使用内置示例）；参数 `fps`、`panorama-path`、`save-mode`；产物 `generated_world`、`worldfm.mp4`。
+输入 `input-path`、`prompt`、`meta-path`（不传时使用内置示例）；参数 `fps`、`panorama-path`、`save-mode`；产物 `worldfm.mp4`。
 
-CLI task profile：`official-meta-demo`。绑定的 pipeline 类是 `WorldFMPipeline`。
-
-系列状态：**已验证**。
-
-`official-meta-demo` 的默认值：fps=30。
+CLI task profile：`official-meta-demo`。绑定的 pipeline 类是 `WorldFMPipeline`。系列状态：**已验证**。`official-meta-demo` 的默认值：fps=30。
 
 通过官方 meta.json demo 格式驱动运行，并就位本地 WorldFM 资产。
+
+验证覆盖 runner 路径与产物结构，不代表输出质量。
 
 ## 在 WorldFoundry 中运行
 

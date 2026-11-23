@@ -9,9 +9,7 @@ WoW 是 X-Humanoid 的具身世界模型家族，面向动作条件图生视频�
 
 <ModelPaperFigures modelId="wow" locale="zh" />
 
-论文：[arXiv 2509.22642](https://arxiv.org/abs/2509.22642)。
-
-项目页：[wow-world-model.github.io](https://wow-world-model.github.io/)。代码：[wow-world-model/wow-world-model](https://github.com/wow-world-model/wow-world-model)。
+论文：[arXiv 2509.22642](https://arxiv.org/abs/2509.22642)。项目页：[wow-world-model.github.io](https://wow-world-model.github.io/)。代码：[wow-world-model/wow-world-model](https://github.com/wow-world-model/wow-world-model)。
 
 <ModelCommandBuilder modelId="wow" locale="zh" />
 
@@ -19,9 +17,9 @@ WoW 是 X-Humanoid 的具身世界模型家族，面向动作条件图生视频�
 
 用 `wow` 以动作推进世界并渲染出相应画面。
 
-Wan 线在 Wan 扩散骨干上采用仅 VAE 的首帧条件。DiT 2B 线是 Cosmos Predict2 配方上的 transformer 覆盖，经 runtime_backend=dit2b 选择。官方 demo 默认值：Wan 为 steps=50、seed=42、tiled、41 帧、15 fps；DiT 2B 为 720p、16 fps、guidance=7。该模型由X-Humanoid（北京人形机器人创新中心）发布。
+Wan 线在 Wan 扩散骨干上采用仅 VAE 的首帧条件。DiT 2B 线是 Cosmos Predict2 配方上的 transformer 覆盖，经 runtime_backend=dit2b 选择。官方 demo 默认值：Wan 为 steps=50、seed=42、tiled、41 帧、15 fps；DiT 2B 为 720p、16 fps、guidance=7。该模型由 X-Humanoid（北京人形机器人创新中心）发布。
 
-任务：世界模型、图生视频、动作条件视频。别名：`wow-world-model`、`world-of-worlds`。模态上，它接受图像，输出视频。
+任务：世界模型、图生视频、动作条件视频。别名：`wow-world-model`、`world-of-worlds`。模态上，它接受图像、动作，输出视频。
 
 推荐评测：[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身动作条件世界模型质量）、[WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena)（WorldArena 开源世界模型榜单收录）。
 
@@ -29,13 +27,11 @@ Wan 线在 Wan 扩散骨干上采用仅 VAE 的首帧条件。DiT 2B 线是 Cosm
 
 输入 `input-path`、`prompt`（不传时使用内置示例）；参数 `steps`、`num-frames`、`seed`、`no-tiled`、`enable-vram-management`、`persistent-param-gb`；产物 `wow.mp4`。
 
-CLI task profile：`official-image-to-world`。绑定的 pipeline 类是 `WoWPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`official-image-to-world` 的默认值：seed=42。
+CLI task profile：`official-image-to-world`。绑定的 pipeline 类是 `WoWPipeline`。系列状态：**Runner 一致性待确认**。`official-image-to-world` 的默认值：steps=50, num-frames=41, seed=42。
 
 建议从 Wan 1.3B-2M（MIT）checkpoint 起步；官方推荐为 Wan 14B-2M。
+
+锁定的 DiT 2B Hub 快照不包含 wow_dit_2b.pt，因此 DiT 2B 线尚未验证。
 
 ## 在 WorldFoundry 中运行
 

@@ -9,9 +9,7 @@ WoW is X-Humanoid's embodied world model family for action-conditioned image-to-
 
 <ModelPaperFigures modelId="wow" locale="en" />
 
-Paper: [arXiv 2509.22642](https://arxiv.org/abs/2509.22642).
-
-Project page: [wow-world-model.github.io](https://wow-world-model.github.io/). Code: [wow-world-model/wow-world-model](https://github.com/wow-world-model/wow-world-model).
+Paper: [arXiv 2509.22642](https://arxiv.org/abs/2509.22642). Project page: [wow-world-model.github.io](https://wow-world-model.github.io/). Code: [wow-world-model/wow-world-model](https://github.com/wow-world-model/wow-world-model).
 
 <ModelCommandBuilder modelId="wow" locale="en" />
 
@@ -21,21 +19,19 @@ Use `wow` to step a world forward with actions and render the resulting frames.
 
 The Wan line uses VAE-only first-frame conditioning on Wan diffusion backbones. The DiT 2B line is a transformer override on the Cosmos Predict2 recipe, selected via runtime_backend=dit2b. Official demo defaults: Wan uses steps=50, seed=42, tiled, 41 frames at 15 fps; DiT 2B uses 720p, 16 fps, guidance=7. It is published by X-Humanoid (Beijing Humanoid Robot Innovation Center).
 
-Tasks: world model, image-to-video, and action-conditioned video. Aliases: `wow-world-model` and `world-of-worlds`. Modalities: image in, video out.
+Tasks: world model, image-to-video, and action-conditioned video. Aliases: `wow-world-model` and `world-of-worlds`. Modalities: image and action in, video out.
 
 Suggested benchmarks: [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Embodied action-conditioned world-model quality), [WorldArena](/docs/evaluation/benchmark-hub/worldarena) (Listed among WorldArena open-source world models).
 
 ## Runtime contract
 
-Inputs `input-path` and `prompt` (bundled samples are used when omitted); options `steps`, `num-frames`, `seed`, `no-tiled`, `enable-vram-management`, and `persistent-param-gb`; artifacts `wow.mp4`.
+Inputs `input-path` and `prompt` (bundled samples are used when omitted); options `steps`, `num-frames`, `seed`, `no-tiled`, `enable-vram-management`, and `persistent-param-gb`; artifact `wow.mp4`.
 
-CLI task profiles: `official-image-to-world`. WorldFoundry binds `WoWPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `official-image-to-world`: seed=42.
+CLI task profile: `official-image-to-world`. WorldFoundry binds `WoWPipeline`. Family status: **Runner parity pending**. Defaults for `official-image-to-world`: steps=50, num-frames=41, seed=42.
 
 Start with the Wan 1.3B-2M (MIT) checkpoint; the official recommendation is Wan 14B-2M.
+
+The pinned DiT 2B Hub snapshot does not include wow_dit_2b.pt, so the DiT 2B line has not been validated.
 
 ## Running in WorldFoundry
 

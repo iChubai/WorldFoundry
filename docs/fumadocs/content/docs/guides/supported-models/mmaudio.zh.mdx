@@ -9,9 +9,7 @@ MMAudio 为无声视频生成配音：给定一段视频（可附文本提示词
 
 <ModelPaperFigures modelId="mmaudio" locale="zh" />
 
-论文：[arXiv 2412.15322](https://arxiv.org/abs/2412.15322)。
-
-项目页：[hkchengrex.github.io/MMAudio](https://hkchengrex.github.io/MMAudio)。代码：[hkchengrex/MMAudio](https://github.com/hkchengrex/MMAudio)。
+论文：[arXiv 2412.15322](https://arxiv.org/abs/2412.15322)。项目页：[hkchengrex.github.io/MMAudio](https://hkchengrex.github.io/MMAudio)。代码：[hkchengrex/MMAudio](https://github.com/hkchengrex/MMAudio)。
 
 <ModelCommandBuilder modelId="mmaudio" locale="zh" />
 
@@ -21,15 +19,13 @@ MMAudio 为无声视频生成配音：给定一段视频（可附文本提示词
 
 MMAudio 是多模态联合训练的流匹配（flow-matching）模型，以视频帧与文本为条件生成音频（见其论文）。该模型由索尼 AI / 伊利诺伊大学厄巴纳-香槟分校发布。
 
-任务：文生音频、视频生音频、audio-generation。别名：`hkchengrex/MMAudio`。
+任务：文生音频、视频生音频、音频生成。别名：`hkchengrex/MMAudio`。
 
 ## 运行时契约
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `steps`、`duration`、`variant`；产物 `mmaudio.wav`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MMAudioPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MMAudioPipeline`。系列状态：**Runner 一致性待确认**。`interactive-video` 的默认值：steps=25。
 
 典型工作流：先用任一文生/图生视频模型出片，再把视频交给 MMAudio 生成配音。
 

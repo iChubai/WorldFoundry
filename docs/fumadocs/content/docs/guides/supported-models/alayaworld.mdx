@@ -23,15 +23,15 @@ Use `alayaworld` when the viewpoint must follow a given camera path.
 
 AlayaWorld extends WorldFoundry's in-tree LTX-2.3 model and reuses its Transformer, VAE, Gemma connector, RoPE, patchifier, attention dispatcher, and distributed helpers; the Alaya-specific weights add action AdaLN and a temporal-history encoder. Spatial memory uses the in-tree Depth Anything 3 model. It is published by AlayaLab.
 
-Tasks: image-to-video, camera-controlled video, interactive world model, and long video generation. Aliases: `alaya-world` and `alaya_world`. Modalities: image in, video out.
+Tasks: image-to-video, camera-controlled video, interactive world model, and long video generation. Aliases: `alaya-world` and `alaya_world`. Modalities: image and camera pose in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-control quality of interactive rollouts), [MemoBench](/docs/evaluation/benchmark-hub/memobench) (Long-horizon spatial-memory consistency evaluation).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `height`, `width`, `steps`, and `rounds`; artifacts `generated_world_video` and `alayaworld.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `height`, `width`, `steps`, and `rounds`; artifact `alayaworld.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `AlayaWorldPipeline`.
+CLI task profile: `default`. WorldFoundry binds `AlayaWorldPipeline`.
 
 Family status: **Verified**.
 

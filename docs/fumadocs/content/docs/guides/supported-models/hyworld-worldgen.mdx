@@ -21,13 +21,13 @@ Use `hyworld-worldgen` to render camera-controlled video from an existing HY-Wor
 
 The adapter invokes the official trajectory-render stage from a local checkout at pinned revision `7f668e67c74338d50684e57be46a438459b6bbe1` (Tencent Hunyuan community license). The public tree does not bundle that source or implement the full five-stage world generation chain.
 
-Tasks: camera-controlled-video, world-generation-stage, and point-cloud-rendering. This route outputs a video from an existing point cloud.
+Tasks: camera-controlled video, world generation stage, and point cloud rendering. This route outputs a video from an existing point cloud.
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `height`, `width`, `seed`, and `camera-json`; artifacts `hyworld-worldgen.mp4`.
+Input `input-path` (bundled samples are used when omitted); options `height`, `width`, `seed`, and `camera-json`; artifact `hyworld-worldgen.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `HYWorld2WorldgenPipeline`.
+CLI task profile: `default`. WorldFoundry binds `HYWorld2WorldgenPipeline`.
 
 Family status: **Runner parity pending**.
 

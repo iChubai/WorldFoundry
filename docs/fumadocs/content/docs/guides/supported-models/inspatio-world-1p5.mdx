@@ -1,16 +1,15 @@
 ---
 title: "InSpatio World 1.5"
-description: "Camera-controlled world generation from one image, four images, or a video."
+description: "InSpatio World 1.5 from inspatio: image-to-video, video-to-video, and 2 more tasks; Verified."
+modelId: "inspatio-world-1p5"
 pageSource: authored
 ---
 
-[Official source](https://github.com/inspatio/inspatio-world-v1.5) · [Weights](https://huggingface.co/inspatio/world-1.5) · [Examples and input format](https://github.com/inspatio/inspatio-world-v1.5/tree/dd3561f544053fe22d739b6b2f8461c9c97bf8cb/examples)
+InSpatio World 1.5 is a world model from inspatio for image-to-video, video-to-video, trajectory-conditioned video, and novel view synthesis.
 
 Use model ID `inspatio-world-1p5`. The original `inspatio-world` entry keeps its existing checkpoint and video pipeline.
 
 The model runs on a causal Wan2.1 backbone with the UMT5 encoder, Wan VAE, block sampler and DA3 depth model, and does not need a separately installed InSpatio checkout. The released inference geometry is **832×480**, BF16, three latent frames per block and four denoising calls. It produces completed videos; interactive streaming sessions are not available.
-
-Stage `inspatio/world-1.5` and `Wan-AI/Wan2.1-T2V-1.3B` locally. Direct inputs also need `depth-anything/DA3NESTED-GIANT-LARGE-1.1`. Prepared scenes already contain depth and cameras and do not load DA3.
 
 ```python
 from worldfoundry.pipelines.inspatio_world.pipeline_inspatio_world_v15 import InspatioWorldV15Pipeline
@@ -54,3 +53,35 @@ done
 Repeat `native`, `upstream` and `compare` with `--direct` to exercise RGB staging and DA3. `--cases` selects individual cases for parallel runs on separate GPUs. The standard replay matrix includes `inspatio-world-1p5-{image,multiview,video}-short`; set `WORLDFOUNDRY_REGRESSION_INSPATIO_SCENE_ROOT` to the validation directory's `fixtures` subdirectory. Comparisons refuse mismatched release weights.
 
 Code attribution and the upstream Apache-2.0 text are centralized in `THIRD-PARTY-NOTICES`. Component weights keep their upstream terms.
+
+<ModelPaperFigures modelId="inspatio-world-1p5" locale="en" />
+
+Paper: [arXiv 2604.07209](https://arxiv.org/abs/2604.07209).
+
+Project page: [inspatio.github.io/inspatio-world-1.5](https://inspatio.github.io/inspatio-world-1.5/). Code: [inspatio/inspatio-world-v1.5](https://github.com/inspatio/inspatio-world-v1.5).
+
+<ModelCommandBuilder modelId="inspatio-world-1p5" locale="en" />
+
+## What it is for
+
+`inspatio-world-1p5` estimates scene geometry from the input views.
+
+Tasks: image-to-video, video-to-video, trajectory-conditioned video, and novel view synthesis. Aliases: `inspatio-world-v1.5` and `inspatio-world-1.5`. Modalities: image, video, and trajectory in, video out.
+
+## Runtime contract
+
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); option `seed`; artifact `inspatio-world-1p5.mp4`.
+
+CLI task profile: `default`. WorldFoundry binds `InspatioWorldV15Pipeline`. Family status: **Verified**. Defaults for `default`: seed=0.
+
+## Running in WorldFoundry
+
+Run `wf run inspatio-world-1p5 --pipeline.task-profile default` to write the geometry.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Weights: `inspatio/world-1.5`, `Wan-AI/Wan2.1-T2V-1.3B`, and `depth-anything/DA3NESTED-GIANT-LARGE-1.1`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh inspatio-world-1p5`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
+
+<ModelRelatedRecipes modelId="inspatio-world-1p5" locale="en" />

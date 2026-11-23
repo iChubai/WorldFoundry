@@ -17,15 +17,13 @@ Kandinsky 6.0 lite-pretrain 是来自 kandinskylab 的视频生成模型，支�
 
 `kandinsky6-lite-pretrain` 根据文本提示词生成视频，也可以额外用一张静态图做条件。
 
-任务：文生视频、图生视频、音视频联合生成。模态上，它接受文本、图像，输出视频。
+任务：文生视频、图生视频、音视频联合生成。模态上，它接受文本、图像，输出视频、音频。
 
 ## 运行时契约
 
-输入 `prompt`、`image`；产物 `generated_video`、`kandinsky6-lite-pretrain.mp4`。
+输入 `prompt`、`image`；产物 `kandinsky6-lite-pretrain.mp4`。
 
-CLI task profile：`text-to-video`、`image-to-video`、`audio-video-generation`、`video_generation`。绑定的 pipeline 类是 `Kandinsky6Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`text-to-video`、`image-to-video`、`audio-video-generation`、`video_generation`。绑定的 pipeline 类是 `Kandinsky6Pipeline`。系列状态：**Runner 一致性待确认**。
 
 ## 在 WorldFoundry 中运行
 

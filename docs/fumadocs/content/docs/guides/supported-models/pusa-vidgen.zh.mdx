@@ -9,9 +9,7 @@ Pusa VidGen（Pusa V1）展示了向量化时间步适配：不再让整段视�
 
 <ModelPaperFigures modelId="pusa-vidgen" locale="zh" />
 
-论文：[arXiv 2410.03160](https://arxiv.org/abs/2410.03160)。
-
-项目页：[pusav1.org](https://pusav1.org/)。代码：[Yaofang-Liu/Pusa-VidGen](https://github.com/Yaofang-Liu/Pusa-VidGen)。
+论文：[arXiv 2410.03160](https://arxiv.org/abs/2410.03160)。项目页：[pusav1.org](https://pusav1.org/)。代码：[Yaofang-Liu/Pusa-VidGen](https://github.com/Yaofang-Liu/Pusa-VidGen)。
 
 <ModelCommandBuilder modelId="pusa-vidgen" locale="zh" />
 
@@ -27,15 +25,13 @@ Pusa V1 = Wan2.2 基座（规范化去噪器、条件器、VAE、加载器与共
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `frames`、`height`、`width`、`steps`、`guidance-scale`、`seed` 等 11 项；产物 `generated_video`、`pusa_vidgen_public_runner.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `frames`、`height`、`width`、`steps`、`guidance-scale`、`seed` 等 11 项；产物 `pusa_vidgen_public_runner.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `PusaVidGenPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`default` 的默认值：frames=81, height=720, width=1280, seed=0。
+CLI task profile：`default`。绑定的 pipeline 类是 `PusaVidGenPipeline`。系列状态：**Runner 一致性待确认**。`default` 的默认值：frames=81, height=720, width=1280, steps=4, guidance-scale=1.0, seed=0。
 
 以 execute=True 调用 pipeline 即可写出 generated_video 产物。运行前请同时就位 Wan2.2 基座权重与 Pusa LoRA。
+
+需要同时就位 Wan2.2 基座 checkpoint 与 Pusa LoRA——只有 LoRA 无法运行。
 
 ## 在 WorldFoundry 中运行
 

@@ -1,17 +1,15 @@
 ---
 title: "Infinite VGGT"
-description: "Infinite VGGT（清华大学）：3D 重建、streaming-3d；Runner 一致性待确认; Streaming 4D Visual Geometry Transformer。"
+description: "Infinite VGGT（清华大学）：3D 重建、流式 3D；Runner 一致性待确认；Streaming 4D Visual Geometry Transformer。"
 modelId: "infinite-vggt"
-pageSource: authored
+pageSource: generated
 ---
 
 Infinite VGGT（StreamVGGT）把前馈重建器 VGGT 改造成流式模型：用缓存 token 因果地处理到来的帧，使重建可以无限延伸而不受固定窗口限制。
 
 <ModelPaperFigures modelId="infinite-vggt" locale="zh" />
 
-论文：[Streaming 4D Visual Geometry Transformer](https://arxiv.org/abs/2507.11539)（2025）。
-
-项目页：[wzzheng.net/StreamVGGT](https://wzzheng.net/StreamVGGT/)。代码：[wzzheng/StreamVGGT](https://github.com/wzzheng/StreamVGGT)。
+论文：[Streaming 4D Visual Geometry Transformer](https://arxiv.org/abs/2507.11539)（2025）。项目页：[wzzheng.net/StreamVGGT](https://wzzheng.net/StreamVGGT/)。代码：[wzzheng/StreamVGGT](https://github.com/wzzheng/StreamVGGT)。
 
 <ModelCommandBuilder modelId="infinite-vggt" locale="zh" />
 
@@ -21,21 +19,17 @@ Infinite VGGT（StreamVGGT）把前馈重建器 VGGT 改造成流式模型：用
 
 带缓存 token 的因果 Transformer，从 VGGT 进行知识蒸馏（见 arXiv 2507.11539）。许可为 CC-BY-NC-4.0——非商用。该模型由清华大学发布。
 
-任务：3D 重建、streaming-3d。别名：`stream-vggt`、`streamvggt`。
-
-Infinite VGGT 做流式几何重建，与视频模型 Infinite-World 无关。
+任务：3D 重建、流式 3D。别名：`stream-vggt`、`streamvggt`。
 
 ## 运行时契约
 
 输入 `input-path`（不传时使用内置示例）；参数 `output-format`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `InfiniteVGGTPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `InfiniteVGGTPipeline`。系列状态：**Runner 一致性待确认**。
 
 运行前需准备 StreamVGGT 权重。离线重建请用 VGGT；帧以流形式到达时用 Infinite VGGT。
 
-CC-BY-NC-4.0：非商用许可。
+CC-BY-NC-4.0：非商用许可。因果流式处理相对离线联合重建会累积漂移。
 
 ## 在 WorldFoundry 中运行
 

@@ -9,9 +9,7 @@ HyDRA is a camera-controlled video-to-video world model: it re-renders an input 
 
 <ModelPaperFigures modelId="hydra" locale="en" />
 
-Paper: [arXiv 2603.25716](https://arxiv.org/abs/2603.25716).
-
-Project page: [kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models](https://kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models/). Code: [H-EmbodVis/HyDRA](https://github.com/H-EmbodVis/HyDRA).
+Paper: [arXiv 2603.25716](https://arxiv.org/abs/2603.25716). Project page: [kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models](https://kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models/). Code: [H-EmbodVis/HyDRA](https://github.com/H-EmbodVis/HyDRA).
 
 <ModelCommandBuilder modelId="hydra" locale="en" />
 
@@ -21,21 +19,19 @@ Project page: [kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models](https:/
 
 HyDRA pairs its own checkpoint (H-EmbodVis/HyDRA) with the Wan2.1-T2V-1.3B base model (Wan-AI/Wan2.1-T2V-1.3B).
 
-Tasks: camera-controlled video, video-to-video, and world model. Aliases: `h-embodvis-hydra`. Modalities: video in, video out.
+Tasks: camera-controlled video, video-to-video, and world model. Aliases: `h-embodvis-hydra`. Modalities: camera pose and video in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-behavior adherence of re-rendered video).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifacts `hydra.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifact `hydra.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `HydraPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `default`: frames=77, fps=15, height=480, width=832, seed=42.
+CLI task profile: `default`. WorldFoundry binds `HydraPipeline`. Family status: **Verified**. Defaults for `default`: frames=77, fps=15, height=480, width=832, steps=50, seed=42.
 
 Bundled source is mandatory — external source checkouts are rejected. Inputs are prompt, video, and camera_json.
+
+No LICENSE in the pinned upstream revision: legal review required before downstream use. The official example looks coherent, while a separate synthetic-path artifact has a broad occlusion; quantitative camera adherence is unmeasured.
 
 ## Running in WorldFoundry
 
@@ -44,5 +40,7 @@ Generate a camera-controlled clip with `wf run hydra --pipeline.task-profile def
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `H-EmbodVis/HyDRA` and `Wan-AI/Wan2.1-T2V-1.3B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hydra`. Add `--download` to fetch missing public checkpoints.
+
+License: unknown.
 
 <ModelRelatedRecipes modelId="hydra" locale="en" />

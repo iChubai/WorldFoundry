@@ -25,7 +25,7 @@ AC3D 是 Snap Research 给 CogVideoX 的 **ControlNet 风格**相机插件：文
 
 ## 运行时契约
 
-必填 `prompt`、`video`；可选 `image`；`actions`：camera_index、camera_index_range、camera_pose_rows；产物 `ac3d.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `frames`、`height`、`width`、`annotation-json`、`stride-min`、`stride-max` 等 8 项；产物 `ac3d.mp4`。
 
 基座权重：`THUDM/CogVideoX-2b` 与 `THUDM/CogVideoX-5b`。ControlNet 就位在 `$WORLDFOUNDRY_CKPT_DIR/ac3d` 下的 `2B/checkpoint-10000.pt` 与 `5B/checkpoint-10000.pt`。其它位姿格式先转成 19 列约定。
 

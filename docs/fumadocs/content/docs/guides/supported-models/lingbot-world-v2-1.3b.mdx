@@ -1,11 +1,11 @@
 ---
 title: "LingBot-World-V2 1.3B"
-description: "Independent 1.3B causal-fast camera-controlled world model with reusable camera conditions and streaming Wan VAE."
+description: "LingBot-World-V2 1.3B from Robbyant (Ant Group): image-to-world-video, camera-controlled video, and 1 more task; Runner parity pending; dedicated env lingbot-world-v2."
 modelId: "lingbot-world-v2-1.3b"
 pageSource: authored
 ---
 
-`lingbot-world-v2-1.3b`, alias `lingbot-v2-1.3b`, is Robbyant's 30-layer, width-1536, 12-head causal-fast model. Its checkpoint and distributed defaults are independent of the 14B `lingbot-world-v2` entry.
+LingBot-World-V2 1.3B is Robbyant's causal-fast camera-controlled world model, a smaller sibling of the 14B lingbot-world-v2 with its own checkpoint and defaults.
 
 - Weights: [robbyant/lingbot-world-v2-1.3b-causal-fast](https://huggingface.co/robbyant/lingbot-world-v2-1.3b-causal-fast), revision `7e36a5f919f86cb4255cc9bfc30adb44963fbde1`.
 - Source: [Robbyant/lingbot-world-v2](https://github.com/Robbyant/lingbot-world-v2), revision `94f43115de8d4a4f9f282126528c300a0b232c5f`.
@@ -15,3 +15,37 @@ pageSource: authored
 - License: **CC-BY-NC-SA-4.0, non-commercial, attribution, share-alike**.
 
 See [Causal Wan streaming inference](/docs/guides/causal-wan-streaming) for loading, shared acceleration effects, and the Studio sensor contract.
+
+<ModelPaperFigures modelId="lingbot-world-v2-1.3b" locale="en" />
+
+<ModelCommandBuilder modelId="lingbot-world-v2-1.3b" locale="en" />
+
+## What it is for
+
+`lingbot-world-v2-1.3b` conditions video generation on camera poses.
+
+30 transformer layers, hidden width 1536, FFN width 8960 and 12 attention heads; shared Wan2.1 VAE and UMT5 text encoding. It is published by Robbyant (Ant Group).
+
+Tasks: image-to-world-video, camera-controlled video, and interactive world model. Aliases: `lingbot-v2-1.3b`. Modalities: image and camera pose in, world state and video out.
+
+## Runtime contract
+
+Inputs `image`, `prompt`, and `action-path` (bundled samples are used when omitted); options `size`, `frame-num`, `chunk-size`, `seed`, `sample-shift`, `local-attn-size`, and 6 more; artifact `lingbot-world-v2-1.3b.mp4`.
+
+CLI task profile: `image-camera-video`. WorldFoundry binds `LingBotWorldV2SmallPipeline`. Family status: **Runner parity pending**. Defaults for `image-camera-video`: size=480*832, seed=42.
+
+Offline-first. Supply shared_assets_path pointing to the Wan2.1 T5/tokenizer/VAE assets.
+
+CC BY-NC-SA 4.0 non-commercial license. Scaled INT8/FP8 attention is an explicit approximate option, not the default.
+
+## Running in WorldFoundry
+
+Generate a camera-controlled clip with `wf run lingbot-world-v2-1.3b --pipeline.task-profile image-camera-video`.
+
+It runs in the dedicated environment `lingbot-world-v2` (Python 3.10, CUDA 12.1, torch==2.5.1).
+
+Weights: `robbyant/lingbot-world-v2-1.3b-causal-fast` and `Wan-AI/Wan2.1-T2V-1.3B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world-v2-1.3b`. Add `--download` to fetch missing public checkpoints.
+
+License: CC BY-NC-SA 4.0.
+
+<ModelRelatedRecipes modelId="lingbot-world-v2-1.3b" locale="en" />

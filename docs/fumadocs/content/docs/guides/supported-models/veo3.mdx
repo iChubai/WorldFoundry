@@ -17,7 +17,7 @@ Project page: [deepmind.google/technologies/veo](https://deepmind.google/technol
 
 `veo3` runs on the provider's hosted API; no local checkpoint is needed.
 
-Tasks: text-to-video, image-to-video, and hosted api. Modalities: text and image in, video out.
+Tasks: text-to-video, image-to-video, and hosted API. Modalities: text and image in, video out.
 
 Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Standard multi-dimension quality suite for comparing hosted text/image-to-video outputs), [Physics-IQ Original](/docs/evaluation/benchmark-hub/physics-iq) (Probes whether provider-side video models respect basic physical plausibility).
 
@@ -25,13 +25,11 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Standard 
 
 Inputs `prompt` and `input-path` (bundled samples are used when omitted).
 
-CLI task profiles: `default`. WorldFoundry binds `Veo3Pipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `Veo3Pipeline`. Family status: **Runner parity pending**.
 
 Supply your own provider API key and account. No weights are downloaded and no GPU environment is provisioned locally — generation happens on the provider side, so cost, quota, and content policy follow your provider account. Veo access is provisioned through Google's AI developer offerings (e.g. the Gemini API); regional availability applies.
 
-Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+Requires a paid provider account and API key; WorldFoundry does not ship credentials. The provider controls model versioning, so outputs can change over time without any change on the WorldFoundry side. No local weights, no offline mode, and no reproducibility pinning beyond the request parameters WorldFoundry stores.
 
 ## Running in WorldFoundry
 

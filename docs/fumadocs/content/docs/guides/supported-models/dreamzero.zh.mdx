@@ -1,6 +1,6 @@
 ---
 title: "NVIDIA DreamZero"
-description: "NVIDIA DreamZero（英伟达（GEAR 实验室））：wam、world_action_model等 5 项任务；Runner 一致性待确认; 2 个 variant。"
+description: "NVIDIA DreamZero（英伟达（GEAR 实验室））：世界-动作模型（WAM）、世界-动作模型等 5 项任务；Runner 一致性待确认；2 个 variant。"
 modelId: "dreamzero"
 pageSource: authored
 ---
@@ -21,7 +21,7 @@ pageSource: authored
 
 14B 模型基于 Wan2.1-I2V-14B-480P，文本编码器为 UMT5-XXL。默认 14B 服务使用两个 CUDA rank，Wan2.2 5B 入口可单 rank 运行。checkpoint 控制的 Hydra target 被重写并限定在树内推理模块白名单内，绝不执行 checkpoint Python。该模型由英伟达（GEAR 实验室）发布。
 
-任务：wam、world_action_model、wam.world_action_modeling、机器人策略。别名：`dreamzero-droid`、`dreamzero-agibot`、`DreamZero-DROID`。同系列还有 `dreamzero-agibot`。
+任务：世界-动作模型（WAM）、世界-动作模型、世界-动作建模、机器人策略。别名：`dreamzero-droid`、`dreamzero-agibot`、`DreamZero-DROID`。同系列还有 `dreamzero-agibot`。
 
 推荐评测：[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身控制的世界-动作建模质量）。
 

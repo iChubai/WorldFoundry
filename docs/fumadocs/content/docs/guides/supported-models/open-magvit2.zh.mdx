@@ -1,6 +1,6 @@
 ---
 title: "Open-MAGVIT2"
-description: "Open-MAGVIT2（腾讯（ARC Lab））：视频分词；已验证。"
+description: "Open-MAGVIT2（腾讯（ARC Lab））：视频分词、类别条件图像生成等 3 项任务；已验证。"
 modelId: "open-magvit2"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Open-MAGVIT2 是腾讯 ARC 对 MAGVIT-v2 免查表（lookup-free）视觉分词�
 
 <ModelPaperFigures modelId="open-magvit2" locale="zh" />
 
-论文：[arXiv 2409.04410](https://arxiv.org/abs/2409.04410)。
-
-代码：[TencentARC/Open-MAGVIT2](https://github.com/TencentARC/Open-MAGVIT2)。
+论文：[arXiv 2409.04410](https://arxiv.org/abs/2409.04410)。代码：[TencentARC/Open-MAGVIT2](https://github.com/TencentARC/Open-MAGVIT2)。
 
 <ModelCommandBuilder modelId="open-magvit2" locale="zh" />
 
@@ -21,19 +19,17 @@ Open-MAGVIT2 是腾讯 ARC 对 MAGVIT-v2 免查表（lookup-free）视觉分词�
 
 包含两部分：带超大码本的免查表量化（LFQ）分词器，以及为指定 ImageNet 类别预测视觉 token 的自回归 Transformer。class_id 输入选择类别。该模型由腾讯（ARC Lab）发布。
 
-任务：视频分词、class-conditional-image-generation、autoregressive-generation。别名：`open_magvit2`、`openmagvit2`。
+任务：视频分词、类别条件图像生成、自回归生成。别名：`open_magvit2`、`openmagvit2`。
 
 ## 运行时契约
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `steps`、`class-id`、`batch-size`；产物 `open_magvit2.png`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `OpenMAGVIT2Pipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `OpenMAGVIT2Pipeline`。系列状态：**已验证**。`interactive-video` 的默认值：steps=256。
 
 请就位 TencentARC/Open-MAGVIT2 权重（apache-2.0），并用 class_id 选择 ImageNet 类别。该路径是类条件图像生成，不是提示词生成视频；视频分词是其分词器在上游支持的能力。
 
-可运行路径仅支持类条件图像生成——没有自由提示词，也没有视频输出。
+可运行路径仅支持类条件图像生成——没有自由提示词，也没有视频输出。ImageNet 类条件把主体多样性限制在 1000 个类别内。
 
 ## 在 WorldFoundry 中运行
 

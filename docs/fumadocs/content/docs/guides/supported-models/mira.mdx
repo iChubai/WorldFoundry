@@ -1,6 +1,6 @@
 ---
 title: "MIRA"
-description: "MIRA: action-conditioned world model and multiplayer game world model; Runner parity pending; dedicated `mira`."
+description: "MIRA: action-conditioned world model and multiplayer game world model; Runner parity pending; dedicated env mira."
 modelId: "mira"
 pageSource: authored
 ---
@@ -21,21 +21,19 @@ The paper is [Multiplayer Interactive World Models with Representation Autoencod
 
 Per the paper, MIRA builds multiplayer interactive world models on representation autoencoders; the code is released under apache-2.0. The local-checkpoint variant runs the Rocket Science rollout task.
 
-Tasks: action-conditioned world model and multiplayer game world model. Aliases: `mira-wm` and `multiplayer-interactive-world-model`.
+Tasks: action-conditioned world model and multiplayer game world model. Aliases: `mira-wm` and `multiplayer-interactive-world-model`. Modalities: action in, video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Multiplayer world-rollout quality).
 
 ## Runtime contract
 
-Inputs `load.checkpoint-path` and `load.dataset-path` (bundled samples are used when omitted); options `plan-only` and `timeout-seconds`; artifacts `generated_video` and `mira.mp4`.
+Inputs `load.checkpoint-path` and `load.dataset-path` (bundled samples are used when omitted); options `plan-only` and `timeout-seconds`; artifact `mira.mp4`.
 
-CLI task profiles: `rocket-science-rollout`. WorldFoundry binds `MIRAPipeline`.
-
-Family status: **Runner parity pending**.
-
-`rocket-science-rollout` defaults: seed=42.
+CLI task profile: `rocket-science-rollout`. WorldFoundry binds `MIRAPipeline`. Family status: **Runner parity pending**.
 
 The public Rocket Science dataset is about 29.24 TB and is never downloaded automatically; stage the split you need locally. Video decoding falls back to PyAV when TorchCodec is ABI-incompatible.
+
+Inference only: training and metric entrypoints are not included. The public dataset is ~29.24 TB — plan storage before staging.
 
 ## Running in WorldFoundry
 

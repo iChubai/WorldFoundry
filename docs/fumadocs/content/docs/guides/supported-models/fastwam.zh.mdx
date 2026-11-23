@@ -1,17 +1,15 @@
 ---
 title: "FastWAM"
-description: "FastWAM：wam、机器人策略等 4 项任务；已验证; 独立环境 `worldfoundry-vla-fastwam`。"
+description: "FastWAM：世界-动作模型（WAM）、机器人策略等 4 项任务；已验证；独立环境 worldfoundry-vla-fastwam。"
 modelId: "fastwam"
-pageSource: authored
+pageSource: generated
 ---
 
-FastWAM 是基于 Wan 视频栈的世界-动作模型：mixture-of-transformers（MoT）动作推理图构建在 Wan2.1-T2V-1.3B 组件之上（MIT 许可）。已用发布权重验证：LIBERO 与 RoboTwin 基础权重输出有限的 32 步动作块，独立的 LIBERO Optional IDM 权重在 idm 与 first_frame 两种模式下输出有限的 8 步动作块。
+FastWAM 是基于 Wan 视频栈的世界动作模型（MIT 许可）。已用发布权重验证：LIBERO 与 RoboTwin 基础权重输出有限的 32 步动作块，独立的 LIBERO Optional IDM 权重在 idm 与 first_frame 两种模式下输出有限的 8 步动作块。
 
 <ModelPaperFigures modelId="fastwam" locale="zh" />
 
-论文：[arXiv 2603.16666](https://arxiv.org/abs/2603.16666)。
-
-项目页：[yuantianyuan01.github.io/FastWAM](https://yuantianyuan01.github.io/FastWAM/)。代码：[yuantianyuan01/FastWAM](https://github.com/yuantianyuan01/FastWAM)。
+论文：[arXiv 2603.16666](https://arxiv.org/abs/2603.16666)。项目页：[yuantianyuan01.github.io/FastWAM](https://yuantianyuan01.github.io/FastWAM/)。代码：[yuantianyuan01/FastWAM](https://github.com/yuantianyuan01/FastWAM)。
 
 <ModelCommandBuilder modelId="fastwam" locale="zh" />
 
@@ -21,26 +19,28 @@ FastWAM 是基于 Wan 视频栈的世界-动作模型：mixture-of-transformers�
 
 发布的 MoT 动作推理图、Wan VAE、UMT5 编码器、调度器、预处理与归一化全部内置树内，无需 FastWAM 源码 checkout，也不执行远程 checkpoint 代码。
 
-任务：wam、机器人策略、策略执行、具身评测。
+任务：世界-动作模型（WAM）、机器人策略、策略执行、具身评测。
 
 推荐评测：[LIBERO](/zh/docs/evaluation/benchmark-hub/libero)（GPU 已验证的 LIBERO checkpoint 变体）、[RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin)（GPU 已验证的 RoboTwin checkpoint 变体）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `steps`、`seed`、`state`、`variant`、`head-camera`、`left-camera` 等 9 项；产物 `action_trace`、`fastwam_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `steps`、`seed`、`state`、`variant`、`head-camera`、`left-camera` 等 9 项；产物 `fastwam_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `FastWAMPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `FastWAMPipeline`。系列状态：**已验证**。`default` 的默认值：steps=10, seed=42。
 
 在运行时配置中选择 libero、libero_optional_idm 或 robotwin。Optional IDM 支持 idm（生成未来视频后预测动作）与 first_frame 模式。需在本地就位 yuanty/fastwam、Wan 系列转换 safetensors 与 Wan2.1-T2V-1.3B tokenizer。
+
+验证使用合成观测，不代表 LIBERO 或 RoboTwin 闭环任务成功。
 
 ## 在 WorldFoundry 中运行
 
 运行 `wf run fastwam --pipeline.task-profile default` 预测动作。
 
-运行环境是独立 profile `worldfoundry-vla-fastwam`（Python 3.10，CUDA 12.1+，torch>=2.2）。
+运行环境：独立环境 `worldfoundry-vla-fastwam`（Python 3.10，CUDA 12.1+，torch>=2.2）。
 
-记录的权重仓库包括 `yuanty/fastwam`、`DiffSynth-Studio/Wan-Series-Converted-Safetensors`、`Wan-AI/Wan2.1-T2V-1.3B` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh fastwam`；下载缺失的公开权重时加 `--download`。
+权重仓库：`yuanty/fastwam`、`DiffSynth-Studio/Wan-Series-Converted-Safetensors`、`Wan-AI/Wan2.1-T2V-1.3B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh fastwam`；下载缺失的公开权重时加 `--download`。
+
+许可证：MIT。
 
 <ModelRelatedRecipes modelId="fastwam" locale="zh" />

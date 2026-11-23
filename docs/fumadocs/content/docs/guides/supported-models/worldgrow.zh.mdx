@@ -9,9 +9,7 @@ WorldGrow 以扩张方式生成世界：从种子场景出发逐步生长出连�
 
 <ModelPaperFigures modelId="worldgrow" locale="zh" />
 
-论文：[arXiv 2510.21682](https://arxiv.org/abs/2510.21682)。
-
-项目页：[world-grow.github.io](https://world-grow.github.io/)。代码：[world-grow/WorldGrow](https://github.com/world-grow/WorldGrow)。
+论文：[arXiv 2510.21682](https://arxiv.org/abs/2510.21682)。项目页：[world-grow.github.io](https://world-grow.github.io/)。代码：[world-grow/WorldGrow](https://github.com/world-grow/WorldGrow)。
 
 <ModelCommandBuilder modelId="worldgrow" locale="zh" />
 
@@ -21,17 +19,15 @@ WorldGrow 以扩张方式生成世界：从种子场景出发逐步生长出连�
 
 对 TRELLIS 资产的依赖表明其以结构化 3D 隐变量生成为骨干、叠加分块场景生长。官方源码为 world-grow/WorldGrow，固定在 1f2ac49c。
 
-任务：世界生成、交互式世界模型、scene-expansion。
+任务：世界生成、交互式世界模型、场景扩展。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（可生长 3D 世界的连贯性与质量）。
 
 ## 运行时契约
 
-产物 `generated_world`、`worldgrow_runtime_plan.json`。
+产物 `worldgrow_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `WorldGrowPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `WorldGrowPipeline`。系列状态：**Runner 一致性待确认**。
 
 运行前需同时就位 WorldGrow checkpoint 与 TRELLIS 资产；就位前运行只会返回一份列出缺失资产的计划。
 
@@ -44,5 +40,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `WorldGrowPipeline`。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`UranusITS/WorldGrow`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh worldgrow`；下载缺失的公开权重时加 `--download`。
+
+许可证：manual_review:missing_root_license。
 
 <ModelRelatedRecipes modelId="worldgrow" locale="zh" />

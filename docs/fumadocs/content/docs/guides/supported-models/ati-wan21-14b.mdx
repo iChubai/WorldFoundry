@@ -23,15 +23,15 @@ ATI weights: `bytedance-research/ATI`. Base components: `Wan-AI/Wan2.1-I2V-14B-4
 
 Per the upstream release, ATI injects dense point-track conditioning into the Wan2.1 I2V backbone through a trajectory instruction module. At load time WorldFoundry combines the ATI weights (bytedance-research/ATI) with locally staged Wan2.1 I2V 480P base components. It is published by ByteDance.
 
-Tasks: camera-controlled video and image-to-video. Modalities: image in, video out.
+Tasks: camera-controlled video and image-to-video. Modalities: camera pose and image in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Evaluates trajectory/camera-motion adherence).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `ati-wan21-14b.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `ati-wan21-14b.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `ATIPipeline`.
+CLI task profile: `default`. WorldFoundry binds `ATIPipeline`.
 
 Family status: **Runner parity pending**.
 

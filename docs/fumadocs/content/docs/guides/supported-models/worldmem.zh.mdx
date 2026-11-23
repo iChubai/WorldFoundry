@@ -9,9 +9,7 @@ WorldMem 针对交互式世界模型的核心弱点——遗忘：为 Minecraft 
 
 <ModelPaperFigures modelId="worldmem" locale="zh" />
 
-论文：[WorldMem: Long-term Consistent World Simulation with Memory](https://arxiv.org/abs/2504.12369)（2025）。
-
-项目页：[worldmem.github.io](https://worldmem.github.io/)。代码：[xizaoqu/WorldMem](https://github.com/xizaoqu/WorldMem)。
+论文：[WorldMem: Long-term Consistent World Simulation with Memory](https://arxiv.org/abs/2504.12369)（2025）。项目页：[worldmem.github.io](https://worldmem.github.io/)。代码：[xizaoqu/WorldMem](https://github.com/xizaoqu/WorldMem)。
 
 <ModelCommandBuilder modelId="worldmem" locale="zh" />
 
@@ -27,11 +25,9 @@ WorldMem 针对交互式世界模型的核心弱点——遗忘：为 Minecraft 
 
 ## 运行时契约
 
-产物 `generated_video`、`worldmem_runtime_plan.json`。
+产物 `worldmem_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `WorldMemPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `WorldMemPipeline`。系列状态：**Runner 一致性待确认**。
 
 上游推理模型与数据资产就位前，运行只输出列出缺失资产的运行时计划，不会生成内容。
 

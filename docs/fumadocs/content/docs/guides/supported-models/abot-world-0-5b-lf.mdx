@@ -1,6 +1,6 @@
 ---
 title: "ABot-World-0-5B-LF"
-description: "ABot-World-0-5B-LF from Alibaba (Amap): image-to-world-video, action-conditioned video, and 1 more task; Verified; dedicated `abot-world`."
+description: "ABot-World-0-5B-LF from Alibaba (Amap): image-to-world-video, action-conditioned video, and 1 more task; Verified; dedicated env abot-world."
 modelId: "abot-world-0-5b-lf"
 pageSource: authored
 ---
@@ -25,15 +25,15 @@ Validated on an **A100**: the first action block at the official **1280×704** p
 
 The causal student uses Wan attention, a T5 text encoder, the Wan2.2 VAE, and its scheduler, with optional FP8. WorldFoundry supports causal inference and resident interactive rollout; training and the Gradio demo are not included. The checkpoint is acvlab/ABot-World-0-5B-LF (causal student). It is published by Alibaba (Amap).
 
-Tasks: image-to-world-video, action-conditioned video, and interactive world model. Aliases: `abot-world` and `abot`. Modalities: image in, world state and video out.
+Tasks: image-to-world-video, action-conditioned video, and interactive world model. Aliases: `abot-world` and `abot`. Modalities: image and action in, world state and video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (General world-model rollout quality evaluation).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `seed`, and `num-blocks`; artifacts `generated_world_video` and `abot-world.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `seed`, and `num-blocks`; artifact `abot-world.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `ABotWorldPipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `ABotWorldPipeline`.
 
 Family status: **Verified**.
 

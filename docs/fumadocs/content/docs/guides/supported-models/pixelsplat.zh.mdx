@@ -9,9 +9,7 @@ pixelSplat 在单次前向中从两张标定视图重建 3D 高斯场景（CVPR 
 
 <ModelPaperFigures modelId="pixelsplat" locale="zh" />
 
-论文：[arXiv 2312.12337](https://arxiv.org/abs/2312.12337)。
-
-项目页：[dcharatan.github.io/pixelsplat](https://dcharatan.github.io/pixelsplat)。代码：[dcharatan/pixelsplat](https://github.com/dcharatan/pixelsplat)。
+论文：[arXiv 2312.12337](https://arxiv.org/abs/2312.12337)。项目页：[dcharatan.github.io/pixelsplat](https://dcharatan.github.io/pixelsplat)。代码：[dcharatan/pixelsplat](https://github.com/dcharatan/pixelsplat)。
 
 <ModelCommandBuilder modelId="pixelsplat" locale="zh" />
 
@@ -27,13 +25,11 @@ pixelSplat 在单次前向中从两张标定视图重建 3D 高斯场景（CVPR 
 
 输入 `input-path`（不传时使用内置示例）；产物 `pixelsplat.ply`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `PixelSplatPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `PixelSplatPipeline`。系列状态：**已验证**。
 
 model_path 指向 re10k.ckpt 或 acid.ckpt，同时指定匹配的 experiment 与标定数据 dataset_roots/index_path。需安装已声明的运行依赖和本地高斯光栅化扩展。仅传图像列表时使用合成基线。PLY 导出归一化几何、DC 颜色和标准透明度 logit。
 
-支持原始卷积版本权重，不能直接替换为更新的 camera-ready 网络权重。
+支持原始卷积版本权重，不能直接替换为更新的 camera-ready 网络权重。验证覆盖每个数据集的两个场景，并非完整基准；未标定输入不能证明几何准确性。PLY 仅保留 DC 颜色，视角相关外观仍需使用原生渲染器。
 
 ## 在 WorldFoundry 中运行
 

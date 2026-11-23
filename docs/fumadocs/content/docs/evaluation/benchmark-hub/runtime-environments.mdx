@@ -7,7 +7,7 @@ description: Environment, service, checkpoint, and validated-scope summary for e
 
 The generator and the evaluator are separate runtimes. A model may generate videos in its own conda environment, exit, and hand ordinary files to a benchmark running in another environment. A benchmark must not import the candidate model or force evaluator packages into the model environment.
 
-For the 42 Video Generation and World Model entries below, `needs_new_env: false` means the WorldFoundry wrapper or result importer is expected to start from the unified environment. It does **not** mean that every official metric checkpoint, API credential, native extension, or complete dataset is already installed. `environment_id` names the executable base environment. A separate conda environment is required only when `needs_new_env: true` and a setup command are both documented.
+For the 43 Video Generation and World Model entries below, `needs_new_env: false` means the WorldFoundry wrapper or result importer is expected to start from the unified environment. It does **not** mean that every official metric checkpoint, API credential, native extension, or complete dataset is already installed. `environment_id` names the executable base environment. A separate conda environment is required only when `needs_new_env: true` and a setup command are both documented.
 
 Environment classes used below:
 
@@ -103,7 +103,7 @@ Calling `"$EVALCRAFTER_PYTHON"` directly is the environment switch; shell activa
     { name: <><a href="/docs/evaluation/benchmark-hub/memobench">MemoBench</a></>, description: <><strong>U + service/metric stack</strong>{"; Step 1 uses local metrics, while full ORS/VQA needs SAM-3 and Gemini-compatible judge access."}</>, reads: [{ label: "Verified scope", value: "Step 1 local metrics run; full ORS/VQA scoring needs SAM-3 and a Gemini-compatible judge, so Step 1 results are not full MemoBench scores." }] }
   ]} />
 
-## World model benchmarks — 12
+## World model benchmarks — 13
 
 <KvCatalog heading="Benchmark" vars rows={[
     { name: <><a href="/docs/evaluation/benchmark-hub/worldmodelbench">WorldModelBench</a></>, description: <><strong>U + metric stack</strong>{"; provide the 350-instance data root and a VILA-compatible judge checkpoint/model ID."}</>, reads: [{ label: "Verified scope", value: "Result import and manifest coverage checks are validated; full scoring needs a VILA-compatible judge checkpoint." }] },

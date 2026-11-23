@@ -1,6 +1,6 @@
 ---
 title: "Krea Realtime Video 14B"
-description: "Krea Realtime Video 14B（Krea AI）：文生视频、视频到视频等 4 项任务；Runner 一致性待确认。"
+description: "Krea Realtime Video 14B（Krea AI）：实时视频生成、文生视频等 4 项任务；Runner 一致性待确认。"
 modelId: "krea-realtime-video"
 pageSource: generated
 ---
@@ -19,7 +19,7 @@ Krea Realtime Video 14B 是 Krea AI 开源的实时/流式视频生成模型。�
 
 上游将其描述为面向实时块式生成蒸馏的 14B 自回归/流式视频模型（权重在 krea/krea-realtime-video，apache-2.0）。生成按块进行，块数由 num_blocks 控制，输入为 prompt 与可选的 video。
 
-任务：realtime-video-generation、文生视频、视频到视频、streaming-video。别名：`krea-rt-14b`。模态上，它接受文本、视频，输出视频。
+任务：实时视频生成、文生视频、视频到视频、流式视频。别名：`krea-rt-14b`。模态上，它接受文本、视频，输出视频。
 
 推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（流式文生视频输出的基础质量检查）。
 
@@ -27,13 +27,11 @@ Krea Realtime Video 14B 是 Krea AI 开源的实时/流式视频生成模型。�
 
 输入 `prompt`（不传时使用内置示例）；参数 `fps`、`height`、`width`、`seed`、`num-blocks`；产物 `krea-realtime-video.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `KreaRealtimeVideoPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`interactive-video` 的默认值：fps=16, height=480, width=832, seed=42。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `KreaRealtimeVideoPipeline`。系列状态：**Runner 一致性待确认**。`interactive-video` 的默认值：fps=16, height=480, width=832, seed=42。
 
 先把 krea/krea-realtime-video 放到本地。文生视频只需 prompt；视频到视频时再提供 video。
+
+14B 规模下要达到真正实时帧率需要数据中心级 GPU。
 
 ## 在 WorldFoundry 中运行
 

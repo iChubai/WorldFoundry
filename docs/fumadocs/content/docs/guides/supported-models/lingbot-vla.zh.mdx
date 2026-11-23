@@ -1,17 +1,15 @@
 ---
 title: "LingBot-VLA"
-description: "LingBot-VLA（蚂蚁灵波科技（Robbyant，蚂蚁集团））：视觉-语言-动作（VLA）、VLA 动作预测等 4 项任务；仅静态加载; 3 个 variant。"
+description: "LingBot-VLA（蚂蚁灵波科技（Robbyant，蚂蚁集团））：视觉-语言-动作（VLA）、VLA 动作预测等 4 项任务；仅静态加载；3 个 variant。"
 modelId: "lingbot-vla"
 pageSource: generated
 ---
 
-LingBot-VLA is Robbyant's 4B vision-language-action policy line: a pretrained base plus RoboTwin post-trained and depth-enhanced RoboTwin variants, all Apache-2.0 with pinned revisions on Hugging Face and ModelScope. WorldFoundry integrate…
+LingBot-VLA is Robbyant's 4B vision-language-action policy line: a pretrained base plus RoboTwin post-trained and depth-enhanced RoboTwin variants, all Apache-2.0 with pinned revisions on Hugging Face and ModelScope.
 
 <ModelPaperFigures modelId="lingbot-vla" locale="zh" />
 
-论文：[arXiv 2508.02317](https://arxiv.org/abs/2508.02317)。
-
-代码：[Robbyant/lingbot-vla](https://github.com/Robbyant/lingbot-vla)。
+论文：[arXiv 2508.02317](https://arxiv.org/abs/2508.02317)。代码：[Robbyant/lingbot-vla](https://github.com/Robbyant/lingbot-vla)。
 
 <ModelCommandBuilder modelId="lingbot-vla" locale="zh" />
 
@@ -27,7 +25,7 @@ LingBot-VLA is Robbyant's 4B vision-language-action policy line: a pretrained ba
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`lingbot_vla_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `lingbot_vla_action_trace.json`。
 
 CLI task profile：`default`。绑定的 pipeline 类是 `LingBotVLAPipeline`。
 

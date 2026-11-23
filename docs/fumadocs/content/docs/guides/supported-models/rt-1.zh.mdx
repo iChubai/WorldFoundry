@@ -9,9 +9,7 @@ RT-1（Robotics Transformer 1）是谷歌研究院开创性的大规模机器人
 
 <ModelPaperFigures modelId="rt-1" locale="zh" />
 
-论文：[arXiv 2212.06817](https://arxiv.org/abs/2212.06817)。
-
-项目页：[robotics-transformer.github.io](https://robotics-transformer.github.io/)。代码：[google-research/robotics_transformer](https://github.com/google-research/robotics_transformer)。
+论文：[arXiv 2212.06817](https://arxiv.org/abs/2212.06817)。项目页：[robotics-transformer.github.io](https://robotics-transformer.github.io/)。代码：[google-research/robotics_transformer](https://github.com/google-research/robotics_transformer)。
 
 <ModelCommandBuilder modelId="rt-1" locale="zh" />
 
@@ -21,19 +19,17 @@ RT-1（Robotics Transformer 1）是谷歌研究院开创性的大规模机器人
 
 EfficientNet-B3 图像 token 化配 FiLM 语言条件、TokenLearner 压缩与 decoder-only transformer，输出离散化动作 token——以 TensorFlow SavedModel 提供。该模型由谷歌研究院（Google Research）发布。
 
-任务：视觉-语言-动作（VLA）、VLA 策略执行、机器人策略、robotics_transformer。别名：`rt1`、`robotics-transformer`。
+任务：视觉-语言-动作（VLA）、VLA 策略执行、机器人策略、机器人 Transformer。别名：`rt1`、`robotics-transformer`。
 
 ## 运行时契约
 
 必填 `input-path`、`language-embedding`；输入 `prompt`（不传时使用内置示例）；参数 `plan-only`；产物 `rt1_action_trace.json`。
 
-CLI task profile：`vla`。绑定的 pipeline 类是 `RT1Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`vla`。绑定的 pipeline 类是 `RT1Pipeline`。系列状态：**Runner 一致性待确认**。
 
 传入图像、指令以及由兼容编码器生成的 512 维 language_embedding。发布的 SavedModel 不会自行把指令文本编码成该向量；WorldFoundry 对只有文本的推理明确报错，不会默默使用零向量。GPU 推理需要兼容的 TensorFlow/CuDNN 环境。
 
-仅输入文本还需要另行准备与 checkpoint 兼容的语言编码器；离线动作结构验证不代表任务成功。
+仅输入文本还需要另行准备与 checkpoint 兼容的语言编码器；离线动作结构验证不代表任务成功。未列出许可证。
 
 ## 在 WorldFoundry 中运行
 

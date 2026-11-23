@@ -1,6 +1,6 @@
 ---
 title: "WonderJourney"
-description: "WonderJourney from Stanford University / Google: 3D world generation, scene expansion, and 1 more task; Runner parity pending; dedicated `wonderworld`."
+description: "WonderJourney from Stanford University / Google: 3D world generation, scene expansion, and 1 more task; Runner parity pending; dedicated env wonderworld."
 modelId: "wonderjourney"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ WonderJourney generates a journey: starting from text or an image, it produces a
 
 <ModelPaperFigures modelId="wonderjourney" locale="en" />
 
-Paper: [WonderJourney: Going from Anywhere to Everywhere](https://arxiv.org/abs/2312.03884) (2023).
-
-Project page: [kovenyu.com/WonderJourney](https://kovenyu.com/WonderJourney/). Code: [KovenYu/WonderJourney](https://github.com/KovenYu/WonderJourney).
+Paper: [WonderJourney: Going from Anywhere to Everywhere](https://arxiv.org/abs/2312.03884) (2023). Project page: [kovenyu.com/WonderJourney](https://kovenyu.com/WonderJourney/). Code: [KovenYu/WonderJourney](https://github.com/KovenYu/WonderJourney).
 
 <ModelCommandBuilder modelId="wonderjourney" locale="en" />
 
@@ -27,11 +25,9 @@ Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (S
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `config` and `python-executable`; artifacts `generated_world` and `wonderjourney.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `config` and `python-executable`; artifact `wonderjourney.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `WonderJourneyPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `WonderJourneyPipeline`. Family status: **Runner parity pending**.
 
 Stage the upstream assets (depth, inpainting, LLM access) locally before generating journeys; without them a run produces only a plan.
 

@@ -9,9 +9,7 @@ InSpatio-WorldFM is a 3D world foundation model for spatial intelligence and fra
 
 <ModelPaperFigures modelId="worldfm" locale="en" />
 
-Paper: [arXiv 2603.11911](https://arxiv.org/abs/2603.11911).
-
-Project page: [inspatio.github.io/worldfm](https://inspatio.github.io/worldfm). Code: [inspatio/worldfm](https://github.com/inspatio/worldfm).
+Paper: [arXiv 2603.11911](https://arxiv.org/abs/2603.11911). Project page: [inspatio.github.io/worldfm](https://inspatio.github.io/worldfm). Code: [inspatio/worldfm](https://github.com/inspatio/worldfm).
 
 <ModelCommandBuilder modelId="worldfm" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (U
 
 ## Runtime contract
 
-Inputs `input-path`, `prompt`, and `meta-path` (bundled samples are used when omitted); options `fps`, `panorama-path`, and `save-mode`; artifacts `generated_world` and `worldfm.mp4`.
+Inputs `input-path`, `prompt`, and `meta-path` (bundled samples are used when omitted); options `fps`, `panorama-path`, and `save-mode`; artifact `worldfm.mp4`.
 
-CLI task profiles: `official-meta-demo`. WorldFoundry binds `WorldFMPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `official-meta-demo`: fps=30.
+CLI task profile: `official-meta-demo`. WorldFoundry binds `WorldFMPipeline`. Family status: **Verified**. Defaults for `official-meta-demo`: fps=30.
 
 Drive runs through the official meta.json demo format with local WorldFM assets staged.
+
+Validation covers the runner path and artifact structure, not output quality.
 
 ## Running in WorldFoundry
 

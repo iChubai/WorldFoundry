@@ -9,9 +9,7 @@ Show-o (Xie et al., Show Lab at NUS with ByteDance, arXiv 2408.12528) is a singl
 
 <ModelPaperFigures modelId="show-o" locale="en" />
 
-Paper: [Show-o: One Single Transformer to Unify Multimodal Understanding and Generation](https://arxiv.org/abs/2408.12528) (ICLR 2025, 2024).
-
-Project page: [showlab.github.io/Show-o](https://showlab.github.io/Show-o/). Code: [showlab/Show-o](https://github.com/showlab/Show-o).
+Paper: [Show-o: One Single Transformer to Unify Multimodal Understanding and Generation](https://arxiv.org/abs/2408.12528) (ICLR 2025, 2024). Project page: [showlab.github.io/Show-o](https://showlab.github.io/Show-o/). Code: [showlab/Show-o](https://github.com/showlab/Show-o).
 
 <ModelCommandBuilder modelId="show-o" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: multimodal generation and text-to-image. Aliases: `show_o` and `showo`. M
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `guidance-scale`, `mode`, `generation-timesteps`, and `resolution`; artifacts `show_o.png`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `guidance-scale`, `mode`, `generation-timesteps`, and `resolution`; artifact `show_o.png`.
 
-CLI task profiles: `default`. WorldFoundry binds `ShowOPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `ShowOPipeline`. Family status: **Verified**. Defaults for `default`: guidance-scale=1.0.
 
 WorldFoundry runs T2I only — set mode accordingly and expect a generated_image artifact. Paper-default resolution is 256; the wrapper uses classifier-free guidance (default 3.0) and 18 discrete-diffusion steps. Weights are MIT at showlab/show-o, with showlab/magvitv2 (MAGVIT-v2) and microsoft/phi-1_5 as companion weights.
 
-Only text-to-image is available; understanding (MMU), inpainting, and extrapolation are not.
+Only text-to-image is available; understanding (MMU), inpainting, and extrapolation are not. Show-o produces images, not video. The published default is a 1.3B Phi-1.5 model at 256px discrete tokens, not a video backbone.
 
 ## Running in WorldFoundry
 

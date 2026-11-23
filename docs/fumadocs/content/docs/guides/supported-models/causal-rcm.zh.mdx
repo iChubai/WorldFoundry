@@ -1,6 +1,6 @@
 ---
 title: "Causal-rCM"
-description: "Causal-rCM（英伟达（NVIDIA））：交互式世界模型、文生视频等 5 项任务；Runner 一致性待确认; 独立环境 `causal-rcm`。"
+description: "Causal-rCM（英伟达（NVIDIA））：自回归视频生成、流式视频生成等 5 项任务；Runner 一致性待确认；独立环境 causal-rcm。"
 modelId: "causal-rcm"
 pageSource: authored
 ---
@@ -25,13 +25,13 @@ Causal-rCM 把英伟达的 rCM 一致性蒸馏应用于因果视频生成：以�
 
 按论文（arXiv 2510.08431），rCM 在连续时间一致性蒸馏中加入分数正则化，实现少步采样。因果版本在块因果注意力掩码下逐 chunk 去噪潜帧；其掩码与 chunk 调度与上游一致。该模型由英伟达（NVIDIA）发布。
 
-任务：autoregressive-video-generation、streaming-video-generation、交互式世界模型、文生视频。别名：`rcm`、`causal_rcm`、`rcm-causal`、`causal-rcm-wan2.1`。模态上，它接受文本、图像，输出视频。
+任务：自回归视频生成、流式视频生成、交互式世界模型、文生视频。别名：`rcm`、`causal_rcm`、`rcm-causal`、`causal-rcm-wan2.1`。模态上，它接受文本、图像，输出视频。
 
 推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（流式文/图生视频的质量评测）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`steps`、`seed`、`plan-only`、`timeout-seconds`、`model-size` 等 12 项；产物 `generated_world`、`generated_video`、`causal-rcm.mp4`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`steps`、`seed`、`plan-only`、`timeout-seconds`、`model-size` 等 12 项；产物 `causal-rcm.mp4`。
 
 CLI task profile：`default`。绑定的 pipeline 类是 `CausalRCMPipeline`。
 

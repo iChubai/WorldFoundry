@@ -1,17 +1,15 @@
 ---
 title: "LingBot-World Base Act"
-description: "Robbyant 的动作条件世界视频模型，由动作矩阵驱动。"
+description: "LingBot-World Base Act（蚂蚁灵波科技（Robbyant，蚂蚁集团））：交互式世界模型、动作条件视频；已验证。"
 modelId: "lingbot-world-act"
-pageSource: authored
+pageSource: generated
 ---
 
 LingBot-World Base Act 是 LingBot-World 的动作条件同门：它消费动作矩阵而非相机位姿，是该家族的交互控制档案。它加载官方 Base-Act 预览 checkpoint，而不是 Base-Cam。
 
 <ModelPaperFigures modelId="lingbot-world-act" locale="zh" />
 
-论文：[arXiv 2601.20540](https://arxiv.org/abs/2601.20540)。
-
-项目页：[technology.robbyant.com/lingbot-world](https://technology.robbyant.com/lingbot-world)。代码：[robbyant/lingbot-world](https://github.com/robbyant/lingbot-world)。
+论文：[arXiv 2601.20540](https://arxiv.org/abs/2601.20540)。项目页：[technology.robbyant.com/lingbot-world](https://technology.robbyant.com/lingbot-world)。代码：[robbyant/lingbot-world](https://github.com/robbyant/lingbot-world)。
 
 <ModelCommandBuilder modelId="lingbot-world-act" locale="zh" />
 
@@ -21,7 +19,7 @@ LingBot-World Base Act 是 LingBot-World 的动作条件同门：它消费动作
 
 推理路径复用树内 LingBot 运行时与中央 Wan 基座模块（apache-2.0）。输入为提示词、图像、位姿与 action_matrix。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
-任务：交互式世界模型、动作条件视频。
+任务：交互式世界模型、动作条件视频。模态上，它接受动作，输出视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（动作条件世界滚动生成质量）。
 
@@ -29,20 +27,20 @@ LingBot-World Base Act 是 LingBot-World 的动作条件同门：它消费动作
 
 输入 `prompt`、`image`、`pose`、`action-matrix`；产物 `lingbot-world-act.mp4`。
 
-CLI task profile：`interactive-world-model`、`action-conditioned-video`、`world_model`。绑定的 pipeline 类是 `LingBotPipeline`。
+CLI task profile：`interactive-world-model`、`action-conditioned-video`、`world_model`。绑定的 pipeline 类是 `LingBotPipeline`。系列状态：**已验证**。
 
-已用 Base-Act 预览权重验证：公开 runner 在专属 LingBot 环境中，使用官方猫图和前进 WASD 动作生成 17 帧、8 步片段（544 × 720，16 fps）。动作贴合度尚未测量。
+已用 Base-Act 预览权重验证：公开 runner 在专属 LingBot 环境中，根据一张图像和前进 WASD 动作矩阵生成 17 帧、8 步的视频（544×720，16 fps）。
 
-官方完整长度的品质与动作贴合度仍待评测。
+仅验证了 17 帧、8 步配置；动作贴合度与官方 161 帧配方尚未测试。必须在专属 LingBot 环境运行；统一环境下 act2cam 输出近黑画面。
 
 ## 在 WorldFoundry 中运行
 
 运行 `wf run lingbot-world-act --pipeline.task-profile interactive-world-model` 推演世界模型。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
 
-使用专属 `lingbot-world` 环境（Python 3.10、CUDA 12.1）；统一环境下 act2cam 输出近黑画面。
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`robbyant/lingbot-world-base-act-preview`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lingbot-world-act`；下载缺失的公开权重时加 `--download`。
 
-官方 161 帧配方尚未验证。
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="lingbot-world-act" locale="zh" />

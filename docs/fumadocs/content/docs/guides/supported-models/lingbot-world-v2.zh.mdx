@@ -1,6 +1,6 @@
 ---
 title: "LingBot-World-V2"
-description: "LingBot-World-V2（蚂蚁灵波科技）：image-to-world-video、相机可控视频；独立环境 `lingbot-world-v2`。"
+description: "LingBot-World-V2（蚂蚁灵波科技（Robbyant，蚂蚁集团））：图像生成世界视频、相机可控视频等 3 项任务；Runner 一致性待确认；独立环境 lingbot-world-v2。"
 modelId: "lingbot-world-v2"
 pageSource: authored
 ---
@@ -21,13 +21,13 @@ LingBot-World-V2（别名 lingbot-world-infinity）是蚂蚁灵波世界模型�
 
 使用 WorldFoundry 共享的 Wan、T5、VAE、调度器、FSDP 与媒体组件。仅包含已发布的 causal-fast 路径；不包含训练与未发布的 causal-pretrain、双向路径。checkpoint 为 robbyant/lingbot-world-v2-14b-causal-fast。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
-任务：image-to-world-video、相机可控视频、交互式世界模型。别名：`lingbot-world-infinity`、`lingbot-v2`。模态上，它接受图像，输出世界状态、视频。
+任务：图像生成世界视频、相机可控视频、交互式世界模型。别名：`lingbot-world-infinity`、`lingbot-v2`。模态上，它接受图像、相机位姿，输出世界状态、视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（世界滚动生成的相机控制贴合度）、[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（世界滚动生成的总体质量）。
 
 ## 运行时契约
 
-输入 `image`、`prompt`、`action-path`（不传时使用内置示例）；参数 `size`、`frame-num`、`chunk-size`、`seed`、`sample-shift`、`local-attn-size` 等 12 项；产物 `generated_world_video`、`lingbot-world-v2.mp4`。
+输入 `image`、`prompt`、`action-path`（不传时使用内置示例）；参数 `size`、`frame-num`、`chunk-size`、`seed`、`sample-shift`、`local-attn-size` 等 12 项；产物 `lingbot-world-v2.mp4`。
 
 CLI task profile：`image-camera-video`。绑定的 pipeline 类是 `LingBotWorldV2Pipeline`。
 

@@ -9,9 +9,7 @@ InSpatio-World is a 1.3B video-conditioned world generator: given a video and a 
 
 <ModelPaperFigures modelId="inspatio-world" locale="en" />
 
-Paper: [arXiv 2604.07209](https://arxiv.org/abs/2604.07209).
-
-Project page: [inspatio.github.io/inspatio-world](https://inspatio.github.io/inspatio-world/). Code: [inspatio/inspatio-world](https://github.com/inspatio/inspatio-world). Code: [madebyollin/taehv](https://github.com/madebyollin/taehv).
+Paper: [arXiv 2604.07209](https://arxiv.org/abs/2604.07209). Project page: [inspatio.github.io/inspatio-world](https://inspatio.github.io/inspatio-world/). Code: [inspatio/inspatio-world](https://github.com/inspatio/inspatio-world). Code: [madebyollin/taehv](https://github.com/madebyollin/taehv).
 
 <ModelCommandBuilder modelId="inspatio-world" locale="en" />
 
@@ -21,17 +19,15 @@ Use `inspatio-world` for feed-forward 3D reconstruction from the input views.
 
 The checkpoint is inspatio/world (apache-2.0), used with the Wan2.1-T2V-1.3B base, Depth Anything 3 for geometry reconstruction, and Florence-2-large for video captioning. An optional use_tae path loads taew2_1.pth from the shared checkpoint root; the default Wan VAE path does not need it.
 
-Tasks: video-conditioned world generation, trajectory-conditioned video, and novel view synthesis. Aliases: `inspatio-world-1.3b`.
+Tasks: video-conditioned world generation, trajectory-conditioned video, and novel view synthesis. Aliases: `inspatio-world-1.3b`. Modalities: trajectory in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Trajectory-following accuracy of generated views).
 
 ## Runtime contract
 
-Required `input-path`; inputs `prompt` (bundled samples are used when omitted); options `skip-step1`, `skip-step2`, and `skip-step3`; artifacts `inspatio-world.mp4`.
+Required `input-path`; input `prompt` (bundled samples are used when omitted); options `skip-step1`, `skip-step2`, and `skip-step3`; artifact `inspatio-world.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `InspatioWorldPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `InspatioWorldPipeline`. Family status: **Verified**.
 
 All default components load from local checkpoint storage only: stage inspatio/world, Wan-AI/Wan2.1-T2V-1.3B, depth-anything/DA3NESTED-GIANT-LARGE-1.1, and microsoft/Florence-2-large before running.
 

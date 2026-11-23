@@ -19,21 +19,19 @@ Project page: [oasis-model.github.io](https://oasis-model.github.io/). Code: [et
 
 Per the upstream release, a ViT VAE compresses frames and a 500M diffusion transformer generates the next frame conditioned on past frames and actions (MIT license). It is published by Etched / Decart.
 
-Tasks: interactive world model, minecraft world model, and action-conditioned video. Aliases: `open-oasis` and `oasis`.
+Tasks: interactive world model, minecraft world model, and action-conditioned video. Aliases: `open-oasis` and `oasis`. Modalities: action in, video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Action-conditioned game-world rollout quality).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `plan-only`, `timeout-seconds`, and `ddim-steps`; artifacts `oasis-500m.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `plan-only`, `timeout-seconds`, and `ddim-steps`; artifact `oasis-500m.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `Oasis500MPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `interactive-video`: frames=32, fps=20.
+CLI task profile: `interactive-video`. WorldFoundry binds `Oasis500MPipeline`. Family status: **Verified**. Defaults for `interactive-video`: frames=32, fps=20.
 
 Supply 25-column action tensors in the official Open-Oasis format. The upstream converter maps cameraX from MineRL camera[0] and cameraY from camera[1], then normalizes each as (raw-40)/40. MineRL defines camera[0] as vertical pitch and camera[1] as horizontal yaw, so cameraX is pitch despite its name. Sources: https://github.com/etched-ai/open-oasis/blob/f59deef2c019c212bd0c5a3a5b986a51f3701847/utils.py and https://github.com/minerllabs/minerl/blob/cdeae668c2f334e3c9117adf651b5a94436b45f8/minerl/herobraine/hero/handlers/agent/actions/camera.py. Set WORLDFOUNDRY_CKPT_DIR to the directory containing Etched--oasis-500m when using local weights.
+
+500M research model: short-horizon drift and low resolution versus commercial demos.
 
 ## Running in WorldFoundry
 

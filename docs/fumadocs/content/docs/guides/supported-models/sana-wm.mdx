@@ -1,6 +1,6 @@
 ---
 title: "SANA-WM"
-description: "SANA-WM from NVIDIA: world model, camera-controlled video, and 1 more task; Runner parity pending; dedicated `sana`."
+description: "SANA-WM from NVIDIA: world model, camera-controlled video, and 1 more task; Runner parity pending; dedicated env sana."
 modelId: "sana-wm"
 pageSource: authored
 ---
@@ -31,9 +31,9 @@ SANA-WM is a separate model from [SANA](/docs/guides/supported-models/sana). Sco
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `guidance-scale`, `seed`, `window-frames`, and `step`; artifacts `sana-wm-streaming.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `guidance-scale`, `seed`, `window-frames`, and `step`; artifact `sana-wm-streaming.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `SanaWMPipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `SanaWMPipeline`.
 
 Family status: **Runner parity pending**.
 

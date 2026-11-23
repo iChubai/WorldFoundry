@@ -21,7 +21,7 @@ Project page: [amirbar.net/nwm](https://www.amirbar.net/nwm/). Code: [facebookre
 
 Per the upstream release, a Conditional Diffusion Transformer (CDiT) scales to 1B parameters and conditions on action and time embeddings for egocentric prediction (checkpoints at facebook/nwm, CC-BY-NC-4.0). It is published by Meta AI (FAIR).
 
-Tasks: navigation world model, action-conditioned video, and egocentric video generation. Aliases: `navigation-world-models`, `nwm-recon`, and `nwm-scand`. Output modalities: video. Other variants: `nwm-scand`.
+Tasks: navigation world model, action-conditioned video, and egocentric video generation. Aliases: `navigation-world-models`, `nwm-recon`, and `nwm-scand`. Modalities: action in, video out. Other variants: `nwm-scand`.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Navigation world-rollout quality).
 
@@ -31,7 +31,7 @@ NWM predicts egocentric future video from past frames plus navigation actions. P
 
 Artifacts `nwm.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `NWMPipeline`.
+CLI task profile: `default`. WorldFoundry binds `NWMPipeline`.
 
 Start with `nwm-recon`. The family has 2 variants, selectable in the command builder above: `nwm-recon` (`navigation-world-model`) — Planned; `nwm-scand` (`navigation-world-model`) — Planned. Family status: **Runner parity pending**.
 

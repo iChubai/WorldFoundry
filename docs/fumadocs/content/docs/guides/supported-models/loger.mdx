@@ -9,9 +9,7 @@ LoGeR reconstructs 3D scenes, camera trajectories, and point clouds from input v
 
 <ModelPaperFigures modelId="loger" locale="en" />
 
-Paper: [arXiv 2603.03269](https://arxiv.org/abs/2603.03269).
-
-Project page: [LoGeR-project.github.io](https://LoGeR-project.github.io/). Code: [Junyi42/LoGeR](https://github.com/Junyi42/LoGeR).
+Paper: [arXiv 2603.03269](https://arxiv.org/abs/2603.03269). Project page: [LoGeR-project.github.io](https://LoGeR-project.github.io/). Code: [Junyi42/LoGeR](https://github.com/Junyi42/LoGeR).
 
 <ModelCommandBuilder modelId="loger" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: 3D reconstruction, trajectory, and point cloud. Output modalities: point 
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `interval`; artifacts `result.ply`.
+Input `input-path` (bundled samples are used when omitted); option `interval`; artifact `result.ply`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `LoGeRPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `interactive-video`. WorldFoundry binds `LoGeRPipeline`. Family status: **Verified**.
 
 Runs in the shared worldfoundry-unified-cu128 environment; the exported point clouds can feed point-cloud navigation pipelines.
 
@@ -40,5 +36,7 @@ Run `wf run loger --pipeline.task-profile interactive-video` to write the geomet
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `Junyi42/LoGeR`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh loger`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="loger" locale="en" />

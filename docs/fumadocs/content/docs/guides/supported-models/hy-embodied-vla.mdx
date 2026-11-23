@@ -9,9 +9,7 @@ Hy-Embodied-0.5-VLA is Tencent Hunyuan's bimanual manipulation VLA, released as 
 
 <ModelPaperFigures modelId="hy-embodied-vla" locale="en" />
 
-Paper: [arXiv 2606.14409](https://arxiv.org/abs/2606.14409).
-
-Code: [Tencent-Hunyuan/Hy-Embodied-0.5-VLA](https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA).
+Paper: [arXiv 2606.14409](https://arxiv.org/abs/2606.14409). Code: [Tencent-Hunyuan/Hy-Embodied-0.5-VLA](https://github.com/Tencent-Hunyuan/Hy-Embodied-0.5-VLA).
 
 <ModelCommandBuilder modelId="hy-embodied-vla" locale="en" />
 
@@ -27,9 +25,9 @@ Suggested benchmarks: [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) (G
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `state`, `variant`, `state-format`, `blend-mode`, `history-size`, `replicate-single-image`, and 2 more; artifacts `action_trace` and `hy_embodied_vla_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `state`, `variant`, `state-format`, `blend-mode`, `history-size`, `replicate-single-image`, and 2 more; artifact `hy_embodied_vla_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `HyEmbodiedVLAPipeline`.
+CLI task profile: `default`. WorldFoundry binds `HyEmbodiedVLAPipeline`.
 
 Start with `hy-embodied-vla-umi`. The family has 2 variants, selectable in the command builder above: `hy-embodied-vla-umi` (`vla.policy_rollout`) — Verified; `hy-embodied-vla-robotwin` (`vla.policy_rollout`) — Verified. Family status: **Verified**.
 

@@ -1,6 +1,6 @@
 ---
 title: "LingBot-VA"
-description: "LingBot-VA from Robbyant (Ant Group): VLA, va, and 6 more tasks; Runner parity pending; 3 variants."
+description: "LingBot-VA from Robbyant (Ant Group): VLA, VA, and 6 more tasks; Runner parity pending; 3 variants."
 modelId: "lingbot-va"
 pageSource: authored
 ---
@@ -9,9 +9,7 @@ LingBot-VA is Robbyant's video-action model, served through a vendored server/cl
 
 <ModelPaperFigures modelId="lingbot-va" locale="en" />
 
-Paper: [arXiv 2601.21998](https://arxiv.org/abs/2601.21998).
-
-Code: [Robbyant/lingbot-va](https://github.com/Robbyant/lingbot-va).
+Paper: [arXiv 2601.21998](https://arxiv.org/abs/2601.21998). Code: [Robbyant/lingbot-va](https://github.com/Robbyant/lingbot-va).
 
 <ModelCommandBuilder modelId="lingbot-va" locale="en" />
 
@@ -21,15 +19,15 @@ Code: [Robbyant/lingbot-va](https://github.com/Robbyant/lingbot-va).
 
 A transformer video-action backbone. The provided configs set attn_mode=torch, and the vendored server is launched with --checkpoint-dir pointing at the chosen checkpoint. It is published by Robbyant (Ant Group).
 
-Tasks: VLA, va, vam, and WAM. Aliases: `lingbot_va`, `lingbot-va-base`, `lingbot-va-posttrain-robotwin`, and `lingbot-va-posttrain-libero-long`. Other variants: `lingbot-va-posttrain-robotwin`, `lingbot-va-posttrain-libero-long`.
+Tasks: VLA, VA, VAM, and WAM. Aliases: `lingbot_va`, `lingbot-va-base`, `lingbot-va-posttrain-robotwin`, and `lingbot-va-posttrain-libero-long`. Other variants: `lingbot-va-posttrain-robotwin`, `lingbot-va-posttrain-libero-long`.
 
 Suggested benchmarks: [LIBERO](/docs/evaluation/benchmark-hub/libero) (A LIBERO-Long post-trained checkpoint is available), [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) (A RoboTwin post-trained checkpoint is available).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `lingbot_va_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `lingbot_va_action_trace.json`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `LingBotVAPipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `LingBotVAPipeline`.
 
 Start with `lingbot-va-base`. The family has 3 variants, selectable in the command builder above: `lingbot-va-base` (`vam.video_action_modeling`) — Runner parity pending; `lingbot-va-posttrain-robotwin` (`vla.policy_rollout`) — Runner parity pending; `lingbot-va-posttrain-libero-long` (`vla.policy_rollout`) — Runner parity pending. Family status: **Runner parity pending**.
 

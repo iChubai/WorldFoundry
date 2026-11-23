@@ -1,17 +1,15 @@
 ---
 title: "H-RDT"
-description: "H-RDT：视觉-语言-动作（VLA）、human_motion_policy等 4 项任务；仅静态加载; 独立环境 `worldfoundry-vla-h-rdt`。"
+description: "H-RDT：视觉-语言-动作（VLA）、人体运动策略等 4 项任务；仅静态加载；独立环境 worldfoundry-vla-h-rdt。"
 modelId: "h-rdt"
-pageSource: authored
+pageSource: generated
 ---
 
 H-RDT（Human-to-Robotics Diffusion Transformer）先在大规模人类操作数据上预训练扩散 transformer 策略，再做机器人微调（论文：arXiv 2507.23523，MPL-2.0）。官方发布为 48 维人体动作预训练 checkpoint（embodiedfoundation/H-RDT）。
 
 <ModelPaperFigures modelId="h-rdt" locale="zh" />
 
-论文：[H-RDT: Human Manipulation Enhanced Bimanual Robotic Manipulation](https://arxiv.org/abs/2507.23523)（2025）。
-
-项目页：[embodiedfoundation.github.io/hrdt](https://embodiedfoundation.github.io/hrdt/)。代码：[HongzheBi/H_RDT](https://github.com/HongzheBi/H_RDT)。
+论文：[H-RDT: Human Manipulation Enhanced Bimanual Robotic Manipulation](https://arxiv.org/abs/2507.23523)（2025）。项目页：[embodiedfoundation.github.io/hrdt](https://embodiedfoundation.github.io/hrdt/)。代码：[HongzheBi/H_RDT](https://github.com/HongzheBi/H_RDT)。
 
 <ModelCommandBuilder modelId="h-rdt" locale="zh" />
 
@@ -21,15 +19,13 @@ H-RDT（Human-to-Robotics Diffusion Transformer）先在大规模人类操作数
 
 扩散 transformer 配 flow-matching 采样；视觉用 DINOv2 加 SigLIP，语言可选 T5。官方 checkpoint 按参数名严格匹配加载。
 
-任务：视觉-语言-动作（VLA）、human_motion_policy、VLA 策略执行、robot_policy_finetune。别名：`h_rdt`、`embodiedfoundation/h-rdt`。
+任务：视觉-语言-动作（VLA）、人体运动策略、VLA 策略执行、机器人策略微调。别名：`h_rdt`、`embodiedfoundation/h-rdt`。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`h_rdt_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `h_rdt_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `HRDTSynthesis`。
-
-系列状态：**仅静态加载**。
+CLI task profile：`default`。绑定的 pipeline 类是 `HRDTSynthesis`。系列状态：**仅静态加载**。
 
 集成仅覆盖推理；不包含训练、数据集、ROS、机器人驱动与模拟器客户端。
 
@@ -39,8 +35,10 @@ CLI task profile：`default`。绑定的 pipeline 类是 `HRDTSynthesis`。
 
 运行 `wf run h-rdt --pipeline.task-profile default` 预测动作。
 
-运行环境是独立 profile `worldfoundry-vla-h-rdt`（Python 3.10，CUDA 12.1 或更新版本，torch>=2.2）。
+运行环境：独立环境 `worldfoundry-vla-h-rdt`（Python 3.10，CUDA 12.1+，torch>=2.2）。
 
 权重仓库：`embodiedfoundation/H-RDT`、`google/t5-v1_1-xxl`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh h-rdt`；下载缺失的公开权重时加 `--download`。
+
+许可证：mpl-2.0。
 
 <ModelRelatedRecipes modelId="h-rdt" locale="zh" />

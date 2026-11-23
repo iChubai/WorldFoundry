@@ -17,7 +17,7 @@ Wan shifted trajectory 是 canonical 实现，flow UniPC/DPM++ 只在 `scheduler
 
 Sana image、video、streaming、ControlNet 与 SANA-WM variant 和其他 diffusion family 共用同一套 role-based package。Checkpoint-shaped network math 位于 `models/networks/sana`，DC-AE 位于 `models/autoencoders/sana`，conditioning 位于 `models/encoders/sana`，构造逻辑属于 recipe 与 scheduler。其 Wan VAE variant 使用框架无关 adapter，不继承 Diffusers mixin。Shape、volume、configuration filtering、state-dict prefix 与 Triton autotune helper 来自 `worldfoundry/core`。
 
-## Wan family
+## Wan 系列
 
 `wan2.1-t2v-1.3b` 是参考内置 native recipe。UMT5 conditioner、tokenizer resource、DiT、latent initializer、shifted Euler scheduler 和 VAE decoder 全部由 standard strategy 装配。Checkpoint resolver 会先请求 `worldfoundry/core` 解析本地 staged Hub snapshot，找不到时才执行 filtered Hub materialization；revision 与 required files 始终保持 declarative。本地 checkpoint 结构验证确认 DiT（825）、text encoder（242）和 VAE（194）全部逐键匹配。该 recipe 的 CUDA artifact parity 仍是独立 release gate。
 
@@ -66,7 +66,7 @@ Vid2World dataset adapter 属于其 synthesis 包 `synthesis/visual_generation/v
 - **Dynamicrafter、MotionCtrl** — 共享 role-based component。现有 synthesis adapter 保留各自产品行为，同时 import 同一组 LVDM component。
 - **Vid2World** — 共享 component + 显式扩展。其改造的 latent diffusion network、UNet、attention、DDIM sampler 与 KV cache 作为命名 role component；dataset 仍归 synthesis。
 
-### Guard rails
+### 防护边界（Guard Rails）
 
 对每个 LVDM 衍生集成：
 

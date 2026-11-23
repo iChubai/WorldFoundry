@@ -1,6 +1,6 @@
 ---
 title: "AlayaWorld v1.1"
-description: "AlayaWorld v1.1 from AlayaLab: image-to-video, camera-controlled video, and 1 more task; Runner parity pending; dedicated `alayaworld-v1.1`."
+description: "AlayaWorld v1.1 from AlayaLab: image-to-video, camera-controlled video, and 1 more task; Runner parity pending; dedicated env alayaworld-v1.1."
 modelId: "alayaworld-v1.1"
 pageSource: generated
 ---
@@ -19,26 +19,26 @@ Code: [AlayaLab/AlayaWorld](https://github.com/AlayaLab/AlayaWorld).
 
 Inference-only rollout methods from the pinned upstream run with WorldFoundry checkpoint/LoRA loaders, the LTX VAE, Gemma text encoding, and the Alaya history encoder. The Alaya transformer extension and ViGeo geometry come from the pinned AlayaWorld source checkout. It is published by AlayaLab.
 
-Tasks: image-to-video, camera-controlled video, and interactive world model. Aliases: `alayaworld-v11` and `alaya-world-v1.1`. Modalities: image in, video out.
+Tasks: image-to-video, camera-controlled video, and interactive world model. Aliases: `alayaworld-v11` and `alaya-world-v1.1`. Modalities: image and camera pose in, video out.
 
 ## Runtime contract
 
-Required `input-path`, `load.base-checkpoint`, `load.gemma-path`, and `load.vigeo-checkpoint`; inputs `prompt` and `load.checkpoint-dir` (bundled samples are used when omitted); options `rounds`, `seed`, `execute`, and `timeout-seconds`; artifacts `generated_world` and `alayaworld-v1.1.mp4`.
+Required `input-path`, `load.base-checkpoint`, `load.gemma-path`, and `load.vigeo-checkpoint`; inputs `prompt` and `load.checkpoint-dir` (bundled samples are used when omitted); options `rounds`, `seed`, `execute`, and `timeout-seconds`; artifact `alayaworld-v1.1.mp4`.
 
-CLI task profiles: `image-to-video`. WorldFoundry binds `AlayaWorldV11Pipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `image-to-video`: seed=42.
+CLI task profile: `image-to-video`. WorldFoundry binds `AlayaWorldV11Pipeline`. Family status: **Runner parity pending**. Defaults for `image-to-video`: seed=42.
 
 Select variant=ar (30 steps) or dmd (4 steps). Stage2b transformer/history weights, the LTX-2.3 base, Gemma and ViGeo1.1 are required; DMD additionally needs the stage3 LoRA. Gemma is gated and requires accepting its license. This route does not use the merged DA3 checkpoint of the original AlayaWorld.
+
+Runs on a single GPU; full-window native VAE encoding may use more peak memory than the upstream streaming encoder.
 
 ## Running in WorldFoundry
 
 Run `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video` to follow the camera path.
 
+It runs in the dedicated environment `alayaworld-v1.1` (Python 3.11, CUDA 12.8, torch>=2.6).
+
 Weights: `AlayaLab/AlayaWorld-v1.1-stage2b`, `AlayaLab/AlayaWorld-v1.1-stage3`, and `Lightricks/LTX-2.3` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh alayaworld-v1.1`. Add `--download` to fetch missing public checkpoints.
 
-Gated weights: `google/gemma-3-12b-it-qat-q4_0-unquantized` (accept the upstream terms before downloading).
+License: LTX-2 Community License; gated weights: `google/gemma-3-12b-it-qat-q4_0-unquantized` (accept the upstream terms before downloading).
 
 <ModelRelatedRecipes modelId="alayaworld-v1.1" locale="en" />

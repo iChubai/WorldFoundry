@@ -1,6 +1,6 @@
 ---
 title: "StarWM"
-description: "StarWM: multi agent world model, starcraft world model, and 1 more task; Runner parity pending."
+description: "StarWM: multi agent world model, StarCraft world model, and 1 more task; Runner parity pending."
 modelId: "starwm"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ StarWM is a multi-agent world model for StarCraft-style environments: it predict
 
 <ModelPaperFigures modelId="starwm" locale="en" />
 
-Paper: [arXiv 2602.14857](https://arxiv.org/abs/2602.14857).
-
-Project page: [star-wm.github.io](https://star-wm.github.io/). Code: [yxzzhang/StarWM](https://github.com/yxzzhang/StarWM).
+Paper: [arXiv 2602.14857](https://arxiv.org/abs/2602.14857). Project page: [star-wm.github.io](https://star-wm.github.io/). Code: [yxzzhang/StarWM](https://github.com/yxzzhang/StarWM).
 
 <ModelCommandBuilder modelId="starwm" locale="en" />
 
@@ -21,17 +19,15 @@ Use `starwm` to step a world forward with actions and render the resulting frame
 
 The runtime is an endpoint-client design: the route builds the official run_inference_client.py command and validates input_file, mode, and served_model_id/api_model_id before execution.
 
-Tasks: multi agent world model, starcraft world model, and action-conditioned video.
+Tasks: multi agent world model, StarCraft world model, and action-conditioned video. Modalities: action in, video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Action-conditioned game-world rollout quality).
 
 ## Runtime contract
 
-Inputs `load.input-file` and `load.served-model-id` (bundled samples are used when omitted); options `plan-only` and `timeout-seconds`; artifacts `generated_world` and `starwm_predictions.jsonl`.
+Inputs `load.input-file` and `load.served-model-id` (bundled samples are used when omitted); options `plan-only` and `timeout-seconds`; artifact `starwm_predictions.jsonl`.
 
-CLI task profiles: `starcraft-offline-client`. WorldFoundry binds `StarWMPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `starcraft-offline-client`. WorldFoundry binds `StarWMPipeline`. Family status: **Runner parity pending**.
 
 Actual generation requires a running OpenAI-compatible StarWM endpoint; the WorldFoundry route only builds and validates the client command.
 

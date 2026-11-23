@@ -1,6 +1,6 @@
 ---
 title: "MolmoAct2"
-description: "MolmoAct2（艾伦人工智能研究所（AI2））：视觉-语言-动作（VLA）、VLA 动作预测等 4 项任务；已验证; 5 个 variant。"
+description: "MolmoAct2（艾伦人工智能研究所（AI2））：视觉-语言-动作（VLA）、VLA 动作预测等 4 项任务；已验证；5 个 variant。"
 modelId: "molmoact2"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ MolmoAct2 是 AI2 的第二代动作推理模型，Apache-2.0 checkpoint 阵容�
 
 <ModelPaperFigures modelId="molmoact2" locale="zh" />
 
-论文：[arXiv 2605.02881](https://arxiv.org/abs/2605.02881)。
-
-代码：[allenai/molmoact2](https://github.com/allenai/molmoact2)。
+论文：[arXiv 2605.02881](https://arxiv.org/abs/2605.02881)。代码：[allenai/molmoact2](https://github.com/allenai/molmoact2)。
 
 <ModelCommandBuilder modelId="molmoact2" locale="zh" />
 
@@ -27,7 +25,7 @@ MolmoAct2 基于 Molmo 开放 VLM 线并加动作推理头；Think 变体在行�
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`molmoact2_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `molmoact2_action_trace.json`。
 
 CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MolmoAct2Pipeline`。
 

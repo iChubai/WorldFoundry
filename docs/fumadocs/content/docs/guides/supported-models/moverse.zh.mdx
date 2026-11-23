@@ -1,6 +1,6 @@
 ---
 title: "MoVerse"
-description: "MoVerse：相机可控视频；Runner 一致性待确认; 独立环境 `moverse`。"
+description: "MoVerse：图像生成可导航世界、相机可控视频等 3 项任务；Runner 一致性待确认；独立环境 moverse。"
 modelId: "moverse"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ MoVerse 把一张图变成可游走的世界：从输入构建全景高斯脚手
 
 <ModelPaperFigures modelId="moverse" locale="zh" />
 
-论文：[arXiv 2606.13376](https://arxiv.org/abs/2606.13376)。
-
-项目页：[orange-3dv-team.github.io/MoVerse](https://orange-3dv-team.github.io/MoVerse)。代码：[Orange-3DV-Team/MoVerse](https://github.com/Orange-3DV-Team/MoVerse)。代码：[ByteDance-Seed/Depth-Anything-3](https://github.com/ByteDance-Seed/Depth-Anything-3)。
+论文：[arXiv 2606.13376](https://arxiv.org/abs/2606.13376)。项目页：[orange-3dv-team.github.io/MoVerse](https://orange-3dv-team.github.io/MoVerse)。代码：[Orange-3DV-Team/MoVerse](https://github.com/Orange-3DV-Team/MoVerse)。代码：[ByteDance-Seed/Depth-Anything-3](https://github.com/ByteDance-Seed/Depth-Anything-3)。
 
 <ModelCommandBuilder modelId="moverse" locale="zh" />
 
@@ -21,26 +19,28 @@ MoVerse 把一张图变成可游走的世界：从输入构建全景高斯脚手
 
 组合 GeoCalib AutoLevel、Depth Anything 3、SHARP 全景、Wan（视频基座 Wan2.1-T2V-1.3B）与 TAEHV 组件，另加作为全景基座的 FLUX.1-Fill-dev 与 MoVerse 自有组件权重。
 
-任务：image-to-navigable-world、相机可控视频、panoramic-gaussian-scaffold。别名：`mo-verse`、`Orange-3DV-Team/MoVerse`。模态上，它接受图像，输出世界状态。
+任务：图像生成可导航世界、相机可控视频、全景高斯脚手架。别名：`mo-verse`、`Orange-3DV-Team/MoVerse`。模态上，它接受图像、相机位姿，输出世界状态、视频。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（可游走生成世界的质量）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（游走过程的相机控制贴合度）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`；产物 `generated_world`、`gaussian_scaffold`、`generated_video`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`；产物 `gaussian_scaffold`、`moverse.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `MoVersePipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`default` 的默认值：frames=161, fps=16。
+CLI task profile：`default`。绑定的 pipeline 类是 `MoVersePipeline`。系列状态：**Runner 一致性待确认**。`default` 的默认值：frames=161, fps=16。
 
 执行为离线模式，需要预先就位四个 Hugging Face snapshot（`Orange-3DV-Team/MoVerse`、`black-forest-labs/FLUX.1-Fill-dev`、`depth-anything/DA3NESTED-GIANT-LARGE-1.1`、`Wan-AI/Wan2.1-T2V-1.3B`），另加 ffmpeg、gsplat 与兼容的 CUDA 内核。
+
+上游无许可文件：需要法律审查。需要 gated FLUX 权限与 ≥24 GB 显存。输出尚未与上游产物对照，相机精度未经标定。
 
 ## 在 WorldFoundry 中运行
 
 运行 `wf run moverse --pipeline.task-profile default` 沿相机路径生成视频。
 
+运行环境：独立环境 `moverse`（Python 3.10，CUDA 12.4，torch==2.6.0+cu124）。
+
 权重仓库：`Orange-3DV-Team/MoVerse`、`black-forest-labs/FLUX.1-Fill-dev`、`depth-anything/DA3NESTED-GIANT-LARGE-1.1` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh moverse`；下载缺失的公开权重时加 `--download`。
+
+许可证：not_found。
 
 <ModelRelatedRecipes modelId="moverse" locale="zh" />

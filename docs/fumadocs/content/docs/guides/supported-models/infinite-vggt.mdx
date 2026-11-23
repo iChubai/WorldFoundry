@@ -9,9 +9,7 @@ Infinite VGGT (StreamVGGT) turns the feed-forward VGGT reconstructor into a stre
 
 <ModelPaperFigures modelId="infinite-vggt" locale="en" />
 
-Paper: [Streaming 4D Visual Geometry Transformer](https://arxiv.org/abs/2507.11539) (2025).
-
-Project page: [wzzheng.net/StreamVGGT](https://wzzheng.net/StreamVGGT/). Code: [wzzheng/StreamVGGT](https://github.com/wzzheng/StreamVGGT).
+Paper: [Streaming 4D Visual Geometry Transformer](https://arxiv.org/abs/2507.11539) (2025). Project page: [wzzheng.net/StreamVGGT](https://wzzheng.net/StreamVGGT/). Code: [wzzheng/StreamVGGT](https://github.com/wzzheng/StreamVGGT).
 
 <ModelCommandBuilder modelId="infinite-vggt" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: 3D reconstruction and streaming 3D. Aliases: `stream-vggt` and `streamvgg
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `output-format`.
+Input `input-path` (bundled samples are used when omitted); option `output-format`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `InfiniteVGGTPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `interactive-video`. WorldFoundry binds `InfiniteVGGTPipeline`. Family status: **Runner parity pending**.
 
 Stage the StreamVGGT weights before running. Use VGGT for offline reconstruction and Infinite VGGT when frames arrive as a stream.
 
-CC-BY-NC-4.0: non-commercial license.
+CC-BY-NC-4.0: non-commercial license. Causal streaming accumulates drift relative to offline joint reconstruction.
 
 ## Running in WorldFoundry
 

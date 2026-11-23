@@ -142,8 +142,8 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
     },
     "pi0-fast": {
         "description": {
-            "en": "Autoregressive π0 variant: FAST action tokens instead of flow matching; default `pi0_fast_droid`.",
-            "zh": "π0 的自回归变体：用 FAST 动作 token 代替 flow matching；默认 `pi0_fast_droid`。",
+            "en": "Autoregressive π0 variant: FAST action tokens instead of flow matching; default pi0_fast_droid.",
+            "zh": "π0 的自回归变体：用 FAST 动作 token 代替 flow matching；默认 pi0_fast_droid。",
         },
         "use_cases": {
             "en": [
@@ -172,8 +172,8 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
     },
     "pi05": {
         "description": {
-            "en": "π0.5 open-world upgrade of π0's flow-matching VLA; `pi05_libero` is the validated reference.",
-            "zh": "π0.5 是 π0 flow-matching VLA 的开放世界升级；已验证的参考配置为 `pi05_libero`。",
+            "en": "π0.5 open-world upgrade of π0's flow-matching VLA; pi05_libero is the validated reference.",
+            "zh": "π0.5 是 π0 flow-matching VLA 的开放世界升级；已验证的参考配置为 pi05_libero。",
         },
         "use_cases": {
             "en": [
@@ -232,8 +232,8 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
     },
     "openvla": {
         "description": {
-            "en": "Open 7B VLA: Prismatic VLM emits 7-DoF action tokens; base route verified with `unnorm_key=bridge_orig`.",
-            "zh": "开源 7B VLA：Prismatic VLM 输出 7-DoF 动作 token；基座路由以 `unnorm_key=bridge_orig` 已验证。",
+            "en": "Open 7B VLA: Prismatic VLM emits 7-DoF action tokens; base route verified with unnorm_key=bridge_orig.",
+            "zh": "开源 7B VLA：Prismatic VLM 输出 7-DoF 动作 token；基座路由以 unnorm_key=bridge_orig 已验证。",
         },
         "use_cases": {
             "en": [
@@ -862,8 +862,8 @@ EXEMPLAR_PROSE: dict[str, dict[str, Any]] = {
     },
     "matrix-game-1": {
         "description": {
-            "en": "Skywork Matrix-Game 1.0: image + prompt in, `world.mp4` out. Prefer 2.0/3.0 for verified runners.",
-            "zh": "Skywork Matrix-Game 1.0：image + prompt 入，`world.mp4` 出。要已验证 runner 请优先 2.0/3.0。",
+            "en": "Skywork Matrix-Game 1.0: image + prompt in, world.mp4 out. Prefer 2.0/3.0 for verified runners.",
+            "zh": "Skywork Matrix-Game 1.0：image + prompt 入，world.mp4 出。要已验证 runner 请优先 2.0/3.0。",
         },
         "use_cases": {
             "en": [

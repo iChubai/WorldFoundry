@@ -9,9 +9,7 @@ Stable Video Infinity 2.0（SVI）通过五帧续接与逐段换种子来串联�
 
 <ModelPaperFigures modelId="stable-video-infinity" locale="zh" />
 
-论文：[Stable Video Infinity: Infinite-Length Video Generation with Error Recycling](https://arxiv.org/abs/2510.09212)（2025）。
-
-项目页：[stable-video-infinity.github.io/homepage](https://stable-video-infinity.github.io/homepage/)。代码：[vita-epfl/Stable-Video-Infinity](https://github.com/vita-epfl/Stable-Video-Infinity)。代码：[epfl-vita/svi-model](https://huggingface.co/epfl-vita/svi-model)。
+论文：[Stable Video Infinity: Infinite-Length Video Generation with Error Recycling](https://arxiv.org/abs/2510.09212)（2025）。项目页：[stable-video-infinity.github.io/homepage](https://stable-video-infinity.github.io/homepage/)。代码：[vita-epfl/Stable-Video-Infinity](https://github.com/vita-epfl/Stable-Video-Infinity)。代码：[epfl-vita/svi-model](https://huggingface.co/epfl-vita/svi-model)。
 
 <ModelCommandBuilder modelId="stable-video-infinity" locale="zh" />
 
@@ -21,21 +19,19 @@ Stable Video Infinity 2.0（SVI）通过五帧续接与逐段换种子来串联�
 
 SVI 2.0 是叠加在 Wan2.1-I2V-14B-480P 上的 LoRA，保留五帧续接、参考帧填充与提示词流重复机制。发布 checkpoint 中任一 LoRA 对未能合并到 Wan DiT 时，加载即失败。该模型由洛桑联邦理工学院（EPFL VITA 实验室）发布。
 
-任务：图生视频、长视频生成、prompt-stream-video-generation。别名：`SVI`、`SVI-2.0`、`stable_video_infinity`、`stable-video-infinity-2.0`。模态上，它接受图像，输出视频。
+任务：图生视频、长视频生成、提示词流视频生成。别名：`SVI`、`SVI-2.0`、`stable_video_infinity`、`stable-video-infinity-2.0`。模态上，它接受图像，输出视频。
 
 推荐评测：[ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench)（长时程评测，契合 SVI 的无限长视频目标）、[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（单段质量标尺）。
 
 ## 运行时契约
 
-输入 `prompt`、`image`（不传时使用内置示例）；参数 `num-clips`、`num-frames`、`num-motion-frames`、`num-inference-steps`、`cfg-scale-text`、`seed` 等 10 项；产物 `generated_video`、`stable-video-infinity.mp4`。
+输入 `prompt`、`image`（不传时使用内置示例）；参数 `num-clips`、`num-frames`、`num-motion-frames`、`num-inference-steps`、`cfg-scale-text`、`seed` 等 10 项；产物 `stable-video-infinity.mp4`。
 
-CLI task profile：`prompt-stream-i2v`。绑定的 pipeline 类是 `StableVideoInfinityPipeline`。
-
-系列状态：**已验证**。
-
-`prompt-stream-i2v` 的默认值：seed=0, fps=24。
+CLI task profile：`prompt-stream-i2v`。绑定的 pipeline 类是 `StableVideoInfinityPipeline`。系列状态：**已验证**。`prompt-stream-i2v` 的默认值：num-frames=81, num-inference-steps=50, seed=0, fps=24。
 
 默认值遵循官方配方：五运动帧续接、完整参考帧填充、每段独立种子、每条提示词重复两次后推进。除非启用 use_first_prompt_only，官方 999 段上限被限定为每条提示词两段。需同时就位 SVI LoRA（vita-video-gen/svi-model，MIT）与 Wan2.1 基座。
+
+需要同时就位 SVI LoRA 与 Wan2.1-I2V-14B 基座 checkpoint。长视频漂移被缓解而非消除——多段串联后质量仍可能下降。仅推理：不包含训练启动器与数据集。
 
 ## 在 WorldFoundry 中运行
 

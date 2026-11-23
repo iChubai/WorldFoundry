@@ -9,9 +9,7 @@ pixelSplat reconstructs a 3D Gaussian scene from two calibrated views in a singl
 
 <ModelPaperFigures modelId="pixelsplat" locale="en" />
 
-Paper: [arXiv 2312.12337](https://arxiv.org/abs/2312.12337).
-
-Project page: [dcharatan.github.io/pixelsplat](https://dcharatan.github.io/pixelsplat). Code: [dcharatan/pixelsplat](https://github.com/dcharatan/pixelsplat).
+Paper: [arXiv 2312.12337](https://arxiv.org/abs/2312.12337). Project page: [dcharatan.github.io/pixelsplat](https://dcharatan.github.io/pixelsplat). Code: [dcharatan/pixelsplat](https://github.com/dcharatan/pixelsplat).
 
 <ModelCommandBuilder modelId="pixelsplat" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: 3D reconstruction, gaussian splatting, and novel view synthesis. Aliases:
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); artifacts `pixelsplat.ply`.
+Input `input-path` (bundled samples are used when omitted); artifact `pixelsplat.ply`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `PixelSplatPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `interactive-video`. WorldFoundry binds `PixelSplatPipeline`. Family status: **Verified**.
 
 Provide model_path pointing to re10k.ckpt or acid.ckpt, the matching experiment, and posed dataset_roots/index_path. Install the declared runtime dependencies and local Gaussian rasterizer. Bare image lists use a synthetic baseline. PLY output exports normalized geometry and DC color with standard opacity logits.
 
-Supports the original convolutional checkpoints; newer camera-ready architectures are not interchangeable.
+Supports the original convolutional checkpoints; newer camera-ready architectures are not interchangeable. Validation covers two scenes per dataset, not the complete benchmark. Unposed input does not establish geometric accuracy. PLY export retains only DC color; view-dependent appearance is available in the native renderer.
 
 ## Running in WorldFoundry
 

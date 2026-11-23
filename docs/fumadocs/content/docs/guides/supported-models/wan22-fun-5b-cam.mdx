@@ -19,7 +19,7 @@ Code: [aigc-apps/VideoX-Fun](https://github.com/aigc-apps/VideoX-Fun).
 
 A 5B-parameter Wan2.2 diffusion transformer with the VideoX-Fun Control-Camera conditioning pathway. It is published by Alibaba PAI (VideoX-Fun).
 
-Tasks: camera-controlled video and image-to-video. Modalities: image in, video out.
+Tasks: camera-controlled video and image-to-video. Modalities: camera pose and image in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-pose adherence for controlled i2v generation), [WRBench](/docs/evaluation/benchmark-hub/wrbench) (Native 121-frame/24FPS profile suits WRBench-style requests).
 
@@ -27,9 +27,9 @@ For base Wan2.2 generation or the A14B camera-control model, use [Wan2.2](/docs/
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifacts `wan22-fun-5b-cam.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifact `wan22-fun-5b-cam.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `Wan22Fun5BCameraPipeline`.
+CLI task profile: `default`. WorldFoundry binds `Wan22Fun5BCameraPipeline`.
 
 Family status: **Runner parity pending**.
 

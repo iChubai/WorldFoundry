@@ -1,17 +1,15 @@
 ---
 title: "MIRA"
-description: "多人交互世界模型：多名玩家在同一个动作条件生成世界中行动。运行于独立环境 `mira`。"
+description: "MIRA：动作条件世界模型、多人游戏世界模型；Runner 一致性待确认；独立环境 mira。"
 modelId: "mira"
-pageSource: authored
+pageSource: generated
 ---
 
 MIRA 是多人交互世界模型：多名玩家在同一个动作条件生成世界中行动（论文 arXiv 2607.05352）。WorldFoundry 仅支持推理，需要兼容的本地 checkpoint 与包含 index.json 的本地 Rocket Science 数据集切分。
 
 <ModelPaperFigures modelId="mira" locale="zh" />
 
-论文：[Multiplayer Interactive World Models with Representation Autoencoders](https://arxiv.org/abs/2607.05352)（2026）。
-
-项目页：[mira-wm.com](https://mira-wm.com)。代码：[mira-wm/mira](https://github.com/mira-wm/mira)。
+论文：[Multiplayer Interactive World Models with Representation Autoencoders](https://arxiv.org/abs/2607.05352)（2026）。项目页：[mira-wm.com](https://mira-wm.com)。代码：[mira-wm/mira](https://github.com/mira-wm/mira)。
 
 <ModelCommandBuilder modelId="mira" locale="zh" />
 
@@ -21,23 +19,19 @@ MIRA 是多人交互世界模型：多名玩家在同一个动作条件生成世
 
 按论文，MIRA 基于表征自编码器构建多人交互世界模型；代码以 apache-2.0 发布。local-checkpoint variant 运行 Rocket Science 滚动生成任务。
 
-任务：action-conditioned-world-model、multiplayer-game-world-model。别名：`mira-wm`、`multiplayer-interactive-world-model`。
+任务：动作条件世界模型、多人游戏世界模型。别名：`mira-wm`、`multiplayer-interactive-world-model`。模态上，它接受动作，输出视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（多人世界滚动生成质量）。
 
 ## 运行时契约
 
-输入 `load.checkpoint-path`、`load.dataset-path`（不传时使用内置示例）；参数 `plan-only`、`timeout-seconds`；产物 `generated_video`、`mira.mp4`。
+输入 `load.checkpoint-path`、`load.dataset-path`（不传时使用内置示例）；参数 `plan-only`、`timeout-seconds`；产物 `mira.mp4`。
 
-CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`rocket-science-rollout` 默认值：seed=42。
+CLI task profile：`rocket-science-rollout`。绑定的 pipeline 类是 `MIRAPipeline`。系列状态：**Runner 一致性待确认**。
 
 公开的 Rocket Science 数据集约 29.24 TB，不会自动下载；请在本地就位所需切分。TorchCodec ABI 不兼容时视频解码回退到 PyAV。
 
-必填 `checkpoint_path`、`dataset_path`；可选 `prompt`、`image`、`video`、`seed`、`clip_index`、`n_context_frames`、`num_unrolled_frames`、`n_diffusion_steps`、`schedule_type`、`noise_level`、`compile`、`overlay_actions`、`generated_only`、`plan_only`、`timeout_seconds`；`actions`：rocket_league_keyboard、game_action；产物 `generated_video`、`mira.mp4`。
+仅支持推理：不包含训练与指标入口。公开数据集约 29.24 TB——就位前请规划存储。
 
 ## 在 WorldFoundry 中运行
 

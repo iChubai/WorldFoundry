@@ -9,9 +9,7 @@ LingBot-VLA is Robbyant's 4B vision-language-action policy line: a pretrained ba
 
 <ModelPaperFigures modelId="lingbot-vla" locale="en" />
 
-Paper: [arXiv 2508.02317](https://arxiv.org/abs/2508.02317).
-
-Code: [Robbyant/lingbot-vla](https://github.com/Robbyant/lingbot-vla).
+Paper: [arXiv 2508.02317](https://arxiv.org/abs/2508.02317). Code: [Robbyant/lingbot-vla](https://github.com/Robbyant/lingbot-vla).
 
 <ModelCommandBuilder modelId="lingbot-vla" locale="en" />
 
@@ -29,9 +27,9 @@ LingBot VLA policy rollout. The 6B successor is [LingBot-VLA v2](/docs/guides/su
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `lingbot_vla_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `lingbot_vla_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `LingBotVLAPipeline`.
+CLI task profile: `default`. WorldFoundry binds `LingBotVLAPipeline`.
 
 Start with `lingbot-vla-4b`. The family has 3 variants, selectable in the command builder above: `lingbot-vla-4b` (`vla.pretraining`) — Runner parity pending; `lingbot-vla-4b-posttrain-robotwin` (`vla.policy_rollout`) — Runner parity pending; `lingbot-vla-4b-depth-posttrain-robotwin` (`vla.policy_rollout`) — Runner parity pending. Family status: **Static load only**.
 

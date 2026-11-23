@@ -1,6 +1,6 @@
 ---
 title: "Spirit-VLA v1.5"
-description: "Spirit-VLA v1.5（Spirit AI（千寻智能））：VLA 动作预测、VLA 策略执行；Runner 一致性待确认; 独立环境 `worldfoundry-vla-spirit-v1-5`。"
+description: "Spirit-VLA v1.5（Spirit AI（千寻智能））：VLA 动作预测、VLA 策略执行；Runner 一致性待确认；独立环境 worldfoundry-vla-spirit-v1-5。"
 modelId: "spirit-v1.5"
 pageSource: generated
 ---
@@ -23,11 +23,9 @@ Qwen3-VL 视觉-语言骨干配 Spirit 的动作预测头。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`spirit-v1.5_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `spirit-v1.5_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `SpiritV15Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `SpiritV15Pipeline`。系列状态：**Runner 一致性待确认**。
 
 运行前需在本地就位 21.6 GB 的 Spirit-v1.5 checkpoint 与 Qwen/Qwen3-VL-4B-Instruct 骨干。
 

@@ -1,16 +1,44 @@
 ---
 title: "World Observer"
-description: "通过联合生成 actor 与 observer 视角实现持久世界建模。"
+description: "World Observer（KAIST AI（韩国科学技术院））：持久化世界模型、行动者与观测者联合生成；计划中。"
 modelId: "world-observer"
 pageSource: authored
 ---
 
-World Observer 是 KAIST AI 的研究项目，通过联合生成 actor 与 observer 视角研究持久世界建模。
-
-论文：[arXiv:2610.02162](https://arxiv.org/abs/2610.02162)。代码仓库：[cvlab-kaist/world-observer](https://github.com/cvlab-kaist/world-observer)。项目主页：[World Observer](https://cvlab-kaist.github.io/world-observer/)。
+World Observer 通过联合生成 actor 与 observer 视角研究持久世界建模，官方仓库当前公布论文及发布计划。
 
 模型 ID：`world-observer`（别名 `WorldObserver`、`worldobserver`）。官方 checkpoint 与推理代码发布前无法运行。
 
-## 发布状态
+<ModelPaperFigures modelId="world-observer" locale="zh" />
 
-官方仓库目前仅包含项目介绍及发布计划，数据集、checkpoint、推理代码和训练代码均标为待发布。
+论文：[arXiv 2610.02162](https://arxiv.org/abs/2610.02162)。
+
+项目页：[cvlab-kaist.github.io/world-observer](https://cvlab-kaist.github.io/world-observer/)。代码：[cvlab-kaist/world-observer](https://github.com/cvlab-kaist/world-observer)。
+
+<ModelCommandBuilder modelId="world-observer" locale="zh" />
+
+## 用来做什么
+
+`world-observer` 是世界生成模型。该模型由 KAIST AI（韩国科学技术院）发布。
+
+任务：持久化世界模型、行动者与观测者联合生成。别名：`WorldObserver`、`worldobserver`。
+
+## 运行时契约
+
+必填 `prompt`。
+
+CLI task profile：`persistent-world-model`、`joint-actor-observer-generation`。系列状态：**计划中**。
+
+运行它需要官方 checkpoint 与推理代码，二者尚未发布。
+
+上游尚未发布模型 checkpoint 或推理代码。
+
+## 在 WorldFoundry 中运行
+
+运行 `wf run world-observer --pipeline.task-profile persistent-world-model` 生成世界。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
+
+该模型未记录运行环境。
+
+该模型没有登记公开 checkpoint；按使用说明就位权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh world-observer`；下载缺失的公开权重时加 `--download`。
+
+<ModelRelatedRecipes modelId="world-observer" locale="zh" />

@@ -1,27 +1,11 @@
 ---
-title: WorldCrafter
-description: 使用可查询 3D 记忆的相机可控场景探索。
+title: "WorldCrafter"
+description: "WorldCrafter（TencentARC）：文生视频、图生视频等 4 项任务；已验证。"
+modelId: "worldcrafter"
 pageSource: authored
 ---
 
-WorldCrafter Base 和 Fast 都支持图生视频、文生视频，分辨率固定为 **640 × 384**，每段 **33 帧**。多段生成通过 RepEncoder 从已有场景中查询目标视角的记忆。
-
-```python
-from worldfoundry.pipelines.worldcrafter import WorldCrafterPipeline
-
-pipe = WorldCrafterPipeline.from_pretrained(
-    model_id="worldcrafter-fast",
-    model_path="/checkpoints/TencentARC--WorldCrafter-Fast",
-    device="cuda:0",
-)
-result = pipe(
-    prompt="A bright living room with a wooden table.",
-    images="room.png",
-    actions="forward1 backward1",
-    output_path="worldcrafter.mp4",
-    return_dict=True,
-)
-```
+WorldCrafter 是来自 TencentARC 的世界模型，支持文生视频、图生视频、相机可控视频、世界模型。
 
 省略 `images` 即为文生视频。`actions`、`actions_file`、`camera_path` 三选一。相机文件是 `[T,3,4]` 或 `[T,4,4]` 的全局 **camera-to-world** 矩阵，平移单位为米，坐标轴为右/下/前，帧数须为 33 的整数倍。可以通过 `num_chunks` 截取已有轨迹。
 
@@ -33,4 +17,34 @@ Base 常规输出会按上游规则裁剪到 `33 × num_chunks - 1` 帧；Fast �
 
 运行需要 CUDA、PyTorch 2.10、支持 Helios 的 Diffusers、Transformers 5.3、Accelerate、PEFT、Einops 和 safetensors。编译默认关闭。已在 H100 上用 Base 与 Fast 发布权重验证：两段 I2V/T2V 运行可严格加载、完整解码视频并通过画面审核；Base 断点续推与连续运行的输出逐值一致。长程记忆与相机控制质量尚未验证。
 
-[官方源码](https://github.com/TencentARC/WorldCrafter) 固定版本为 `7e57e4d0448e8661eb6ae078f53e19638bd07102`。官方许可证仅允许**学术用途**；完整许可和第三方声明统一保留在仓库根目录的 `THIRD-PARTY-NOTICES`。
+<ModelPaperFigures modelId="worldcrafter" locale="zh" />
+
+论文：[arXiv 2609.24984](https://arxiv.org/abs/2609.24984)。
+
+项目页：[drexubery.github.io/WorldCrafter](https://drexubery.github.io/WorldCrafter/)。代码：[TencentARC/WorldCrafter](https://github.com/TencentARC/WorldCrafter)。
+
+<ModelCommandBuilder modelId="worldcrafter" locale="zh" />
+
+## 用来做什么
+
+`worldcrafter` 以相机位姿为条件生成视频。
+
+任务：文生视频、图生视频、相机可控视频、世界模型。模态上，它接受文本、图像、相机位姿，输出视频。
+
+## 运行时契约
+
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `worldcrafter.mp4`。
+
+CLI task profile：`default`。绑定的 pipeline 类是 `WorldCrafterPipeline`。系列状态：**已验证**。
+
+## 在 WorldFoundry 中运行
+
+运行 `wf run worldcrafter --pipeline.task-profile default` 沿相机路径生成视频。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`TencentARC/WorldCrafter-Base`、`TencentARC/WorldCrafter-Fast`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh worldcrafter`；下载缺失的公开权重时加 `--download`。
+
+许可证：worldcrafter-academic-only。
+
+<ModelRelatedRecipes modelId="worldcrafter" locale="zh" />

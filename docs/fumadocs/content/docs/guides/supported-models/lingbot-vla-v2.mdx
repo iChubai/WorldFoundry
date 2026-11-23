@@ -1,6 +1,6 @@
 ---
 title: "LingBot-VLA 2.0"
-description: "LingBot-VLA 2.0 from Robbyant (Ant Group): VLA, VLA action prediction, and 2 more tasks; Static load only; dedicated `worldfoundry-lingbot-vla-v2-cu128`."
+description: "LingBot-VLA 2.0 from Robbyant (Ant Group): VLA, VLA action prediction, and 2 more tasks; Static load only; dedicated env worldfoundry-lingbot-vla-v2-cu128."
 modelId: "lingbot-vla-v2"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ LingBot-VLA 2.0 is Robbyant's 6B second-generation VLA built on a Qwen3-VL mixtu
 
 <ModelPaperFigures modelId="lingbot-vla-v2" locale="en" />
 
-Paper: [arXiv 2607.06403](https://arxiv.org/abs/2607.06403).
-
-Code: [Robbyant/lingbot-vla-v2](https://github.com/Robbyant/lingbot-vla-v2).
+Paper: [arXiv 2607.06403](https://arxiv.org/abs/2607.06403). Code: [Robbyant/lingbot-vla-v2](https://github.com/Robbyant/lingbot-vla-v2).
 
 <ModelCommandBuilder modelId="lingbot-vla-v2" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: VLA, VLA action prediction, VLA policy rollout, and robot policy. Aliases
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `lingbot_vla_v2_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `lingbot_vla_v2_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `LingBotVLAV2Pipeline`.
-
-Family status: **Static load only**.
+CLI task profile: `default`. WorldFoundry binds `LingBotVLAV2Pipeline`. Family status: **Static load only**.
 
 The public 6B checkpoint uses the bundled official-derived inference config; robot-specific downstream checkpoints may override it with their own lingbotvla_cli.yaml.
 

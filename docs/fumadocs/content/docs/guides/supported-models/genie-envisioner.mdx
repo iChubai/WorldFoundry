@@ -1,6 +1,6 @@
 ---
 title: "Genie Envisioner"
-description: "Genie Envisioner from AgiBot: three-view camera history and text in, multiview robot video out."
+description: "Genie Envisioner from AgiBot: robotics world model, image-to-video, and 1 more task; Runner parity pending."
 modelId: "genie-envisioner"
 pageSource: authored
 ---
@@ -31,7 +31,7 @@ Suggested benchmarks: [WorldArena](/docs/evaluation/benchmark-hub/worldarena) (G
 
 Required `prompt` and `input_views` for official-style history inference; pass three directories with four numbered PNG frames each. Set `input_mode` to `explicit-three-view` (the default). Three individual image paths or one image in `synthetic-three-view` mode exercise only smoke paths. Artifact: `genie-envisioner.mp4`.
 
-CLI task profiles: `robot-multiview-video`. WorldFoundry binds `GenieEnvisionerPipeline`.
+CLI task profile: `robot-multiview-video`. WorldFoundry binds `GenieEnvisionerPipeline`.
 
 Validated with the released checkpoint: the published GE-base-fast `sample_0` configuration reproduces the published video sample on GPU from four-frame histories. Other configurations are not validated, and action-quality parity needs checkpoint-matched AgiBot or LeRobot trajectories.
 

@@ -9,9 +9,7 @@ TesserAct 是面向机器人的具身 4D 世界模型：预测操作场景的动
 
 <ModelPaperFigures modelId="tesseract" locale="zh" />
 
-论文：[arXiv 2504.20995](https://arxiv.org/abs/2504.20995)。
-
-项目页：[tesseractworld.github.io](https://tesseractworld.github.io/)。代码：[UMass-Embodied-AGI/TesserAct](https://github.com/UMass-Embodied-AGI/TesserAct)。
+论文：[arXiv 2504.20995](https://arxiv.org/abs/2504.20995)。项目页：[tesseractworld.github.io](https://tesseractworld.github.io/)。代码：[UMass-Embodied-AGI/TesserAct](https://github.com/UMass-Embodied-AGI/TesserAct)。
 
 <ModelCommandBuilder modelId="tesseract" locale="zh" />
 
@@ -21,7 +19,7 @@ TesserAct 是面向机器人的具身 4D 世界模型：预测操作场景的动
 
 pipeline 通过官方推理入口，在本地 CogVideoX-5b-I2V 基座上运行官方 RGB-深度-法线 SFT transformer（anyeZHY/tesseract）。该模型由马萨诸塞大学阿默斯特分校（Embodied AGI 实验室）发布。
 
-任务：具身世界模型、机器人世界模型、动作条件视频。别名：`tesser-act`。
+任务：具身世界模型、机器人世界模型、动作条件视频。别名：`tesser-act`。模态上，它接受动作，输出视频。
 
 推荐评测：[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身操作世界模型质量）、[WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena)（WorldArena 开源世界模型榜单收录）。
 
@@ -29,13 +27,11 @@ pipeline 通过官方推理入口，在本地 CogVideoX-5b-I2V 基座上运行�
 
 输入 `input-path`、`prompt`、`load.checkpoint-dir`、`load.base-model-dir`（不传时使用内置示例）；参数 `geometry-mode`、`height`、`width`、`num-frames`、`num-inference-steps`、`guidance-scale` 等 14 项；产物 `tesseract.mp4`。
 
-CLI task profile：`robot-action-video`。绑定的 pipeline 类是 `TesserActPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`robot-action-video` 的默认值：height=256, width=320, fps=8, seed=23。
+CLI task profile：`robot-action-video`。绑定的 pipeline 类是 `TesserActPipeline`。系列状态：**Runner 一致性待确认**。`robot-action-video` 的默认值：height=256, width=320, num-frames=49, num-inference-steps=4, guidance-scale=7.5, fps=8。
 
 先在本地准备 anyeZHY/tesseract、THUDM/CogVideoX-5b-I2V 与具身任务资产；在它们就位前，pipeline 只返回列出缺失项的诊断信息。
+
+内置的合成梯度深度/法线模式只是 demo 路径；需要有意义的输出时请提供官方深度/法线条件文件。
 
 ## 在 WorldFoundry 中运行
 

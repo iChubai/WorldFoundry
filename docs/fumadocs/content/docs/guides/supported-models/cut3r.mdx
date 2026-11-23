@@ -1,6 +1,6 @@
 ---
 title: "CUT3R"
-description: "CUT3R from UC Berkeley: 3D reconstruction, 3dgs, and 1 more task; Runner parity pending."
+description: "CUT3R from UC Berkeley: 3D reconstruction, 3DGS, and 1 more task; Runner parity pending."
 modelId: "cut3r"
 pageSource: authored
 ---
@@ -23,19 +23,17 @@ Checkpoint-backed inference needs the `liguang0115/cut3r` weights staged locally
 
 A recurrent transformer maintains a persistent scene state; each new frame updates the state and outputs pointmaps and camera parameters online (per the upstream publication). WorldFoundry exposes raw point-cloud export and a two-stage 3DGS pipeline; weights are apache-2.0. It is published by UC Berkeley.
 
-Tasks: 3D reconstruction, 3dgs, and point cloud. Output modalities: point cloud.
+Tasks: 3D reconstruction, 3DGS, and point cloud. Output modalities: point cloud.
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `size`, `vis-threshold`, and `revisit`.
+Input `input-path` (bundled samples are used when omitted); options `size`, `vis-threshold`, and `revisit`.
 
-CLI task profiles: `official-export` and `two-stage-3dgs`. WorldFoundry binds `CUT3RPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `official-export`: size=512 Defaults for `two-stage-3dgs`: size=512, width=704, height=480.
+CLI task profiles: `official-export` and `two-stage-3dgs`. WorldFoundry binds `CUT3RPipeline`. Family status: **Runner parity pending**. Defaults for `official-export`: size=512. Defaults for `two-stage-3dgs`: size=512, width=704, height=480.
 
 Stage the `liguang0115/cut3r` weights locally or from Hugging Face before submitting Studio jobs.
+
+Streaming reconstruction quality degrades on long sequences with severe viewpoint changes.
 
 ## Running in WorldFoundry
 

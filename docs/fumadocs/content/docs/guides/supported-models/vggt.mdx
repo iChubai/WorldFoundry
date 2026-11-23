@@ -1,6 +1,6 @@
 ---
 title: "VGGT"
-description: "VGGT from Meta AI (FAIR) / University of Oxford (VGG): 3D reconstruction, 3dgs, and 1 more task; Runner parity pending."
+description: "VGGT from Meta AI (FAIR) / University of Oxford (VGG): 3D reconstruction, 3DGS, and 1 more task; Runner parity pending."
 modelId: "vggt"
 pageSource: authored
 ---
@@ -21,15 +21,15 @@ Paper: [VGGT: Visual Geometry Grounded Transformer](https://openaccess.thecvf.co
 
 Per the CVPR 2025 paper, a large transformer alternates frame-wise and global attention over image tokens, with task-specific heads for cameras, depth, pointmaps, and tracking. Weights are apache-2.0 (facebookresearch/vggt); the WorldFoundry route builds 3DGS from VGGT geometry in two stages. It is published by Meta AI (FAIR) / University of Oxford (VGG).
 
-Tasks: 3D reconstruction, 3dgs, and point cloud. Output modalities: point cloud.
+Tasks: 3D reconstruction, 3DGS, and point cloud. Output modalities: point cloud.
 
 Related VGGT-based models: [VGGT-World](/docs/guides/supported-models/vggt-world) and [Infinite VGGT](/docs/guides/supported-models/infinite-vggt).
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `fps`, `height`, `width`, `point-conf-threshold`, `resolution`, and `preprocess-mode`.
+Input `input-path` (bundled samples are used when omitted); options `fps`, `height`, `width`, `point-conf-threshold`, `resolution`, and `preprocess-mode`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `VGGTPipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `VGGTPipeline`.
 
 Family status: **Runner parity pending**.
 

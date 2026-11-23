@@ -13,31 +13,25 @@ Paper: [arXiv 2401.10891](https://arxiv.org/abs/2401.10891).
 
 Project page: [depth-anything.github.io](https://depth-anything.github.io/). Code: [LiheYoung/Depth-Anything](https://github.com/LiheYoung/Depth-Anything).
 
-Weights: `LiheYoung/depth-anything-small-hf`, `base-hf`, `large-hf`. The source code is Apache-2.0.
-
 For metric depth use [Depth Anything V2 prior](/docs/guides/supported-models/depth-anything-v2-prior); for 360° panoramas use [DAP](/docs/guides/supported-models/dap).
 
 <ModelCommandBuilder modelId="depth-anything-v1" locale="en" />
 
 ## What it is for
 
-`depth-anything-v1` estimates depth: images in, depth maps out.
-
-It is published by TikTok / The University of Hong Kong.
+`depth-anything-v1` estimates depth: images in, depth maps out. It is published by TikTok / The University of Hong Kong.
 
 Tasks: depth, geometry, and monocular depth estimation. Modalities: image in, depth out.
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); artifacts `depth-anything-v1.png`.
+Input `input-path` (bundled samples are used when omitted); artifact `depth-anything-v1.png`.
 
-CLI task profiles: `default`. WorldFoundry binds `DepthAnything1Pipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `DepthAnything1Pipeline`. Family status: **Verified**.
 
 A good default for relative depth. For metric depth choose depth-anything-v2-prior or depth-anything-v3-prior instead.
 
-Relative depth only — no metric scale on this route.
+Relative depth only — no metric scale on this route. Single-image estimation: temporal flicker on video (use video-depth-anything-prior for video).
 
 ## Running in WorldFoundry
 
@@ -46,5 +40,7 @@ Estimate depth with `wf run depth-anything-v1 --pipeline.task-profile default`.
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `LiheYoung/depth-anything-large-hf`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh depth-anything-v1`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="depth-anything-v1" locale="en" />

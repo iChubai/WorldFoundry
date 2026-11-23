@@ -1,6 +1,6 @@
 ---
 title: "Mem-0"
-description: "Mem-0：视觉-语言-动作（VLA）、VLA 策略执行等 4 项任务；仅静态加载; 独立环境 `worldfoundry-vla-mem-0`。"
+description: "Mem-0：视觉-语言-动作（VLA）、VLA 策略执行等 4 项任务；仅静态加载；独立环境 worldfoundry-vla-mem-0。"
 modelId: "mem-0"
 pageSource: authored
 ---
@@ -21,7 +21,7 @@ Mem-0（“Memory Matters”）是 RoboTwin RMBench 线的记忆增强操作策�
 
 树内运行时包含情节记忆库、Qwen 特征路径、任务分类器与 flow-matching 动作解码器。输出匹配官方 14 值双臂关节适配器，排除两个仅模型内部的填充通道。
 
-任务：视觉-语言-动作（VLA）、VLA 策略执行、机器人策略、memory_policy。别名：`mem0`、`memorymatters`。
+任务：视觉-语言-动作（VLA）、VLA 策略执行、机器人策略、记忆策略。别名：`mem0`、`memorymatters`。
 
 推荐评测：[RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin)（构建于 RoboTwin 平台的 RMBench 记忆任务）。
 
@@ -29,7 +29,7 @@ Mem-0 记忆策略 rollout，不是视频生成器。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`mem-0_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `mem-0_action_trace.json`。
 
 CLI task profile：`default`。绑定的 pipeline 类是 `Mem0Pipeline`。
 

@@ -1,105 +1,46 @@
 ---
 title: "DreamDojo Student"
-description: "Native low-step DreamDojo student inference and resident robot-action streaming."
+description: "DreamDojo Student from NVIDIA: world, robot, and 1 more task; Runner parity pending."
 modelId: "dreamdojo-student"
 pageSource: authored
 ---
 
-WorldFoundry integrates DreamDojo's **2B GR-1 self-forcing student** with causal action conditioning, **1–4 TrigFlow steps**, isolated offline rollouts, and a resident streaming API. The DiT, Reason1 text conditioning, and Wan video codec reuse canonical Cosmos components. The [teacher route](./dreamdojo) remains separate.
+DreamDojo's self-forcing student predicts robot-view video with causal action conditioning and one to four TrigFlow sampling steps. WorldFoundry supports isolated offline rollouts and resident normalized-action streaming.
 
 Source: [NVIDIA/DreamDojo](https://github.com/NVIDIA/DreamDojo/tree/02f119b759d5c7f84a399fdeea3c6e82e7ed6cff), including [the distillation workflow](https://github.com/NVIDIA/DreamDojo/blob/02f119b759d5c7f84a399fdeea3c6e82e7ed6cff/docs/DISTILL.md).
 
-## Inputs and cadence
+<ModelPaperFigures modelId="dreamdojo-student" locale="en" />
 
-Supply one initial image and finite, caller-normalized robot actions shaped `[N,384]` or `[1,N,384]`.
+Paper: [arXiv 2602.06949](https://arxiv.org/abs/2602.06949).
 
-- First STEP: **12 new actions → 13 RGB frames**.
-- Subsequent STEP: **4 new actions → 4 new RGB frames**.
-- Playback clock: **10 fps**, at the configured native resolution; default **480×640**.
-- Steps: integer **1–4**, default **4**. Guidance is distilled; `guidance_scale=1`.
-- Offline sequences: `N >= 12` and divisible by 4. A 24-action sequence returns 25 frames.
+<ModelCommandBuilder modelId="dreamdojo-student" locale="en" />
 
-Continuation retains nine RGB frames and eight historical actions, re-encodes the observation window, and assigns new actions to new latent transitions. Each window owns three-frame-per-layer clean KV history; sampling reads do not commit noise. Text conditioning stays resident until reset. `reset_realtime()` discards rollout state without unloading weights.
+## What it is for
 
-## Assets and environment
+`dreamdojo-student` generates future frames conditioned on actions.
 
-Use the unified CUDA environment described in [Contributing](/docs/maintainers/contributing):
+The causal student reuses the Cosmos action DiT, Reason1 encoder, and Wan codec. Clean prefill writes request-local three-frame KV history; noisy sampling only reads it. Window continuation retains nine RGB frames and eight aligned historical actions. It is published by NVIDIA.
 
-```bash
-bash scripts/setup/bootstrap_worldfoundry.sh
-source tmp/worldfoundry_unified_env.sh
-conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
-```
+Tasks: world, robot, and world model.
 
-Provide an explicit **distilled student** checkpoint via `student_checkpoint_path`, plus the Cosmos-Predict2.5 `tokenizer.pth` and Cosmos-Reason1-7B text assets. An exported EMA file, an iteration directory containing `model/.metadata`, or the DCP model directory is supported. Distributed EMA conversion uses the packaged helper. For precomputed text features, use `text_embeddings_path` with `[1,S,100352]` tensors instead of `text_encoder_path`.
+## Runtime contract
 
-## Public community checkpoint
+Required `input-path`, `action-file`, and `load.student-checkpoint-path`; input `prompt` (bundled samples are used when omitted); options `height`, `width`, `num-inference-steps`, `guidance-scale`, `fps`, and `seed`; artifact `dreamdojo_world.mp4`.
 
-[PencilHu/DreamDojo-Jokeru-2B-SelfForcing](https://huggingface.co/PencilHu/DreamDojo-Jokeru-2B-SelfForcing/tree/c99e38c158c853113e1148078f4730aabde7b4ed) publishes a community **Jokeru** student at `checkpoints/iter_000000700`. Its training configuration uses the 2B causal architecture, 384-D actions, four released TrigFlow times, and 480×640 geometry, and its EMA weights map onto the native student without missing keys or shape mismatches. This is not NVIDIA's official GR-1 student.
+CLI task profile: `robot-world-generation`. WorldFoundry binds `DreamDojoStudentPipeline`. Family status: **Runner parity pending**. Defaults for `robot-world-generation`: height=480, width=640, num-inference-steps=4, guidance-scale=1.0, fps=10, seed=42.
 
-```bash
-hf download PencilHu/DreamDojo-Jokeru-2B-SelfForcing \
-  --revision c99e38c158c853113e1148078f4730aabde7b4ed \
-  --include 'checkpoints/iter_000000700/model/*' \
-            'checkpoints/iter_000000700/training_config.yaml' README.md \
-  --local-dir /weights/DreamDojo-Jokeru-2B-SelfForcing
-```
+Supply student_checkpoint_path, one initial image, normalized 384-D actions, and shared Cosmos tokenizer/Reason1 assets. First STEP consumes 12 actions and returns 13 frames; subsequent STEP consumes 4 actions and returns 4 new frames at a 10-fps playback clock. Reset retains weights.
 
-The model shards total about **17.2 GB**, including training-side networks. Pass `/weights/DreamDojo-Jokeru-2B-SelfForcing/checkpoints/iter_000000700` as `student_checkpoint_path`; the packaged converter selects EMA weights for inference. Retain the upstream NVIDIA model terms alongside the uploader's stated Apache-2.0 license.
+The pinned DreamDojo Hub snapshot contains no distilled student checkpoint; explicit student assets are required. Student checkpoint-backed quality, official parity, closed-loop robot success, and 10-fps inference throughput are not yet validated. Dataset normalization and teleoperation mapping remain caller-owned; WASD controls are not robot actions.
 
-## Resident streaming
+## Running in WorldFoundry
 
-```python
-import numpy as np
-from worldfoundry.pipelines.dreamdojo.pipeline_dreamdojo_student import DreamDojoStudentPipeline
+Run `wf run dreamdojo-student --pipeline.task-profile robot-world-generation` to roll out the world model.
 
-pipeline = DreamDojoStudentPipeline.from_pretrained(
-    {
-        "student_checkpoint_path": "/weights/DreamDojo/student/iter_000003000",
-        "vae_path": "/weights/Cosmos-Predict2.5-2B/tokenizer.pth",
-        "text_embeddings_path": "/inputs/robot-text.pt",
-    },
-    device="cuda",
-)
-# Prepared normalized controls, not raw joint readings or keyboard commands.
-actions = np.load("/inputs/normalized-actions.npy")  # [N,384], N >= 16
-pipeline.configure_realtime(
-    images="/inputs/robot.png",
-    height=480,
-    width=640,
-    num_inference_steps=4,
-    seed=42,
-)
-try:
-    first = pipeline.stream_realtime(actions=actions[:12])
-    next_chunk = pipeline.stream_realtime(actions=actions[12:16])
-    pixels = next_chunk["video_chunk"].frames  # [1,3,4,480,640], [-1,1]
-finally:
-    pipeline.reset_realtime()
-```
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
-For an isolated offline export, call the same pipeline with `images`, `interactions=[action_file]`, and `output_path`. Offline calls do not mutate an existing resident rollout. Studio exposes a separate **DreamDojo Student** entry with the student checkpoint control and four-step defaults.
+Weights: `nvidia/Cosmos-Predict2.5-2B` and `nvidia/Cosmos-Reason1-7B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh dreamdojo-student`. Add `--download` to fetch missing public checkpoints.
 
-The checkpoint-backed public streaming command is:
-
-```bash
-python tests/manual/dreamdojo_inference.py \
-  --variant student --stream \
-  --student-checkpoint /weights/DreamDojo/student/iter_000003000 \
-  --vae /weights/Cosmos-Predict2.5-2B/tokenizer.pth \
-  --text-embeddings /inputs/robot-text.pt \
-  --image /inputs/robot.png --actions /inputs/normalized-actions.npy \
-  --output /outputs/dreamdojo-student.mp4 --steps 4 --seed 42
-```
-
-## Validation
-
-Tests with a small weight-free DiT confirm that cached causal sampling matches dense temporal-mask outputs and that action/history alignment, repeatability, interleaved sessions, reset, and isolated offline export behave correctly. With the released Cosmos tokenizer, the initial and continuation windows at 480×640 encode identically to direct Wan encoding; no student DiT checkpoint has been replayed.
-
-## Limitations
-
-- The pinned DreamDojo Hub snapshot `89d029e10816d2995d700cb8ba06f171e0504203` contains no distilled student checkpoint. Student weights must be supplied; the loader does not substitute post-trained teacher weights.
-- Student checkpoint-backed output quality, official numerical/visual parity, closed-loop robot success, and measured **10-fps generation throughput** remain unvalidated. Ten fps above is the playback cadence.
-- Dataset normalization and teleoperation mapping remain caller-owned. The API consumes normalized robot-action arrays; the stock WASD browser controls are not mapped to this action space. Student WebRTC end-to-end replay has not been executed.
+License: NVIDIA Open Model License.
 
 <ModelRelatedRecipes modelId="dreamdojo-student" locale="en" />

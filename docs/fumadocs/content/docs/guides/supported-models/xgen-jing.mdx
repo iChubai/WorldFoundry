@@ -1,10 +1,11 @@
 ---
-title: XGEN-JING
-description: Camera-controlled, joint audio/video generation with the shared MiniMax-H3 base.
+title: "XGEN-JING Flash v1"
+description: "XGEN-JING Flash v1 from XGEN Labs: text-to-video, image-to-video, and 2 more tasks; Verified."
+modelId: "xgen-jing"
 pageSource: authored
 ---
 
-`xgen-jing` runs the released **JING-Flash-v1 four-step bidirectional** model, a camera-controlled audio/video extension of MiniMax-H3. On top of the H3 transformer it adds camera FiLM, independent text refinement per slice and global-media/slice-local-text attention. Conditioning uses Qwen3-VL, and the H3 video/audio codecs come from Diffusers.
+XGEN-JING Flash v1 is a world model from XGEN Labs for text-to-video, image-to-video, camera-controlled video, and world model.
 
 ```python
 from worldfoundry.pipelines.xgen_jing import XGENJINGPipeline
@@ -42,3 +43,31 @@ The runtime processes text, transformer and codecs sequentially. Default transfo
 Validated on a single GPU with the released JING-Flash-v1 and MiniMax-H3 checkpoints: text-only generation produces coherent 22-frame, 24 FPS H.264 video with 32 kHz stereo AAC audio at 448×256 (`cpu_offload=False`) and at the default 960×544 canvas (`cpu_offload=True`). Image references, camera-control accuracy, longer generations and general prompt quality are not yet validated. The causal model and streaming observation-history inference are not released.
 
 Sources: [XGEN-JING](https://github.com/XGEN-Labs/XGEN-JING), revision `cbeec31630d63a981a8e40d6e79c71a188a7d8c9`; [weights](https://huggingface.co/XGENlabs/XGEN-JING), revision `8153db624fa4fa573d2e0c5335b515882efff30d`. Attribution and the MiniMax H3 Community License are recorded in root `THIRD-PARTY-NOTICES`.
+
+<ModelPaperFigures modelId="xgen-jing" locale="en" />
+
+<ModelCommandBuilder modelId="xgen-jing" locale="en" />
+
+## What it is for
+
+`xgen-jing` generates camera-controlled video: a camera trajectory in, a clip that follows it out.
+
+Tasks: text-to-video, image-to-video, camera-controlled video, and world model. Modalities: text, image, and camera pose in, video out.
+
+## Runtime contract
+
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `xgen-jing.mp4`.
+
+CLI task profile: `default`. WorldFoundry binds `XGENJINGPipeline`. Family status: **Verified**.
+
+## Running in WorldFoundry
+
+Run `wf run xgen-jing --pipeline.task-profile default` to follow the camera path.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Weights: `XGENlabs/XGEN-JING` and `MiniMaxAI/MiniMax-H3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh xgen-jing`. Add `--download` to fetch missing public checkpoints.
+
+License: minimax-h3-community.
+
+<ModelRelatedRecipes modelId="xgen-jing" locale="en" />

@@ -9,9 +9,7 @@ Pusa VidGen (Pusa V1) demonstrates vectorized timestep adaptation: instead of on
 
 <ModelPaperFigures modelId="pusa-vidgen" locale="en" />
 
-Paper: [arXiv 2410.03160](https://arxiv.org/abs/2410.03160).
-
-Project page: [pusav1.org](https://pusav1.org/). Code: [Yaofang-Liu/Pusa-VidGen](https://github.com/Yaofang-Liu/Pusa-VidGen).
+Paper: [arXiv 2410.03160](https://arxiv.org/abs/2410.03160). Project page: [pusav1.org](https://pusav1.org/). Code: [Yaofang-Liu/Pusa-VidGen](https://github.com/Yaofang-Liu/Pusa-VidGen).
 
 <ModelCommandBuilder modelId="pusa-vidgen" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (General T
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `frames`, `height`, `width`, `steps`, `guidance-scale`, `seed`, and 5 more; artifacts `generated_video` and `pusa_vidgen_public_runner.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `frames`, `height`, `width`, `steps`, `guidance-scale`, `seed`, and 5 more; artifact `pusa_vidgen_public_runner.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `PusaVidGenPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `default`: frames=81, height=720, width=1280, seed=0.
+CLI task profile: `default`. WorldFoundry binds `PusaVidGenPipeline`. Family status: **Runner parity pending**. Defaults for `default`: frames=81, height=720, width=1280, steps=4, guidance-scale=1.0, seed=0.
 
 Call the pipeline with execute=True to write the generated_video artifact. Stage the Wan2.2 base weights plus the Pusa LoRA before running.
+
+Requires both the Wan2.2 base checkpoints and the Pusa LoRA — the LoRA alone does nothing.
 
 ## Running in WorldFoundry
 

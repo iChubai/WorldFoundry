@@ -9,9 +9,7 @@ MolmoAct2 is AI2's second-generation action reasoning model with a broad Apache-
 
 <ModelPaperFigures modelId="molmoact2" locale="en" />
 
-Paper: [arXiv 2605.02881](https://arxiv.org/abs/2605.02881).
-
-Code: [allenai/molmoact2](https://github.com/allenai/molmoact2).
+Paper: [arXiv 2605.02881](https://arxiv.org/abs/2605.02881). Code: [allenai/molmoact2](https://github.com/allenai/molmoact2).
 
 <ModelCommandBuilder modelId="molmoact2" locale="en" />
 
@@ -27,9 +25,9 @@ Suggested benchmarks: [LIBERO](/docs/evaluation/benchmark-hub/libero) (Dedicated
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `molmoact2_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `molmoact2_action_trace.json`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `MolmoAct2Pipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `MolmoAct2Pipeline`.
 
 Start on `molmoact2-droid`. The family has 5 variants, all for `vla.policy_rollout`: `molmoact2-droid`, `molmoact2-bimanual-yam`, `molmoact2-so100-101`, `molmoact2-libero`, and `molmoact2-think-libero`.
 

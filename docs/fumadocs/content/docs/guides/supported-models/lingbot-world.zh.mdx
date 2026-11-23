@@ -1,6 +1,6 @@
 ---
 title: "LingBot-World"
-description: "LingBot-World（蚂蚁灵波科技（Robbyant，蚂蚁集团））：世界模型、相机控制等 3 项任务；已验证; 独立环境 `lingbot-world`。"
+description: "LingBot-World（蚂蚁灵波科技（Robbyant，蚂蚁集团））：世界模型、相机控制等 3 项任务；已验证；独立环境 lingbot-world。"
 modelId: "lingbot-world"
 pageSource: authored
 ---
@@ -33,7 +33,7 @@ CLI task profile：`image-navigation-video`、`image-action-video`。绑定的 p
 
 系列状态：**已验证**。
 
-`image-navigation-video` 的默认值：frames=161, seed=42；`image-action-video` 的默认值：frames=21, seed=42。
+`image-navigation-video` 的默认值：frames=161, steps=70, seed=42；`image-action-video` 的默认值：frames=21, steps=20, seed=42。
 
 封装仅解析本地 HFD 或显式 checkpoint 目录，不在运行时下载。Base-Cam 在专属 `lingbot-world` 环境中运行；Base-Act 另有独立页面 [LingBot-World Act](/zh/docs/guides/supported-models/lingbot-world-act)。官方 Fast 权重复用 Base-Cam 的 T5/VAE 组件，并使用独立的 16 个分片。已在单张 H100 上验证：Fast 生成可完整解码的 21 帧、544 × 720、16 fps 视频。选择 Fast 时传入 `runtime_variant=fast` 和 `fast_model_path`；由于上游按三个潜变量帧分块，帧数需取 9、21、33 等，否则会被截短。更长的 Fast 视频和相机贴合度尚未测量。
 

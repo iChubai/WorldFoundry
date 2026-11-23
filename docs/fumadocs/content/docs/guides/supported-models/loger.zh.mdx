@@ -9,9 +9,7 @@ LoGeR 从输入视图重建 3D 场景、相机轨迹与点云。已用 Junyi42/L
 
 <ModelPaperFigures modelId="loger" locale="zh" />
 
-论文：[arXiv 2603.03269](https://arxiv.org/abs/2603.03269)。
-
-项目页：[LoGeR-project.github.io](https://LoGeR-project.github.io/)。代码：[Junyi42/LoGeR](https://github.com/Junyi42/LoGeR)。
+论文：[arXiv 2603.03269](https://arxiv.org/abs/2603.03269)。项目页：[LoGeR-project.github.io](https://LoGeR-project.github.io/)。代码：[Junyi42/LoGeR](https://github.com/Junyi42/LoGeR)。
 
 <ModelCommandBuilder modelId="loger" locale="zh" />
 
@@ -27,9 +25,7 @@ LoGeR 从输入视图重建 3D 场景、相机轨迹与点云。已用 Junyi42/L
 
 输入 `input-path`（不传时使用内置示例）；参数 `interval`；产物 `result.ply`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LoGeRPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LoGeRPipeline`。系列状态：**已验证**。
 
 在共享的 worldfoundry-unified-cu128 环境中运行；导出的点云可接入点云导航管线。
 
@@ -40,5 +36,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LoGeRPipelin
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`Junyi42/LoGeR`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh loger`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="loger" locale="zh" />

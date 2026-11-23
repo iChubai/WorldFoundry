@@ -9,9 +9,7 @@ Vchitect-2.0 是上海人工智能实验室的开源文生视频扩散 Transform
 
 <ModelPaperFigures modelId="vchitect-2-t2v" locale="zh" />
 
-论文：[arXiv 2501.08453](https://arxiv.org/abs/2501.08453)。
-
-代码：[Vchitect/Vchitect-2.0](https://github.com/Vchitect/Vchitect-2.0)。
+论文：[arXiv 2501.08453](https://arxiv.org/abs/2501.08453)。代码：[Vchitect/Vchitect-2.0](https://github.com/Vchitect/Vchitect-2.0)。
 
 <ModelCommandBuilder modelId="vchitect-2-t2v" locale="zh" />
 
@@ -27,15 +25,13 @@ Vchitect-2.0 是上海人工智能实验室的开源文生视频扩散 Transform
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`guidance-scale` 等 7 项；产物 `generated_video`、`vchitect_2_t2v_public_runner.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`guidance-scale` 等 7 项；产物 `vchitect_2_t2v_public_runner.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `Vchitect2T2VPipeline`。
-
-系列状态：**仅静态加载**。
-
-`interactive-video` 的默认值：frames=40, fps=8, height=432, width=768, seed=0。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `Vchitect2T2VPipeline`。系列状态：**仅静态加载**。`interactive-video` 的默认值：frames=40, fps=8, height=432, width=768, steps=100, guidance-scale=7.5。
 
 权重为 apache-2.0，位于 Vchitect/Vchitect-2.0-2B。请使用 id vchitect-2-t2v。
+
+验证仅限结构层：checkpoint 可精确加载到原生模型，但与上游 demo 的视觉一致性未确立。2B 规模：质量低于 13B 以上的文生视频模型。
 
 ## 在 WorldFoundry 中运行
 

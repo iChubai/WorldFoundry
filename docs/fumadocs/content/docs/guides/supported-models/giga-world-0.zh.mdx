@@ -25,7 +25,7 @@ pipeline 还需要 `google-t5/t5-11b` 和 `Wan-AI/Wan2.1-T2V-1.3B-Diffusers`。�
 
 open-gigaai 提供两个 2B 视频 checkpoint：GigaWorld-0-Video-Pretrain-2b 与 GigaWorld-0-Video-GR1-2b。GR1 入口还使用 T5-11B 文本编码器和 Wan VAE。该模型由极佳科技（GigaAI）发布。
 
-catalog 记录的任务包括机器人世界模型、视频生成、action-conditioned-generation、robot-image-to-video。别名包括 `giga_world_0`、`gigaworld-0`、`gigaworld0`。输出模态为视频。
+catalog 记录的任务包括机器人世界模型、视频生成、action-conditioned-generation、robot-image-to-video。别名包括 `giga_world_0`、`gigaworld-0`、`gigaworld0`。模态上，它接受图像，输出视频。
 
 推荐评测：[WorldArena](/zh/docs/evaluation/benchmark-hub/worldarena)（WorldArena 收录 GigaWorld-0 用于机器人世界模型评测）、[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身世界模型视频预测质量）。
 
@@ -33,7 +33,7 @@ catalog 记录的任务包括机器人世界模型、视频生成、action-condi
 
 ## 运行时契约
 
-必填 `prompt`、`image`；可选 `video`、`actions`（robot_action, world_action）；产物 `giga-world-0.mp4`。
+输入 `input-path`、`prompt`、`load.transformer-model-dir`、`load.text-encoder-model-dir`、`load.vae-model-dir`（不传时使用内置示例）；参数 `attention-backend`、`height`、`width`、`num-frames`、`num-inference-steps`、`guidance-scale` 等 12 项；产物 `giga-world-0.mp4`。
 
 记录的任务 profile：`robotics-world-model`、`video-generation`、`action-conditioned-generation`、`robot-image-to-video`。绑定的 pipeline 类是 `GigaWorld0Pipeline`。
 

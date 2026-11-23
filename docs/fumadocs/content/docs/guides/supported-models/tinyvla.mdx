@@ -9,9 +9,7 @@ TinyVLA targets fast, data-efficient VLA at sub-billion scale: LLaVA-Pythia back
 
 <ModelPaperFigures modelId="tinyvla" locale="en" />
 
-Paper: [arXiv 2402.03766](https://arxiv.org/abs/2402.03766).
-
-Code: [liyaxuanliyaxuan/TinyVLA](https://github.com/liyaxuanliyaxuan/TinyVLA).
+Paper: [arXiv 2402.03766](https://arxiv.org/abs/2402.03766). Code: [liyaxuanliyaxuan/TinyVLA](https://github.com/liyaxuanliyaxuan/TinyVLA).
 
 <ModelCommandBuilder modelId="tinyvla" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: VLA, VLA action prediction, and embodied policy. Aliases: `tiny-vla` and 
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `tinyvla_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `tinyvla_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `TinyVLAPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `TinyVLAPipeline`. Family status: **Runner parity pending**.
 
 Stage a compatible task checkpoint, its config.json (action dimensions and head type), and dataset statistics locally; the runtime does not start without them.
 
-No public task-trained action checkpoint; released Hub models are backbones only.
+No public task-trained action checkpoint; released Hub models are backbones only. Mixed MIT/Apache-2.0 licensing across components.
 
 ## Running in WorldFoundry
 
@@ -42,5 +38,7 @@ Run `wf run tinyvla --pipeline.task-profile default` to predict actions.
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8, torch>=2.5).
 
 Weights: `lesjie/Llava-Pythia-400M`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh tinyvla`. Add `--download` to fetch missing public checkpoints.
+
+License: mixed-mit-apache-2.0.
 
 <ModelRelatedRecipes modelId="tinyvla" locale="en" />

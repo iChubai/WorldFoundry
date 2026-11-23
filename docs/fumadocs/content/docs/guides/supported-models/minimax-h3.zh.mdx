@@ -1,6 +1,6 @@
 ---
 title: "MiniMax H3"
-description: "MiniMax H3（MiniMaxAI）：文生视频、图生视频与参考图生成视频模型。"
+description: "MiniMax H3（MiniMaxAI）：文生视频、图生视频等 3 项任务；Runner 一致性待确认。"
 modelId: "minimax-h3"
 pageSource: authored
 ---
@@ -25,9 +25,7 @@ MiniMax H3 支持文生视频、图生视频与参考图生成视频，与托管
 
 输入 `prompt`（不传时使用内置示例）；产物 `minimax-h3.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `NativeMiniMaxH3Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `NativeMiniMaxH3Pipeline`。系列状态：**Runner 一致性待确认**。
 
 ## 在 WorldFoundry 中运行
 
@@ -37,6 +35,6 @@ CLI task profile：`default`。绑定的 pipeline 类是 `NativeMiniMaxH3Pipelin
 
 权重仓库：`MiniMaxAI/MiniMax-H3`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh minimax-h3`；下载缺失的公开权重时加 `--download`。
 
-许可证为 Apache-2.0；最低显存 80 GB。
+许可证：Apache-2.0；最低显存 80 GB。
 
 <ModelRelatedRecipes modelId="minimax-h3" locale="zh" />

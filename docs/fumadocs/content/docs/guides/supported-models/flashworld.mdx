@@ -1,6 +1,6 @@
 ---
 title: "FlashWorld"
-description: "FlashWorld from Xiamen University / Tencent: one image (plus optional prompt) in, camera-navigable 3D scene out in seconds."
+description: "FlashWorld from Xiamen University / Tencent: fast 3D scene generation from image or text; Verified."
 modelId: "flashworld"
 pageSource: authored
 ---
@@ -29,15 +29,13 @@ Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (S
 
 ## Runtime contract
 
-Inputs `input-path` and `prompt` (bundled samples are used when omitted); options `interactions`, `num-frames`, `fps`, `image-height`, `image-width`, and `return-video`; artifacts `generated_3d_asset`, `generated_video`, and `flashworld.ply`.
+Inputs `input-path` and `prompt` (bundled samples are used when omitted); options `interactions`, `num-frames`, `fps`, `image-height`, `image-width`, and `return-video`; artifacts `generated_video` and `flashworld.ply`.
 
-CLI task profiles: `official-camera-scene`. WorldFoundry binds `FlashWorldPipeline`.
-
-Family status: **Verified**.
-
-Recorded `official-camera-scene` defaults: num_frames=16, fps=15.
+CLI task profile: `official-camera-scene`. WorldFoundry binds `FlashWorldPipeline`. Family status: **Verified**. Defaults for `official-camera-scene`: num-frames=16, fps=15.
 
 Stage imlixinyang/FlashWorld and Wan-AI/Wan2.2-TI2V-5B-Diffusers before running; execution needs a CUDA GPU.
+
+Speed-focused distillation trades some scene fidelity versus optimization-based methods. Requires both the FlashWorld and Wan2.2 checkpoints.
 
 ## Running in WorldFoundry
 

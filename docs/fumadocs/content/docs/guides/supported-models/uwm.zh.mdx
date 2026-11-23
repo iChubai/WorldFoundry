@@ -9,9 +9,7 @@ pageSource: generated
 
 <ModelPaperFigures modelId="uwm" locale="zh" />
 
-论文：[arXiv 2504.02792](https://arxiv.org/abs/2504.02792)。
-
-项目页：[weirdlabuw.github.io/uwm](https://weirdlabuw.github.io/uwm/)。代码：[WEIRDLabUW/unified-world-model](https://github.com/WEIRDLabUW/unified-world-model)。
+论文：[arXiv 2504.02792](https://arxiv.org/abs/2504.02792)。项目页：[weirdlabuw.github.io/uwm](https://weirdlabuw.github.io/uwm/)。代码：[WEIRDLabUW/unified-world-model](https://github.com/WEIRDLabUW/unified-world-model)。
 
 <ModelCommandBuilder modelId="uwm" locale="zh" />
 
@@ -21,17 +19,15 @@ pageSource: generated
 
 UWM 是视频-动作扩散设计：单个扩散过程联合建模未来观测与机器人动作，同一网络兼任预测与策略角色。该模型由华盛顿大学（WEIRD 实验室）发布。
 
-任务：机器人世界模型、动作条件视频、video-action-diffusion。别名：`uwm-libero90`、`uwm-droid`。
+任务：机器人世界模型、动作条件视频、视频-动作扩散。别名：`uwm-libero90`、`uwm-droid`。模态上，它接受动作，输出视频。
 
 推荐评测：[LIBERO](/zh/docs/evaluation/benchmark-hub/libero)（uwm-libero90 变体面向 LIBERO 任务）、[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（机器人世界模型滚动生成质量）。
 
 ## 运行时契约
 
-产物 `generated_video`、`uwm_runtime_plan.json`。
+产物 `uwm_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `UWMPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `UWMPipeline`。系列状态：**Runner 一致性待确认**。
 
 请按评测套件选择 LIBERO-90 或 DROID 变体。所需 checkpoint 与资产就位前，运行只会输出列出缺失资产的运行时计划，而不会生成结果。
 

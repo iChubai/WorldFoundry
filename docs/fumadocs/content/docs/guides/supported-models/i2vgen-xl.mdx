@@ -9,9 +9,7 @@ I2VGen-XL is Alibaba's cascaded image-to-video model, one of the earlier high-re
 
 <ModelPaperFigures modelId="i2vgen-xl" locale="en" />
 
-Paper: [arXiv 2311.04145](https://arxiv.org/abs/2311.04145).
-
-Project page: [i2vgen-xl.github.io](https://i2vgen-xl.github.io/). Code: [ali-vilab/VGen](https://github.com/ali-vilab/VGen).
+Paper: [arXiv 2311.04145](https://arxiv.org/abs/2311.04145). Project page: [i2vgen-xl.github.io](https://i2vgen-xl.github.io/). Code: [ali-vilab/VGen](https://github.com/ali-vilab/VGen).
 
 <ModelCommandBuilder modelId="i2vgen-xl" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [AIGCBench](/docs/evaluation/benchmark-hub/aigcbench) (I2V
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `negative-prompt`, `frames`, `height`, `width`, `steps`, `guidance-scale`, and 2 more; artifacts `i2vgen-xl.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `negative-prompt`, `frames`, `height`, `width`, `steps`, `guidance-scale`, and 2 more; artifact `i2vgen-xl.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `I2VGenXLPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: frames=16, height=704, width=1280, seed=8888.
+CLI task profile: `interactive-video`. WorldFoundry binds `I2VGenXLPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: frames=16, height=704, width=1280, steps=50, guidance-scale=9.0, seed=8888.
 
 WorldFoundry runs the Hugging Face diffusers I2VGenXLPipeline with the official ali-vilab weights in float16. The pipeline needs both an image and a prompt; `wf run` falls back to its bundled sample image and prompt when either is omitted.
+
+It is a 2023 UNet cascade, older than the DiT-based image-to-video models in the catalog.
 
 ## Running in WorldFoundry
 

@@ -1,26 +1,44 @@
 ---
 title: "Pika H3 Flex"
-description: "Pika H3 Flex six-step joint video/audio generation on the shared MiniMax-H3 runtime."
+description: "Pika H3 Flex from Pika Labs: text-to-video, image-to-video, and 2 more tasks; Runner parity pending."
 modelId: "pika-h3-flex"
 pageSource: authored
 ---
 
-Pika H3 Flex is a six-step MiniMax-H3 adapter for joint video and stereo audio generation. It runs on the MiniMax-H3 base model with its Qwen3-VL conditioner.
+Six-step MiniMax-H3 adapter for joint video/audio generation with endpoint and multimodal image references.
+
+<ModelPaperFigures modelId="pika-h3-flex" locale="en" />
 
 Code: [Pika-Labs/Pika-H3-Flex](https://github.com/Pika-Labs/Pika-H3-Flex).
 
+<ModelCommandBuilder modelId="pika-h3-flex" locale="en" />
+
+## What it is for
+
+`pika-h3-flex` covers text-to-video and image-to-video: a prompt and an optional still image in, a clip out. It is published by Pika Labs.
+
+Tasks: text-to-video, image-to-video, reference-to-video, and audio video generation. Aliases: `pika-h3`, `pika-h3-flex-fl2va`, and `pika-h3-flex-ref2va`. Modalities: text and image in, video and audio out.
+
 ## Runtime contract
+
+Input `prompt` (bundled samples are used when omitted); options `num-frames`, `short-edge`, `aspect-ratio`, and `seed`; artifact `pika-h3-flex.mp4`.
+
+CLI task profiles: `t2va`, `i2va`, `l2va`, `fl2va`, and `ref2va`. WorldFoundry binds `PikaH3FlexPipeline`. Family status: **Runner parity pending**. Defaults for `t2va`, `i2va`, and `l2va`: num-frames=124, seed=0.
+
+Stage the Pika H3 Flex fl2va or ref2va adapter together with the pinned MiniMax-H3 base snapshot. Use adapter_task=ref2va for reference generation.
+
+Native output is 24 fps with 32 kHz stereo audio and six generator evaluations. Reference generation accepts image references only; video and standalone-audio references are not supported. Multi-GPU execution, the full 480p/768p bucket set, and checkpoint-backed outputs are not validated.
 
 Use the `fl2va` adapter for text and endpoint-frame generation, and the `ref2va` adapter for image references. Outputs use 24 FPS video with synchronized 32 kHz stereo audio.
 
-The adapter is loaded with `adapter_task=fl2va` or `adapter_task=ref2va`:
+## Running in WorldFoundry
 
-```bash
-wf run pika-h3-flex --pipeline.task-profile t2va --json
-```
+Run `wf run pika-h3-flex --pipeline.task-profile t2va` to generate the video. Switch tasks in the command builder above to change `--pipeline.task-profile`.
 
-Prepare the pinned MiniMax-H3 base snapshot and the Pika adapter files before running.
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
-## Limitations
+Weights: `Pika-Labs/Pika-H3-Flex` and `MiniMaxAI/MiniMax-H3`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh pika-h3-flex`. Add `--download` to fetch missing public checkpoints.
 
-Reference generation accepts image references only; video and standalone-audio references are not supported. Multi-GPU execution, the full 480p/768p bucket set, and checkpoint-backed outputs are not validated.
+License: minimax-h3-community.
+
+<ModelRelatedRecipes modelId="pika-h3-flex" locale="en" />

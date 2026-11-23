@@ -1,16 +1,44 @@
 ---
 title: "World Observer"
-description: "Joint actor-observer generation for persistent world modeling."
+description: "World Observer from KAIST AI: persistent world model and joint actor observer generation; Planned."
 modelId: "world-observer"
 pageSource: authored
 ---
 
-World Observer is a KAIST AI research project on persistent world modeling through joint actor-observer generation.
-
-Paper: [arXiv:2610.02162](https://arxiv.org/abs/2610.02162). Repository: [cvlab-kaist/world-observer](https://github.com/cvlab-kaist/world-observer). Project: [World Observer](https://cvlab-kaist.github.io/world-observer/).
+World Observer studies persistent world modeling through joint actor-observer generation. The official repository publishes the paper and release plan.
 
 Model ID: `world-observer` (aliases `WorldObserver` and `worldobserver`). It cannot be run until the official checkpoint and inference code are released.
 
-## Release status
+<ModelPaperFigures modelId="world-observer" locale="en" />
 
-The official repository contains the introduction and release plan. The dataset, checkpoint, inference code, and training code are all listed as forthcoming.
+Paper: [arXiv 2610.02162](https://arxiv.org/abs/2610.02162).
+
+Project page: [cvlab-kaist.github.io/world-observer](https://cvlab-kaist.github.io/world-observer/). Code: [cvlab-kaist/world-observer](https://github.com/cvlab-kaist/world-observer).
+
+<ModelCommandBuilder modelId="world-observer" locale="en" />
+
+## What it is for
+
+`world-observer` is a world generation model. It is published by KAIST AI.
+
+Tasks: persistent world model and joint actor observer generation. Aliases: `WorldObserver` and `worldobserver`.
+
+## Runtime contract
+
+Required `prompt`.
+
+CLI task profiles: `persistent-world-model` and `joint-actor-observer-generation`. Family status: **Planned**.
+
+Running it requires the official checkpoint and inference code, which have not been released yet.
+
+No model checkpoint or inference code has been released upstream yet.
+
+## Running in WorldFoundry
+
+Run `wf run world-observer --pipeline.task-profile persistent-world-model` to generate the world. Switch tasks in the command builder above to change `--pipeline.task-profile`.
+
+No runtime environment is recorded for this model.
+
+No public checkpoint is listed for this model; stage the weights as described in the usage notes. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh world-observer`. Add `--download` to fetch missing public checkpoints.
+
+<ModelRelatedRecipes modelId="world-observer" locale="en" />

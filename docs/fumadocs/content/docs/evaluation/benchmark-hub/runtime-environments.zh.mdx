@@ -1,13 +1,13 @@
 ---
 title: Benchmark 运行环境
-description: 42 个 Video Generation 与 World Model benchmark 的环境、服务、checkpoint 和已验证范围。
+description: 43 个视频生成与世界模型评测基准的环境、服务、权重和已验证范围汇总。
 ---
 
 ## Artifact 是模型与 benchmark 的边界
 
 生成模型和 evaluator 是两个独立 runtime。模型可以在自己的 conda 环境里生成视频并退出，然后把普通文件交给另一个环境中的 benchmark。Benchmark 不应 import 待测模型，也不应把 evaluator 的依赖强塞进模型环境。
 
-下面 42 个 Video Generation / World Model 条目中，`needs_new_env: false` 只表示 WorldFoundry wrapper 或结果 importer 默认从统一环境启动；它**不表示**所有 official metric checkpoint、API credential、native extension 和完整数据都已经安装。`environment_id` 表示真正执行所用的 base environment；只有同时写明 `needs_new_env: true` 和公开 setup 命令时，才是仓库管理的独立环境。
+下面 43 个 Video Generation / World Model 条目中，`needs_new_env: false` 只表示 WorldFoundry wrapper 或结果 importer 默认从统一环境启动；它**不表示**所有 official metric checkpoint、API credential、native extension 和完整数据都已经安装。`environment_id` 表示真正执行所用的 base environment；只有同时写明 `needs_new_env: true` 和公开 setup 命令时，才是仓库管理的独立环境。
 
 下面用到的环境类型：
 
@@ -68,9 +68,9 @@ test -x "$EVALCRAFTER_PYTHON"
 
 直接调用 `"$EVALCRAFTER_PYTHON"` 就是切换环境，不要求激活 shell。该 profile 逐项对齐固定 revision 的官方环境：Python 3.9.17、pip 23.2.1、Torch 2.0.1、torchvision 0.15.2、TensorFlow 2.12.0、PaddlePaddle-GPU 2.5.1、MMCV 2.0.1 和 MMAction2 1.1.0。官方 RAFT native extension 和 checkpoint 树需要另外准备。固定 upstream checkout、CUDA 11.7 说明、checkpoint 布局、bounded raw-video 命令和官方结果导入都见 [EvalCrafter 页面](/zh/docs/evaluation/benchmark-hub/evalcrafter)。
 
-## Video generation benchmarks — 30
+## 视频生成基准 — 30
 
-<KvCatalog heading="Benchmark" vars rows={[
+<KvCatalog heading="评测基准" vars rows={[
     { name: <><a href="/zh/docs/evaluation/benchmark-hub/vbench">VBench</a></>, description: <><strong>U + metric stack</strong>{"；按所选 dimension 准备 checkpoint。Detectron2 维度可能需要与 CUDA/Torch 匹配的构建。"}</>, reads: [{ label: "已验证范围", value: <>{"已在一个真实视频上验证 "}<code>aesthetic_quality</code>{" 维度；完整 16 维套件和 leaderboard 对比需要所有维度的 checkpoint。"}</> }] },
     { name: <><a href="/zh/docs/evaluation/benchmark-hub/vbench-plus-plus">VBench++</a></>, description: <><strong>U + metric stack</strong>{"；I2V、long-video、trustworthiness track 的资产不同。"}</>, reads: [{ label: "已验证范围", value: "已验证 bounded long-video 组件；完整套件需要 I2V、long-video 和 trustworthiness 资产。" }] },
     { name: <><a href="/zh/docs/evaluation/benchmark-hub/vbench-2.0">VBench-2.0</a></>, description: <><strong>U + metric stack</strong>{"；需要 VBench2 checkpoint/data，相关维度可选 RetinaFace。"}</>, reads: [{ label: "已验证范围", value: "已验证 bounded diversity 组件；完整套件需要所有维度的 VBench2 checkpoint 和数据。" }] },
@@ -103,9 +103,9 @@ test -x "$EVALCRAFTER_PYTHON"
     { name: <><a href="/zh/docs/evaluation/benchmark-hub/memobench">MemoBench</a></>, description: <><strong>U + service/metric stack</strong>{"；Step 1 用本地指标，完整 ORS/VQA 需要 SAM-3 和 Gemini-compatible judge。"}</>, reads: [{ label: "已验证范围", value: "Step 1 本地指标可运行；完整 ORS/VQA 评分需要 SAM-3 和 Gemini-compatible judge，因此 Step 1 结果不是完整 MemoBench 分数。" }] }
   ]} />
 
-## World model benchmarks — 12
+## 世界模型基准 — 13
 
-<KvCatalog heading="Benchmark" vars rows={[
+<KvCatalog heading="评测基准" vars rows={[
     { name: <><a href="/zh/docs/evaluation/benchmark-hub/worldmodelbench">WorldModelBench</a></>, description: <><strong>U + metric stack</strong>{"；提供 350-instance data root 和 VILA-compatible judge checkpoint/model ID。"}</>, reads: [{ label: "已验证范围", value: "已验证 result import 与 manifest coverage 检查；完整评分需要 VILA-compatible judge checkpoint。" }] },
     { name: <><a href="/zh/docs/evaluation/benchmark-hub/worldscore">WorldScore</a></>, description: <><strong>U + metric stack</strong>{"；完整指标需要 DROID/"}<code>lietorch</code>{"、GroundingDINO、SAM、optical-flow/interpolation、Mamba 和匹配的 checkpoint/extension。"}</>, reads: [{ label: "已验证范围", value: "已验证 bounded dynamic 组件；完整 metric tree 需要各指标的 checkpoint 和 native extension。" }] },
     { name: <><a href="/zh/docs/evaluation/benchmark-hub/worldbench">WorldBench</a></>, description: <><strong>U</strong>{"，但只做 official-result normalization。"}</>, reads: [{ label: "已验证范围", value: <>{"只做 official-result normalization；没有可再分发的 official raw-video evaluator，因此不支持从视频执行 "}<code>official-run</code>{"。"}</> }] },

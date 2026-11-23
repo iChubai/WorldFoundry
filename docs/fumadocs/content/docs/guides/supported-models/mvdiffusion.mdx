@@ -1,11 +1,11 @@
 ---
 title: "MVDiffusion"
-description: "MVDiffusion (Simon Fraser University): correspondence-aware multi-view image and panorama generation; outpaints one input image into eight views and a panorama."
+description: "MVDiffusion from Simon Fraser University: correspondence-aware multiview image generation and scene texturing; Runner parity pending."
 modelId: "mvdiffusion"
 pageSource: authored
 ---
 
-MVDiffusion generates consistent multi-view images in one shot — panoramas from text or perspective views, and texture views for scenes — by letting diffusion branches attend to each other. In WorldFoundry, the image-outpainting route turns one input image into eight views and a panorama PNG.
+MVDiffusion generates multi-view images and panoramas with correspondence-aware attention. In WorldFoundry, the image-outpainting route turns one input image into eight views and a panorama; generated regions can show visible consistency defects.
 
 <ModelPaperFigures modelId="mvdiffusion" locale="en" />
 
@@ -25,15 +25,15 @@ Tasks: correspondence-aware multiview image generation and scene texturing. Alia
 
 ## Runtime contract
 
-Required `prompt` and `image`; optional `video` and `actions`; artifacts `generated_3d_asset` and `mvdiffusion.png`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `steps`, `gen-video`, and `python-executable`; artifact `mvdiffusion.png`.
 
-CLI task profiles: `default`. WorldFoundry binds `MVDiffusionPipeline`.
+CLI task profile: `default`. WorldFoundry binds `MVDiffusionPipeline`. Family status: **Runner parity pending**. Defaults for `default`: steps=20.
 
-Family status: **Runner parity pending**.
+Provide one image for the outpainting route. The default artifact is a panorama PNG.
+
+Generated wall regions and objects can diverge visibly from the input scene across views. The optional spin video and full upstream parity are not validated. Panorama-oriented training: free-form camera trajectories are out of scope.
 
 Stage the upstream source checkout and checkpoints locally before running; without them the run cannot produce multi-view output.
-
-Generated wall regions and objects can diverge visibly from the input scene across views.
 
 ## Running in WorldFoundry
 

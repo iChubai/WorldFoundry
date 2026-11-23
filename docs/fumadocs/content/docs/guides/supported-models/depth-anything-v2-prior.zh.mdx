@@ -2,18 +2,14 @@
 title: "Depth Anything V2"
 description: "Depth Anything V2（TikTok / 香港大学）：单目深度估计、米制深度估计等 3 项任务；已验证。"
 modelId: "depth-anything-v2-prior"
-pageSource: authored
+pageSource: generated
 ---
 
 Depth Anything V2 是 V1 的后继者，用合成数据训练、细节更锐利，在 WorldFoundry 中用作单目/米制深度先验。它加载 depth-anything/Depth-Anything-V2-Large checkpoint。
 
 <ModelPaperFigures modelId="depth-anything-v2-prior" locale="zh" />
 
-论文：[arXiv 2406.09414](https://arxiv.org/abs/2406.09414)。
-
-项目页：[depth-anything-v2.github.io](https://depth-anything-v2.github.io/)。代码：[DepthAnything/Depth-Anything-V2](https://github.com/DepthAnything/Depth-Anything-V2)。
-
-Checkpoint：`depth-anything/Depth-Anything-V2-Large` 中的 `depth_anything_v2_vitl.pth`。
+论文：[arXiv 2406.09414](https://arxiv.org/abs/2406.09414)。项目页：[depth-anything-v2.github.io](https://depth-anything-v2.github.io/)。代码：[DepthAnything/Depth-Anything-V2](https://github.com/DepthAnything/Depth-Anything-V2)。
 
 <ModelCommandBuilder modelId="depth-anything-v2-prior" locale="zh" />
 
@@ -21,7 +17,7 @@ Checkpoint：`depth-anything/Depth-Anything-V2-Large` 中的 `depth_anything_v2_
 
 `depth-anything-v2-prior` 是深度估计模型。
 
-与 V1 同为 DINOv2+DPT 家族，但用精确合成标注加伪标注真实图像训练，边缘与细结构更好（见论文）。该模型由TikTok / 香港大学发布。
+与 V1 同为 DINOv2+DPT 家族，但用精确合成标注加伪标注真实图像训练，边缘与细结构更好（见论文）。该模型由 TikTok / 香港大学发布。
 
 任务：单目深度估计、米制深度估计、几何先验。别名：`dav2-prior`、`depth-anything-v2`。模态上，它接受图像，输出深度。
 
@@ -29,13 +25,11 @@ Checkpoint：`depth-anything/Depth-Anything-V2-Large` 中的 `depth_anything_v2_
 
 输入 `input-path`（不传时使用内置示例）；参数 `model`、`execute`、`max-points`；产物 `depth-anything-v2-prior.npz`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `DepthAnythingV2PriorPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `DepthAnythingV2PriorPipeline`。系列状态：**已验证**。
 
 通过 input_path 传入一张图像，运行后深度预测写入 depth-anything-v2-prior.npz。ViPE 等上层几何管线使用同一先验。
 
-米制精度随领域变化；室内/室外标定不同。
+米制精度随领域变化；室内/室外标定不同。单帧先验：不保证视频帧间的时序一致性。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +38,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `DepthAnythingV2PriorPi
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`depth-anything/Depth-Anything-V2-Large`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh depth-anything-v2-prior`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="depth-anything-v2-prior" locale="zh" />

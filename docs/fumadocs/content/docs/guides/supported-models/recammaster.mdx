@@ -25,15 +25,13 @@ Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) 
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `steps`, `guidance-scale`, and `camera-trajectory`; artifacts `generated_video`, `generated_4d_scene`, and `recammaster.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `steps`, `guidance-scale`, and `camera-trajectory`; artifacts `generated_4d_scene` and `recammaster.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `ReCamMasterPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `default`: frames=81, fps=8.
+CLI task profile: `default`. WorldFoundry binds `ReCamMasterPipeline`. Family status: **Verified**. Defaults for `default`: frames=81, fps=8, steps=50, guidance-scale=5.0.
 
 Stage Wan2.1 (Wan-AI/Wan2.1-T2V-1.3B) and the ReCamMaster checkpoint (KlingTeam/ReCamMaster-Wan2.1) before submitting jobs; the runtime also needs torchvision and a CUDA GPU.
+
+Requires local Wan2.1 and ReCamMaster checkpoints plus CUDA. Re-rendering quality is bounded by the source video content — unseen regions are hallucinated.
 
 ## Running in WorldFoundry
 

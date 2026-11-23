@@ -1,41 +1,42 @@
 ---
 title: "AdaWorld"
-description: "AdaWorld 从源视频中提取潜在动作驱动可适配世界模型，使用发布权重运行。"
+description: "AdaWorld（香港科技大学 / 麻省理工学院）：潜动作世界模型、动作条件视频等 3 项任务；已验证。"
 modelId: "adaworld"
-pageSource: authored
+pageSource: generated
 ---
 
-AdaWorld 从视频中提取潜在动作，用它们驱动可适配的世界模型。WorldFoundry 的公开 Pipeline 可使用发布权重和用户提供的源视频运行。
+AdaWorld 从视频中提取潜在动作来驱动可适配世界模型。WorldFoundry 使用发布权重和用户提供的源视频推理。
 
 <ModelPaperFigures modelId="adaworld" locale="zh" />
 
-项目论文为 [arXiv 2503.18938](https://arxiv.org/abs/2503.18938)。另见[项目主页](https://adaptable-world-model.github.io/)和[官方代码](https://github.com/Little-Podi/AdaWorld)。
+论文：[arXiv 2503.18938](https://arxiv.org/abs/2503.18938)。项目页：[adaptable-world-model.github.io](https://adaptable-world-model.github.io/)。代码：[Little-Podi/AdaWorld](https://github.com/Little-Podi/AdaWorld)。
 
 <ModelCommandBuilder modelId="adaworld" locale="zh" />
 
-## 模型用途
+## 用来做什么
 
-AdaWorld 的潜在动作自编码器从视频中提取运动表示，用于条件化世界模型的生成帧。运行时沿用官方 FDM 推理路径。任务标签为 `latent-action-world-model`、`action-conditioned-video` 和 `multi-domain-world-model`。
+`adaworld` 是动作条件世界模型：输入动作和起始帧，输出推演结果。
 
-## 输入与权重
+按上游项目，潜在动作自编码器提取可迁移的动作表示，用于条件化自回归世界模型。WorldFoundry 在仓内运行官方 FDM 推理路径。该模型由香港科技大学 / 麻省理工学院发布。
 
-提供可读取的源 `video`。此推理路径不使用 `prompt` 或 `image`；直接输入动作 token 尚未验证。输出文件是 `adaworld.mp4`。
+任务：潜动作世界模型、动作条件视频、多域世界模型。模态上，它接受动作，输出视频。
 
-将发布的 `Little-Podi/AdaWorld` 权重放在 `${WORLDFOUNDRY_CKPT_DIR}/Little-Podi--AdaWorld/adaworld.safetensors`，也可以像下面这样显式传入路径。主权重已经包含此推理路径使用的 CLIP 和 LAM 编码器参数，不需要额外的 `lam.ckpt`。
+## 运行时契约
 
-```python
-from worldfoundry.pipelines.world_model.pipeline_runtime_manifest import AdaWorldPipeline
+必填 `video`；参数 `start-index`、`video-len`、`resolution`、`context-frame`、`num-steps`、`cfg-scale` 等 9 项；产物 `adaworld.mp4`。
 
-pipeline = AdaWorldPipeline.from_pretrained(
-    {"checkpoint_path": "/path/to/adaworld.safetensors"}, device="cuda"
-)
-result = pipeline(video="/path/to/source.mp4", output_path="adaworld.mp4", start_index=0)
-```
+CLI task profile：`latent-action-world-model`。绑定的 pipeline 类是 `AdaWorldPipeline`。系列状态：**已验证**。`latent-action-world-model` 的默认值：fps=5, seed=32。
 
-运行环境为 `worldfoundry-unified-cu128`（Python 3.11、CUDA 12.8）。使用短源视频时，将 `start_index` 设置为实际存在的帧；底层运行时默认从第 50 帧开始。
+提供发布的 adaworld.safetensors 权重和可读取的源视频。主权重已包含推理所需的 CLIP 与 LAM 编码器参数，此推理路径不需要单独的 lam.ckpt。
 
-## 验证
+验证只覆盖短时推理（合成源视频、生成 4 帧、采样 2 步）；任务效果和长时一致性尚未测量。
 
-已使用发布权重验证：公开 Pipeline 以合成源视频、两步采样生成 4 帧 256 × 256 MP4，与官方入口的输出一致。任务效果、长时一致性与输出质量尚未评测。
+## 在 WorldFoundry 中运行
+
+用 `wf run adaworld --pipeline.task-profile latent-action-world-model` 推进世界。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`Little-Podi/AdaWorld`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh adaworld`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="adaworld" locale="zh" />

@@ -1,6 +1,6 @@
 ---
 title: "Matrix-Game 1.0"
-description: "Matrix-Game 1.0（Skywork AI，昆仑万维）：`image`、`prompt` 进，`world.mp4` 出。"
+description: "Skywork Matrix-Game 1.0：image + prompt 入，world.mp4 出。要已验证 runner 请优先 2.0/3.0。"
 modelId: "matrix-game-1"
 pageSource: authored
 ---
@@ -21,7 +21,7 @@ Matrix-Game 1.0 是昆仑万维交互式游戏世界模型的第一代：从一�
 
 ## 运行时契约
 
-必填 `image`、`prompt`；`actions`：keyboard、mouse、navigation_token；产物 `world.mp4`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`execute`、`timeout-seconds`、`inference-steps`、`max-images` 等 8 项；产物 `world.mp4`。
 
 ## 在 WorldFoundry 中运行
 

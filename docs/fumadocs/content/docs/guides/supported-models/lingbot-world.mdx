@@ -1,6 +1,6 @@
 ---
 title: "LingBot-World"
-description: "LingBot-World from Robbyant (Ant Group): world, camera control, and 1 more task; Verified; dedicated `lingbot-world`."
+description: "LingBot-World from Robbyant (Ant Group): world, camera control, and 1 more task; Verified; dedicated env lingbot-world."
 modelId: "lingbot-world"
 pageSource: authored
 ---
@@ -27,13 +27,13 @@ Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) 
 
 ## Runtime contract
 
-Inputs `image` and `prompt` (bundled samples are used when omitted); options `action-path`, `frames`, `steps`, and `seed`; artifacts `lingbot-world.mp4`.
+Inputs `image` and `prompt` (bundled samples are used when omitted); options `action-path`, `frames`, `steps`, and `seed`; artifact `lingbot-world.mp4`.
 
 CLI task profiles: `image-navigation-video` and `image-action-video`. WorldFoundry binds `LingBotPipeline`.
 
 Family status: **Verified**.
 
-Defaults for `image-navigation-video`: frames=161, seed=42 Defaults for `image-action-video`: frames=21, seed=42.
+Defaults for `image-navigation-video`: frames=161, steps=70, seed=42. Defaults for `image-action-video`: frames=21, steps=20, seed=42.
 
 The wrapper resolves only local HFD or explicit checkpoint directories — no runtime downloads. Base-cam runs in the dedicated `lingbot-world` environment; Base-Act has its own page, [LingBot-World Act](/docs/guides/supported-models/lingbot-world-act). The official Fast checkpoint uses Base-Cam's shared T5/VAE assets plus its own 16 shards. Validated on one H100: Fast generates a fully decodable 21-frame, 544 × 720, 16 fps clip. Select it with `runtime_variant=fast` and `fast_model_path`; Fast frame counts must be 9, 21, 33, … because its three-latent-frame chunks otherwise truncate the clip. Longer Fast rollouts and camera adherence remain unmeasured.
 

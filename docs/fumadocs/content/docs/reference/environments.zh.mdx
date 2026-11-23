@@ -26,7 +26,7 @@ WorldFoundry 采用 GPU-first 的运行和开发路径，统一使用 conda。�
 
 `all` 是经过筛选的通用 runtime bundle，不是全部 extra 的机械并集。它刻意排除了开发工具、NVIDIA 专有 VFX bindings、训练栈和模型专属 ABI 孤岛。下面目录里“包含于 `all`”表示该 extra 声明的每个包名都出现在 `all`；如果运行时契约依赖更严格的版本范围，仍应同时安装对应的具名 extra。
 
-<KvCatalog heading="Extra" vars rows={[
+<KvCatalog heading="可选依赖组" vars rows={[
     { name: <><code>api</code></>, description: "托管模型 API client，以及图像和请求辅助依赖。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[api]</code></> }] },
     { name: <><code>apple_pi</code></>, description: "Apple-PI 评测 runtime、judge client 与媒体辅助包。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[apple_pi]</code></> }] },
     { name: <><code>hf</code></>, description: "Hugging Face 和 ModelScope 资产下载支持。", reads: [{ label: "包含于 all", value: "是" }, { label: "安装", value: <><code>.[hf]</code></> }] },

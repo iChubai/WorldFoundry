@@ -1,6 +1,6 @@
 ---
 title: "AlayaWorld v1.1"
-description: "AlayaWorld v1.1（AlayaLab）：图生视频、相机可控视频等 3 项任务；Runner 一致性待确认; 独立环境 `alayaworld-v1.1`。"
+description: "AlayaWorld v1.1（AlayaLab）：图生视频、相机可控视频等 3 项任务；Runner 一致性待确认；独立环境 alayaworld-v1.1。"
 modelId: "alayaworld-v1.1"
 pageSource: generated
 ---
@@ -17,28 +17,28 @@ AlayaWorld v1.1 是带 ViGeo 空间记忆的相机控制图生视频世界模型
 
 `alayaworld-v1.1` 以相机位姿为条件生成视频。
 
-固定版本上游的纯推理 rollout 方法配合 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 文本编码和 Alaya 历史编码器运行。Alaya Transformer 扩展和 ViGeo 几何来自固定版本的 AlayaWorld 源码检出。该模型由AlayaLab发布。
+固定版本上游的纯推理 rollout 方法配合 WorldFoundry checkpoint/LoRA 加载器、LTX VAE、Gemma 文本编码和 Alaya 历史编码器运行。Alaya Transformer 扩展和 ViGeo 几何来自固定版本的 AlayaWorld 源码检出。该模型由 AlayaLab 发布。
 
-任务：图生视频、相机可控视频、交互式世界模型。别名：`alayaworld-v11`、`alaya-world-v1.1`。模态上，它接受图像，输出视频。
+任务：图生视频、相机可控视频、交互式世界模型。别名：`alayaworld-v11`、`alaya-world-v1.1`。模态上，它接受图像、相机位姿，输出视频。
 
 ## 运行时契约
 
-必填 `input-path`、`load.base-checkpoint`、`load.gemma-path`、`load.vigeo-checkpoint`；输入 `prompt`、`load.checkpoint-dir`（不传时使用内置示例）；参数 `rounds`、`seed`、`execute`、`timeout-seconds`；产物 `generated_world`、`alayaworld-v1.1.mp4`。
+必填 `input-path`、`load.base-checkpoint`、`load.gemma-path`、`load.vigeo-checkpoint`；输入 `prompt`、`load.checkpoint-dir`（不传时使用内置示例）；参数 `rounds`、`seed`、`execute`、`timeout-seconds`；产物 `alayaworld-v1.1.mp4`。
 
-CLI task profile：`image-to-video`。绑定的 pipeline 类是 `AlayaWorldV11Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`image-to-video` 的默认值：seed=42。
+CLI task profile：`image-to-video`。绑定的 pipeline 类是 `AlayaWorldV11Pipeline`。系列状态：**Runner 一致性待确认**。`image-to-video` 的默认值：seed=42。
 
 选择 variant=ar（30 步）或 dmd（4 步）。需 stage2b Transformer/历史权重、LTX-2.3 基座、Gemma 和 ViGeo1.1；DMD 另需 stage3 LoRA。Gemma 为门控模型，需先接受其许可。此路线不使用原版 AlayaWorld 的 DA3 合并 checkpoint。
+
+单 GPU 运行；整窗原生 VAE 编码的峰值显存可能高于上游流式编码器。
 
 ## 在 WorldFoundry 中运行
 
 运行 `wf run alayaworld-v1.1 --pipeline.task-profile image-to-video` 沿相机路径生成视频。
 
+运行环境：独立环境 `alayaworld-v1.1`（Python 3.11，CUDA 12.8，torch>=2.6）。
+
 权重仓库：`AlayaLab/AlayaWorld-v1.1-stage2b`、`AlayaLab/AlayaWorld-v1.1-stage3`、`Lightricks/LTX-2.3` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh alayaworld-v1.1`；下载缺失的公开权重时加 `--download`。
 
-gated 权重：`google/gemma-3-12b-it-qat-q4_0-unquantized`（下载前需在上游接受条款）。
+许可证：LTX-2 社区许可；gated 权重：`google/gemma-3-12b-it-qat-q4_0-unquantized`（下载前需在上游接受条款）。
 
 <ModelRelatedRecipes modelId="alayaworld-v1.1" locale="zh" />

@@ -21,15 +21,15 @@ AlayaWorld 是面向长视频的相机可控交互式世界模型：从一张图
 
 视角需要沿指定相机路径运动时，用 `alayaworld`。
 
-AlayaWorld 在 WorldFoundry 树内 LTX-2.3 模型上扩展，复用其 Transformer、VAE、Gemma 连接器、RoPE、patchifier、注意力分发器与分布式辅助；Alaya 专属权重新增动作 AdaLN 与时间历史编码器。空间记忆使用树内 Depth Anything 3 模型。该模型由AlayaLab发布。
+AlayaWorld 在 WorldFoundry 树内 LTX-2.3 模型上扩展，复用其 Transformer、VAE、Gemma 连接器、RoPE、patchifier、注意力分发器与分布式辅助；Alaya 专属权重新增动作 AdaLN 与时间历史编码器。空间记忆使用树内 Depth Anything 3 模型。该模型由 AlayaLab 发布。
 
-任务：图生视频、相机可控视频、交互式世界模型、长视频生成。别名：`alaya-world`、`alaya_world`。模态上，它接受图像，输出视频。
+任务：图生视频、相机可控视频、交互式世界模型、长视频生成。别名：`alaya-world`、`alaya_world`。模态上，它接受图像、相机位姿，输出视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（交互滚动生成的相机控制质量）、[MemoBench](/zh/docs/evaluation/benchmark-hub/memobench)（长时程空间记忆一致性评测）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `fps`、`height`、`width`、`steps`、`rounds`；产物 `generated_world_video`、`alayaworld.mp4`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `fps`、`height`、`width`、`steps`、`rounds`；产物 `alayaworld.mp4`。
 
 CLI task profile：`default`。绑定的 pipeline 类是 `AlayaWorldPipeline`。
 

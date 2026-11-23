@@ -9,9 +9,7 @@ MineWorld 是微软面向 Minecraft 的实时开源交互世界模型：自回�
 
 <ModelPaperFigures modelId="mineworld" locale="zh" />
 
-论文：[MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft](https://arxiv.org/abs/2504.08388)（2025）。
-
-代码：[microsoft/mineworld](https://github.com/microsoft/mineworld)。
+论文：[MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft](https://arxiv.org/abs/2504.08388)（2025）。代码：[microsoft/mineworld](https://github.com/microsoft/mineworld)。
 
 <ModelCommandBuilder modelId="mineworld" locale="zh" />
 
@@ -21,7 +19,7 @@ MineWorld 是微软面向 Minecraft 的实时开源交互世界模型：自回�
 
 按论文：视觉 tokenizer 加在「状态-动作」交错 token 上的自回归 Transformer，配并行解码实现实时速度。该模型由微软（Microsoft）发布。
 
-任务：交互式世界模型、Minecraft 世界模型、动作条件视频。
+任务：交互式世界模型、Minecraft 世界模型、动作条件视频。模态上，它接受动作，输出视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（动作条件游戏世界滚动生成质量）。
 
@@ -29,13 +27,11 @@ MineWorld 是微软面向 Minecraft 的实时开源交互世界模型：自回�
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `interactions`、`frames`、`fps`、`seed`；产物 `mineworld.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MineWorldPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`interactive-video` 的默认值：frames=16, fps=16, seed=42。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MineWorldPipeline`。系列状态：**Runner 一致性待确认**。`interactive-video` 的默认值：frames=16, fps=16, seed=42。
 
 请先就位官方 checkpoint 与验证数据；缺少时 pipeline 返回 blocked 运行时诊断，而不生成视频。
+
+Minecraft 领域世界模型：不是通用视频生成器。
 
 ## 在 WorldFoundry 中运行
 

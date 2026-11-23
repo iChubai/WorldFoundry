@@ -9,9 +9,7 @@ Segment and Track Anything (SAM-Track) combines SAM segmentation with AOT/DeAOT 
 
 <ModelPaperFigures modelId="track-anything-prior" locale="en" />
 
-Paper: [arXiv 2305.06558](https://arxiv.org/abs/2305.06558).
-
-Code: [z-x-yang/Segment-and-Track-Anything](https://github.com/z-x-yang/Segment-and-Track-Anything).
+Paper: [arXiv 2305.06558](https://arxiv.org/abs/2305.06558). Code: [z-x-yang/Segment-and-Track-Anything](https://github.com/z-x-yang/Segment-and-Track-Anything).
 
 <ModelCommandBuilder modelId="track-anything-prior" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: video object segmentation, object tracking, and geometry prior. Aliases: 
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `max-frames`, `execute`, and `max-points`; artifacts `track-anything-mask.npz`.
+Input `input-path` (bundled samples are used when omitted); options `max-frames`, `execute`, and `max-points`; artifact `track-anything-mask.npz`.
 
-CLI task profiles: `default`. WorldFoundry binds `TrackAnythingPriorPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `TrackAnythingPriorPipeline`. Family status: **Runner parity pending**.
 
 Stage the SAM, GroundingDINO, and AOT/DeAOT checkpoints before running prior inference.
 
@@ -42,5 +38,7 @@ Run `wf run track-anything-prior --pipeline.task-profile default` to write the g
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `ShilongLiu/GroundingDINO`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh track-anything-prior`. Add `--download` to fetch missing public checkpoints.
+
+License: AGPL-3.0.
 
 <ModelRelatedRecipes modelId="track-anything-prior" locale="en" />

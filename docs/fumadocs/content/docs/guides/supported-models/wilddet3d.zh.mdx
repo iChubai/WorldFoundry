@@ -1,6 +1,6 @@
 ---
 title: "WildDet3D"
-description: "WildDet3D（艾伦人工智能研究所（AI2））：3d-detection、wild-3d-perception等 3 项任务；已验证。"
+description: "WildDet3D（艾伦人工智能研究所（AI2））：3D 检测、开放场景 3D 感知等 3 项任务；已验证。"
 modelId: "wilddet3d"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ pageSource: generated
 
 <ModelPaperFigures modelId="wilddet3d" locale="zh" />
 
-论文：[arXiv 2604.08626](https://arxiv.org/abs/2604.08626)。
-
-项目页：[allenai.github.io/WildDet3D](https://allenai.github.io/WildDet3D/)。代码：[allenai/WildDet3D](https://github.com/allenai/WildDet3D)。
+论文：[arXiv 2604.08626](https://arxiv.org/abs/2604.08626)。项目页：[allenai.github.io/WildDet3D](https://allenai.github.io/WildDet3D/)。代码：[allenai/WildDet3D](https://github.com/allenai/WildDet3D)。
 
 <ModelCommandBuilder modelId="wilddet3d" locale="zh" />
 
@@ -21,19 +19,17 @@ pageSource: generated
 
 官方模型结合 SAM3 图像特征与 LingBot-Depth 几何信息；源码和子模块从仓库外的固定版本检出加载。
 
-任务：3d-detection、wild-3d-perception、world-understanding。
+任务：3D 检测、开放场景 3D 感知、世界理解。
 
 ## 运行时契约
 
-产物 `generated_3d_asset`、`wilddet3d_predictions.npz`。
+产物 `wilddet3d_predictions.npz`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `WildDet3DPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `WildDet3DPipeline`。系列状态：**已验证**。
 
 传入 image_path，并用英文逗号分隔 prompt 中的检测类别；可选传入 3x3 的 intrinsics_path（.npy）。需要完整的 allenai/WildDet3D checkpoint、robbyant/lingbot-depth-postrain-dc-vitl14/model.pt，以及含子模块的官方固定版本源码。上游源码使用 SAM License。
 
-仅感知：不产出视频或世界生成结果。
+仅感知：不产出视频或世界生成结果。上游源码使用 SAM License；商用前请审查。
 
 ## 在 WorldFoundry 中运行
 
@@ -42,5 +38,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `WildDet3DPipeline`。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`allenai/WildDet3D`、`robbyant/lingbot-depth-postrain-dc-vitl14`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh wilddet3d`；下载缺失的公开权重时加 `--download`。
+
+许可证：other:sam-license。
 
 <ModelRelatedRecipes modelId="wilddet3d" locale="zh" />

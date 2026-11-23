@@ -515,7 +515,7 @@ conda run -p "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}" wf zoo benchmark-run --benchma
 - **Stale** — 证据产生时的 commit、manifest 或验证脚本与当前审查的改动不一致。发布处理：重新运行验证后才能计入。
 - **Runner-only** — Schema 和 runner path 通过，但 official runtime 未运行。发布处理：不是 leaderboard evidence。
 
-## Validation matrix
+## 验证矩阵
 
 Plan matrix 在不加载模型的前提下检查发布清单：它把正式文档清单里每个 model × benchmark 格子解析到 `suite_manifest.json`，再由 `validate-artifact` 按 schema 校验。
 

@@ -1,6 +1,6 @@
 ---
 title: "Lyra"
-description: "Lyra（英伟达（NVIDIA））：3D 与 4D；已验证; 2 个 variant。"
+description: "Lyra（英伟达（NVIDIA））：开放生成式 3D 与 4D 世界模型；已验证；2 个 variant。"
 modelId: "lyra"
 pageSource: authored
 ---
@@ -21,13 +21,13 @@ Lyra 是英伟达面向探索的生成式世界模型家族：Lyra-1 从图像�
 
 Lyra 有两代模型：Lyra-1 做图像/视频到世界视频，Lyra-2 做动作条件世界视频（论文见 OpenReview，项目页在 NVIDIA Research）。运行任一代都需要本地 Lyra checkpoint、文本编码器资产、DA3（Depth Anything 3）资产与 CUDA 依赖。该模型由英伟达（NVIDIA）发布。
 
-任务：open generative 3D and 4D world models。别名：`Project Lyra`、`Lyra 1.0`、`Lyra 2.0`。同系列还有 `lyra-2`。
+任务：开放生成式 3D 与 4D 世界模型。别名：`Project Lyra`、`Lyra 1.0`、`Lyra 2.0`。同系列还有 `lyra-2`。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（可探索生成世界的标准评分）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（评估探索过程中的相机/视角控制质量）。
 
 ## 运行时契约
 
-输入 `image`、`prompt`（不传时使用内置示例）；参数 `mode`、`trajectory`、`camera-rotation`、`movement-distance`、`multi-trajectory`、`total-movement-distance-factor` 等 23 项；产物 `generated_world`、`generated_3d_asset`、`lyra-1.mp4`。
+输入 `image`、`prompt`（不传时使用内置示例）；参数 `mode`、`trajectory`、`camera-rotation`、`movement-distance`、`multi-trajectory`、`total-movement-distance-factor` 等 23 项；产物 `generated_3d_asset`、`lyra-1.mp4`。
 
 CLI task profile：`official-static-sdg`、`official-zoomgs`。绑定的 pipeline 类是 `LyraPipeline`。
 

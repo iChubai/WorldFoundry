@@ -1,6 +1,6 @@
 ---
 title: "Kairos Sensenova"
-description: "Kairos Sensenova（商汤科技（日日新 SenseNova））：文生视频、图生视频等 4 项任务；已验证; 独立环境 `kairos-sensenova`。"
+description: "Kairos Sensenova（商汤科技（日日新 SenseNova））：文生视频、图生视频等 4 项任务；已验证；独立环境 kairos-sensenova。"
 modelId: "kairos-sensenova"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Kairos Sensenova 是商汤的具身世界模型视频生成器：4B 模型覆盖
 
 <ModelPaperFigures modelId="kairos-sensenova" locale="zh" />
 
-论文：[arXiv 2606.16533](https://arxiv.org/abs/2606.16533)。
-
-代码：[kairos-agi/kairos-sensenova](https://github.com/kairos-agi/kairos-sensenova)。
+论文：[arXiv 2606.16533](https://arxiv.org/abs/2606.16533)。代码：[kairos-agi/kairos-sensenova](https://github.com/kairos-agi/kairos-sensenova)。
 
 <ModelCommandBuilder modelId="kairos-sensenova" locale="zh" />
 
@@ -21,7 +19,7 @@ Kairos Sensenova 是商汤的具身世界模型视频生成器：4B 模型覆盖
 
 默认可运行 variant 遵循官方 robot 4B 480P 蒸馏配方（kairos_4b_config_DMD.py）：81 帧、480x640、cfg_scale 5、分块 VAE 解码、无 CFG 并行。记录的 checkpoint 覆盖 robot 480P 蒸馏、480P 预训练与 720P 三个 variant；配置布局要求 Kairos、Qwen 与 Wan2.1-T2V-14B 子目录。该模型由商汤科技（日日新 SenseNova）发布。
 
-任务：文生视频、图生视频、text-image-to-video、具身世界模型。别名：`Kairos`、`Kairos Sensenova`、`kairos-4b`、`kairos-sensenova-4b`。模态上，它接受文本、图像，输出视频。
+任务：文生视频、图生视频、图文生成视频、具身世界模型。别名：`Kairos`、`Kairos Sensenova`、`kairos-4b`、`kairos-sensenova-4b`。模态上，它接受文本、图像，输出视频。
 
 推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（文/图生视频输出的质量评测）、[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身世界模型预测质量）。
 
@@ -29,18 +27,20 @@ Kairos Sensenova 是商汤的具身世界模型视频生成器：4B 模型覆盖
 
 输入 `prompt`（不传时使用内置示例）；参数 `negative-prompt`、`frames`、`height`、`width`、`guidance-scale`、`seed` 等 9 项；产物 `kairos-sensenova.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `KairosPipeline`。
-
-系列状态：**已验证**。
-
-`default` 的默认值：frames=81, height=480, width=640, seed=0。
+CLI task profile：`default`。绑定的 pipeline 类是 `KairosPipeline`。系列状态：**已验证**。`default` 的默认值：frames=81, height=480, width=640, guidance-scale=5, seed=0。
 
 将 WORLDFOUNDRY_KAIROS_MODELS_ROOT（或 models_root）指向符合官方配置布局的目录。720P 与非蒸馏 variant 需要对应的 checkpoint 路径与配置覆盖。
+
+已验证配方使用 8 个 torchrun rank——请准备多卡主机。默认是 480P 机器人蒸馏配方：追求画质的 720P 运行需要覆盖配置。
 
 ## 在 WorldFoundry 中运行
 
 用 `wf run kairos-sensenova --pipeline.task-profile default` 推进世界。
 
+运行环境：独立环境 `kairos-sensenova`（Python 3.10，CUDA 12.8，torch==2.12.0）。
+
 权重仓库：`kairos-agi/kairos-sensenova-robot-4B-480P-distilled`、`kairos-agi/kairos-sensenova-4B-480P-pretrained`、`kairos-agi/kairos-sensenova-4B-720P`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh kairos-sensenova`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="kairos-sensenova" locale="zh" />

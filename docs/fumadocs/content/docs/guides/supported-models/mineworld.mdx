@@ -9,9 +9,7 @@ MineWorld is Microsoft's real-time open-source interactive world model for Minec
 
 <ModelPaperFigures modelId="mineworld" locale="en" />
 
-Paper: [MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft](https://arxiv.org/abs/2504.08388) (2025).
-
-Code: [microsoft/mineworld](https://github.com/microsoft/mineworld).
+Paper: [MineWorld: a Real-Time and Open-Source Interactive World Model on Minecraft](https://arxiv.org/abs/2504.08388) (2025). Code: [microsoft/mineworld](https://github.com/microsoft/mineworld).
 
 <ModelCommandBuilder modelId="mineworld" locale="en" />
 
@@ -21,21 +19,19 @@ Code: [microsoft/mineworld](https://github.com/microsoft/mineworld).
 
 Per the paper, a visual tokenizer plus an autoregressive transformer over interleaved state-action tokens, with parallel decoding for real-time speed.
 
-Tasks: interactive world model, minecraft world model, and action-conditioned video.
+Tasks: interactive world model, minecraft world model, and action-conditioned video. Modalities: action in, video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Action-conditioned game-world rollout quality).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `interactions`, `frames`, `fps`, and `seed`; artifacts `mineworld.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `interactions`, `frames`, `fps`, and `seed`; artifact `mineworld.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `MineWorldPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: frames=16, fps=16, seed=42.
+CLI task profile: `interactive-video`. WorldFoundry binds `MineWorldPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: frames=16, fps=16, seed=42.
 
 Stage the official checkpoints and validation data first; until they are present, the pipeline returns blocked runtime diagnostics instead of a video.
+
+Minecraft-domain world model: not a general video generator.
 
 ## Running in WorldFoundry
 

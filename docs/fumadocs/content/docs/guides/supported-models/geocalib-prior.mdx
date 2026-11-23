@@ -2,18 +2,14 @@
 title: "GeoCalib"
 description: "GeoCalib from ETH Zurich (CVG): camera calibration, gravity estimation, and 1 more task; Verified."
 modelId: "geocalib-prior"
-pageSource: authored
+pageSource: generated
 ---
 
 GeoCalib estimates camera calibration and the gravity direction from a single image by combining geometric optimization with deep learning. WorldFoundry exposes it as a camera-calibration prior that higher-level pipelines, notably ViPE, consume through the shared geometry-prior contract.
 
 <ModelPaperFigures modelId="geocalib-prior" locale="en" />
 
-Paper: [arXiv 2409.06704](https://arxiv.org/abs/2409.06704).
-
-Project page: [cvg.ethz.ch/research/geocalib](https://www.cvg.ethz.ch/research/geocalib/). Code: [cvg/GeoCalib](https://github.com/cvg/GeoCalib).
-
-Weights: `geocalib-pinhole.tar` from the v1.0 release of [cvg/GeoCalib](https://github.com/cvg/GeoCalib) (**Apache-2.0**). Aliases: `geocalib`, `cvg-geocalib`.
+Paper: [arXiv 2409.06704](https://arxiv.org/abs/2409.06704). Project page: [cvg.ethz.ch/research/geocalib](https://www.cvg.ethz.ch/research/geocalib/). Code: [cvg/GeoCalib](https://github.com/cvg/GeoCalib).
 
 <ModelCommandBuilder modelId="geocalib-prior" locale="en" />
 
@@ -27,11 +23,9 @@ Tasks: camera calibration, gravity estimation, and geometry prior. Aliases: `geo
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `camera-model`, `execute`, and `max-points`; artifacts `geocalib-prior.json`.
+Input `input-path` (bundled samples are used when omitted); options `camera-model`, `execute`, and `max-points`; artifact `geocalib-prior.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `GeoCalibPriorPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `GeoCalibPriorPipeline`. Family status: **Verified**.
 
 Stage the official geocalib-pinhole.tar weights from the v1.0 GitHub release. Run it directly through the geometry-prior pipeline, or let ViPE call it as its calibration prior.
 

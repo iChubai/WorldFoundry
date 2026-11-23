@@ -9,9 +9,7 @@ OmniForcing is a real-time audio-visual world model built with distillation: it 
 
 <ModelPaperFigures modelId="omniforcing" locale="en" />
 
-Paper: [arXiv 2603.11647](https://arxiv.org/abs/2603.11647).
-
-Code: [OmniForcing/OmniForcing](https://github.com/OmniForcing/OmniForcing).
+Paper: [arXiv 2603.11647](https://arxiv.org/abs/2603.11647). Code: [OmniForcing/OmniForcing](https://github.com/OmniForcing/OmniForcing).
 
 <ModelCommandBuilder modelId="omniforcing" locale="en" />
 
@@ -19,15 +17,13 @@ Code: [OmniForcing/OmniForcing](https://github.com/OmniForcing/OmniForcing).
 
 `omniforcing` generates a 3D-consistent world rather than a single clip.
 
-Tasks: audio visual world model, real time generation, and distillation.
+Tasks: audio visual world model, real time generation, and distillation. Output modalities: video and audio.
 
 ## Runtime contract
 
-Artifacts `generated_video` and `omniforcing_runtime_plan.json`.
+Artifact `omniforcing_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `OmniForcingPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `OmniForcingPipeline`. Family status: **Runner parity pending**.
 
 Stage the required checkpoints and runtime assets first. Until they are in place, a run writes a runtime plan (`omniforcing_runtime_plan.json`) that lists the missing assets instead of generating video.
 

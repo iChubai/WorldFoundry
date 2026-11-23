@@ -1,31 +1,47 @@
 ---
 title: "Emu3.5"
-description: "Checkpoint-backed interleaved text and image generation through the official runtime."
+description: "Emu3.5 from Beijing Academy of Artificial Intelligence (BAAI): multimodal generation and image generation; Runner parity pending."
 modelId: "emu3.5"
 pageSource: authored
 ---
 
-Emu3.5 is BAAI's model for interleaved text and image generation. WorldFoundry calls a pinned checkout of the official implementation and returns its protobuf response. It does not generate video.
-
-Validated with the released checkpoints: a `howto` run returns three text segments and two decoded 384×384 PNG images.
+Emu3.5 is BAAI's native multimodal model for interleaved text and images. WorldFoundry uses the pinned official implementation and emits its protobuf response. Validated with the released checkpoints: GPU inference produces text and decoded images. It does not generate video.
 
 <ModelPaperFigures modelId="emu3.5" locale="en" />
 
-Code: [baaivision/Emu3.5](https://github.com/baaivision/Emu3.5). Weights: [BAAI/Emu3.5](https://huggingface.co/BAAI/Emu3.5) and [BAAI/Emu3.5-VisionTokenizer](https://huggingface.co/BAAI/Emu3.5-VisionTokenizer).
+Code: [BAAI/Emu3.5](https://huggingface.co/BAAI/Emu3.5). Code: [baaivision/Emu3.5](https://github.com/baaivision/Emu3.5).
 
 <ModelCommandBuilder modelId="emu3.5" locale="en" />
 
 ## What it is for
 
+`emu3.5` generates an image from a text prompt.
+
+Emu3.5 predicts a unified text/image token stream and generates visual tokens with discrete diffusion, then decodes visual tokens through its separate vision tokenizer. It is published by Beijing Academy of Artificial Intelligence (BAAI).
+
+Tasks: multimodal generation and image generation. Aliases: `emu3p5`, `emu3_5`, and `BAAI/Emu3.5`.
+
 The `story` and `howto` tasks take a text prompt and optionally a reference image. Emu3.5 predicts a unified text/image token sequence, generates visual tokens with discrete diffusion, and decodes images with its separate vision tokenizer. The response may contain text and images; it is stored as an official `.pb` artifact.
 
 ## Runtime contract
 
+Inputs `prompt` and `image`; artifact `emu3.5.pb`.
+
+CLI task profiles: `multimodal-generation` and `image-generation`. WorldFoundry binds `Emu35Pipeline`. Family status: **Runner parity pending**.
+
+Stage the BAAI/Emu3.5 and BAAI/Emu3.5-VisionTokenizer weights plus the pinned official source checkout. The default story and howto tasks return an official protobuf response.
+
+Byte-for-byte parity with the official CLI and image sizes above 384×384 are not verified. The official checkpoint card describes text/image generation, not video generation.
+
 The runtime requires both checkpoints and the official source at revision `8fcf1da48f9c5252fe0a0b8dc842e07b6efcd745`. Set `WORLDFOUNDRY_HFD_ROOT` to the directory containing `BAAI--Emu3.5` and `BAAI--Emu3.5-VisionTokenizer`, and `WORLDFOUNDRY_EMU35_REPO_ROOT` to the checkout. Model loading uses the official Emu3 class with eager attention; the vision tokenizer, generation, decoding, and protobuf writer also come from the official release.
 
-Larger image sizes and byte-for-byte parity with the official CLI are not verified.
-
 ## Running in WorldFoundry
+
+Run `wf run emu3.5 --pipeline.task-profile multimodal-generation` to write the image. Switch tasks in the command builder above to change `--pipeline.task-profile`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Weights: `BAAI/Emu3.5` and `BAAI/Emu3.5-VisionTokenizer`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh emu3.5`. Add `--download` to fetch missing public checkpoints.
 
 Use the `emu3.5` pipeline binding with a prompt and optional image. The default output is `emu3.5.pb`; `task_type` selects `story` or `howto`. Optional `target_height` and `target_width` set the visual-token grid together (a 24×24 grid decodes to 384×384 pixels). Give `max_new_tokens` enough room to finish the image; a shorter cap can yield a valid protobuf containing only text. The model needs a GPU with enough memory for the large main checkpoint and the vision tokenizer.
 

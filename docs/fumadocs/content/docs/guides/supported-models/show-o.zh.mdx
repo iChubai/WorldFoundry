@@ -1,6 +1,6 @@
 ---
 title: "Show-o"
-description: "Show-o（新加坡国立大学（Show Lab））：文生图；已验证。"
+description: "Show-o（新加坡国立大学（Show Lab））：多模态生成、文生图；已验证。"
 modelId: "show-o"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Show-o（Xie 等，新加坡国立大学 Show Lab 与 ByteDance，arXiv 2408.125
 
 <ModelPaperFigures modelId="show-o" locale="zh" />
 
-论文：[Show-o: One Single Transformer to Unify Multimodal Understanding and Generation](https://arxiv.org/abs/2408.12528)（ICLR 2025, 2024）。
-
-项目页：[showlab.github.io/Show-o](https://showlab.github.io/Show-o/)。代码：[showlab/Show-o](https://github.com/showlab/Show-o)。
+论文：[Show-o: One Single Transformer to Unify Multimodal Understanding and Generation](https://arxiv.org/abs/2408.12528)（ICLR 2025, 2024）。项目页：[showlab.github.io/Show-o](https://showlab.github.io/Show-o/)。代码：[showlab/Show-o](https://github.com/showlab/Show-o)。
 
 <ModelCommandBuilder modelId="show-o" locale="zh" />
 
@@ -21,19 +19,17 @@ Show-o（Xie 等，新加坡国立大学 Show Lab 与 ByteDance，arXiv 2408.125
 
 Transformer 是带逐层 QK-Norm 的 Phi-1.5，词表额外增加 8,192 个可学习图像 token。统一 prompt 用 [MMU]/[T2I] 标明任务，用 [SOT]/[EOT]、[SOI]/[EOI] 框住文本与图像。训练同时做 mask-token prediction 与 next-token prediction（L_MTP + α L_NTP）。生成从全 [MASK] 开始、按 T 步逐步揭开，步数大约是自回归解码图像的 1/20；树内运行时默认 256 像素、CFG 3.0、18 步。该模型由新加坡国立大学（Show Lab）发布。
 
-任务：multimodal-generation、文生图。别名：`show_o`、`showo`。模态上，它接受文本、图像，输出图像、文本。
+任务：多模态生成、文生图。别名：`show_o`、`showo`。模态上，它接受文本、图像，输出图像、文本。
 
 ## 运行时契约
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `guidance-scale`、`mode`、`generation-timesteps`、`resolution`；产物 `show_o.png`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `ShowOPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `ShowOPipeline`。系列状态：**已验证**。`default` 的默认值：guidance-scale=1.0。
 
 WorldFoundry 仅运行 T2I，请相应设置 mode，预期产物为 generated_image。论文默认分辨率 256；封装使用 classifier-free guidance（默认 3.0）和 18 步离散扩散。权重为 MIT，位于 showlab/show-o，配套权重为 showlab/magvitv2（MAGVIT-v2）与 microsoft/phi-1_5。
 
-仅支持文生图；理解（MMU）、补全与外推不可用。
+仅支持文生图；理解（MMU）、补全与外推不可用。Show-o 产出图像，不是视频。论文默认是 1.3B Phi-1.5、256 像素离散 token，不是视频骨干。
 
 ## 在 WorldFoundry 中运行
 

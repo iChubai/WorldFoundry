@@ -9,9 +9,7 @@ UniDepth V2 is a universal monocular metric-depth model: from a single image of 
 
 <ModelPaperFigures modelId="unidepth-v2-prior" locale="en" />
 
-Paper: [arXiv 2502.20110](https://arxiv.org/abs/2502.20110).
-
-Project page: [lpiccinelli-eth.github.io/pub/unidepth](https://lpiccinelli-eth.github.io/pub/unidepth/). Code: [lpiccinelli-eth/UniDepth](https://github.com/lpiccinelli-eth/UniDepth).
+Paper: [arXiv 2502.20110](https://arxiv.org/abs/2502.20110). Project page: [lpiccinelli-eth.github.io/pub/unidepth](https://lpiccinelli-eth.github.io/pub/unidepth/). Code: [lpiccinelli-eth/UniDepth](https://github.com/lpiccinelli-eth/UniDepth).
 
 <ModelCommandBuilder modelId="unidepth-v2-prior" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: monocular depth estimation, metric depth estimation, and geometry prior. 
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `type`, `focal-length`, `execute`, and `max-points`; artifacts `unidepth-v2-prior.npz`.
+Input `input-path` (bundled samples are used when omitted); options `type`, `focal-length`, `execute`, and `max-points`; artifact `unidepth-v2-prior.npz`.
 
-CLI task profiles: `default`. WorldFoundry binds `UniDepthV2PriorPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `UniDepthV2PriorPipeline`. Family status: **Verified**.
 
 Run UniDepth V2 as a standalone geometry prior, or let higher-level pipelines such as ViPE use it for metric depth.
 
-CC-BY-NC-4.0: non-commercial license terms apply downstream.
+CC-BY-NC-4.0: non-commercial license terms apply downstream. Single-image estimation; temporal stability on video is out of scope.
 
 ## Running in WorldFoundry
 

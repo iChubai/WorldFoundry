@@ -1,19 +1,41 @@
 ---
 title: "DreamDojo"
-description: "Native action-conditioned robot video generation with DreamDojo 2B GR-1."
+description: "DreamDojo from NVIDIA: world, robot, and 1 more task; Runner parity pending; 2 variants."
 modelId: "dreamdojo"
 pageSource: authored
 ---
 
-DreamDojo predicts robot-view video from an initial image and normalized robot actions. WorldFoundry integrates the offline **2B GR-1 post-trained teacher** with a native action-conditioned Cosmos DiT, shared Reason1 text encoder, Wan video codec, and UniPC sampling. The separate [DreamDojo Student](./dreamdojo-student) route provides low-step distilled inference and resident normalized-action streaming.
+DreamDojo predicts robot-view video from an initial image and normalized robot actions. WorldFoundry integrates the offline 2B GR-1 post-trained teacher and a separate low-step causal student route through native Cosmos components.
 
 <ModelPaperFigures modelId="dreamdojo" locale="en" />
 
-Paper: [arXiv 2602.06949](https://arxiv.org/abs/2602.06949). Project: [DreamDojo](https://dreamdojo-world.github.io/). Code: [NVIDIA/DreamDojo](https://github.com/NVIDIA/DreamDojo). Weights: [nvidia/DreamDojo](https://huggingface.co/nvidia/DreamDojo). License: **NVIDIA Open Model License**.
+Paper: [arXiv 2602.06949](https://arxiv.org/abs/2602.06949).
+
+Project page: [dreamdojo-world.github.io](https://dreamdojo-world.github.io/). Code: [NVIDIA/DreamDojo](https://github.com/NVIDIA/DreamDojo).
+
+<ModelCommandBuilder modelId="dreamdojo" locale="en" />
+
+## What it is for
+
+Use `dreamdojo-2b-gr1-distilled` to step a world forward with actions and render the resulting frames.
+
+The action-conditioned Cosmos DiT groups four 384-dimensional actions per future latent frame and adds their projections to timestep and AdaLN embeddings. Reason1 text conditioning and the Wan codec are shared. The teacher uses UniPC; the causal student uses clean KV prefill and one to four TrigFlow steps. It is published by NVIDIA.
+
+Tasks: world, robot, and world model. Other variants: `dreamdojo-2b-gr1-action-conditioned`.
+
+Suggested benchmarks: [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Robot-video prediction with explicit action conditioning).
 
 ## Runtime contract
 
-The model is a robot world model, not an action-generating VLA policy.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `height`, `width`, `steps`, `guidance-scale`, and `seed`; artifact `dreamdojo_world.mp4`.
+
+CLI task profiles: `interactive-video` and `robot-world-generation`. WorldFoundry binds `DreamDojoPipeline`. Defaults for `interactive-video`: height=480, width=640, steps=35, guidance-scale=7.0, seed=42.
+
+Start with `dreamdojo-2b-gr1-distilled`. The family has 2 variants, selectable in the command builder above: `dreamdojo-2b-gr1-action-conditioned` (`robot-world-generation`) — Runner parity pending; `dreamdojo-2b-gr1-distilled` (`robot-world-generation`) — Runner parity pending. Family status: **Runner parity pending**.
+
+Supply one initial image, complete 12-action chunks in the normalized 384-dimensional space, the converted EMA checkpoint, Cosmos video tokenizer, and Reason1 text weights or explicit precomputed embeddings. Each chunk generates 13 frames; longer sequences reuse the final generated frame.
+
+Official numerical parity, GR-1 evaluation quality, and robot-task success have not been validated. Distilled inference uses dreamdojo-student with explicit student weights; the teacher checkpoint is not interchangeable. Other model scales are not supported.
 
 Supply one initial image and already-normalized actions shaped `[N,384]` or `[1,N,384]`, where `N` is a positive multiple of 12. Each chunk generates 13 frames at 480×640 and 5 fps. Continuation uses the final generated frame as the next observation and removes duplicate boundary frames. Action files may be `.npy`, `.json`, or PyTorch tensors.
 
@@ -21,11 +43,17 @@ The unified action layout includes GR-1 `[0,58)`, G1 `[58,101)`, YAM `[101,147)`
 
 ## Running in WorldFoundry
 
+Run `wf run dreamdojo-2b-gr1-action-conditioned --pipeline.task-profile interactive-video` to roll out the world model. Switch tasks in the command builder above to change `--pipeline.task-profile`.
+
+It runs in the dedicated environment `dreamdojo` (Python 3.10, CUDA 12.8, torch==2.7.0).
+
+Weights: `nvidia/DreamDojo`, `nvidia/Cosmos-Predict2.5-2B`, and `nvidia/Cosmos-Reason1-7B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh dreamdojo-2b-gr1-action-conditioned`. Add `--download` to fetch missing public checkpoints.
+
+License: NVIDIA Open Model License.
+
 Prepare the GR-1 EMA checkpoint, Cosmos-Predict2.5 video tokenizer, and Cosmos-Reason1-7B text encoder. The public loader automatically converts distributed checkpoint shards to `model_ema_bf16.pt` when needed.
 
 ```python
-from worldfoundry.pipelines.component_pipelines import DreamDojoPipeline
-
 pipeline = DreamDojoPipeline.from_pretrained(
     {
         "checkpoints_dir": "/weights/DreamDojo/2B_GR1_post-train",
@@ -47,14 +75,5 @@ pipeline(
 For precomputed official Reason1 features, replace `text_encoder_path` with `text_embeddings_path`. Features must have shape `[1,S,100352]`; this uses actual supplied text embeddings rather than loading the text encoder.
 
 For a command-line run, see `python tests/manual/dreamdojo_inference.py --help`. Checkpoints, inputs, and generated videos live outside the repository.
-
-## Validation
-
-Validated with the released GR-1 checkpoint: the pipeline generates 13 frames per chunk at 480×640 and 5 fps (35 steps, seed 42), repeated actions reproduce identical frames, and changed actions change the generated video.
-
-## Limitations
-
-- This teacher profile supports offline 2B GR-1 inference. Distilled inference uses the separate student route and explicit student weights. Other checkpoint scales remain unsupported.
-- Official numerical parity, GR-1 evaluation quality, and robot-task success are not validated.
 
 <ModelRelatedRecipes modelId="dreamdojo" locale="en" />

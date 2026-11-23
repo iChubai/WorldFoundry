@@ -9,17 +9,17 @@ description: 选择模型，检查运行时，并复制与你的机器匹配的�
 
 每个模型都有一个就绪度徽章，由其 manifest 得出。
 
-- **Runner verified** — 至少一条路径已记录 WorldFoundry runner parity 产物。请选择证据对应的 variant 和配置。
-- **Integrated** — 已绑定可运行 Pipeline，但端到端 GPU parity 仍在验证。可以运行；在 parity 记录之前，输出应视为未验证。
-- **Runtime ported** — 运行时代码已在仓库中，路径还在接线。检查 manifest；运行可能需要手动步骤。
-- **Profile only** — 只记录了 runtime profile，没有绑定 Pipeline。页面可用于溯源与规划；不会显示运行命令。
-- **Planned** — 只有上游来源信息，目前没有可运行内容。
-- **Blocked** — 已记录的 blocker（许可、权重、上游）阻止了集成。阅读 manifest 备注了解具体 blocker。
+- **Runner 已验证（Runner verified）** — 至少一条路径已记录 WorldFoundry runner parity 产物。请选择证据对应的 variant 和配置。
+- **已集成（Integrated）** — 已绑定可运行 Pipeline，但端到端 GPU parity 仍在验证。可以运行；在 parity 记录之前，输出应视为未验证。
+- **运行时已迁移（Runtime ported）** — 运行时代码已在仓库中，路径还在接线。检查 manifest；运行可能需要手动步骤。
+- **仅 Profile（Profile only）** — 只记录了 runtime profile，没有绑定 Pipeline。页面可用于溯源与规划；不会显示运行命令。
+- **已规划（Planned）** — 只有上游来源信息，目前没有可运行内容。
+- **受阻（Blocked）** — 已记录的 blocker（许可、权重、上游）阻止了集成。阅读 manifest 备注了解具体 blocker。
 
 ## 如何选择模型
 
-1. **按家族和任务过滤。** 使用分类标签（视频、世界模型、3D 与 4D、具身智能、托管 API）和搜索框——搜索会匹配模型名、别名、提供方和任务 id。
-2. **优先选择 verified 或 integrated 条目。** 这些条目已绑定 Pipeline；其余条目只是参考资料。
+1. **按家族和任务过滤。** 使用分类标签（视频、多模态、世界模型、3D 与 4D、具身智能、托管 API）和搜索框——搜索会匹配模型名、别名、提供方和任务。
+2. **优先选择已验证或已集成条目。** 这些条目已绑定 Pipeline；其余条目只是参考资料。
 3. **检查运行时信息。** 独立环境需要单独安装；统一环境的模型共享一个 conda 环境。Python 与 CUDA 可以在安装前告诉你驱动栈是否匹配。
 4. **打开模型页面。** 每个页面都会解释模型是什么、来自哪里、输入/输出契约、精确的环境、带固定 revision 的权重仓库，以及为所选 variant 生成可复制运行命令的命令构建器。
 
@@ -29,31 +29,31 @@ description: 选择模型，检查运行时，并复制与你的机器匹配的�
 
 <RecipeRecords items={[
   {
-    term: 'Catalog',
+    term: '目录元数据（Catalog）',
     detail: '稳定 model ID、任务、官方来源（论文、项目、代码、权重）、别名和集成状态。',
   },
   {
-    term: '发表机构',
+    term: '发表机构（Publisher）',
     detail: '正式发表机构（企业优先，其次大学或实验室）及其类型。没有正式机构信息时，页面会注明。',
   },
   {
-    term: 'Runtime profile',
-    detail: '输入契约、artifact 契约、backend stage 和运行时就绪状态。',
+    term: '运行时配置（Runtime profile）',
+    detail: '输入契约、产物契约、后端阶段和运行时就绪状态。',
   },
   {
-    term: 'Environment',
-    detail: 'Python、CUDA tier、固定依赖、验证 import，以及独立/统一环境路由。',
+    term: '环境（Environment）',
+    detail: 'Python、CUDA 版本、固定依赖、验证 import，以及独立/统一环境路由。',
   },
   {
-    term: 'Pipeline binding',
+    term: 'Pipeline 绑定（Pipeline binding）',
     detail: 'WorldFoundry 使用的 runner 与每个 variant 的具体 pipeline target。',
   },
   {
-    term: 'Benchmarks',
+    term: '评测基准（Benchmarks）',
     detail: 'Manifest 推荐或其证据记录中提到的评测，链接到 Benchmark Hub。',
   },
   {
-    term: 'Evidence',
+    term: '验证证据（Evidence）',
     detail: '原生 demo 与 WorldFoundry runner 的 parity 结果。',
   },
 ]} />

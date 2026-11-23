@@ -9,9 +9,7 @@ SimWorld is a simulator-control model rather than a video generator: it drives m
 
 <ModelPaperFigures modelId="simworld" locale="en" />
 
-Paper: [arXiv 2512.01078](https://arxiv.org/abs/2512.01078).
-
-Code: [SimWorld-AI/SimWorld](https://github.com/SimWorld-AI/SimWorld).
+Paper: [arXiv 2512.01078](https://arxiv.org/abs/2512.01078). Code: [SimWorld-AI/SimWorld](https://github.com/SimWorld-AI/SimWorld).
 
 <ModelCommandBuilder modelId="simworld" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: simulator control, multi agent simulation, and embodied policy rollout. A
 
 ## Runtime contract
 
-Artifacts `world_state` and `simworld_runtime_plan.json`.
+Artifact `simworld_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `SimWorldPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `SimWorldPipeline`. Family status: **Runner parity pending**.
 
 A running simulator server is the key prerequisite. Until the required assets are staged, a run returns a runtime plan that lists what is missing.
 

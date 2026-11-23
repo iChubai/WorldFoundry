@@ -1,105 +1,46 @@
 ---
 title: "DreamDojo Student"
-description: "DreamDojo 学生的原生低步数推理与常驻机器人动作流式入口。"
+description: "DreamDojo Student（英伟达（NVIDIA））：世界模型、机器人等 3 项任务；Runner 一致性待确认。"
 modelId: "dreamdojo-student"
 pageSource: authored
 ---
 
-WorldFoundry 已接入 DreamDojo 的 **2B GR-1 self-forcing 学生**，支持因果动作条件、**1–4 步 TrigFlow 采样**、独立离线回放与常驻流式 API。DiT、Reason1 文本条件与 Wan 视频编解码复用规范 Cosmos 组件。[Teacher 入口](./dreamdojo) 保持独立。
+DreamDojo self-forcing 学生通过因果动作条件与一至四步 TrigFlow 采样预测机器人视角视频。WorldFoundry 支持独立离线回放与常驻归一化动作流式推理。
 
 源码：[NVIDIA/DreamDojo](https://github.com/NVIDIA/DreamDojo/tree/02f119b759d5c7f84a399fdeea3c6e82e7ed6cff)，包括[蒸馏流程](https://github.com/NVIDIA/DreamDojo/blob/02f119b759d5c7f84a399fdeea3c6e82e7ed6cff/docs/DISTILL.md)。
 
-## 输入与帧节奏
+<ModelPaperFigures modelId="dreamdojo-student" locale="zh" />
 
-提供一幅初始图像与有限、由调用方归一化的机器人动作，形状为 `[N,384]` 或 `[1,N,384]`。
+论文：[arXiv 2602.06949](https://arxiv.org/abs/2602.06949)。
 
-- 首次 STEP：**12 步新动作 → 13 帧 RGB**。
-- 后续 STEP：**4 步新动作 → 4 帧新 RGB**。
-- 播放时钟：**10 fps**，使用配置的原生分辨率，默认 **480×640**。
-- 采样步数：整数 **1–4**，默认 **4**。Guidance 已蒸馏，使用 `guidance_scale=1`。
-- 离线序列：`N >= 12` 且为 4 的倍数。24 步动作返回 25 帧。
+<ModelCommandBuilder modelId="dreamdojo-student" locale="zh" />
 
-续接保存九帧 RGB 与八步历史动作，重新编码观测窗口，并将新动作对齐到新潜帧转换。每个窗口独立维护每层最多三潜帧的干净 KV 历史，噪声采样只读缓存。文本条件保持常驻直到重置。`reset_realtime()` 丢弃回放状态，不卸载权重。
+## 用来做什么
 
-## 资产与环境
+`dreamdojo-student` 以动作为条件生成未来帧。
 
-使用[贡献指南](/zh/docs/maintainers/contributing)中的统一 CUDA 环境：
+因果学生复用 Cosmos 动作 DiT、Reason1 编码器与 Wan 编解码。干净上下文预填充写入请求专属三潜帧 KV 历史，噪声采样只读取历史。窗口续接保存九帧 RGB 与八步对齐的历史动作。该模型由英伟达（NVIDIA）发布。
 
-```bash
-bash scripts/setup/bootstrap_worldfoundry.sh
-source tmp/worldfoundry_unified_env.sh
-conda activate "${WORLDFOUNDRY_UNIFIED_ENV_PREFIX}"
-```
+任务：世界模型、机器人。
 
-通过 `student_checkpoint_path` 显式提供**蒸馏学生** checkpoint，同时准备 Cosmos-Predict2.5 的 `tokenizer.pth` 与 Cosmos-Reason1-7B 文本资产。支持导出的 EMA 文件、含 `model/.metadata` 的迭代目录，或 DCP model 目录。分布式 EMA 转换使用包内工具。如已有文本特征，可使用形状为 `[1,S,100352]` 的 `text_embeddings_path` 替代 `text_encoder_path`。
+## 运行时契约
 
-## 公开社区 checkpoint
+必填 `input-path`、`action-file`、`load.student-checkpoint-path`；输入 `prompt`（不传时使用内置示例）；参数 `height`、`width`、`num-inference-steps`、`guidance-scale`、`fps`、`seed`；产物 `dreamdojo_world.mp4`。
 
-[PencilHu/DreamDojo-Jokeru-2B-SelfForcing](https://huggingface.co/PencilHu/DreamDojo-Jokeru-2B-SelfForcing/tree/c99e38c158c853113e1148078f4730aabde7b4ed) 发布了 `checkpoints/iter_000000700` 社区 **Jokeru** 学生。训练配置使用 2B 因果架构、384 维动作、四个已发布 TrigFlow 时间点与 480×640 分辨率，EMA 权重可完整映射到原生学生模型，没有缺失键或形状差异。这不是 NVIDIA 官方 GR-1 学生。
+CLI task profile：`robot-world-generation`。绑定的 pipeline 类是 `DreamDojoStudentPipeline`。系列状态：**Runner 一致性待确认**。`robot-world-generation` 的默认值：height=480, width=640, num-inference-steps=4, guidance-scale=1.0, fps=10, seed=42。
 
-```bash
-hf download PencilHu/DreamDojo-Jokeru-2B-SelfForcing \
-  --revision c99e38c158c853113e1148078f4730aabde7b4ed \
-  --include 'checkpoints/iter_000000700/model/*' \
-            'checkpoints/iter_000000700/training_config.yaml' README.md \
-  --local-dir /weights/DreamDojo-Jokeru-2B-SelfForcing
-```
+提供 student_checkpoint_path、一幅初始图像、归一化 384 维动作与共享 Cosmos tokenizer/Reason1 资产。首次 STEP 消费 12 步动作并返回 13 帧，后续每次消费 4 步新动作并按 10 fps 播放时钟返回 4 帧新像素。重置保留权重。
 
-model 分片合计约 **17.2 GB**，包含训练侧网络。将 `/weights/DreamDojo-Jokeru-2B-SelfForcing/checkpoints/iter_000000700` 传给 `student_checkpoint_path`，包内转换器会提取 EMA 推理权重。除上传者声明的 Apache-2.0 许可外，还需保留上游 NVIDIA 模型条款。
+固定的 DreamDojo Hub 快照不包含蒸馏学生 checkpoint，需要显式学生资产。尚未验证学生真实权重输出质量、官方一致性、机器人闭环成功率或 10 fps 推理吞吐。数据集归一化与遥操作映射由调用方负责；WASD 控制不等于机器人动作。
 
-## 常驻流式推理
+## 在 WorldFoundry 中运行
 
-```python
-import numpy as np
-from worldfoundry.pipelines.dreamdojo.pipeline_dreamdojo_student import DreamDojoStudentPipeline
+运行 `wf run dreamdojo-student --pipeline.task-profile robot-world-generation` 推演世界模型。
 
-pipeline = DreamDojoStudentPipeline.from_pretrained(
-    {
-        "student_checkpoint_path": "/weights/DreamDojo/student/iter_000003000",
-        "vae_path": "/weights/Cosmos-Predict2.5-2B/tokenizer.pth",
-        "text_embeddings_path": "/inputs/robot-text.pt",
-    },
-    device="cuda",
-)
-# 已准备的归一化控制，不是原始关节读数或键盘命令。
-actions = np.load("/inputs/normalized-actions.npy")  # [N,384], N >= 16
-pipeline.configure_realtime(
-    images="/inputs/robot.png",
-    height=480,
-    width=640,
-    num_inference_steps=4,
-    seed=42,
-)
-try:
-    first = pipeline.stream_realtime(actions=actions[:12])
-    next_chunk = pipeline.stream_realtime(actions=actions[12:16])
-    pixels = next_chunk["video_chunk"].frames  # [1,3,4,480,640], [-1,1]
-finally:
-    pipeline.reset_realtime()
-```
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
-如需独立离线导出，对同一 pipeline 传入 `images`、`interactions=[action_file]` 与 `output_path`。离线调用不修改已有常驻回放。Studio 提供独立的 **DreamDojo Student** 条目，包含学生权重控制与四步默认配置。
+权重仓库：`nvidia/Cosmos-Predict2.5-2B`、`nvidia/Cosmos-Reason1-7B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh dreamdojo-student`；下载缺失的公开权重时加 `--download`。
 
-真实权重公共流式入口命令：
-
-```bash
-python tests/manual/dreamdojo_inference.py \
-  --variant student --stream \
-  --student-checkpoint /weights/DreamDojo/student/iter_000003000 \
-  --vae /weights/Cosmos-Predict2.5-2B/tokenizer.pth \
-  --text-embeddings /inputs/robot-text.pt \
-  --image /inputs/robot.png --actions /inputs/normalized-actions.npy \
-  --output /outputs/dreamdojo-student.mp4 --steps 4 --seed 42
-```
-
-## 验证
-
-使用无权重小型 DiT 的测试确认：缓存因果采样与稠密时间掩码输出一致，动作与历史对齐、可重复性、会话交错、重置与独立离线导出行为正确。使用发布的 Cosmos tokenizer 时，480×640 下的初始窗口与续接窗口编码结果与直接调用 Wan 编码完全一致；尚未回放学生 DiT checkpoint。
-
-## 限制
-
-- 固定的 DreamDojo Hub 快照 `89d029e10816d2995d700cb8ba06f171e0504203` 不包含蒸馏学生 checkpoint。需自行提供学生权重，加载器不会替换为后训练 teacher 权重。
-- 尚未验证学生真实权重输出质量、官方数值/视觉一致性、机器人闭环成功率或实测 **10 fps 生成吞吐**。上文 10 fps 是播放节奏。
-- 数据集归一化与遥操作映射由调用方负责。API 消费归一化机器人动作数组，默认 WASD 浏览器控制未映射到该动作空间。尚未执行学生 WebRTC 端到端回放。
+许可证：NVIDIA Open Model License。
 
 <ModelRelatedRecipes modelId="dreamdojo-student" locale="zh" />

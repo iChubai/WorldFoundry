@@ -21,13 +21,13 @@ LongCat-Video 是美团开源的视频生成模型，主打长视频：文生视
 
 上游将 LongCat-Video 定位为统一的 DiT 系生成器，视频续写是一等任务，可生成分钟级视频。该模型由美团（LongCat 团队）发布。
 
-任务：文生视频、图生视频、video-continuation、长视频生成。模态上，它接受文本、图像，输出视频。
+任务：文生视频、图生视频、视频续写、长视频生成。模态上，它接受文本、图像，输出视频。
 
 推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（基础文生视频质量评测）、[ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench)（长时程生成评测，契合其续写定位）。
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `negative-prompt`、`task-type`、`num-frames`、`fps`、`height`、`width` 等 13 项；产物 `generated_video`、`longcat_video.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `negative-prompt`、`task-type`、`num-frames`、`fps`、`height`、`width` 等 13 项；产物 `longcat_video.mp4`。
 
 CLI task profile：`official-t2v`。绑定的 pipeline 类是 `LongCatVideoPipeline`。
 

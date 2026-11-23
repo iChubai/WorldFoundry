@@ -1,6 +1,6 @@
 ---
 title: "SimWorld"
-description: "SimWorld：simulator-control；Runner 一致性待确认。"
+description: "SimWorld：仿真器控制、多智能体仿真等 3 项任务；Runner 一致性待确认。"
 modelId: "simworld"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ SimWorld 是模拟器控制模型而非视频生成器：通过模拟器服务�
 
 <ModelPaperFigures modelId="simworld" locale="zh" />
 
-论文：[arXiv 2512.01078](https://arxiv.org/abs/2512.01078)。
-
-代码：[SimWorld-AI/SimWorld](https://github.com/SimWorld-AI/SimWorld)。
+论文：[arXiv 2512.01078](https://arxiv.org/abs/2512.01078)。代码：[SimWorld-AI/SimWorld](https://github.com/SimWorld-AI/SimWorld)。
 
 <ModelCommandBuilder modelId="simworld" locale="zh" />
 
@@ -21,15 +19,13 @@ SimWorld 是模拟器控制模型而非视频生成器：通过模拟器服务�
 
 仿真平台接口，不是神经网络。
 
-任务：simulator-control、multi-agent-simulation、embodied.policy_rollout。别名：`simworld-ai`、`SimWorld-AI/SimWorld`。
+任务：仿真器控制、多智能体仿真、具身策略执行。别名：`simworld-ai`、`SimWorld-AI/SimWorld`。
 
 ## 运行时契约
 
-产物 `world_state`、`simworld_runtime_plan.json`。
+产物 `simworld_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `SimWorldPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `SimWorldPipeline`。系列状态：**Runner 一致性待确认**。
 
 关键前置条件是一个运行中的模拟器服务器。在所需资产就位前，运行只返回列出缺失项的运行时计划。
 

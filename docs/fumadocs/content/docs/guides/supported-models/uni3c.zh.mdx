@@ -1,6 +1,6 @@
 ---
 title: "Uni3C"
-description: "Uni3C（阿里巴巴达摩院）：图生视频、相机可控视频等 3 项任务；已验证; 独立环境 `uni3c`。"
+description: "Uni3C（阿里巴巴达摩院）：图生视频、相机可控视频等 3 项任务；已验证；独立环境 uni3c。"
 modelId: "uni3c"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ pageSource: generated
 
 <ModelPaperFigures modelId="uni3c" locale="zh" />
 
-论文：[arXiv 2504.14899](https://arxiv.org/abs/2504.14899)。
-
-项目页：[ewrfcas.github.io/Uni3C](https://ewrfcas.github.io/Uni3C/)。代码：[alibaba-damo-academy/Uni3C](https://github.com/alibaba-damo-academy/Uni3C)。
+论文：[arXiv 2504.14899](https://arxiv.org/abs/2504.14899)。项目页：[ewrfcas.github.io/Uni3C](https://ewrfcas.github.io/Uni3C/)。代码：[alibaba-damo-academy/Uni3C](https://github.com/alibaba-damo-academy/Uni3C)。
 
 <ModelCommandBuilder modelId="uni3c" locale="zh" />
 
@@ -21,26 +19,28 @@ pageSource: generated
 
 使用三个 checkpoint：ewrfcas/Uni3C 为 PCDController，Wan-AI/Wan2.1-I2V-14B-720P-Diffusers 为相机基座，theFoxofSky/RealisDance-DiT 为相机+人体统一模型。预渲染控制包作为显式运行时输入。
 
-任务：图生视频、相机可控视频、human-motion-controlled-video。别名：`PCDController`、`alibaba-damo-academy/Uni3C`。模态上，它接受图像，输出视频。
+任务：图生视频、相机可控视频、人体运动可控视频。别名：`PCDController`、`alibaba-damo-academy/Uni3C`。模态上，它接受图像、相机位姿，输出视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（显式控制下的相机轨迹跟随）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`、`render-path`（不传时使用内置示例）；参数 `mode`、`num-frames`、`fps`、`max-area`、`seed`、`num-gpus`；产物 `generated_video`、`uni3c.mp4`。
+输入 `prompt`、`input-path`、`render-path`（不传时使用内置示例）；参数 `mode`、`num-frames`、`fps`、`max-area`、`seed`、`num-gpus`；产物 `uni3c.mp4`。
 
-CLI task profile：`image-camera-control-video`。绑定的 pipeline 类是 `Uni3CPipeline`。
-
-系列状态：**已验证**。
-
-`image-camera-control-video` 的默认值：fps=16, seed=0。
+CLI task profile：`image-camera-control-video`。绑定的 pipeline 类是 `Uni3CPipeline`。系列状态：**已验证**。`image-camera-control-video` 的默认值：num-frames=9, fps=16, seed=0。
 
 按需选择仅相机或相机+人体统一路线，并提供匹配的预渲染控制包。已在 H100 上用官方 checkpoint 验证：默认 PCDController 相机路线可端到端运行。
+
+GPU 验证仅覆盖默认 PCDController 相机路线，相机+人体统一路线尚未验证。控制包需预先渲染；pipeline 不代为生成。
 
 ## 在 WorldFoundry 中运行
 
 用 `wf run uni3c --pipeline.task-profile image-camera-control-video` 生成相机可控视频。
 
+运行环境：独立环境 `uni3c`（Python 3.10，CUDA 12.4，torch==2.6.0+cu124）。
+
 权重仓库：`ewrfcas/Uni3C`、`Wan-AI/Wan2.1-I2V-14B-720P-Diffusers`、`theFoxofSky/RealisDance-DiT`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh uni3c`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="uni3c" locale="zh" />

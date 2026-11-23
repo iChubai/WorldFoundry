@@ -9,9 +9,7 @@ MosaicMem is a memory-augmented world-model component: it ingests keyframe patch
 
 <ModelPaperFigures modelId="mosaicmem" locale="en" />
 
-Paper: [arXiv 2603.17117](https://arxiv.org/abs/2603.17117).
-
-Project page: [mosaicmem.github.io/mosaicmem](https://mosaicmem.github.io/mosaicmem/). Code: [AbdelStark/mosaicmem](https://github.com/AbdelStark/mosaicmem).
+Paper: [arXiv 2603.17117](https://arxiv.org/abs/2603.17117). Project page: [mosaicmem.github.io/mosaicmem](https://mosaicmem.github.io/mosaicmem/). Code: [AbdelStark/mosaicmem](https://github.com/AbdelStark/mosaicmem).
 
 <ModelCommandBuilder modelId="mosaicmem" locale="en" />
 
@@ -27,11 +25,9 @@ Suggested benchmarks: [MemoBench](/docs/evaluation/benchmark-hub/memobench) (Lon
 
 ## Runtime contract
 
-Artifacts `memory_index` and `mosaicmem_runtime_plan.json`.
+Artifact `mosaicmem_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `MosaicMemPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `MosaicMemPipeline`. Family status: **Runner parity pending**.
 
 Until the required checkpoints and assets are staged, generation returns a runtime plan that lists the missing assets. Use it as the memory side of a world-model stack, not as a standalone generator.
 

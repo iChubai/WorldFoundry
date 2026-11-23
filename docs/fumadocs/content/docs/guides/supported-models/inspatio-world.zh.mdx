@@ -1,6 +1,6 @@
 ---
 title: "InSpatio-World"
-description: "InSpatio-World（InSpatio）：新视角合成；已验证。"
+description: "InSpatio-World（InSpatio）：视频条件世界生成、轨迹条件视频等 3 项任务；已验证。"
 modelId: "inspatio-world"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ InSpatio-World 是 1.3B 的视频条件世界生成器：给定一段视频与�
 
 <ModelPaperFigures modelId="inspatio-world" locale="zh" />
 
-论文：[arXiv 2604.07209](https://arxiv.org/abs/2604.07209)。
-
-项目页：[inspatio.github.io/inspatio-world](https://inspatio.github.io/inspatio-world/)。代码：[inspatio/inspatio-world](https://github.com/inspatio/inspatio-world)。代码：[madebyollin/taehv](https://github.com/madebyollin/taehv)。
+论文：[arXiv 2604.07209](https://arxiv.org/abs/2604.07209)。项目页：[inspatio.github.io/inspatio-world](https://inspatio.github.io/inspatio-world/)。代码：[inspatio/inspatio-world](https://github.com/inspatio/inspatio-world)。代码：[madebyollin/taehv](https://github.com/madebyollin/taehv)。
 
 <ModelCommandBuilder modelId="inspatio-world" locale="zh" />
 
@@ -21,7 +19,7 @@ InSpatio-World 是 1.3B 的视频条件世界生成器：给定一段视频与�
 
 checkpoint 为 inspatio/world（apache-2.0），配合 Wan2.1-T2V-1.3B 基座、用于几何重建的 Depth Anything 3 以及用于视频描述的 Florence-2-large 使用。可选的 use_tae 路径会从共享 checkpoint 根加载 taew2_1.pth；默认 Wan VAE 路径不需要它。
 
-任务：video-conditioned-world-generation、trajectory-conditioned-video、新视角合成。别名：`inspatio-world-1.3b`。
+任务：视频条件世界生成、轨迹条件视频、新视角合成。别名：`inspatio-world-1.3b`。模态上，它接受轨迹，输出视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（生成视角的轨迹跟随精度）。
 
@@ -29,9 +27,7 @@ checkpoint 为 inspatio/world（apache-2.0），配合 Wan2.1-T2V-1.3B 基座、
 
 必填 `input-path`；输入 `prompt`（不传时使用内置示例）；参数 `skip-step1`、`skip-step2`、`skip-step3`；产物 `inspatio-world.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `InspatioWorldPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `InspatioWorldPipeline`。系列状态：**已验证**。
 
 所有默认组件只从本地 checkpoint 存储加载：运行前请就位 inspatio/world、Wan-AI/Wan2.1-T2V-1.3B、depth-anything/DA3NESTED-GIANT-LARGE-1.1 与 microsoft/Florence-2-large。
 

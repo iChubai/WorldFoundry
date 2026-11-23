@@ -1,6 +1,6 @@
 ---
 title: "MonST3R"
-description: "MonST3R from Google DeepMind / UC Berkeley: geometry estimation in the presence of motion."
+description: "MonST3R from Google DeepMind / UC Berkeley: geometry estimation in the presence of motion; Verified."
 modelId: "monst3r"
 pageSource: authored
 ---
@@ -25,15 +25,13 @@ Tasks: geometry estimation in the presence of motion.
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `weights`, `seq-name`, `niter`, `flow-loss-weight`, `skip-pair-dynamic-mask`, `silent`, and 1 more; artifacts `generated_4d_scene` and `monst3r.glb`.
+Input `input-path` (bundled samples are used when omitted); options `weights`, `seq-name`, `niter`, `flow-loss-weight`, `skip-pair-dynamic-mask`, `silent`, and 1 more; artifact `monst3r.glb`.
 
-CLI task profiles: `default`. WorldFoundry binds `MonST3RPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `MonST3RPipeline`. Family status: **Verified**.
 
 The Studio default disables the optional flow loss so missing RAFT2/SAM2 assets do not block preview output. For full official dynamic-mask parity, configure the MonST3R, RAFT, and SAM2 assets in the runtime environment.
 
-Full official dynamic-mask parity needs RAFT2/SAM2 assets beyond the Studio default path.
+Full official dynamic-mask parity needs RAFT2/SAM2 assets beyond the Studio default path. Optimization-based alignment makes long videos slow compared with feed-forward reconstructors.
 
 ## Running in WorldFoundry
 

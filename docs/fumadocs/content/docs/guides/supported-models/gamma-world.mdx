@@ -25,7 +25,7 @@ Weights: `chijw/Gamma-World` (**Apache-2.0**, bidirectional / causal / distilled
 
 The model conditions on Reason1 (nvidia/Cosmos-Reason1-7B as text encoder) and decodes with the shared Wan VAE; WorldFoundry handles action normalization and windowed execution. The chijw/Gamma-World weights (apache-2.0) contain the bidirectional, causal, and distilled networks.
 
-Tasks: multi agent world model, action-conditioned video, and image-to-video. Aliases: `gammaworld`, `gamma-world-causal`, and `gamma-world-causal-few-step`. Modalities: image in, video out. Other variants: `gamma-world-causal`, `gamma-world-bidirectional`.
+Tasks: multi agent world model, action-conditioned video, and image-to-video. Aliases: `gammaworld`, `gamma-world-causal`, and `gamma-world-causal-few-step`. Modalities: action and image in, video out. Other variants: `gamma-world-causal`, `gamma-world-bidirectional`.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (World-rollout quality under action conditioning).
 
@@ -33,7 +33,7 @@ Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmode
 
 Required `prompt` and start images. Causal and four-step causal inference also require one action track per view, supplied through `actions`/`action_paths` or action JSONs in `eval_dir`; these checkpoints cannot run without actions. Other options include `mode`, `n_players`, `num_frames`, `num_conditional_frames`, `guidance`, `num_steps`, and `seed`. The output is a generated video.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `GammaWorldPipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `GammaWorldPipeline`.
 
 Start with `gamma-world-causal-few-step`. The family has 3 variants, selectable in the command builder above: `gamma-world-causal-few-step` (`action-conditioned-video`) — Runner parity pending; `gamma-world-causal` (`action-conditioned-video`) — Runner parity pending; `gamma-world-bidirectional` (`action-conditioned-video`) — Runner parity pending. Family status: **Runner parity pending**.
 

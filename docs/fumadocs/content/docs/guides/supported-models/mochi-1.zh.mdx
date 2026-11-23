@@ -27,13 +27,11 @@ Mochi-1 是 Genmo 开源的文生视频模型，以 preview checkpoint 形式发
 
 输入 `prompt`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`guidance-scale` 等 7 项；产物 `mochi-1-preview-t2v.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `Mochi1PreviewT2VPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`interactive-video` 的默认值：frames=84, fps=30, height=480, width=848, seed=12345。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `Mochi1PreviewT2VPipeline`。系列状态：**Runner 一致性待确认**。`interactive-video` 的默认值：frames=84, fps=30, height=480, width=848, steps=64, guidance-scale=4.5。
 
 运行前需准备 preview checkpoint（genmo/mochi-1-preview）。GitHub 组织名为 genmoai，Hugging Face 为 genmo。
+
+尚未验证基于 checkpoint 的 GPU 输出，包括官方 31 帧、64 步的画质设置。
 
 ## 在 WorldFoundry 中运行
 

@@ -1,33 +1,48 @@
 ---
 title: "HMA"
-description: "使用连续 MAR 或离散 MAGVIT 权重，按动作生成 LangTable 机器人视频。"
+description: "HMA（麻省理工学院（MIT））：机器人世界模型、动作条件视频等 3 项任务；Runner 一致性待确认；2 个 variant。"
 modelId: "hma"
-pageSource: authored
+pageSource: generated
 ---
 
-HMA（异构掩码自回归）根据短图像历史和二维动作预测机器人后续观察。WorldFoundry 通过 `HMAPipeline` 调用[官方 HMA 源码](https://github.com/liruiw/HMA)及本地权重，不打包权重。变体包括连续 MAR（`hma-mar-1b`）和离散 MAGVIT（`hma-magvit-362m`）。参见[论文](https://arxiv.org/abs/2502.04296)与[项目页](https://liruiw.github.io/hma)。
+HMA（异构掩码自回归）跨异构机器人形态与数据集建模「动作-视频」动力学，速度足以支撑实时交互。variant 覆盖 MAGVIT 风格的 362M 离散模型与 1B MAR 连续模型。WorldFoundry 从本地就位的官方源码运行生成器；checkpoint 与机器人资产需在本地就位。
 
 <ModelPaperFigures modelId="hma" locale="zh" />
 
+论文：[Learning Real-World Action-Video Dynamics with Heterogeneous Masked Autoregression](https://arxiv.org/abs/2502.04296)（2025）。项目页：[liruiw.github.io/hma](https://liruiw.github.io/hma)。代码：[liruiw/HMA](https://github.com/liruiw/HMA)。
+
 <ModelCommandBuilder modelId="hma" locale="zh" />
 
-## 运行时输入
+## 用来做什么
 
-默认 LangTable 路径将同一张图重复用作历史，并反复施加恒定动作，只适合加载与生成 smoke 测试。要运行配对轨迹，请将 `trajectory_path` 指向如下格式的 JSON 文件：
+用 `hma-magvit-362m` 生成可探索的世界。
 
-```json
-{
-  "action_format": "raw_language_table_delta_yx",
-  "prompt_frames": ["frame_000.png", "frame_001.png", "frame_002.png"],
-  "actions": [
-    [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0],
-    [0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.0, 0.0]
-  ]
-}
-```
+按论文（arXiv 2502.04296），对视频 token 的掩码自回归通过按模态划分的输出头处理异构动作空间；liruiw 发布了离散（hma-base-disc）与连续（hma-base-cont）checkpoint（apache-2.0）。该模型由麻省理工学院（MIT）发布。
 
-示例对应默认 3 帧历史、生成 6 帧：`prompt_horizon - 1 + generated_frames` 共需 8 行有限的 `[delta_y, delta_x]`。若生成 8 帧，则需提供 10 行。图像路径相对 JSON 文件解析，也可使用绝对路径。权重内部会归一化原始动作，传入前不要重复归一化。输出首帧是历史最后一帧，后面接所请求的生成帧。使用上方命令构建器时，将初始观察设为历史最后一帧；`trajectory_path` 提供真正的多帧历史。
+任务：机器人世界模型、动作条件视频、视频动力学。别名：`hma-magvit-362m`、`hma-mar-1b`。同系列还有 `hma-mar-1b`。
 
-连续权重需要本地 Stable Video Diffusion 时序 VAE；离散权重需要官方 MAGVIT2 tokenizer 权重（`hma_magvit_checkpoint`）。两者都需要就位官方源码和对应的 HMA 权重。两个变体均可在 GPU 上运行配对 LangTable 轨迹。在该轨迹上，离散版明显跟随真实动作，连续版未复现后段机械臂运动；这只是单一配置，不代表普适的控制质量评分。
+推荐评测：[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（具身世界模型视频预测质量）。
+
+## 运行时契约
+
+输入 `input-path`、`load.checkpoint-dir`、`load.base-model-dir`（不传时使用内置示例）；参数 `generated-frames`、`prompt-horizon`、`maskgit-steps`、`direction`、`action-scale`、`fps` 等 9 项；产物 `hma.mp4`。
+
+CLI task profile：`robot-action-video`。绑定的 pipeline 类是 `HMAPipeline`。`robot-action-video` 的默认值：fps=2, seed=42。
+
+建议从 `hma-magvit-362m` 开始。该系列共有 2 个 variant，可在上方命令构建器中切换：`hma-magvit-362m`（`robot-action-video`）：Runner 一致性待确认、`hma-mar-1b`（`robot-action-video`）：Runner 一致性待确认。系列状态：**Runner 一致性待确认**。
+
+就位固定 commit 的 HMA 官方源码与 HMA checkpoint。连续模型还需要 Stable Video Diffusion 时序 VAE；离散模型需要官方 MAGVIT2 tokenizer 权重。运行配对轨迹时，通过 trajectory_path 传入历史帧与原始 LangTable 增量动作。
+
+默认路径重复同一张图并施加恒定动作，只是 smoke 配置；真实配对轨迹需传入 trajectory_path。研究规模分辨率：输出以动力学保真为先，而非影视级画质。
+
+## 在 WorldFoundry 中运行
+
+用 `wf run hma-magvit-362m --pipeline.task-profile robot-action-video` 生成世界。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`liruiw/hma-base-cont`、`liruiw/hma-base-disc`、`stabilityai/stable-video-diffusion-img2vid`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh hma-magvit-362m`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="hma" locale="zh" />

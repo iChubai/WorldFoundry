@@ -1,6 +1,6 @@
 ---
 title: "ABot-World-0-5B-LF"
-description: "ABot-World-0-5B-LF（阿里巴巴（高德地图 AMAP-CVLab））：image-to-world-video、动作条件视频等 3 项任务；已验证; 独立环境 `abot-world`。"
+description: "ABot-World-0-5B-LF（阿里巴巴（高德地图 AMAP-CVLab））：图像生成世界视频、动作条件视频等 3 项任务；已验证；独立环境 abot-world。"
 modelId: "abot-world-0-5b-lf"
 pageSource: authored
 ---
@@ -25,13 +25,13 @@ ABot-World-0-5B-LF 是高德的交互式世界模型：输入一张图加动作�
 
 该因果学生模型使用 Wan 注意力、T5 文本编码器、Wan2.2 VAE 及其调度器，支持可选 FP8。WorldFoundry 支持因果推理与常驻交互滚动；不包含训练与 Gradio demo。checkpoint 为 acvlab/ABot-World-0-5B-LF（causal student）。该模型由阿里巴巴（高德地图 AMAP-CVLab）发布。
 
-任务：image-to-world-video、动作条件视频、交互式世界模型。别名：`abot-world`、`abot`。模态上，它接受图像，输出世界状态、视频。
+任务：图像生成世界视频、动作条件视频、交互式世界模型。别名：`abot-world`、`abot`。模态上，它接受图像、动作，输出世界状态、视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（世界模型滚动生成质量的通用评测）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`seed`、`num-blocks`；产物 `generated_world_video`、`abot-world.mp4`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`seed`、`num-blocks`；产物 `abot-world.mp4`。
 
 CLI task profile：`interactive-video`。绑定的 pipeline 类是 `ABotWorldPipeline`。
 

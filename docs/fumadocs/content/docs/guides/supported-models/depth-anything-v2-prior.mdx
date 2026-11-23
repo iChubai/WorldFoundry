@@ -2,18 +2,14 @@
 title: "Depth Anything V2"
 description: "Depth Anything V2 from TikTok / The University of Hong Kong: monocular depth estimation, metric depth estimation, and 1 more task; Verified."
 modelId: "depth-anything-v2-prior"
-pageSource: authored
+pageSource: generated
 ---
 
 Depth Anything V2 is the sharper, synthetic-data-trained successor to V1, used in WorldFoundry as a monocular and metric depth prior. It loads the depth-anything/Depth-Anything-V2-Large checkpoint.
 
 <ModelPaperFigures modelId="depth-anything-v2-prior" locale="en" />
 
-Paper: [arXiv 2406.09414](https://arxiv.org/abs/2406.09414).
-
-Project page: [depth-anything-v2.github.io](https://depth-anything-v2.github.io/). Code: [DepthAnything/Depth-Anything-V2](https://github.com/DepthAnything/Depth-Anything-V2).
-
-Checkpoint: `depth_anything_v2_vitl.pth` from `depth-anything/Depth-Anything-V2-Large`.
+Paper: [arXiv 2406.09414](https://arxiv.org/abs/2406.09414). Project page: [depth-anything-v2.github.io](https://depth-anything-v2.github.io/). Code: [DepthAnything/Depth-Anything-V2](https://github.com/DepthAnything/Depth-Anything-V2).
 
 <ModelCommandBuilder modelId="depth-anything-v2-prior" locale="en" />
 
@@ -27,15 +23,13 @@ Tasks: monocular depth estimation, metric depth estimation, and geometry prior. 
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `model`, `execute`, and `max-points`; artifacts `depth-anything-v2-prior.npz`.
+Input `input-path` (bundled samples are used when omitted); options `model`, `execute`, and `max-points`; artifact `depth-anything-v2-prior.npz`.
 
-CLI task profiles: `default`. WorldFoundry binds `DepthAnythingV2PriorPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `DepthAnythingV2PriorPipeline`. Family status: **Verified**.
 
 Pass one image as input_path; the run writes the depth prediction to depth-anything-v2-prior.npz. Higher-level geometry pipelines such as ViPE use the same prior.
 
-Metric accuracy varies by domain; indoor/outdoor calibration differs.
+Metric accuracy varies by domain; indoor/outdoor calibration differs. Single-image prior: it does not enforce temporal consistency across video frames.
 
 ## Running in WorldFoundry
 
@@ -44,5 +38,7 @@ Estimate depth with `wf run depth-anything-v2-prior --pipeline.task-profile defa
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `depth-anything/Depth-Anything-V2-Large`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh depth-anything-v2-prior`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="depth-anything-v2-prior" locale="en" />

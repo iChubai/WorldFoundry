@@ -1,6 +1,6 @@
 ---
 title: "LingBot-VA"
-description: "LingBot-VA（蚂蚁灵波科技（Robbyant，蚂蚁集团））：视觉-语言-动作（VLA）、va等 8 项任务；Runner 一致性待确认；3 个 variant。"
+description: "LingBot-VA（蚂蚁灵波科技（Robbyant，蚂蚁集团））：视觉-语言-动作（VLA）、视觉-动作（VA）等 8 项任务；Runner 一致性待确认；3 个 variant。"
 modelId: "lingbot-va"
 pageSource: authored
 ---
@@ -9,9 +9,7 @@ LingBot-VA is Robbyant's video-action model, served through a vendored server/cl
 
 <ModelPaperFigures modelId="lingbot-va" locale="zh" />
 
-论文：[arXiv 2601.21998](https://arxiv.org/abs/2601.21998)。
-
-代码：[Robbyant/lingbot-va](https://github.com/Robbyant/lingbot-va)。
+论文：[arXiv 2601.21998](https://arxiv.org/abs/2601.21998)。代码：[Robbyant/lingbot-va](https://github.com/Robbyant/lingbot-va)。
 
 <ModelCommandBuilder modelId="lingbot-va" locale="zh" />
 
@@ -21,7 +19,7 @@ LingBot-VA is Robbyant's video-action model, served through a vendored server/cl
 
 transformer 视频-动作骨干。随附配置设 attn_mode=torch，内置服务启动时通过 --checkpoint-dir 指向所选 checkpoint。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
 
-任务：视觉-语言-动作（VLA）、va、vam、wam。别名：`lingbot_va`、`lingbot-va-base`、`lingbot-va-posttrain-robotwin`、`lingbot-va-posttrain-libero-long`。同系列还有 `lingbot-va-posttrain-robotwin`、`lingbot-va-posttrain-libero-long`。
+任务：视觉-语言-动作（VLA）、视觉-动作（VA）、视频-动作模型（VAM）、世界-动作模型（WAM）。别名：`lingbot_va`、`lingbot-va-base`、`lingbot-va-posttrain-robotwin`、`lingbot-va-posttrain-libero-long`。同系列还有 `lingbot-va-posttrain-robotwin`、`lingbot-va-posttrain-libero-long`。
 
 推荐评测：[LIBERO](/zh/docs/evaluation/benchmark-hub/libero)（提供 LIBERO-Long 后训练 checkpoint）、[RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin)（提供 RoboTwin 后训练 checkpoint）。
 

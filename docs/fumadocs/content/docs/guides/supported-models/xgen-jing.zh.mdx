@@ -1,14 +1,13 @@
 ---
-title: XGEN-JING
-description: 复用 MiniMax-H3 基础模型的相机控制与音视频联合生成。
+title: "XGEN-JING Flash v1"
+description: "XGEN-JING Flash v1（XGEN Labs）：文生视频、图生视频等 4 项任务；已验证。"
+modelId: "xgen-jing"
 pageSource: authored
 ---
 
-`xgen-jing` 接入公开发布的 **JING-Flash-v1 四步双向模型**，它是 MiniMax-H3 的相机控制音视频扩展：在 H3 Transformer 上增加相机 FiLM、逐段独立文本细化，以及全局媒体／段内文本可见性。条件编码使用 Qwen3-VL，音视频 VAE 使用 Diffusers 的 H3 实现。
+XGEN-JING Flash v1 是来自 XGEN Labs 的世界模型，支持文生视频、图生视频、相机可控视频、世界模型。
 
 ```python
-from worldfoundry.pipelines.xgen_jing import XGENJINGPipeline
-
 pipe = XGENJINGPipeline.from_pretrained(
     model_path="/checkpoints/XGENlabs--XGEN-JING",
     base_model_path="/checkpoints/MiniMax-H3",  # Diffusers 组件目录
@@ -39,3 +38,31 @@ result = pipe(
 已用公开的 JING-Flash-v1 与 MiniMax-H3 权重在单卡上验证：纯文本生成在 448×256（`cpu_offload=False`）和默认 960×544 画布（`cpu_offload=True`）下均输出连贯的 22 帧、24 FPS H.264 视频及 32 kHz 双声道 AAC 音轨。参考图、相机控制准确性、长片质量和一般提示词质量尚未验证。因果模型及流式观察历史推理尚未公开。
 
 来源：[XGEN-JING](https://github.com/XGEN-Labs/XGEN-JING)，提交 `cbeec31630d63a981a8e40d6e79c71a188a7d8c9`；[权重](https://huggingface.co/XGENlabs/XGEN-JING)，版本 `8153db624fa4fa573d2e0c5335b515882efff30d`。署名与 MiniMax H3 Community License 集中记录在根目录 `THIRD-PARTY-NOTICES`。
+
+<ModelPaperFigures modelId="xgen-jing" locale="zh" />
+
+<ModelCommandBuilder modelId="xgen-jing" locale="zh" />
+
+## 用来做什么
+
+`xgen-jing` 生成相机可控视频：输入相机轨迹，输出沿轨迹运动的视频。
+
+任务：文生视频、图生视频、相机可控视频、世界模型。模态上，它接受文本、图像、相机位姿，输出视频。
+
+## 运行时契约
+
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `xgen-jing.mp4`。
+
+CLI task profile：`default`。绑定的 pipeline 类是 `XGENJINGPipeline`。系列状态：**已验证**。
+
+## 在 WorldFoundry 中运行
+
+运行 `wf run xgen-jing --pipeline.task-profile default` 沿相机路径生成视频。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`XGENlabs/XGEN-JING`、`MiniMaxAI/MiniMax-H3`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh xgen-jing`；下载缺失的公开权重时加 `--download`。
+
+许可证：minimax-h3-community。
+
+<ModelRelatedRecipes modelId="xgen-jing" locale="zh" />

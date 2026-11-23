@@ -25,15 +25,13 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Baseline 
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `fps`, `height`, `width`, `seed`, and `num-blocks`; artifacts `krea-realtime-video.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `fps`, `height`, `width`, `seed`, and `num-blocks`; artifact `krea-realtime-video.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `KreaRealtimeVideoPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: fps=16, height=480, width=832, seed=42.
+CLI task profile: `interactive-video`. WorldFoundry binds `KreaRealtimeVideoPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: fps=16, height=480, width=832, seed=42.
 
 Stage krea/krea-realtime-video locally. Pass a prompt for text-to-video; add a video for video-to-video.
+
+True realtime rates require datacenter-class GPUs at 14B scale.
 
 ## Running in WorldFoundry
 

@@ -1,18 +1,46 @@
 ---
 title: "HunyuanWorld-Voyager"
-description: "Tencent's camera-path RGB-D world generator, validated on the official case1 example."
+description: "HunyuanWorld-Voyager from Tencent (Hunyuan): world, video, and 1 more task; Verified."
 modelId: "hunyuanworld-voyager"
-pageSource: authored
+pageSource: generated
 ---
 
-HunyuanWorld-Voyager is designed to generate RGB-D video along a user-defined camera path from an input image. See the [official source](https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager) and [project page](https://3d-models.hunyuan.tencent.com/world/).
+HunyuanWorld-Voyager generates RGB-D video along a camera path from an input image. Validated on the official case1 example: the public runner, bridged to the licensed upstream checkout, produces a decodable 45-frame RGB-D video at 768×1024, 24 fps, including with the upstream 50-step default.
 
 <ModelPaperFigures modelId="hunyuanworld-voyager" locale="en" />
 
-## Validation
+Paper: [arXiv 2506.04225](https://arxiv.org/abs/2506.04225). Project page: [3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/). Code: [Tencent-Hunyuan/HunyuanWorld-Voyager](https://github.com/Tencent-Hunyuan/HunyuanWorld-Voyager).
 
-`WorldFoundryPipelineRunner` invokes the official Voyager code through a small bridge. On the official case1 checkpoint and 49-frame conditions, the official CLI and the WorldFoundry runner both produce a fully decodable RGB-D H.264 video of 45 frames at 768 × 1024 and 24 fps at eight inference steps, and the WorldFoundry runner also completes the upstream 50-step default. Validation covers case1 only; arbitrary camera paths, long-range extension, and quantitative depth or camera fidelity are not validated.
+<ModelCommandBuilder modelId="hunyuanworld-voyager" locale="en" />
 
-Run this binding with an external official checkout pinned to `6218ccd36df77d0254dcf24ad1fb77312f75b04a`, the official checkpoint, a dedicated Python environment with upstream dependencies, and a pre-rendered 49-frame condition directory. Set `WORLDFOUNDRY_VOYAGER_SOURCE_ROOT` and `WORLDFOUNDRY_VOYAGER_PYTHON`. The official source and weights are not redistributed by WorldFoundry. Tencent's community license excludes use in the EU, UK, and South Korea and requires its `LICENSE` and `NOTICE` when redistributing upstream materials.
+## What it is for
+
+`hunyuanworld-voyager` is a world generation model.
+
+Per the upstream release, Voyager combines a HunyuanVideo-based generator with joint RGB-D output and a world-cache mechanism for long-range consistency. The official case1 defaults are num_frames=49, infer_steps=50, flow_shift=7.0, embedded_cfg_scale=6.0, i2v_stability=true. It is published by Tencent (Hunyuan).
+
+Tasks: world, video, and world model. Output modalities: video.
+
+Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (Scoring for camera-navigable generated worlds), [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-path adherence evaluation).
+
+## Runtime contract
+
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `hunyuanworld-voyager.mp4`.
+
+CLI task profile: `default`. WorldFoundry binds `HunyuanWorldVoyagerOfficialPipeline`. Family status: **Verified**.
+
+Provide a separate official checkout at revision 6218ccd36df77d0254dcf24ad1fb77312f75b04a, the checkpoint, an official-dependency Python environment, and a 49-frame rendered condition directory. Set WORLDFOUNDRY_VOYAGER_SOURCE_ROOT and WORLDFOUNDRY_VOYAGER_PYTHON. The Tencent community license excludes use in the EU, UK, and South Korea and restricts redistribution.
+
+The official case1 requests 49 frames but the latent-concat I2V pipeline discards four conditioning frames, yielding 45 video frames; longer voyages need iterative extension. Depth quality is generative, not sensor-grade — validate before metric use. Validation covers the official case1 example only; arbitrary camera paths, long-range extension, and quantitative depth or camera fidelity are not validated.
+
+## Running in WorldFoundry
+
+Generate a world with `wf run hunyuanworld-voyager --pipeline.task-profile default`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Weights: `tencent/HunyuanWorld-Voyager`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hunyuanworld-voyager`. Add `--download` to fetch missing public checkpoints.
+
+License: other:tencent-hunyuanworld-community.
 
 <ModelRelatedRecipes modelId="hunyuanworld-voyager" locale="en" />

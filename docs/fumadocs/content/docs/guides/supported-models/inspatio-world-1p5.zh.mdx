@@ -1,33 +1,17 @@
 ---
 title: "InSpatio World 1.5"
-description: "从单图、四图或视频生成相机轨迹可控的世界视频。"
+description: "InSpatio World 1.5（inspatio）：图生视频、视频到视频等 4 项任务；已验证。"
+modelId: "inspatio-world-1p5"
 pageSource: authored
 ---
 
-[官方代码](https://github.com/inspatio/inspatio-world-v1.5) · [权重](https://huggingface.co/inspatio/world-1.5) · [官方样例与输入格式](https://github.com/inspatio/inspatio-world-v1.5/tree/dd3561f544053fe22d739b6b2f8461c9c97bf8cb/examples)
+InSpatio World 1.5 是来自 inspatio 的世界模型，支持图生视频、视频到视频、轨迹条件视频、新视角合成。
 
 模型 ID 为 `inspatio-world-1p5`。原有 `inspatio-world` 继续使用旧版权重和视频推理入口。
 
 模型基于因果 Wan2.1 骨干，配合 UMT5 编码器、Wan VAE、分块采样器和 DA3 深度模型运行，无需另行安装 InSpatio 仓库。已发布模型的推理规格为 **832×480、BF16、每块三个潜帧、四次去噪**。输出为完整视频文件，不提供交互式流式会话。
 
 先准备本地 `inspatio/world-1.5` 和 `Wan-AI/Wan2.1-T2V-1.3B` 权重。直接输入图像或视频还需要 `depth-anything/DA3NESTED-GIANT-LARGE-1.1`；已准备深度和相机的场景不加载 DA3。
-
-```python
-from worldfoundry.pipelines.inspatio_world.pipeline_inspatio_world_v15 import InspatioWorldV15Pipeline
-
-pipeline = InspatioWorldV15Pipeline.from_pretrained(
-    model_path="/models/inspatio--world-1.5",
-    wan_model_path="/models/Wan-AI--Wan2.1-T2V-1.3B",
-    da3_model_path="/models/depth-anything--DA3NESTED-GIANT-LARGE-1.1",
-    device="cuda:0",
-)
-result = pipeline(
-    scene_dir="/data/prepared_scene",
-    output_path="/outputs/pred.mp4",
-    seed=0,
-)
-print(result["artifact_path"])
-```
 
 准备好的场景沿用官方 `scene.json` 格式，包括 RGB、prompt 文件（允许为空）、带统一 min/max 的 uint16 深度、源视角内参与位姿，以及目标轨迹。相机位姿为 OpenCV **world-to-camera** 4×4 矩阵，每个目标帧一行、16 个数字、按行展开。四图模式要求四个源视角，并覆盖完整的三个潜帧分组；输出会裁掉场景中的补齐帧。
 
@@ -54,3 +38,35 @@ done
 再给 `native`、`upstream`、`compare` 加上 `--direct`，即可检查原始 RGB 输入和 DA3 路径。`--cases` 可选择单例并在不同 GPU 上并行运行。标准回归矩阵包含 `inspatio-world-1p5-{image,multiview,video}-short`；将 `WORLDFOUNDRY_REGRESSION_INSPATIO_SCENE_ROOT` 设为验证目录下的 `fixtures`。对照会拒绝不同版本的发布权重。
 
 代码归属和 Apache-2.0 正文统一保留在根目录 `THIRD-PARTY-NOTICES`，各组件权重继续遵循上游条款。
+
+<ModelPaperFigures modelId="inspatio-world-1p5" locale="zh" />
+
+论文：[arXiv 2604.07209](https://arxiv.org/abs/2604.07209)。
+
+项目页：[inspatio.github.io/inspatio-world-1.5](https://inspatio.github.io/inspatio-world-1.5/)。代码：[inspatio/inspatio-world-v1.5](https://github.com/inspatio/inspatio-world-v1.5)。
+
+<ModelCommandBuilder modelId="inspatio-world-1p5" locale="zh" />
+
+## 用来做什么
+
+`inspatio-world-1p5` 根据输入视图估计场景几何。
+
+任务：图生视频、视频到视频、轨迹条件视频、新视角合成。别名：`inspatio-world-v1.5`、`inspatio-world-1.5`。模态上，它接受图像、视频、轨迹，输出视频。
+
+## 运行时契约
+
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `seed`；产物 `inspatio-world-1p5.mp4`。
+
+CLI task profile：`default`。绑定的 pipeline 类是 `InspatioWorldV15Pipeline`。系列状态：**已验证**。`default` 的默认值：seed=0。
+
+## 在 WorldFoundry 中运行
+
+运行 `wf run inspatio-world-1p5 --pipeline.task-profile default` 写出几何结果。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`inspatio/world-1.5`、`Wan-AI/Wan2.1-T2V-1.3B`、`depth-anything/DA3NESTED-GIANT-LARGE-1.1`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh inspatio-world-1p5`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
+
+<ModelRelatedRecipes modelId="inspatio-world-1p5" locale="zh" />

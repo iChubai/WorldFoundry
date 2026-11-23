@@ -9,9 +9,7 @@ MME-VLA is the policy-learning line of the RoboMME project, centered on perceptu
 
 <ModelPaperFigures modelId="mme-vla" locale="en" />
 
-Paper: [arXiv 2603.04639](https://arxiv.org/abs/2603.04639).
-
-Project page: [robomme.github.io/challenge.html](https://robomme.github.io/challenge.html). Code: [RoboMME/robomme_policy_learning](https://github.com/RoboMME/robomme_policy_learning).
+Paper: [arXiv 2603.04639](https://arxiv.org/abs/2603.04639). Project page: [robomme.github.io/challenge.html](https://robomme.github.io/challenge.html). Code: [RoboMME/robomme_policy_learning](https://github.com/RoboMME/robomme_policy_learning).
 
 <ModelCommandBuilder modelId="mme-vla" locale="en" />
 
@@ -27,11 +25,9 @@ Suggested benchmarks: [RoboMME](/docs/evaluation/benchmark-hub/robomme) (Native 
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `checkpoint-ref` and `official-policy-observation`; artifacts `action_trace` and `mme-vla_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `checkpoint-ref` and `official-policy-observation`; artifact `mme-vla_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `MMEVLAPipeline`.
-
-Family status: **Static load only**.
+CLI task profile: `default`. WorldFoundry binds `MMEVLAPipeline`. Family status: **Static load only**.
 
 Stage the perceptual frame-sampling module checkpoint (`Yinpei/perceptual-framesamp-modul`) first.
 

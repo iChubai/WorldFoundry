@@ -1,6 +1,6 @@
 ---
 title: "JoyAI-Echo 1.5 / Echo-LongVideo"
-description: "JoyAI-Echo 1.5 / Echo-LongVideo from JD.com (JoyAI / Echo Team): reference-to-video, audio video generation, and 1 more task; Runner parity pending; dedicated `joyai-echo-longvideo`."
+description: "JoyAI-Echo 1.5 / Echo-LongVideo from JD.com (JoyAI / Echo Team): reference-to-video, audio video generation, and 1 more task; Runner parity pending; dedicated env joyai-echo-longvideo."
 modelId: "joyai-echo-longvideo"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ JoyAI-Echo 1.5 is an inference-only long-form audio-video generator. Its R2V req
 
 <ModelPaperFigures modelId="joyai-echo-longvideo" locale="en" />
 
-Paper: [arXiv 2608.23383](https://arxiv.org/abs/2608.23383).
-
-Project page: [echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page](https://echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page/). Code: [jd-opensource/JoyAI-Echo](https://github.com/jd-opensource/JoyAI-Echo).
+Paper: [arXiv 2608.23383](https://arxiv.org/abs/2608.23383). Project page: [echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page](https://echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page/). Code: [jd-opensource/JoyAI-Echo](https://github.com/jd-opensource/JoyAI-Echo).
 
 <ModelCommandBuilder modelId="joyai-echo-longvideo" locale="en" />
 
@@ -21,28 +19,28 @@ Project page: [echo-team-joy-future-academy-jd.github.io/Echo-1.5-Page](https://
 
 The release builds on LTX-2.3 and adds few-step DMD generation plus a paired cross-modal memory bank. WorldFoundry calls the official runtime (Python 3.11, PyTorch 2.8, CUDA 12.8) in its dedicated environment through the upstream CLI. It is published by JD.com (JoyAI / Echo Team).
 
-Tasks: reference-to-video, audio video generation, and long video generation. Aliases: `joyai-echo`, `echo-longvideo`, and `joyai-echo-1.5`. Modalities: image in, video out.
+Tasks: reference-to-video, audio video generation, and long video generation. Aliases: `joyai-echo`, `echo-longvideo`, and `joyai-echo-1.5`. Modalities: image in, video and audio out.
 
 Suggested benchmarks: [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) (Long-horizon temporal continuity across generated shots), [VBench](/docs/evaluation/benchmark-hub/vbench) (Baseline video quality and motion evaluation).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `seed`, `execute`, and 1 more; artifacts `generated_video` and `joyai-echo-longvideo.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `seed`, `execute`, and 1 more; artifact `joyai-echo-longvideo.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `JoyAIEchoLongVideoPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: frames=241, fps=25, height=736, width=1280, seed=42.
+CLI task profile: `interactive-video`. WorldFoundry binds `JoyAIEchoLongVideoPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: frames=241, fps=25, height=736, width=1280, seed=42.
 
 Clone JoyAI-Echo at the pinned revision, prepare its dedicated environment, and pass source_root plus local Echo and gated Gemma checkpoints. Generation runs only when execute=True is set. FP4 also needs NVIDIA ModelOpt; production voice-memory extraction needs the upstream MSST setup.
+
+The upstream release is marked for academic research and non-commercial use and remains subject to the LTX-2 Community License.
 
 ## Running in WorldFoundry
 
 Animate a still image with `wf run joyai-echo-longvideo --pipeline.task-profile interactive-video`.
 
+It runs in the dedicated environment `joyai-echo-longvideo` (Python 3.11, CUDA 12.8, torch==2.8.0).
+
 Weights: `jdopensource/JoyAI-Echo` and `google/gemma-3-12b-it`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh joyai-echo-longvideo`. Add `--download` to fetch missing public checkpoints.
 
-Gated weights: `google/gemma-3-12b-it` (accept the upstream terms before downloading).
+License: LTX-2 Community License; gated weights: `google/gemma-3-12b-it` (accept the upstream terms before downloading).
 
 <ModelRelatedRecipes modelId="joyai-echo-longvideo" locale="en" />

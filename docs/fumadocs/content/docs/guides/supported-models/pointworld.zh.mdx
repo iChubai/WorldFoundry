@@ -9,9 +9,7 @@ PointWorld 是英伟达面向机器人的点云世界模型：不预测像素，
 
 <ModelPaperFigures modelId="pointworld" locale="zh" />
 
-论文：[arXiv 2601.03782](https://arxiv.org/abs/2601.03782)。
-
-代码：[NVlabs/PointWorld](https://github.com/NVlabs/PointWorld)。
+论文：[arXiv 2601.03782](https://arxiv.org/abs/2601.03782)。代码：[NVlabs/PointWorld](https://github.com/NVlabs/PointWorld)。
 
 <ModelCommandBuilder modelId="pointworld" locale="zh" />
 
@@ -27,11 +25,9 @@ PointWorld 是英伟达面向机器人的点云世界模型：不预测像素，
 
 ## 运行时契约
 
-产物 `generated_3d_asset`、`pointworld_runtime_plan.json`。
+产物 `pointworld_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `PointWorldPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `PointWorldPipeline`。系列状态：**Runner 一致性待确认**。
 
 运行前需准备 nvidia/PointWorld_models checkpoint 与点云资产；在它们就位前，运行只会返回列出缺失资产的计划，而不会生成结果。输入除常规的提示词/图像/视频/动作外还包括点云。
 

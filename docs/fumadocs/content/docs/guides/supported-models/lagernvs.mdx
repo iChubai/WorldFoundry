@@ -9,9 +9,7 @@ LagrNVS is Meta's novel-view-synthesis model for rendering new camera paths thro
 
 <ModelPaperFigures modelId="lagernvs" locale="en" />
 
-Paper: [arXiv 2603.20176](https://arxiv.org/abs/2603.20176).
-
-Project page: [szymanowiczs.github.io/lagernvs](https://szymanowiczs.github.io/lagernvs). Code: [facebookresearch/lagernvs](https://github.com/facebookresearch/lagernvs).
+Paper: [arXiv 2603.20176](https://arxiv.org/abs/2603.20176). Project page: [szymanowiczs.github.io/lagernvs](https://szymanowiczs.github.io/lagernvs). Code: [facebookresearch/lagernvs](https://github.com/facebookresearch/lagernvs).
 
 <ModelCommandBuilder modelId="lagernvs" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: novel view synthesis, 3D scene rendering, and camera path rendering. Alia
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `model-repo`, and `python-executable`; artifacts `generated_video` and `lagernvs.mp4`.
+Input `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `model-repo`, and `python-executable`; artifact `lagernvs.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `LagrNVSPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `default`: frames=16, fps=25.
+CLI task profile: `default`. WorldFoundry binds `LagrNVSPipeline`. Family status: **Runner parity pending**. Defaults for `default`: frames=16, fps=25.
 
 Running needs the gated checkpoint and a CUDA GPU. Accept the gated terms on Hugging Face and set HF_TOKEN before running.
+
+Gated checkpoint under the FAIR non-commercial research license.
 
 ## Running in WorldFoundry
 
@@ -43,6 +39,6 @@ It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CU
 
 Weights: `facebook/lagernvs_general_512`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lagernvs`. Add `--download` to fetch missing public checkpoints.
 
-Gated weights: `facebook/lagernvs_general_512` (accept the upstream terms before downloading).
+License: FAIR Non-Commercial Research License; gated weights: `facebook/lagernvs_general_512` (accept the upstream terms before downloading).
 
 <ModelRelatedRecipes modelId="lagernvs" locale="en" />

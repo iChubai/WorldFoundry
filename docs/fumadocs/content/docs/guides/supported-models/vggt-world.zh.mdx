@@ -1,6 +1,6 @@
 ---
 title: "VGGT-World"
-description: "VGGT-World：世界模型、视频生成等 3 项任务；Runner 一致性待确认。"
+description: "VGGT-World：世界模型、3D 场景理解等 3 项任务；Runner 一致性待确认。"
 modelId: "vggt-world"
 pageSource: authored
 ---
@@ -9,9 +9,7 @@ VGGT-World 在 VGGT 式 3D 场景理解之上构建世界模型：将几何锚�
 
 <ModelPaperFigures modelId="vggt-world" locale="zh" />
 
-论文：[VGGT-World: Transforming VGGT into an Autoregressive Geometry World Model](https://arxiv.org/abs/2603.12655)（2026）。
-
-代码：[SimonSun0810/VGGT-World](https://github.com/SimonSun0810/VGGT-World)。
+论文：[VGGT-World: Transforming VGGT into an Autoregressive Geometry World Model](https://arxiv.org/abs/2603.12655)（2026）。代码：[SimonSun0810/VGGT-World](https://github.com/SimonSun0810/VGGT-World)。
 
 <ModelCommandBuilder modelId="vggt-world" locale="zh" />
 
@@ -21,7 +19,7 @@ VGGT-World 在 VGGT 式 3D 场景理解之上构建世界模型：将几何锚�
 
 按论文（arXiv 2603.12655），VGGT 被改造为自回归几何世界模型。
 
-任务：世界模型、3d-scene-understanding、视频生成。输出模态为视频。
+任务：世界模型、3D 场景理解、视频生成。输出模态为视频。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（3D 锚定滚动生成的统一世界生成质量）。
 
@@ -29,11 +27,9 @@ VGGT-World 在 VGGT 式 3D 场景理解之上构建世界模型：将几何锚�
 
 ## 运行时契约
 
-产物 `generated_world`、`vggt_world_runtime_plan.json`。
+产物 `vggt_world_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `VGGTWorldPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `VGGTWorldPipeline`。系列状态：**Runner 一致性待确认**。
 
 先就位所需 checkpoint 与资产。资产就位前，运行只写出列出缺失资产的 `vggt_world_runtime_plan.json`，不会生成世界。
 

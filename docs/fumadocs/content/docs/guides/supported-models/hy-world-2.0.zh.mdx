@@ -9,9 +9,7 @@ HY-World 2.0 是腾讯第二代世界生成栈，包含三个组件：HY-Pano 2.
 
 <ModelPaperFigures modelId="hy-world-2.0" locale="zh" />
 
-论文：[arXiv 2604.14268](https://arxiv.org/abs/2604.14268)。
-
-项目页：[3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/)。代码：[Tencent-Hunyuan/HY-World-2.0](https://github.com/Tencent-Hunyuan/HY-World-2.0)。
+论文：[arXiv 2604.14268](https://arxiv.org/abs/2604.14268)。项目页：[3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/)。代码：[Tencent-Hunyuan/HY-World-2.0](https://github.com/Tencent-Hunyuan/HY-World-2.0)。
 
 <ModelCommandBuilder modelId="hy-world-2.0" locale="zh" />
 
@@ -21,7 +19,7 @@ HY-World 2.0 是腾讯第二代世界生成栈，包含三个组件：HY-Pano 2.
 
 上游的五阶段世界生成串联 WorldNav 轨迹生成、轨迹渲染、视频生成、GS 数据准备与 3DGS 组合（traj_generate.py 到 world_gs_trainer.py），另需 VLM 端点。WorldFoundry 运行 HY-Pano 2.0 与 WorldMirror 2.0；其余阶段仅能用上游代码运行。该模型由腾讯（混元）发布。
 
-任务：default。别名：`hyworld2.0`、`hyworld-2.0`、`hy-world2.0`、`hy-world-2p0` 等。
+别名：`hyworld2.0`、`hyworld-2.0`、`hy-world2.0`、`hy-world-2p0` 等。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（生成可探索世界的标准评分）。
 
@@ -29,13 +27,11 @@ HY-World 2.0 是腾讯第二代世界生成栈，包含三个组件：HY-Pano 2.
 
 输入 `input-path`（不传时使用内置示例）；参数 `task`、`confidence-percentile`、`edge-normal-threshold`、`edge-depth-threshold`、`apply-confidence-mask`、`apply-edge-mask` 等 14 项；产物 `hy-world-2.0.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `HYWorld2Pipeline`。
-
-系列状态：**计划中**。
+CLI task profile：`default`。绑定的 pipeline 类是 `HYWorld2Pipeline`。系列状态：**计划中**。
 
 需要 3D 输出时使用 WorldMirror 2.0 重建路径；完整世界生成请用上游代码运行。轨迹渲染阶段单独提供为 hyworld-worldgen。
 
-WorldFoundry 不提供完整文/图到 3D 世界生成，请使用上游代码。
+WorldFoundry 不提供完整文/图到 3D 世界生成，请使用上游代码。worldgen 各阶段需要原生扩展与 VLM 端点。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ WorldFoundry 不提供完整文/图到 3D 世界生成，请使用上游代码�
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`tencent/HY-World-2.0`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh hy-world-2.0`；下载缺失的公开权重时加 `--download`。
+
+许可证：other:tencent-hunyuanworld-community。
 
 <ModelRelatedRecipes modelId="hy-world-2.0" locale="zh" />

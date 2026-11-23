@@ -9,9 +9,7 @@ SAMA 14B is an open instruction-guided video editing model: it takes a source vi
 
 <ModelPaperFigures modelId="sama-14b" locale="en" />
 
-Paper: [arXiv 2603.19228](https://arxiv.org/abs/2603.19228).
-
-Project page: [cynthiazxy123.github.io/SAMA](https://cynthiazxy123.github.io/SAMA/). Code: [Cynthiazxy123/SAMA](https://github.com/Cynthiazxy123/SAMA).
+Paper: [arXiv 2603.19228](https://arxiv.org/abs/2603.19228). Project page: [cynthiazxy123.github.io/SAMA](https://cynthiazxy123.github.io/SAMA/). Code: [Cynthiazxy123/SAMA](https://github.com/Cynthiazxy123/SAMA).
 
 <ModelCommandBuilder modelId="sama-14b" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: video editing.
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `height`, `width`, `seed`, `max-frames`, `tiled`, and 1 more; artifacts `sama-14b.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `height`, `width`, `seed`, `max-frames`, `tiled`, and 1 more; artifact `sama-14b.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `SAMA14BPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: fps=16, height=480, width=832, seed=1.
+CLI task profile: `interactive-video`. WorldFoundry binds `SAMA14BPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: fps=16, height=480, width=832, seed=1.
 
 Supply a source video and an edit instruction. A 17-frame edit with the released checkpoint was checked against the official implementation.
+
+Only a 17-frame run was checked against official inference; other inputs, longer videos, and broader editing quality are not validated. The released SAMA inference entrypoint has no spatial mask or separate reference-image input.
 
 ## Running in WorldFoundry
 

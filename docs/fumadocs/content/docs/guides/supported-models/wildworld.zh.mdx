@@ -1,6 +1,6 @@
 ---
 title: "WildWorld"
-description: "WildWorld：dataset、evaluation等 3 项任务；Runner 一致性待确认。"
+description: "WildWorld：世界模型评测、数据集等 3 项任务；Runner 一致性待确认。"
 modelId: "wildworld"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ WildWorld 是基准与数据集，而非生成模型：在野外真实素材上�
 
 <ModelPaperFigures modelId="wildworld" locale="zh" />
 
-论文：[arXiv 2603.23497](https://arxiv.org/abs/2603.23497)。
-
-项目页：[alaya-studio.github.io/wildworld-project](https://alaya-studio.github.io/wildworld-project/)。代码：[ShandaAI/WildWorld](https://github.com/ShandaAI/WildWorld)。
+论文：[arXiv 2603.23497](https://arxiv.org/abs/2603.23497)。项目页：[alaya-studio.github.io/wildworld-project](https://alaya-studio.github.io/wildworld-project/)。代码：[ShandaAI/WildWorld](https://github.com/ShandaAI/WildWorld)。
 
 <ModelCommandBuilder modelId="wildworld" locale="zh" />
 
@@ -21,19 +19,17 @@ WildWorld 是基准与数据集，而非生成模型：在野外真实素材上�
 
 作为评测 pipeline，其输出产物为 evaluation_report。
 
-任务：world-model-benchmark、dataset、evaluation。
+任务：世界模型评测、数据集、评测。
 
 ## 运行时契约
 
-产物 `evaluation_report`、`wildworld_runtime_plan.json`。
+产物 `wildworld_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `WildWorldPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `WildWorldPipeline`。系列状态：**Runner 一致性待确认**。
 
 在所需 checkpoint 与资产就位前，运行会输出运行时计划并列出缺失资产，而不执行评测。
 
-上游来源状态未确认；使用前请核实其溯源。
+上游来源状态未确认；使用前请核实其溯源。仅限非商业研究许可。
 
 ## 在 WorldFoundry 中运行
 

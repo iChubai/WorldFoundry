@@ -1,6 +1,6 @@
 ---
 title: "Solaris"
-description: "Solaris（纽约大学（VisionX 实验室））：video_generation、交互式视频生成等 3 项任务；已验证。"
+description: "Solaris（纽约大学（VisionX 实验室））：视频生成、多智能体世界模型等 3 项任务；已验证。"
 modelId: "solaris"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Solaris 是纽约大学 VisionX 组的多智能体交互视频世界模型（论
 
 <ModelPaperFigures modelId="solaris" locale="zh" />
 
-论文：[Solaris: Building a Multiplayer Video World Model in Minecraft](https://arxiv.org/abs/2602.22208)（2026）。
-
-项目页：[solaris-wm.github.io](https://solaris-wm.github.io/)。代码：[solaris-wm/solaris](https://github.com/solaris-wm/solaris)。
+论文：[Solaris: Building a Multiplayer Video World Model in Minecraft](https://arxiv.org/abs/2602.22208)（2026）。项目页：[solaris-wm.github.io](https://solaris-wm.github.io/)。代码：[solaris-wm/solaris](https://github.com/solaris-wm/solaris)。
 
 <ModelCommandBuilder modelId="solaris" locale="zh" />
 
@@ -21,7 +19,7 @@ Solaris 是纽约大学 VisionX 组的多智能体交互视频世界模型（论
 
 运行时基于 JAX，加载官方 Orbax checkpoint。该模型由纽约大学（VisionX 实验室）发布。
 
-任务：video_generation、multi-agent-world-model、交互式视频生成。别名：`solaris-wm`。输出模态为视频。
+任务：视频生成、多智能体世界模型、交互式视频生成。别名：`solaris-wm`。输出模态为视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（多智能体世界滚动生成质量）。
 
@@ -29,13 +27,11 @@ Solaris 是纽约大学 VisionX 组的多智能体交互视频世界模型（论
 
 参数 `eval-types`；产物 `solaris.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `SolarisPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `SolarisPipeline`。系列状态：**已验证**。
 
 推理按每张可见 GPU 启动一个样本——eval_num_samples 必须是可见 GPU 数的整数倍。官方权重与评估数据集从 HF 或同布局本地镜像解析。
 
-使用前请审查上游许可。
+使用前请审查上游许可。eval_num_samples 须满足 GPU 数整数倍约束。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `SolarisPipeline`。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`nyu-visionx/solaris`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh solaris`；下载缺失的公开权重时加 `--download`。
+
+许可证：manual_review。
 
 <ModelRelatedRecipes modelId="solaris" locale="zh" />

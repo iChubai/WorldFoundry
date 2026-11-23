@@ -1,6 +1,6 @@
 ---
 title: "MultiWorld"
-description: "MultiWorld：video_generation、交互式视频生成等 4 项任务；已验证。"
+description: "MultiWorld：视频生成、多智能体世界模型等 4 项任务；已验证。"
 modelId: "multiworld"
 pageSource: generated
 ---
@@ -19,7 +19,7 @@ MultiWorld（「It Takes Two」）是多智能体交互视频生成器：两名�
 
 MultiWorld 以 Wan2.2-TI2V-5B（基座与 VAE）为底座，配动作编码器，并以 VGGT-1B 作为环境编码器；ItTakesTwo 权重为 Haoyuwu/MultiWorldCheckpoint。
 
-任务：video_generation、multi-agent-world-model、交互式视频生成、game-video。别名：`multiword`、`multiworld-ittakestwo`。输出模态为视频。
+任务：视频生成、多智能体世界模型、交互式视频生成、游戏视频。别名：`multiword`、`multiworld-ittakestwo`。输出模态为视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（多智能体世界滚动生成质量）。
 
@@ -27,13 +27,11 @@ MultiWorld 以 Wan2.2-TI2V-5B（基座与 VAE）为底座，配动作编码器�
 
 输入 `input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`steps`、`action-path`、`save-name`、`inference-seed` 等 7 项；产物 `multiworld.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `MultiWorldItTakesTwoPipeline`。
-
-系列状态：**已验证**。
-
-`default` 的默认值：frames=81, fps=60。
+CLI task profile：`default`。绑定的 pipeline 类是 `MultiWorldItTakesTwoPipeline`。系列状态：**已验证**。`default` 的默认值：frames=81, fps=60, steps=35。
 
 提供首帧图像和双玩家离散、连续动作张量（或动作 CSV）。已用发布的 toydata 权重验证：pipeline 以 35 步生成 480x480 的 81 帧视频。
+
+上游许可为自定义条款，再分发前请审查。验证使用合成动作和非游戏图像，不能证明游戏场景的动作控制能力或真实世界动态。
 
 ## 在 WorldFoundry 中运行
 
@@ -42,5 +40,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `MultiWorldItTakesTwoPi
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`Haoyuwu/MultiWorldCheckpoint`、`Wan-AI/Wan2.2-TI2V-5B`、`facebook/VGGT-1B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh multiworld`；下载缺失的公开权重时加 `--download`。
+
+许可证：manual_review:custom-licence。
 
 <ModelRelatedRecipes modelId="multiworld" locale="zh" />

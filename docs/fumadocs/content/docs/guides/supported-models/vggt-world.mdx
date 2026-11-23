@@ -9,9 +9,7 @@ VGGT-World builds a world model on top of VGGT-style 3D scene understanding: it 
 
 <ModelPaperFigures modelId="vggt-world" locale="en" />
 
-Paper: [VGGT-World: Transforming VGGT into an Autoregressive Geometry World Model](https://arxiv.org/abs/2603.12655) (2026).
-
-Code: [SimonSun0810/VGGT-World](https://github.com/SimonSun0810/VGGT-World).
+Paper: [VGGT-World: Transforming VGGT into an Autoregressive Geometry World Model](https://arxiv.org/abs/2603.12655) (2026). Code: [SimonSun0810/VGGT-World](https://github.com/SimonSun0810/VGGT-World).
 
 <ModelCommandBuilder modelId="vggt-world" locale="en" />
 
@@ -29,11 +27,9 @@ This is not [VGGT](/docs/guides/supported-models/vggt) or [VGGT-Omega](/docs/gui
 
 ## Runtime contract
 
-Artifacts `generated_world` and `vggt_world_runtime_plan.json`.
+Artifact `vggt_world_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `VGGTWorldPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `VGGTWorldPipeline`. Family status: **Runner parity pending**.
 
 Stage the required checkpoints and assets first. Until they are in place, a run writes `vggt_world_runtime_plan.json` listing the missing assets instead of generating a world.
 

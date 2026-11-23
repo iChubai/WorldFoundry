@@ -9,9 +9,7 @@ Vchitect-2.0 is Shanghai AI Lab's open text-to-video diffusion transformer. Worl
 
 <ModelPaperFigures modelId="vchitect-2-t2v" locale="en" />
 
-Paper: [arXiv 2501.08453](https://arxiv.org/abs/2501.08453).
-
-Code: [Vchitect/Vchitect-2.0](https://github.com/Vchitect/Vchitect-2.0).
+Paper: [arXiv 2501.08453](https://arxiv.org/abs/2501.08453). Code: [Vchitect/Vchitect-2.0](https://github.com/Vchitect/Vchitect-2.0).
 
 <ModelCommandBuilder modelId="vchitect-2-t2v" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Standard 
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifacts `generated_video` and `vchitect_2_t2v_public_runner.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifact `vchitect_2_t2v_public_runner.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `Vchitect2T2VPipeline`.
-
-Family status: **Static load only**.
-
-Defaults for `interactive-video`: frames=40, fps=8, height=432, width=768, seed=0.
+CLI task profile: `interactive-video`. WorldFoundry binds `Vchitect2T2VPipeline`. Family status: **Static load only**. Defaults for `interactive-video`: frames=40, fps=8, height=432, width=768, steps=100, guidance-scale=7.5.
 
 Weights are apache-2.0 at Vchitect/Vchitect-2.0-2B. Use id vchitect-2-t2v.
+
+Validation is structural: the checkpoint loads exactly into the native model, but visual parity with upstream demos is not established. 2B scale: quality below 13B+ text-to-video models.
 
 ## Running in WorldFoundry
 

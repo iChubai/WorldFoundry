@@ -9,9 +9,7 @@ NeoVerse is a 4D world model that adds 4D-aware control and reconstruction to a 
 
 <ModelPaperFigures modelId="neoverse" locale="en" />
 
-Paper: [NeoVerse: Enhancing 4D World Model with in-the-wild Monocular Videos](https://arxiv.org/abs/2601.00393) (CVPR 2026, 2026).
-
-Project page: [neoverse-4d.github.io](https://neoverse-4d.github.io/). Code: [IamCreateAI/NeoVerse](https://github.com/IamCreateAI/NeoVerse).
+Paper: [NeoVerse: Enhancing 4D World Model with in-the-wild Monocular Videos](https://arxiv.org/abs/2601.00393) (CVPR 2026, 2026). Project page: [neoverse-4d.github.io](https://neoverse-4d.github.io/). Code: [IamCreateAI/NeoVerse](https://github.com/IamCreateAI/NeoVerse).
 
 <ModelCommandBuilder modelId="neoverse" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (S
 
 ## Runtime contract
 
-Inputs `video` and `prompt` (bundled samples are used when omitted); options `predefined-trajectory`, `num-frames`, `num-inference-steps`, `cfg-scale`, `seed`, `trajectory-mode`, and 7 more; artifacts `generated_world`, `generated_4d_scene`, and `neoverse.mp4`.
+Inputs `video` and `prompt` (bundled samples are used when omitted); options `predefined-trajectory`, `num-frames`, `num-inference-steps`, `cfg-scale`, `seed`, `trajectory-mode`, and 7 more; artifacts `generated_4d_scene` and `neoverse.mp4`.
 
-CLI task profiles: `official-tilt-up-video`. WorldFoundry binds `NeoVersePipeline`.
-
-Family status: **Verified**.
-
-Defaults for `official-tilt-up-video`: seed=42.
+CLI task profile: `official-tilt-up-video`. WorldFoundry binds `NeoVersePipeline`. Family status: **Verified**. Defaults for `official-tilt-up-video`: num-frames=81, num-inference-steps=4, seed=42.
 
 Running requires NeoVerse, Wan, reconstructor, LoRA, and CUDA assets. For video input, follow the official path with static_scene=false.
+
+Requires the full asset stack (NeoVerse + Wan + reconstructor + LoRA). Only the README-style demo is validated; other scenarios are not verified.
 
 ## Running in WorldFoundry
 

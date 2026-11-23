@@ -109,7 +109,7 @@ Attention 选项按模型声明的加载和推理边界传递；仅加载期支�
 
 <div className="pi-kv-catalog not-prose">
   <section className="pi-kv-group">
-    <h3>Key</h3>
+    <h3>配置项</h3>
     <ul>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -646,26 +646,26 @@ viewer 应作为小型 visualization plugin 保留；共享 Viser/Rerun scene la
 - **Catalog** — world-model 过滤结果和模型 metadata。
 - **Gallery** — 最近生成结果的并排视觉检查。
 
-### Inference jobs
+### 推理任务（Inference jobs）
 
 队列会展示已提交 run、最终状态，以及 run record 提供的内嵌 preview video 或
 image。
 
 ![Studio inference job queue](/images/studio/screens/studio-inference-jobs.png)
 
-### Create Job
+### 创建任务（Create Job）
 
 表单应该展示模型真实的输入 contract。下面的截图只展示 UI 结构。
 
 ![Studio Create Job dialog](/images/studio/screens/studio-create-job-ltx2-3.png)
 
-### Catalog
+### 模型目录（Catalog）
 
 Catalog 过滤可以用来确认 workspace 提交 job 前能看到哪些 world-model entries。
 
 ![Studio catalog filtered to world models](/images/studio/screens/studio-catalog-world-models.png)
 
-### Gallery
+### 结果画廊（Gallery）
 
 Gallery 提供最近 inference outputs 和 preview artifacts 的紧凑视觉检查入口。
 
@@ -959,7 +959,7 @@ Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
             <code>WORLDFOUNDRY_STUDIO_MODEL</code>
           </div>
         </div>
-        <p>Default model ID。</p>
+        <p>默认模型 ID。</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -967,7 +967,7 @@ Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
             <code>WORLDFOUNDRY_STUDIO_VARIANT</code>
           </div>
         </div>
-        <p>Default variant。</p>
+        <p>默认变体。</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -975,7 +975,7 @@ Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
             <code>WORLDFOUNDRY_STUDIO_BACKEND</code>
           </div>
         </div>
-        <p>Default backend。</p>
+        <p>默认后端。</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -983,7 +983,7 @@ Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
             <code>WORLDFOUNDRY_STUDIO_DEVICE</code>
           </div>
         </div>
-        <p>Default device。</p>
+        <p>默认运行设备。</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">
@@ -991,7 +991,7 @@ Workspace 的 visualizer iframe 已经授予 fullscreen 权限。
             <code>WORLDFOUNDRY_STUDIO_ENDPOINT</code>
           </div>
         </div>
-        <p>API endpoint。</p>
+        <p>API 服务端点。</p>
       </li>
       <li className="pi-kv-row">
         <div className="pi-kv-head">

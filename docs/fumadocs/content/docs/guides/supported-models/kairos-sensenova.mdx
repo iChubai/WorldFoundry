@@ -1,6 +1,6 @@
 ---
 title: "Kairos Sensenova"
-description: "Kairos Sensenova from SenseTime (SenseNova): text-to-video, image-to-video, and 2 more tasks; Verified; dedicated `kairos-sensenova`."
+description: "Kairos Sensenova from SenseTime (SenseNova): text-to-video, image-to-video, and 2 more tasks; Verified; dedicated env kairos-sensenova."
 modelId: "kairos-sensenova"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Kairos Sensenova is SenseTime's embodied world-model video generator: a 4B model
 
 <ModelPaperFigures modelId="kairos-sensenova" locale="en" />
 
-Paper: [arXiv 2606.16533](https://arxiv.org/abs/2606.16533).
-
-Code: [kairos-agi/kairos-sensenova](https://github.com/kairos-agi/kairos-sensenova).
+Paper: [arXiv 2606.16533](https://arxiv.org/abs/2606.16533). Code: [kairos-agi/kairos-sensenova](https://github.com/kairos-agi/kairos-sensenova).
 
 <ModelCommandBuilder modelId="kairos-sensenova" locale="en" />
 
@@ -27,20 +25,22 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Video qua
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `negative-prompt`, `frames`, `height`, `width`, `guidance-scale`, `seed`, and 3 more; artifacts `kairos-sensenova.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `negative-prompt`, `frames`, `height`, `width`, `guidance-scale`, `seed`, and 3 more; artifact `kairos-sensenova.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `KairosPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `default`: frames=81, height=480, width=640, seed=0.
+CLI task profile: `default`. WorldFoundry binds `KairosPipeline`. Family status: **Verified**. Defaults for `default`: frames=81, height=480, width=640, guidance-scale=5, seed=0.
 
 Set WORLDFOUNDRY_KAIROS_MODELS_ROOT (or models_root) to a directory matching the official config layout. 720P and non-distilled variants need the corresponding checkpoint paths and config override.
+
+The verified recipe uses 8 torchrun ranks — plan for a multi-GPU host. 480P robot-distilled default: quality-oriented 720P runs need overrides.
 
 ## Running in WorldFoundry
 
 Step the world with `wf run kairos-sensenova --pipeline.task-profile default`.
 
+It runs in the dedicated environment `kairos-sensenova` (Python 3.10, CUDA 12.8, torch==2.12.0).
+
 Weights: `kairos-agi/kairos-sensenova-robot-4B-480P-distilled`, `kairos-agi/kairos-sensenova-4B-480P-pretrained`, and `kairos-agi/kairos-sensenova-4B-720P`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh kairos-sensenova`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="kairos-sensenova" locale="en" />

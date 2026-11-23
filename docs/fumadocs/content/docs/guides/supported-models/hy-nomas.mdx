@@ -1,114 +1,46 @@
 ---
-title: Hy-Nomas
-description: Native segment-autoregressive world generation with text and camera control.
-pageSource: authored
+title: "Hy-Nomas"
+description: "Hy-Nomas from Tencent Hunyuan: text-to-video, action-conditioned video, and 1 more task; Runner parity pending; 2 variants."
+modelId: "hy-nomas"
+pageSource: generated
 ---
 
-## Overview
+Segment-autoregressive text and camera controlled world generation with the distilled Hy-Nomas DiT and PixelUMM decoder.
 
-Hy-Nomas generates successive segments of one world from text and camera poses.
-A distilled DiT conditioned on a Qwen2.5-VL text backbone generates latent
-segments with Euler scheduling and compressed KV history, and the PixelUMM
-decoder turns them into frames.
+<ModelPaperFigures modelId="hy-nomas" locale="en" />
 
-Reference source: [Tencent-Hunyuan/Hy-Nomas](https://github.com/Tencent-Hunyuan/Hy-Nomas/tree/911cea6458a89c2663513ff7099561ec190dd491).
-The component conversion follows the Apache-2.0
-[Diffusers integration](https://github.com/jiaxiangc/diffusers/tree/12722ef11acf8e335f96cfd4faea17de78cd8909).
+Code: [Tencent-Hunyuan/Hy-Nomas](https://github.com/Tencent-Hunyuan/Hy-Nomas).
 
-## Checkpoints
+<ModelCommandBuilder modelId="hy-nomas" locale="en" />
 
-Stage these assets separately:
+## What it is for
 
-- `tencent/Hy-Nomas`, revision `bac719a80c8d02f91c485fca804bb8221e149b70`:
-  `DiT/distilled/diffusion_pytorch_model_ema_0_995.safetensors` and
-  `VAE/PixelUMM_FT/diffusion_pytorch_model.safetensors`.
-- `Qwen/Qwen2.5-VL-7B-Instruct`, revision
-  `cc594898137f460bfe9f0759e9844b3ce807cfb5`: weights, config and tokenizer.
+`hy-nomas` is a text-to-video model: a prompt in, a video clip out.
 
-Together these downloads are approximately 82 GB. A shared local checkpoint root
-can contain the Hy-Nomas hierarchy; pass the Qwen directory as `text_encoder_path`.
-The text tower must have 3584 hidden features.
+A distilled Hy-Nomas DiT conditioned on a Qwen2.5-VL text backbone generates latent segments autoregressively with Euler scheduling and compressed KV history; the PixelUMM decoder turns the latents into frames. It is published by Tencent Hunyuan.
 
-## Generate
+Tasks: text-to-video, action-conditioned video, and interactive world generation. Aliases: `hynomas` and `tencent/Hy-Nomas`. Modalities: text and action in, video out. Other variants: `hy-nomas-low-memory`.
 
-```python
-from worldfoundry.pipelines.hy_nomas.pipeline_hy_nomas import HyNomasPipeline
+## Runtime contract
 
-pipeline = HyNomasPipeline.from_pretrained(
-    model_path="/checkpoints/Hy-Nomas",
-    text_encoder_path="/checkpoints/Qwen2.5-VL-7B-Instruct",
-    device="cuda",
-)
-result = pipeline(
-    prompt=["A camera moves through a forest.", "The path opens into a clearing."],
-    num_frames=120,
-    segment_latent_lengths=[15, 15],
-    height=720,
-    width=1280,
-    num_inference_steps=8,
-    seed=42,
-    output_path="hy-nomas.mp4",
-    return_dict=True,
-)
-```
+Input `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, and `guidance-scale`; artifact `hy-nomas.mp4`.
 
-A prompt list is an ordered rollout, not a batch. `segment_latent_lengths` must
-have one positive length per prompt and sum to `ceil(num_frames / 4)`; omitted
-lengths divide that total across segments. Spatial latent sizes use ceiling
-compression by 32 and decode crops back to the requested dimensions.
-Structured action JSON retains per-action text visibility and timestamp windows.
+CLI task profile: `interactive-video`. WorldFoundry binds `HyNomasPipeline`. Defaults for `interactive-video`: frames=120, fps=24, height=720, width=1280, steps=8, guidance-scale=1.0.
 
-`camera_extrinsics` accepts normalized OpenCV camera-to-world matrices shaped
-`(num_frames, 4, 4)` or `(1, num_frames, 4, 4)`. Camera poses are padded only for
-the final latent and are not treated as world-to-camera view matrices.
+Start with `hy-nomas`. The family has 2 variants, selectable in the command builder above: `hy-nomas` (`text-to-video`) — Runner parity pending; `hy-nomas-low-memory` (`text-to-video`) — Runner parity pending. Family status: **Runner parity pending**.
 
-The shared CLI resolves both variants:
+Ordered prompts are successive segments of one world. Use normalized camera-to-world matrices for explicit camera control. Stage the floating-point DiT, PixelUMM and Qwen2.5-VL-7B weights separately.
 
-```bash
-wf zoo model-show --model-id hy-nomas --include-manifest --json
-wf run hy-nomas --model-status
-wf run hy-nomas --print-config --json
-```
+Generation with the full released checkpoints, low-memory quantization at deployed sizes, and Studio performance are not yet measured. Low-memory inference quantizes the floating-point checkpoints at load time (INT8/FP8); upstream packed INT8/FP8 export files are not supported.
 
-## Low-memory inference
+## Running in WorldFoundry
 
-Pass `low_memory=True` while loading, or select `hy-nomas-low-memory`.
-The native preset applies weight-only INT8 to the DiT, INT8 KV storage, FP8 linear
-layers in PixelUMM, and phase-wise CPU offload. Qwen, denoising and decoding are
-staged separately. It quantizes the floating-point checkpoints above at load
-time, so no separate quantized checkpoint is needed. FP8 execution requires eligible CUDA hardware and BF16/FP16 inputs.
+Generate a clip with `wf run hy-nomas --pipeline.task-profile interactive-video`.
 
-`max_cache_segments` optionally bounds retained segment KV history. Eviction
-reduces temporal context; positional offsets continue monotonically.
+It runs in the unified environment `worldfoundry-unified-cu121` (Python 3.11, CUDA 12.1).
 
-## Studio and resident sessions
+Weights: `tencent/Hy-Nomas` and `Qwen/Qwen2.5-VL-7B-Instruct`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hy-nomas`. Add `--download` to fetch missing public checkpoints.
 
-Studio discovers `Hy-Nomas` with text initialization and WASD/look controls.
-The public `configure_realtime`, `stream_realtime` and `reset_realtime` methods
-reuse the existing resident worker and in-memory RGB transport. Text updates keep
-the world history. Reset releases that session's KV, camera and decoder history
-without reloading model weights.
+License: Apache-2.0.
 
-With the default PixelUMM window/overlap, stable-prefix decoding consumes 40 input
-frames initially and emits 4 stable frames, then consumes and emits 20 frames per
-chunk. The remaining prefix is buffered until future windows or finalization make
-it stable; already transmitted WebRTC frames never need replacement.
-A failed segment invalidates its session; restart the rollout rather than reusing
-partially advanced history.
-
-## Validation and limitations
-
-Validated with small, randomly initialized models on CPU and H100 CUDA:
-generation, camera conditioning, cache continuation, phase-wise offload, reset,
-the INT8/FP8 low-memory kernels and Studio API routing work, DiT, PixelUMM and
-Qwen text outputs match the pinned reference source, and the official checkpoint
-parameter names and shapes match the native modules.
-
-- Generation with the full released checkpoints has not been validated: output
-  quality, low-memory quantization at deployed sizes, browser streaming and latency
-  are unmeasured.
-- The upstream `PE` directory describes Qwen3.5 with 5120 features,
-  inconsistent with its inference configuration. Use the separate Qwen2.5-VL
-  checkpoint above; incompatible text architectures are rejected.
-- The low-memory preset does not load upstream packed INT8/FP8 export files or use
-  their specialized CUDA kernels.
+<ModelRelatedRecipes modelId="hy-nomas" locale="en" />

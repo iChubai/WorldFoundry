@@ -9,9 +9,7 @@ HunyuanWorld-Mirror 是腾讯的通用 3D 重建模型：输入图像，一次�
 
 <ModelPaperFigures modelId="hunyuanworld-mirror" locale="zh" />
 
-论文：[arXiv 2510.10726](https://arxiv.org/abs/2510.10726)。
-
-项目页：[3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/)。代码：[Tencent-Hunyuan/HunyuanWorld-Mirror](https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror)。
+论文：[arXiv 2510.10726](https://arxiv.org/abs/2510.10726)。项目页：[3d-models.hunyuan.tencent.com/world](https://3d-models.hunyuan.tencent.com/world/)。代码：[Tencent-Hunyuan/HunyuanWorld-Mirror](https://github.com/Tencent-Hunyuan/HunyuanWorld-Mirror)。
 
 <ModelCommandBuilder modelId="hunyuanworld-mirror" locale="zh" />
 
@@ -27,13 +25,11 @@ WorldFoundry 通过 HunyuanMirrorPipeline 和内置的推理代码运行该模�
 
 输入 `input-path`（不传时使用内置示例）；参数 `confidence-percentile`、`edge-normal-threshold`、`edge-depth-threshold`、`apply-confidence-mask`、`apply-edge-mask`、`apply-sky-mask` 等 12 项；产物 `hunyuan_mirror_outputs.zip`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `HunyuanMirrorPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `HunyuanMirrorPipeline`。系列状态：**已验证**。
 
 HunyuanMirrorPipeline 接受 image、input、images 或 image_path 负载，并把重建产物写入样例输出目录。gsplat 可能需要与本地 torch 构建匹配的 CUDA/PyTorch 专用 wheel。
 
-运行环境需要 GPU 兼容的 torch/gsplat 包。
+运行环境需要 GPU 兼容的 torch/gsplat 包。面向重建：它不生成新内容，只重建所见。
 
 ## 在 WorldFoundry 中运行
 
@@ -42,5 +38,7 @@ HunyuanMirrorPipeline 接受 image、input、images 或 image_path 负载，并�
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`tencent/HunyuanWorld-Mirror`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh hunyuanworld-mirror`；下载缺失的公开权重时加 `--download`。
+
+许可证：other:tencent-hunyuanworld-community。
 
 <ModelRelatedRecipes modelId="hunyuanworld-mirror" locale="zh" />

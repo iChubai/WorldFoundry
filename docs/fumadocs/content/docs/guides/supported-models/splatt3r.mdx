@@ -9,9 +9,7 @@ Splatt3R predicts a 3D Gaussian splat scene directly from an uncalibrated image 
 
 <ModelPaperFigures modelId="splatt3r" locale="en" />
 
-Paper: [Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs](https://arxiv.org/abs/2408.13912) (2024).
-
-Project page: [splatt3r.active.vision](https://splatt3r.active.vision/). Code: [btsmart/splatt3r](https://github.com/btsmart/splatt3r).
+Paper: [Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs](https://arxiv.org/abs/2408.13912) (2024). Project page: [splatt3r.active.vision](https://splatt3r.active.vision/). Code: [btsmart/splatt3r](https://github.com/btsmart/splatt3r).
 
 <ModelCommandBuilder modelId="splatt3r" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: 3D reconstruction and gaussian splatting. Aliases: `splattr` and `splatt3
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); artifacts `splatt3r.ply`.
+Input `input-path` (bundled samples are used when omitted); artifact `splatt3r.ply`.
 
-CLI task profiles: `default`. WorldFoundry binds `Splatt3RPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `Splatt3RPipeline`. Family status: **Verified**.
 
 Input is an uncalibrated image pair; output is a PLY Gaussian-splat file. Stage the brandonsmart/splatt3r_v1.0 checkpoint before running.
 
-Two-view input: large scenes need multiple pairs and external merging.
+Two-view input: large scenes need multiple pairs and external merging. Inherits MASt3R/DUSt3R licensing considerations through its backbone lineage.
 
 ## Running in WorldFoundry
 

@@ -19,7 +19,7 @@ Use `worldlabs` to call the hosted model through WorldFoundry.
 
 World Labs has not published the architecture behind its world generation service.
 
-Tasks: world generation, assets, and hosted api.
+Tasks: world generation, assets, and hosted API.
 
 Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (Unified benchmark for scoring generated explorable worlds).
 
@@ -29,13 +29,11 @@ World Labs' Marble 1.1 model has its own page: [Marble 1.1](/docs/guides/support
 
 Inputs `prompt` and `input-path` (bundled samples are used when omitted).
 
-CLI task profiles: `default`. WorldFoundry binds `WorldLabsPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `WorldLabsPipeline`. Family status: **Runner parity pending**.
 
 Supply your own World Labs account and API key through WORLDLABS_API_KEY (or WLT_API_KEY); access is provisioned through World Labs' platform (worldlabs.ai). No weights are downloaded and no local GPU is needed — generation happens on the provider side, so cost, quota, and content policy follow your provider account.
 
-Requires a paid provider account and API key; WorldFoundry does not ship credentials.
+Requires a paid provider account and API key; WorldFoundry does not ship credentials. The provider controls model versioning, so outputs can change over time. No local weights, no offline mode, and no reproducibility pinning beyond the request parameters WorldFoundry stores.
 
 ## Running in WorldFoundry
 

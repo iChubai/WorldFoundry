@@ -1,6 +1,6 @@
 ---
 title: "MosaicMem"
-description: "MosaicMem：世界模型、视频生成等 3 项任务；Runner 一致性待确认。"
+description: "MosaicMem：世界模型、记忆增强生成等 3 项任务；Runner 一致性待确认。"
 modelId: "mosaicmem"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ MosaicMem 是记忆增强的世界模型组件：摄取关键帧 patch、检索�
 
 <ModelPaperFigures modelId="mosaicmem" locale="zh" />
 
-论文：[arXiv 2603.17117](https://arxiv.org/abs/2603.17117)。
-
-项目页：[mosaicmem.github.io/mosaicmem](https://mosaicmem.github.io/mosaicmem/)。代码：[AbdelStark/mosaicmem](https://github.com/AbdelStark/mosaicmem)。
+论文：[arXiv 2603.17117](https://arxiv.org/abs/2603.17117)。项目页：[mosaicmem.github.io/mosaicmem](https://mosaicmem.github.io/mosaicmem/)。代码：[AbdelStark/mosaicmem](https://github.com/AbdelStark/mosaicmem)。
 
 <ModelCommandBuilder modelId="mosaicmem" locale="zh" />
 
@@ -21,17 +19,15 @@ MosaicMem 是记忆增强的世界模型组件：摄取关键帧 patch、检索�
 
 上游源码为 MIT 许可。产物类型为 memory_index。
 
-任务：世界模型、memory-augmented-generation、视频生成。输出模态为视频。
+任务：世界模型、记忆增强生成、视频生成。输出模态为视频。
 
 推荐评测：[MemoBench](/zh/docs/evaluation/benchmark-hub/memobench)（长时程记忆一致性评测）。
 
 ## 运行时契约
 
-产物 `memory_index`、`mosaicmem_runtime_plan.json`。
+产物 `mosaicmem_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `MosaicMemPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `MosaicMemPipeline`。系列状态：**Runner 一致性待确认**。
 
 在所需 checkpoint 与资产就位前，生成会返回列出缺失资产的运行时计划。请把它当作世界模型栈的记忆侧组件使用，而非独立生成器。
 

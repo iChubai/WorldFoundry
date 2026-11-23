@@ -9,9 +9,7 @@ SkyReels V3 is Skywork's newer generation, covering reference-to-video, audio-gu
 
 <ModelPaperFigures modelId="skyreels-v3" locale="en" />
 
-Paper: [arXiv 2601.17323](https://arxiv.org/abs/2601.17323).
-
-Code: [SkyworkAI/SkyReels-V3](https://github.com/SkyworkAI/SkyReels-V3).
+Paper: [arXiv 2601.17323](https://arxiv.org/abs/2601.17323). Code: [SkyworkAI/SkyReels-V3](https://github.com/SkyworkAI/SkyReels-V3).
 
 <ModelCommandBuilder modelId="skyreels-v3" locale="en" />
 
@@ -21,7 +19,7 @@ Use `skyreels-v3` to generate a video that starts from a reference image.
 
 The transformer, UMT5 text encoder, and VAE checkpoints map exactly onto the native Wan graphs. Reference conditioning concatenates reference-image latents; guidance runs dual text/image channels through the UniPC scheduler and dual-condition runner. It is published by Skywork AI (Kunlun).
 
-Tasks: reference-to-video, audio-guided video, video-to-video, and video generation. Modalities: image and video in, video out.
+Tasks: reference-to-video, audio-guided video, video-to-video, and video generation. Modalities: image, audio, and video in, video out.
 
 Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Baseline quality suite).
 
@@ -29,9 +27,9 @@ Not [SkyReels V2](/docs/guides/supported-models/skyreels-v2). Score on [VBench](
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `seed`, `task-type`, `duration`, and `resolution`; artifacts `skyreels-v3.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `seed`, `task-type`, `duration`, and `resolution`; artifact `skyreels-v3.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `SkyReelsV3Pipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `SkyReelsV3Pipeline`.
 
 Family status: **Runner parity pending**.
 

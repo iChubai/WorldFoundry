@@ -9,9 +9,7 @@ Stable Video Infinity 2.0 (SVI) generates arbitrarily long videos by chaining cl
 
 <ModelPaperFigures modelId="stable-video-infinity" locale="en" />
 
-Paper: [Stable Video Infinity: Infinite-Length Video Generation with Error Recycling](https://arxiv.org/abs/2510.09212) (2025).
-
-Project page: [stable-video-infinity.github.io/homepage](https://stable-video-infinity.github.io/homepage/). Code: [vita-epfl/Stable-Video-Infinity](https://github.com/vita-epfl/Stable-Video-Infinity). Code: [epfl-vita/svi-model](https://huggingface.co/epfl-vita/svi-model).
+Paper: [Stable Video Infinity: Infinite-Length Video Generation with Error Recycling](https://arxiv.org/abs/2510.09212) (2025). Project page: [stable-video-infinity.github.io/homepage](https://stable-video-infinity.github.io/homepage/). Code: [vita-epfl/Stable-Video-Infinity](https://github.com/vita-epfl/Stable-Video-Infinity). Code: [epfl-vita/svi-model](https://huggingface.co/epfl-vita/svi-model).
 
 <ModelCommandBuilder modelId="stable-video-infinity" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronom
 
 ## Runtime contract
 
-Inputs `prompt` and `image` (bundled samples are used when omitted); options `num-clips`, `num-frames`, `num-motion-frames`, `num-inference-steps`, `cfg-scale-text`, `seed`, and 4 more; artifacts `generated_video` and `stable-video-infinity.mp4`.
+Inputs `prompt` and `image` (bundled samples are used when omitted); options `num-clips`, `num-frames`, `num-motion-frames`, `num-inference-steps`, `cfg-scale-text`, `seed`, and 4 more; artifact `stable-video-infinity.mp4`.
 
-CLI task profiles: `prompt-stream-i2v`. WorldFoundry binds `StableVideoInfinityPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `prompt-stream-i2v`: seed=0, fps=24.
+CLI task profile: `prompt-stream-i2v`. WorldFoundry binds `StableVideoInfinityPipeline`. Family status: **Verified**. Defaults for `prompt-stream-i2v`: num-frames=81, num-inference-steps=50, seed=0, fps=24.
 
 Defaults follow the official recipe: five-motion-frame continuation, full reference padding, each clip a distinct seed, prompts repeated twice before advancing. The official 999-clip cap is bounded to two clips per prompt unless use_first_prompt_only is enabled. Stage both the SVI LoRA (vita-video-gen/svi-model, MIT) and the Wan2.1 base.
+
+Requires both the SVI LoRA and the Wan2.1-I2V-14B base checkpoint. Long-video drift is mitigated, not eliminated — quality can still degrade over many chained clips. Inference only: training launchers and datasets are not included.
 
 ## Running in WorldFoundry
 

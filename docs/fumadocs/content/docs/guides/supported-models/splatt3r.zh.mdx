@@ -9,9 +9,7 @@ Splatt3R 直接从未标定的图像对预测 3D 高斯泼溅场景——零样�
 
 <ModelPaperFigures modelId="splatt3r" locale="zh" />
 
-论文：[Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs](https://arxiv.org/abs/2408.13912)（2024）。
-
-项目页：[splatt3r.active.vision](https://splatt3r.active.vision/)。代码：[btsmart/splatt3r](https://github.com/btsmart/splatt3r)。
+论文：[Splatt3R: Zero-shot Gaussian Splatting from Uncalibrated Image Pairs](https://arxiv.org/abs/2408.13912)（2024）。项目页：[splatt3r.active.vision](https://splatt3r.active.vision/)。代码：[btsmart/splatt3r](https://github.com/btsmart/splatt3r)。
 
 <ModelCommandBuilder modelId="splatt3r" locale="zh" />
 
@@ -27,13 +25,11 @@ Splatt3R 直接从未标定的图像对预测 3D 高斯泼溅场景——零样�
 
 输入 `input-path`（不传时使用内置示例）；产物 `splatt3r.ply`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `Splatt3RPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `Splatt3RPipeline`。系列状态：**已验证**。
 
 输入为未标定的图像对，输出为 PLY 高斯泼溅文件。运行前请先就位 brandonsmart/splatt3r_v1.0 checkpoint。
 
-双视图输入：大场景需要多对图像并在外部合并。
+双视图输入：大场景需要多对图像并在外部合并。经主干继承 MASt3R/DUSt3R 的许可注意事项。
 
 ## 在 WorldFoundry 中运行
 

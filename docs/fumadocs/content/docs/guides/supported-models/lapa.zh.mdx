@@ -1,17 +1,15 @@
 ---
 title: "Latent Action Pretraining"
-description: "Latent Action Pretraining：va、vam等 4 项任务；Runner 一致性待确认; 独立环境 `worldfoundry-lapa-jax-cu118`。"
+description: "Latent Action Pretraining：视觉-动作（VA）、视频-动作模型（VAM）等 4 项任务；Runner 一致性待确认；独立环境 worldfoundry-lapa-jax-cu118。"
 modelId: "lapa"
-pageSource: authored
+pageSource: generated
 ---
 
 LAPA（Latent Action Pretraining）无需动作标签学习动作：在无标注视频上通过发现隐式动作预训练视频-动作模型，再迁移到真实机器人控制。WorldFoundry 使用 MIT 许可的 LAPA-7B-openx checkpoint 运行隐式动作推理。
 
 <ModelPaperFigures modelId="lapa" locale="zh" />
 
-论文：[arXiv 2410.11758](https://arxiv.org/abs/2410.11758)。
-
-代码：[LatentActionPretraining/LAPA](https://github.com/LatentActionPretraining/LAPA)。
+论文：[arXiv 2410.11758](https://arxiv.org/abs/2410.11758)。代码：[LatentActionPretraining/LAPA](https://github.com/LatentActionPretraining/LAPA)。
 
 <ModelCommandBuilder modelId="lapa" locale="zh" />
 
@@ -21,19 +19,17 @@ LAPA（Latent Action Pretraining）无需动作标签学习动作：在无标注
 
 7B 视频-动作模型，在 Open X-Embodiment 规模数据上以隐式动作量化训练。
 
-任务：va、vam、latent_action、video_action_modeling。别名：`LAPA`、`LAPA-7B-openx`。
-
-根据视频上下文输出隐式动作 token（`lapa_action_tokens.json`）。
+任务：视觉-动作（VA）、视频-动作模型（VAM）、潜动作、视频-动作建模。别名：`LAPA`、`LAPA-7B-openx`。
 
 ## 运行时契约
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `seed`、`checkpoint-dir`、`dtype`、`image-size`、`mesh-dim`、`tokens-per-delta`；产物 `lapa_action_tokens.json`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LAPAPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LAPAPipeline`。系列状态：**Runner 一致性待确认**。`interactive-video` 的默认值：seed=1234。
 
 请在专用 JAX 环境 worldfoundry-lapa-jax-cu118 中运行。仅计划执行可用；完整 7B 推理需要装有 tux 且 JAX 版本兼容的环境。
+
+完整 7B 推理暂不可用：prepare 环境缺少 tux，gpu-jax0325 环境的 JAX 版本不兼容。使用 JAX/Flax 栈而非 PyTorch，环境配置与多数模型不同。
 
 ## 在 WorldFoundry 中运行
 
@@ -41,7 +37,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LAPAPipeline
 
 运行环境：独立环境 `worldfoundry-lapa-jax-cu118`（Python 3.10，CUDA 11.8）。
 
-权重仓库为 `latent-action-pretraining/LAPA-7B-openx`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lapa-7b-openx`；下载缺失的公开权重时加 `--download`。
+权重仓库：`latent-action-pretraining/LAPA-7B-openx`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lapa-7b-openx`；下载缺失的公开权重时加 `--download`。
 
 许可证：MIT。
 

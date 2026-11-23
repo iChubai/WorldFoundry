@@ -508,14 +508,6 @@ Framework comparisons use `benchmarks.inference.framework_ab_wan22` and its v4 r
 gate: one physical GPU in `Exclusive_Process` mode. Shared GPUs in `Default` mode do
 not satisfy that gate; their timings are diagnostic rather than framework speedup evidence.
 
-## Next steps
-
-<Cards>
-  <Card title="Run inference" description="Environment, CLI, and Workspace commands." href="/docs/guides/inference" />
-  <Card title="Models" description="Pick a model ID and its default profile." href="/docs/guides/supported-models" />
-  <Card title="Studio" description="Workspace checkboxes and load JSON." href="/docs/guides/studio" />
-</Cards>
-
 ## Trace stages without synchronizing CUDA
 
 Set `WORLDFOUNDRY_NVTX=1` when recording an Nsight Systems trace. For example,
@@ -579,3 +571,11 @@ Q `[1,32,256,64]`, K/V `[1,8,8192,64]`, and the efficient SDPA backend.
 Packed offload halves H2D copy calls but is slower for these small layers, so
 it is opt-in. Measure the actual model and its layer sizes before selecting
 it. Peak memory includes all live tensors in the process; it is not just weights.
+
+## Next steps
+
+<Cards>
+  <Card title="Run inference" description="Environment, CLI, and Workspace commands." href="/docs/guides/inference" />
+  <Card title="Models" description="Pick a model ID and its default profile." href="/docs/guides/supported-models" />
+  <Card title="Studio" description="Workspace checkboxes and load JSON." href="/docs/guides/studio" />
+</Cards>

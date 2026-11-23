@@ -9,9 +9,7 @@ Solaris is a multi-agent interactive video world model from NYU's VisionX group 
 
 <ModelPaperFigures modelId="solaris" locale="en" />
 
-Paper: [Solaris: Building a Multiplayer Video World Model in Minecraft](https://arxiv.org/abs/2602.22208) (2026).
-
-Project page: [solaris-wm.github.io](https://solaris-wm.github.io/). Code: [solaris-wm/solaris](https://github.com/solaris-wm/solaris).
+Paper: [Solaris: Building a Multiplayer Video World Model in Minecraft](https://arxiv.org/abs/2602.22208) (2026). Project page: [solaris-wm.github.io](https://solaris-wm.github.io/). Code: [solaris-wm/solaris](https://github.com/solaris-wm/solaris).
 
 <ModelCommandBuilder modelId="solaris" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmode
 
 ## Runtime contract
 
-Options `eval-types`; artifacts `solaris.mp4`.
+Option `eval-types`; artifact `solaris.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `SolarisPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `SolarisPipeline`. Family status: **Verified**.
 
 Inference launches one sample per visible GPU — eval_num_samples must be a multiple of the visible GPU count. Official weights and eval datasets resolve from HF or a same-layout local mirror.
 
-Review the upstream license before use.
+Review the upstream license before use. eval_num_samples must match the GPU-count multiple constraint.
 
 ## Running in WorldFoundry
 
@@ -44,5 +40,7 @@ Run `wf run solaris --pipeline.task-profile default` to roll out the world model
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `nyu-visionx/solaris`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh solaris`. Add `--download` to fetch missing public checkpoints.
+
+License: manual_review.
 
 <ModelRelatedRecipes modelId="solaris" locale="en" />

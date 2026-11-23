@@ -1,6 +1,6 @@
 ---
 title: "Prior Depth Anything"
-description: "Prior Depth Anything：depth-completion、米制深度估计等 3 项任务；已验证。"
+description: "Prior Depth Anything：深度补全、米制深度估计等 3 项任务；已验证。"
 modelId: "prior-depth-anything"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Prior Depth Anything 是深度补全先验：接受任意粗糙或稀疏的米�
 
 <ModelPaperFigures modelId="prior-depth-anything" locale="zh" />
 
-论文：[arXiv 2505.10565](https://arxiv.org/abs/2505.10565)。
-
-项目页：[prior-depth-anything.github.io](https://prior-depth-anything.github.io/)。代码：[SpatialVision/Prior-Depth-Anything](https://github.com/SpatialVision/Prior-Depth-Anything)。
+论文：[arXiv 2505.10565](https://arxiv.org/abs/2505.10565)。项目页：[prior-depth-anything.github.io](https://prior-depth-anything.github.io/)。代码：[SpatialVision/Prior-Depth-Anything](https://github.com/SpatialVision/Prior-Depth-Anything)。
 
 <ModelCommandBuilder modelId="prior-depth-anything" locale="zh" />
 
@@ -21,15 +19,13 @@ Prior Depth Anything 是深度补全先验：接受任意粗糙或稀疏的米�
 
 提示条件的深度补全设计：模型同时消费提示米制深度与图像（checkpoint 为 `Rain729/Prior-Depth-Anything`，apache-2.0）。
 
-任务：depth-completion、米制深度估计、几何先验。别名：`priorda`、`prior-depth-anything-prior`。模态上，它接受图像，输出深度。
+任务：深度补全、米制深度估计、几何先验。别名：`priorda`、`prior-depth-anything-prior`。模态上，它接受图像，输出深度。
 
 ## 运行时契约
 
 输入 `input-path`（不传时使用内置示例）；参数 `execute`、`max-points`；产物 `prior-depth-anything.npz`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `PriorDepthAnythingPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `PriorDepthAnythingPipeline`。系列状态：**已验证**。
 
 它作为独立几何先验，通过共享的 geometry-prior pipeline/operator 契约运行，上层管线（如 ViPE）可直接使用。请与米制深度源（如 depth-anything-v3-prior）配对使用，由它细化该源的输出。
 

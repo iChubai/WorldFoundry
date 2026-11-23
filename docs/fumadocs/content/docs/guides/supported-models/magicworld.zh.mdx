@@ -9,9 +9,7 @@ MagicWorld 是 vivo 的交互式世界模型：从一张图经 MagicWorld-Fast �
 
 <ModelPaperFigures modelId="magicworld" locale="zh" />
 
-论文：[arXiv 2511.18886](https://arxiv.org/abs/2511.18886)。
-
-项目页：[vivocameraresearch.github.io/magicworld](https://vivocameraresearch.github.io/magicworld/)。代码：[vivoCameraResearch/Magic-World](https://github.com/vivoCameraResearch/Magic-World)。代码：[alibaba-damo-academy/Uni3C](https://github.com/alibaba-damo-academy/Uni3C)。代码：[apple/ml-depth-pro](https://github.com/apple/ml-depth-pro)。
+论文：[arXiv 2511.18886](https://arxiv.org/abs/2511.18886)。项目页：[vivocameraresearch.github.io/magicworld](https://vivocameraresearch.github.io/magicworld/)。代码：[vivoCameraResearch/Magic-World](https://github.com/vivoCameraResearch/Magic-World)。代码：[alibaba-damo-academy/Uni3C](https://github.com/alibaba-damo-academy/Uni3C)。代码：[apple/ml-depth-pro](https://github.com/apple/ml-depth-pro)。
 
 <ModelCommandBuilder modelId="magicworld" locale="zh" />
 
@@ -19,9 +17,9 @@ MagicWorld 是 vivo 的交互式世界模型：从一张图经 MagicWorld-Fast �
 
 `magicworld` 生成相机可控视频：输入相机轨迹，输出沿轨迹运动的视频。
 
-基于 Wan2.1-Fun-V1.1-1.3B-InP，并用 Apple DepthPro 提供米制深度；LuckyLiGY/MagicWorld checkpoint 提供 MagicWorld-Fast 与 MagicWorld-Base 权重。许可分离：代码为 apache-2.0，而上游 README 对发布的模型材料适用 CC BY-NC-SA 4.0 条款。该模型由vivo（影像研究团队）发布。
+基于 Wan2.1-Fun-V1.1-1.3B-InP，并用 Apple DepthPro 提供米制深度；LuckyLiGY/MagicWorld checkpoint 提供 MagicWorld-Fast 与 MagicWorld-Base 权重。许可分离：代码为 apache-2.0，而上游 README 对发布的模型材料适用 CC BY-NC-SA 4.0 条款。该模型由 vivo（影像研究团队）发布。
 
-任务：交互式世界模型、相机可控视频、图生视频。模态上，它接受图像，输出视频。
+任务：交互式世界模型、相机可控视频、图生视频。模态上，它接受相机位姿、图像，输出视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（交互滚动生成的相机控制贴合度）。
 
@@ -29,13 +27,11 @@ MagicWorld 是 vivo 的交互式世界模型：从一张图经 MagicWorld-Fast �
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`seed`、`native-rows`；产物 `magicworld.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `MagicWorldPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`default` 的默认值：frames=81, seed=42。
+CLI task profile：`default`。绑定的 pipeline 类是 `MagicWorldPipeline`。系列状态：**Runner 一致性待确认**。`default` 的默认值：frames=81, seed=42。
 
 输入为提示词、图像与 native_rows 相机控制。运行前需就位 LuckyLiGY/MagicWorld（ModelScope，约 16 GB）、alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP 与 apple/DepthPro（ModelScope）。
+
+模型材料为 CC BY-NC-SA 4.0（非商用），商用前请先审查条款。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `MagicWorldPipeline`。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`LuckyLiGY/MagicWorld`、`alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP`、`apple/DepthPro`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh magicworld`；下载缺失的公开权重时加 `--download`。
+
+许可证：apache-2.0-code-and-cc-by-nc-sa-4.0-model-materials。
 
 <ModelRelatedRecipes modelId="magicworld" locale="zh" />

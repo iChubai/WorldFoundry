@@ -1,6 +1,6 @@
 ---
 title: "Bernini-R 1.3B"
-description: "Bernini-R 1.3B（字节跳动（ByteDance））：文生图、图像编辑等 6 项任务；Runner 一致性待确认; 独立环境 `worldfoundry-bernini-cu124`。"
+description: "Bernini-R 1.3B（字节跳动（ByteDance））：文生图、图像编辑等 6 项任务；Runner 一致性待确认；独立环境 worldfoundry-bernini-cu124。"
 modelId: "bernini-r-1.3b"
 pageSource: authored
 ---
@@ -31,7 +31,7 @@ Bernini-R 1.3B 是字节 Bernini 系列中的小型「仅渲染器」成员—�
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `task-type`、`num-frames`、`height`、`width`、`num-inference-steps`、`seed` 等 10 项；产物 `generated_image`、`generated_video`、`bernini-r-1.3b.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `task-type`、`num-frames`、`height`、`width`、`num-inference-steps`、`seed` 等 10 项；产物 `generated_image`、`bernini-r-1.3b.mp4`。
 
 CLI task profile：`t2v`、`t2i`、`i2i`、`v2v`、`r2v`、`rv2v`。绑定的 pipeline 类是 `BerniniWorldFoundryPipeline`。
 

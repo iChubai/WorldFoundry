@@ -1,6 +1,6 @@
 ---
 title: "Infinite-World"
-description: "Infinite-World（美团（MeiGen-AI））：世界模型、video等 3 项任务；已验证。"
+description: "Infinite-World（美团（MeiGen-AI））：世界模型、视频生成等 3 项任务；已验证。"
 modelId: "infinite-world"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Infinite-World 是美团 MeiGen-AI 的长时程世界视频模型：从一张图
 
 <ModelPaperFigures modelId="infinite-world" locale="zh" />
 
-论文：[arXiv 2602.02393](https://arxiv.org/abs/2602.02393)。
-
-项目页：[rq-wu.github.io/projects/infinite-world](https://rq-wu.github.io/projects/infinite-world)。代码：[MeiGen-AI/Infinite-World](https://github.com/MeiGen-AI/Infinite-World)。
+论文：[arXiv 2602.02393](https://arxiv.org/abs/2602.02393)。项目页：[rq-wu.github.io/projects/infinite-world](https://rq-wu.github.io/projects/infinite-world)。代码：[MeiGen-AI/Infinite-World](https://github.com/MeiGen-AI/Infinite-World)。
 
 <ModelCommandBuilder modelId="infinite-world" locale="zh" />
 
@@ -21,21 +19,19 @@ Infinite-World 是美团 MeiGen-AI 的长时程世界视频模型：从一张图
 
 WorldFoundry 在树内运行 Infinite-World，可使用本地或 Hugging Face checkpoint 布局；推理不需要外部源码检出。该模型由美团（MeiGen-AI）发布。
 
-任务：世界模型、video。输出模态为视频。
+任务：世界模型、视频生成。输出模态为视频。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（长时程世界滚动生成质量）、[MemoBench](/zh/docs/evaluation/benchmark-hub/memobench)（长时程一致性评测）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`seed`；产物 `generated_world`、`infinite-world.mp4`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`seed`；产物 `infinite-world.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `InfiniteWorldPipeline`。
-
-系列状态：**已验证**。
-
-`interactive-video` 的默认值：frames=81, fps=30, seed=42。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `InfiniteWorldPipeline`。系列状态：**已验证**。`interactive-video` 的默认值：frames=81, fps=30, seed=42。
 
 按官方本地/Hugging Face 布局就位 checkpoint，并从官方图像条件导航 demo 设置出发。
+
+长时程质量会自然漂移；请针对你的时长目标验证输出。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `InfiniteWorl
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`thuml/InfiniteWorld`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh infinite-world`；下载缺失的公开权重时加 `--download`。
+
+许可证：MIT。
 
 <ModelRelatedRecipes modelId="infinite-world" locale="zh" />

@@ -9,9 +9,7 @@ Vid2World from Tsinghua's THUML group turns pretrained video diffusion models in
 
 <ModelPaperFigures modelId="vid2world" locale="en" />
 
-Paper: [arXiv 2505.14357](https://arxiv.org/abs/2505.14357).
-
-Project page: [knightnemo.github.io/vid2world](https://knightnemo.github.io/vid2world/). Code: [thuml/Vid2World](https://github.com/thuml/Vid2World).
+Paper: [arXiv 2505.14357](https://arxiv.org/abs/2505.14357). Project page: [knightnemo.github.io/vid2world](https://knightnemo.github.io/vid2world/). Code: [thuml/Vid2World](https://github.com/thuml/Vid2World).
 
 <ModelCommandBuilder modelId="vid2world" locale="en" />
 
@@ -21,19 +19,15 @@ Use `vid2world` to step a world forward with actions and render the resulting fr
 
 The core idea is video-diffusion adaptation: converting a full-sequence diffusion model into a causal, action-conditioned rollout. Official code: thuml/Vid2World. It is published by Tsinghua University (THUML).
 
-Tasks: interactive world model, video diffusion adaptation, and action-conditioned video.
+Tasks: interactive world model, video diffusion adaptation, and action-conditioned video. Modalities: action in, video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Action-conditioned interactive rollout quality).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `interactions`, `frames`, `fps`, and `seed`; artifacts `generated_video` and `vid2world_runtime_plan.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `interactions`, `frames`, `fps`, and `seed`; artifact `vid2world_runtime_plan.json`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `Vid2WorldPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: frames=16, fps=16, seed=42.
+CLI task profile: `interactive-video`. WorldFoundry binds `Vid2WorldPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: frames=16, fps=16, seed=42.
 
 Until the required checkpoints and config assets are staged, generation returns a runtime plan that lists the missing assets.
 

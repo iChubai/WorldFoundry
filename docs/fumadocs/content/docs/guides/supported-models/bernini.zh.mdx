@@ -1,6 +1,6 @@
 ---
 title: "Bernini"
-description: "Bernini（字节跳动（ByteDance））：文生图、图像编辑等 6 项任务；Runner 一致性待确认；独立环境 `worldfoundry-bernini-cu124`。"
+description: "Bernini（字节跳动（ByteDance））：文生图、图像编辑等 6 项任务；Runner 一致性待确认；独立环境 worldfoundry-bernini-cu124。"
 modelId: "bernini"
 pageSource: authored
 ---
@@ -29,7 +29,7 @@ Bernini 是字节跳动的统一「任意到任意」视觉生成模型：一个
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `task-type`、`num-frames`、`height`、`width`、`num-inference-steps`、`seed` 等 10 项；产物 `generated_image`、`generated_video`、`bernini.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `task-type`、`num-frames`、`height`、`width`、`num-inference-steps`、`seed` 等 10 项；产物 `generated_image`、`bernini.mp4`。
 
 CLI task profile：`t2v`、`t2i`、`i2i`、`v2v`、`r2v`、`rv2v`。绑定的 pipeline 类是 `BerniniWorldFoundryPipeline`。
 

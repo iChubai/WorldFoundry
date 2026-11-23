@@ -1,17 +1,15 @@
 ---
 title: "FastWAM"
-description: "FastWAM: WAM, robot policy, and 2 more tasks; Verified; dedicated `worldfoundry-vla-fastwam`."
+description: "FastWAM: WAM, robot policy, and 2 more tasks; Verified; dedicated env worldfoundry-vla-fastwam."
 modelId: "fastwam"
-pageSource: authored
+pageSource: generated
 ---
 
-FastWAM is a world-action model built on the Wan video stack: a mixture-of-transformers (MoT) action-inference graph runs on Wan2.1-T2V-1.3B components (MIT license). Validated with the released checkpoints: the LIBERO and RoboTwin base checkpoints produce finite 32-step action chunks, and the separate LIBERO Optional IDM checkpoint produces finite 8-step chunks in both idm and first_frame modes.
+FastWAM is a world-action model built on the Wan video stack (MIT license). Validated with the released checkpoints: the LIBERO and RoboTwin base checkpoints produce finite 32-step action chunks, and the separate LIBERO Optional IDM checkpoint produces finite 8-step chunks in both idm and first_frame modes.
 
 <ModelPaperFigures modelId="fastwam" locale="en" />
 
-Paper: [arXiv 2603.16666](https://arxiv.org/abs/2603.16666).
-
-Project page: [yuantianyuan01.github.io/FastWAM](https://yuantianyuan01.github.io/FastWAM/). Code: [yuantianyuan01/FastWAM](https://github.com/yuantianyuan01/FastWAM).
+Paper: [arXiv 2603.16666](https://arxiv.org/abs/2603.16666). Project page: [yuantianyuan01.github.io/FastWAM](https://yuantianyuan01.github.io/FastWAM/). Code: [yuantianyuan01/FastWAM](https://github.com/yuantianyuan01/FastWAM).
 
 <ModelCommandBuilder modelId="fastwam" locale="en" />
 
@@ -27,13 +25,13 @@ Suggested benchmarks: [LIBERO](/docs/evaluation/benchmark-hub/libero) (GPU-valid
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `steps`, `seed`, `state`, `variant`, `head-camera`, `left-camera`, and 3 more; artifacts `action_trace` and `fastwam_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `steps`, `seed`, `state`, `variant`, `head-camera`, `left-camera`, and 3 more; artifact `fastwam_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `FastWAMPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `FastWAMPipeline`. Family status: **Verified**. Defaults for `default`: steps=10, seed=42.
 
 Select libero, libero_optional_idm, or robotwin in the runtime data configuration. Optional IDM supports idm (generated-future conditioning) and first_frame modes. Stage yuanty/fastwam plus the Wan-series converted safetensors and Wan2.1-T2V-1.3B tokenizer locally.
+
+Validation used synthetic observations; it does not establish closed-loop LIBERO or RoboTwin task success.
 
 ## Running in WorldFoundry
 
@@ -41,6 +39,8 @@ Run `wf run fastwam --pipeline.task-profile default` to predict actions.
 
 It runs in the dedicated environment `worldfoundry-vla-fastwam` (Python 3.10, CUDA 12.1+, torch>=2.2).
 
-Recorded weight repositories include `yuanty/fastwam`, `DiffSynth-Studio/Wan-Series-Converted-Safetensors`, and `Wan-AI/Wan2.1-T2V-1.3B` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh fastwam`. Add `--download` to fetch missing public checkpoints.
+Weights: `yuanty/fastwam`, `DiffSynth-Studio/Wan-Series-Converted-Safetensors`, and `Wan-AI/Wan2.1-T2V-1.3B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh fastwam`. Add `--download` to fetch missing public checkpoints.
+
+License: MIT.
 
 <ModelRelatedRecipes modelId="fastwam" locale="en" />

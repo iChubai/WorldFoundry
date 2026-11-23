@@ -9,9 +9,7 @@ UniK3D generalizes metric 3D estimation to any camera — pinhole, fisheye, even
 
 <ModelPaperFigures modelId="unik3d-prior" locale="en" />
 
-Paper: [arXiv 2503.16591](https://arxiv.org/abs/2503.16591).
-
-Project page: [lpiccinelli-eth.github.io/pub/unik3d](https://lpiccinelli-eth.github.io/pub/unik3d/). Code: [lpiccinelli-eth/UniK3D](https://github.com/lpiccinelli-eth/UniK3D).
+Paper: [arXiv 2503.16591](https://arxiv.org/abs/2503.16591). Project page: [lpiccinelli-eth.github.io/pub/unik3d](https://lpiccinelli-eth.github.io/pub/unik3d/). Code: [lpiccinelli-eth/UniK3D](https://github.com/lpiccinelli-eth/UniK3D).
 
 <ModelCommandBuilder modelId="unik3d-prior" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: panoramic depth estimation, metric 3D estimation, monocular depth estimat
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `type`, `camera-model`, `execute`, and `max-points`; artifacts `unik3d-prior.npz`.
+Input `input-path` (bundled samples are used when omitted); options `type`, `camera-model`, `execute`, and `max-points`; artifact `unik3d-prior.npz`.
 
-CLI task profiles: `default`. WorldFoundry binds `UniK3DPriorPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `UniK3DPriorPipeline`. Family status: **Verified**.
 
 Use it through the shared geometry-prior pipeline/operator contract; pipelines such as ViPE also use it as their geometry prior. Prefer it over pinhole-only priors when inputs include fisheye or panoramic imagery.
 
-CC-BY-NC-4.0: non-commercial license terms apply downstream.
+CC-BY-NC-4.0: non-commercial license terms apply downstream. Auto camera estimation can misjudge unusual optics — use explicit pinhole/panorama overrides when known.
 
 ## Running in WorldFoundry
 
@@ -42,5 +38,7 @@ Run `wf run unik3d-prior --pipeline.task-profile default` to write the depth map
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `lpiccinelli/unik3d-vitl`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh unik3d-prior`. Add `--download` to fetch missing public checkpoints.
+
+License: CC BY-NC 4.0.
 
 <ModelRelatedRecipes modelId="unik3d-prior" locale="en" />

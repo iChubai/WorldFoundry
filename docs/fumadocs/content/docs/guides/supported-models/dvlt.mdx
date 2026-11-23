@@ -27,15 +27,13 @@ Tasks: 3D reconstruction, multi view reconstruction, camera pose estimation, and
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `execute` and `max-points`; artifacts `dvlt_reconstruction.glb`.
+Input `input-path` (bundled samples are used when omitted); options `execute` and `max-points`; artifact `dvlt_reconstruction.glb`.
 
-CLI task profiles: `default`. WorldFoundry binds `DVLTPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `DVLTPipeline`. Family status: **Runner parity pending**.
 
 Stage a local DVLT source checkout, its dependencies, and the `nvidia/dvlt` checkpoint before running; DVLTSynthesis fails fast when a prerequisite is missing. Check the NVIDIA non-commercial research/evaluation license terms before use.
 
-Checkpoint license is NVIDIA non-commercial research/evaluation only.
+Checkpoint license is NVIDIA non-commercial research/evaluation only. The upstream DVLT runtime source is not part of WorldFoundry; you stage it yourself.
 
 ## Running in WorldFoundry
 

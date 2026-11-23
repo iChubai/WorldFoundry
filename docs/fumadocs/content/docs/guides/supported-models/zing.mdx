@@ -1,6 +1,6 @@
 ---
 title: "Zing-0.5"
-description: "Zing-0.5 from seedleap: text-to-video, image-to-video, and 1 more task; Runner parity pending; dedicated `zing`."
+description: "Zing-0.5 from seedleap: text-to-video, image-to-video, and 1 more task; Runner parity pending; dedicated env zing."
 modelId: "zing"
 pageSource: generated
 ---
@@ -23,20 +23,22 @@ Tasks: text-to-video, image-to-video, and interactive world model. Aliases: `zin
 
 ## Runtime contract
 
-Inputs `prompt`, `input-path`, and `load.checkpoint-dir` (bundled samples are used when omitted); options `num-frames`, `height`, `width`, `fps`, and `seed`; artifacts `generated_world` and `zing.mp4`.
+Inputs `prompt`, `input-path`, and `load.checkpoint-dir` (bundled samples are used when omitted); options `num-frames`, `height`, `width`, `fps`, and `seed`; artifact `zing.mp4`.
 
-CLI task profiles: `interactive-world-model`. WorldFoundry binds `ZingPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-world-model`: height=480, width=832, fps=24, seed=0.
+CLI task profile: `interactive-world-model`. WorldFoundry binds `ZingPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-world-model`: num-frames=81, height=480, width=832, fps=24, seed=0.
 
 Use ZingPipeline.from_pretrained(checkpoint_dir). num_frames includes the optional reference and must be 1+4*N; height/width are multiples of 32. Keyboard controls contain N-1 rows of eight values for a total N-frame result.
+
+Validated on CPU only: a tiny transformer state dict matches upstream FP32/BF16 rollouts, including cache eviction and prompt switches; checkpoint-backed GPU generation is not validated.
 
 ## Running in WorldFoundry
 
 Step the world with `wf run zing --pipeline.task-profile interactive-world-model`.
 
+It runs in the dedicated environment `zing` (Python 3.11, CUDA 12.8, torch>=2.6).
+
 Weights: `seedleap/zing-0.5`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh zing`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="zing" locale="en" />

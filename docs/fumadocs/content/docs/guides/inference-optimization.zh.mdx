@@ -40,16 +40,16 @@ WorldFoundry 只把「有公开开关、且主链会消费」的技术算作可�
   { name: "inplace_residual", hintLabel: "怎么开", hint: "inplace_residual=True", description: "复用 dtype 相容的 Wan 残差存储。仅推理；类型提升和 autograd 保留 functional 路径。", reads: [{ label: "适用范围", value: "仅原生 Wan DiT" }] }
 ]} />
 
-### Attention backend
+### 注意力后端
 
-<KvCatalog heading="Backend" vars rows={[
+<KvCatalog heading="后端" vars rows={[
   { name: "attention_backend", hintLabel: "取值", hint: "auto / flash / flash2 / flash3 / flash4 / sage / sage3 / xformers / sdpa / torch", description: "dispatcher 选 kernel；provider 不可用或 shape 不合格时报告 SDPA。auto 是稳妥默认。", reads: [{ label: "适用范围", value: "原生 Wan；HunyuanVideo 也接受 attention_backend。Studio 下拉：auto、torch、flash_attn_2、flash_attn_3、sage、xformers" }] },
   { name: "WORLDFOUNDRY_ATTENTION_BACKEND", hintLabel: "环境变量", hint: "auto / flash / cudnn / efficient / math", description: "调用 install_worldfoundry_inference_infra 的进程级 SDPA 策略。flash_attention_2 这类名字会映射到 auto，除非你在管线上钉死 dispatcher backend。", reads: [{ label: "相关", value: "WORLDFOUNDRY_ENABLE_TF32（默认开）、WORLDFOUNDRY_MATMUL_PRECISION=high、WORLDFOUNDRY_DETERMINISTIC=1" }] }
 ]} />
 
 ### 精确或数值等价的 Wan kernel
 
-<KvCatalog heading="Kernel" vars rows={[
+<KvCatalog heading="算子" vars rows={[
   { name: "fuse_qkv", hintLabel: "怎么开", hint: "fuse_qkv=True", description: "合并 Q/K/V 投影。可选 qkv_strategy=auto|packed|split 和 qkv_split_threshold（Studio 默认 8192）。", reads: [{ label: "适用范围", value: "原生 Wan DiT。forward 后确认 fused_blocks 和真实投影调用" }] },
   { name: "fused_rope", hintLabel: "怎么开", hint: "fused_rope=True", description: "融合 3D RoPE。可与 Ulysses SP 组合（kernel 接收 rank offset 与 padding）。rope_precision 为 fp32 或 fp64。", reads: [{ label: "适用范围", value: "原生 Wan DiT" }] },
   { name: "static_cross_kv", hintLabel: "怎么开", hint: "static_cross_kv=True", description: "复用本次请求的文本 cross-attention K/V。Studio 对 Wan2.2 TI2V-5B 默认打开。常驻 canonical Wan 通过显式逐层 K/V 输入支持 CUDA Graph。", reads: [{ label: "适用范围", value: "原生 Wan DiT" }] }
@@ -57,7 +57,7 @@ WorldFoundry 只把「有公开开关、且主链会消费」的技术算作可�
 
 ### Compile 与 CUDA Graph
 
-<KvCatalog heading="Compile" vars rows={[
+<KvCatalog heading="编译与图捕获" vars rows={[
   { name: "compile", hintLabel: "怎么开", hint: "compile=True 或 torch_compile=True", description: "对绑定的 forward 做 torch.compile。compile_scope=full（默认）编译组件 forward；regional 编译声明的 Wan transformer blocks，文本编码器和 VAE 保持 eager。可选 compile_mode（default / reduce-overhead / max-autotune / max-autotune-no-cudagraphs）、compile_backend、compile_fullgraph、compile_dynamic。首次请求承担编译及适用的 autotuning 成本。", reads: [{ label: "另外", value: "走 compile_module_if_enabled 的进程可用 WORLDFOUNDRY_TORCH_COMPILE=1" }] },
   { name: "cuda_graph", hintLabel: "怎么开", hint: "cuda_graph=True", description: "捕获并 replay 形状稳定的 Wan DiT 内层调用。默认关。和 Inductor 一起用时，full scope 使用 max-autotune-no-cudagraphs；regional 使用 default 和原生 GEMM 分派，两者均避免嵌套 Graph。", reads: [{ label: "会拒绝", value: "sequence parallel、feature cache、近似 attention、自定义 Inductor compile_options" }] }
 ]} />
@@ -203,7 +203,7 @@ offload 或分布式执行。失败或取消的任务可能保留诊断产物；
 
 ### Wan VAE 解码
 
-<KvCatalog heading="VAE" vars rows={[
+<KvCatalog heading="VAE 解码" vars rows={[
   { name: "vae_decode_autocast", hintLabel: "怎么开", hint: "vae_decode_autocast=\"bf16\"", description: "Wan decode 混精。相对 FP32 decode 有轻微数值差。", reads: [{ label: "适用范围", value: "原生 Wan VAE" }] },
   { name: "vae_spatial_tiling", hintLabel: "怎么开", hint: "vae_spatial_tiling=True", description: "空间分 tile 解码。别名：vae_tiled_decode，或组件 tiled=True。默认 tile 34×34、stride 18×16。只切出 1 个 tile 不算 tiled 执行。", reads: [{ label: "不是同一个 flag", value: "vae_tiling 是 Hunyuan / Cosmos Predict2 的。Wan 忽略这个名字。" }] },
   { name: "vae_temporal_chunk_size", hintLabel: "怎么开", hint: "vae_temporal_chunk_size=4", description: "因果时间 streaming 解码。chunk 之间保留 convolution cache。整段能装进一个 chunk 就不算 streaming。", reads: [{ label: "适用范围", value: "官方 Wan VAE" }] },
@@ -226,7 +226,7 @@ Wan2.2 公开管线接受 `peft_adapter_path`，在校验 adapter / 基模 / tar
 
 可选、单 rank、互斥。每个 CFG 分支独立 cache。TeaCache 对 Wan2.1 1.3B / 14B T2V 与 I2V、Wan2.1 Fun / VACE 别名、Wan2.2 Fun / A14B、Wan2.2 TI2V-5B 有预设系数。其他 model ID 必须显式传 `coefficients`。
 
-<KvCatalog heading="Cache" vars rows={[
+<KvCatalog heading="缓存策略" vars rows={[
   { name: "teacache", hintLabel: "怎么开", hint: "feature_cache=\"teacache\" 或 teacache=True", description: "按 residual 阈值（默认 0.26）加模型预设跳过 DiT step。也可 teacache=<threshold>。", reads: [{ label: "适用范围", value: "有预设或显式 coefficients 的原生 Wan denoiser" }] },
   { name: "adacache", hintLabel: "怎么开", hint: "feature_cache=\"adacache\"", description: "自适应 residual cache。与其他 cache 一样，不能和 SP / CUDA Graph 组合。", reads: [{ label: "适用范围", value: "原生 Wan" }] },
   { name: "magcache", hintLabel: "怎么开", hint: "magcache={\"ratios\": [...]}", description: "必须提供逐 step 校准 ratios。仓内没有 Wan2.2 预设。", reads: [{ label: "会 fail-closed", value: "magcache=True 却不给 ratios" }] },
@@ -426,14 +426,6 @@ python -m benchmarks.operators.attention_adapter_parity \
 
 Framework 对比使用 `benchmarks.inference.framework_ab_wan22` 的 v4 报告门禁：单张物理 GPU，且处于 `Exclusive_Process` 模式。共享 GPU 的 `Default` 模式不满足该门禁，其耗时只作为诊断信息，不作为 framework 加速证据。
 
-## 下一步
-
-<Cards>
-  <Card title="运行推理" description="环境、CLI 与 Workspace 命令。" href="/zh/docs/guides/inference" />
-  <Card title="模型" description="挑选 model ID 和默认 profile。" href="/zh/docs/guides/supported-models" />
-  <Card title="Studio" description="Workspace 勾选与 load JSON。" href="/zh/docs/guides/studio" />
-</Cards>
-
 ## 不引入 CUDA 同步的分阶段跟踪
 
 录制 Nsight Systems trace 时设置 `WORLDFOUNDRY_NVTX=1`。例如，把下列
@@ -475,3 +467,11 @@ H.264 输出和打包 offload 分别标记 `worldfoundry.postprocess`、
 
 Offload 使用 8 个宽度 1024 的 Linear 层，batch 64。GQA 使用
 Q `[1,32,256,64]`、K/V `[1,8,8192,64]` 和 efficient SDPA。打包 offload 将 H2D 拷贝次数减半，但这个小层用例耗时更高，因此需显式开启。选择前需对实际模型及层尺寸测量。峰值显存包含进程中所有存活 tensor，不只是权重。
+
+## 下一步
+
+<Cards>
+  <Card title="运行推理" description="环境、CLI 与 Workspace 命令。" href="/zh/docs/guides/inference" />
+  <Card title="模型" description="挑选 model ID 和默认 profile。" href="/zh/docs/guides/supported-models" />
+  <Card title="Studio" description="Workspace 勾选与 load JSON。" href="/zh/docs/guides/studio" />
+</Cards>

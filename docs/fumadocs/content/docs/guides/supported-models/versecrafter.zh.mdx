@@ -9,9 +9,7 @@ pageSource: generated
 
 <ModelPaperFigures modelId="versecrafter" locale="zh" />
 
-论文：[arXiv 2601.05138](https://arxiv.org/abs/2601.05138)。
-
-项目页：[sixiaozheng.github.io/VerseCrafter_page](https://sixiaozheng.github.io/VerseCrafter_page/)。代码：[TencentARC/VerseCrafter](https://github.com/TencentARC/VerseCrafter)。
+论文：[arXiv 2601.05138](https://arxiv.org/abs/2601.05138)。项目页：[sixiaozheng.github.io/VerseCrafter_page](https://sixiaozheng.github.io/VerseCrafter_page/)。代码：[TencentARC/VerseCrafter](https://github.com/TencentARC/VerseCrafter)。
 
 <ModelCommandBuilder modelId="versecrafter" locale="zh" />
 
@@ -21,7 +19,7 @@ pageSource: generated
 
 两个阶段：仅相机的 4D 控制渲染，随后是扩散阶段，其扩散骨干来自 VideoX-Fun。该模型由腾讯 ARC 实验室发布。
 
-任务：相机可控视频、图生视频、世界模型。模态上，它接受图像，输出视频。
+任务：相机可控视频、图生视频、世界模型。模态上，它接受相机位姿、图像，输出视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（4D 控制生成的相机路径跟随）。
 
@@ -29,13 +27,11 @@ pageSource: generated
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`guidance-scale` 等 7 项；产物 `versecrafter.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `VerseCrafterPipeline`。
-
-系列状态：**已验证**。
-
-`default` 的默认值：frames=81, fps=16, height=480, width=832, seed=2025。
+CLI task profile：`default`。绑定的 pipeline 类是 `VerseCrafterPipeline`。系列状态：**已验证**。`default` 的默认值：frames=81, fps=16, height=480, width=832, steps=30, guidance-scale=5.0。
 
 已用发布权重验证：可端到端生成相机可控短视频，后段帧有可见伪影。
+
+仅研究、非商用许可，且排除面向欧盟的使用。短片 GPU 运行后段存在遮挡解除伪影；相机路径精度和官方输出一致性尚未测量。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `VerseCrafterPipeline`�
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`TencentARC/VerseCrafter`、`Wan-AI/Wan2.1-T2V-14B`、`Ruicheng/moge-2-vitl-normal`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh versecrafter`；下载缺失的公开权重时加 `--download`。
+
+许可证：research-only-non-commercial-not-eu。
 
 <ModelRelatedRecipes modelId="versecrafter" locale="zh" />

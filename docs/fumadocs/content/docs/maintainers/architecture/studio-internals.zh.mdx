@@ -100,7 +100,7 @@ Studio 是覆盖同一套 pipeline 与 artifact 契约的目录驱动 shell，�
   </section>
 </div>
 
-## Catalog discovery
+## 目录发现（Catalog Discovery）
 
 Catalog 构建刻意做成静态过程。`discover_catalog()` 用 AST helpers 扫描 pipeline 模块，从而在不 import 重型 CUDA 栈或可选依赖的情况下列出模型。它合并三路来源：`pipeline_*.py` 类、component-pipeline 工厂、action-synthesis 类，再叠加 curated overrides 与 canonical runtime entries（aliases、默认 kwargs、checkpoint、`runtime_kind`）。去重键是 `(module_path, class_name)`；隐藏或抽象 id 不会进入 UI 列表。
 
@@ -115,7 +115,7 @@ catalog 包按层组织，下层不导入上层：`entry.py`（数据模型）�
 - **归一化 ids** (`_normalize_model_id()`) — UI、CLI launch args 和 recent runs 共用的稳定 lookup key。
 - **构建 entries** (`discover_catalog()`) — 产出 `CatalogEntry[]`，包含 family、class path、category、backend、aliases、examples。
 
-## Execution core
+## 执行核心（Execution Core）
 
 `StudioManager` 是编排中枢。典型的 `run` / `stream` / `init` / `reset` 路径会准备 request、把输入落到 run 目录、按 `entry.runtime_kind` 选择 driver、加载 pipeline（LRU 缓存）、调用 driver，再物化为 `RunRecord`。Driver 存在是因为并非每个家族都是一次 `__call__`：two-stage 3DGS 先重建再 orbit，point-cloud nav 先重建再渲染视角。WorldFM 走 `BaseRuntimeDriver`；相机控制与标定由 operator 负责，场景重建与 streaming state 由 pipeline 持有。
 

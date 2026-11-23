@@ -9,9 +9,7 @@ Video Depth Anything brings temporal consistency to the Depth Anything family: i
 
 <ModelPaperFigures modelId="video-depth-anything-prior" locale="en" />
 
-Paper: [arXiv 2501.12375](https://arxiv.org/abs/2501.12375).
-
-Project page: [videodepthanything.github.io](https://videodepthanything.github.io/). Code: [DepthAnything/Video-Depth-Anything](https://github.com/DepthAnything/Video-Depth-Anything).
+Paper: [arXiv 2501.12375](https://arxiv.org/abs/2501.12375). Project page: [videodepthanything.github.io](https://videodepthanything.github.io/). Code: [DepthAnything/Video-Depth-Anything](https://github.com/DepthAnything/Video-Depth-Anything).
 
 <ModelCommandBuilder modelId="video-depth-anything-prior" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: video depth estimation, temporal depth estimation, and geometry prior. Al
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `model`, `input-size`, `max-frames`, `execute`, and `max-points`; artifacts `video-depth-anything-prior.npz`.
+Input `input-path` (bundled samples are used when omitted); options `model`, `input-size`, `max-frames`, `execute`, and `max-points`; artifact `video-depth-anything-prior.npz`.
 
-CLI task profiles: `default`. WorldFoundry binds `VideoDepthAnythingPriorPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `VideoDepthAnythingPriorPipeline`. Family status: **Runner parity pending**.
 
 Run it on its own as a geometry prior, or select it from a ViPE pipeline profile. Stage the depth-anything/Video-Depth-Anything-Large weights before running.
 
@@ -42,5 +38,7 @@ Run `wf run video-depth-anything-prior --pipeline.task-profile default` to write
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `depth-anything/Video-Depth-Anything-Large`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh video-depth-anything-prior`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="video-depth-anything-prior" locale="en" />

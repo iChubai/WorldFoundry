@@ -5,13 +5,11 @@ modelId: "minwm-hy-action2v"
 pageSource: authored
 ---
 
-minWM HY Action2V is Shengshu's minimal world-model recipe on a HunyuanVideo-1.5 base: given a prompt, an image, and a motion trajectory it generates action-conditioned, camera-controllable video through a distilled DMD entrypoint.
+minWM HY Action2V generates camera-controlled video from a prompt, image and trajectory on a HunyuanVideo-1.5 base.
 
 <ModelPaperFigures modelId="minwm-hy-action2v" locale="en" />
 
-Paper: [arXiv 2605.30263](https://arxiv.org/abs/2605.30263).
-
-Code: [shengshu-ai/minWM](https://github.com/shengshu-ai/minWM).
+Paper: [arXiv 2605.30263](https://arxiv.org/abs/2605.30263). Code: [shengshu-ai/minWM](https://github.com/shengshu-ai/minWM).
 
 <ModelCommandBuilder modelId="minwm-hy-action2v" locale="en" />
 
@@ -19,19 +17,23 @@ Code: [shengshu-ai/minWM](https://github.com/shengshu-ai/minWM).
 
 `minwm-hy-action2v` conditions video generation on camera poses.
 
-The official source is Apache-2.0. Only the HY15/Action2V/dmd subset of the 384.97 GB upstream minWM repository is required; you do not need the full research archive.
+The inference-only camera transformer keeps the upstream PRoPE and autoregressive caches and uses the HunyuanVideo-1.5 VAE and encoders. It is published by Shengshu Technology.
 
-Tasks: interactive world model, action-conditioned video, and camera-controlled video. Aliases: `minwm` and `minwm-hy-action2v`.
+Tasks: interactive world model, action-conditioned video, and camera-controlled video. Aliases: `minwm` and `minwm-hy-action2v`. Modalities: action and camera pose in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera/motion-trajectory adherence).
 
+The official source is Apache-2.0. Only the HY15/Action2V/dmd subset of the 384.97 GB upstream minWM repository is required; you do not need the full research archive.
+
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifacts `minwm-hy-action2v.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifact `minwm-hy-action2v.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `MinWMHYAction2VPipeline`.
+CLI task profile: `default`. WorldFoundry binds `MinWMHYAction2VPipeline`. Family status: **Runner parity pending**. Defaults for `default`: frames=77, fps=16, height=480, width=832, steps=4, seed=0.
 
-Family status: **Runner parity pending**.
+Stage HY15/Action2V/dmd plus the HunyuanVideo-1.5 encoders and VAE; only this subset of the minWM repository is needed. The public pipeline uses camera-conditioned four-step autoregressive inference and spatially tiled VAE decoding. Validated on a single H100: 77 frames at 832×480 with four DMD steps and a camera trajectory.
+
+Only camera-conditioned generation is supported; non-camera modes are not available in this runtime. HY15-derived files retain Tencent Hunyuan license terms; see the included licenses and provenance.
 
 Inputs are prompt, image, and trajectory (native motion tokens). Stage the HY15 Action2V DMD subset before running. For the Wan-based variant use `minwm-wan-action2v`.
 
@@ -42,5 +44,7 @@ Run `wf run minwm-hy-action2v --pipeline.task-profile default` to follow the cam
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `MIN-Lab/minWM` and `tencent/HunyuanVideo-1.5`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh minwm-hy-action2v`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
 
 <ModelRelatedRecipes modelId="minwm-hy-action2v" locale="en" />

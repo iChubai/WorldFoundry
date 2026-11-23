@@ -1,6 +1,6 @@
 ---
 title: "World Labs Marble 1.1"
-description: "World Labs Marble 1.1 from World Labs: integrated 3D world-generation API."
+description: "World Labs Marble 1.1 from World Labs: world generation, 3D world generation, and 1 more task; Runner parity pending."
 modelId: "worldlabs-marble-1.1"
 pageSource: authored
 ---
@@ -19,7 +19,7 @@ Use `worldlabs-marble-1.1` to generate an explorable world.
 
 Closed API service; architecture details are not public. The official sources are the release notes and the API endpoint.
 
-Tasks: world generation, 3D world generation, and api world model. Aliases: `marble-1.1` and `worldlab-marble-1.1`.
+Tasks: world generation, 3D world generation, and API world model. Aliases: `marble-1.1` and `worldlab-marble-1.1`.
 
 Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (Explorable 3D world generation quality).
 
@@ -27,11 +27,9 @@ For the general World Labs API entry, see [World Labs](/docs/guides/supported-mo
 
 ## Runtime contract
 
-Artifacts `worldlabs-marble-1.1.zip`.
+Artifact `worldlabs-marble-1.1.zip`.
 
-CLI task profiles: `default`. WorldFoundry binds `WorldLabsMarble11Pipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `WorldLabsMarble11Pipeline`. Family status: **Runner parity pending**.
 
 Requires World Labs API credentials; requests go through the WorldLabs API pipeline using model id marble-1.1.
 
@@ -44,7 +42,5 @@ Run `wf run worldlabs-marble-1.1 --pipeline.task-profile default` to generate th
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh worldlabs-marble-1.1`. Add `--download` to fetch missing public checkpoints.
-
-Status: **Runner parity pending**.
 
 <ModelRelatedRecipes modelId="worldlabs-marble-1.1" locale="en" />

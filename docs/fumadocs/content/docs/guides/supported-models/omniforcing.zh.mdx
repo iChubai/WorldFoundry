@@ -1,6 +1,6 @@
 ---
 title: "OmniForcing"
-description: "OmniForcing：实时生成、蒸馏等 3 项任务；Runner 一致性待确认。"
+description: "OmniForcing：音视觉世界模型、实时生成等 3 项任务；Runner 一致性待确认。"
 modelId: "omniforcing"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ OmniForcing 是以蒸馏构建的实时音视频世界模型：目标是交互�
 
 <ModelPaperFigures modelId="omniforcing" locale="zh" />
 
-论文：[arXiv 2603.11647](https://arxiv.org/abs/2603.11647)。
-
-代码：[OmniForcing/OmniForcing](https://github.com/OmniForcing/OmniForcing)。
+论文：[arXiv 2603.11647](https://arxiv.org/abs/2603.11647)。代码：[OmniForcing/OmniForcing](https://github.com/OmniForcing/OmniForcing)。
 
 <ModelCommandBuilder modelId="omniforcing" locale="zh" />
 
@@ -19,15 +17,13 @@ OmniForcing 是以蒸馏构建的实时音视频世界模型：目标是交互�
 
 `omniforcing` 生成 3D 一致的世界，而不只是一段视频。
 
-任务：audio-visual-world-model、实时生成、蒸馏。
+任务：音视觉世界模型、实时生成、蒸馏。输出模态为视频、音频。
 
 ## 运行时契约
 
-产物 `generated_video`、`omniforcing_runtime_plan.json`。
+产物 `omniforcing_runtime_plan.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `OmniForcingPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `OmniForcingPipeline`。系列状态：**Runner 一致性待确认**。
 
 先就位所需 checkpoint 与运行时资产。资产就位前，运行只写出列出缺失资产的运行时计划（`omniforcing_runtime_plan.json`），不会生成视频。
 

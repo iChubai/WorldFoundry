@@ -1,11 +1,11 @@
 ---
 title: "LingBot-World-V2 1.3B"
-description: "独立的 1.3B causal-fast 相机控制世界模型，复用相机条件缓存和流式 Wan VAE。"
+description: "LingBot-World-V2 1.3B（蚂蚁灵波科技（Robbyant，蚂蚁集团））：图像生成世界视频、相机可控视频等 3 项任务；Runner 一致性待确认；独立环境 lingbot-world-v2。"
 modelId: "lingbot-world-v2-1.3b"
 pageSource: authored
 ---
 
-`lingbot-world-v2-1.3b` 是 Robbyant 的 30 层、1536 hidden width、12-head causal-fast 模型，别名为 `lingbot-v2-1.3b`。它与 `lingbot-world-v2` 14B 的 checkpoint 和默认分布式配方独立。
+LingBot-World-V2 1.3B 是 Robbyant 的 causal-fast 相机控制世界模型，是 14B lingbot-world-v2 的小规模版本，拥有独立的 checkpoint 与默认配置。
 
 - 权重：[robbyant/lingbot-world-v2-1.3b-causal-fast](https://huggingface.co/robbyant/lingbot-world-v2-1.3b-causal-fast)，revision `7e36a5f919f86cb4255cc9bfc30adb44963fbde1`。
 - 源码：[Robbyant/lingbot-world-v2](https://github.com/Robbyant/lingbot-world-v2)，revision `94f43115de8d4a4f9f282126528c300a0b232c5f`。
@@ -15,3 +15,37 @@ pageSource: authored
 - 许可：**CC-BY-NC-SA-4.0，署名、非商用、相同方式共享**。
 
 加载示例、共享加速效果和 Studio 多传感器契约见 [Causal Wan 流式推理](/zh/docs/guides/causal-wan-streaming)。
+
+<ModelPaperFigures modelId="lingbot-world-v2-1.3b" locale="zh" />
+
+<ModelCommandBuilder modelId="lingbot-world-v2-1.3b" locale="zh" />
+
+## 用来做什么
+
+`lingbot-world-v2-1.3b` 以相机位姿为条件生成视频。
+
+30 层 Transformer、1536 隐藏宽度、8960 FFN 宽度、12 个注意力头，复用 Wan2.1 VAE 与 UMT5 文本编码。该模型由蚂蚁灵波科技（Robbyant，蚂蚁集团）发布。
+
+任务：图像生成世界视频、相机可控视频、交互式世界模型。别名：`lingbot-v2-1.3b`。模态上，它接受图像、相机位姿，输出世界状态、视频。
+
+## 运行时契约
+
+输入 `image`、`prompt`、`action-path`（不传时使用内置示例）；参数 `size`、`frame-num`、`chunk-size`、`seed`、`sample-shift`、`local-attn-size` 等 12 项；产物 `lingbot-world-v2-1.3b.mp4`。
+
+CLI task profile：`image-camera-video`。绑定的 pipeline 类是 `LingBotWorldV2SmallPipeline`。系列状态：**Runner 一致性待确认**。`image-camera-video` 的默认值：size=480*832, seed=42。
+
+离线优先；shared_assets_path 指向 Wan2.1 的 T5、tokenizer 和 VAE 资产目录。
+
+CC BY-NC-SA 4.0 非商用许可。Scaled INT8/FP8 attention 为显式近似选项，非默认行为。
+
+## 在 WorldFoundry 中运行
+
+用 `wf run lingbot-world-v2-1.3b --pipeline.task-profile image-camera-video` 生成相机可控视频。
+
+运行环境：独立环境 `lingbot-world-v2`（Python 3.10，CUDA 12.1，torch==2.5.1）。
+
+权重仓库：`robbyant/lingbot-world-v2-1.3b-causal-fast`、`Wan-AI/Wan2.1-T2V-1.3B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lingbot-world-v2-1.3b`；下载缺失的公开权重时加 `--download`。
+
+许可证：CC BY-NC-SA 4.0。
+
+<ModelRelatedRecipes modelId="lingbot-world-v2-1.3b" locale="zh" />

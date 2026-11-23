@@ -1,6 +1,6 @@
 ---
 title: "LaST-R1"
-description: "LaST-R1：视觉-语言-动作（VLA）、策略执行等 3 项任务；Runner 一致性待确认。"
+description: "LaST-R1：视觉-语言-动作（VLA）、强化学习等 3 项任务；Runner 一致性待确认。"
 modelId: "last-r1"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ LaST-R1 是 MIT 许可的 VLA 策略。WorldFoundry 已通过模型专用 latent
 
 <ModelPaperFigures modelId="last-r1" locale="zh" />
 
-论文：[arXiv 2604.28192](https://arxiv.org/abs/2604.28192)。
-
-项目页：[siriyep.github.io/last-r1](https://siriyep.github.io/last-r1/)。代码：[CHEN-H01/LaST-R1](https://github.com/CHEN-H01/LaST-R1)。
+论文：[arXiv 2604.28192](https://arxiv.org/abs/2604.28192)。项目页：[siriyep.github.io/last-r1](https://siriyep.github.io/last-r1/)。代码：[CHEN-H01/LaST-R1](https://github.com/CHEN-H01/LaST-R1)。
 
 <ModelCommandBuilder modelId="last-r1" locale="zh" />
 
@@ -21,17 +19,15 @@ LaST-R1 是 MIT 许可的 VLA 策略。WorldFoundry 已通过模型专用 latent
 
 LaST-R1 是基于 Qwen3-VL、经强化学习精调的 VLA 策略；WorldFoundry 运行官方源码（CHEN-H01/LaST-R1），通过其 latent/action token 解码动作。
 
-任务：视觉-语言-动作（VLA）、reinforcement_learning、策略执行。
+任务：视觉-语言-动作（VLA）、强化学习、策略执行。
 
 推荐评测：[LIBERO](/zh/docs/evaluation/benchmark-hub/libero)（该模型 manifest 的证据记录中提到了这一评测）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`last-r1_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `last-r1_action_trace.json`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LastR1Pipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LastR1Pipeline`。系列状态：**Runner 一致性待确认**。
 
 安装锁定版本的 LaST-R1 源码并设置 WORLDFOUNDRY_LAST_R1_SOURCE_DIR（或向 LastR1Pipeline.from_pretrained 传入 source_root），并准备 chenhao01/LaST-R1 中的 libero_10 RL 权重。适配器从一幅图像与一条指令返回八步七维动作。
 
@@ -44,5 +40,7 @@ CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LastR1Pipeli
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`chenhao01/LaST-R1`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh last-r1`；下载缺失的公开权重时加 `--download`。
+
+许可证：MIT。
 
 <ModelRelatedRecipes modelId="last-r1" locale="zh" />

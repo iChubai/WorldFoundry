@@ -9,9 +9,7 @@ LingBot-Video is Robbyant's video generation family for text-to-image, text-to-v
 
 <ModelPaperFigures modelId="lingbot-video" locale="en" />
 
-Paper: [arXiv 2607.07675](https://arxiv.org/abs/2607.07675).
-
-Project page: [technology.robbyant.com/lingbot-video](https://technology.robbyant.com/lingbot-video). Code: [Robbyant/lingbot-video](https://github.com/Robbyant/lingbot-video).
+Paper: [arXiv 2607.07675](https://arxiv.org/abs/2607.07675). Project page: [technology.robbyant.com/lingbot-video](https://technology.robbyant.com/lingbot-video). Code: [Robbyant/lingbot-video](https://github.com/Robbyant/lingbot-video).
 
 <ModelCommandBuilder modelId="lingbot-video" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (General T
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `backend`, `mode`, `height`, `width`, `num-frames`, `num-inference-steps`, and 13 more; artifacts `generated_image`, `generated_video`, and `lingbot_video.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `backend`, `mode`, `height`, `width`, `num-frames`, `num-inference-steps`, and 13 more; artifacts `generated_image` and `lingbot_video.mp4`.
 
-CLI task profiles: `t2v`, `ti2v`, and `t2i`. WorldFoundry binds `LingBotVideoGenerationPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `t2v`: height=480, width=832, seed=42, fps=24 Defaults for `ti2v`: height=480, width=832, seed=42, fps=24.
+CLI task profiles: `t2v`, `ti2v`, and `t2i`. WorldFoundry binds `LingBotVideoGenerationPipeline`. Family status: **Runner parity pending**. Defaults for `t2v` and `ti2v`: height=480, width=832, num-frames=121, num-inference-steps=40, guidance-scale=3.0, seed=42. Defaults for `t2i`: height=480, width=832, num-inference-steps=40, guidance-scale=3.0, seed=42.
 
 Validated with the released checkpoints: the dense 1.3B model generates a 121-frame 832x480 video, and a short MoE 30B-A3B T2V clip matches the pinned official runner visually but not pixel for pixel. T2I produces an image even though the default artifact type is the T2V video route. Dense and MoE weights (apache-2.0) are external and must be staged before running.
+
+Pixel-exact parity, the standard five-second recipe, the MoE refiner, and modes other than short MoE T2V are not yet validated. Requires the dedicated Transformers 5 / Diffusers 0.39 environment recommended upstream. The prompt rewriter and training code are not included.
 
 ## Running in WorldFoundry
 

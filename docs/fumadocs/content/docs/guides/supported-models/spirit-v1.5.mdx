@@ -1,6 +1,6 @@
 ---
 title: "Spirit-VLA v1.5"
-description: "Spirit-VLA v1.5 from Spirit AI: VLA action prediction and VLA policy rollout; Runner parity pending; dedicated `worldfoundry-vla-spirit-v1-5`."
+description: "Spirit-VLA v1.5 from Spirit AI: VLA action prediction and VLA policy rollout; Runner parity pending; dedicated env worldfoundry-vla-spirit-v1-5."
 modelId: "spirit-v1.5"
 pageSource: generated
 ---
@@ -23,11 +23,9 @@ Tasks: VLA action prediction and VLA policy rollout. Aliases: `spirit-vla`, `spi
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `spirit-v1.5_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `spirit-v1.5_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `SpiritV15Pipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `SpiritV15Pipeline`. Family status: **Runner parity pending**.
 
 Stage the 21.6 GB Spirit-v1.5 checkpoint and the Qwen/Qwen3-VL-4B-Instruct backbone locally before running.
 

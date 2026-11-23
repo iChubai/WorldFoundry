@@ -9,9 +9,7 @@ MME-VLA 是 RoboMME 项目的策略学习线，核心是面向重记忆操作的
 
 <ModelPaperFigures modelId="mme-vla" locale="zh" />
 
-论文：[arXiv 2603.04639](https://arxiv.org/abs/2603.04639)。
-
-项目页：[robomme.github.io/challenge.html](https://robomme.github.io/challenge.html)。代码：[RoboMME/robomme_policy_learning](https://github.com/RoboMME/robomme_policy_learning)。
+论文：[arXiv 2603.04639](https://arxiv.org/abs/2603.04639)。项目页：[robomme.github.io/challenge.html](https://robomme.github.io/challenge.html)。代码：[RoboMME/robomme_policy_learning](https://github.com/RoboMME/robomme_policy_learning)。
 
 <ModelCommandBuilder modelId="mme-vla" locale="zh" />
 
@@ -27,11 +25,9 @@ MME-VLA 是 RoboMME 项目的策略学习线，核心是面向重记忆操作的
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `checkpoint-ref`、`official-policy-observation`；产物 `action_trace`、`mme-vla_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `checkpoint-ref`、`official-policy-observation`；产物 `mme-vla_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `MMEVLAPipeline`。
-
-系列状态：**仅静态加载**。
+CLI task profile：`default`。绑定的 pipeline 类是 `MMEVLAPipeline`。系列状态：**仅静态加载**。
 
 请先就位感知帧采样模块 checkpoint（`Yinpei/perceptual-framesamp-modul`）。
 

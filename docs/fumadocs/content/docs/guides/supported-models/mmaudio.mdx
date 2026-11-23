@@ -9,9 +9,7 @@ MMAudio generates soundtracks for silent video: given a video (and optionally a 
 
 <ModelPaperFigures modelId="mmaudio" locale="en" />
 
-Paper: [arXiv 2412.15322](https://arxiv.org/abs/2412.15322).
-
-Project page: [hkchengrex.github.io/MMAudio](https://hkchengrex.github.io/MMAudio). Code: [hkchengrex/MMAudio](https://github.com/hkchengrex/MMAudio).
+Paper: [arXiv 2412.15322](https://arxiv.org/abs/2412.15322). Project page: [hkchengrex.github.io/MMAudio](https://hkchengrex.github.io/MMAudio). Code: [hkchengrex/MMAudio](https://github.com/hkchengrex/MMAudio).
 
 <ModelCommandBuilder modelId="mmaudio" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: text-to-audio, video-to-audio, and audio generation. Aliases: `hkchengrex
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `steps`, `duration`, and `variant`; artifacts `mmaudio.wav`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `steps`, `duration`, and `variant`; artifact `mmaudio.wav`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `MMAudioPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `interactive-video`. WorldFoundry binds `MMAudioPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: steps=25.
 
 Typical workflow: generate video with any T2V/I2V model, then feed the clip to MMAudio for a soundtrack.
 

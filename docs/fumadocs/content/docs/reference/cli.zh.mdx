@@ -515,6 +515,8 @@ wf zoo benchmark-fetch \
 
 如果要改用该 revision 已有的本地 checkout，把该 benchmark 的 `runtime_root_env` 变量（例如 `WORLDFOUNDRY_CAMERABENCH_RUNTIME_ROOT`）指向其中的 `repo_subdir` 目录。
 
+HarnessEval-W 的 `--result-model-id` 用于选择模型，并保留官方共同 case 范围；Python 执行、缓存评分与模型依赖见 [HarnessEval-W](/zh/docs/evaluation/benchmark-hub/harnesseval-w)。
+
 ### 6. 回放原生 Wan 执行路径与请求批处理
 
 在已准备本地 checkpoint 的 checkout 中运行：
@@ -532,7 +534,7 @@ python -m benchmarks.inference.wan_execution_preparation \
 Dense 参照必须执行，并适用 latent/RGB 质量阈值。报告记录预热耗时/显存及同两个请求的诊断性吞吐对比。`report.json` 必须同时满足 `complete` 和 `passed`；计时仅作诊断，不是独占设备性能结果。Compile、Graph、精度与批处理兼容范围见
 [推理优化](/zh/docs/guides/inference-optimization)。
 
-## Benchmark mode
+## Benchmark 模式
 
 - **`official-run`** — 对准备好的 artifact 执行 manifest 声明的 benchmark runtime。只有 evaluator、数据、checkpoint 与服务都就绪后才使用。
 - **`official-validation`** — 通过 benchmark runner 导入官方形态结果，记录 framework integration evidence。
@@ -635,7 +637,7 @@ Cache 使用 SQLite 与 `audit.jsonl`，命中会写入 run manifest。复用 ca
 - 不要解析人类可读表格。使用命令的 `--json`，或 `--output-dir` 下的持久化文件。
 - Batch 或 CI 不允许逐样本部分失败时，加 `--fail-on-sample-error`。
 
-### Exit status
+### 退出状态码
 
 - **`0`** — 请求的操作完成；分数与 leaderboard 是否有效仍以输出契约为准。
 - **`1`** — 某个能区分 domain failure 的命令发现 validation、metric、sample、prepared intent 或 run result 失败。
@@ -652,5 +654,3 @@ Cache 使用 SQLite 与 `audit.jsonl`，命中会写入 run manifest。复用 ca
   <Card title="TUI" description="在终端中交互式构建同样的命令。" href="/zh/docs/guides/tui" />
   <Card title="验证" description="验证 artifact 与 release evidence。" href="/zh/docs/reference/validation" />
 </Cards>
-
-HarnessEval-W 的 `--result-model-id` 用于选择模型，并保留官方共同 case 范围；Python 执行、缓存评分与模型依赖见 [HarnessEval-W](/docs/evaluation/benchmark-hub/harnesseval-w)。

@@ -9,9 +9,7 @@ WorldCrafter Fast is a world model from TencentARC for text-to-video, image-to-v
 
 <ModelPaperFigures modelId="worldcrafter-fast" locale="en" />
 
-Paper: [arXiv 2609.24984](https://arxiv.org/abs/2609.24984).
-
-Project page: [drexubery.github.io/WorldCrafter](https://drexubery.github.io/WorldCrafter/). Code: [TencentARC/WorldCrafter](https://github.com/TencentARC/WorldCrafter).
+Paper: [arXiv 2609.24984](https://arxiv.org/abs/2609.24984). Project page: [drexubery.github.io/WorldCrafter](https://drexubery.github.io/WorldCrafter/). Code: [TencentARC/WorldCrafter](https://github.com/TencentARC/WorldCrafter).
 
 <ModelCommandBuilder modelId="worldcrafter-fast" locale="en" />
 
@@ -19,19 +17,15 @@ Project page: [drexubery.github.io/WorldCrafter](https://drexubery.github.io/Wor
 
 `worldcrafter-fast` generates camera-controlled video: a camera trajectory in, a clip that follows it out.
 
-Tasks: text-to-video, image-to-video, camera-controlled video, and world model. Modalities: text and image in, video out.
+Tasks: text-to-video, image-to-video, camera-controlled video, and world model. Modalities: text, image, and camera pose in, video out.
 
 ## Runtime contract
 
-Inputs `prompt` and `image`; artifacts `worldcrafter.mp4`.
+Inputs `prompt` and `image`; artifact `worldcrafter.mp4`.
 
-CLI task profiles: `text-to-video`, `image-to-video`, `camera-controlled-video`, and `world-model`. WorldFoundry binds `WorldCrafterPipeline`.
+CLI task profiles: `text-to-video`, `image-to-video`, `camera-controlled-video`, and `world-model`. WorldFoundry binds `WorldCrafterPipeline`. Family status: **Verified**.
 
-Family status: **Verified**.
-
-Validated with the released weights: two-segment 640×384 image-to-video and text-to-video inference generates and decodes completely.
-
-Long-horizon visual quality is not yet established.
+Validated with the released weights: two-segment 640×384 image-to-video and text-to-video inference generates and decodes completely. Long-horizon visual quality is not yet established.
 
 ## Running in WorldFoundry
 
@@ -40,5 +34,7 @@ Generate a camera-controlled clip with `wf run worldcrafter-fast --pipeline.task
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `TencentARC/WorldCrafter-Fast`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh worldcrafter-fast`. Add `--download` to fetch missing public checkpoints.
+
+License: worldcrafter-academic-only.
 
 <ModelRelatedRecipes modelId="worldcrafter-fast" locale="en" />

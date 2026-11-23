@@ -2,16 +2,14 @@
 title: "MotionBricks"
 description: "MotionBricks from NVIDIA: human action generation, motion generation, and 1 more task; Runner parity pending."
 modelId: "motionbricks"
-pageSource: authored
+pageSource: generated
 ---
 
 MotionBricks is part of NVIDIA's GR00T-WholeBodyControl stack: it generates humanoid whole-body motion — the action side of embodied world modeling, emitting action traces rather than video (paper arXiv 2604.24833).
 
 <ModelPaperFigures modelId="motionbricks" locale="en" />
 
-Paper: [MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives](https://arxiv.org/abs/2604.24833) (SIGGRAPH 2026, 2026).
-
-Project page: [nvlabs.github.io/motionbricks](https://nvlabs.github.io/motionbricks/). Code: [NVlabs/GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl).
+Paper: [MotionBricks: Scalable Real-Time Motions with Modular Latent Generative Model and Smart Primitives](https://arxiv.org/abs/2604.24833) (SIGGRAPH 2026, 2026). Project page: [nvlabs.github.io/motionbricks](https://nvlabs.github.io/motionbricks/). Code: [NVlabs/GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl).
 
 <ModelCommandBuilder modelId="motionbricks" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: human action generation, motion generation, and world model.
 
 ## Runtime contract
 
-Artifacts `action_trace` and `motionbricks_runtime_plan.json`.
+Artifact `motionbricks_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `MotionBricksPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `MotionBricksPipeline`. Family status: **Runner parity pending**.
 
 Place the official source at $\{WORLDFOUNDRY_MODEL_SOURCE_DIR\}/GR00T-WholeBodyControl/motionbricks and stage the MotionBricks checkpoints and robot assets. Until they are staged, a run writes a runtime plan (motionbricks_runtime_plan.json) that lists the missing assets instead of generating motion.
 

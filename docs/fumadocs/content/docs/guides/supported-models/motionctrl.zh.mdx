@@ -9,9 +9,7 @@ MotionCtrl 是统一、灵活的视频生成运动控制器：在单一模型中
 
 <ModelPaperFigures modelId="motionctrl" locale="zh" />
 
-论文：[arXiv 2312.03641](https://arxiv.org/abs/2312.03641)。
-
-项目页：[wanquanf.github.io/MotionCtrl](https://wanquanf.github.io/MotionCtrl/)。代码：[TencentARC/MotionCtrl](https://github.com/TencentARC/MotionCtrl)。
+论文：[arXiv 2312.03641](https://arxiv.org/abs/2312.03641)。项目页：[wanquanf.github.io/MotionCtrl](https://wanquanf.github.io/MotionCtrl/)。代码：[TencentARC/MotionCtrl](https://github.com/TencentARC/MotionCtrl)。
 
 <ModelCommandBuilder modelId="motionctrl" locale="zh" />
 
@@ -21,7 +19,7 @@ MotionCtrl 是统一、灵活的视频生成运动控制器：在单一模型中
 
 按论文，相机运动控制模块以相机位姿序列为条件、物体运动控制模块以轨迹为条件，挂接在 LVDM 系视频基座上。WorldFoundry 在进程内运行模型栈、控制模块与采样器，无需检出上游仓库。该模型由腾讯（ARC Lab）发布。
 
-任务：interactive-video。
+任务：交互式视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（相机运动控制贴合度）。
 
@@ -29,13 +27,11 @@ MotionCtrl 是统一、灵活的视频生成运动控制器：在单一模型中
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `height`、`width`、`seed`、`camera-pose-path`、`condtype`、`unconditional-guidance-scale` 等 7 项；产物 `motionctrl.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MotionCtrlPipeline`。
-
-系列状态：**已验证**。
-
-`interactive-video` 的默认值：height=256, width=256, seed=42。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `MotionCtrlPipeline`。系列状态：**已验证**。`interactive-video` 的默认值：height=256, width=256, seed=42。
 
 从内置的默认相机/物体运动条件与推理配置开始；需提供本地 MotionCtrl checkpoint。
+
+LVDM 时代基座：画质弱于较新的 DiT 视频模型。尚未测量 benchmark 分数。
 
 ## 在 WorldFoundry 中运行
 

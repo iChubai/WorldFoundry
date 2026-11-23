@@ -9,9 +9,7 @@ Unified World Models (UWM) from the University of Washington's WEIRD Lab couples
 
 <ModelPaperFigures modelId="uwm" locale="en" />
 
-Paper: [arXiv 2504.02792](https://arxiv.org/abs/2504.02792).
-
-Project page: [weirdlabuw.github.io/uwm](https://weirdlabuw.github.io/uwm/). Code: [WEIRDLabUW/unified-world-model](https://github.com/WEIRDLabUW/unified-world-model).
+Paper: [arXiv 2504.02792](https://arxiv.org/abs/2504.02792). Project page: [weirdlabuw.github.io/uwm](https://weirdlabuw.github.io/uwm/). Code: [WEIRDLabUW/unified-world-model](https://github.com/WEIRDLabUW/unified-world-model).
 
 <ModelCommandBuilder modelId="uwm" locale="en" />
 
@@ -21,17 +19,15 @@ Project page: [weirdlabuw.github.io/uwm](https://weirdlabuw.github.io/uwm/). Cod
 
 UWM is a video-action diffusion design: one diffusion process jointly models future observations and robot actions, so the same network serves prediction and policy roles. It is published by University of Washington (WEIRD Lab).
 
-Tasks: robot world model, action-conditioned video, and video action diffusion. Aliases: `uwm-libero90` and `uwm-droid`.
+Tasks: robot world model, action-conditioned video, and video action diffusion. Aliases: `uwm-libero90` and `uwm-droid`. Modalities: action in, video out.
 
 Suggested benchmarks: [LIBERO](/docs/evaluation/benchmark-hub/libero) (The uwm-libero90 variant targets LIBERO tasks), [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Robot world-model rollout quality).
 
 ## Runtime contract
 
-Artifacts `generated_video` and `uwm_runtime_plan.json`.
+Artifact `uwm_runtime_plan.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `UWMPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `UWMPipeline`. Family status: **Runner parity pending**.
 
 Pick the LIBERO-90 or DROID variant to match your evaluation suite. Until the required checkpoints and assets are staged, a run outputs a runtime plan that lists the missing assets instead of generating.
 

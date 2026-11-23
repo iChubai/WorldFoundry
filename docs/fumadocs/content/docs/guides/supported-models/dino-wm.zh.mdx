@@ -1,30 +1,42 @@
 ---
 title: "DINO-WM"
-description: "DINO-WM 在 DINOv2 特征空间中规划；wall_single 权重驱动的推理已验证。"
+description: "DINO-WM（纽约大学（NYU））：视觉特征世界模型、预测编码等 3 项任务；已验证。"
 modelId: "dino-wm"
-pageSource: authored
+pageSource: generated
 ---
 
-DINO-WM 在动作条件下预测未来的 DINOv2 视觉特征，并在特征空间中规划到达目标。WorldFoundry 包含官方规划路径及 wall 任务仿真器代码。
+DINO-WM 在预训练 DINOv2 视觉特征（而非像素）上构建世界模型：预测未来 patch 特征，并通过针对目标特征状态优化动作序列来规划机器人行为——无需重建即可零样本规划。WorldFoundry 内置官方规划/评估路径及所需的 env 仿真器。
 
 <ModelPaperFigures modelId="dino-wm" locale="zh" />
 
-参见[论文 arXiv 2411.04983](https://arxiv.org/abs/2411.04983)、[项目主页](https://dino-wm.github.io/)和[官方仓库](https://github.com/gaoyuezhou/dino_wm)。
+论文：[arXiv 2411.04983](https://arxiv.org/abs/2411.04983)。项目页：[dino-wm.github.io](https://dino-wm.github.io/)。代码：[gaoyuezhou/dino_wm](https://github.com/gaoyuezhou/dino_wm)。
 
-## 验证
+<ModelCommandBuilder modelId="dino-wm" locale="zh" />
 
-已用发布的 epoch-65 `wall_single` 权重、官方 wall 轨迹数据集和 DINOv2 ViT-S/14 编码器验证：GPU 规划运行生成可解码的 26 帧 MP4 及规划指标。
+## 用来做什么
 
-`pusht` 和 `point_maze` 的权重已发布，但它们的任务数据集与仿真依赖尚未在 WorldFoundry 中验证。
+`dino-wm` 是动作条件世界模型：输入动作和起始帧，输出推演结果。
 
-## 输入与输出
+按上游项目，ViT 预测器在动作条件下向前滚动 DINOv2 patch 特征；规划是特征空间中的模型预测控制。该模型由纽约大学（NYU）发布。
 
-已验证的 wall 路径需要包含 `outputs/wall_single/hydra.yaml` 与 `outputs/wall_single/checkpoints/model_latest.pth` 的权重目录、DINOv2 编码器及完整官方 wall 轨迹。将 `DATASET_DIR` 指向含有 `wall_single/` 的父目录；wall 配置从 `${DATASET_DIR}/wall_single` 读取轨迹。公开 synthesis 路径接收 `ckpt_base_path`、`model_name="wall_single"` 和 `config`，输出 `dino-wm.mp4` 与规划指标。文本 prompt 或独立的图像/视频输入不是已验证 wall 规划的运行契约。
+任务：视觉特征世界模型、预测编码、机器人世界模型。
 
-MP4 展示仿真与规划过程。DINO-WM 在特征空间中预测，不是像素视频生成器。运行前应先检查解析后的计划：仅有模型权重还不足以提供所需轨迹。
+## 运行时契约
 
-## 局限
+输入 `load.ckpt-base-path`、`load.model-name`（不传时使用内置示例）；参数 `plan-only`、`timeout-seconds`；产物 `dino-wm.mp4`。
 
-wall 验证运行使用很小的搜索预算，只确认执行链路；不能证明任务成功率、长时规划质量，也不代表其他发布任务的结果。
+CLI task profile：`wall-planning`。绑定的 pipeline 类是 `DinoWMPipeline`。系列状态：**已验证**。
+
+wall_single 规划路径需要发布的 model_latest.pth、DINOv2 编码器，并将 DATASET_DIR 指向包含完整官方 wall_single 轨迹数据集的父目录。这些资源不随 WorldFoundry 分发；无需外部 DINO-WM 检出。
+
+只有 wall_single 已用发布权重完成 GPU 验证；pusht 和 point_maze 尚未测试。wall 验证运行不能证明规划质量或一般任务成功率。模型在特征空间中预测；MP4 是仿真/规划可视化，并非像素生成。
+
+## 在 WorldFoundry 中运行
+
+运行 `wf run dino-wm --pipeline.task-profile wall-planning` 推演世界模型。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+该模型没有登记公开 checkpoint；按使用说明就位权重。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh dino-wm`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="dino-wm" locale="zh" />

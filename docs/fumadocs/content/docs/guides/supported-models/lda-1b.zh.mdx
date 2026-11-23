@@ -1,6 +1,6 @@
 ---
 title: "LDA-1B"
-description: "LDA-1B：视觉-语言-动作（VLA）、机器人策略等 4 项任务；仅静态加载; 独立环境 `worldfoundry-vla-lda-1b`。"
+description: "LDA-1B：视觉-语言-动作（VLA）、机器人策略等 4 项任务；仅静态加载；独立环境 worldfoundry-vla-lda-1b。"
 modelId: "lda-1b"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ LDA-1B 是 1B 规模的 VLA 策略，将 Qwen3-VL 视觉-语言组装、DINOv3-V
 
 <ModelPaperFigures modelId="lda-1b" locale="zh" />
 
-论文：[arXiv 2505.03233](https://arxiv.org/abs/2505.03233)。
-
-代码：[jiangranlv/LDA-1B](https://github.com/jiangranlv/LDA-1B)。
+论文：[arXiv 2505.03233](https://arxiv.org/abs/2505.03233)。代码：[jiangranlv/LDA-1B](https://github.com/jiangranlv/LDA-1B)。
 
 <ModelCommandBuilder modelId="lda-1b" locale="zh" />
 
@@ -27,15 +25,13 @@ Qwen3-VL 提供多模态编码，DINOv3-ViT 补充视觉特征，MMDiT（多模�
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `official-policy-observation`；产物 `action_trace`、`lda_1b_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `official-policy-observation`；产物 `lda_1b_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `LDA1BSynthesis`。
-
-系列状态：**仅静态加载**。
+CLI task profile：`default`。绑定的 pipeline 类是 `LDA1BSynthesis`。系列状态：**仅静态加载**。
 
 运行前请在本地就位 14.4 GB 的 Wayer2/LDA-robocasa checkpoint。运行时以 weights_only=true 将其作为张量 state dict 加载，不执行 checkpoint 中的 Python 代码。
 
-CC-BY-NC-4.0：仅限非商用。
+CC-BY-NC-4.0：仅限非商用。尚未用发布的 14.4 GB checkpoint 验证 checkpoint 键与数值 rollout。仅推理：不包含训练、数据集、评测服务与仿真器适配器。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CC-BY-NC-4.0：仅限非商用。
 运行环境：独立环境 `worldfoundry-vla-lda-1b`（Python 3.10，CUDA 12.4+，torch==2.6.0）。
 
 权重仓库：`Wayer2/LDA-robocasa`、`Qwen/Qwen3-VL-4B-Instruct`、`facebook/dinov3-vits16-pretrain-lvd1689m`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh lda-1b`；下载缺失的公开权重时加 `--download`。
+
+许可证：CC BY-NC 4.0。
 
 <ModelRelatedRecipes modelId="lda-1b" locale="zh" />

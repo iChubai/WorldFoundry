@@ -9,9 +9,7 @@ Prior Depth Anything is a depth-completion prior: it takes any coarse or sparse 
 
 <ModelPaperFigures modelId="prior-depth-anything" locale="en" />
 
-Paper: [arXiv 2505.10565](https://arxiv.org/abs/2505.10565).
-
-Project page: [prior-depth-anything.github.io](https://prior-depth-anything.github.io/). Code: [SpatialVision/Prior-Depth-Anything](https://github.com/SpatialVision/Prior-Depth-Anything).
+Paper: [arXiv 2505.10565](https://arxiv.org/abs/2505.10565). Project page: [prior-depth-anything.github.io](https://prior-depth-anything.github.io/). Code: [SpatialVision/Prior-Depth-Anything](https://github.com/SpatialVision/Prior-Depth-Anything).
 
 <ModelCommandBuilder modelId="prior-depth-anything" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: depth completion, metric depth estimation, and geometry prior. Aliases: `
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `execute` and `max-points`; artifacts `prior-depth-anything.npz`.
+Input `input-path` (bundled samples are used when omitted); options `execute` and `max-points`; artifact `prior-depth-anything.npz`.
 
-CLI task profiles: `default`. WorldFoundry binds `PriorDepthAnythingPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `PriorDepthAnythingPipeline`. Family status: **Verified**.
 
 It runs as an independent geometry prior through the shared geometry-prior pipeline/operator contract, so higher-level pipelines such as ViPE can use it. Pair it with a metric source (e.g. depth-anything-v3-prior) whose output it refines.
 

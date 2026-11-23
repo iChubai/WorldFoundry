@@ -9,9 +9,7 @@ Pi3 (π³) is a feed-forward visual-geometry model that reconstructs 3D scenes, 
 
 <ModelPaperFigures modelId="pi3" locale="en" />
 
-Paper: [$π^3$: Permutation-Equivariant Visual Geometry Learning](https://arxiv.org/abs/2507.13347) (2025).
-
-Project page: [yyfz.github.io/pi3](https://yyfz.github.io/pi3/). Code: [yyfz/Pi3](https://github.com/yyfz/Pi3).
+Paper: [$π^3$: Permutation-Equivariant Visual Geometry Learning](https://arxiv.org/abs/2507.13347) (2025). Project page: [yyfz.github.io/pi3](https://yyfz.github.io/pi3/). Code: [yyfz/Pi3](https://github.com/yyfz/Pi3).
 
 <ModelCommandBuilder modelId="pi3" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: 3D reconstruction, trajectory, and point cloud. Output modalities: point 
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `interval`.
+Input `input-path` (bundled samples are used when omitted); option `interval`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `Pi3Pipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `interactive-video`. WorldFoundry binds `Pi3Pipeline`. Family status: **Runner parity pending**.
 
 Stage the upstream Pi3 weights (`yyfz233/Pi3X`) before running reconstruction.
 

@@ -19,7 +19,7 @@ Code: [aigc-apps/VideoX-Fun](https://github.com/aigc-apps/VideoX-Fun).
 
 An A14B Wan2.2 diffusion backbone with the VideoX-Fun Control-Camera conditioning pathway. It is published by Alibaba PAI (VideoX-Fun).
 
-Tasks: camera-controlled video and image-to-video. Modalities: image in, video out.
+Tasks: camera-controlled video and image-to-video. Modalities: camera pose and image in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-pose adherence for controlled i2v generation).
 
@@ -27,9 +27,9 @@ Related models: [Wan2.2](/docs/guides/supported-models/wan2.2) and [Wan2.2 Fun 5
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifacts `wan22-fun-a14b-cam.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifact `wan22-fun-a14b-cam.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `Wan22FunA14BCameraPipeline`.
+CLI task profile: `default`. WorldFoundry binds `Wan22FunA14BCameraPipeline`.
 
 Family status: **Runner parity pending**.
 

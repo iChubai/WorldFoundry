@@ -1,6 +1,6 @@
 ---
 title: "Xiaomi-Robotics-1"
-description: "Xiaomi-Robotics-1 from Xiaomi Robotics: VLA, VLA action prediction, and 2 more tasks; Runner parity pending; dedicated `worldfoundry-xiaomi-robotics-1-cu128`."
+description: "Xiaomi-Robotics-1 from Xiaomi Robotics: VLA, VLA action prediction, and 2 more tasks; Runner parity pending; dedicated env worldfoundry-xiaomi-robotics-1-cu128."
 modelId: "xiaomi-robotics-1"
 pageSource: authored
 ---
@@ -9,9 +9,7 @@ Xiaomi-Robotics-1 is Xiaomi's next-generation VLA (Apache-2.0): a Qwen3-VL polic
 
 <ModelPaperFigures modelId="xiaomi-robotics-1" locale="en" />
 
-Paper: [arXiv 2607.15330](https://arxiv.org/abs/2607.15330).
-
-Code: [XiaomiRobotics/Xiaomi-Robotics-1](https://github.com/XiaomiRobotics/Xiaomi-Robotics-1).
+Paper: [arXiv 2607.15330](https://arxiv.org/abs/2607.15330). Code: [XiaomiRobotics/Xiaomi-Robotics-1](https://github.com/XiaomiRobotics/Xiaomi-Robotics-1).
 
 <ModelCommandBuilder modelId="xiaomi-robotics-1" locale="en" />
 
@@ -27,11 +25,9 @@ Not [Xiaomi Robotics 0](/docs/guides/supported-models/xiaomi-robotics-0).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `xiaomi_robotics_1_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `xiaomi_robotics_1_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `XiaomiRobotics1Pipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `XiaomiRobotics1Pipeline`. Family status: **Runner parity pending**.
 
 Stage checkpoints under $\{WORLDFOUNDRY_CKPT_DIR\}/embodied_action/xiaomi-robotics-1. The model, processor, and checkpoint load only from local files.
 

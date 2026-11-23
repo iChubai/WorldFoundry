@@ -1,25 +1,21 @@
 ---
 title: "T2V Turbo T2V"
-description: "T2V Turbo T2V from University of California, Santa Barbara: text-to-video; T2V-Turbo."
+description: "T2V Turbo T2V from University of California, Santa Barbara: text-to-video; Static load only; T2V-Turbo."
 modelId: "t2v_turbo_t2v"
-pageSource: authored
+pageSource: generated
 ---
 
 T2V-Turbo is a fast text-to-video model distilled from VideoCrafter2 with consistency distillation plus reward feedback, generating watchable clips in 4-8 steps.
 
 <ModelPaperFigures modelId="t2v_turbo_t2v" locale="en" />
 
-Paper: [T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback](https://arxiv.org/abs/2405.18750) (2024).
-
-Project page: [t2v-turbo.github.io](https://t2v-turbo.github.io/). Code: [Ji4chenLi/t2v-turbo](https://github.com/Ji4chenLi/t2v-turbo).
+Paper: [T2V-Turbo: Breaking the Quality Bottleneck of Video Consistency Model with Mixed Reward Feedback](https://arxiv.org/abs/2405.18750) (2024). Project page: [t2v-turbo.github.io](https://t2v-turbo.github.io/). Code: [Ji4chenLi/t2v-turbo](https://github.com/Ji4chenLi/t2v-turbo).
 
 <ModelCommandBuilder modelId="t2v_turbo_t2v" locale="en" />
 
 ## What it is for
 
-`t2v_turbo_t2v` generates a video clip from a text prompt.
-
-It is published by University of California, Santa Barbara.
+`t2v_turbo_t2v` generates a video clip from a text prompt. It is published by University of California, Santa Barbara.
 
 Tasks: text-to-video. Aliases: `t2v-turbo-t2v` and `t2v-turbo`. Modalities: text in, video out.
 
@@ -27,13 +23,13 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (T2V-Turbo
 
 ## Runtime contract
 
-Optional `prompt`, `frames`, `fps`, `height`, and `width`.
+Input `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 2 more.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `T2VTurboT2VPipeline`.
-
-Family status: **Static load only**.
+CLI task profile: `interactive-video`. WorldFoundry binds `T2VTurboT2VPipeline`. Family status: **Static load only**. Defaults for `interactive-video`: frames=16, fps=8, height=320, width=512, steps=8, guidance-scale=7.5.
 
 Stage both the VideoCrafter2 base (VideoCrafter/VideoCrafter2) and the T2V-Turbo VC2 LoRA (jiachenli-ucsb/T2V-Turbo-VC2). Use it when you need many quick T2V drafts rather than maximum quality.
+
+Few-step generation trades detail for speed — quality ceiling is the VideoCrafter2 base. Requires both the base checkpoint and the ordered LoRA; they are separate inputs.
 
 ## Running in WorldFoundry
 

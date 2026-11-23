@@ -1,6 +1,6 @@
 ---
 title: "Hunyuan Game Craft"
-description: "Hunyuan Game Craft（腾讯（混元））：交互式世界模型、图生视频等 3 项任务；Runner 一致性待确认; 独立环境 `HYGameCraft`。"
+description: "Hunyuan Game Craft（腾讯（混元））：交互式世界模型、图生视频等 3 项任务；Runner 一致性待确认；独立环境 HYGameCraft。"
 modelId: "hunyuan-game-craft"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Hunyuan GameCraft 从场景图像生成动作条件的世界视频：每个动�
 
 <ModelPaperFigures modelId="hunyuan-game-craft" locale="zh" />
 
-论文：[arXiv 2506.17201](https://arxiv.org/abs/2506.17201)。
-
-项目页：[hunyuan-gamecraft.github.io](https://hunyuan-gamecraft.github.io/)。代码：[Tencent-Hunyuan/Hunyuan-GameCraft-1.0](https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0)。
+论文：[arXiv 2506.17201](https://arxiv.org/abs/2506.17201)。项目页：[hunyuan-gamecraft.github.io](https://hunyuan-gamecraft.github.io/)。代码：[Tencent-Hunyuan/Hunyuan-GameCraft-1.0](https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0)。
 
 <ModelCommandBuilder modelId="hunyuan-game-craft" locale="zh" />
 
@@ -29,13 +27,11 @@ HunyuanVideo Transformer 结合 GameCraft 相机网络与历史条件自回归�
 
 输入 `image`、`prompt`（不传时使用内置示例）；参数 `interactions`、`frames`、`fps`、`height`、`width`、`steps` 等 7 项；产物 `hunyuan-game-craft.mp4`。
 
-CLI task profile：`official-interactive-video`。绑定的 pipeline 类是 `HunyuanGameCraftPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`official-interactive-video` 的默认值：frames=129, fps=24, height=704, width=1216。
+CLI task profile：`official-interactive-video`。绑定的 pipeline 类是 `HunyuanGameCraftPipeline`。系列状态：**Runner 一致性待确认**。`official-interactive-video` 的默认值：frames=129, fps=24, height=704, width=1216, steps=50, guidance-scale=2.0。
 
 就位本地 GameCraft 权重。每个动作生成 33 帧；显式 num_frames 必须等于动作数量乘以 33。支持 CPU offload 与 output_path 导出。已在单张 H100 上以 CPU offload 验证：单个前进动作以 50 步生成 1216x704 的 33 帧。
+
+多卡推理未经测试，不支持 FP8 转换。需要专属环境 HYGameCraft（Python 3.10，torch 2.5.1）。遵循腾讯混元社区许可，见附带许可与来源说明。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CLI task profile：`official-interactive-video`。绑定的 pipeline 类是 `Hun
 运行环境：独立环境 `HYGameCraft`（Python 3.10，CUDA 12.4，torch==2.5.1）。
 
 权重仓库：`tencent/Hunyuan-GameCraft-1.0`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh hunyuan-game-craft`；下载缺失的公开权重时加 `--download`。
+
+许可证：tencent-hunyuan-community。
 
 <ModelRelatedRecipes modelId="hunyuan-game-craft" locale="zh" />

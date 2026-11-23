@@ -1,6 +1,6 @@
 ---
 title: "X-WAM"
-description: "X-WAM：wam、world_action_model等 6 项任务；已验证; 3 个 variant。"
+description: "X-WAM：世界-动作模型（WAM）、世界-动作模型等 6 项任务；已验证；3 个 variant。"
 modelId: "x-wam"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ X-WAM 是世界-动作模型：单个 Wan 2.2 联合 flow 过程同时预测未�
 
 <ModelPaperFigures modelId="x-wam" locale="zh" />
 
-论文：[arXiv 2604.26694](https://arxiv.org/abs/2604.26694)。
-
-项目页：[sharinka0715.github.io/X-WAM](https://sharinka0715.github.io/X-WAM/)。代码：[sharinka0715/X-WAM](https://github.com/sharinka0715/X-WAM)。
+论文：[arXiv 2604.26694](https://arxiv.org/abs/2604.26694)。项目页：[sharinka0715.github.io/X-WAM](https://sharinka0715.github.io/X-WAM/)。代码：[sharinka0715/X-WAM](https://github.com/sharinka0715/X-WAM)。
 
 <ModelCommandBuilder modelId="x-wam" locale="zh" />
 
@@ -21,21 +19,21 @@ X-WAM 是世界-动作模型：单个 Wan 2.2 联合 flow 过程同时预测未�
 
 构建于 Wan2.2-TI2V-5B：对视觉未来与动作流的联合 flow 模型。官方部署策略在 10 个动作步后异步提前停止并返回 32 步动作块；可选的完整世界解码持续到 50 步。
 
-任务：wam、world_action_model、wam.world_action_modeling、机器人策略。别名：`x_wam`、`xwam`、`X-WAM`。模态上，它接受图像，输出深度。同系列还有 `x-wam-robotwin-sft`、`x-wam-pretrained`。
+任务：世界-动作模型（WAM）、世界-动作模型、世界-动作建模、机器人策略。别名：`x_wam`、`xwam`、`X-WAM`。模态上，它接受图像，输出深度。同系列还有 `x-wam-robotwin-sft`、`x-wam-pretrained`。
 
 推荐评测：[RoboCasa](/zh/docs/evaluation/benchmark-hub/robocasa)（RoboCasa-SFT 权重面向 RoboCasa；尚未测量闭环分数）、[RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin)（RoboTwin-SFT 权重面向 RoboTwin；尚未测量闭环分数）、[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（联合世界-动作预测质量）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `guidance-scale`、`rgb-views`、`state`、`variant`、`torch-dtype`、`denoise-steps` 等 11 项；产物 `action_trace`、`predicted_video`、`x-wam_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `guidance-scale`、`rgb-views`、`state`、`variant`、`torch-dtype`、`denoise-steps` 等 11 项；产物 `predicted_video`、`x-wam_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `XWAMPipeline`。
+CLI task profile：`default`。绑定的 pipeline 类是 `XWAMPipeline`。`default` 的默认值：guidance-scale=0.0。
 
 建议从 `x-wam-robocasa-sft` 开始。该系列共有 3 个 variant，可在上方命令构建器中切换：`x-wam-robocasa-sft`（`wam.world_action_modeling`）：已验证、`x-wam-robotwin-sft`（`wam.world_action_modeling`）：已验证、`x-wam-pretrained`（`wam.post_training_base`）：已验证。系列状态：**已验证**。
 
 需准备 X-WAM checkpoint 状态与 Wan2.2-TI2V-5B 基座。运行无需外部 X-WAM 源码；不包含训练、模拟器、ZeroMQ 服务、Lightning 与 DeepSpeed 编排。
 
-可选的深度解码尚未验证。
+可选的深度解码尚未验证。38.9 GB checkpoint 需要可观的本地存储。
 
 ## 在 WorldFoundry 中运行
 

@@ -9,9 +9,7 @@ Step-Video-T2V is StepFun's large open text-to-video model (30B parameters upstr
 
 <ModelPaperFigures modelId="step-video-t2v" locale="en" />
 
-Paper: [arXiv 2502.10248](https://arxiv.org/abs/2502.10248).
-
-Code: [stepfun-ai/Step-Video-T2V](https://github.com/stepfun-ai/Step-Video-T2V).
+Paper: [arXiv 2502.10248](https://arxiv.org/abs/2502.10248). Code: [stepfun-ai/Step-Video-T2V](https://github.com/stepfun-ai/Step-Video-T2V).
 
 <ModelCommandBuilder modelId="step-video-t2v" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Standard 
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifacts `generated_video` and `step_video_t2v.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifact `step_video_t2v.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `StepVideoT2VPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `interactive-video`: frames=204, fps=25, height=544, width=992.
+CLI task profile: `interactive-video`. WorldFoundry binds `StepVideoT2VPipeline`. Family status: **Verified**. Defaults for `interactive-video`: frames=204, fps=25, height=544, width=992, steps=50, guidance-scale=9.0.
 
 Validated with the released checkpoint: one prompt generates a 204-frame 992x544 video with 50 steps on GPU. Use id step-video-t2v. At 30B scale plan for serious VRAM or multi-GPU setups.
+
+Validation covers a single prompt; benchmark scores and pixel-level parity with the official implementation have not been measured. 30B scale demands datacenter GPUs; single consumer cards are not viable.
 
 ## Running in WorldFoundry
 

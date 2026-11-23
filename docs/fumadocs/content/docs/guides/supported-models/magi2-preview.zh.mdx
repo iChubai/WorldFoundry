@@ -1,51 +1,42 @@
 ---
 title: "MAGI-2 Preview"
-description: "MAGI-2 文生视频，联合生成音频，可选视频 Refiner。"
+description: "MAGI-2 Preview（sand-ai）：文生视频；Runner 一致性待确认。"
 modelId: "magi2-preview"
 pageSource: authored
 ---
 
-MAGI-2 从文本联合生成视频与音频。WorldFoundry 已接入 [SandAI-org/MAGI-2-preview](https://github.com/SandAI-org/MAGI-2-preview) 的 Preview MoE、可选稠密视频 Refiner、Turbo 视频解码器、音频编解码器与文本编码器，许可为 Apache-2.0。
+MAGI-2 Preview 是来自 sand-ai 的视频生成模型，支持文生视频。
 
 <ModelPaperFigures modelId="magi2-preview" locale="zh" />
 
+代码：[SandAI-org/MAGI-2-preview](https://github.com/SandAI-org/MAGI-2-preview)。
+
+<ModelCommandBuilder modelId="magi2-preview" locale="zh" />
+
+## 用来做什么
+
+用 `magi2-preview` 把一段文本提示词变成短视频。
+
+任务：文生视频。别名：`magi2`、`magi2_preview`、`magi-2-preview`。模态上，它接受文本，输出视频。
+
 ## 运行时契约
 
-pipeline 支持十秒文生视频。Preview 输出为 12.5 fps；可选 Refiner 增加时间分辨率，以 25 fps 导出并保留 Preview 音频。
+输入 `prompt`（不传时使用内置示例）；参数 `steps`、`seed`、`short-edge`、`aspect-ratio`、`duration-seconds`、`use-refiner`；产物 `magi2-preview.mp4`。
+
+CLI task profile：`default`。绑定的 pipeline 类是 `NativeMagi2Pipeline`。系列状态：**Runner 一致性待确认**。`default` 的默认值：steps=100, seed=0。
 
 Refiner 按 8×4×4 潜变量块打包视频，使用发布配置中的半径二局部注意力窗口。精确范围并集注意力保留所有允许的 key，不创建二次大小的稠密 mask。采样默认使用零 SNR 重加噪、五步 UniPC、shift 5 与 guidance 2。
 
 ## 在 WorldFoundry 中运行
 
+运行 `wf run magi2-preview --pipeline.task-profile default` 生成视频。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`sand-ai/MAGI-2-preview`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh magi2-preview`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0；最低显存 80 GB。
+
 准备 `sand-ai/MAGI-2-preview` 的权重布局：`preview/`、`refiner/`、`turbo_vae/`、`stable-audio-open-1.0/` 与 `text_encoder/`。组件按需加载；Preview 层使用顺序 GPU 驻留。
-
-```python
-from worldfoundry.pipelines.magi2 import NativeMagi2Pipeline
-
-pipeline = NativeMagi2Pipeline.from_pretrained("/weights/MAGI-2-preview", device="cuda")
-pipeline(
-    prompt="A cinematic camera move through a sunlit forest.",
-    use_refiner=True,
-    refiner_num_inference_steps=5,
-    refiner_height=1088,
-    refiner_width=1920,
-    output_path="/outputs/magi2-refined.mp4",
-    seed=42,
-)
-```
-
-`use_refiner=False` 保留 Preview-only 行为。Refiner 高宽必须为 16 的正整数倍。Refiner 将潜变量时间尺寸从 `T` 变为 `2T−1`，输出音频来自 Preview 阶段。
-
-<ModelCommandBuilder modelId="magi2-preview" locale="zh" />
-
-## 验证
-
-已在 H100 上用发布的 Qwen3.5、Refiner 与 Turbo 权重验证：Refiner 阶段以五步采样（seed 42）细化已保存的 Preview 潜变量，输出 128×128、25 fps 的 249 帧视频，并保留立体声 44.1 kHz Preview 音频。回放命令见 `python tests/manual/magi2_refinement.py --help`。
-
-## 限制
-
-- 不支持图像条件。
-- 默认 1920×1088 分辨率下的细化，以及与官方的数值、视觉一致性尚未验证。
-- 114B Preview 需要较大的主机内存与顺序 offload；上游面向八张 Hopper GPU。
 
 <ModelRelatedRecipes modelId="magi2-preview" locale="zh" />

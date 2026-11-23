@@ -9,9 +9,7 @@ TesserAct is an embodied 4D world model for robotics: it predicts action-conditi
 
 <ModelPaperFigures modelId="tesseract" locale="en" />
 
-Paper: [arXiv 2504.20995](https://arxiv.org/abs/2504.20995).
-
-Project page: [tesseractworld.github.io](https://tesseractworld.github.io/). Code: [UMass-Embodied-AGI/TesserAct](https://github.com/UMass-Embodied-AGI/TesserAct).
+Paper: [arXiv 2504.20995](https://arxiv.org/abs/2504.20995). Project page: [tesseractworld.github.io](https://tesseractworld.github.io/). Code: [UMass-Embodied-AGI/TesserAct](https://github.com/UMass-Embodied-AGI/TesserAct).
 
 <ModelCommandBuilder modelId="tesseract" locale="en" />
 
@@ -21,21 +19,19 @@ Project page: [tesseractworld.github.io](https://tesseractworld.github.io/). Cod
 
 The pipeline runs the official RGB-depth-normal SFT transformer (anyeZHY/tesseract) on a local CogVideoX-5b-I2V base model through the official inference entrypoint. It is published by University of Massachusetts Amherst (Embodied AGI Lab).
 
-Tasks: embodied world model, robotics world model, and action-conditioned video. Aliases: `tesser-act`.
+Tasks: embodied world model, robotics world model, and action-conditioned video. Aliases: `tesser-act`. Modalities: action in, video out.
 
 Suggested benchmarks: [EWMBench](/docs/evaluation/benchmark-hub/ewmbench) (Embodied manipulation world-model quality), [WorldArena](/docs/evaluation/benchmark-hub/worldarena) (Listed among WorldArena open-source world models).
 
 ## Runtime contract
 
-Inputs `input-path`, `prompt`, `load.checkpoint-dir`, and `load.base-model-dir` (bundled samples are used when omitted); options `geometry-mode`, `height`, `width`, `num-frames`, `num-inference-steps`, `guidance-scale`, and 8 more; artifacts `tesseract.mp4`.
+Inputs `input-path`, `prompt`, `load.checkpoint-dir`, and `load.base-model-dir` (bundled samples are used when omitted); options `geometry-mode`, `height`, `width`, `num-frames`, `num-inference-steps`, `guidance-scale`, and 8 more; artifact `tesseract.mp4`.
 
-CLI task profiles: `robot-action-video`. WorldFoundry binds `TesserActPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `robot-action-video`: height=256, width=320, fps=8, seed=23.
+CLI task profile: `robot-action-video`. WorldFoundry binds `TesserActPipeline`. Family status: **Runner parity pending**. Defaults for `robot-action-video`: height=256, width=320, num-frames=49, num-inference-steps=4, guidance-scale=7.5, fps=8.
 
 Stage anyeZHY/tesseract, THUDM/CogVideoX-5b-I2V, and the embodied task assets locally; until they are staged, the pipeline returns diagnostics that list what is missing.
+
+The built-in synthetic-gradient depth/normal mode is only a demo path; supply official depth/normal conditioning files for meaningful output.
 
 ## Running in WorldFoundry
 

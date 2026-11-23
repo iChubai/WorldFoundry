@@ -1,6 +1,6 @@
 ---
 title: "RollingForcing"
-description: "RollingForcing（腾讯（ARC Lab）/ 南洋理工大学）：文生视频、长视频生成等 3 项任务；已验证; Rolling Forcing。"
+description: "RollingForcing（腾讯（ARC Lab）/ 南洋理工大学）：文生视频、长视频生成等 3 项任务；已验证；Rolling Forcing。"
 modelId: "rolling-forcing"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ RollingForcing 自回归地流式生成数分钟长的视频：滚动窗口去�
 
 <ModelPaperFigures modelId="rolling-forcing" locale="zh" />
 
-论文：[Rolling Forcing: Autoregressive Long Video Diffusion in Real Time](https://arxiv.org/abs/2509.25161)（2025）。
-
-项目页：[kunhao-liu.github.io/Rolling_Forcing_Webpage](https://kunhao-liu.github.io/Rolling_Forcing_Webpage/)。代码：[TencentARC/RollingForcing](https://github.com/TencentARC/RollingForcing)。
+论文：[Rolling Forcing: Autoregressive Long Video Diffusion in Real Time](https://arxiv.org/abs/2509.25161)（2025）。项目页：[kunhao-liu.github.io/Rolling_Forcing_Webpage](https://kunhao-liu.github.io/Rolling_Forcing_Webpage/)。代码：[TencentARC/RollingForcing](https://github.com/TencentARC/RollingForcing)。
 
 <ModelCommandBuilder modelId="rolling-forcing" locale="zh" />
 
@@ -21,21 +19,19 @@ RollingForcing 自回归地流式生成数分钟长的视频：滚动窗口去�
 
 WorldFoundry 在带 attention sink 与 KV 缓存的因果 Wan 骨干上运行，遵循官方五步、三潜帧块配置。该模型由腾讯（ARC Lab）/ 南洋理工大学发布。
 
-任务：文生视频、长视频生成、autoregressive-video-generation。别名：`RollingForcing`、`rolling_forcing`、`rollingforcing`。模态上，它接受文本，输出视频。
+任务：文生视频、长视频生成、自回归视频生成。别名：`RollingForcing`、`rolling_forcing`、`rollingforcing`。模态上，它接受文本，输出视频。
 
 推荐评测：[VBench](/zh/docs/evaluation/benchmark-hub/vbench)（长文生视频输出的质量评测）、[ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench)（长时程时间连贯性评测）。
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `frames`、`seed`、`num-samples`、`use-ema`、`save-with-index`、`report-timing`；产物 `generated_video`、`rolling-forcing.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `frames`、`seed`、`num-samples`、`use-ema`、`save-with-index`、`report-timing`；产物 `rolling-forcing.mp4`。
 
-CLI task profile：`text-to-long-video`。绑定的 pipeline 类是 `RollingForcingPipeline`。
-
-系列状态：**已验证**。
-
-`text-to-long-video` 的默认值：frames=126, seed=0。
+CLI task profile：`text-to-long-video`。绑定的 pipeline 类是 `RollingForcingPipeline`。系列状态：**已验证**。`text-to-long-video` 的默认值：frames=126, seed=0。
 
 发布路径仅支持文生视频。需要支持 BF16 且显存充足的 GPU；官方 126 潜帧解码为 16 fps 长视频，更小的三的倍数可用于较短的测试运行。上游条款仅允许学术使用。
+
+仅限学术使用的许可：禁止一切商用与生产用途。发布路径仅支持文生视频。与上游参考产物的像素级一致性未确立。
 
 ## 在 WorldFoundry 中运行
 

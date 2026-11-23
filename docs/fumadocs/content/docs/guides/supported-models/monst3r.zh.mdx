@@ -1,6 +1,6 @@
 ---
 title: "MonST3R"
-description: "MonST3R（Google DeepMind / 加州大学伯克利分校）：3D 与 4D；已验证。"
+description: "MonST3R（Google DeepMind / 加州大学伯克利分校）：动态场景几何估计；已验证。"
 modelId: "monst3r"
 pageSource: authored
 ---
@@ -19,19 +19,19 @@ MonST3R 把 DUSt3R 的点图方法扩展到动态场景：直接从视频逐时�
 
 `monst3r` 从图像恢复 3D 几何：输入多视图，输出重建结果、相机轨迹或点云。
 
-按上游论文，MonST3R 在动态数据上微调 DUSt3R 的点图回归器，使点图按时刻估计；下游优化将其对齐为 4D 场景。WorldFoundry 将结果输出为 GLB 场景。该模型由Google DeepMind / 加州大学伯克利分校发布。
+按上游论文，MonST3R 在动态数据上微调 DUSt3R 的点图回归器，使点图按时刻估计；下游优化将其对齐为 4D 场景。WorldFoundry 将结果输出为 GLB 场景。该模型由 Google DeepMind / 加州大学伯克利分校发布。
 
-任务：geometry estimation in the presence of motion。
+任务：动态场景几何估计。
 
 ## 运行时契约
 
-输入 `input-path`（不传时使用内置示例）；参数 `weights`、`seq-name`、`niter`、`flow-loss-weight`、`skip-pair-dynamic-mask`、`silent` 等 7 项；产物 `generated_4d_scene`、`monst3r.glb`。
+输入 `input-path`（不传时使用内置示例）；参数 `weights`、`seq-name`、`niter`、`flow-loss-weight`、`skip-pair-dynamic-mask`、`silent` 等 7 项；产物 `monst3r.glb`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `MonST3RPipeline`。
-
-系列状态：**已验证**。
+CLI task profile：`default`。绑定的 pipeline 类是 `MonST3RPipeline`。系列状态：**已验证**。
 
 Studio 默认关闭可选的光流损失，因此 RAFT2/SAM2 资产缺失不会阻塞预览输出。若要完整对齐官方动态掩码效果，请在运行时环境中配置 MonST3R、RAFT 与 SAM2 资产。
+
+完整的官方动态掩码效果需要 Studio 默认路径之外的 RAFT2/SAM2 资产。基于优化的对齐使长视频处理速度慢于前馈式重建器。
 
 ## 在 WorldFoundry 中运行
 

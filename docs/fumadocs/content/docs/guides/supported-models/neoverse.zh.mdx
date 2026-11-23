@@ -1,6 +1,6 @@
 ---
 title: "NeoVerse"
-description: "NeoVerse（CreateAI（原图森未来））：3D 与 4D；已验证。"
+description: "NeoVerse（CreateAI（原图森未来））：野外单目视频 4D 世界建模；已验证。"
 modelId: "neoverse"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ NeoVerse 是一个 4D 世界模型，在 Wan 视频基座上加入 4D 感知的�
 
 <ModelPaperFigures modelId="neoverse" locale="zh" />
 
-论文：[NeoVerse: Enhancing 4D World Model with in-the-wild Monocular Videos](https://arxiv.org/abs/2601.00393)（CVPR 2026, 2026）。
-
-项目页：[neoverse-4d.github.io](https://neoverse-4d.github.io/)。代码：[IamCreateAI/NeoVerse](https://github.com/IamCreateAI/NeoVerse)。
+论文：[NeoVerse: Enhancing 4D World Model with in-the-wild Monocular Videos](https://arxiv.org/abs/2601.00393)（CVPR 2026, 2026）。项目页：[neoverse-4d.github.io](https://neoverse-4d.github.io/)。代码：[IamCreateAI/NeoVerse](https://github.com/IamCreateAI/NeoVerse)。
 
 <ModelCommandBuilder modelId="neoverse" locale="zh" />
 
@@ -19,23 +17,21 @@ NeoVerse 是一个 4D 世界模型，在 Wan 视频基座上加入 4D 感知的�
 
 用 `neoverse` 生成可探索的世界。
 
-按上游发布（arXiv 2601.00393），NeoVerse 在 Wan 视频基座上叠加 4D 重建与控制角色。该模型由CreateAI（原图森未来）发布。
+按上游发布（arXiv 2601.00393），NeoVerse 在 Wan 视频基座上叠加 4D 重建与控制角色。该模型由 CreateAI（原图森未来）发布。
 
-任务：4D world modeling from in-the-wild monocular videos。别名：`NeoVerse: Enhancing 4D World Model`。
+任务：野外单目视频 4D 世界建模。别名：`NeoVerse: Enhancing 4D World Model`。
 
 推荐评测：[WorldScore](/zh/docs/evaluation/benchmark-hub/worldscore)（评估可游走的生成世界）、[4DWorldBench](/zh/docs/evaluation/benchmark-hub/4dworldbench)（契合 NeoVerse 的 4D 世界模型定位）。
 
 ## 运行时契约
 
-输入 `video`、`prompt`（不传时使用内置示例）；参数 `predefined-trajectory`、`num-frames`、`num-inference-steps`、`cfg-scale`、`seed`、`trajectory-mode` 等 13 项；产物 `generated_world`、`generated_4d_scene`、`neoverse.mp4`。
+输入 `video`、`prompt`（不传时使用内置示例）；参数 `predefined-trajectory`、`num-frames`、`num-inference-steps`、`cfg-scale`、`seed`、`trajectory-mode` 等 13 项；产物 `generated_4d_scene`、`neoverse.mp4`。
 
-CLI task profile：`official-tilt-up-video`。绑定的 pipeline 类是 `NeoVersePipeline`。
-
-系列状态：**已验证**。
-
-`official-tilt-up-video` 的默认值：seed=42。
+CLI task profile：`official-tilt-up-video`。绑定的 pipeline 类是 `NeoVersePipeline`。系列状态：**已验证**。`official-tilt-up-video` 的默认值：num-frames=81, num-inference-steps=4, seed=42。
 
 运行需要 NeoVerse、Wan、重建器、LoRA 与 CUDA 资产。视频输入请按官方路径使用 static_scene=false。
+
+需要完整的资产组合（NeoVerse + Wan + 重建器 + LoRA）。仅验证了 README 风格 demo；其他场景尚未验证。
 
 ## 在 WorldFoundry 中运行
 

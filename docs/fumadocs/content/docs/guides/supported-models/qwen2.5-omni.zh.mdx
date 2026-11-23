@@ -1,13 +1,17 @@
 ---
 title: "Qwen2.5-Omni"
-description: "阿里通义千问的全模态 7B：文本、图像、音频、视频进。WorldFoundry 运行文本响应路径——prompt 加可选图像或视频，JSON 出。"
+description: "Qwen2.5-Omni（阿里巴巴（通义千问 Qwen））：多模态推理、音频推理等 4 项任务；Runner 一致性待确认。"
 modelId: "qwen2.5-omni"
 pageSource: authored
 ---
 
-Qwen2.5-Omni 是阿里通义千问的端到端全模态模型。官方论文是 [Qwen2.5-Omni Technical Report](https://arxiv.org/abs/2503.20215)（arXiv 2503.20215）。代码与模型卡见 [QwenLM/Qwen2.5-Omni](https://github.com/QwenLM/Qwen2.5-Omni) 与 [Qwen/Qwen2.5-Omni-7B](https://huggingface.co/Qwen/Qwen2.5-Omni-7B)。WorldFoundry 把它用作**理解 / 推理**模型——不是视频生成器——产物为 `model_response`。别名 `qwen2p5-omni`、`qwen2p5_omni`、`Qwen/Qwen2.5-Omni-7B` 解析到本页。
+Qwen2.5-Omni 是阿里的端到端全模态模型：能感知文本、图像、音频与视频。WorldFoundry 用它做理解与推理——多模态推理、音频推理与图像/视频问答——产物为 model_response。支持的权重是 7B 版本（Qwen/Qwen2.5-Omni-7B）。
 
 <ModelPaperFigures modelId="qwen2.5-omni" locale="zh" />
+
+论文：[arXiv 2503.20215](https://arxiv.org/abs/2503.20215)。
+
+代码：[Qwen/Qwen2.5-Omni-7B](https://huggingface.co/Qwen/Qwen2.5-Omni-7B)。
 
 论文描述的是 **Thinker-Talker** 栈，并用 **TMRoPE**（时间对齐的多模态 RoPE）让音频与视频共用同一时钟。官方能力是感知**文本、图像、音频、视频**，并可同时流式输出**文本与语音**。TMRoPE 里音频帧按 **40 ms** 一个 temporal id 对齐。WorldFoundry 只接通**文本响应**路径：必填 `prompt`，可选 `image` / `video`，产物 `qwen2.5-omni.json`。记录的权重是 **7B** 版本。Hugging Face 卡片的许可证为 `other`，生产使用前请自行核对。
 
@@ -15,17 +19,32 @@ Qwen2.5-Omni 是阿里通义千问的端到端全模态模型。官方论文是 
 
 ## 用来做什么
 
-为其他模型生成的静帧或片段做描述、追问或质检。记录的任务 profile 是 `multimodal-reasoning`（默认）、`audio-reasoning`、`image-question-answering`、`video-question-answering`。四条线共用同一输入契约，经 `Qwen25OmniPipeline` 写出 `qwen2.5-omni.json`。
+用 `qwen2.5-omni` 做多模态推理。
 
-先就位 `Qwen/Qwen2.5-Omni-7B`。7B 规模按单张现代 GPU 设计。
+阿里将 Qwen2.5-Omni 描述为 Thinker-Talker 设计：推理核心加语音生成头，并用 TMRoPE 做音视频时间对齐。WorldFoundry 只使用文本响应路径：输入 prompt/image/video，输出模型响应。该模型由阿里巴巴（通义千问 Qwen）发布。
+
+任务：多模态推理、音频推理、图像问答、视频问答。别名：`qwen2p5-omni`、`qwen2p5_omni`、`Qwen/Qwen2.5-Omni-7B`。
+
+为其他模型生成的静帧或片段做描述、追问或质检。记录的任务 profile 是 `multimodal-reasoning`（默认）、`audio-reasoning`、`image-question-answering`、`video-question-answering`。四条线共用同一输入契约，经 `Qwen25OmniPipeline` 写出 `qwen2.5-omni.json`。
 
 `audio-reasoning` profile 不接受 `audio` 输入；这条路径不是语音进 / 语音出配方。
 
 ## 运行时契约
-后端是官方 Hugging Face Transformers 运行时。加载方式为 `from_pretrained`。不支持 Talker / 流式语音解码。
+
+输入 `prompt`、`image`、`video`；产物 `qwen2.5-omni.json`。
+
+CLI task profile：`multimodal-reasoning`、`audio-reasoning`、`image-question-answering`、`video-question-answering`、`video_generation`。绑定的 pipeline 类是 `Qwen25OmniPipeline`。系列状态：**Runner 一致性待确认**。
+
+可用于为其它模型生成的视频做描述、问答或质检。7B 规模单张现代 GPU 即可运行。
+
+只支持文本响应路径：没有 `audio` 输入，也没有 Talker / 流式语音输出。尚未用发布的 checkpoint 在 GPU 上验证响应结果。
 
 ## 在 WorldFoundry 中运行
 
-在统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）里运行 `wf run qwen2.5-omni --pipeline.task-profile multimodal-reasoning`。准备 / 检查可用 `bash scripts/inference/prepare_model_infer.sh qwen2.5-omni` 与 `wf zoo model-show --model-id qwen2.5-omni`。
+用 `wf run qwen2.5-omni --pipeline.task-profile multimodal-reasoning` 运行模型。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`Qwen/Qwen2.5-Omni-7B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh qwen2.5-omni`；下载缺失的公开权重时加 `--download`。
 
 <ModelRelatedRecipes modelId="qwen2.5-omni" locale="zh" />

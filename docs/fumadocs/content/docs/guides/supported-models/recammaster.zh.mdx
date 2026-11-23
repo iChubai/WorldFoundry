@@ -1,6 +1,6 @@
 ---
 title: "ReCamMaster"
-description: "ReCamMaster（快手（可灵团队））：3D 与 4D；已验证。"
+description: "ReCamMaster（快手（可灵团队））：相机可控视频重渲染；已验证。"
 modelId: "recammaster"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ ReCamMaster 让已有视频沿新的相机轨迹重新渲染，即从单个视�
 
 <ModelPaperFigures modelId="recammaster" locale="zh" />
 
-论文：[ReCamMaster: Camera-Controlled Generative Rendering from A Single Video](https://arxiv.org/abs/2503.11647)（2025）。
-
-项目页：[jianhongbai.github.io/ReCamMaster](https://jianhongbai.github.io/ReCamMaster/)。代码：[KlingAIResearch/ReCamMaster](https://github.com/KlingAIResearch/ReCamMaster)。
+论文：[ReCamMaster: Camera-Controlled Generative Rendering from A Single Video](https://arxiv.org/abs/2503.11647)（2025）。项目页：[jianhongbai.github.io/ReCamMaster](https://jianhongbai.github.io/ReCamMaster/)。代码：[KlingAIResearch/ReCamMaster](https://github.com/KlingAIResearch/ReCamMaster)。
 
 <ModelCommandBuilder modelId="recammaster" locale="zh" />
 
@@ -21,21 +19,19 @@ ReCamMaster 让已有视频沿新的相机轨迹重新渲染，即从单个视�
 
 按论文（arXiv 2503.11647），ReCamMaster 通过帧维度条件化把源视频注入预训练文生视频模型（开源版基于 Wan 系），从而在生成时更换相机轨迹。该模型由快手（可灵团队）发布。
 
-任务：camera-controlled video rerendering。别名：`Camera-Controlled Generative Rendering from A Single Video`。
+任务：相机可控视频重渲染。别名：`Camera-Controlled Generative Rendering from A Single Video`。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（直接评估相机轨迹控制质量）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`steps`、`guidance-scale`、`camera-trajectory`；产物 `generated_video`、`generated_4d_scene`、`recammaster.mp4`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`steps`、`guidance-scale`、`camera-trajectory`；产物 `generated_4d_scene`、`recammaster.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `ReCamMasterPipeline`。
-
-系列状态：**已验证**。
-
-`default` 的默认值：frames=81, fps=8。
+CLI task profile：`default`。绑定的 pipeline 类是 `ReCamMasterPipeline`。系列状态：**已验证**。`default` 的默认值：frames=81, fps=8, steps=50, guidance-scale=5.0。
 
 提交任务前请就位 Wan2.1（Wan-AI/Wan2.1-T2V-1.3B）与 ReCamMaster checkpoint（KlingTeam/ReCamMaster-Wan2.1）；运行时还需要 torchvision 与 CUDA GPU。
+
+需要本地 Wan2.1 与 ReCamMaster checkpoint 及 CUDA。重渲染质量受源视频内容限制，未见区域由模型补全想象。
 
 ## 在 WorldFoundry 中运行
 

@@ -1,19 +1,15 @@
 ---
 title: "CUT3R"
-description: "CUT3R（加州大学伯克利分校（UC Berkeley））：3D 重建、3dgs等 3 项任务；Runner 一致性待确认。"
+description: "CUT3R（加州大学伯克利分校（UC Berkeley））：3D 重建、3DGS（3D 高斯泼溅）等 3 项任务；Runner 一致性待确认。"
 modelId: "cut3r"
-pageSource: authored
+pageSource: generated
 ---
 
 CUT3R 是带持久状态的连续 3D 感知模型：接收图像流并持续更新米制尺度的 3D 重建，无需离线捆绑优化。WorldFoundry 提供树内点云导出与两段式 3DGS 两条路径，均可在 Studio 中使用。CUT3R 同时是 VMem 的几何主干。
 
 <ModelPaperFigures modelId="cut3r" locale="zh" />
 
-论文：[arXiv 2501.12387](https://arxiv.org/abs/2501.12387)。
-
-项目页：[cut3r.github.io](https://cut3r.github.io/)。代码：[CUT3R/CUT3R](https://github.com/CUT3R/CUT3R)。
-
-checkpoint 推理需要先在本地或从 Hugging Face 就位 `liguang0115/cut3r` 权重。就位后可用 `wf zoo model-show --model-id cut3r` 查看模型信息。
+论文：[arXiv 2501.12387](https://arxiv.org/abs/2501.12387)。项目页：[cut3r.github.io](https://cut3r.github.io/)。代码：[CUT3R/CUT3R](https://github.com/CUT3R/CUT3R)。
 
 <ModelCommandBuilder modelId="cut3r" locale="zh" />
 
@@ -23,19 +19,17 @@ checkpoint 推理需要先在本地或从 Hugging Face 就位 `liguang0115/cut3r
 
 循环 Transformer 维护持久场景状态；每帧新图像更新状态并在线输出点图与相机参数（见上游论文）。WorldFoundry 提供点云导出与两段式 3DGS pipeline；权重为 apache-2.0。该模型由加州大学伯克利分校（UC Berkeley）发布。
 
-任务：3D 重建、3dgs、点云。输出模态为点云。
+任务：3D 重建、3DGS（3D 高斯泼溅）、点云。输出模态为点云。
 
 ## 运行时契约
 
 输入 `input-path`（不传时使用内置示例）；参数 `size`、`vis-threshold`、`revisit`。
 
-CLI task profile：`official-export`、`two-stage-3dgs`。绑定的 pipeline 类是 `CUT3RPipeline`。
-
-系列状态：**Runner 一致性待确认**。
-
-`official-export` 的默认值：size=512；`two-stage-3dgs` 的默认值：size=512, width=704, height=480。
+CLI task profile：`official-export`、`two-stage-3dgs`。绑定的 pipeline 类是 `CUT3RPipeline`。系列状态：**Runner 一致性待确认**。`official-export` 的默认值：size=512；`two-stage-3dgs` 的默认值：size=512, width=704, height=480。
 
 提交 Studio 任务前，先在本地或从 Hugging Face 就位 `liguang0115/cut3r` 权重。
+
+长序列且视角剧烈变化时，流式重建质量会下降。
 
 ## 在 WorldFoundry 中运行
 

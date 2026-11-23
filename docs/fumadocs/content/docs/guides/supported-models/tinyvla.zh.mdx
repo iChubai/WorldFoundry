@@ -9,9 +9,7 @@ TinyVLA 追求亚十亿级的快速、数据高效 VLA：LLaVA-Pythia 骨干（H
 
 <ModelPaperFigures modelId="tinyvla" locale="zh" />
 
-论文：[arXiv 2402.03766](https://arxiv.org/abs/2402.03766)。
-
-代码：[liyaxuanliyaxuan/TinyVLA](https://github.com/liyaxuanliyaxuan/TinyVLA)。
+论文：[arXiv 2402.03766](https://arxiv.org/abs/2402.03766)。代码：[liyaxuanliyaxuan/TinyVLA](https://github.com/liyaxuanliyaxuan/TinyVLA)。
 
 <ModelCommandBuilder modelId="tinyvla" locale="zh" />
 
@@ -25,15 +23,13 @@ LLaVA-Pythia 多模态骨干配 CLIP/SigLIP 视觉融合与可换动作头（ACT
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`tinyvla_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `tinyvla_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `TinyVLAPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `TinyVLAPipeline`。系列状态：**Runner 一致性待确认**。
 
 需在本地准备兼容的任务 checkpoint、含动作维度与头类型的 config.json 及数据集统计；缺少它们时运行时无法启动。
 
-无公开任务训练动作 checkpoint；Hub 发布仅为骨干。
+无公开任务训练动作 checkpoint；Hub 发布仅为骨干。组件许可为 MIT/Apache-2.0 混合。
 
 ## 在 WorldFoundry 中运行
 
@@ -42,5 +38,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `TinyVLAPipeline`。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8，torch>=2.5）。
 
 权重仓库：`lesjie/Llava-Pythia-400M`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh tinyvla`；下载缺失的公开权重时加 `--download`。
+
+许可证：mixed-mit-apache-2.0。
 
 <ModelRelatedRecipes modelId="tinyvla" locale="zh" />

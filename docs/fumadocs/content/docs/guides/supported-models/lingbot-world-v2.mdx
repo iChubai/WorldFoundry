@@ -1,6 +1,6 @@
 ---
 title: "LingBot-World-V2"
-description: "LingBot-World-V2 from Robbyant (Ant Group): image-to-world-video, camera-controlled video, and 1 more task; Runner parity pending; dedicated `lingbot-world-v2`."
+description: "LingBot-World-V2 from Robbyant (Ant Group): image-to-world-video, camera-controlled video, and 1 more task; Runner parity pending; dedicated env lingbot-world-v2."
 modelId: "lingbot-world-v2"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ LingBot-World-V2 (also aliased lingbot-world-infinity) is the second generation 
 
 <ModelPaperFigures modelId="lingbot-world-v2" locale="en" />
 
-Paper: [arXiv 2607.07534](https://arxiv.org/abs/2607.07534).
-
-Project page: [technology.robbyant.com/lingbot-world-v2](https://technology.robbyant.com/lingbot-world-v2). Code: [Robbyant/lingbot-world-v2](https://github.com/Robbyant/lingbot-world-v2).
+Paper: [arXiv 2607.07534](https://arxiv.org/abs/2607.07534). Project page: [technology.robbyant.com/lingbot-world-v2](https://technology.robbyant.com/lingbot-world-v2). Code: [Robbyant/lingbot-world-v2](https://github.com/Robbyant/lingbot-world-v2).
 
 <ModelCommandBuilder modelId="lingbot-world-v2" locale="en" />
 
@@ -21,26 +19,28 @@ Use `lingbot-world-v2` when the viewpoint must follow a given camera path.
 
 Uses WorldFoundry's shared Wan, T5, VAE, scheduler, FSDP, and media components. Only the released causal-fast route is included; training and the unreleased causal-pretrain and bidirectional routes are not. The checkpoint is robbyant/lingbot-world-v2-14b-causal-fast. It is published by Robbyant (Ant Group).
 
-Tasks: image-to-world-video, camera-controlled video, and interactive world model. Aliases: `lingbot-world-infinity` and `lingbot-v2`. Modalities: image in, world state and video out.
+Tasks: image-to-world-video, camera-controlled video, and interactive world model. Aliases: `lingbot-world-infinity` and `lingbot-v2`. Modalities: image and camera pose in, world state and video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-control adherence of world rollouts), [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (General world-rollout quality).
 
 ## Runtime contract
 
-Inputs `image`, `prompt`, and `action-path` (bundled samples are used when omitted); options `size`, `frame-num`, `chunk-size`, `seed`, `sample-shift`, `local-attn-size`, and 6 more; artifacts `generated_world_video` and `lingbot-world-v2.mp4`.
+Inputs `image`, `prompt`, and `action-path` (bundled samples are used when omitted); options `size`, `frame-num`, `chunk-size`, `seed`, `sample-shift`, `local-attn-size`, and 6 more; artifact `lingbot-world-v2.mp4`.
 
-CLI task profiles: `image-camera-video`. WorldFoundry binds `LingBotWorldV2Pipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `image-camera-video`: size=480*832, seed=42.
+CLI task profile: `image-camera-video`. WorldFoundry binds `LingBotWorldV2Pipeline`. Family status: **Runner parity pending**. Defaults for `image-camera-video`: size=480*832, seed=42.
 
 The official causal-fast recipe uses eight GPUs; a four-GPU compact topology is also supported. When launched inside an existing torchrun process group, inference runs in that group without starting nested torchrun workers.
+
+CC BY-NC-SA 4.0: non-commercial license. Only a short single-GPU run is validated; the official 8-GPU 361-frame output and camera-control accuracy are not yet verified. 14B model: high GPU memory requirements.
 
 ## Running in WorldFoundry
 
 Run `wf run lingbot-world-v2 --pipeline.task-profile image-camera-video` to follow the camera path.
 
+It runs in the dedicated environment `lingbot-world-v2` (Python 3.10, CUDA 12.1, torch==2.5.1).
+
 Weights: `robbyant/lingbot-world-v2-14b-causal-fast`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world-v2`. Add `--download` to fetch missing public checkpoints.
+
+License: CC BY-NC-SA 4.0.
 
 <ModelRelatedRecipes modelId="lingbot-world-v2" locale="en" />

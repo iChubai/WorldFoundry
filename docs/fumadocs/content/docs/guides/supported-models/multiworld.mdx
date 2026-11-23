@@ -25,15 +25,13 @@ Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmode
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `steps`, `action-path`, `save-name`, `inference-seed`, and 1 more; artifacts `multiworld.mp4`.
+Input `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `steps`, `action-path`, `save-name`, `inference-seed`, and 1 more; artifact `multiworld.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `MultiWorldItTakesTwoPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `default`: frames=81, fps=60.
+CLI task profile: `default`. WorldFoundry binds `MultiWorldItTakesTwoPipeline`. Family status: **Verified**. Defaults for `default`: frames=81, fps=60, steps=35.
 
 Supply an initial image and two-player discrete and continuous action tensors (or an action CSV). Validated with the released toydata checkpoint: the pipeline generates 81 frames at 480x480 with 35 steps.
+
+The upstream license is custom; review it before redistribution. Validation used synthetic actions and a non-game image; it does not establish game-domain action control or realistic world dynamics.
 
 ## Running in WorldFoundry
 
@@ -42,5 +40,7 @@ Run `wf run multiworld --pipeline.task-profile default` to roll out the world mo
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `Haoyuwu/MultiWorldCheckpoint`, `Wan-AI/Wan2.2-TI2V-5B`, and `facebook/VGGT-1B`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh multiworld`. Add `--download` to fetch missing public checkpoints.
+
+License: manual_review:custom-licence.
 
 <ModelRelatedRecipes modelId="multiworld" locale="en" />

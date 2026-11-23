@@ -1,6 +1,6 @@
 ---
 title: "Hunyuan Game Craft"
-description: "Hunyuan Game Craft from Tencent (Hunyuan): interactive world model, image-to-video, and 1 more task; Runner parity pending; dedicated `HYGameCraft`."
+description: "Hunyuan Game Craft from Tencent (Hunyuan): interactive world model, image-to-video, and 1 more task; Runner parity pending; dedicated env HYGameCraft."
 modelId: "hunyuan-game-craft"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Hunyuan GameCraft generates action-conditioned world video from a scene image: e
 
 <ModelPaperFigures modelId="hunyuan-game-craft" locale="en" />
 
-Paper: [arXiv 2506.17201](https://arxiv.org/abs/2506.17201).
-
-Project page: [hunyuan-gamecraft.github.io](https://hunyuan-gamecraft.github.io/). Code: [Tencent-Hunyuan/Hunyuan-GameCraft-1.0](https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0).
+Paper: [arXiv 2506.17201](https://arxiv.org/abs/2506.17201). Project page: [hunyuan-gamecraft.github.io](https://hunyuan-gamecraft.github.io/). Code: [Tencent-Hunyuan/Hunyuan-GameCraft-1.0](https://github.com/Tencent-Hunyuan/Hunyuan-GameCraft-1.0).
 
 <ModelCommandBuilder modelId="hunyuan-game-craft" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmode
 
 ## Runtime contract
 
-Inputs `image` and `prompt` (bundled samples are used when omitted); options `interactions`, `frames`, `fps`, `height`, `width`, `steps`, and 1 more; artifacts `hunyuan-game-craft.mp4`.
+Inputs `image` and `prompt` (bundled samples are used when omitted); options `interactions`, `frames`, `fps`, `height`, `width`, `steps`, and 1 more; artifact `hunyuan-game-craft.mp4`.
 
-CLI task profiles: `official-interactive-video`. WorldFoundry binds `HunyuanGameCraftPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `official-interactive-video`: frames=129, fps=24, height=704, width=1216.
+CLI task profile: `official-interactive-video`. WorldFoundry binds `HunyuanGameCraftPipeline`. Family status: **Runner parity pending**. Defaults for `official-interactive-video`: frames=129, fps=24, height=704, width=1216, steps=50, guidance-scale=2.0.
 
 Provide local GameCraft checkpoints. Each action generates 33 frames; explicit num_frames must equal 33 times the action count. CPU offload and output_path export are supported. Validated on a single H100 with CPU offload: one forward action produces 33 frames at 1216x704 with 50 steps.
+
+Multi-GPU inference is untested and FP8 conversion is not supported. Requires the dedicated HYGameCraft environment (Python 3.10, torch 2.5.1). The Tencent Hunyuan community license applies; see the included license and provenance.
 
 ## Running in WorldFoundry
 
@@ -44,5 +40,7 @@ Generate a camera-controlled clip with `wf run hunyuan-game-craft --pipeline.tas
 It runs in the dedicated environment `HYGameCraft` (Python 3.10, CUDA 12.4, torch==2.5.1).
 
 Weights: `tencent/Hunyuan-GameCraft-1.0`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh hunyuan-game-craft`. Add `--download` to fetch missing public checkpoints.
+
+License: tencent-hunyuan-community.
 
 <ModelRelatedRecipes modelId="hunyuan-game-craft" locale="en" />

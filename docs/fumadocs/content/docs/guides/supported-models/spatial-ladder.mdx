@@ -19,15 +19,13 @@ Code: [hongxingli/SpatialLadder-3B](https://huggingface.co/hongxingli/SpatialLad
 
 A 3B-parameter vision-language model; the upstream release describes its progressive spatial-reasoning training design.
 
-Tasks: multimodal reasoning, spatial reasoning, image question answering, and video question answering. Aliases: `spatial_ladder` and `hongxingli/SpatialLadder-3B`.
+Tasks: multimodal reasoning, spatial reasoning, image question answering, and video question answering. Aliases: `spatial_ladder` and `hongxingli/SpatialLadder-3B`. Modalities: image and video in, text out.
 
 ## Runtime contract
 
-Inputs `prompt`, `image`, and `video`; artifacts `spatial-ladder.json`.
+Inputs `prompt`, `image`, and `video`; artifact `spatial-ladder.json`.
 
-CLI task profiles: `multimodal-reasoning`, `spatial-reasoning`, `image-question-answering`, `video-question-answering`, and `video_generation`. WorldFoundry binds `SpatialLadderPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profiles: `multimodal-reasoning`, `spatial-reasoning`, `image-question-answering`, `video-question-answering`, and `video_generation`. WorldFoundry binds `SpatialLadderPipeline`. Family status: **Runner parity pending**.
 
 Use it as a lightweight spatial-QA judge for generated scenes; the 3B scale runs on modest GPUs.
 

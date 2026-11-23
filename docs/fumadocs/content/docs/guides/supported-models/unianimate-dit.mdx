@@ -9,9 +9,7 @@ UniAnimate-DiT is Alibaba ali-vilab's human image animation model built on Wan2.
 
 <ModelPaperFigures modelId="unianimate-dit" locale="en" />
 
-Paper: [arXiv 2504.11289](https://arxiv.org/abs/2504.11289).
-
-Code: [ali-vilab/unianimate-dit](https://github.com/ali-vilab/unianimate-dit).
+Paper: [arXiv 2504.11289](https://arxiv.org/abs/2504.11289). Code: [ali-vilab/unianimate-dit](https://github.com/ali-vilab/unianimate-dit).
 
 <ModelCommandBuilder modelId="unianimate-dit" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: human image animation, image-to-video, and video generation. Modalities: 
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `height`, `width`, `steps`, `seed`, and `max-frames`; artifacts `unianimate-dit.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `height`, `width`, `steps`, `seed`, and `max-frames`; artifact `unianimate-dit.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `UniAnimateDiTPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: height=832, width=480, seed=0.
+CLI task profile: `interactive-video`. WorldFoundry binds `UniAnimateDiTPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: height=832, width=480, steps=50, seed=0.
 
 Prepare a clean subject photo and a driving pose sequence for best results.
+
+Only a short 9-frame, 4-step GPU run has been validated; quality and pose-control fidelity at the official 81-frame, 50-step setting have not been measured. Specialized for human subjects — not a general I2V model.
 
 ## Running in WorldFoundry
 

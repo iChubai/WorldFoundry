@@ -9,9 +9,7 @@ ATI（Any Trajectory Instruction）把「画轨迹」变成视频控制：在输
 
 <ModelPaperFigures modelId="ati-wan21-14b" locale="zh" />
 
-论文：[arXiv 2505.22944](https://arxiv.org/abs/2505.22944)。
-
-代码：[bytedance/ATI](https://github.com/bytedance/ATI)。代码：[Wan-Video/Wan2.1](https://github.com/Wan-Video/Wan2.1)。
+论文：[arXiv 2505.22944](https://arxiv.org/abs/2505.22944)。代码：[bytedance/ATI](https://github.com/bytedance/ATI)。代码：[Wan-Video/Wan2.1](https://github.com/Wan-Video/Wan2.1)。
 
 <ModelCommandBuilder modelId="ati-wan21-14b" locale="zh" />
 
@@ -21,7 +19,7 @@ ATI（Any Trajectory Instruction）把「画轨迹」变成视频控制：在输
 
 按上游发布，ATI 通过轨迹指令模块把稠密点轨迹条件注入 Wan2.1 I2V 基座。加载时 WorldFoundry 将 ATI 权重（bytedance-research/ATI）与本地就位的 Wan2.1 I2V 480P 基座组件组合使用。该模型由字节跳动发布。
 
-任务：相机可控视频、图生视频。模态上，它接受图像，输出视频。
+任务：相机可控视频、图生视频。模态上，它接受相机位姿、图像，输出视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（评估轨迹/相机运动的贴合度）。
 
@@ -29,13 +27,11 @@ ATI（Any Trajectory Instruction）把「画轨迹」变成视频控制：在输
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `ati-wan21-14b.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `ATIPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `ATIPipeline`。系列状态：**Runner 一致性待确认**。
 
 已用本地 ATI 与 Wan2.1 I2V 480P 权重验证：pipeline 可在 GPU 上生成 81 帧视频。只使用本地就位的 checkpoint。打包轨迹形状为 [N,121,1,3]，x/y 像素坐标乘以 8；可见度可用归一化 [0,1] 或上游量化 [0,8]，每条轨迹内部应保持一种编码。
 
-点轨迹贴合度与官方产物一致性尚未测量。
+点轨迹贴合度与官方产物一致性尚未测量。14B 基座：实际推理需要大显存 GPU。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `ATIPipeline`。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`bytedance-research/ATI`、`Wan-AI/Wan2.1-I2V-14B-480P`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh ati-wan21-14b`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="ati-wan21-14b" locale="zh" />

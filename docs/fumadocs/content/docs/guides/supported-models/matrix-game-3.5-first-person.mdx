@@ -19,15 +19,15 @@ Project page: [matrix-game-v3-5.github.io](https://matrix-game-v3-5.github.io/).
 
 Builds on Wan2.2-TI2V-5B (apache-2.0) with the Matrix-Game-3.5-Base weights and a DA3NESTED-GIANT-LARGE-1.1 depth dependency (CC-BY-NC-4.0 — separate non-commercial terms). The released checkpoint is the 25-step bidirectional 5B base, not the announced few-step real-time distilled model. It is published by Riemann Dynamics.
 
-Tasks: image-to-video, camera-controlled video, interactive world model, and long horizon generation. Aliases: `matrix-game-3.5-fp` and `matrix-game-35-first-person`. Modalities: image in, video out.
+Tasks: image-to-video, camera-controlled video, interactive world model, and long horizon generation. Aliases: `matrix-game-3.5-fp` and `matrix-game-35-first-person`. Modalities: image and camera pose in, video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Long-horizon interactive world-rollout quality), [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-NPZ trajectory adherence).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `steps`, `guidance-scale`, `seed`, `camera`, `num-blocks`, and 1 more; artifacts `generated_world_video` and `matrix-game-3.5-first-person.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `fps`, `steps`, `guidance-scale`, `seed`, `camera`, `num-blocks`, and 1 more; artifact `matrix-game-3.5-first-person.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `MatrixGame35FirstPersonPipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `MatrixGame35FirstPersonPipeline`.
 
 Family status: **Runner parity pending**.
 

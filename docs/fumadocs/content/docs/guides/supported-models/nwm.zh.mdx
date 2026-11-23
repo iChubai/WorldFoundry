@@ -1,6 +1,6 @@
 ---
 title: "Navigation World Models"
-description: "Navigation World Models（Meta AI（FAIR））：动作条件视频；Runner 一致性待确认; 2 个 variant。"
+description: "Navigation World Models（Meta AI（FAIR））：导航世界模型、动作条件视频等 3 项任务；Runner 一致性待确认；2 个 variant。"
 modelId: "nwm"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Navigation World Models（NWM）是 Meta 的导航世界模型（CVPR 2025 highl
 
 <ModelPaperFigures modelId="nwm" locale="zh" />
 
-论文：[arXiv 2412.03572](https://arxiv.org/abs/2412.03572)。
-
-项目页：[amirbar.net/nwm](https://www.amirbar.net/nwm/)。代码：[facebookresearch/nwm](https://github.com/facebookresearch/nwm)。
+论文：[arXiv 2412.03572](https://arxiv.org/abs/2412.03572)。项目页：[amirbar.net/nwm](https://www.amirbar.net/nwm/)。代码：[facebookresearch/nwm](https://github.com/facebookresearch/nwm)。
 
 <ModelCommandBuilder modelId="nwm" locale="zh" />
 
@@ -19,9 +17,9 @@ Navigation World Models（NWM）是 Meta 的导航世界模型（CVPR 2025 highl
 
 `nwm-recon` 以动作为条件生成未来帧。
 
-按上游发布，条件扩散 Transformer（CDiT）参数量达 1B，以动作与时间嵌入为条件做第一视角预测（checkpoint 位于 facebook/nwm，CC-BY-NC-4.0）。该模型由Meta AI（FAIR）发布。
+按上游发布，条件扩散 Transformer（CDiT）参数量达 1B，以动作与时间嵌入为条件做第一视角预测（checkpoint 位于 facebook/nwm，CC-BY-NC-4.0）。该模型由 Meta AI（FAIR）发布。
 
-任务：navigation-world-model、动作条件视频、egocentric-video-generation。别名：`navigation-world-models`、`nwm-recon`、`nwm-scand`。输出模态为视频。同系列还有 `nwm-scand`。
+任务：导航世界模型、动作条件视频、第一视角视频生成。别名：`navigation-world-models`、`nwm-recon`、`nwm-scand`。模态上，它接受动作，输出视频。同系列还有 `nwm-scand`。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（导航世界滚动生成质量）。
 
@@ -35,7 +33,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `NWMPipeline`。
 
 pipeline 调用官方 NWM 推理入口，在 checkpoint 与评估数据集就位前报告缺失项。适用于非驾驶类导航视频评估。
 
-CC-BY-NC-4.0：非商用许可。
+CC-BY-NC-4.0：非商用许可。运行需要在本地就位 facebook/nwm checkpoint 与评估数据集。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +42,7 @@ CC-BY-NC-4.0：非商用许可。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`facebook/nwm`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh nwm-recon`；下载缺失的公开权重时加 `--download`。
+
+许可证：CC BY-NC 4.0。
 
 <ModelRelatedRecipes modelId="nwm" locale="zh" />

@@ -9,9 +9,7 @@ Stable Virtual Camera (SEVA) turns one or a few 2D images into a novel-view vide
 
 <ModelPaperFigures modelId="stable-virtual-camera" locale="en" />
 
-Paper: [Stable Virtual Camera: Generative View Synthesis with Diffusion Models](https://arxiv.org/abs/2503.14489) (2025).
-
-Project page: [stable-virtual-camera.github.io](https://stable-virtual-camera.github.io/). Code: [Stability-AI/stable-virtual-camera](https://github.com/Stability-AI/stable-virtual-camera).
+Paper: [Stable Virtual Camera: Generative View Synthesis with Diffusion Models](https://arxiv.org/abs/2503.14489) (2025). Project page: [stable-virtual-camera.github.io](https://stable-virtual-camera.github.io/). Code: [Stability-AI/stable-virtual-camera](https://github.com/Stability-AI/stable-virtual-camera).
 
 <ModelCommandBuilder modelId="stable-virtual-camera" locale="en" />
 
@@ -27,15 +25,13 @@ Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) 
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `steps`, `seed`, `version`, `task`, `pretrained-model-name-or-path`, `weight-name`, and 4 more; artifacts `generated_video` and `stable_virtual_camera.mp4`.
+Input `input-path` (bundled samples are used when omitted); options `steps`, `seed`, `version`, `task`, `pretrained-model-name-or-path`, `weight-name`, and 4 more; artifact `stable_virtual_camera.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `StableVirtualCameraPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `default`: seed=23.
+CLI task profile: `default`. WorldFoundry binds `StableVirtualCameraPipeline`. Family status: **Runner parity pending**. Defaults for `default`: steps=50, seed=23.
 
 Accept the gated checkpoint terms on Hugging Face and set HF_TOKEN before running. The adapter drives the upstream demo.py Fire entrypoint.
+
+Gated checkpoint: Stability AI community-license terms apply. Output has not yet been checked against the official gallery results.
 
 ## Running in WorldFoundry
 

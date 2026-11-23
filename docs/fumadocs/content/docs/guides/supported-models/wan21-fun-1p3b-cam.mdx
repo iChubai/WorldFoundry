@@ -19,7 +19,7 @@ Use `wan21-fun-1p3b-cam` when the viewpoint must follow a given camera path.
 
 A 1.3B-parameter Wan2.1 diffusion transformer with the VideoX-Fun Control+i2v camera conditioning pathway. It is published by Alibaba PAI (VideoX-Fun).
 
-Tasks: camera-controlled video and image-to-video. Modalities: image in, video out.
+Tasks: camera-controlled video and image-to-video. Modalities: camera pose and image in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-pose adherence for controlled i2v generation).
 
@@ -27,9 +27,9 @@ Related pages: [Wan2.1](/docs/guides/supported-models/wan2.1) and the larger [Wa
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifacts `wan21-fun-1p3b-cam.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 1 more; artifact `wan21-fun-1p3b-cam.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `Wan21Fun1P3BCameraPipeline`.
+CLI task profile: `default`. WorldFoundry binds `Wan21Fun1P3BCameraPipeline`.
 
 Family status: **Verified**.
 

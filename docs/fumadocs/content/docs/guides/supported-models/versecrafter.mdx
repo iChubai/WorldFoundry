@@ -9,9 +9,7 @@ VerseCrafter from Tencent ARC is a camera-controlled image-to-video world model 
 
 <ModelPaperFigures modelId="versecrafter" locale="en" />
 
-Paper: [arXiv 2601.05138](https://arxiv.org/abs/2601.05138).
-
-Project page: [sixiaozheng.github.io/VerseCrafter_page](https://sixiaozheng.github.io/VerseCrafter_page/). Code: [TencentARC/VerseCrafter](https://github.com/TencentARC/VerseCrafter).
+Paper: [arXiv 2601.05138](https://arxiv.org/abs/2601.05138). Project page: [sixiaozheng.github.io/VerseCrafter_page](https://sixiaozheng.github.io/VerseCrafter_page/). Code: [TencentARC/VerseCrafter](https://github.com/TencentARC/VerseCrafter).
 
 <ModelCommandBuilder modelId="versecrafter" locale="en" />
 
@@ -21,21 +19,19 @@ Project page: [sixiaozheng.github.io/VerseCrafter_page](https://sixiaozheng.gith
 
 Two stages: camera-only 4D-control rendering, followed by a diffusion stage whose backbone comes from VideoX-Fun. It is published by Tencent ARC Lab.
 
-Tasks: camera-controlled video, image-to-video, and world model. Modalities: image in, video out.
+Tasks: camera-controlled video, image-to-video, and world model. Modalities: camera pose and image in, video out.
 
 Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-path adherence for 4D-controlled generation).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifacts `versecrafter.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifact `versecrafter.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `VerseCrafterPipeline`.
-
-Family status: **Verified**.
-
-Defaults for `default`: frames=81, fps=16, height=480, width=832, seed=2025.
+CLI task profile: `default`. WorldFoundry binds `VerseCrafterPipeline`. Family status: **Verified**. Defaults for `default`: frames=81, fps=16, height=480, width=832, steps=30, guidance-scale=5.0.
 
 Validated with the released checkpoint: a short camera-controlled video generates end to end, with visible artifacts in late frames.
+
+Research-only, non-commercial license that excludes intended EU use. The short GPU run has late-frame disocclusion artifacts; camera-path accuracy and official output parity remain unmeasured.
 
 ## Running in WorldFoundry
 
@@ -44,5 +40,7 @@ Generate a camera-controlled clip with `wf run versecrafter --pipeline.task-prof
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `TencentARC/VerseCrafter`, `Wan-AI/Wan2.1-T2V-14B`, and `Ruicheng/moge-2-vitl-normal`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh versecrafter`. Add `--download` to fetch missing public checkpoints.
+
+License: research-only-non-commercial-not-eu.
 
 <ModelRelatedRecipes modelId="versecrafter" locale="en" />

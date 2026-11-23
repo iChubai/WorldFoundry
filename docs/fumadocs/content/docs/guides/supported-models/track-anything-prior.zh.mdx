@@ -1,6 +1,6 @@
 ---
 title: "Segment and Track Anything"
-description: "Segment and Track Anything（浙江大学（ReLER 实验室））：object-tracking、几何先验等 3 项任务；Runner 一致性待确认。"
+description: "Segment and Track Anything（浙江大学（ReLER 实验室））：视频目标分割、目标跟踪等 3 项任务；Runner 一致性待确认。"
 modelId: "track-anything-prior"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Segment and Track Anything（SAM-Track）把 SAM 分割与 AOT/DeAOT 跟踪结�
 
 <ModelPaperFigures modelId="track-anything-prior" locale="zh" />
 
-论文：[arXiv 2305.06558](https://arxiv.org/abs/2305.06558)。
-
-代码：[z-x-yang/Segment-and-Track-Anything](https://github.com/z-x-yang/Segment-and-Track-Anything)。
+论文：[arXiv 2305.06558](https://arxiv.org/abs/2305.06558)。代码：[z-x-yang/Segment-and-Track-Anything](https://github.com/z-x-yang/Segment-and-Track-Anything)。
 
 <ModelCommandBuilder modelId="track-anything-prior" locale="zh" />
 
@@ -21,15 +19,13 @@ Segment and Track Anything（SAM-Track）把 SAM 分割与 AOT/DeAOT 跟踪结�
 
 三个子组件协同工作：SAM 生成掩码，GroundingDINO 做文本定位，AOT/DeAOT 在视频中传播掩码。该模型由浙江大学（ReLER 实验室）发布。
 
-任务：video-object-segmentation、object-tracking、几何先验。别名：`segment-and-track-anything`、`track-anything`、`aot-deaot-l`。
+任务：视频目标分割、目标跟踪、几何先验。别名：`segment-and-track-anything`、`track-anything`、`aot-deaot-l`。
 
 ## 运行时契约
 
 输入 `input-path`（不传时使用内置示例）；参数 `max-frames`、`execute`、`max-points`；产物 `track-anything-mask.npz`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `TrackAnythingPriorPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `TrackAnythingPriorPipeline`。系列状态：**Runner 一致性待确认**。
 
 运行先验推理前，先就位 SAM、GroundingDINO 与 AOT/DeAOT checkpoint。
 
@@ -42,5 +38,7 @@ AGPL-3.0 许可：下游适用 copyleft 条款。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`ShilongLiu/GroundingDINO`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh track-anything-prior`；下载缺失的公开权重时加 `--download`。
+
+许可证：AGPL-3.0。
 
 <ModelRelatedRecipes modelId="track-anything-prior" locale="zh" />

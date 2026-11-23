@@ -9,9 +9,7 @@ LeWorldModel（le-wm）研究潜空间世界模型：在 PushT 等控制任务�
 
 <ModelPaperFigures modelId="leworldmodel" locale="zh" />
 
-论文：[arXiv 2603.19312](https://arxiv.org/abs/2603.19312)。
-
-项目页：[le-wm.github.io](https://le-wm.github.io/)。代码：[lucas-maes/le-wm](https://github.com/lucas-maes/le-wm)。
+论文：[arXiv 2603.19312](https://arxiv.org/abs/2603.19312)。项目页：[le-wm.github.io](https://le-wm.github.io/)。代码：[lucas-maes/le-wm](https://github.com/lucas-maes/le-wm)。
 
 <ModelCommandBuilder modelId="leworldmodel" locale="zh" />
 
@@ -19,21 +17,19 @@ LeWorldModel（le-wm）研究潜空间世界模型：在 PushT 等控制任务�
 
 `leworldmodel` 生成 3D 一致的世界，而不只是一段视频。
 
-覆盖潜空间（JEPA）与像素两类世界模型 variant，checkpoint 位于 eren23/lewm-models。推理使用官方 eval 配置，不需要训练配置。该模型由Mila 魁北克人工智能研究所 / 蒙特利尔大学发布。
+覆盖潜空间（JEPA）与像素两类世界模型 variant，checkpoint 位于 eren23/lewm-models。推理使用官方 eval 配置，不需要训练配置。该模型由 Mila 魁北克人工智能研究所 / 蒙特利尔大学发布。
 
-任务：潜空间世界模型、JEPA 世界模型、pixel-world-model。
+任务：潜空间世界模型、JEPA 世界模型、像素世界模型。
 
 ## 运行时契约
 
-参数 `plan-only`、`timeout-seconds`；产物 `generated_world`、`leworldmodel_result.json`。
+参数 `plan-only`、`timeout-seconds`；产物 `leworldmodel_result.json`。
 
-CLI task profile：`pusht-eval`。绑定的 pipeline 类是 `LeWorldModelPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`pusht-eval`。绑定的 pipeline 类是 `LeWorldModelPipeline`。系列状态：**Runner 一致性待确认**。
 
 该路径遵循官方 eval.py 配置流程，并在执行前检查 stable-worldmodel 包、任务数据集与非随机策略 checkpoint。
 
-面向评估的世界模型：用于评价动力学，不渲染演示视频。
+面向评估的世界模型：用于评价动力学，不渲染演示视频。结果尚未与官方 PushT 评估对齐。
 
 ## 在 WorldFoundry 中运行
 

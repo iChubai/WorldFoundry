@@ -1,10 +1,11 @@
 ---
-title: WorldCrafter
-description: Camera-controlled scene exploration with queryable 3D memory.
+title: "WorldCrafter"
+description: "WorldCrafter from TencentARC: text-to-video, image-to-video, and 2 more tasks; Verified."
+modelId: "worldcrafter"
 pageSource: authored
 ---
 
-WorldCrafter Base and Fast support image-to-video and text-to-video at **640 × 384**, with **33 frames per chunk**. Multi-chunk generation uses RepEncoder to query the previously generated scene from the requested camera views.
+WorldCrafter is a world model from TencentARC for text-to-video, image-to-video, camera-controlled video, and world model.
 
 ```python
 from worldfoundry.pipelines.worldcrafter import WorldCrafterPipeline
@@ -34,3 +35,33 @@ Base trims ordinary output to `33 × num_chunks - 1` frames, following upstream 
 The runtime requires CUDA, PyTorch 2.10, a Diffusers version with Helios support, Transformers 5.3, Accelerate, PEFT, Einops and safetensors. Compilation is optional and disabled by default. Validated on an H100 with the released Base and Fast weights: two-chunk I2V and T2V runs load strictly and decode complete, visually reviewed videos, and Base resume reproduces the continuous run exactly. Long-horizon memory and camera-control quality are not validated.
 
 [Official source](https://github.com/TencentARC/WorldCrafter) is pinned to `7e57e4d0448e8661eb6ae078f53e19638bd07102`. The official license permits **academic use only**; its complete terms and third-party notices are retained in the repository root `THIRD-PARTY-NOTICES`.
+
+<ModelPaperFigures modelId="worldcrafter" locale="en" />
+
+Paper: [arXiv 2609.24984](https://arxiv.org/abs/2609.24984).
+
+<ModelCommandBuilder modelId="worldcrafter" locale="en" />
+
+## What it is for
+
+`worldcrafter` conditions video generation on camera poses.
+
+Tasks: text-to-video, image-to-video, camera-controlled video, and world model. Modalities: text, image, and camera pose in, video out.
+
+## Runtime contract
+
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `worldcrafter.mp4`.
+
+CLI task profile: `default`. WorldFoundry binds `WorldCrafterPipeline`. Family status: **Verified**.
+
+## Running in WorldFoundry
+
+Run `wf run worldcrafter --pipeline.task-profile default` to follow the camera path.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Weights: `TencentARC/WorldCrafter-Base` and `TencentARC/WorldCrafter-Fast`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh worldcrafter`. Add `--download` to fetch missing public checkpoints.
+
+License: worldcrafter-academic-only.
+
+<ModelRelatedRecipes modelId="worldcrafter" locale="en" />

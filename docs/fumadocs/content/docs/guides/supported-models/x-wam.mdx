@@ -9,9 +9,7 @@ X-WAM is a world-action model: one Wan 2.2 joint flow process predicts future RG
 
 <ModelPaperFigures modelId="x-wam" locale="en" />
 
-Paper: [arXiv 2604.26694](https://arxiv.org/abs/2604.26694).
-
-Project page: [sharinka0715.github.io/X-WAM](https://sharinka0715.github.io/X-WAM/). Code: [sharinka0715/X-WAM](https://github.com/sharinka0715/X-WAM).
+Paper: [arXiv 2604.26694](https://arxiv.org/abs/2604.26694). Project page: [sharinka0715.github.io/X-WAM](https://sharinka0715.github.io/X-WAM/). Code: [sharinka0715/X-WAM](https://github.com/sharinka0715/X-WAM).
 
 <ModelCommandBuilder modelId="x-wam" locale="en" />
 
@@ -27,15 +25,15 @@ Suggested benchmarks: [RoboCasa](/docs/evaluation/benchmark-hub/robocasa) (The R
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `guidance-scale`, `rgb-views`, `state`, `variant`, `torch-dtype`, `denoise-steps`, and 5 more; artifacts `action_trace`, `predicted_video`, and `x-wam_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `guidance-scale`, `rgb-views`, `state`, `variant`, `torch-dtype`, `denoise-steps`, and 5 more; artifacts `predicted_video` and `x-wam_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `XWAMPipeline`.
+CLI task profile: `default`. WorldFoundry binds `XWAMPipeline`. Defaults for `default`: guidance-scale=0.0.
 
 Start with `x-wam-robocasa-sft`. The family has 3 variants, selectable in the command builder above: `x-wam-robocasa-sft` (`wam.world_action_modeling`) — Verified; `x-wam-robotwin-sft` (`wam.world_action_modeling`) — Verified; `x-wam-pretrained` (`wam.post_training_base`) — Verified. Family status: **Verified**.
 
 Stage the X-WAM checkpoint states plus the Wan2.2-TI2V-5B base. The runtime does not need an external X-WAM checkout; training, simulators, ZeroMQ services, Lightning, and DeepSpeed orchestration are not included.
 
-Optional depth decoding remains unvalidated.
+Optional depth decoding remains unvalidated. The 38.9 GB checkpoint requires substantial local storage.
 
 ## Running in WorldFoundry
 

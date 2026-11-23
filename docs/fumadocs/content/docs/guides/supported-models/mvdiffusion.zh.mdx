@@ -1,6 +1,6 @@
 ---
 title: "MVDiffusion"
-description: "MVDiffusion（西蒙菲莎大学（Simon Fraser University））：3D 与 4D；Runner 一致性待确认。"
+description: "MVDiffusion（西蒙菲莎大学（Simon Fraser University））：对应感知多视图图像生成与场景纹理化；Runner 一致性待确认。"
 modelId: "mvdiffusion"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ MVDiffusion 利用对应感知注意力生成多视角图像和全景。在 Worl
 
 <ModelPaperFigures modelId="mvdiffusion" locale="zh" />
 
-论文：[MVDiffusion: Enabling Holistic Multi-view Image Generation with Correspondence-Aware Diffusion](https://arxiv.org/abs/2307.01097)（NeurIPS 2023 (spotlight), 2023）。
-
-项目页：[mvdiffusion.github.io](https://mvdiffusion.github.io/)。代码：[Tangshitao/MVDiffusion](https://github.com/Tangshitao/MVDiffusion)。
+论文：[MVDiffusion: Enabling Holistic Multi-view Image Generation with Correspondence-Aware Diffusion](https://arxiv.org/abs/2307.01097)（NeurIPS 2023 (spotlight), 2023）。项目页：[mvdiffusion.github.io](https://mvdiffusion.github.io/)。代码：[Tangshitao/MVDiffusion](https://github.com/Tangshitao/MVDiffusion)。
 
 <ModelCommandBuilder modelId="mvdiffusion" locale="zh" />
 
@@ -21,19 +19,17 @@ MVDiffusion 利用对应感知注意力生成多视角图像和全景。在 Worl
 
 按 NeurIPS 2023 论文（arXiv 2307.01097），多个并行扩散分支借助「对应感知注意力」同时生成所有视图并保持全局一致。该模型由西蒙菲莎大学（Simon Fraser University）发布。
 
-任务：correspondence-aware multiview image generation and scene texturing。别名：`MVDiffusion: Enabling Holistic Multi-view Image Generation`。
+任务：对应感知多视图图像生成与场景纹理化。别名：`MVDiffusion: Enabling Holistic Multi-view Image Generation`。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `steps`、`gen-video`、`python-executable`；产物 `generated_image`、`mvdiffusion.png`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `steps`、`gen-video`、`python-executable`；产物 `mvdiffusion.png`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `MVDiffusionPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `MVDiffusionPipeline`。系列状态：**Runner 一致性待确认**。`default` 的默认值：steps=20。
 
 图像扩展路线需要一张输入图像，默认产物为全景 PNG。
 
-各视角生成的墙面和物体可能明显偏离输入场景。
+各视角生成的墙面和物体可能明显偏离输入场景。可选旋转视频与完整上游一致性尚未验证。训练面向全景场景：自由相机轨迹不在其范围内。
 
 ## 在 WorldFoundry 中运行
 

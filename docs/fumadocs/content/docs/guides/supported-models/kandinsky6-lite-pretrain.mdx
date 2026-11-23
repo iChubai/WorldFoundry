@@ -17,15 +17,13 @@ Code: [kandinskylab/kandinsky-6](https://github.com/kandinskylab/kandinsky-6).
 
 `kandinsky6-lite-pretrain` generates video from a text prompt, optionally conditioned on a still image.
 
-Tasks: text-to-video, image-to-video, and audio video generation. Modalities: text and image in, video out.
+Tasks: text-to-video, image-to-video, and audio video generation. Modalities: text and image in, video and audio out.
 
 ## Runtime contract
 
-Inputs `prompt` and `image`; artifacts `generated_video` and `kandinsky6-lite-pretrain.mp4`.
+Inputs `prompt` and `image`; artifact `kandinsky6-lite-pretrain.mp4`.
 
-CLI task profiles: `text-to-video`, `image-to-video`, `audio-video-generation`, and `video_generation`. WorldFoundry binds `Kandinsky6Pipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profiles: `text-to-video`, `image-to-video`, `audio-video-generation`, and `video_generation`. WorldFoundry binds `Kandinsky6Pipeline`. Family status: **Runner parity pending**.
 
 ## Running in WorldFoundry
 

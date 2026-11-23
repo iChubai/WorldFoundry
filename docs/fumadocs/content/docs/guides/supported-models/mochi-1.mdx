@@ -25,15 +25,13 @@ Suggested benchmarks: [VBench](/docs/evaluation/benchmark-hub/vbench) (Standard 
 
 ## Runtime contract
 
-Inputs `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifacts `mochi-1-preview-t2v.mp4`.
+Input `prompt` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifact `mochi-1-preview-t2v.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `Mochi1PreviewT2VPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: frames=84, fps=30, height=480, width=848, seed=12345.
+CLI task profile: `interactive-video`. WorldFoundry binds `Mochi1PreviewT2VPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: frames=84, fps=30, height=480, width=848, steps=64, guidance-scale=4.5.
 
 Stage the preview checkpoint (genmo/mochi-1-preview) before running. The GitHub organization is genmoai, while Hugging Face uses genmo.
+
+No checkpoint-backed GPU output has been validated yet, including the official 31-frame / 64-step quality setting.
 
 ## Running in WorldFoundry
 

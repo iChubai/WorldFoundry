@@ -1,6 +1,6 @@
 ---
 title: "Kandinsky 6.0 pro-distill"
-description: "Kandinsky 6.0 pro-distill from kandinskylab: text-to-video, image-to-video, and 1 more task; Runner parity pending; dedicated `worldfoundry-kandinsky6-cu126`."
+description: "Kandinsky 6.0 pro-distill from kandinskylab: text-to-video, image-to-video, and 1 more task; Runner parity pending; dedicated env worldfoundry-kandinsky6-cu126."
 modelId: "kandinsky6-pro-distill"
 pageSource: generated
 ---
@@ -21,11 +21,9 @@ Tasks: text-to-video, image-to-video, and audio video generation. Aliases: `kand
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `generated_video` and `kandinsky6-pro-distill.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `kandinsky6-pro-distill.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `Kandinsky6Pipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `default`. WorldFoundry binds `Kandinsky6Pipeline`. Family status: **Runner parity pending**.
 
 Validated on one H100 80GB: text-to-video with SDPA attention and component offload generates 121 frames at 864x480 and 24 fps with muxed audio, taking about 140 seconds after an 85-second weight load.
 

@@ -1,6 +1,6 @@
 ---
 title: "ABot-M0"
-description: "ABot-M0（高德地图 CV 实验室（阿里巴巴集团））：视觉-语言-动作（VLA）、机器人策略等 4 项任务；仅静态加载; 独立环境 `worldfoundry-vla-abot-m0`。"
+description: "ABot-M0（高德地图 CV 实验室（阿里巴巴集团））：视觉-语言-动作（VLA）、机器人策略等 4 项任务；仅静态加载；独立环境 worldfoundry-vla-abot-m0。"
 modelId: "abot-m0"
 pageSource: authored
 ---
@@ -23,13 +23,13 @@ pageSource: authored
 
 Qwen3-VL 提供视觉-语言骨干；AML flow 动作专家解码动作；可选 VGGT 融合注入 3D 几何。运行时直接加载发布的 config.yaml、dataset_statistics.json 与 steps_*_pytorch_model.pt 布局。该模型由高德地图 CV 实验室（阿里巴巴集团）发布。
 
-任务：视觉-语言-动作（VLA）、机器人策略、策略执行、bimanual_manipulation。别名：`abot_m0`。
+任务：视觉-语言-动作（VLA）、机器人策略、策略执行、双臂操作。别名：`abot_m0`。
 
 推荐评测：[LIBERO](/zh/docs/evaluation/benchmark-hub/libero)（有专门的 ABot-M0-LIBERO 任务权重）、[RoboCasa](/zh/docs/evaluation/benchmark-hub/robocasa)（有专门的 ABot-M0-Robocasa 任务权重）、[RoboTwin 2.0](/zh/docs/evaluation/benchmark-hub/robotwin)（有专门的 ABot-M0-RoboTwin2 任务权重）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `action_trace`、`abot_m0_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；产物 `abot_m0_action_trace.json`。
 
 CLI task profile：`default`。绑定的 pipeline 类是 `ABotM0Pipeline`。
 

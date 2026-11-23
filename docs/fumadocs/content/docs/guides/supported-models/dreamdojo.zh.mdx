@@ -1,17 +1,41 @@
 ---
 title: "DreamDojo"
-description: "DreamDojo 2B GR-1 的原生动作条件机器人视频生成。"
+description: "DreamDojo（英伟达（NVIDIA））：世界模型、机器人等 3 项任务；Runner 一致性待确认；2 个 variant。"
 modelId: "dreamdojo"
 pageSource: authored
 ---
 
-DreamDojo 从初始图像与归一化机器人动作预测机器人视角视频。WorldFoundry 已通过原生动作条件 Cosmos DiT、共享 Reason1 文本编码器、Wan 视频编码解码与 UniPC 采样接入离线 **2B GR-1 后训练 teacher**。独立的 [DreamDojo Student](./dreamdojo-student) 入口提供低步数蒸馏推理与常驻归一化动作流式推理。
+DreamDojo 从初始图像与归一化机器人动作预测机器人视角视频。WorldFoundry 通过原生 Cosmos 组件接入离线 2B GR-1 后训练 teacher 与独立低步数因果学生入口。
 
 <ModelPaperFigures modelId="dreamdojo" locale="zh" />
 
-论文：[arXiv 2602.06949](https://arxiv.org/abs/2602.06949)。项目：[DreamDojo](https://dreamdojo-world.github.io/)。代码：[NVIDIA/DreamDojo](https://github.com/NVIDIA/DreamDojo)。权重：[nvidia/DreamDojo](https://huggingface.co/nvidia/DreamDojo)。许可：**NVIDIA Open Model License**。
+论文：[arXiv 2602.06949](https://arxiv.org/abs/2602.06949)。
+
+项目页：[dreamdojo-world.github.io](https://dreamdojo-world.github.io/)。代码：[NVIDIA/DreamDojo](https://github.com/NVIDIA/DreamDojo)。
+
+<ModelCommandBuilder modelId="dreamdojo" locale="zh" />
+
+## 用来做什么
+
+用 `dreamdojo-2b-gr1-distilled` 以动作推进世界并渲染出相应画面。
+
+动作条件 Cosmos DiT 为每个后续潜帧组合四个 384 维动作，将投影注入时间步与 AdaLN embedding。Reason1 文本条件与 Wan 编解码共享。Teacher 使用 UniPC，因果学生使用干净 KV 预填充与一至四步 TrigFlow 采样。该模型由英伟达（NVIDIA）发布。
+
+任务：世界模型、机器人。同系列还有 `dreamdojo-2b-gr1-action-conditioned`。
+
+推荐评测：[EWMBench](/zh/docs/evaluation/benchmark-hub/ewmbench)（显式动作条件下的机器人视频预测）。
 
 ## 运行时契约
+
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `height`、`width`、`steps`、`guidance-scale`、`seed`；产物 `dreamdojo_world.mp4`。
+
+CLI task profile：`interactive-video`、`robot-world-generation`。绑定的 pipeline 类是 `DreamDojoPipeline`。`interactive-video` 的默认值：height=480, width=640, steps=35, guidance-scale=7.0, seed=42。
+
+建议从 `dreamdojo-2b-gr1-distilled` 开始。该系列共有 2 个 variant，可在上方命令构建器中切换：`dreamdojo-2b-gr1-action-conditioned`（`robot-world-generation`）：Runner 一致性待确认、`dreamdojo-2b-gr1-distilled`（`robot-world-generation`）：Runner 一致性待确认。系列状态：**Runner 一致性待确认**。
+
+提供一幅初始图像、归一化 384 维空间中的完整 12 步动作块、转换后的 EMA 权重、Cosmos 视频 tokenizer，以及 Reason1 文本权重或显式预计算 embedding。每块生成 13 帧，较长序列复用上一块的最终生成帧。
+
+尚未验证官方数值一致性、GR-1 评测质量与机器人任务成功率。蒸馏推理通过 dreamdojo-student 使用显式学生权重，不能与 teacher 权重互换。暂不支持其他模型规模。
 
 此模型是机器人世界模型，不是输出动作的 VLA 策略。
 
@@ -21,40 +45,16 @@ DreamDojo 从初始图像与归一化机器人动作预测机器人视角视频�
 
 ## 在 WorldFoundry 中运行
 
+运行 `wf run dreamdojo-2b-gr1-action-conditioned --pipeline.task-profile interactive-video` 推演世界模型。在上方命令构建器中切换任务，即可改变 `--pipeline.task-profile`。
+
+运行环境：独立环境 `dreamdojo`（Python 3.10，CUDA 12.8，torch==2.7.0）。
+
+权重仓库：`nvidia/DreamDojo`、`nvidia/Cosmos-Predict2.5-2B`、`nvidia/Cosmos-Reason1-7B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh dreamdojo-2b-gr1-action-conditioned`；下载缺失的公开权重时加 `--download`。
+
+许可证：NVIDIA Open Model License。
+
 准备 GR-1 EMA 权重、Cosmos-Predict2.5 视频 tokenizer 与 Cosmos-Reason1-7B 文本编码器。需要时，公共加载入口会自动将分布式 checkpoint 分片转换为 `model_ema_bf16.pt`。
 
-```python
-from worldfoundry.pipelines.component_pipelines import DreamDojoPipeline
-
-pipeline = DreamDojoPipeline.from_pretrained(
-    {
-        "checkpoints_dir": "/weights/DreamDojo/2B_GR1_post-train",
-        "vae_path": "/weights/Cosmos-Predict2.5-2B/tokenizer.pth",
-        "text_encoder_path": "/weights/Cosmos-Reason1-7B",
-    },
-    device="cuda",
-)
-pipeline(
-    images="/inputs/robot.png",
-    interactions=["/inputs/normalized-actions.npy"],
-    output_path="/outputs/dreamdojo.mp4",
-    num_inference_steps=35,
-    guidance_scale=7.0,
-    seed=42,
-)
-```
-
 如已准备官方 Reason1 特征，可用 `text_embeddings_path` 替代 `text_encoder_path`。特征形状必须为 `[1,S,100352]`；该路径使用实际提供的文本 embedding，不再加载文本编码器。
-
-命令行运行方式见 `python tests/manual/dreamdojo_inference.py --help`。权重、输入与生成视频存放在仓库之外。
-
-## 验证
-
-已用发布的 GR-1 权重验证：pipeline 每块在 480×640、5 fps 下生成 13 帧（35 步，seed 42），重复相同动作得到完全一致的帧，改变动作会改变生成视频。
-
-## 限制
-
-- 此 teacher 配置支持离线 2B GR-1 推理。蒸馏推理通过独立学生入口使用显式学生权重，暂不支持其他权重规模。
-- 尚未验证官方数值一致性、GR-1 评测质量与机器人任务成功率。
 
 <ModelRelatedRecipes modelId="dreamdojo" locale="zh" />

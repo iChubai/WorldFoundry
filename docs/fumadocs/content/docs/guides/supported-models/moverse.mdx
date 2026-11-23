@@ -1,6 +1,6 @@
 ---
 title: "MoVerse"
-description: "MoVerse: image-to-navigable-world, camera-controlled video, and 1 more task; Runner parity pending; dedicated `moverse`."
+description: "MoVerse: image-to-navigable-world, camera-controlled video, and 1 more task; Runner parity pending; dedicated env moverse."
 modelId: "moverse"
 pageSource: authored
 ---
@@ -21,15 +21,15 @@ Use `moverse` when the viewpoint must follow a given camera path.
 
 Assembles GeoCalib AutoLevel, Depth Anything 3, SHARP panorama, Wan (Wan2.1-T2V-1.3B video base), and TAEHV components, plus FLUX.1-Fill-dev as the panorama base and MoVerse's own component weights.
 
-Tasks: image-to-navigable-world, camera-controlled video, and panoramic gaussian scaffold. Aliases: `mo-verse` and `Orange-3DV-Team/MoVerse`. Modalities: image in, world state out.
+Tasks: image-to-navigable-world, camera-controlled video, and panoramic gaussian scaffold. Aliases: `mo-verse` and `Orange-3DV-Team/MoVerse`. Modalities: image and camera pose in, world state and video out.
 
 Suggested benchmarks: [WorldScore](/docs/evaluation/benchmark-hub/worldscore) (Navigable generated-world quality), [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Camera-control adherence during navigation).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames` and `fps`; artifacts `generated_world`, `gaussian_scaffold`, and `generated_video`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames` and `fps`; artifacts `gaussian_scaffold` and `moverse.mp4`.
 
-CLI task profiles: `default`. WorldFoundry binds `MoVersePipeline`.
+CLI task profile: `default`. WorldFoundry binds `MoVersePipeline`.
 
 Family status: **Runner parity pending**.
 

@@ -1,17 +1,15 @@
 ---
 title: "H-RDT"
-description: "H-RDT: VLA, human motion policy, and 2 more tasks; Static load only; dedicated `worldfoundry-vla-h-rdt`."
+description: "H-RDT: VLA, human motion policy, and 2 more tasks; Static load only; dedicated env worldfoundry-vla-h-rdt."
 modelId: "h-rdt"
-pageSource: authored
+pageSource: generated
 ---
 
 H-RDT (Human-to-Robotics Diffusion Transformer) pretrains a diffusion-transformer policy on large-scale human manipulation data before robot fine-tuning (paper: arXiv 2507.23523, MPL-2.0). The official release is the 48-dimensional human-motion pretraining checkpoint (embodiedfoundation/H-RDT).
 
 <ModelPaperFigures modelId="h-rdt" locale="en" />
 
-Paper: [H-RDT: Human Manipulation Enhanced Bimanual Robotic Manipulation](https://arxiv.org/abs/2507.23523) (2025).
-
-Project page: [embodiedfoundation.github.io/hrdt](https://embodiedfoundation.github.io/hrdt/). Code: [HongzheBi/H_RDT](https://github.com/HongzheBi/H_RDT).
+Paper: [H-RDT: Human Manipulation Enhanced Bimanual Robotic Manipulation](https://arxiv.org/abs/2507.23523) (2025). Project page: [embodiedfoundation.github.io/hrdt](https://embodiedfoundation.github.io/hrdt/). Code: [HongzheBi/H_RDT](https://github.com/HongzheBi/H_RDT).
 
 <ModelCommandBuilder modelId="h-rdt" locale="en" />
 
@@ -25,11 +23,9 @@ Tasks: VLA, human motion policy, VLA policy rollout, and robot policy finetune. 
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifacts `action_trace` and `h_rdt_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); artifact `h_rdt_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `HRDTSynthesis`.
-
-Family status: **Static load only**.
+CLI task profile: `default`. WorldFoundry binds `HRDTSynthesis`. Family status: **Static load only**.
 
 The integration covers inference only; training, datasets, ROS, robot drivers, and simulator clients are not included.
 
@@ -39,8 +35,10 @@ Only the 48-dimensional human-motion pretraining checkpoint is released; the 14-
 
 Run `wf run h-rdt --pipeline.task-profile default` to predict actions.
 
-It runs in the dedicated environment `worldfoundry-vla-h-rdt` (Python 3.10, CUDA 12.1 or newer, torch>=2.2).
+It runs in the dedicated environment `worldfoundry-vla-h-rdt` (Python 3.10, CUDA 12.1+, torch>=2.2).
 
 Weights: `embodiedfoundation/H-RDT` and `google/t5-v1_1-xxl`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh h-rdt`. Add `--download` to fetch missing public checkpoints.
+
+License: mpl-2.0.
 
 <ModelRelatedRecipes modelId="h-rdt" locale="en" />

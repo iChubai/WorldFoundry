@@ -1,17 +1,15 @@
 ---
 title: "MotionCtrl"
-description: "MotionCtrl from Tencent (ARC Lab): independent camera-motion and object-motion control for video generation."
+description: "MotionCtrl from Tencent (ARC Lab); Verified."
 modelId: "motionctrl"
-pageSource: authored
+pageSource: generated
 ---
 
 MotionCtrl is a unified, flexible motion controller for video generation: it controls camera motion and object motion independently in one model (SIGGRAPH 2024). Validated with the released MotionCtrl checkpoint: the camera-motion demo runs end to end with the bundled camera-pose example.
 
 <ModelPaperFigures modelId="motionctrl" locale="en" />
 
-Paper: [arXiv 2312.03641](https://arxiv.org/abs/2312.03641).
-
-Project page: [wanquanf.github.io/MotionCtrl](https://wanquanf.github.io/MotionCtrl/). Code: [TencentARC/MotionCtrl](https://github.com/TencentARC/MotionCtrl).
+Paper: [arXiv 2312.03641](https://arxiv.org/abs/2312.03641). Project page: [wanquanf.github.io/MotionCtrl](https://wanquanf.github.io/MotionCtrl/). Code: [TencentARC/MotionCtrl](https://github.com/TencentARC/MotionCtrl).
 
 <ModelCommandBuilder modelId="motionctrl" locale="en" />
 
@@ -27,13 +25,13 @@ Suggested benchmarks: [CameraBench](/docs/evaluation/benchmark-hub/camerabench) 
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `height`, `width`, `seed`, `camera-pose-path`, `condtype`, `unconditional-guidance-scale`, and 1 more; artifacts `motionctrl.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `height`, `width`, `seed`, `camera-pose-path`, `condtype`, `unconditional-guidance-scale`, and 1 more; artifact `motionctrl.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `MotionCtrlPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `interactive-video`. WorldFoundry binds `MotionCtrlPipeline`. Family status: **Verified**. Defaults for `interactive-video`: height=256, width=256, seed=42.
 
 Start from the bundled default camera/object motion conditions and inference config; supply the local MotionCtrl checkpoint.
+
+LVDM-era base: visual quality trails newer DiT video models. Benchmark scores have not been measured.
 
 ## Running in WorldFoundry
 

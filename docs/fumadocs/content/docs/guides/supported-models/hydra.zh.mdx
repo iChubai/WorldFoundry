@@ -9,9 +9,7 @@ HyDRA 是相机可控的视频到视频世界模型：按 camera JSON 描述的�
 
 <ModelPaperFigures modelId="hydra" locale="zh" />
 
-论文：[arXiv 2603.25716](https://arxiv.org/abs/2603.25716)。
-
-项目页：[kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models](https://kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models/)。代码：[H-EmbodVis/HyDRA](https://github.com/H-EmbodVis/HyDRA)。
+论文：[arXiv 2603.25716](https://arxiv.org/abs/2603.25716)。项目页：[kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models](https://kj-chen666.github.io/Hybrid-Memory-in-Video-World-Models/)。代码：[H-EmbodVis/HyDRA](https://github.com/H-EmbodVis/HyDRA)。
 
 <ModelCommandBuilder modelId="hydra" locale="zh" />
 
@@ -21,7 +19,7 @@ HyDRA 是相机可控的视频到视频世界模型：按 camera JSON 描述的�
 
 HyDRA 将自有 checkpoint（H-EmbodVis/HyDRA）与 Wan2.1-T2V-1.3B 基座模型（Wan-AI/Wan2.1-T2V-1.3B）配合使用。
 
-任务：相机可控视频、视频到视频、世界模型。别名：`h-embodvis-hydra`。模态上，它接受视频，输出视频。
+任务：相机可控视频、视频到视频、世界模型。别名：`h-embodvis-hydra`。模态上，它接受相机位姿、视频，输出视频。
 
 推荐评测：[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（重渲染视频的相机行为贴合度）。
 
@@ -29,13 +27,11 @@ HyDRA 将自有 checkpoint（H-EmbodVis/HyDRA）与 Wan2.1-T2V-1.3B 基座模型
 
 输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`seed` 等 7 项；产物 `hydra.mp4`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `HydraPipeline`。
-
-系列状态：**已验证**。
-
-`default` 的默认值：frames=77, fps=15, height=480, width=832, seed=42。
+CLI task profile：`default`。绑定的 pipeline 类是 `HydraPipeline`。系列状态：**已验证**。`default` 的默认值：frames=77, fps=15, height=480, width=832, steps=50, seed=42。
 
 必须使用内置源码——外部源码检出会被拒绝。输入为提示词、视频与 camera_json。
+
+固定上游 revision 无 LICENSE：下游使用前需要法律审查。官方样例画面连贯，但另一个合成轨迹产物出现大面积遮挡；相机轨迹遵循性尚未量化测量。
 
 ## 在 WorldFoundry 中运行
 
@@ -44,5 +40,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `HydraPipeline`。
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`H-EmbodVis/HyDRA`、`Wan-AI/Wan2.1-T2V-1.3B`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh hydra`；下载缺失的公开权重时加 `--download`。
+
+许可证：unknown。
 
 <ModelRelatedRecipes modelId="hydra" locale="zh" />

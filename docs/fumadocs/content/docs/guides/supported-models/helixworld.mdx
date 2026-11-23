@@ -1,13 +1,11 @@
 ---
-title: "HelixWorld"
-description: "Camera-controlled joint audio-video generation from one image."
+title: "HelixWorld Preview v1"
+description: "HelixWorld Preview v1 from Noiz AI: image-to-video, action-conditioned video, and 2 more tasks; Runner parity pending."
 modelId: "helixworld"
 pageSource: authored
 ---
 
-HelixWorld Preview v1 generates video and spatial audio together from one image, three scene descriptions and a camera/action plan. It builds on the LTX-2.3 transformer, Gemma text encoder, video/audio VAE and vocoder, adding camera and action encoders.
-
-Code: [NoizAI/HelixWorld](https://github.com/NoizAI/HelixWorld). Weights: [NoizAI/HelixWorld-preview](https://huggingface.co/NoizAI/HelixWorld-preview).
+HelixWorld Preview v1 generates camera-controlled video and spatial audio together from one image and three scene descriptions.
 
 ```python
 from worldfoundry.pipelines.helixworld import HelixWorldPipeline
@@ -35,8 +33,36 @@ The default is 768×512 at 24 FPS. Frame counts are 121, 153, 185, …; inferenc
 
 Validated with the full checkpoint on an H100 80 GB (BF16, default block offload): a 768×512, 121-frame run produces an MP4 with 48 kHz stereo audio in about 24 seconds after loading, peaking at 26.0 GiB allocated CUDA memory.
 
-## Limitations
+<ModelPaperFigures modelId="helixworld" locale="en" />
 
-- The official BF16 reference run uses about 70 GB VRAM; an 80 GB GPU is recommended. Gemma assets require acceptance of Google's model terms.
-- Preview generates one sample per request.
-- The released preview provides offline inference; training code and the technical report are forthcoming.
+Project page: [helixworld.org](https://helixworld.org/). Code: [NoizAI/HelixWorld](https://github.com/NoizAI/HelixWorld).
+
+<ModelCommandBuilder modelId="helixworld" locale="en" />
+
+## What it is for
+
+Use `helixworld` to step a world forward with actions and render the resulting frames.
+
+LTX-2.3 joint audio/video transformer with action timestep embeddings, camera PRoPE, four-step stochastic sampling and bounded clean-context replay. It is published by Noiz AI.
+
+Tasks: image-to-video, action-conditioned video, camera pose-controlled video, and audio video generation. Aliases: `helixworld-preview`, `helix-world`, and `NoizAI/HelixWorld-preview`. Modalities: image, action, and camera pose in, video and audio out.
+
+## Runtime contract
+
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `guidance-scale`, and 1 more; artifact `helixworld.mp4`.
+
+CLI task profile: `interactive-video`. WorldFoundry binds `HelixWorldPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: frames=121, fps=24, height=512, width=768, steps=4, guidance-scale=1.0.
+
+Preview inference is released; full-model training code and the technical report are forthcoming.
+
+## Running in WorldFoundry
+
+Step the world with `wf run helixworld --pipeline.task-profile interactive-video`.
+
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
+
+Weights: `NoizAI/HelixWorld-preview` and `google/gemma-3-12b-it-qat-q4_0-unquantized`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh helixworld`. Add `--download` to fetch missing public checkpoints.
+
+License: Apache-2.0.
+
+<ModelRelatedRecipes modelId="helixworld" locale="en" />

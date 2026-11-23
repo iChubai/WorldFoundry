@@ -1,6 +1,6 @@
 ---
 title: "Gamma-World"
-description: "Gamma-World（英伟达（NVIDIA））：动作条件视频、图生视频等 3 项任务；Runner 一致性待确认; 3 个 variant。"
+description: "Gamma-World（英伟达（NVIDIA））：多智能体世界模型、动作条件视频等 3 项任务；Runner 一致性待确认；3 个 variant。"
 modelId: "gamma-world"
 pageSource: authored
 ---
@@ -25,7 +25,7 @@ Gamma-World 是英伟达的多智能体世界模型：给定每个玩家的起�
 
 模型以 Reason1（文本编码器为 nvidia/Cosmos-Reason1-7B）为条件，用共享 Wan VAE 解码；WorldFoundry 负责动作归一化与窗口执行。chijw/Gamma-World 权重（apache-2.0）包含双向、因果与蒸馏网络。该模型由英伟达（NVIDIA）发布。
 
-任务：multi-agent-world-model、动作条件视频、图生视频。别名：`gammaworld`、`gamma-world-causal`、`gamma-world-causal-few-step`。模态上，它接受图像，输出视频。同系列还有 `gamma-world-causal`、`gamma-world-bidirectional`。
+任务：多智能体世界模型、动作条件视频、图生视频。别名：`gammaworld`、`gamma-world-causal`、`gamma-world-causal-few-step`。模态上，它接受动作、图像，输出视频。同系列还有 `gamma-world-causal`、`gamma-world-bidirectional`。
 
 推荐评测：[WorldModelBench](/zh/docs/evaluation/benchmark-hub/worldmodelbench)（动作条件下世界滚动生成质量）。
 

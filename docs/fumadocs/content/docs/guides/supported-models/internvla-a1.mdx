@@ -1,6 +1,6 @@
 ---
 title: "InternVLA-A1-3B"
-description: "InternVLA-A1-3B from Shanghai AI Laboratory (InternRobotics): VLA, robot policy, and 2 more tasks; Static load only; dedicated `worldfoundry-vla-internvla-a1`."
+description: "InternVLA-A1-3B from Shanghai AI Laboratory (InternRobotics): VLA, robot policy, and 2 more tasks; Static load only; dedicated env worldfoundry-vla-internvla-a1."
 modelId: "internvla-a1"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ InternVLA-A1-3B is the A1 generation of InternRobotics' InternVLA series: a 3B p
 
 <ModelPaperFigures modelId="internvla-a1" locale="en" />
 
-Paper: [arXiv 2607.04988](https://arxiv.org/abs/2607.04988).
-
-Project page: [internrobotics.github.io/internvla-a15.github.io](https://internrobotics.github.io/internvla-a15.github.io). Code: [InternRobotics/InternVLA-A-series](https://github.com/InternRobotics/InternVLA-A-series).
+Paper: [arXiv 2607.04988](https://arxiv.org/abs/2607.04988). Project page: [internrobotics.github.io/internvla-a15.github.io](https://internrobotics.github.io/internvla-a15.github.io). Code: [InternRobotics/InternVLA-A-series](https://github.com/InternRobotics/InternVLA-A-series).
 
 <ModelCommandBuilder modelId="internvla-a1" locale="en" />
 
@@ -27,11 +25,9 @@ Suggested benchmarks: [RoboTwin 2.0](/docs/evaluation/benchmark-hub/robotwin) (D
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `official-policy-observation`; artifacts `action_trace` and `internvla_a1_action_trace.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); option `official-policy-observation`; artifact `internvla_a1_action_trace.json`.
 
-CLI task profiles: `default`. WorldFoundry binds `InternVLAA1Synthesis`.
-
-Family status: **Static load only**.
+CLI task profile: `default`. WorldFoundry binds `InternVLAA1Synthesis`. Family status: **Static load only**.
 
 Stage the A1-3B (or RoboTwin) checkpoint plus Qwen3-VL-2B-Instruct and the Cosmos tokenizer locally. Note the non-commercial license.
 
@@ -44,5 +40,7 @@ Run the policy with `wf run internvla-a1 --pipeline.task-profile default`.
 It runs in the dedicated environment `worldfoundry-vla-internvla-a1` (Python 3.10, CUDA 12.8, torch>=2.7,\<2.8).
 
 Weights: `InternRobotics/InternVLA-A1-3B`, `InternRobotics/InternVLA-A1-3B-RoboTwin`, and `Qwen/Qwen3-VL-2B-Instruct` among others. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh internvla-a1`. Add `--download` to fetch missing public checkpoints.
+
+License: CC BY-NC-SA 4.0.
 
 <ModelRelatedRecipes modelId="internvla-a1" locale="en" />

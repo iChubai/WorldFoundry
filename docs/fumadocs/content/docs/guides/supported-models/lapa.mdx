@@ -1,6 +1,6 @@
 ---
 title: "Latent Action Pretraining"
-description: "Latent Action Pretraining: va, vam, and 2 more tasks; Runner parity pending; dedicated `worldfoundry-lapa-jax-cu118`."
+description: "Latent Action Pretraining: VA, VAM, and 2 more tasks; Runner parity pending; dedicated env worldfoundry-lapa-jax-cu118."
 modelId: "lapa"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ LAPA (Latent Action Pretraining) learns actions without action labels: it pretra
 
 <ModelPaperFigures modelId="lapa" locale="en" />
 
-Paper: [arXiv 2410.11758](https://arxiv.org/abs/2410.11758).
-
-Code: [LatentActionPretraining/LAPA](https://github.com/LatentActionPretraining/LAPA).
+Paper: [arXiv 2410.11758](https://arxiv.org/abs/2410.11758). Code: [LatentActionPretraining/LAPA](https://github.com/LatentActionPretraining/LAPA).
 
 <ModelCommandBuilder modelId="lapa" locale="en" />
 
@@ -21,19 +19,17 @@ Code: [LatentActionPretraining/LAPA](https://github.com/LatentActionPretraining/
 
 A 7B video-action model trained on Open X-Embodiment scale data with latent action quantization.
 
-Tasks: va, vam, latent action, and video action modeling. Aliases: `LAPA` and `LAPA-7B-openx`.
+Tasks: VA, VAM, latent action, and video action modeling. Aliases: `LAPA` and `LAPA-7B-openx`.
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `seed`, `checkpoint-dir`, `dtype`, `image-size`, `mesh-dim`, and `tokens-per-delta`; artifacts `lapa_action_tokens.json`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `seed`, `checkpoint-dir`, `dtype`, `image-size`, `mesh-dim`, and `tokens-per-delta`; artifact `lapa_action_tokens.json`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `LAPAPipeline`.
-
-Family status: **Runner parity pending**.
-
-Defaults for `interactive-video`: seed=1234.
+CLI task profile: `interactive-video`. WorldFoundry binds `LAPAPipeline`. Family status: **Runner parity pending**. Defaults for `interactive-video`: seed=1234.
 
 Run it in the dedicated JAX environment worldfoundry-lapa-jax-cu118. Plan-only execution works; full 7B inference needs a compatible JAX environment with tux installed.
+
+Full 7B inference does not run yet: the prepare environment lacks tux and the gpu-jax0325 environment has an incompatible JAX version. JAX/Flax stack, not PyTorch, so environment setup differs from most models.
 
 ## Running in WorldFoundry
 

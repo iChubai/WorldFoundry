@@ -9,9 +9,7 @@ Step-Video-T2V 是阶跃星辰的大规模开源文生视频模型（上游 300 
 
 <ModelPaperFigures modelId="step-video-t2v" locale="zh" />
 
-论文：[arXiv 2502.10248](https://arxiv.org/abs/2502.10248)。
-
-代码：[stepfun-ai/Step-Video-T2V](https://github.com/stepfun-ai/Step-Video-T2V)。
+论文：[arXiv 2502.10248](https://arxiv.org/abs/2502.10248)。代码：[stepfun-ai/Step-Video-T2V](https://github.com/stepfun-ai/Step-Video-T2V)。
 
 <ModelCommandBuilder modelId="step-video-t2v" locale="zh" />
 
@@ -27,15 +25,13 @@ Step-Video-T2V 是阶跃星辰的大规模开源文生视频模型（上游 300 
 
 ## 运行时契约
 
-输入 `prompt`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`guidance-scale` 等 7 项；产物 `generated_video`、`step_video_t2v.mp4`。
+输入 `prompt`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`guidance-scale` 等 7 项；产物 `step_video_t2v.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `StepVideoT2VPipeline`。
-
-系列状态：**已验证**。
-
-`interactive-video` 的默认值：frames=204, fps=25, height=544, width=992。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `StepVideoT2VPipeline`。系列状态：**已验证**。`interactive-video` 的默认值：frames=204, fps=25, height=544, width=992, steps=50, guidance-scale=9.0。
 
 已用发布的 checkpoint 验证：一个提示词在 GPU 上以 50 步生成 992x544、204 帧的视频。请使用 id step-video-t2v。30B 规模需要充足显存或多卡配置。
+
+验证仅覆盖一个提示词；尚未测量基准分数或与官方实现的逐像素一致性。30B 规模需要数据中心级 GPU；单张消费级显卡不可行。
 
 ## 在 WorldFoundry 中运行
 

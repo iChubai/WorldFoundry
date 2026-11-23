@@ -1,31 +1,11 @@
 ---
-title: "HelixWorld"
-description: "从一张图像生成相机可控的视频与空间音频。"
+title: "HelixWorld Preview v1"
+description: "HelixWorld Preview v1（Noiz AI）：图生视频、动作条件视频等 4 项任务；Runner 一致性待确认。"
 modelId: "helixworld"
 pageSource: authored
 ---
 
-HelixWorld Preview v1 从一张图像、视觉/声音/联合场景描述及动作计划共同生成视频与空间音频。它基于 LTX-2.3 transformer、Gemma 文本编码器、视频/音频 VAE 与 vocoder，并加入相机与动作编码器。
-
-代码：[NoizAI/HelixWorld](https://github.com/NoizAI/HelixWorld)。权重：[NoizAI/HelixWorld-preview](https://huggingface.co/NoizAI/HelixWorld-preview)。
-
-```python
-from worldfoundry.pipelines.helixworld import HelixWorldPipeline
-
-pipeline = HelixWorldPipeline.from_pretrained(device="cuda")
-result = pipeline(
-    prompt="A forest path with rustling leaves as the camera walks forward.",
-    audio_prompt="Footsteps on gravel, birds and wind in the trees.",
-    av_prompt="The footsteps and sound field follow the camera movement.",
-    images="first_frame.png",
-    actions="W:5,right:5,stop:5",
-    perspective="first_person",
-    num_frames=121,
-    seed=42,
-    output_path="outputs/helixworld.mp4",
-    return_dict=True,
-)
-```
+HelixWorld Preview v1 从一张图像及视觉、声音、联合场景描述生成相机可控视频与空间音频。
 
 MP4 包含生成的音轨，返回字典还提供音频波形、采样率与视频 tensor。使用本地资产时，将 checkpoint 文件传入 `model_path`，Gemma 目录传入 `text_encoder_path`。
 
@@ -35,8 +15,36 @@ MP4 包含生成的音轨，返回字典还提供音频波形、采样率与视�
 
 已在 H100 80 GB 上用完整 checkpoint 验证（BF16，默认 block offload）：768×512、121 帧的运行生成含 48 kHz 双声道音轨的 MP4，加载后约 24 秒完成，CUDA 峰值分配 26.0 GiB。
 
-## 限制
+<ModelPaperFigures modelId="helixworld" locale="zh" />
 
-- 官方 BF16 参考运行约使用 70 GB 显存，建议 80 GB GPU；Gemma 资产需要接受 Google 模型条款。
-- Preview 每次请求生成一个样本。
-- 当前公开 Preview 离线推理版本，训练代码及技术报告尚待发布。
+项目页：[helixworld.org](https://helixworld.org/)。代码：[NoizAI/HelixWorld](https://github.com/NoizAI/HelixWorld)。
+
+<ModelCommandBuilder modelId="helixworld" locale="zh" />
+
+## 用来做什么
+
+用 `helixworld` 以动作推进世界并渲染出相应画面。
+
+基于 LTX-2.3 联合音视频 transformer，加入动作时间步嵌入、相机 PRoPE、四步随机采样与有界历史上下文重放。该模型由 Noiz AI 发布。
+
+任务：图生视频、动作条件视频、相机位姿可控视频、音视频联合生成。别名：`helixworld-preview`、`helix-world`、`NoizAI/HelixWorld-preview`。模态上，它接受图像、动作、相机位姿，输出视频、音频。
+
+## 运行时契约
+
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`guidance-scale` 等 7 项；产物 `helixworld.mp4`。
+
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `HelixWorldPipeline`。系列状态：**Runner 一致性待确认**。`interactive-video` 的默认值：frames=121, fps=24, height=512, width=768, steps=4, guidance-scale=1.0。
+
+当前公开 Preview 推理版本，完整模型训练代码及技术报告尚待发布。
+
+## 在 WorldFoundry 中运行
+
+用 `wf run helixworld --pipeline.task-profile interactive-video` 推进世界。
+
+运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
+
+权重仓库：`NoizAI/HelixWorld-preview`、`google/gemma-3-12b-it-qat-q4_0-unquantized`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh helixworld`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
+
+<ModelRelatedRecipes modelId="helixworld" locale="zh" />

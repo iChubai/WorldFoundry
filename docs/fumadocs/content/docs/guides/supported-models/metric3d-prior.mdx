@@ -9,9 +9,7 @@ Metric3D recovers metric-scale depth from a single image by normalizing images i
 
 <ModelPaperFigures modelId="metric3d-prior" locale="en" />
 
-Paper: [arXiv 2403.12013](https://arxiv.org/abs/2403.12013).
-
-Project page: [jugghm.github.io/Metric3Dv2](https://jugghm.github.io/Metric3Dv2/). Code: [YvanYin/Metric3D](https://github.com/YvanYin/Metric3D).
+Paper: [arXiv 2403.12013](https://arxiv.org/abs/2403.12013). Project page: [jugghm.github.io/Metric3Dv2](https://jugghm.github.io/Metric3Dv2/). Code: [YvanYin/Metric3D](https://github.com/YvanYin/Metric3D).
 
 <ModelCommandBuilder modelId="metric3d-prior" locale="en" />
 
@@ -25,15 +23,13 @@ Tasks: monocular depth estimation, metric depth estimation, and geometry prior. 
 
 ## Runtime contract
 
-Inputs `input-path` (bundled samples are used when omitted); options `model`, `version`, `focal-length`, `execute`, and `max-points`; artifacts `metric3d-prior.npz`.
+Input `input-path` (bundled samples are used when omitted); options `model`, `version`, `focal-length`, `execute`, and `max-points`; artifact `metric3d-prior.npz`.
 
-CLI task profiles: `default`. WorldFoundry binds `Metric3DPriorPipeline`.
-
-Family status: **Verified**.
+CLI task profile: `default`. WorldFoundry binds `Metric3DPriorPipeline`. Family status: **Verified**.
 
 Pass one image as input_path and, when known, its focal_length; the run writes the depth prediction to metric3d-prior.npz.
 
-Metric accuracy depends on camera-intrinsics quality; wrong intrinsics degrade the scale.
+Metric accuracy depends on camera-intrinsics quality; wrong intrinsics degrade the scale. Single-image prior: it does not enforce temporal consistency across video frames.
 
 ## Running in WorldFoundry
 
@@ -42,5 +38,7 @@ Estimate depth with `wf run metric3d-prior --pipeline.task-profile default`.
 It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `JUGGHM/Metric3D`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh metric3d-prior`. Add `--download` to fetch missing public checkpoints.
+
+License: BSD-2-Clause.
 
 <ModelRelatedRecipes modelId="metric3d-prior" locale="en" />

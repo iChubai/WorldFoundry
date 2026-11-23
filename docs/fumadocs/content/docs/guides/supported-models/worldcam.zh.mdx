@@ -9,9 +9,7 @@ WorldCam 由 KAIST CV Lab 联合 Adobe Research 与 MAUM AI 发布，是支持�
 
 <ModelPaperFigures modelId="worldcam" locale="zh" />
 
-论文：[arXiv 2603.16871](https://arxiv.org/abs/2603.16871)。
-
-项目页：[cvlab-kaist.github.io/WorldCam](https://cvlab-kaist.github.io/WorldCam/)。代码：[cvlab-kaist/WorldCam](https://github.com/cvlab-kaist/WorldCam)。
+论文：[arXiv 2603.16871](https://arxiv.org/abs/2603.16871)。项目页：[cvlab-kaist.github.io/WorldCam](https://cvlab-kaist.github.io/WorldCam/)。代码：[cvlab-kaist/WorldCam](https://github.com/cvlab-kaist/WorldCam)。
 
 <ModelCommandBuilder modelId="worldcam" locale="zh" />
 
@@ -19,7 +17,7 @@ WorldCam 由 KAIST CV Lab 联合 Adobe Research 与 MAUM AI 发布，是支持�
 
 `worldcam` 以相机位姿为条件生成视频。
 
-runner 遵循官方条件视频路径，使用 WorldCam 与 Wan 资产，表明其为基于 Wan 的扩散骨干加相机位姿条件。该模型由KAIST（韩国科学技术院）/ Adobe Research / MAUM AI发布。
+runner 遵循官方条件视频路径，使用 WorldCam 与 Wan 资产，表明其为基于 Wan 的扩散骨干加相机位姿条件。该模型由 KAIST（韩国科学技术院）/ Adobe Research / MAUM AI 发布。
 
 任务：世界模型、相机控制。
 
@@ -29,13 +27,11 @@ runner 遵循官方条件视频路径，使用 WorldCam 与 Wan 资产，表明�
 
 必填 `input-path`；输入 `prompt`（不传时使用内置示例）；参数 `fps`、`height`、`width`、`steps`、`guidance-scale`、`seed` 等 13 项；产物 `worldcam.mp4`。
 
-CLI task profile：`interactive-video`。绑定的 pipeline 类是 `WorldCamPipeline`。
-
-系列状态：**已验证**。
-
-`interactive-video` 的默认值：fps=30, height=480, width=832, seed=0。
+CLI task profile：`interactive-video`。绑定的 pipeline 类是 `WorldCamPipeline`。系列状态：**已验证**。`interactive-video` 的默认值：fps=30, height=480, width=832, steps=50, guidance-scale=4, seed=0。
 
 该发布为 code-only，需自行在本地就位 WorldCam 与 Wan2.1-T2V-1.3B 资产；wrapper 的 load_model=False 模式可在无权重时检查规划。
+
+code-only 发布：官方 checkpoint 尚未确认。
 
 ## 在 WorldFoundry 中运行
 

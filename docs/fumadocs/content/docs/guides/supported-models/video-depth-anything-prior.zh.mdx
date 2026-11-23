@@ -1,6 +1,6 @@
 ---
 title: "Video Depth Anything"
-description: "Video Depth Anything（字节跳动）：几何先验；Runner 一致性待确认。"
+description: "Video Depth Anything（字节跳动）：视频深度估计、时序深度估计等 3 项任务；Runner 一致性待确认。"
 modelId: "video-depth-anything-prior"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ Video Depth Anything 为 Depth Anything 家族带来时序一致性：在任意�
 
 <ModelPaperFigures modelId="video-depth-anything-prior" locale="zh" />
 
-论文：[arXiv 2501.12375](https://arxiv.org/abs/2501.12375)。
-
-项目页：[videodepthanything.github.io](https://videodepthanything.github.io/)。代码：[DepthAnything/Video-Depth-Anything](https://github.com/DepthAnything/Video-Depth-Anything)。
+论文：[arXiv 2501.12375](https://arxiv.org/abs/2501.12375)。项目页：[videodepthanything.github.io](https://videodepthanything.github.io/)。代码：[DepthAnything/Video-Depth-Anything](https://github.com/DepthAnything/Video-Depth-Anything)。
 
 <ModelCommandBuilder modelId="video-depth-anything-prior" locale="zh" />
 
@@ -21,15 +19,13 @@ Video Depth Anything 为 Depth Anything 家族带来时序一致性：在任意�
 
 按上游发布，时空头加时间梯度一致性目标把 Depth Anything V2 扩展到视频，并用关键帧策略处理长序列。checkpoint 为 depth-anything/Video-Depth-Anything-Large（apache-2.0）。该模型由字节跳动发布。
 
-任务：video-depth-estimation、temporal-depth-estimation、几何先验。别名：`video-depth-anything`、`vda-prior`。模态上，它接受图像，输出深度。
+任务：视频深度估计、时序深度估计、几何先验。别名：`video-depth-anything`、`vda-prior`。模态上，它接受图像，输出深度。
 
 ## 运行时契约
 
 输入 `input-path`（不传时使用内置示例）；参数 `model`、`input-size`、`max-frames`、`execute`、`max-points`；产物 `video-depth-anything-prior.npz`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `VideoDepthAnythingPriorPipeline`。
-
-系列状态：**Runner 一致性待确认**。
+CLI task profile：`default`。绑定的 pipeline 类是 `VideoDepthAnythingPriorPipeline`。系列状态：**Runner 一致性待确认**。
 
 可单独作为几何先验运行，也可在 ViPE pipeline 档案中选用。运行前请就位 depth-anything/Video-Depth-Anything-Large 权重。
 
@@ -42,5 +38,7 @@ CLI task profile：`default`。绑定的 pipeline 类是 `VideoDepthAnythingPrio
 运行环境：统一环境 `worldfoundry-unified-cu128`（Python 3.11，CUDA 12.8）。
 
 权重仓库：`depth-anything/Video-Depth-Anything-Large`。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh video-depth-anything-prior`；下载缺失的公开权重时加 `--download`。
+
+许可证：Apache-2.0。
 
 <ModelRelatedRecipes modelId="video-depth-anything-prior" locale="zh" />

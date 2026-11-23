@@ -1,6 +1,6 @@
 ---
 title: "LongVie 2"
-description: "LongVie 2（上海人工智能实验室（Vchitect 团队））：图生视频、长视频生成等 4 项任务；已验证; 独立环境 `worldfoundry-longvie-cu128`。"
+description: "LongVie 2（上海人工智能实验室（Vchitect 团队））：图生视频、长视频生成等 4 项任务；已验证；独立环境 worldfoundry-longvie-cu128。"
 modelId: "longvie-2"
 pageSource: authored
 ---
@@ -21,13 +21,13 @@ LongVie 2 是 Vchitect 团队第二代可控长视频框架。它以排队的 81
 
 基于 Wan2.1-I2V-14B-480P，叠加 LongVie 专属权重：适配器同时加载 control.safetensors 与 dit.safetensors，后者即区别于 LongVie-1 的 LongVie 2 DiT 注意力覆盖。execute=True 时支持官方 USP ring/ulysses 分布式推理。该模型由上海人工智能实验室（Vchitect 团队）发布。
 
-任务：图生视频、长视频生成、depth-controlled-video、trajectory-controlled-video。别名：`longvie2`、`longvie-v2`。模态上，它接受图像，输出视频、深度。
+任务：图生视频、长视频生成、深度可控视频、轨迹可控视频。别名：`longvie2`、`longvie-v2`。模态上，它接受图像、深度、轨迹，输出视频。
 
 推荐评测：[ChronoMagic-Bench](/zh/docs/evaluation/benchmark-hub/chronomagic-bench)（长时程生成评测）、[CameraBench](/zh/docs/evaluation/benchmark-hub/camerabench)（控制驱动生成适合做相机运动评测）。
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`seed` 等 10 项；产物 `generated_video`、`longvie-2.mp4`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `frames`、`fps`、`height`、`width`、`steps`、`seed` 等 10 项；产物 `longvie-2.mp4`。
 
 CLI task profile：`interactive-video`。绑定的 pipeline 类是 `LongVie2Pipeline`。
 

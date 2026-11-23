@@ -1,6 +1,6 @@
 ---
 title: "LeWorldModel"
-description: "LeWorldModel from Mila – Quebec AI Institute / Université de Montréal: latent world model, jepa world model, and 1 more task; Runner parity pending."
+description: "LeWorldModel from Mila – Quebec AI Institute / Université de Montréal: latent world model, JEPA world model, and 1 more task; Runner parity pending."
 modelId: "leworldmodel"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ LeWorldModel (le-wm) studies latent world models: JEPA-style and pixel-space wor
 
 <ModelPaperFigures modelId="leworldmodel" locale="en" />
 
-Paper: [arXiv 2603.19312](https://arxiv.org/abs/2603.19312).
-
-Project page: [le-wm.github.io](https://le-wm.github.io/). Code: [lucas-maes/le-wm](https://github.com/lucas-maes/le-wm).
+Paper: [arXiv 2603.19312](https://arxiv.org/abs/2603.19312). Project page: [le-wm.github.io](https://le-wm.github.io/). Code: [lucas-maes/le-wm](https://github.com/lucas-maes/le-wm).
 
 <ModelCommandBuilder modelId="leworldmodel" locale="en" />
 
@@ -21,19 +19,17 @@ Project page: [le-wm.github.io](https://le-wm.github.io/). Code: [lucas-maes/le-
 
 It covers latent (JEPA) and pixel world-model variants, with checkpoints at eren23/lewm-models. Inference uses the official eval configs; training configs are not required. It is published by Mila – Quebec AI Institute / Université de Montréal.
 
-Tasks: latent world model, jepa world model, and pixel world model.
+Tasks: latent world model, JEPA world model, and pixel world model.
 
 ## Runtime contract
 
-Options `plan-only` and `timeout-seconds`; artifacts `generated_world` and `leworldmodel_result.json`.
+Options `plan-only` and `timeout-seconds`; artifact `leworldmodel_result.json`.
 
-CLI task profiles: `pusht-eval`. WorldFoundry binds `LeWorldModelPipeline`.
-
-Family status: **Runner parity pending**.
+CLI task profile: `pusht-eval`. WorldFoundry binds `LeWorldModelPipeline`. Family status: **Runner parity pending**.
 
 The route follows the official eval.py config flow and checks for stable-worldmodel packages, task datasets, and non-random policy checkpoints before execution.
 
-Evaluation-oriented world model: it scores dynamics and does not render showcase video.
+Evaluation-oriented world model: it scores dynamics and does not render showcase video. Results have not been compared against the official PushT evaluation.
 
 ## Running in WorldFoundry
 

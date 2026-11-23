@@ -286,6 +286,145 @@ TASK_PHRASES_ZH = {
     "point-cloud-world-model": "点云世界模型",
     "3d-world-model": "3D 世界模型",
     "embodied_policy": "具身策略",
+    "wam": "世界-动作模型（WAM）",
+    "wam.world_action_modeling": "世界-动作建模",
+    "world_action_model": "世界-动作模型",
+    "vla.world_action_model": "VLA 世界-动作模型",
+    "vla.long_horizon_memory": "VLA 长时程记忆",
+    "va": "视觉-动作（VA）",
+    "vam": "视频-动作模型（VAM）",
+    "vam.video_action_modeling": "视频-动作建模",
+    "video_action_modeling": "视频-动作建模",
+    "latent_world_action_model": "潜空间世界-动作模型",
+    "latent-action-world-model": "潜动作世界模型",
+    "latent_action": "潜动作",
+    "cross_embodiment_vla": "跨本体 VLA",
+    "dexterous_manipulation": "灵巧操作",
+    "bimanual_manipulation": "双臂操作",
+    "bimanual_robot_policy": "双臂机器人策略",
+    "human_motion_policy": "人体运动策略",
+    "vlm_policy": "VLM 策略",
+    "generalist_policy": "通用策略",
+    "memory_policy": "记忆策略",
+    "robot_policy_finetune": "机器人策略微调",
+    "robotics_transformer": "机器人 Transformer",
+    "subtask_prediction": "子任务预测",
+    "embodied.policy_rollout": "具身策略执行",
+    "robot": "机器人",
+    "3dgs": "3DGS（3D 高斯泼溅）",
+    "multi-view-reconstruction": "多视角重建",
+    "streaming-3d-reconstruction": "流式 3D 重建",
+    "streaming-3d": "流式 3D",
+    "3d-scene-generation": "3D 场景生成",
+    "3d-scene-rendering": "3D 场景渲染",
+    "3d-scene-understanding": "3D 场景理解",
+    "3d-detection": "3D 检测",
+    "metric-3d-estimation": "米制 3D 估计",
+    "depth-estimation": "深度估计",
+    "depth-completion": "深度补全",
+    "depth_conditioned": "深度条件生成",
+    "depth_prediction": "深度预测",
+    "depth-controlled-video": "深度可控视频",
+    "panoramic-depth-estimation": "全景深度估计",
+    "temporal-depth-estimation": "时序深度估计",
+    "video-depth-estimation": "视频深度估计",
+    "gravity-estimation": "重力估计",
+    "camera-pose-estimation": "相机位姿估计",
+    "camera-pose-controlled-video": "相机位姿可控视频",
+    "camera-controlled-video-generation": "相机可控视频生成",
+    "camera-controlled-world-extension": "相机可控世界延展",
+    "camera-calibration": "相机标定",
+    "camera-path-rendering": "相机路径渲染",
+    "point-cloud-rendering": "点云渲染",
+    "low-poly-rendering": "低多边形渲染",
+    "panoramic-gaussian-scaffold": "全景高斯脚手架",
+    "scene-expansion": "场景扩展",
+    "object-tracking": "目标跟踪",
+    "image-to-world-video": "图像生成世界视频",
+    "image-to-3d-world": "图像生成 3D 世界",
+    "image-to-navigable-world": "图像生成可导航世界",
+    "text-image-to-video": "图文生成视频",
+    "reference-video-to-video": "参考视频转视频",
+    "autoregressive-video-generation": "自回归视频生成",
+    "autoregressive-generation": "自回归生成",
+    "streaming-video-generation": "流式视频生成",
+    "streaming-video": "流式视频",
+    "stream": "流式生成",
+    "causal-video-generation": "因果视频生成",
+    "real-time-video-generation": "实时视频生成",
+    "realtime-video-generation": "实时视频生成",
+    "long-video": "长视频",
+    "long-horizon-generation": "长时程生成",
+    "video_generation": "视频生成",
+    "video_prediction": "视频预测",
+    "video": "视频生成",
+    "video-continuation": "视频续写",
+    "video-refinement": "视频精炼",
+    "video-dynamics": "视频动力学",
+    "video-action-diffusion": "视频-动作扩散",
+    "video-diffusion-adaptation": "视频扩散适配",
+    "video-object-segmentation": "视频目标分割",
+    "prompt-stream-video-generation": "提示词流视频生成",
+    "image_to_video": "图生视频",
+    "image-conditioned-generation": "图像条件生成",
+    "class-conditional-image-generation": "类别条件图像生成",
+    "human-image-animation": "人物图像驱动",
+    "human-action-generation": "人物动作生成",
+    "human-motion-controlled-video": "人体运动可控视频",
+    "egocentric-video-generation": "第一视角视频生成",
+    "egocentric-world-model": "第一视角世界模型",
+    "trajectory-conditioned-video": "轨迹条件视频",
+    "trajectory-controlled-video": "轨迹可控视频",
+    "action-conditioned-world-model": "动作条件世界模型",
+    "controllable-world-generation": "可控世界生成",
+    "video-conditioned-world-generation": "视频条件世界生成",
+    "interactive-world-generation": "交互式世界生成",
+    "interactive": "交互式生成",
+    "diffusion-world-model": "扩散世界模型",
+    "navigation-world-model": "导航世界模型",
+    "navigation": "导航",
+    "persistent-world-model": "持久化世界模型",
+    "pixel-world-model": "像素世界模型",
+    "visual-feature-world-model": "视觉特征世界模型",
+    "reinforcement-learning-world-model": "强化学习世界模型",
+    "reinforcement_learning": "强化学习",
+    "multi-agent-world-model": "多智能体世界模型",
+    "multi-agent-simulation": "多智能体仿真",
+    "multi-domain-world-model": "多域世界模型",
+    "multiplayer-game-world-model": "多人游戏世界模型",
+    "starcraft-world-model": "星际争霸世界模型",
+    "game-video": "游戏视频",
+    "simulator-control": "仿真器控制",
+    "action-control": "动作控制",
+    "memory-augmented-generation": "记忆增强生成",
+    "memory-research": "记忆机制研究",
+    "memory": "记忆机制",
+    "predictive-coding": "预测编码",
+    "motion-generation": "运动生成",
+    "multimodal-generation": "多模态生成",
+    "audio-generation": "音频生成",
+    "audio-video": "音视频生成",
+    "audio-visual-world-model": "音视觉世界模型",
+    "world-generation-stage": "世界生成阶段",
+    "world-model-benchmark": "世界模型评测",
+    "world-understanding": "世界理解",
+    "api-product": "API 产品",
+    "api-world-model": "API 世界模型",
+    "legacy-unet-diffusion": "UNet 扩散模型",
+    "evaluation": "评测",
+    "dataset": "数据集",
+    "assets": "资产",
+    "interactive-video": "交互式视频",
+    "wild-3d-perception": "开放场景 3D 感知",
+    "camera-controlled video rerendering": "相机可控视频重渲染",
+    "generative novel view synthesis with camera control": "相机可控生成式新视角合成",
+    "4d world modeling from in-the-wild monocular videos": "野外单目视频 4D 世界建模",
+    "correspondence-aware multiview image generation and scene texturing": "对应感知多视图图像生成与场景纹理化",
+    "geometry-consistent world modeling": "几何一致世界建模",
+    "fast 3d scene generation from image or text": "图像或文本快速 3D 场景生成",
+    "open generative 3d and 4d world models": "开放生成式 3D 与 4D 世界模型",
+    "geometry estimation in the presence of motion": "动态场景几何估计",
+    "joint-actor-observer-generation": "行动者与观测者联合生成",
 }
 
 GENERIC_FIELD_DETAILS = {
@@ -400,15 +539,31 @@ def zh_gap(text: str) -> str:
     return " " if text[:1].isascii() and text[:1] not in ("", "（") else ""
 
 
+def zh_gap_after(text: str) -> str:
+    """Space after Latin text or inline code before Chinese; no space after Chinese."""
+
+    return " " if text[-1:].isascii() and text[-1:] not in ("", "）") else ""
+
+
 LICENSE_NAMES = {
     "apache-2.0": ("Apache-2.0", "Apache-2.0"),
     "mit": ("MIT", "MIT"),
     "cc-by-4.0": ("CC BY 4.0", "CC BY 4.0"),
     "cc-by-nc-4.0": ("CC BY-NC 4.0", "CC BY-NC 4.0"),
+    "cc-by-nc-sa-4.0": ("CC BY-NC-SA 4.0", "CC BY-NC-SA 4.0"),
+    "bsd-2-clause": ("BSD-2-Clause", "BSD-2-Clause"),
+    "bsd-3-clause": ("BSD-3-Clause", "BSD-3-Clause"),
+    "agpl-3.0": ("AGPL-3.0", "AGPL-3.0"),
     "gemma": ("Gemma Terms of Use", "Gemma 使用条款"),
     "other": ("a custom license (see the model card)", "自定义许可（见模型卡）"),
     "other:nvidia-open-model-license": ("NVIDIA Open Model License", "NVIDIA Open Model License"),
     "other:openmdw-1.1": ("OpenMDW 1.1", "OpenMDW 1.1"),
+    "minimax-h3-community-license": ("MiniMax-H3 Community License", "MiniMax-H3 社区许可"),
+    "ltx-2-community-license": ("LTX-2 Community License", "LTX-2 社区许可"),
+    "fair-noncommercial-research-license": (
+        "FAIR Non-Commercial Research License",
+        "FAIR 非商用研究许可",
+    ),
     "nvidia-noncommercial-research-evaluation": (
         "NVIDIA non-commercial research and evaluation license",
         "NVIDIA 非商用研究与评测许可",
@@ -476,9 +631,9 @@ INFER_PARAM_FIELDS = (
     "size",
     "fps",
     "num_inference_steps",
+    "steps",
     "num_iterations",
     "guidance_scale",
-    "negative_prompt",
     "seed",
     "base_seed",
 )
@@ -498,7 +653,33 @@ def drop_training_prose(items: list[str]) -> list[str]:
     return [item for item in items if item and not is_training_heavy(item)]
 
 
-TASK_ACRONYMS_EN = {"vla": "VLA", "wam": "WAM", "vlm": "VLM", "umi": "UMI", "3d": "3D", "4d": "4D", "rgb": "RGB"}
+TASK_ACRONYMS_EN = {
+    "vla": "VLA",
+    "va": "VA",
+    "vam": "VAM",
+    "wam": "WAM",
+    "vlm": "VLM",
+    "umi": "UMI",
+    "3d": "3D",
+    "4d": "4D",
+    "3dgs": "3DGS",
+    "rgb": "RGB",
+    "api": "API",
+    "jepa": "JEPA",
+    "unet": "UNet",
+    "starcraft": "StarCraft",
+    "t2v": "T2V",
+    "i2v": "I2V",
+    "ti2v": "TI2V",
+    "v2v": "V2V",
+    "t2va": "T2VA",
+    "fl2va": "FL2VA",
+    "ref2va": "Ref2VA",
+    "i2va": "I2VA",
+    "l2va": "L2VA",
+    "rv2v": "RV2V",
+    "r2v": "R2V",
+}
 TASK_COMPOUND_SUFFIXES_EN = {"controlled", "conditioned", "guided", "based", "driven", "aware"}
 
 
@@ -581,7 +762,7 @@ def recorded_task_ids(recipe: dict[str, Any]) -> list[str]:
     tasks = [str(item) for item in recipe.get("tasks") or [] if item]
     if not tasks:
         for item in recipe.get("inferenceTasks") or []:
-            if isinstance(item, dict) and item.get("id"):
+            if isinstance(item, dict) and item.get("id") and str(item["id"]).lower() not in {"default", "single"}:
                 tasks.append(str(item["id"]))
     return unique_keep(tasks)
 
@@ -736,14 +917,22 @@ def artifact_names(recipe: dict[str, Any]) -> list[str]:
         None,
     )
     artifacts = task.get("artifacts", []) if task is not None else recipe.get("artifacts") or []
-    for item in artifacts:
-        if not isinstance(item, dict):
-            continue
+    dict_items = [item for item in artifacts if isinstance(item, dict)]
+    kinds_with_filename = {
+        str(item.get("kind") or "").strip()
+        for item in dict_items
+        if str(item.get("filename") or "").strip() and str(item.get("kind") or "").strip()
+    }
+    if any(str(item.get("filename") or "").strip().endswith(".mp4") for item in dict_items):
+        kinds_with_filename.update({"generated_video", "generated_world_video", "generated_world", "predicted_video"})
+    if any(str(item.get("filename") or "").strip().endswith("_action_trace.json") for item in dict_items):
+        kinds_with_filename.update({"actions", "action_trace"})
+    for item in dict_items:
         filename = str(item.get("filename") or "").strip()
         kind = str(item.get("kind") or "").strip()
         if filename:
             names.append(filename)
-        elif kind:
+        elif kind and kind not in kinds_with_filename:
             names.append(kind)
     return unique_keep(names)
 
@@ -1037,7 +1226,8 @@ def task_profile_sentence(recipe: dict[str, Any], locale: str) -> str:
         if pipe:
             text += f"绑定的 pipeline 类是 `{pipe}`。"
         return text
-    text = f"CLI task profiles: {joined}{extra}."
+    profile_word = "profile" if len(ids) == 1 else "profiles"
+    text = f"CLI task {profile_word}: {joined}{extra}."
     if pipe:
         text += f" WorldFoundry binds `{pipe}`."
     return text
@@ -1050,9 +1240,7 @@ def family_status_sentence(recipe: dict[str, Any], locale: str) -> str:
     return f"Family status: **{label}**."
 
 
-def usage_and_blocker_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) -> list[str]:
-    items = drop_training_prose(locale_paragraphs(docs, "usageNotes", locale))
-    items.extend(drop_training_prose(locale_paragraphs(docs, "limitations", locale)))
+def _clean_note_items(items: list[str], locale: str) -> list[str]:
     cleaned: list[str] = []
     for item in items:
         text = sanitize_manifest_dialect(re.sub(r"\s+", " ", str(item)).strip(), locale)
@@ -1098,10 +1286,21 @@ def usage_and_blocker_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], l
             continue
         if text and text not in cleaned:
             cleaned.append(text)
-    return cleaned[:3]
+    return cleaned
 
 
-def method_paragraph(recipe: dict[str, Any], docs: dict[str, Any], locale: str, lead: str) -> str:
+def usage_and_blocker_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) -> list[str]:
+    usage = _clean_note_items(drop_training_prose(locale_paragraphs(docs, "usageNotes", locale)), locale)
+    limits = _clean_note_items(drop_training_prose(locale_paragraphs(docs, "limitations", locale)), locale)
+    result = list(usage[:2])
+    if limits:
+        joined_limits = join_prose(limits[:4], locale)
+        if joined_limits and joined_limits not in result:
+            result.append(joined_limits)
+    return result[:3]
+
+
+def method_paragraph(recipe: dict[str, Any], docs: dict[str, Any], locale: str, lead: str) -> tuple[str, str]:
     arch = drop_training_prose(locale_paragraphs(docs, "architecture", locale))
     text = clip_at_sentence(arch[0], 420) if arch else ""
     if text and (text == lead or mentions(lead, text[:36])):
@@ -1109,9 +1308,14 @@ def method_paragraph(recipe: dict[str, Any], docs: dict[str, Any], locale: str, 
     publisher = publisher_name(docs, locale)
     extra = ""
     if is_real_publisher(publisher) and not mentions(lead, publisher, str(recipe.get("provider") or "")):
-        extra = f"该模型由{publisher}发布。" if locale == "zh" else f"It is published by {publisher}."
-    parts = [part for part in (text, extra) if part]
-    return join_prose(parts, locale)
+        extra = (
+            f"该模型由{zh_gap(publisher)}{publisher}{zh_gap_after(publisher)}发布。"
+            if locale == "zh"
+            else f"It is published by {publisher}."
+        )
+    if text:
+        return join_prose([text, extra], locale), ""
+    return "", extra
 
 
 def prepare_sentence(recipe: dict[str, Any], locale: str) -> str:
@@ -1138,16 +1342,22 @@ def builder_sentence(recipe: dict[str, Any], locale: str) -> str:
 def inference_defaults_paragraph(recipe: dict[str, Any], locale: str) -> str:
     """Pull recorded height/width/frames/steps/guidance/fps from inference tasks."""
 
-    bits: list[str] = []
-    for task in (recipe.get("inferenceTasks") or [])[:2]:
-        if not isinstance(task, dict):
+    run_id, _ = run_identity(recipe)
+    all_tasks = [item for item in (recipe.get("inferenceTasks") or []) if isinstance(item, dict)]
+    tasks = [item for item in all_tasks if not item.get("variantIds") or run_id in item["variantIds"]] or all_tasks
+    seen_task_ids: set[str] = set()
+    groups: dict[str, list[str]] = {}
+    for task in tasks:
+        task_id = str(task.get("id") or task.get("task") or "").strip()
+        if task_id in seen_task_ids:
             continue
+        seen_task_ids.add(task_id)
         defaults: list[str] = []
         for item in task.get("inputs") or []:
             if not isinstance(item, dict):
                 continue
             field = str(item.get("field") or "").strip()
-            if field not in INFER_PARAM_FIELDS:
+            if field.replace("-", "_") not in INFER_PARAM_FIELDS:
                 continue
             value = item.get("default")
             if value in (None, "", "Optional"):
@@ -1157,17 +1367,25 @@ def inference_defaults_paragraph(recipe: dict[str, Any], locale: str) -> str:
             if value in (None, ""):
                 continue
             defaults.append(f"{field}={value}")
-        if not defaults:
-            continue
-        task_id = str(task.get("id") or task.get("task") or "").strip()
-        joined = ", ".join(defaults[:6])
-        if locale == "zh":
-            bits.append(f"`{task_id}` 的默认值：{joined}" if task_id else f"默认值：{joined}")
-        else:
-            bits.append(f"Defaults for `{task_id}`: {joined}" if task_id else f"Defaults: {joined}")
-    if not bits:
+        if defaults:
+            joined = ", ".join(defaults[:6])
+            groups.setdefault(joined, []).append(task_id)
+        if len(seen_task_ids) >= 3:
+            break
+    if not groups:
         return ""
-    return "；".join(bits) + "。" if locale == "zh" else " ".join(bits) + ("." if not bits[-1].endswith(".") else "")
+    bits: list[str] = []
+    for joined, task_ids in list(groups.items())[:2]:
+        valid_ids = [tid for tid in task_ids if tid]
+        if locale == "zh":
+            tasks_label = join_zh([f"`{tid}`" for tid in valid_ids])
+            bits.append(f"{tasks_label} 的默认值：{joined}" if tasks_label else f"默认值：{joined}")
+        else:
+            tasks_label = join_en([f"`{tid}`" for tid in valid_ids])
+            bits.append(f"Defaults for {tasks_label}: {joined}" if tasks_label else f"Defaults: {joined}")
+    if locale == "zh":
+        return "；".join(bits) + "。"
+    return ". ".join(bit.rstrip(".") for bit in bits) + "."
 
 
 CONTRACT_OPTION_LIMIT = 6
@@ -1221,13 +1439,19 @@ def contract_paragraph(recipe: dict[str, Any], locale: str) -> str:
     if required_tokens:
         bits.append(f"required {join_en(required_tokens)}")
     if input_tokens:
-        bits.append(f"inputs {join_en(input_tokens)}" + (" (bundled samples are used when omitted)" if sampled else ""))
+        input_word = "input" if len(input_tokens) == 1 else "inputs"
+        bits.append(
+            f"{input_word} {join_en(input_tokens)}" + (" (bundled samples are used when omitted)" if sampled else "")
+        )
     if shown:
-        bits.append(f"options {join_en(shown + ([f'{rest} more'] if rest > 0 else []))}")
+        option_word = "option" if len(option_tokens) == 1 else "options"
+        bits.append(f"{option_word} {join_en(shown + ([f'{rest} more'] if rest > 0 else []))}")
     if action and "actions" not in field_names:
         bits.append(f"`actions` is {action}")
     if artifacts:
-        bits.append(f"artifacts {join_en(f'`{item}`' for item in artifacts[:3])}")
+        shown_artifacts = artifacts[:3]
+        artifact_word = "artifact" if len(shown_artifacts) == 1 else "artifacts"
+        bits.append(f"{artifact_word} {join_en(f'`{item}`' for item in shown_artifacts)}")
     if not bits:
         return "No input or artifact contract is recorded for this model."
     text = "; ".join(bits)
@@ -1294,10 +1518,14 @@ def for_what_paragraphs(recipe: dict[str, Any], locale: str) -> list[str]:
 
     parts: list[str] = []
     opening = family_opening(recipe, locale)
+    method, publisher_only = method_paragraph(recipe, docs, locale, lead)
+    if opening and publisher_only:
+        opening = join_prose([opening, publisher_only], locale)
     if opening:
         parts.append(opening)
+    elif publisher_only:
+        parts.append(publisher_only)
 
-    method = method_paragraph(recipe, docs, locale, lead)
     if method:
         parts.append(method)
 
@@ -1350,16 +1578,20 @@ def contract_paragraphs(recipe: dict[str, Any], locale: str) -> list[str]:
     if contract:
         parts.append(contract)
     profiles = task_profile_sentence(recipe, locale)
-    if profiles:
-        parts.append(profiles)
     variants = variants_paragraph(recipe, locale)
     status = family_status_sentence(recipe, locale)
-    variant_block = join_prose([item for item in (variants, status) if item], locale)
-    if variant_block:
-        parts.append(variant_block)
     knobs = inference_defaults_paragraph(recipe, locale)
-    if knobs:
-        parts.append(knobs)
+    if variants:
+        profile_block = join_prose([item for item in (profiles, knobs) if item], locale)
+        if profile_block:
+            parts.append(profile_block)
+        variant_block = join_prose([item for item in (variants, status) if item], locale)
+        if variant_block:
+            parts.append(variant_block)
+    else:
+        profile_block = join_prose([item for item in (profiles, status, knobs) if item], locale)
+        if profile_block:
+            parts.append(profile_block)
     for item in usage_and_blocker_paragraphs(recipe, docs, locale):
         parts.append(item)
     return unique_keep(parts)[:5]
@@ -1416,6 +1648,7 @@ def run_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) ->
 
     for item in exemplar:
         add(item)
+    exemplar_blob = blob
 
     launch = run_command_sentence(recipe, locale)
     builder = builder_sentence(recipe, locale)
@@ -1425,7 +1658,8 @@ def run_paragraphs(recipe: dict[str, Any], docs: dict[str, Any], locale: str) ->
         add(builder)
 
     env = environment_sentence(recipe, locale)
-    if env and not mentions(blob, str((recipe.get("runtime") or {}).get("environmentName") or "___never___")):
+    env_name = str((recipe.get("runtime") or {}).get("environmentName") or "___never___")
+    if env and not mentions(exemplar_blob, env_name):
         add(env)
 
     ckpt = checkpoint_sentence(recipe, locale)
@@ -1923,9 +2157,9 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
         extras.append(f"{len(ids)} variants" if locale == "en" else f"{len(ids)} 个 variant")
     if env_kind == "dedicated" and runtime.get("environmentName"):
         extras.append(
-            f"dedicated `{runtime['environmentName']}`"
+            f"dedicated env {runtime['environmentName']}"
             if locale == "en"
-            else f"独立环境 `{runtime['environmentName']}`"
+            else f"独立环境 {runtime['environmentName']}"
         )
     if title and title not in overview0:
         short = title.split(":")[0].strip()
@@ -1938,7 +2172,7 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
         task_bit = f"{', '.join(tasks)}, and {more} more task{'s' if more > 1 else ''}" if more > 0 else join_en(tasks)
     else:
         task_bit = f"{join_zh(tasks)}等 {total_tasks} 项任务" if more > 0 else join_zh(tasks)
-    extra_bit = "; ".join(extras[:2])
+    extra_bit = ("；" if locale == "zh" else "; ").join(extras[:2])
     if locale == "zh":
         head = f"{name}" + (f"（{provider}）" if provider else "")
         desc = head + (f"：{task_bit}。" if task_bit else "。")
@@ -1953,7 +2187,7 @@ def description_text(recipe: dict[str, Any], locale: str) -> str:
     if mentions(overview0, desc[:40]) or desc.rstrip(".") in overview0:
         run_id, _ = run_identity(recipe)
         if run_id and run_id not in desc:
-            suffix = f" Variant `{run_id}`." if locale == "en" else f"variant `{run_id}`。"
+            suffix = f" Variant {run_id}." if locale == "en" else f"variant {run_id}。"
             desc = desc.rstrip(".") + "." + suffix if locale == "en" else desc.rstrip("。") + "。" + suffix
     if locale == "zh" and not re.search(r"[\u4e00-\u9fff]", desc):
         category_zh = str(recipe.get("categoryLabelZh") or "").strip()
@@ -2037,15 +2271,25 @@ def render_page(
     paper_already = bool(title_rest and mentions(lead, title_rest)) or (
         bool(paper_title) and ":" not in paper_title and mentions(lead, paper_title[:28])
     )
-    if paper and not paper_already:
-        chunks.append(emit_prose(paper, locale))
-        chunks.append("")
+    emit_paper = bool(paper and not paper_already)
 
     sources = sources_sentence(recipe, locale)
     already = " ".join([lead, paper or ""] + (extras.get("lead") or []))
-    if sources and not any(mentions(already, url[:24]) for url in re.findall(r"https?://[^\s)]+", sources)):
-        chunks.append(emit_prose(sources, locale))
+    emit_sources = bool(
+        sources and not any(mentions(already, url[:24]) for url in re.findall(r"https?://[^\s)]+", sources))
+    )
+
+    if emit_paper and emit_sources and not (extras.get("mid") or []):
+        sep = " " if locale == "en" else ""
+        chunks.append(emit_prose(f"{paper}{sep}{sources}", locale))
         chunks.append("")
+    else:
+        if emit_paper:
+            chunks.append(emit_prose(paper, locale))
+            chunks.append("")
+        if emit_sources:
+            chunks.append(emit_prose(sources, locale))
+            chunks.append("")
     for item in extras.get("mid") or []:
         if item and not mentions(already + (sources or ""), item[:36]):
             chunks.append(sanitize_manifest_dialect(item, locale))
@@ -2163,6 +2407,7 @@ GENERIC_STUB_RE = re.compile(
     r"|the runtime does not download weights"
     r"|missing files fail at load, nothing is downloaded"
     r"|跑在统一环境"
+    r"|在统一环境 `.+`.*里运行 `wf run"
     r"|启动 `wf run"
     r"|用 `wf run"
     r"|^运行 `wf run"
@@ -2170,11 +2415,15 @@ GENERIC_STUB_RE = re.compile(
     r"|缺文件加载失败"
     r"|把 `.+` 就位到本地"
     r"|Stage `.+` locally"
+    r"|^Weights come from `"
+    r"|^Recorded weight repositories include `"
+    r"|^权重仓库为 `"
+    r"|^记录的权重仓库包括 `"
     r")",
     re.I,
 )
 FIELD_LIST_RE = re.compile(
-    r"^(Required|Optional|Artifacts?|Status|必填|可选|产物|状态)[:：]",
+    r"^(Required|Optional|Inputs?|Artifacts?|Status|Tasks|必填|可选|输入|产物|状态|任务)(?:\s+`|\s*[:：])",
     re.I,
 )
 

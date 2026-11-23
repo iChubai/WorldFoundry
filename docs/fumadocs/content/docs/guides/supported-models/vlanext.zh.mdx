@@ -9,9 +9,7 @@ VLANeXt 是以 S-Lab License 1.0（源码可得、面向研究）发布的新一
 
 <ModelPaperFigures modelId="vlanext" locale="zh" />
 
-论文：[arXiv 2602.18532](https://arxiv.org/abs/2602.18532)。
-
-项目页：[dravenalg.github.io/VLANeXt](https://dravenalg.github.io/VLANeXt)。代码：[DravenALG/VLANeXt](https://github.com/DravenALG/VLANeXt)。
+论文：[arXiv 2602.18532](https://arxiv.org/abs/2602.18532)。项目页：[dravenalg.github.io/VLANeXt](https://dravenalg.github.io/VLANeXt)。代码：[DravenALG/VLANeXt](https://github.com/DravenALG/VLANeXt)。
 
 <ModelCommandBuilder modelId="vlanext" locale="zh" />
 
@@ -27,15 +25,13 @@ VLANeXt 是以 S-Lab License 1.0（源码可得、面向研究）发布的新一
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `checkpoint-ref`、`official-policy-observation`；产物 `action_trace`、`vlanext_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `checkpoint-ref`、`official-policy-observation`；产物 `vlanext_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `VLANeXtPipeline`。
-
-系列状态：**仅静态加载**。
+CLI task profile：`default`。绑定的 pipeline 类是 `VLANeXtPipeline`。系列状态：**仅静态加载**。
 
 运行前从 DravenALG/VLANeXt 集合下载对应套件的 LIBERO checkpoint。S-Lab-1.0 许可限制商业使用。
 
-S-Lab-1.0 许可：源码可得，但仅限研究用途。
+S-Lab-1.0 许可：源码可得，但仅限研究用途。尚未用发布的 checkpoint 验证动作块推理，目前只检查了运行时导入与加载。
 
 ## 在 WorldFoundry 中运行
 

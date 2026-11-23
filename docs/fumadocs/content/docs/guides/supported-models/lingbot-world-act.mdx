@@ -1,6 +1,6 @@
 ---
 title: "LingBot-World Base Act"
-description: "Robbyant's action-conditioned world video model driven by an action matrix."
+description: "LingBot-World Base Act from Robbyant (Ant Group): interactive world model and action-conditioned video; Verified."
 modelId: "lingbot-world-act"
 pageSource: authored
 ---
@@ -21,28 +21,30 @@ Use `lingbot-world-act` to step a world forward with actions and render the resu
 
 The inference path reuses the in-tree LingBot runtime and central Wan base modules (apache-2.0). Inputs are prompt, image, pose, and action_matrix. It is published by Robbyant (Ant Group).
 
-Tasks: interactive world model and action-conditioned video.
+Tasks: interactive world model and action-conditioned video. Modalities: action in, video out.
 
 Suggested benchmarks: [WorldModelBench](/docs/evaluation/benchmark-hub/worldmodelbench) (Action-conditioned world-rollout quality).
 
 ## Runtime contract
 
-Inputs `prompt`, `image`, `pose`, and `action-matrix`; artifacts `lingbot-world-act.mp4`.
+Inputs `prompt`, `image`, `pose`, and `action-matrix`; artifact `lingbot-world-act.mp4`.
 
-CLI task profiles: `interactive-world-model`, `action-conditioned-video`, and `world_model`. WorldFoundry binds `LingBotPipeline`.
+CLI task profiles: `interactive-world-model`, `action-conditioned-video`, and `world_model`. WorldFoundry binds `LingBotPipeline`. Family status: **Verified**.
 
-Validated with the Base-Act preview checkpoint: the public runner generates a 17-frame, 8-step clip (544 × 720, 16 fps) from the official cat image and forward WASD actions in the dedicated LingBot environment. Action adherence has not been measured.
+Validated with the Base-Act preview checkpoint: the public runner generates a 17-frame, 8-step clip (544×720, 16 fps) from an image and a forward WASD action matrix in the dedicated LingBot environment.
 
-Only the 17-frame, 8-step configuration is validated; action adherence and the official 161-frame recipe are untested.
+Only the 17-frame, 8-step configuration is validated; action adherence and the official 161-frame recipe are untested. Must run in the dedicated LingBot environment; act2cam output in the unified environment is near-black.
 
 ## Running in WorldFoundry
 
 Run `wf run lingbot-world-act --pipeline.task-profile interactive-world-model` to roll out the world model. Switch tasks in the command builder above to change `--pipeline.task-profile`.
 
-Use the dedicated `lingbot-world` environment (Python 3.10, CUDA 12.1). act2cam output in the unified environment is near-black.
+It runs in the unified environment `worldfoundry-unified-cu128` (Python 3.11, CUDA 12.8).
 
 Weights: `robbyant/lingbot-world-base-act-preview`. Prepare the environment and check local assets with `bash scripts/inference/prepare_model_infer.sh lingbot-world-act`. Add `--download` to fetch missing public checkpoints.
 
-The official 161-frame recipe is untested.
+License: Apache-2.0.
+
+Use the dedicated `lingbot-world` environment (Python 3.10, CUDA 12.1). act2cam output in the unified environment is near-black.
 
 <ModelRelatedRecipes modelId="lingbot-world-act" locale="en" />

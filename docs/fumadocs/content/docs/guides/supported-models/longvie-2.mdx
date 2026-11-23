@@ -1,6 +1,6 @@
 ---
 title: "LongVie 2"
-description: "LongVie 2 from Shanghai AI Laboratory (Vchitect): image-to-video, long video generation, and 2 more tasks; Verified; dedicated `worldfoundry-longvie-cu128`."
+description: "LongVie 2 from Shanghai AI Laboratory (Vchitect): image-to-video, long video generation, and 2 more tasks; Verified; dedicated env worldfoundry-longvie-cu128."
 modelId: "longvie-2"
 pageSource: authored
 ---
@@ -21,15 +21,15 @@ Project page: [vchitect.github.io/LongVie2-project](https://vchitect.github.io/L
 
 Built on Wan2.1-I2V-14B-480P plus LongVie-specific weights: the adapter loads both control.safetensors and dit.safetensors, the latter being the LongVie 2 DiT attention override that distinguishes it from LongVie-1. Official USP ring/ulysses distributed inference is supported when execute=True. It is published by Shanghai AI Laboratory (Vchitect).
 
-Tasks: image-to-video, long video generation, depth-controlled video, and trajectory-controlled video. Aliases: `longvie2` and `longvie-v2`. Modalities: image in, video and depth out.
+Tasks: image-to-video, long video generation, depth-controlled video, and trajectory-controlled video. Aliases: `longvie2` and `longvie-v2`. Modalities: image, depth, and trajectory in, video out.
 
 Suggested benchmarks: [ChronoMagic-Bench](/docs/evaluation/benchmark-hub/chronomagic-bench) (Long-horizon generation suite), [CameraBench](/docs/evaluation/benchmark-hub/camerabench) (Control-driven generation benefits from camera-motion evaluation).
 
 ## Runtime contract
 
-Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 4 more; artifacts `generated_video` and `longvie-2.mp4`.
+Inputs `prompt` and `input-path` (bundled samples are used when omitted); options `frames`, `fps`, `height`, `width`, `steps`, `seed`, and 4 more; artifact `longvie-2.mp4`.
 
-CLI task profiles: `interactive-video`. WorldFoundry binds `LongVie2Pipeline`.
+CLI task profile: `interactive-video`. WorldFoundry binds `LongVie2Pipeline`.
 
 Family status: **Verified**.
 

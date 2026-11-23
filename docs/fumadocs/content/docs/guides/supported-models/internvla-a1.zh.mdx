@@ -1,6 +1,6 @@
 ---
 title: "InternVLA-A1-3B"
-description: "InternVLA-A1-3B（上海人工智能实验室（InternRobotics））：视觉-语言-动作（VLA）、机器人策略等 4 项任务；仅静态加载; 独立环境 `worldfoundry-vla-internvla-a1`。"
+description: "InternVLA-A1-3B（上海人工智能实验室（InternRobotics））：视觉-语言-动作（VLA）、机器人策略等 4 项任务；仅静态加载；独立环境 worldfoundry-vla-internvla-a1。"
 modelId: "internvla-a1"
 pageSource: generated
 ---
@@ -9,9 +9,7 @@ InternVLA-A1-3B 是 InternRobotics InternVLA 系列的 A1 世代：3B 策略，Q
 
 <ModelPaperFigures modelId="internvla-a1" locale="zh" />
 
-论文：[arXiv 2607.04988](https://arxiv.org/abs/2607.04988)。
-
-项目页：[internrobotics.github.io/internvla-a15.github.io](https://internrobotics.github.io/internvla-a15.github.io)。代码：[InternRobotics/InternVLA-A-series](https://github.com/InternRobotics/InternVLA-A-series)。
+论文：[arXiv 2607.04988](https://arxiv.org/abs/2607.04988)。项目页：[internrobotics.github.io/internvla-a15.github.io](https://internrobotics.github.io/internvla-a15.github.io)。代码：[InternRobotics/InternVLA-A-series](https://github.com/InternRobotics/InternVLA-A-series)。
 
 <ModelCommandBuilder modelId="internvla-a1" locale="zh" />
 
@@ -27,11 +25,9 @@ A1-3B 计算图将 Qwen3-VL-2B 视觉-语言编码与专家动作头、Cosmos-To
 
 ## 运行时契约
 
-输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `official-policy-observation`；产物 `action_trace`、`internvla_a1_action_trace.json`。
+输入 `prompt`、`input-path`（不传时使用内置示例）；参数 `official-policy-observation`；产物 `internvla_a1_action_trace.json`。
 
-CLI task profile：`default`。绑定的 pipeline 类是 `InternVLAA1Synthesis`。
-
-系列状态：**仅静态加载**。
+CLI task profile：`default`。绑定的 pipeline 类是 `InternVLAA1Synthesis`。系列状态：**仅静态加载**。
 
 在本地就位 A1-3B（或 RoboTwin）checkpoint、Qwen3-VL-2B-Instruct 与 Cosmos tokenizer。注意非商用许可。
 
@@ -44,5 +40,7 @@ CC-BY-NC-SA-4.0：仅限非商用。
 运行环境：独立环境 `worldfoundry-vla-internvla-a1`（Python 3.10，CUDA 12.8，torch>=2.7,\<2.8）。
 
 权重仓库：`InternRobotics/InternVLA-A1-3B`、`InternRobotics/InternVLA-A1-3B-RoboTwin`、`Qwen/Qwen3-VL-2B-Instruct` 等。准备环境并检查本地资产：`bash scripts/inference/prepare_model_infer.sh internvla-a1`；下载缺失的公开权重时加 `--download`。
+
+许可证：CC BY-NC-SA 4.0。
 
 <ModelRelatedRecipes modelId="internvla-a1" locale="zh" />
